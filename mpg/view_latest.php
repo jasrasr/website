@@ -27,6 +27,15 @@ $latest = end($data);
         table { width: 100%; border-collapse: collapse; }
         td { padding: 0.5rem; border-bottom: 1px solid #ccc; }
         th { text-align: left; padding-top: 1rem; }
+         a {
+        text-decoration: none;
+        color: #0066cc;
+        margin-right: 10px;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
     </style>
 </head>
 <body>
@@ -39,6 +48,13 @@ $latest = end($data);
         <tr><td><strong>MPG:</strong></td><td><?= is_null($latest['mpg']) ? 'N/A' : $latest['mpg'] . ' mpg' ?></td></tr>
     </table>
 
-    <p><a href="index.html">← Back to form</a></p>
+<div style="margin-top: 20px;">
+    <a href="fuel_form.php">← Back to Entry Form</a>
+    <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
+        | <a href="admin.php">← Admin Panel</a>
+    <?php endif; ?>
+</div>
+
 </body>
 </html>
+
