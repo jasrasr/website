@@ -34,14 +34,16 @@ $files = glob("$logDir/*.json");
 
 <table>
     <thead>
-        <tr>
-            <th>License Plate</th>
-            <th>Total Entries</th>
-            <th>Last Date</th>
-            <th>View</th>
-            <th>Chart</th>
-            <th>CSV</th>
-        </tr>
+<tr>
+    <th>License Plate</th>
+    <th>Total Entries</th>
+    <th>Last Date</th>
+    <th>View</th>
+    <th>Chart</th>
+    <th>CSV</th>
+    <th>JSON</th> <!-- 👈 New column -->
+</tr>
+
     </thead>
     <tbody>
     <?php foreach ($files as $file): 
@@ -50,17 +52,22 @@ $files = glob("$logDir/*.json");
         $count = count($data);
         $lastDate = end($data)['date'] ?? 'N/A';
     ?>
-        <tr>
-            <td><?= htmlspecialchars($plate) ?></td>
-            <td><?= $count ?></td>
-            <td><?= htmlspecialchars($lastDate) ?></td>
-            <td><a href="view_latest.php?plate=<?= $plate ?>">🔍</a></td>
-            <td><a href="view_chart.php?plate=<?= $plate ?>">📈</a></td>
-            <td><a href="export_csv.php?plate=<?= $plate ?>">⬇️</a></td>
-        </tr>
+<tr>
+    <td><?= htmlspecialchars($plate) ?></td>
+    <td><?= $count ?></td>
+    <td><?= htmlspecialchars($lastDate) ?></td>
+    <td><a href="view_latest.php?plate=<?= $plate ?>">🔍</a></td>
+    <td><a href="view_chart.php?plate=<?= $plate ?>">📈</a></td>
+    <td><a href="export_csv.php?plate=<?= $plate ?>">⬇️</a></td>
+    <td>
+        <a href="https://raw.githubusercontent.com/jasrasr/website/refs/heads/main/mpg/logs/<?= urlencode($plate) ?>.json" target="_blank">📄</a>
+    </td>
+</tr>
+
     <?php endforeach; ?>
     </tbody>
 </table>
 
 </body>
 </html>
+
