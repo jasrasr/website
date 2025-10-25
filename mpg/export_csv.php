@@ -1,7 +1,7 @@
 <?php
 /*
 # Author        : Jason Lamb (with ChatGPT)
-# Rev 1.1 - added submission date/time
+# Rev 1.2 - added submission date/time
 # Script        : export_csv.php
 # Description   : Converts per-vehicle JSON fuel logs into downloadable CSV.
 # Usage         : export_csv.php?plate=jasrasr
@@ -43,4 +43,5 @@ foreach ($data as $entry) {
 fclose($csv);
 exit;
 ?>
+
 
