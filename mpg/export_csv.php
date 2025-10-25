@@ -25,10 +25,10 @@ header('Content-Type: text/csv');
 header("Content-Disposition: attachment; filename=\"{$safePlate}_fuel_log.csv\"");
 
 $csv = fopen('php://output', 'w');
-fputcsv($output, ['Date', 'Odometer', 'Gallons', 'Price', 'Total', 'MPG', 'Submitted']);
-...
+fputcsv($csv, ['Date', 'Odometer', 'Gallons', 'Price', 'Total', 'MPG', 'Submitted']);
+
 foreach ($data as $entry) {
-    fputcsv($output, [
+    fputcsv($csv, [
         $entry['date'],
         $entry['odometer'],
         $entry['gallons'],
@@ -39,6 +39,8 @@ foreach ($data as $entry) {
     ]);
 }
 
+
 fclose($csv);
 exit;
 ?>
+
