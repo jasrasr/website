@@ -84,13 +84,15 @@ $newEntry = [
 
 // ──────────────── SAVE NEW ENTRY ────────────────
 $newEntry = [
-    'date'     => $date,
-    'odometer' => $odometer,
-    'gallons'  => $gallons,
-    'price'    => round($price, 3),
-    'total'    => $total,
-    'mpg'      => $mpg
+    'date' => $date,
+    'odometer' => floatval($odometer),
+    'gallons' => floatval($gallons),
+    'price' => round($price, 3),
+    'total' => $total === '' ? null : floatval($total),
+    'mpg' => $mpg,
+    'submitted' => $submitted
 ];
+
 
 $entries[] = $newEntry;
 file_put_contents($logFile, json_encode($entries, JSON_PRETTY_PRINT), LOCK_EX);
@@ -140,3 +142,4 @@ file_put_contents($logFile, json_encode($entries, JSON_PRETTY_PRINT), LOCK_EX);
 
 </body>
 </html>
+
