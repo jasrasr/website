@@ -59,6 +59,18 @@ if (empty($mpgPoints)) {
             color: #007BFF;
             text-decoration: none;
         }
+        <style>
+    a {
+        text-decoration: none;
+        color: #0066cc;
+        margin-right: 10px;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+</style>
+
     </style>
 </head>
 <body>
@@ -104,7 +116,13 @@ if (empty($mpgPoints)) {
     });
 </script>
 
-<a href="index.html">← Back to Entry Form</a>
+<div style="margin-top: 20px;">
+    <a href="fuel_form.php">← Back to Entry Form</a>
+    <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
+        | <a href="admin.php">← Admin Panel</a>
+    <?php endif; ?>
+</div>
+
 
 </body>
 </html>
