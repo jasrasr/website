@@ -1,0 +1,23 @@
+[
+    {
+        "licensePlate": "jasrasr",
+        "date": "2025-10-23",
+        "odometer": "76010",
+        "gallons": "10",
+        "price": "3"
+    },
+    {
+        "licensePlate": "abc1234",
+        "date": "2025-01-01",
+        "odometer": "100000",
+        "gallons": "15",
+        "price": "2.5"
+    },
+    {
+        "licensePlate": "JASRASR",
+        "date": "2025-10-24",
+        "odometer": "77111",
+        "gallons": "10",
+        "price": "3.5"
+    }
+]

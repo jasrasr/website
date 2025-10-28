@@ -69,17 +69,10 @@ if ($lastValid) {
 
 // ──────────────── COLLECT SUBMITTED DATE/TIME FOR LOG  ────────────────
 
-$submitted = date('c'); // ISO 8601 (e.g., 2025-10-25T16:38:45)
-
-$newEntry = [
-    'date' => $date,
-    'odometer' => floatval($odometer),
-    'gallons' => floatval($gallons),
-    'price' => floatval($price),
-    'total' => $total === '' ? null : floatval($total),
-    'mpg' => $mpg,
-    'submitted' => $submitted
-];
+$tz = new DateTimeZone('America/New_York');
+$submitted = (new DateTime('now', $tz))->format(DateTime::ATOM);
+//$entry['submitted'] . ' ET'
+isset($entry['submitted']) ? $entry['submitted'] . ' ET' : ''
 
 
 // ──────────────── SAVE NEW ENTRY ────────────────
@@ -93,9 +86,14 @@ $newEntry = [
     'submitted' => $submitted
 ];
 
-
 $entries[] = $newEntry;
-file_put_contents($logFile, json_encode($entries, JSON_PRETTY_PRINT), LOCK_EX);
+
+$result = file_put_contents($logFile, json_encode($entries, JSON_PRETTY_PRINT), LOCK_EX);
+
+if ($result === false) {
+    die("❌ Failed to write to log file. Check permissions for <code>$logFile</code>.");
+}
+
 
 // ──────────────── DISPLAY HTML ────────────────
 ?>
@@ -134,11 +132,12 @@ file_put_contents($logFile, json_encode($entries, JSON_PRETTY_PRINT), LOCK_EX);
         echo "</div>";
     }
     ?>
-
+MENU | <a href=index.php>HOME</a> | <a href=view_chart.php>CHART</a> | <a href=view_latest.php>LAST ENTRY</a> | <a href=logs/$platenumber.json>RAW DATA JSON</a> | <a href=export_csv.php>EXPORT CSV</a>
     <h3>Add Another Entry</h3>
     <?php include 'fuel_form.php'; ?>
     <br>
     <a href=index.php>HOME</a>
+<?php include 'menu.php'; ?>
 
 </body>
 </html>

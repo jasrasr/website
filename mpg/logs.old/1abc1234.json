@@ -1,0 +1,13 @@
+[
+    {
+        "date": "1111-11-11",
+        "odometer": 1,
+        "gallons": 1,
+        "price": 1
+    },
+        "date": "2025-01-01",
+        "odometer": "100000",
+        "gallons": "15",
+        "price": "2.5"
+    }
+]

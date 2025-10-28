@@ -43,5 +43,3 @@ foreach ($data as $entry) {
 fclose($csv);
 exit;
 ?>
-
-

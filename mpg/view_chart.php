@@ -1,109 +1,120 @@
 <?php
 /*
-# Author        : Jason Lamb (with ChatGPT)
 # Script        : view_chart.php
-# Description   : Displays an MPG trend chart over time for a specific vehicle.
-# Usage         : view_chart.php?plate=jasrasr
-# Dependencies  : Chart.js (loaded via CDN)
+# Author        : Jason Lamb (with ChatGPT)
+# Revision      : 1.3
+# Created Date  : 2025-10-24
+# Modified Date : 2025-10-27
+# Description   : Displays a line chart of MPG over time with submission timestamps (ET) in tooltips.
 */
+session_start();
 
 $plate = isset($_GET['plate']) ? strtolower(trim($_GET['plate'])) : '';
+
 if (empty($plate)) {
-    exit("❌ License plate required (use ?plate=XXXX)");
+    echo "❌ No license plate specified.";
+    exit;
 }
 
 $safePlate = preg_replace("/[^a-zA-Z0-9]/", "_", $plate);
 $file = "logs/{$safePlate}.json";
 
 if (!file_exists($file)) {
-    exit("❌ No log found for license plate <code>$plate</code>");
+    echo "❌ No log found for license plate <code>$plate</code>.";
+    exit;
 }
 
 $data = json_decode(file_get_contents($file), true);
 
-// Filter entries with valid MPG
-$mpgPoints = [];
-foreach ($data as $entry) {
-    if (isset($entry['mpg']) && is_numeric($entry['mpg'])) {
-        $mpgPoints[] = [
-            'date' => $entry['date'],
-            'mpg' => $entry['mpg']
-        ];
-    }
-}
+$labels = [];
+$mpgValues = [];
+$timestamps = [];
 
-if (empty($mpgPoints)) {
-    exit("❌ No MPG data available for <code>$plate</code>.");
+foreach ($data as $entry) {
+    $labels[] = $entry['date'];
+    $mpgValues[] = is_numeric($entry['mpg']) ? $entry['mpg'] : null;
+
+    // Convert submitted UTC time to Eastern Time for tooltip
+    if (!empty($entry['submitted'])) {
+        $et = (new DateTime($entry['submitted']))->setTimezone(new DateTimeZone('America/New_York'))->format('Y-m-d g:i A T');
+        $timestamps[] = $et;
+    } else {
+        $timestamps[] = '';
+    }
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>MPG Trend: <?= htmlspecialchars($plate) ?></title>
+    <title>MPG Chart - <?= htmlspecialchars($plate) ?></title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
-            font-family: sans-serif;
+            font-family: Arial, sans-serif;
             max-width: 800px;
             margin: auto;
-            padding: 2rem;
-            text-align: center;
+            padding-top: 2rem;
         }
         canvas {
-            margin-top: 2rem;
+            width: 100%;
+            height: 400px;
         }
-        a {
-            display: inline-block;
-            margin-top: 1rem;
-            color: #007BFF;
+        .back-links {
+            margin-top: 20px;
+        }
+        .back-links a {
             text-decoration: none;
+            color: #0066cc;
+            margin-right: 10px;
         }
-        <style>
-    a {
-        text-decoration: none;
-        color: #0066cc;
-        margin-right: 10px;
-    }
-
-    a:hover {
-        text-decoration: underline;
-    }
-</style>
-
+        .back-links a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
+    <h2>MPG Chart for License Plate: <code><?= htmlspecialchars($plate) ?></code></h2>
+    <canvas id="mpgChart"></canvas>
 
-<h2>MPG Trend for <code><?= htmlspecialchars($plate) ?></code></h2>
-
-<canvas id="mpgChart" width="700" height="400"></canvas>
-
-<script>
+    <script>
     const ctx = document.getElementById('mpgChart').getContext('2d');
+
     const mpgChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: <?= json_encode(array_column($mpgPoints, 'date')) ?>,
+            labels: <?= json_encode($labels) ?>,
             datasets: [{
                 label: 'MPG',
-                data: <?= json_encode(array_column($mpgPoints, 'mpg')) ?>,
-                borderColor: 'rgba(75, 192, 192, 1)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderWidth: 2,
-                pointRadius: 4,
-                tension: 0.25
+                data: <?= json_encode($mpgValues) ?>,
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                fill: true,
+                spanGaps: true,
+                tension: 0.3,
+                pointRadius: 5,
+                pointHoverRadius: 7
             }]
         },
         options: {
             responsive: true,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            const timestamps = <?= json_encode($timestamps) ?>;
+                            return "Submitted: " + timestamps[context.dataIndex];
+                        }
+                    }
+                }
+            },
             scales: {
                 y: {
+                    beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Miles Per Gallon'
-                    },
-                    beginAtZero: true
+                        text: 'Miles Per Gallon (MPG)'
+                    }
                 },
                 x: {
                     title: {
@@ -114,15 +125,15 @@ if (empty($mpgPoints)) {
             }
         }
     });
-</script>
+    </script>
 
-<div style="margin-top: 20px;">
-    <a href="fuel_form.php">← Back to Entry Form</a>
-    <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
-        | <a href="admin.php">← Admin Panel</a>
-    <?php endif; ?>
-</div>
+    <div class="back-links">
+        <a href="index.php">← Back to Entry Form</a>
+        <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
+            | <a href="admin.php">← Admin Panel</a>
+        <?php endif; ?>
+    </div>
 
-
+    <?php include 'menu.php'; ?>
 </body>
 </html>
