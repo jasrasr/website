@@ -7,7 +7,10 @@
 # Usage         : export_csv.php?plate=jasrasr
 */
 
-$plate = isset($_GET['plate']) ? strtolower(trim($_GET['plate'])) : '';
+# $plate = isset($_GET['plate']) ? strtolower(trim($_GET['plate'])) : ''; # LOWERCASE
+$plate = isset($_GET['plate']) ? strtoupper(trim($_GET['plate'])) : '';
+$logFile = "logs/$plate.json";
+
 if (empty($plate)) {
     exit("❌ License plate required (use ?plate=XXXX).");
 }

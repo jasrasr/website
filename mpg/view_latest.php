@@ -10,7 +10,10 @@
 */
 session_start();
 
-$plate = isset($_GET['plate']) ? strtolower(trim($_GET['plate'])) : '';
+# $plate = isset($_GET['plate']) ? strtolower(trim($_GET['plate'])) : ''; # LOWERCASE
+$plate = isset($_GET['plate']) ? strtoupper(trim($_GET['plate'])) : '';
+$logFile = "logs/$plate.json";
+
 
 if (empty($plate)) {
     echo "❌ No license plate specified.";
