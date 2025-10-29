@@ -62,14 +62,16 @@ $submitted = (new DateTime('now', $tz))->format(DateTime::ATOM);
 
 // Final entry
 $newEntry = [
-    'date' => $date,
-    'odometer' => floatval($odometer),
-    'gallons' => floatval($gallons),
-    'price' => round($price, 3),
-    'total' => $total === '' ? null : floatval($total),
-    'mpg' => $mpg,
-    'submitted' => $submitted
+    "license_plate"    => $licensePlate,
+    "date"             => $date,
+    "odometer"         => $odometer,
+    "gallons"          => $gallons,
+    "price_per_gallon" => $pricePerGallon,
+    "total_cost"       => $totalCost,
+    "mpg"              => $mpg,
+    "submitted_et"     => $submittedET,
 ];
+
 
 $entries[] = $newEntry;
 $result = file_put_contents($logFile, json_encode($entries, JSON_PRETTY_PRINT), LOCK_EX);
