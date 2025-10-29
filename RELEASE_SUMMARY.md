@@ -59,8 +59,8 @@ The release archives include:
 
 - Repository: https://github.com/jasrasr/website
 - MPG Folder: https://github.com/jasrasr/website/tree/main/mpg
-- Release Notes: RELEASE_NOTES_MPG_v1.0.0.md
-- Changelog: mpg/CHANGELOG.md
+- Release Notes: ./RELEASE_NOTES_MPG_v1.0.0.md
+- Changelog: ./mpg/CHANGELOG.md
 
 ## 📝 Release Notes Summary
 
