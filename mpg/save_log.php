@@ -20,8 +20,8 @@ $plate = strtolower(preg_replace("/[^a-zA-Z0-9]/", "", $_POST['licensePlate'] ??
 $date = sanitize($_POST['date'] ?? '');
 $odometer = floatval($_POST['odometer'] ?? 0);
 $gallons = floatval($_POST['gallons'] ?? 0);
-$price = floatval($_POST['price'] ?? 0) + 0.009;
-$total = isset($_POST['total']) ? floatval($_POST['total']) : null;
+$price_per_gallon = floatval($_POST['price'] ?? 0) + 0.009;
+$total_cost = isset($_POST['total']) ? floatval($_POST['total']) : null;
 
 // Ensure logs folder
 $logDir = __DIR__ . '/logs';
