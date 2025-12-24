@@ -94,19 +94,43 @@ if (!is_dir($logDir)) mkdir($logDir, 0755, true);
 $logFile = $logDir . "{$plate}.json";
 
 // ------------------------------------------------------------
+// Load existing entries FIRST (fixes end(): null crash)
+// ------------------------------------------------------------
+$entries = [];
+if (file_exists($logFile)) {
+    $decoded = json_decode(file_get_contents($logFile), true);
+    if (is_array($decoded)) {
+        $entries = $decoded;
+    }
+}
+
+// ------------------------------------------------------------
 // Determine previous odometer → compute miles driven
 // ------------------------------------------------------------
 $previousOdometer = 0;
 $miles = 0;
 
-if (file_exists($logFile)) {
-    $oldData = json_decode(file_get_contents($logFile), true);
-    if (is_array($oldData) && count($oldData) > 0) {
-        $previousOdometer = floatval(end($oldData)['odometer'] ?? 0);
-        $miles = round(max(0, $odometer - $previousOdometer), 1);
+if (!empty($entries)) {
+    $lastExisting = end($entries);
+    $previousOdometer = floatval($lastExisting['odometer'] ?? 0);
+
+    // "raw" miles (not clamped) for validation
+    $rawMiles = $odometer - $previousOdometer;
+
+    // DEDUPE / INVALID GUARD (requested rules)
+    // Reject if odometer unchanged OR miles <= 0
+    if ($odometer == $previousOdometer || $rawMiles <= 0) {
+        http_response_code(400);
+        die("<h2>Duplicate or invalid entry rejected.</h2>
+             <p>Odometer unchanged or miles <= 0.</p>
+             <p><a href='fuel_form.php'>Back to entry form</a></p>");
     }
+
+    // Miles stored in entry (rounded + safe)
+    $miles = round($rawMiles, 1);
 } else {
-    $miles = 0; // first entry
+    // First entry
+    $miles = 0;
 }
 
 // ------------------------------------------------------------
@@ -119,29 +143,6 @@ $mpg = ($gallons > 0 && $miles > 0) ? round($miles / $gallons, 2) : 0;
 // ------------------------------------------------------------
 $tz = new DateTimeZone('America/New_York');
 $submittedET = (new DateTime('now', $tz))->format('Y-m-d H:i:s T');
-
-// get last existing entry
-$lastEntry = end($entries) ?: null;
-
-if ($lastEntry) {
-    $lastOdo = floatval($lastEntry['odometer']);
-    $miles = $odometer - $lastOdo;
-
-    if ($odometer == $lastOdo || $miles <= 0) {
-        http_response_code(400);
-        echo "Duplicate or invalid entry (odometer unchanged or invalid miles).";
-        exit;
-    }
-}
-
-
-// ------------------------------------------------------------
-// Load existing entries + append new one
-// ------------------------------------------------------------
-$entries = [];
-if (file_exists($logFile)) {
-    $entries = json_decode(file_get_contents($logFile), true) ?: [];
-}
 
 // ------------------------------------------------------------
 // Build new JSON entry
@@ -162,7 +163,9 @@ $newEntry = [
 ];
 
 $entries[] = $newEntry;
-file_put_contents($logFile, json_encode($entries, JSON_PRETTY_PRINT));
+
+// Use LOCK_EX to reduce the chance of concurrent write collisions
+file_put_contents($logFile, json_encode($entries, JSON_PRETTY_PRINT), LOCK_EX);
 
 // ------------------------------------------------------------
 // Increment entry_count for this device
@@ -179,7 +182,7 @@ if (file_exists($deviceWhitelistFile)) {
 
 if (isset($deviceWhitelist[$deviceId])) {
     $deviceWhitelist[$deviceId]['entry_count'] = ($deviceWhitelist[$deviceId]['entry_count'] ?? 0) + 1;
-    file_put_contents($deviceWhitelistFile, json_encode($deviceWhitelist, JSON_PRETTY_PRINT));
+    file_put_contents($deviceWhitelistFile, json_encode($deviceWhitelist, JSON_PRETTY_PRINT), LOCK_EX);
 }
 
 // Reload current counts for the page
