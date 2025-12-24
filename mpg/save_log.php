@@ -3,7 +3,7 @@
 // File: save_log.php
 // Purpose: Save entry, compute MPG, record IP + device, add miles + verified,
 //          show restricted summary for non-admin/trusted users, bump entry_count.
-// Revision: 2.0
+// Revision: 2.1
 // Author: Jason Lamb
 // ============================================================================
 
@@ -119,6 +119,21 @@ $mpg = ($gallons > 0 && $miles > 0) ? round($miles / $gallons, 2) : 0;
 // ------------------------------------------------------------
 $tz = new DateTimeZone('America/New_York');
 $submittedET = (new DateTime('now', $tz))->format('Y-m-d H:i:s T');
+
+// get last existing entry
+$lastEntry = end($entries) ?: null;
+
+if ($lastEntry) {
+    $lastOdo = floatval($lastEntry['odometer']);
+    $miles = $odometer - $lastOdo;
+
+    if ($odometer == $lastOdo || $miles <= 0) {
+        http_response_code(400);
+        echo "Duplicate or invalid entry (odometer unchanged or invalid miles).";
+        exit;
+    }
+}
+
 
 // ------------------------------------------------------------
 // Load existing entries + append new one
