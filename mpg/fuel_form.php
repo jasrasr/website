@@ -65,6 +65,18 @@ button{
 
 <form method="post" action="save_log.php">
 
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.querySelector("form");
+  form.addEventListener("submit", () => {
+    // disable submit to make double-click less likely
+    const btn = form.querySelector("button[type=submit], input[type=submit]");
+    if (btn) btn.disabled = true;
+  });
+});
+</script>
+
+
     <?php if ($canUseDropdown && !empty($knownPlates)): ?>
         <label for="plateDropdown">Select a License Plate:</label>
         <select id="plateDropdown" name="plateDropdown">
