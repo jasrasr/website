@@ -2,7 +2,7 @@
 // ============================================================================
 // File: fuel_form.php
 // Purpose: Fuel entry form with IP/device-based access logic for dropdown
-// Revision: 2.2
+// Revision: 2.3
 // ============================================================================
 
 error_reporting(E_ALL);
@@ -108,16 +108,16 @@ document.addEventListener("DOMContentLoaded", () => {
     <label for="date">Date (defaults to today)</label>
     <input type="date" id="date" name="date" value="<?php echo $today; ?>">
 
-    <label for="odometer">Odometer Reading (up to .1)</label>
+    <label for="odometer">Odometer Reading (up to .#)</label>
     <input type="number" id="odometer" name="odometer" step="0.1" min="0">
 
-    <label for="pricePerGallon">Price per Gallon ($, up to .001)</label>
+    <label for="pricePerGallon">Price per Gallon ($, only enter .### because .009 is automatically added)</label>
     <input type="number" id="pricePerGallon" name="pricePerGallon" step="0.001" min="0">
 
     <label for="totalPrice">Total Price ($)</label>
     <input type="number" id="totalPrice" name="totalPrice" step="0.01" min="0">
 
-    <label for="gallons">Total Gallons (up to .001)</label>
+    <label for="gallons">Total Gallons (up to .###)</label>
     <input type="number" id="gallons" name="gallons" step="0.001" min="0">
 
     <div class="note">
