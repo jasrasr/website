@@ -1,0 +1,7 @@
+[
+  'name'    => 'Garage Tools',
+  'items'   => ['Drill', 'Wrench set'],
+  'count'   => 2,
+  'updated' => '2026-01-13T18:04:52Z',
+  'owner'   => 'jason'
+]
