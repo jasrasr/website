@@ -1,5 +1,3 @@
----
-
 # Weather Dashboard (PHP)
 
 A lightweight, mobile-friendly PHP weather dashboard powered by the OpenWeather API.
