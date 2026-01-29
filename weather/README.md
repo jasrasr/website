@@ -44,8 +44,10 @@ This project is designed around **accuracy first**
 ├── config.php             # Authoritative city configuration (lat/lon)
 ├── geocode_helper.php     # Setup-time helper for lat/lon + ZIP resolution
 ├── data/
+├── ├── README.md
 │   ├── weather.json       # Cached dashboard payload
 │   └── history/
+├──     ├── README.md
 │       ├── parma_oh.json
 │       ├── sellersburg_in.json
 │       └── newhall_ca.json
