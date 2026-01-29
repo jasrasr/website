@@ -1,14 +1,3 @@
-Yep — I see exactly what’s happening, and you’re right to be annoyed.
-What GitHub is showing you there is **Markdown rendered inside a Markdown code fence**, which makes it *look* like mixed HTML/MD and makes copy/paste painful.
-
-### The fix is simple:
-
-I need to give you the README **as raw Markdown text**, **not wrapped in a code block**.
-
-Below is **plain, normal Markdown**.
-You can select everything, copy, and paste it directly into `README.md` in GitHub, VS Code, or any editor.
-GitHub will render it correctly.
-
 ---
 
 # Weather Dashboard (PHP)
