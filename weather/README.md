@@ -2,7 +2,7 @@
 
 A lightweight, mobile-friendly PHP weather dashboard powered by the OpenWeather API.
 
-This project is designed around **accuracy first**:
+This project is designed around **accuracy first**
 
 * Latitude / Longitude is authoritative
 * City names are never trusted alone
@@ -37,7 +37,20 @@ This project is designed around **accuracy first**:
 
 ## Project Structure
 
-
+```
+/weather
+├── index.php              # UI (mobile friendly)
+├── weather_update.php     # Weather fetch and cache engine
+├── config.php             # Authoritative city configuration (lat/lon)
+├── geocode_helper.php     # Setup-time helper for lat/lon + ZIP resolution
+├── data/
+│   ├── weather.json       # Cached dashboard payload
+│   └── history/
+│       ├── parma_oh.json
+│       ├── sellersburg_in.json
+│       └── newhall_ca.json
+└── README.md
+```
 
 ---
 
