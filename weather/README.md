@@ -39,18 +39,18 @@ This project is designed around **accuracy first**
 
 ```
 /weather
-├── index.php              # UI (mobile friendly)
-├── weather_update.php     # Weather fetch and cache engine
-├── config.php             # Authoritative city configuration (lat/lon)
-├── geocode_helper.php     # Setup-time helper for lat/lon + ZIP resolution
+├── index.php                    # UI (mobile friendly)
+├── weather_update.php           # Weather fetch and cache engine
+├── config.php                   # Authoritative city configuration (lat/lon)
+├── geocode_helper.php           # Setup-time helper for lat/lon + ZIP resolution
 ├── data/
 ├── ├── README.md
-│   ├── weather.json       # Cached dashboard payload
-│   └── history/
-├──     ├── README.md
-│       ├── parma_oh.json
-│       ├── sellersburg_in.json
-│       └── newhall_ca.json
+│   ├── weather.json             # Cached dashboard payload (automatically created)
+│   └── history/                 # Folder Automatically created
+├──     ├── README.md            # File Automatically created
+│       ├── parma_oh.json        # City files Automatically created (example)
+│       ├── sellersburg_in.json  # (example)
+│       └── newhall_ca.json      # (example)
 └── README.md
 ```
 
