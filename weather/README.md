@@ -9,6 +9,10 @@ This project is designed around **accuracy first**
 * Ambiguous locations are explicitly prevented
 * No databases, no cron jobs, no background tasks
 
+## Requirement
+
+Go to https://home.openweathermap.org/api_keys to create a free account and API key
+
 ---
 
 ## Core Principles
