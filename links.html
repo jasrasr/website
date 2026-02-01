@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<!--
+File Name   : links.html
+Author      : Jason Lamb (with help from ChatGPT)
+Created     : 2026-02-01
+Modified    : auto
+Revision    : auto
+
+Change Log:
+- 1.0 (2026-02-01)
+  - Initial release
+  - Full-screen mobile-friendly layout
+  - Four large clickable navigation areas
+- 1.1 (2026-02-01)
+  - Added auto-updating footer
+  - Centralized revision control
+  - Switched to scalable grid layout
+-->
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Links</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: grid;
+            grid-template-rows: 1fr auto;
+        }
+
+        /* ===== Link Grid ===== */
+        .links {
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-auto-rows: minmax(120px, 1fr);
+        }
+
+        .link-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+            color: white;
+            font-size: 2rem;
+            font-weight: 600;
+            text-align: center;
+            transition: transform 0.1s ease, opacity 0.1s ease;
+        }
+
+        .link-area:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        /* Color palette (repeats safely if you add more links) */
+        .link-area:nth-child(6n+1) { background-color: #007BFF; }
+        .link-area:nth-child(6n+2) { background-color: #28A745; }
+        .link-area:nth-child(6n+3) { background-color: #FFC107; color: #222; }
+        .link-area:nth-child(6n+4) { background-color: #DC3545; }
+        .link-area:nth-child(6n+5) { background-color: #6F42C1; }
+        .link-area:nth-child(6n+6) { background-color: #20C997; }
+
+        /* ===== Footer ===== */
+        footer {
+            text-align: center;
+            padding: 8px;
+            font-size: 0.85rem;
+            color: #666;
+            background: #f4f4f4;
+            border-top: 1px solid #ddd;
+        }
+
+        @media (max-width: 600px) {
+            .link-area {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ===== LINKS ===== -->
+    <div class="links">
+        <a href="page1.html" class="link-area">Page 1</a>
+        <a href="page2.html" class="link-area">Page 2</a>
+        <a href="page3.html" class="link-area">Page 3</a>
+        <a href="page4.html" class="link-area">Page 4</a>
+
+        <!-- Just keep adding more -->
+        <!-- <a href="page5.html" class="link-area">Page 5</a> -->
+        <!-- <a href="page6.html" class="link-area">Page 6</a> -->
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <footer id="footer"></footer>
+
+    <script>
+        /*
+            Centralized metadata
+            Change revision ONCE here
+        */
+        const fileName = 'links.html';
+        const revision = '1.1';
+        const year = new Date().getFullYear();
+        const modified = new Date().toLocaleDateString();
+
+        document.getElementById('footer').textContent =
+            `${fileName} | Rev ${revision} | © ${year} | Modified ${modified}`;
+    </script>
+
+</body>
+</html>
