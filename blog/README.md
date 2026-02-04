@@ -1,0 +1,1 @@
+creating a flat-flat file blog like wordpress but without sql backend. This uses json files to store the blog entries. It also includes a search function. I am debating on the media storage solutiona and organiation. 
