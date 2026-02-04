@@ -1,0 +1,54 @@
+<!--
+File: about.html
+Author: Jason Lamb (with help from ChatGPT)
+Created: 2026-02-03
+Modified: 2026-02-03
+Revision: 1.0
+Change Log:
+- 1.0: Basic about page
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>About • Jason’s Flat-File Blog</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="index.html">Jason’s Flat-File Blog</a>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="about.html" aria-current="page">About</a>
+        <a href="rss.xml">RSS</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <article class="post content">
+      <h1>About this setup</h1>
+      <p>
+        This blog is a tiny flat-file CMS without the “C” and the “M” and most of the “S”.
+        Each post is a JSON file in <code>/posts</code>. The homepage reads an index JSON.
+      </p>
+      <ul>
+        <li>No database</li>
+        <li>No PHP required (but optional build tooling included)</li>
+        <li>Works great with GitHub Pages or simple hosting</li>
+      </ul>
+      <p class="muted">
+        If you can copy files and commit to Git, you can run this blog.
+      </p>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span class="muted">© 2026 Jason Lamb</span>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,148 @@
+/*
+File: style.css
+Author: Jason Lamb (with help from ChatGPT)
+Created: 2026-02-03
+Modified: 2026-02-03
+Revision: 1.0
+Change Log:
+- 1.0: Initial styling for flat-file blog
+*/
+
+:root {
+  --bg: #0b0f17;
+  --panel: #11182a;
+  --text: #e8eefc;
+  --muted: #a9b6d3;
+  --link: #8ab4ff;
+  --border: rgba(255,255,255,.12);
+  --shadow: 0 10px 30px rgba(0,0,0,.35);
+  --radius: 16px;
+  --max: 980px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--sans);
+  background: radial-gradient(1000px 700px at 20% 10%, rgba(138,180,255,.18), transparent 60%),
+              radial-gradient(1000px 700px at 70% 40%, rgba(180,120,255,.14), transparent 55%),
+              var(--bg);
+  color: var(--text);
+}
+
+.wrap { max-width: var(--max); margin: 0 auto; padding: 22px; }
+
+.site-header {
+  position: sticky; top: 0; z-index: 10;
+  backdrop-filter: blur(10px);
+  background: rgba(11,15,23,.65);
+  border-bottom: 1px solid var(--border);
+}
+.site-header .wrap { display: flex; gap: 16px; align-items: center; justify-content: space-between; }
+
+.brand { color: var(--text); text-decoration: none; font-weight: 800; letter-spacing: .2px; }
+.nav a {
+  color: var(--muted);
+  text-decoration: none;
+  margin-left: 14px;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+.nav a[aria-current="page"], .nav a:hover {
+  color: var(--text);
+  background: rgba(255,255,255,.06);
+}
+
+.hero {
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  margin: 18px 0 22px;
+}
+.hero h1 { margin: 0 0 8px; font-size: 1.6rem; }
+.hero p { margin: 0; color: var(--muted); line-height: 1.5; }
+
+.search-row { display: flex; gap: 10px; margin-top: 14px; }
+.search {
+  flex: 1;
+  background: rgba(0,0,0,.2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 12px;
+  color: var(--text);
+  outline: none;
+}
+.search:focus { border-color: rgba(138,180,255,.55); }
+
+.btn {
+  background: rgba(138,180,255,.18);
+  border: 1px solid rgba(138,180,255,.35);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn:hover { background: rgba(138,180,255,.25); }
+
+.meta-row { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin: 8px 0 14px; flex-wrap: wrap; }
+
+.post-list { display: grid; grid-template-columns: 1fr; gap: 12px; }
+
+.card {
+  background: rgba(17,24,42,.7);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+.card h2 { margin: 0 0 6px; }
+.card p { margin: 8px 0 0; color: var(--muted); line-height: 1.5; }
+.card a { color: var(--link); text-decoration: none; }
+.card a:hover { text-decoration: underline; }
+
+.post-meta { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.rule { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+.pill-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill {
+  font-size: .85rem;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.04);
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+.pill:hover { color: var(--text); border-color: rgba(138,180,255,.4); }
+.pill.active { color: var(--text); border-color: rgba(138,180,255,.65); background: rgba(138,180,255,.12); }
+
+.post { margin-top: 18px; }
+.back-link { color: var(--muted); text-decoration: none; }
+.back-link:hover { color: var(--text); }
+
+.content { line-height: 1.7; }
+.content code { font-family: var(--mono); background: rgba(0,0,0,.25); padding: 2px 6px; border-radius: 8px; }
+.content pre {
+  overflow: auto;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,.25);
+}
+.content pre code { background: transparent; padding: 0; }
+
+.muted { color: var(--muted); }
+.small { font-size: .9rem; }
+
+.site-footer { border-top: 1px solid var(--border); margin-top: 26px; }

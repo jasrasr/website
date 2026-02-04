@@ -1,0 +1,69 @@
+<!--
+File: post.html
+Author: Jason Lamb (with help from ChatGPT)
+Created: 2026-02-03
+Modified: 2026-02-03
+Revision: 1.0
+Change Log:
+- 1.0: Post page loads /posts/<slug>.json from ?p=slug
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Post • Jason’s Flat-File Blog</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="index.html">Jason’s Flat-File Blog</a>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="rss.xml">RSS</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <article class="post">
+      <a class="back-link" href="index.html">← Back</a>
+      <h1 id="title">Loading…</h1>
+
+      <div class="post-meta">
+        <time id="date" class="muted"></time>
+        <span id="readingTime" class="muted"></span>
+      </div>
+
+      <div id="tags" class="pill-row"></div>
+      <hr class="rule" />
+
+      <div id="content" class="content"></div>
+
+      <hr class="rule" />
+      <div class="muted small" id="footerMeta"></div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span class="muted">Tip: share links like <code>post.html?p=hello-world</code></span>
+    </div>
+  </footer>
+
+  <script src="assets/js/blog.js"></script>
+  <script>
+    window.Blog.renderPost({
+      containerTitleEl: document.getElementById("title"),
+      containerDateEl: document.getElementById("date"),
+      containerTagsEl: document.getElementById("tags"),
+      containerContentEl: document.getElementById("content"),
+      containerReadingTimeEl: document.getElementById("readingTime"),
+      containerFooterMetaEl: document.getElementById("footerMeta"),
+      notFoundUrl: "404.html"
+    });
+  </script>
+</body>
+</html>

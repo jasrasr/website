@@ -1,0 +1,72 @@
+<!--
+File: index.html
+Author: Jason Lamb (with help from ChatGPT)
+Created: 2026-02-03
+Modified: 2026-02-03
+Revision: 1.0
+Change Log:
+- 1.0: Initial home page listing posts from /posts/index.json
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Jason’s Flat-File Blog</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <meta name="description" content="A JSON flat-file blog: WordPress vibes, zero database." />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="index.html">Jason’s Flat-File Blog</a>
+      <nav class="nav">
+        <a href="index.html" aria-current="page">Home</a>
+        <a href="about.html">About</a>
+        <a href="rss.xml">RSS</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <h1>WordPress-ish. Database-free. Mildly rebellious.</h1>
+      <p>
+        Posts live as JSON files. Styling lives in one CSS file.
+        Index page reads <code>/posts/index.json</code>.
+      </p>
+      <div class="search-row">
+        <input id="searchBox" class="search" type="search" placeholder="Search posts (title/tags)..." />
+        <button id="clearSearch" class="btn" type="button">Clear</button>
+      </div>
+    </section>
+
+    <section>
+      <div class="meta-row">
+        <div id="postCount" class="muted">Loading posts…</div>
+        <div class="pill-row" id="tagPills"></div>
+      </div>
+
+      <div id="postList" class="post-list" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span class="muted">© 2026 Jason Lamb • Flat-file blog starter</span>
+    </div>
+  </footer>
+
+  <script src="assets/js/blog.js"></script>
+  <script>
+    window.Blog.renderIndex({
+      indexUrl: "posts/index.json",
+      postListEl: document.getElementById("postList"),
+      tagPillsEl: document.getElementById("tagPills"),
+      postCountEl: document.getElementById("postCount"),
+      searchEl: document.getElementById("searchBox"),
+      clearBtnEl: document.getElementById("clearSearch")
+    });
+  </script>
+</body>
+</html>

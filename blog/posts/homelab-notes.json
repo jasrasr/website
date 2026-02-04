@@ -1,0 +1,13 @@
+{
+  "slug": "homelab-notes",
+  "title": "Homelab notes: logs, backups, and the art of not losing your mind",
+  "date": "2026-01-28",
+  "updated": "2026-01-28",
+  "author": "Jason Lamb",
+  "tags": [
+    "homelab",
+    "ops",
+    "backup"
+  ],
+  "content_html": "<p>Your homelab will eventually betray you. The only question is whether you left yourself a note.</p><h2>Three rules</h2><ol><li><strong>Logs or it didn’t happen.</strong> Centralize where possible.</li><li><strong>Backups or it didn’t matter.</strong> 3-2-1 beats hope.</li><li><strong>Documentation or it didn’t belong in prod.</strong> Yes, your lab has prod now.</li></ol><p>Make future-you smug instead of furious.</p>"
+}

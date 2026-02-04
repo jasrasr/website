@@ -1,0 +1,12 @@
+{
+  "slug": "notepadpp-caution",
+  "title": "Supply-chain paranoia: a practical Notepad++ sanity check",
+  "date": "2026-02-02",
+  "updated": "2026-02-02",
+  "author": "Jason Lamb",
+  "tags": [
+    "security",
+    "windows"
+  ],
+  "content_html": "<p>Security is mostly being annoyingly consistent.</p><h2>Basic checks that actually matter</h2><ul><li>Download from the official site (or a trusted package manager)</li><li>Verify the digital signature if present</li><li>Compare hashes when the vendor provides them</li><li>Keep it updated, but don’t auto-trust random mirrors</li></ul><p>Bonus points: treat “portable EXEs from forum posts” as guilty until proven innocent.</p><pre><code># Example idea (conceptual)\\n# - get file signature\\n# - validate chain\\n# - compare known hash\\n</code></pre>"
+}

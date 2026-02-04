@@ -1,0 +1,37 @@
+{
+  "blog_title": "Jason’s Flat-File Blog",
+  "generated": "2026-02-03T22:28:37.4913393Z",
+  "posts": [
+    {
+      "slug": "hello-world",
+      "title": "Hello, flat-file world",
+      "date": "2026-02-03",
+      "tags": [
+        "meta",
+        "setup"
+      ],
+      "excerpt": "Welcome to the blog that refuses to pay the database tax. Each post is a .json file. The homepage reads posts/index.json and builds the list…"
+    },
+    {
+      "slug": "notepadpp-caution",
+      "title": "Supply-chain paranoia: a practical Notepad++ sanity check",
+      "date": "2026-02-02",
+      "tags": [
+        "security",
+        "windows"
+      ],
+      "excerpt": "Security is mostly being annoyingly consistent. Basic checks that actually matter Download from the official site (or a trusted package mana…"
+    },
+    {
+      "slug": "homelab-notes",
+      "title": "Homelab notes: logs, backups, and the art of not losing your mind",
+      "date": "2026-01-28",
+      "tags": [
+        "homelab",
+        "ops",
+        "backup"
+      ],
+      "excerpt": "Your homelab will eventually betray you. The only question is whether you left yourself a note. Three rules Logs or it didn’t happen. Centra…"
+    }
+  ]
+}

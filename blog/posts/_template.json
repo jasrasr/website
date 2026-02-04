@@ -1,0 +1,12 @@
+{
+  "slug": "my-new-post",
+  "title": "My New Post",
+  "date": "2026-02-03",
+  "updated": "2026-02-03",
+  "author": "Jason Lamb",
+  "tags": [
+    "tag1",
+    "tag2"
+  ],
+  "content_html": "<p>Write HTML here. Keep it simple.</p>"
+}
