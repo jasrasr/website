@@ -1,6 +1,6 @@
 {
   "blog_title": "Jason’s Flat-File Blog",
-  "generated": "2026-02-03T22:28:37.4913393Z",
+  "generated": "2026-02-03T00:00:00.000Z",
   "posts": [
     {
       "slug": "hello-world",
@@ -10,7 +10,7 @@
         "meta",
         "setup"
       ],
-      "excerpt": "Welcome to the blog that refuses to pay the database tax. Each post is a .json file. The homepage reads posts/index.json and builds the list…"
+      "excerpt": "A quick tour of the JSON-blog idea, why it’s nice, and how to add posts."
     },
     {
       "slug": "notepadpp-caution",
@@ -20,7 +20,7 @@
         "security",
         "windows"
       ],
-      "excerpt": "Security is mostly being annoyingly consistent. Basic checks that actually matter Download from the official site (or a trusted package mana…"
+      "excerpt": "No doomscrolling—just simple checks: signatures, hashes, sources, and update hygiene."
     },
     {
       "slug": "homelab-notes",
@@ -31,7 +31,7 @@
         "ops",
         "backup"
       ],
-      "excerpt": "Your homelab will eventually betray you. The only question is whether you left yourself a note. Three rules Logs or it didn’t happen. Centra…"
+      "excerpt": "If your lab doesn’t have logs and backups, it’s not a lab. It’s an expensive mystery."
     }
   ]
 }

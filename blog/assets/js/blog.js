@@ -3,8 +3,9 @@ File: blog.js
 Author: Jason Lamb (with help from ChatGPT)
 Created: 2026-02-03
 Modified: 2026-02-03
-Revision: 1.0
+Revision: 1.1
 Change Log:
+- 1.1: Index search now matches post body text (loads post JSON content on-demand)
 - 1.0: Index + post rendering from JSON flat files
 */
 
@@ -30,14 +31,29 @@ Change Log:
     return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
   }
 
-  function wordsCount(html) {
-    const text = String(html).replace(/<[^>]*>/g, " ");
+  function stripHtml(html) {
+    return String(html || "")
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#039;/g, "'")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function wordsCountFromHtml(html) {
+    const text = stripHtml(html);
     const words = text.trim().split(/\s+/).filter(Boolean);
     return words.length;
   }
 
   function readingTimeFromHtml(html) {
-    const w = wordsCount(html);
+    const w = wordsCountFromHtml(html);
     const minutes = Math.max(1, Math.round(w / 220));
     return { words: w, minutes: minutes };
   }
@@ -70,14 +86,25 @@ Change Log:
     return String(s || "").toLowerCase().trim();
   }
 
+  function buildSearchText(p) {
+    const parts = [
+      p.title,
+      (p.tags || []).join(" "),
+      p.excerpt || "",
+      p._contentText || ""
+    ];
+    return normalize(parts.join(" "));
+  }
+
   function postMatches(p, q, tag) {
     const qn = normalize(q);
-    const title = normalize(p.title);
     const tags = (p.tags || []).map(normalize);
 
     const tagOk = tag ? tags.includes(normalize(tag)) : true;
-    const qOk = !qn ? true : (title.includes(qn) || tags.some((t) => t.includes(qn)));
-    return tagOk && qOk;
+    if (!qn) return tagOk;
+
+    const hay = p._searchText || buildSearchText(p);
+    return tagOk && hay.includes(qn);
   }
 
   function postCardHtml(p) {
@@ -102,6 +129,14 @@ Change Log:
     `;
   }
 
+  function debounce(fn, ms) {
+    let t;
+    return function (...args) {
+      clearTimeout(t);
+      t = setTimeout(() => fn.apply(this, args), ms);
+    };
+  }
+
   async function renderIndex(opts) {
     const {
       indexUrl,
@@ -116,40 +151,90 @@ Change Log:
     let activeTag = "";
     let query = "";
 
+    const loaded = new Set();
+
+    async function ensureContentLoadedForSearch() {
+      const qn = normalize(query);
+      if (qn.length < 2) return;
+
+      const toLoad = posts
+        .filter((p) => !loaded.has(p.slug))
+        .map((p) => p.slug);
+
+      if (toLoad.length === 0) return;
+
+      postCountEl.textContent = "Searching content…";
+
+      const concurrency = 6;
+      let i = 0;
+
+      async function worker() {
+        while (i < toLoad.length) {
+          const slug = toLoad[i++];
+          try {
+            const post = await fetchJson(`posts/${encodeURIComponent(slug)}.json`);
+            const p = posts.find((x) => x.slug === slug);
+            if (p) {
+              p._contentText = stripHtml(post.content_html || "");
+              p._searchText = buildSearchText(p);
+            }
+            loaded.add(slug);
+          } catch {
+            loaded.add(slug);
+          }
+        }
+      }
+
+      await Promise.all(Array.from({ length: Math.min(concurrency, toLoad.length) }, worker));
+    }
+
+    function highlightActivePill() {
+      Array.from(tagPillsEl.querySelectorAll(".pill")).forEach((el) => {
+        el.classList.toggle("active", el.textContent === activeTag);
+      });
+    }
+
+    function draw() {
+      const filtered = posts.filter((p) => postMatches(p, query, activeTag));
+      postCountEl.textContent = filtered.length + " post(s)";
+
+      if (filtered.length === 0) {
+        postListEl.innerHTML = `<div class="card"><p class="muted">No matches. The internet remains undefeated.</p></div>`;
+        return;
+      }
+
+      postListEl.innerHTML = filtered.map(postCardHtml).join("");
+    }
+
+    const drawWithFullText = debounce(async () => {
+      // Fast pass
+      posts.forEach((p) => { p._searchText = p._searchText || buildSearchText(p); });
+      draw();
+
+      // Full-text pass
+      await ensureContentLoadedForSearch();
+      posts.forEach((p) => { p._searchText = p._searchText || buildSearchText(p); });
+      draw();
+    }, 200);
+
     try {
       const index = await fetchJson(indexUrl);
       posts = (index.posts || [])
         .slice()
         .sort((a, b) => (String(b.date)).localeCompare(String(a.date)));
 
+      posts.forEach((p) => { p._searchText = buildSearchText(p); });
+
       const tags = uniqueTags(posts);
       renderPills(tagPillsEl, tags, (t) => {
         activeTag = (activeTag === t) ? "" : t;
-        draw();
+        drawWithFullText();
         highlightActivePill();
       }, activeTag);
 
-      function highlightActivePill() {
-        Array.from(tagPillsEl.querySelectorAll(".pill")).forEach((el) => {
-          el.classList.toggle("active", el.textContent === activeTag);
-        });
-      }
-
-      function draw() {
-        const filtered = posts.filter((p) => postMatches(p, query, activeTag));
-        postCountEl.textContent = filtered.length + " post(s)";
-
-        if (filtered.length === 0) {
-          postListEl.innerHTML = `<div class="card"><p class="muted">No matches. The internet remains undefeated.</p></div>`;
-          return;
-        }
-
-        postListEl.innerHTML = filtered.map(postCardHtml).join("");
-      }
-
       searchEl.addEventListener("input", (e) => {
         query = e.target.value || "";
-        draw();
+        drawWithFullText();
       });
 
       clearBtnEl.addEventListener("click", () => {
