@@ -9,5 +9,15 @@
     "ops",
     "backup"
   ],
-  "content_html": "<p>Your homelab will eventually betray you. The only question is whether you left yourself a note.</p><h2>Three rules</h2><ol><li><strong>Logs or it didn’t happen.</strong> Centralize where possible.</li><li><strong>Backups or it didn’t matter.</strong> 3-2-1 beats hope.</li><li><strong>Documentation or it didn’t belong in prod.</strong> Yes, your lab has prod now.</li></ol><p>Make future-you smug instead of furious.</p>"
+  "content_html": "<p>Your homelab will eventually betray you. The only question is whether you left yourself a note.</p><h2>Three rules</h2><ol><li><strong>Logs or it didn’t happen.</strong> Centralize where possible.</li><li><strong>Backups or it didn’t matter.</strong> 3-2-1 beats hope.</li><li><strong>Documentation or it didn’t belong in prod.</strong> Yes, your lab has prod now.</li></ol><p>Make future-you smug instead of furious.</p>",
+  "_meta": {
+    "filename": "homelab-notes.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-01-28",
+    "modified_date": "2026-02-04",
+    "revision": "1.0",
+    "changelog": [
+      "1.0: Post content file (data)"
+    ]
+  }
 }

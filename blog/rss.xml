@@ -1,9 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+# filename: rss.xml
+# author: Jason Lamb (with help from ChatGPT)
+# created date: 2026-02-03
+# modified date: 2026-02-04
+# revision: 1.2
+# changelog:
+# - 1.2: Preserves header metadata while generating RSS items from post JSON
+# - 1.1: Updated base links to https://jasr.me/blog and added items for posts
+# - 1.0: Basic RSS shell
+-->
 <rss version="2.0">
   <channel>
     <title>Jason’s Flat-File Blog</title>
-    <link>https://example.com/</link>
+    <link>https://jasr.me/blog/</link>
     <description>Database-free blog powered by JSON files.</description>
     <language>en-us</language>
+    <item>
+      <title>Hello, flat-file world</title>
+      <link>https://jasr.me/blog/post.html?p=hello-world</link>
+      <guid>https://jasr.me/blog/post.html?p=hello-world</guid>
+      <pubDate>Tue, 03 Feb 2026 00:00:00 +0000</pubDate>
+      <description>Welcome to the blog that refuses to pay the database tax. Each post is a .json file. The homepage reads posts/index.json and builds the list. Clicking a post lo…</description>
+    </item>
+    <item>
+      <title>Supply-chain paranoia: a practical Notepad++ sanity check</title>
+      <link>https://jasr.me/blog/post.html?p=notepadpp-caution</link>
+      <guid>https://jasr.me/blog/post.html?p=notepadpp-caution</guid>
+      <pubDate>Mon, 02 Feb 2026 00:00:00 +0000</pubDate>
+      <description>Security is mostly being annoyingly consistent. Basic checks that actually matter Download from the official site (or a trusted package manager) Verify the digi…</description>
+    </item>
+    <item>
+      <title>Homelab notes: logs, backups, and the art of not losing your mind</title>
+      <link>https://jasr.me/blog/post.html?p=homelab-notes</link>
+      <guid>https://jasr.me/blog/post.html?p=homelab-notes</guid>
+      <pubDate>Wed, 28 Jan 2026 00:00:00 +0000</pubDate>
+      <description>Your homelab will eventually betray you. The only question is whether you left yourself a note. Three rules Logs or it didn’t happen. Centralize where possible.…</description>
+    </item>
   </channel>
 </rss>

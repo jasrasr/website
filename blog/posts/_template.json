@@ -1,4 +1,14 @@
 {
+  "_meta": {
+    "filename": "_template.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-02-03",
+    "modified_date": "2026-02-04",
+    "revision": "1.1",
+    "changelog": [
+      "1.1: Adds example responsive image srcset snippet and optional excerpt field"
+    ]
+  },
   "slug": "my-new-post",
   "title": "My New Post",
   "date": "2026-02-03",
@@ -8,5 +18,6 @@
     "tag1",
     "tag2"
   ],
-  "content_html": "<p>Write HTML here. Keep it simple.</p>"
+  "excerpt": "Optional. If omitted, Build-Blog.ps1 generates one from content_html.",
+  "content_html": "<p>Write HTML here. Keep it simple.</p>\n\n<!-- Example responsive image snippet (paste from /admin/upload-media.php or /admin/view-media.php) -->\n<figure>\n  <img\n    src=\"/media/derivatives/2026/02/example_640w.jpg\"\n    srcset=\"/media/derivatives/2026/02/example_320w.jpg 320w,\n      /media/derivatives/2026/02/example_640w.jpg 640w,\n      /media/derivatives/2026/02/example_960w.jpg 960w,\n      /media/derivatives/2026/02/example_1600w.jpg 1600w\"\n    sizes=\"(max-width: 720px) 90vw, 720px\"\n    alt=\"Describe the image for accessibility.\"\n    loading=\"lazy\"\n    decoding=\"async\"\n  />\n</figure>\n"
 }

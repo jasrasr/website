@@ -1,0 +1,53 @@
+# ----------------------------------------
+# filename: TREE.txt
+# author: Jason Lamb (with help from ChatGPT)
+# created date: 2026-02-04
+# modified date: 2026-02-04
+# revision: 1.0
+# changelog:
+# - 1.0: Auto-generated folder tree snapshot
+# ----------------------------------------
+
+json-flat-blog/
+admin/
+assets/
+logs/
+media/
+posts/
+tools/
+404.html
+CHANGELOG.md
+README.md
+STRUCTURE.md
+about.html
+index.html
+log-search.php
+post.html
+rss.xml
+sitemap.xml
+  backups/
+  .htaccess
+  media-manifest.json
+  upload-media.php
+  view-media.php
+    .htaccess
+  css/
+  js/
+    style.css
+    blog.js
+  .htaccess
+  _inbox/
+  derivatives/
+  originals/
+  README.md
+    .gitkeep
+    .gitkeep
+    .gitkeep
+  _template.json
+  hello-world.json
+  homelab-notes.json
+  index.json
+  notepadpp-caution.json
+  Build-Blog.ps1
+  Build-Media.ps1
+  Restore-Manifest.ps1

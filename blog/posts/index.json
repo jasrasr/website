@@ -1,6 +1,16 @@
 {
+  "_meta": {
+    "filename": "posts/index.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-02-03",
+    "modified_date": "2026-02-04",
+    "revision": "1.2",
+    "changelog": [
+      "1.2: Adds embedded _meta header; posts array includes _searchText for deterministic full-text search"
+    ]
+  },
   "blog_title": "Jason’s Flat-File Blog",
-  "generated": "2026-02-03T00:00:00.000Z",
+  "generated": "2026-02-04T11:34:49Z",
   "posts": [
     {
       "slug": "hello-world",
@@ -10,7 +20,8 @@
         "meta",
         "setup"
       ],
-      "excerpt": "A quick tour of the JSON-blog idea, why it’s nice, and how to add posts."
+      "excerpt": "Welcome to the blog that refuses to pay the database tax. Each post is a .json file. The homepage reads posts/index.json and builds the list. Clicking a post lo…",
+      "_searchText": "hello, flat-file world meta setup welcome to the blog that refuses to pay the database tax. each post is a .json file. the homepage reads posts/index.json and builds the list. clicking a post lo… welcome to the blog that refuses to pay the database tax. each post is a .json file. the homepage reads posts/index.json and builds the list. clicking a post loads posts/&lt;slug&gt;.json . how to add a new post copy posts/_template.json to posts/my-new-post.json change the slug , title , dates, tags, and html add the post entry to posts/index.json (or run the build script) that’s it. no admin panel. no plugins. no mysterious tables named wp_options doing eldritch things."
     },
     {
       "slug": "notepadpp-caution",
@@ -20,7 +31,8 @@
         "security",
         "windows"
       ],
-      "excerpt": "No doomscrolling—just simple checks: signatures, hashes, sources, and update hygiene."
+      "excerpt": "Security is mostly being annoyingly consistent. Basic checks that actually matter Download from the official site (or a trusted package manager) Verify the digi…",
+      "_searchText": "supply-chain paranoia: a practical notepad++ sanity check security windows security is mostly being annoyingly consistent. basic checks that actually matter download from the official site (or a trusted package manager) verify the digi… security is mostly being annoyingly consistent. basic checks that actually matter download from the official site (or a trusted package manager) verify the digital signature if present compare hashes when the vendor provides them keep it updated, but don’t auto-trust random mirrors bonus points: treat “portable exes from forum posts” as guilty until proven innocent. # example idea (conceptual)\\n# - get file signature\\n# - validate chain\\n# - compare known hash\\n"
     },
     {
       "slug": "homelab-notes",
@@ -31,7 +43,8 @@
         "ops",
         "backup"
       ],
-      "excerpt": "If your lab doesn’t have logs and backups, it’s not a lab. It’s an expensive mystery."
+      "excerpt": "Your homelab will eventually betray you. The only question is whether you left yourself a note. Three rules Logs or it didn’t happen. Centralize where possible.…",
+      "_searchText": "homelab notes: logs, backups, and the art of not losing your mind homelab ops backup your homelab will eventually betray you. the only question is whether you left yourself a note. three rules logs or it didn’t happen. centralize where possible.… your homelab will eventually betray you. the only question is whether you left yourself a note. three rules logs or it didn’t happen. centralize where possible. backups or it didn’t matter. 3-2-1 beats hope. documentation or it didn’t belong in prod. yes, your lab has prod now. make future-you smug instead of furious."
     }
   ]
 }

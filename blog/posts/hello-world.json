@@ -8,5 +8,15 @@
     "meta",
     "setup"
   ],
-  "content_html": "<p>Welcome to the blog that refuses to pay the database tax.</p><p>Each post is a <code>.json</code> file. The homepage reads <code>posts/index.json</code> and builds the list. Clicking a post loads <code>posts/&lt;slug&gt;.json</code>.</p><h2>How to add a new post</h2><ol><li>Copy <code>posts/_template.json</code> to <code>posts/my-new-post.json</code></li><li>Change the <code>slug</code>, <code>title</code>, dates, tags, and HTML</li><li>Add the post entry to <code>posts/index.json</code> (or run the build script)</li></ol><p>That’s it. No admin panel. No plugins. No mysterious tables named <code>wp_options</code> doing eldritch things.</p>"
+  "content_html": "<p>Welcome to the blog that refuses to pay the database tax.</p><p>Each post is a <code>.json</code> file. The homepage reads <code>posts/index.json</code> and builds the list. Clicking a post loads <code>posts/&lt;slug&gt;.json</code>.</p><h2>How to add a new post</h2><ol><li>Copy <code>posts/_template.json</code> to <code>posts/my-new-post.json</code></li><li>Change the <code>slug</code>, <code>title</code>, dates, tags, and HTML</li><li>Add the post entry to <code>posts/index.json</code> (or run the build script)</li></ol><p>That’s it. No admin panel. No plugins. No mysterious tables named <code>wp_options</code> doing eldritch things.</p>",
+  "_meta": {
+    "filename": "hello-world.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-02-03",
+    "modified_date": "2026-02-04",
+    "revision": "1.0",
+    "changelog": [
+      "1.0: Post content file (data)"
+    ]
+  }
 }

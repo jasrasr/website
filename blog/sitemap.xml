@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+# filename: sitemap.xml
+# author: Jason Lamb (with help from ChatGPT)
+# created date: 2026-02-03
+# modified date: 2026-02-04
+# revision: 1.2
+# changelog:
+# - 1.2: Preserves header metadata while generating sitemap URLs from post JSON
+# - 1.1: Updated base links to https://jasr.me/blog and added post URLs
+# - 1.0: Basic sitemap shell
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://example.com/index.html</loc></url>
-  <url><loc>https://example.com/about.html</loc></url>
+  <url><loc>https://jasr.me/blog/index.html</loc></url>
+  <url><loc>https://jasr.me/blog/about.html</loc></url>
+  <url><loc>https://jasr.me/blog/rss.xml</loc></url>
+  <url><loc>https://jasr.me/blog/post.html?p=hello-world</loc></url>
+  <url><loc>https://jasr.me/blog/post.html?p=notepadpp-caution</loc></url>
+  <url><loc>https://jasr.me/blog/post.html?p=homelab-notes</loc></url>
 </urlset>

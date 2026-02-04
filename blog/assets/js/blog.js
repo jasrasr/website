@@ -1,12 +1,14 @@
 /*
-File: blog.js
-Author: Jason Lamb (with help from ChatGPT)
-Created: 2026-02-03
-Modified: 2026-02-03
-Revision: 1.1
-Change Log:
-- 1.1: Index search now matches post body text (loads post JSON content on-demand)
-- 1.0: Index + post rendering from JSON flat files
+# filename: blog.js
+# author: Jason Lamb (with help from ChatGPT)
+# created date: 2026-02-03
+# modified date: 2026-02-03
+# revision: 1.3
+# changelog:
+# - 1.3: Uses build-time _searchText for deterministic full-text search; adds server logging + recent search history (clearable)
+# - 1.2: Added server + local logging helpers
+# - 1.1: Attempted lazy-loaded body search (fragile)
+# - 1.0: Index + post rendering from JSON flat files
 */
 
 (function () {
@@ -17,6 +19,10 @@ Change Log:
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+  }
+
+  function normalize(s) {
+    return String(s || "").toLowerCase().trim();
   }
 
   function getParam(name) {
@@ -36,12 +42,6 @@ Change Log:
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
       .replace(/<style[\s\S]*?<\/style>/gi, " ")
       .replace(/<[^>]*>/g, " ")
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"')
-      .replace(/&#039;/g, "'")
       .replace(/\s+/g, " ")
       .trim();
   }
@@ -64,6 +64,12 @@ Change Log:
     return await res.json();
   }
 
+  function uniqueTags(posts) {
+    const s = new Set();
+    posts.forEach((p) => (p.tags || []).forEach((t) => s.add(t)));
+    return Array.from(s).sort((a, b) => a.localeCompare(b));
+  }
+
   function renderPills(container, tags, onClick, activeTag) {
     container.innerHTML = "";
     (tags || []).forEach((t) => {
@@ -76,44 +82,13 @@ Change Log:
     });
   }
 
-  function uniqueTags(posts) {
-    const s = new Set();
-    posts.forEach((p) => (p.tags || []).forEach((t) => s.add(t)));
-    return Array.from(s).sort((a, b) => a.localeCompare(b));
-  }
-
-  function normalize(s) {
-    return String(s || "").toLowerCase().trim();
-  }
-
-  function buildSearchText(p) {
-    const parts = [
-      p.title,
-      (p.tags || []).join(" "),
-      p.excerpt || "",
-      p._contentText || ""
-    ];
-    return normalize(parts.join(" "));
-  }
-
-  function postMatches(p, q, tag) {
-    const qn = normalize(q);
-    const tags = (p.tags || []).map(normalize);
-
-    const tagOk = tag ? tags.includes(normalize(tag)) : true;
-    if (!qn) return tagOk;
-
-    const hay = p._searchText || buildSearchText(p);
-    return tagOk && hay.includes(qn);
-  }
-
   function postCardHtml(p) {
     const safeTitle = escHtml(p.title);
     const safeExcerpt = escHtml(p.excerpt || "");
     const date = fmtDate(p.date);
 
     const tags = (p.tags || [])
-      .slice(0, 6)
+      .slice(0, 8)
       .map((t) => `<span class="pill" title="Tag">${escHtml(t)}</span>`)
       .join("");
 
@@ -129,14 +104,73 @@ Change Log:
     `;
   }
 
-  function debounce(fn, ms) {
-    let t;
-    return function (...args) {
-      clearTimeout(t);
-      t = setTimeout(() => fn.apply(this, args), ms);
-    };
+  // -----------------------------
+  // Logging + Recent Searches
+  // -----------------------------
+  const RECENT_KEY = "blogRecentSearches";
+
+  function addRecentSearch(query) {
+    const q = String(query || "").trim();
+    if (!q) return;
+
+    let items = [];
+    try { items = JSON.parse(localStorage.getItem(RECENT_KEY) || "[]"); } catch {}
+
+    // de-dupe (case-insensitive)
+    const lower = q.toLowerCase();
+    items = items.filter(x => String(x.query || "").toLowerCase() !== lower);
+
+    items.unshift({ query: q, timestamp: new Date().toISOString() });
+    items = items.slice(0, 10);
+
+    localStorage.setItem(RECENT_KEY, JSON.stringify(items));
   }
 
+  function getRecentSearches() {
+    try { return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]"); } catch { return []; }
+  }
+
+  function clearRecentSearches() {
+    localStorage.removeItem(RECENT_KEY);
+  }
+
+  function renderRecentSearches(listEl, onClickQuery) {
+    if (!listEl) return;
+
+    const items = getRecentSearches();
+    if (items.length === 0) {
+      listEl.innerHTML = "<li class=\"muted\">No recent searches</li>";
+      return;
+    }
+
+    listEl.innerHTML = items.map((x) => {
+      const q = escHtml(x.query);
+      return `<li><a href="#" data-q="${q}">${q}</a></li>`;
+    }).join("");
+
+    Array.from(listEl.querySelectorAll("a[data-q]")).forEach((a) => {
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        onClickQuery(a.getAttribute("data-q") || "");
+      });
+    });
+  }
+
+  function logSearchServer(endpoint, query, resultCount) {
+    if (!endpoint) return;
+    const q = String(query || "").trim();
+    if (!q) return;
+
+    fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: q, results: resultCount })
+    }).catch(() => {});
+  }
+
+  // -----------------------------
+  // Index page rendering
+  // -----------------------------
   async function renderIndex(opts) {
     const {
       indexUrl,
@@ -144,49 +178,15 @@ Change Log:
       tagPillsEl,
       postCountEl,
       searchEl,
-      clearBtnEl
+      clearBtnEl,
+      recentListEl,
+      clearHistoryEl,
+      logEndpoint
     } = opts;
 
     let posts = [];
     let activeTag = "";
     let query = "";
-
-    const loaded = new Set();
-
-    async function ensureContentLoadedForSearch() {
-      const qn = normalize(query);
-      if (qn.length < 2) return;
-
-      const toLoad = posts
-        .filter((p) => !loaded.has(p.slug))
-        .map((p) => p.slug);
-
-      if (toLoad.length === 0) return;
-
-      postCountEl.textContent = "Searching content…";
-
-      const concurrency = 6;
-      let i = 0;
-
-      async function worker() {
-        while (i < toLoad.length) {
-          const slug = toLoad[i++];
-          try {
-            const post = await fetchJson(`posts/${encodeURIComponent(slug)}.json`);
-            const p = posts.find((x) => x.slug === slug);
-            if (p) {
-              p._contentText = stripHtml(post.content_html || "");
-              p._searchText = buildSearchText(p);
-            }
-            loaded.add(slug);
-          } catch {
-            loaded.add(slug);
-          }
-        }
-      }
-
-      await Promise.all(Array.from({ length: Math.min(concurrency, toLoad.length) }, worker));
-    }
 
     function highlightActivePill() {
       Array.from(tagPillsEl.querySelectorAll(".pill")).forEach((el) => {
@@ -194,9 +194,32 @@ Change Log:
       });
     }
 
+    function matches(p) {
+      const tagOk = activeTag ? (p.tags || []).includes(activeTag) : true;
+      if (!tagOk) return false;
+
+      const qn = normalize(query);
+      if (!qn) return true;
+
+      const hay = normalize(p._searchText || "");
+      return hay.includes(qn);
+    }
+
     function draw() {
-      const filtered = posts.filter((p) => postMatches(p, query, activeTag));
+      const filtered = posts.filter(matches);
       postCountEl.textContent = filtered.length + " post(s)";
+
+      // Log only for non-empty searches
+      const q = String(query || "").trim();
+      if (q) {
+        addRecentSearch(q);
+        renderRecentSearches(recentListEl, (qq) => {
+          searchEl.value = qq;
+          query = qq;
+          draw();
+        });
+        logSearchServer(logEndpoint, q, filtered.length);
+      }
 
       if (filtered.length === 0) {
         postListEl.innerHTML = `<div class="card"><p class="muted">No matches. The internet remains undefeated.</p></div>`;
@@ -206,35 +229,40 @@ Change Log:
       postListEl.innerHTML = filtered.map(postCardHtml).join("");
     }
 
-    const drawWithFullText = debounce(async () => {
-      // Fast pass
-      posts.forEach((p) => { p._searchText = p._searchText || buildSearchText(p); });
-      draw();
-
-      // Full-text pass
-      await ensureContentLoadedForSearch();
-      posts.forEach((p) => { p._searchText = p._searchText || buildSearchText(p); });
-      draw();
-    }, 200);
-
     try {
       const index = await fetchJson(indexUrl);
-      posts = (index.posts || [])
-        .slice()
-        .sort((a, b) => (String(b.date)).localeCompare(String(a.date)));
+      posts = (index.posts || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
 
-      posts.forEach((p) => { p._searchText = buildSearchText(p); });
+      // Normalize tags to array + keep activeTag matching stable
+      posts.forEach((p) => { p.tags = Array.isArray(p.tags) ? p.tags : []; });
 
       const tags = uniqueTags(posts);
       renderPills(tagPillsEl, tags, (t) => {
         activeTag = (activeTag === t) ? "" : t;
-        drawWithFullText();
+        draw();
         highlightActivePill();
       }, activeTag);
 
+      renderRecentSearches(recentListEl, (qq) => {
+        searchEl.value = qq;
+        query = qq;
+        draw();
+      });
+
+      if (clearHistoryEl) {
+        clearHistoryEl.addEventListener("click", () => {
+          clearRecentSearches();
+          renderRecentSearches(recentListEl, (qq) => {
+            searchEl.value = qq;
+            query = qq;
+            draw();
+          });
+        });
+      }
+
       searchEl.addEventListener("input", (e) => {
         query = e.target.value || "";
-        drawWithFullText();
+        draw();
       });
 
       clearBtnEl.addEventListener("click", () => {
@@ -258,6 +286,9 @@ Change Log:
     }
   }
 
+  // -----------------------------
+  // Post page rendering
+  // -----------------------------
   async function renderPost(opts) {
     const {
       containerTitleEl,
