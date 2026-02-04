@@ -1,0 +1,12 @@
+# Secrets
+.htpasswd*
+.env
+
+# Runtime / generated
+logs/
+admin/backups/
+admin/media-manifest.json
+
+# OS noise
+.DS_Store
+Thumbs.db
