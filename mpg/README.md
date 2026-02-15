@@ -1,6 +1,9 @@
 
 # MPG Fuel Log Tracker
 
+**Version:** 1.0.0  
+**Release Date:** 2025-10-28
+
 This is a lightweight PHP-based fuel tracking web application.
 
 ## Features
@@ -28,6 +31,7 @@ This is a lightweight PHP-based fuel tracking web application.
 | php.ini           | Enables full error display + logging             |
 | .htaccess         | PHP error override flags                         |
 | README.md         | This file                                        |
+| CHANGELOG.md      | Version history and release notes                |
 
 ## Setup Instructions
 
@@ -40,6 +44,10 @@ This is a lightweight PHP-based fuel tracking web application.
 
 MIT License
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for version history and release notes.
+
 ---
 Author: Jason Lamb (https://jasonlamb.me)  
-Generated with ChatGPT · Revision 1.0 · Last Updated: 2025-10-28 21:12:55
+Generated with ChatGPT · Version 1.0.0 · Released: 2025-10-28
