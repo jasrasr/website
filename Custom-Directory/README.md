@@ -39,15 +39,17 @@ public_html/
 
 Each directory.php is a thin wrapper:
 
+```
 <?php
 require $_SERVER['DOCUMENT_ROOT'] . '/custom-directory/master-directory.php';
-
+?>
+```
 ---
 
 ## ⭐ Favorites System (Path-Based)
 
 Favorites are stored using full relative paths:
-
+```
 {
     "favorites": [
         "/test.png",
@@ -55,7 +57,7 @@ Favorites are stored using full relative paths:
         "/tools/vlc-3.0.20-win32.exe"
     ]
 }
-
+```
 Improvements:
 
 - All favorites use full relative paths (no ambiguity)
@@ -66,7 +68,7 @@ Improvements:
 - Favorites auto-sorted before saving
 
 Cleaner JSON example:
-
+```
 {
     "favorites": [
         "/sample-robots.txt",
@@ -78,7 +80,7 @@ Cleaner JSON example:
         "/weather"
     ]
 }
-
+```
 ---
 
 ## 🔐 Security
