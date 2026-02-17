@@ -1,91 +1,130 @@
-# 📁 PHP Directory Browser (with Shared Favorites)
+# 📁 PHP Directory Browser (Master Architecture)
 
-A lightweight, self-contained PHP file browser that:
+A centralized, path-aware PHP file browser powered by a single master renderer.
 
--   Displays files and subdirectories
--   Supports centralized shared favorites (⭐)
--   Provides safe "Up" navigation
--   Sorts folders first, newest first
--   Works from any folder
--   Requires no database
--   Designed for Apache + PHP hosting
+Update one file. Every folder updates automatically.
 
-------------------------------------------------------------------------
+---
 
 ## 🚀 Features
 
-### 📂 Subdirectory Support
+- 📂 Subdirectory support
+- ⬆ Safe “Up” navigation
+- ⭐ Path-based favorites (files + folders)
+- 🧼 Automatic JSON normalization
+- 🔤 Auto-sorted favorites
+- 📦 Folders first, newest first sorting
+- 💾 Download buttons
+- 📱 Mobile-friendly layout
+- 🧠 No database required
 
--   Folders are displayed alongside files
--   Folders always appear first
--   Click into folders naturally via links
+---
 
-### ⬆ Safe Up Navigation
+## 🏗 Architecture Overview
 
--   "Up" button appears when not at site root
--   Prevents directory traversal outside DOCUMENT_ROOT
--   Uses realpath() for safe resolution
-
-### ⭐ Centralized Favorites
-
-Favorites stored in:
-
-/custom-directory/favorites.json
-
-Shared across all instances of directory.php. JSON auto-creates if
-missing.
-
-------------------------------------------------------------------------
-
-## 📂 Folder Structure
+Uses a single master renderer:
 
 public_html/
 │
 ├── some-folder/
-│ └── directory.php
+│   └── directory.php
 │
 ├── another-folder/
-│ └── directory.php
+│   └── directory.php
 │
 └── custom-directory/
-├── favorites.json
-└── toggle_favorite.php
+    ├── master-directory.php
+    ├── toggle_favorite.php
+    └── favorites.json
 
-------------------------------------------------------------------------
+Each directory.php is a thin wrapper:
 
-## 🛠 Installation
+<?php
+require $_SERVER['DOCUMENT_ROOT'] . '/custom-directory/master-directory.php';
 
-1)  Upload directory.php anywhere you want browsing.
-2)  Create /custom-directory/ in your web root.
-3)  Place toggle_favorite.php inside that folder.
-4)  Ensure the folder is writable (755 recommended).
+---
+
+## ⭐ Favorites System (Path-Based)
+
+Favorites are stored using full relative paths:
+
+{
+    "favorites": [
+        "/test.png",
+        "/weather",
+        "/tools/vlc-3.0.20-win32.exe"
+    ]
+}
+
+Improvements:
+
+- All favorites use full relative paths (no ambiguity)
+- Directories and files both supported
+- Automatic migration from legacy name-only entries
+- JSON stored using:
+  JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
+- Favorites auto-sorted before saving
+
+Cleaner JSON example:
+
+{
+    "favorites": [
+        "/sample-robots.txt",
+        "/test.jpg",
+        "/test.png",
+        "/tools/7z2403-x64.exe",
+        "/tools/vlc-3.0.20-win32.exe",
+        "/vlc-3.0.20-win32.exe",
+        "/weather"
+    ]
+}
+
+---
+
+## 🔐 Security
+
+- Uses realpath() for safe resolution
+- Prevents directory traversal
+- Restricts navigation to DOCUMENT_ROOT
+- Validates favorite paths before storing
+
+---
+
+## 🕒 Revision Tracking
+
+Footer shows:
+
+- Centralized APP_REVISION
+- True modification timestamp of master-directory.php
+- Displayed in Eastern Time (America/New_York)
+
+---
+
+## ⚙ Requirements
+
+- PHP 8.0+
+- Apache recommended
+- Writable custom-directory/ folder
 
 Optional .htaccess:
 
 DirectoryIndex directory.php
 
-------------------------------------------------------------------------
-
-## 🔐 Security Notes
-
--   Navigation restricted to DOCUMENT_ROOT
--   No directory traversal allowed
--   No database required
--   Designed for controlled hosting environments
-
-------------------------------------------------------------------------
+---
 
 ## 📌 Current Revision
 
-directory.php → Revision 2.7
+- master-directory.php → 3.1
+- toggle_favorite.php → 2.0
+- directory.php wrapper → 1.0
 
-------------------------------------------------------------------------
+---
 
 ## 👨‍💻 Author
 
 Jason Lamb
 
-------------------------------------------------------------------------
+---
 
 ## 📜 License
 
