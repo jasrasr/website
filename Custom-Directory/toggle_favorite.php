@@ -33,7 +33,10 @@ if (!file_exists(dirname($favoritesFile))) {
 if (!file_exists($favoritesFile)) {
     file_put_contents(
         $favoritesFile,
-        json_encode(['favorites' => []], JSON_PRETTY_PRINT)
+        json_encode(
+            ['favorites' => []],
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
+        )
     );
 }
 
@@ -114,8 +117,12 @@ if (in_array($relativePath, $favorites, true)) {
 
 file_put_contents(
     $favoritesFile,
-    json_encode(['favorites' => array_values($favorites)], JSON_PRETTY_PRINT)
+    json_encode(
+        ['favorites' => array_values($favorites)],
+        JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
+    )
 );
+
 
 /* ===========================================================
    Response
