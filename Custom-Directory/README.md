@@ -39,9 +39,17 @@ missing.
 
 ## 📂 Folder Structure
 
-public_html/ │ ├── some-folder/ │ └── directory.php │ ├──
-another-folder/ │ └── directory.php │ └── custom-directory/ ├──
-favorites.json └── toggle_favorite.php
+public_html/
+│
+├── some-folder/
+│ └── directory.php
+│
+├── another-folder/
+│ └── directory.php
+│
+└── custom-directory/
+├── favorites.json
+└── toggle_favorite.php
 
 ------------------------------------------------------------------------
 
