@@ -73,16 +73,19 @@ $items = array_filter(scandir($dir), function ($item) {
     if ($item === '.' || $item === '..') return false;
     if (preg_match('/^directory\./i', $item)) return false;
 
+ /* ENTER EXACT FILES OR FOLDERS */
     $exactExcludes = [
         '.htaccess',
         '.editorconfig',
         '.well-known',
         '.htpasswd',
+        '.hidden',
     ];
 
     if (in_array($item, $exactExcludes, true)) return false;
 
-    $patternExcludes = ['api','log','ico'];
+ /* ENTER WILDCARD PATTERN MATCHES FOR FILES OR FOLDERS */
+    $patternExcludes = ['api','log','ico','index','yourls','default','sample','json','lock'];
 
     foreach ($patternExcludes as $pattern) {
         if (stripos($item, $pattern) !== false) return false;
