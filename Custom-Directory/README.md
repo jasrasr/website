@@ -24,6 +24,7 @@ Update one file. Every folder updates automatically.
 
 Uses a single master renderer:
 
+```
 public_html/
 │
 ├── some-folder/
@@ -36,6 +37,8 @@ public_html/
     ├── master-directory.php
     ├── toggle_favorite.php
     └── favorites.json
+```
+
 
 Each directory.php is a thin wrapper:
 
