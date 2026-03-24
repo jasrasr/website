@@ -1,12 +1,10 @@
-<?php
+﻿<?php
 /**
  * Filename: api.php
  * Revision: 1.2
  * Description: REST API endpoint for CVC Youth Scoreboard score management.
  *              Handles reading, updating, resetting, and renaming teams and title.
  * Author: Jason Lamb (with help from Claude)
- * Created Date: 2026-03-19
- * Modified Date: 2026-03-19
  * Changelog
  * 1.0 Initial PHP release, converted from Node.js/Express
  * 1.1 Fixed query parameter routing to match relative URL fetch calls

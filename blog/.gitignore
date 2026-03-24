@@ -10,3 +10,6 @@ admin/media-manifest.json
 # OS noise
 .DS_Store
 Thumbs.db
+
+# Claude Code
+.claude

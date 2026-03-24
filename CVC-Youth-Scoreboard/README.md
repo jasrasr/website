@@ -1,14 +1,33 @@
 # CVC Youth Scoreboard
 
-A PHP scoreboard app for tracking six youth division scores with two pages:
+A PHP scoreboard app for tracking team scores across multiple ministry instances, each with their own teams, data, and admin page.
 
-- `index.php` — scorekeeper admin page to update scores.
-- `viewer.php` — read-only public display page for spectators.
+## Instances
+
+| Instance | Path | Teams |
+|----------|------|-------|
+| Root | `/` | 6th–8th Grade Boys/Girls (6 teams) |
+| Collide | `/collide/` | 6th–8th Boys/Girls (6 teams) |
+| Youth | `/youth/` | 6th–12th Grade + Grads (8 teams) |
+| Frontlines | `/frontlines/` | Blue, Dark Blue, Red, Maroon, Yellow, Gray, Dark Gray, Green, Dark Green, Pink (10 teams) |
+
+Each instance has:
+- `index.php` — read-only viewer for spectators (auto-refreshes every 2 seconds)
+- `enter-scores.php` — scorekeeper admin page to update scores
+- `api.php` — REST API for score operations
+- `scoreboard_lib.php` — instance-specific team definitions and data helpers
+- `data/scores.json` — persisted scores (auto-created on first load)
+
+## Shared Assets
+
+All instances share a single set of frontend files in `public/`:
+
+- `public/styles.css` — all styling; changes here apply to every instance
+- `public/app.js` — all frontend logic; changes here apply to every instance
 
 ## Features
 
-- Six preconfigured teams/divisions with large, color-coded score cards.
-- Quick buttons for `+1`, `+3`, `+5`, `+10`, `-1`, `-3`, `-5`, and `-10`.
+- Quick buttons for `+1`, `+3`, `+5`, `+10` and matching negatives per team.
 - Custom positive or negative score entry for each team.
 - Reset one team or reset all teams at once.
 - Rename teams and update the scoreboard title from the admin page.
@@ -16,19 +35,19 @@ A PHP scoreboard app for tracking six youth division scores with two pages:
 - Viewer page automatically refreshes every 2 seconds.
 - Admin page polls every 10 seconds; skips re-render when an input is focused.
 - Dynamic viewer grid columns that adapt to the number of teams.
-- Score font scales by viewport height for large display screens.
-- Responsive layout that fills large screens and adapts to phones/tablets including Safari mobile.
+- Score font scales with viewport size and shrinks for larger numbers.
+- Responsive layout for large screens, tablets, and phones including Safari mobile.
 - Multiple scorekeepers supported via file locking.
 
 ## Demo
 
-A live demo is available at:
+A live demo is available for public testing — use this instead of the production scoreboards:
 
 - `https://jasr.me/scoreboard-demo/` — admin page (try it out)
-- `https://jasr.me/scoreboard-demo/viewer.php` — viewer page
+- `https://jasr.me/scoreboard-demo/index.php` — viewer page
 
 > Note: `https://jasr.me/scoreboard/` is the production scoreboard and is not open to the public.
 
 ## Deploying
 
-Upload the contents of `CVC-Youth-Scoreboard` into your desired folder on the host. Make sure the `data` folder is writable by PHP so the app can update `data/scores.json`.
+Upload the project folder to your host. Make sure each instance's `data/` folder is writable by PHP so scores can be saved. The `data/scores.json` file is created automatically on first load.

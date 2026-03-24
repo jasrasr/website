@@ -1,12 +1,10 @@
-<?php
+﻿<?php
 /**
  * Filename: index.php
  * Revision: 1.1
  * Description: Public viewer page for CVC Youth Scoreboard (root instance).
  *              Displays live scores, auto-refreshes every 2 seconds.
  * Author: Jason Lamb (with help from Claude)
- * Created Date: 2026-03-19
- * Modified Date: 2026-03-19
  * Changelog
  * 1.0 Initial PHP release, converted from Node.js/Express (was admin page)
  * 1.1 Repurposed as public viewer; admin moved to enter-scores.php

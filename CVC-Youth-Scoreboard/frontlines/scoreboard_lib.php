@@ -1,12 +1,12 @@
 ﻿<?php
 /**
- * Filename: collide/scoreboard_lib.php
+ * Filename: frontlines/scoreboard_lib.php
  * Revision: 1.0
- * Description: Core library for CVC Collide Scoreboard. Defines 6 teams
- *              (6th-8th Boys/Girls), handles JSON file read/write with file locking.
+ * Description: Core library for CVC Frontlines Scoreboard. Defines 10 teams,
+ *              handles JSON file read/write with file locking.
  * Author: Jason Lamb (with help from Claude)
  * Changelog
- * 1.0 Initial release for Collide scoreboard instance
+ * 1.0 Initial release for Frontlines scoreboard instance (10 teams)
  */
 
 declare(strict_types=1);
@@ -16,43 +16,67 @@ const SCOREBOARD_DATA_FILE = __DIR__ . '/data/scores.json';
 function scoreboardDefaultData(): array
 {
     return [
-        'title' => 'CVC Collide Scoreboard',
+        'title' => 'CVC Frontlines Scoreboard',
         'updatedAt' => null,
         'teams' => [
             [
-                'id' => 'sixth-boys',
-                'name' => '6th Boys',
+                'id' => 'team-blue',
+                'name' => 'Blue',
                 'color' => '#1d4ed8',
                 'score' => 0,
             ],
             [
-                'id' => 'sixth-girls',
-                'name' => '6th Girls',
-                'color' => '#db2777',
+                'id' => 'team-dark-blue',
+                'name' => 'Dark Blue',
+                'color' => '#1e3a8a',
                 'score' => 0,
             ],
             [
-                'id' => 'seventh-boys',
-                'name' => '7th Boys',
-                'color' => '#0f766e',
+                'id' => 'team-red',
+                'name' => 'Red',
+                'color' => '#dc2626',
                 'score' => 0,
             ],
             [
-                'id' => 'seventh-girls',
-                'name' => '7th Girls',
-                'color' => '#7c3aed',
+                'id' => 'team-maroon',
+                'name' => 'Maroon',
+                'color' => '#7f1d1d',
                 'score' => 0,
             ],
             [
-                'id' => 'eighth-boys',
-                'name' => '8th Boys',
-                'color' => '#ea580c',
+                'id' => 'team-yellow',
+                'name' => 'Yellow',
+                'color' => '#ca8a04',
                 'score' => 0,
             ],
             [
-                'id' => 'eighth-girls',
-                'name' => '8th Girls',
+                'id' => 'team-gray',
+                'name' => 'Gray',
+                'color' => '#6b7280',
+                'score' => 0,
+            ],
+            [
+                'id' => 'team-dark-gray',
+                'name' => 'Dark Gray',
+                'color' => '#374151',
+                'score' => 0,
+            ],
+            [
+                'id' => 'team-green',
+                'name' => 'Green',
                 'color' => '#15803d',
+                'score' => 0,
+            ],
+            [
+                'id' => 'team-dark-green',
+                'name' => 'Dark Green',
+                'color' => '#14532d',
+                'score' => 0,
+            ],
+            [
+                'id' => 'team-pink',
+                'name' => 'Pink',
+                'color' => '#db2777',
                 'score' => 0,
             ],
         ],

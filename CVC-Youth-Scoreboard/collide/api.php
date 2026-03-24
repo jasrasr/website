@@ -1,12 +1,10 @@
-<?php
+﻿<?php
 /**
  * Filename: collide/api.php
  * Revision: 1.0
  * Description: REST API endpoint for CVC Collide Scoreboard score management.
  *              Handles reading, updating, resetting, and renaming teams and title.
  * Author: Jason Lamb (with help from Claude)
- * Created Date: 2026-03-19
- * Modified Date: 2026-03-19
  * Changelog
  * 1.0 Initial release for Collide scoreboard instance
  */

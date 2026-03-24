@@ -1,12 +1,12 @@
 ﻿<?php
 /**
- * Filename: youth/api.php
+ * Filename: frontlines/api.php
  * Revision: 1.0
- * Description: REST API endpoint for CVC Youth Scoreboard score management.
+ * Description: REST API endpoint for CVC Frontlines Scoreboard score management.
  *              Handles reading, updating, resetting, and renaming teams and title.
  * Author: Jason Lamb (with help from Claude)
  * Changelog
- * 1.0 Initial release for Youth scoreboard instance
+ * 1.0 Initial release for Frontlines scoreboard instance
  */
 
 declare(strict_types=1);

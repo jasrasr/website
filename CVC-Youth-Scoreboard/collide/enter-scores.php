@@ -1,12 +1,10 @@
-<?php
+﻿<?php
 /**
  * Filename: collide/enter-scores.php
  * Revision: 1.0
  * Description: Admin score entry page for CVC Collide Scoreboard.
  *              Allows authorized users to update, reset, and rename team scores and title.
  * Author: Jason Lamb (with help from Claude)
- * Created Date: 2026-03-19
- * Modified Date: 2026-03-19
  * Changelog
  * 1.0 Initial release for Collide scoreboard instance
  */

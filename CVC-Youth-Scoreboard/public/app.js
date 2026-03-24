@@ -1,11 +1,9 @@
-// Filename: app.js
-// Revision: 1.5
+﻿// Filename: app.js
+// Revision: 1.6
 // Description: Frontend logic for CVC Scoreboard. Handles score display,
 //              admin controls, polling, team/title renaming, and dynamic grid layout.
-//              Shared across all scoreboard instances (root, collide, youth).
+//              Shared across all scoreboard instances (root, collide, youth, frontlines).
 // Author: Jason Lamb (with help from Claude)
-// Created Date: 2026-03-19
-// Modified Date: 2026-03-19
 // Changelog
 // 1.0 Initial PHP release, converted from Node.js/Express
 // 1.1 Fixed API URL paths to use relative query params instead of REST-style paths
@@ -13,6 +11,7 @@
 // 1.3 Increased admin poll to 10s; skip re-render when an input is focused
 // 1.4 Added dynamic viewer grid columns to support variable team counts
 // 1.5 Fixed Safari mobile scrolling; score font now scales by viewport height
+// 1.6 Score font scaling now kicks in at 3 digits (was 4) to prevent overflow on large scores
 
 const quickValues = [1, 3, 5, 10];
 const viewerPollIntervalMs = 2000;
@@ -59,9 +58,9 @@ function formatUpdatedAt(updatedAt) {
 
 function scoreFontStyle(score) {
   const len = String(Math.abs(score)).length;
-  if (len <= 3) return '';
-  const vw = len === 4 ? 9 : len === 5 ? 7 : 5;
-  return `style="font-size: clamp(1rem, min(${vw}vw, ${vw}vh), 10rem);"`;
+  if (len <= 2) return '';
+  const vw = len === 3 ? 9 : len === 4 ? 7 : len === 5 ? 5 : 4;
+  return `style="font-size: clamp(1.5rem, min(${vw}vw, ${vw}vh), 7rem);"`;
 }
 
 function createQuickButtons(teamId) {

@@ -1,12 +1,12 @@
 ﻿<?php
 /**
- * Filename: youth/enter-scores.php
+ * Filename: frontlines/enter-scores.php
  * Revision: 1.0
- * Description: Admin score entry page for CVC Youth Scoreboard.
+ * Description: Admin score entry page for CVC Frontlines Scoreboard.
  *              Allows authorized users to update, reset, and rename team scores and title.
  * Author: Jason Lamb (with help from Claude)
  * Changelog
- * 1.0 Initial release for Youth scoreboard instance
+ * 1.0 Initial release for Frontlines scoreboard instance
  */
 declare(strict_types=1);
 ?>
@@ -15,7 +15,7 @@ declare(strict_types=1);
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CVC Youth Scoreboard Admin</title>
+    <title>CVC Frontlines Scoreboard Admin</title>
     <link rel="stylesheet" href="../public/styles.css" />
   </head>
   <body data-page-type="admin">
