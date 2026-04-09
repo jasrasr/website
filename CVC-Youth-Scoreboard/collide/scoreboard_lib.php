@@ -1,15 +1,15 @@
-﻿<?php
+﻿<?php declare(strict_types=1);
 /**
  * Filename: collide/scoreboard_lib.php
- * Revision: 1.0
- * Description: Core library for CVC Collide Scoreboard. Defines 6 teams
- *              (6th-8th Boys/Girls), handles JSON file read/write with file locking.
- * Author: Jason Lamb (with help from Claude)
- * Changelog
- * 1.0 Initial release for Collide scoreboard instance
+ * Revision : 1.0.0
+ * Description : Core library for CVC Collide Scoreboard. Defines 6 teams
+ *               (6th-8th Boys/Girls), handles JSON file read/write with file locking.
+ * Author : Jason Lamb (with help from Claude Code)
+ * Created Date : 2026-04-09
+ * Modified Date : 2026-04-09
+ * Changelog :
+ * 1.0.0 Initial release for Collide scoreboard instance
  */
-
-declare(strict_types=1);
 
 const SCOREBOARD_DATA_FILE = __DIR__ . '/data/scores.json';
 

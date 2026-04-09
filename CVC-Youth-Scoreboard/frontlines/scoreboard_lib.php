@@ -1,15 +1,15 @@
-﻿<?php
+﻿<?php declare(strict_types=1);
 /**
  * Filename: frontlines/scoreboard_lib.php
- * Revision: 1.0
- * Description: Core library for CVC Frontlines Scoreboard. Defines 10 teams,
- *              handles JSON file read/write with file locking.
- * Author: Jason Lamb (with help from Claude)
- * Changelog
- * 1.0 Initial release for Frontlines scoreboard instance (10 teams)
+ * Revision : 1.0.0
+ * Description : Core library for CVC Frontlines Scoreboard. Defines 10 teams,
+ *               handles JSON file read/write with file locking.
+ * Author : Jason Lamb (with help from Claude Code)
+ * Created Date : 2026-04-09
+ * Modified Date : 2026-04-09
+ * Changelog :
+ * 1.0.0 Initial release for Frontlines scoreboard instance (10 teams)
  */
-
-declare(strict_types=1);
 
 const SCOREBOARD_DATA_FILE = __DIR__ . '/data/scores.json';
 

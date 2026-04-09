@@ -1,15 +1,15 @@
-﻿<?php
+﻿<?php declare(strict_types=1);
 /**
  * Filename: youth/scoreboard_lib.php
- * Revision: 1.0
- * Description: Core library for CVC Youth Scoreboard. Defines 8 teams
- *              (6th-12th Grade + Grads), handles JSON file read/write with file locking.
- * Author: Jason Lamb (with help from Claude)
- * Changelog
- * 1.0 Initial release for Youth scoreboard instance
+ * Revision : 1.0.0
+ * Description : Core library for CVC Youth Scoreboard. Defines 8 teams
+ *               (6th-12th Grade + Grads), handles JSON file read/write with file locking.
+ * Author : Jason Lamb (with help from Claude Code)
+ * Created Date : 2026-04-09
+ * Modified Date : 2026-04-09
+ * Changelog :
+ * 1.0.0 Initial release for Youth scoreboard instance
  */
-
-declare(strict_types=1);
 
 const SCOREBOARD_DATA_FILE = __DIR__ . '/data/scores.json';
 

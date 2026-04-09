@@ -1,15 +1,15 @@
-﻿<?php
+﻿<?php declare(strict_types=1);
 /**
  * Filename: scoreboard_lib.php
- * Revision: 1.0
- * Description: Core library for CVC Youth Scoreboard. Defines default team data,
- *              handles JSON file read/write with file locking, and HTTP JSON responses.
- * Author: Jason Lamb (with help from Claude)
- * Changelog
- * 1.0 Initial PHP release, converted from Node.js/Express
+ * Revision : 1.0.0
+ * Description : Core library for CVC Youth Scoreboard. Defines default team data,
+ *               handles JSON file read/write with file locking, and HTTP JSON responses.
+ * Author : Jason Lamb (with help from Claude Code)
+ * Created Date : 2026-04-09
+ * Modified Date : 2026-04-09
+ * Changelog :
+ * 1.0.0 Initial PHP release, converted from Node.js/Express
  */
-
-declare(strict_types=1);
 
 const SCOREBOARD_DATA_FILE = __DIR__ . '/data/scores.json';
 

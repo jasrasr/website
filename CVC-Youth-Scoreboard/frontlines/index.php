@@ -1,14 +1,15 @@
-﻿<?php
+﻿<?php declare(strict_types=1);
 /**
  * Filename: frontlines/index.php
- * Revision: 1.0
- * Description: Public viewer page for CVC Frontlines Scoreboard.
- *              Displays live scores, auto-refreshes every 2 seconds.
- * Author: Jason Lamb (with help from Claude)
- * Changelog
- * 1.0 Initial release for Frontlines scoreboard instance
+ * Revision : 1.0.0
+ * Description : Public viewer page for CVC Frontlines Scoreboard.
+ *               Displays live scores, auto-refreshes every 2 seconds.
+ * Author : Jason Lamb (with help from Claude Code)
+ * Created Date : 2026-04-09
+ * Modified Date : 2026-04-09
+ * Changelog :
+ * 1.0.0 Initial release for Frontlines scoreboard instance
  */
-declare(strict_types=1);
 ?>
 <!DOCTYPE html>
 <html lang="en">
