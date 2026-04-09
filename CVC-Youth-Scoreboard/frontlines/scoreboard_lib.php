@@ -1,4 +1,4 @@
-﻿<?php declare(strict_types=1);
+<?php declare(strict_types=1);
 /**
  * Filename: frontlines/scoreboard_lib.php
  * Revision : 1.0.0

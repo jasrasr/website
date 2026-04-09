@@ -1,4 +1,4 @@
-﻿// Filename: app.js
+// Filename: app.js
 // Revision : 1.6.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.

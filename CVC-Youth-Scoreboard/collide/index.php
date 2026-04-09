@@ -1,4 +1,4 @@
-﻿<?php declare(strict_types=1);
+<?php declare(strict_types=1);
 /**
  * Filename: collide/index.php
  * Revision : 1.0.0

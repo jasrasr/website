@@ -1,4 +1,4 @@
-﻿<?php declare(strict_types=1);
+<?php declare(strict_types=1);
 /**
  * Filename: index.php
  * Revision : 1.1.0
