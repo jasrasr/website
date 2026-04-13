@@ -133,7 +133,7 @@ function sbChecked(array $user, string $sb): string
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CVC Scoreboard — User Admin</title>
-    <link rel="stylesheet" href="./public/styles.css" />
+    <link rel="stylesheet" href="./public/styles.css?v=<?= filemtime(__DIR__ . '/public/styles.css') ?>" />
   </head>
   <body>
     <div class="page-shell">
