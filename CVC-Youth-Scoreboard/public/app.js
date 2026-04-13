@@ -1,5 +1,5 @@
 // Filename: app.js
-// Revision : 1.9.0
+// Revision : 1.10.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
@@ -17,11 +17,13 @@
 // 1.7.0 Added font size reduction for 9-digit (2.5vw) and 10+ digit (2vw) scores to prevent box overflow
 // 1.8.0 Use CSS custom property --viewer-cols so mobile media query can override column count
 // 1.9.0 Show logged-in user, logout/manage-users buttons, and Recent Activity section in admin
+// 1.10.0 Persist activity log open state across auto-refreshes
 
 const quickValues = [1, 3, 5, 10];
 const viewerPollIntervalMs = 2000;
 const adminPollIntervalMs = 10000;
 let currentData = null;
+let activityLogOpen = false;
 
 async function fetchScores() {
   const response = await fetch('api.php?action=scores');
@@ -133,7 +135,7 @@ function renderSharedHeader(data, pageType) {
   `;
 }
 
-function renderAdmin(data) {
+async function renderAdmin(data) {
   const app = document.querySelector('#app');
   const role       = document.body.dataset.role || '';
   const logoutUrl  = document.body.dataset.logoutUrl || './logout.php';
@@ -164,6 +166,21 @@ function renderAdmin(data) {
       </section>
     </div>
   `;
+  await syncActivityLog();
+}
+
+async function syncActivityLog() {
+  const log = document.querySelector('#activity-log');
+  const btn = document.querySelector('#activity-toggle');
+  if (!log || !btn) return;
+  if (activityLogOpen) {
+    log.classList.remove('hidden');
+    btn.textContent = 'Hide Recent Activity';
+    await loadActivityLog();
+  } else {
+    log.classList.add('hidden');
+    btn.textContent = 'Show Recent Activity';
+  }
 }
 
 async function loadActivityLog() {
@@ -274,17 +291,8 @@ async function handleAdminAction(event) {
     }
 
     if (event.target.id === 'activity-toggle') {
-      const log     = document.querySelector('#activity-log');
-      const btn     = event.target;
-      const visible = !log.classList.contains('hidden');
-      if (visible) {
-        log.classList.add('hidden');
-        btn.textContent = 'Show Recent Activity';
-      } else {
-        log.classList.remove('hidden');
-        btn.textContent = 'Hide Recent Activity';
-        await loadActivityLog();
-      }
+      activityLogOpen = !activityLogOpen;
+      await syncActivityLog();
       return;
     }
 
