@@ -1,14 +1,16 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/scoreboard_lib.php
- * Revision : 1.0.0
- * Description : Core library for CVC Frontlines Scoreboard. Defines 10 teams,
+ * Revision : 1.1.0
+ * Description : Core library for CVC Frontlines Scoreboard. Defines 12 teams,
  *               handles JSON file read/write with file locking.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-09
- * Modified Date : 2026-04-09
+ * Modified Date : 2026-04-13
  * Changelog :
  * 1.0.0 Initial release for Frontlines scoreboard instance (10 teams)
+ * 1.1.0 Updated to 12 teams: red, maroon, orange, yellow, light green, dark green,
+ *       light blue, royal blue, navy, pink, purple, smoke
  */
 
 const SCOREBOARD_DATA_FILE = __DIR__ . '/data/scores.json';
@@ -19,18 +21,6 @@ function scoreboardDefaultData(): array
         'title' => 'CVC Frontlines Scoreboard',
         'updatedAt' => null,
         'teams' => [
-            [
-                'id' => 'team-blue',
-                'name' => 'Blue',
-                'color' => '#1d4ed8',
-                'score' => 0,
-            ],
-            [
-                'id' => 'team-dark-blue',
-                'name' => 'Dark Blue',
-                'color' => '#1e3a8a',
-                'score' => 0,
-            ],
             [
                 'id' => 'team-red',
                 'name' => 'Red',
@@ -44,27 +34,21 @@ function scoreboardDefaultData(): array
                 'score' => 0,
             ],
             [
+                'id' => 'team-orange',
+                'name' => 'Orange',
+                'color' => '#ea580c',
+                'score' => 0,
+            ],
+            [
                 'id' => 'team-yellow',
                 'name' => 'Yellow',
                 'color' => '#ca8a04',
                 'score' => 0,
             ],
             [
-                'id' => 'team-gray',
-                'name' => 'Gray',
-                'color' => '#6b7280',
-                'score' => 0,
-            ],
-            [
-                'id' => 'team-dark-gray',
-                'name' => 'Dark Gray',
-                'color' => '#374151',
-                'score' => 0,
-            ],
-            [
-                'id' => 'team-green',
-                'name' => 'Green',
-                'color' => '#15803d',
+                'id' => 'team-light-green',
+                'name' => 'Light Green',
+                'color' => '#16a34a',
                 'score' => 0,
             ],
             [
@@ -74,9 +58,39 @@ function scoreboardDefaultData(): array
                 'score' => 0,
             ],
             [
+                'id' => 'team-light-blue',
+                'name' => 'Light Blue',
+                'color' => '#0ea5e9',
+                'score' => 0,
+            ],
+            [
+                'id' => 'team-royal-blue',
+                'name' => 'Royal Blue',
+                'color' => '#1d4ed8',
+                'score' => 0,
+            ],
+            [
+                'id' => 'team-navy',
+                'name' => 'Navy',
+                'color' => '#1e3a8a',
+                'score' => 0,
+            ],
+            [
                 'id' => 'team-pink',
                 'name' => 'Pink',
                 'color' => '#db2777',
+                'score' => 0,
+            ],
+            [
+                'id' => 'team-purple',
+                'name' => 'Purple',
+                'color' => '#7c3aed',
+                'score' => 0,
+            ],
+            [
+                'id' => 'team-smoke',
+                'name' => 'Smoke',
+                'color' => '#6b7280',
                 'score' => 0,
             ],
         ],
