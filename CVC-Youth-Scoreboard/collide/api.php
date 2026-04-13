@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: collide/api.php
- * Revision : 1.1.0
+ * Revision : 1.2.0
  * Description : REST API endpoint for CVC Collide Scoreboard score management.
  *               Handles reading, updating, resetting, and renaming teams and title.
  * Author : Jason Lamb (with help from Claude Code)
@@ -10,17 +10,33 @@
  * Changelog :
  * 1.0.0 Initial release for Collide scoreboard instance
  * 1.1.0 Allow negative scores (removed max(0) floor)
+ * 1.2.0 Added session authentication and audit logging per action
  */
 
 require __DIR__ . '/scoreboard_lib.php';
+require __DIR__ . '/../auth.php';
+
+$scoreboardId = 'collide';
+$auditFile    = __DIR__ . '/data/audit.json';
 
 $action = $_GET['action'] ?? 'scores';
 $teamId = $_GET['team'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
+if ($method === 'GET' && $action === 'scores') {
+    jsonResponse(readScoreboardData());
+}
+
+$currentUser = requireAuthJson($scoreboardId);
+
 try {
-    if ($method === 'GET' && $action === 'scores') {
-        jsonResponse(readScoreboardData());
+    if ($method === 'GET' && $action === 'audit') {
+        $entries = [];
+        if (is_file($auditFile)) {
+            $data    = json_decode(file_get_contents($auditFile) ?: '', true);
+            $entries = is_array($data) ? array_slice($data, 0, 50) : [];
+        }
+        jsonResponse(['entries' => $entries]);
     }
 
     if ($method !== 'POST') {
@@ -29,7 +45,7 @@ try {
 
     if ($action === 'update') {
         $payload = readJsonRequestBody();
-        $amount = $payload['amount'] ?? null;
+        $amount  = $payload['amount'] ?? null;
         if (!is_numeric($amount)) {
             jsonResponse(['error' => 'Amount must be a valid number.'], 400);
         }
@@ -39,12 +55,27 @@ try {
             if ($teamIndex === null) {
                 throw new InvalidArgumentException('Team not found.');
             }
-
-            $newScore = (int) ($data['teams'][$teamIndex]['score'] ?? 0) + (int) $amount;
-            $data['teams'][$teamIndex]['score'] = $newScore;
-
+            $data['teams'][$teamIndex]['score'] = (int) ($data['teams'][$teamIndex]['score'] ?? 0) + (int) $amount;
             return $data;
         });
+
+        $teamName = '';
+        $newScore = 0;
+        foreach ($saved['teams'] as $team) {
+            if ($team['id'] === $teamId) { $teamName = $team['name']; $newScore = $team['score']; break; }
+        }
+
+        logAudit($auditFile, [
+            'timestamp'  => gmdate('c'),
+            'username'   => $currentUser['username'],
+            'action'     => 'adjust',
+            'team_id'    => $teamId,
+            'team_name'  => $teamName,
+            'amount'     => (int) $amount,
+            'new_score'  => $newScore,
+            'ip'         => clientIp(),
+            'user_agent' => clientUserAgent(),
+        ]);
 
         jsonResponse($saved);
     }
@@ -55,17 +86,30 @@ try {
             if ($teamIndex === null) {
                 throw new InvalidArgumentException('Team not found.');
             }
-
             $data['teams'][$teamIndex]['score'] = 0;
             return $data;
         });
+
+        $teamName = '';
+        foreach ($saved['teams'] as $team) {
+            if ($team['id'] === $teamId) { $teamName = $team['name']; break; }
+        }
+
+        logAudit($auditFile, [
+            'timestamp'  => gmdate('c'),
+            'username'   => $currentUser['username'],
+            'action'     => 'reset-team',
+            'team_id'    => $teamId, 'team_name' => $teamName, 'amount' => null, 'new_score' => 0,
+            'ip'         => clientIp(),
+            'user_agent' => clientUserAgent(),
+        ]);
 
         jsonResponse($saved);
     }
 
     if ($action === 'rename-title') {
         $payload = readJsonRequestBody();
-        $title = trim($payload['title'] ?? '');
+        $title   = trim($payload['title'] ?? '');
         if ($title === '') {
             jsonResponse(['error' => 'Title cannot be empty.'], 400);
         }
@@ -75,14 +119,23 @@ try {
             return $data;
         });
 
+        logAudit($auditFile, [
+            'timestamp'  => gmdate('c'),
+            'username'   => $currentUser['username'],
+            'action'     => 'rename-title',
+            'team_id'    => null, 'team_name' => null, 'amount' => null, 'new_score' => null,
+            'ip'         => clientIp(),
+            'user_agent' => clientUserAgent(),
+        ]);
+
         jsonResponse($saved);
     }
 
     if ($action === 'rename-team') {
         $payload = readJsonRequestBody();
-        $name = trim($payload['name'] ?? '');
+        $name    = trim($payload['name'] ?? '');
         if ($name === '') {
-            jsonResponse(['error' => 'Name cannot be empty.'], 400);
+            jsonResponse(['error' => 'Team name cannot be empty.'], 400);
         }
 
         $saved = writeScoreboardData(function (array $data) use ($teamId, $name): array {
@@ -90,10 +143,18 @@ try {
             if ($teamIndex === null) {
                 throw new InvalidArgumentException('Team not found.');
             }
-
             $data['teams'][$teamIndex]['name'] = $name;
             return $data;
         });
+
+        logAudit($auditFile, [
+            'timestamp'  => gmdate('c'),
+            'username'   => $currentUser['username'],
+            'action'     => 'rename-team',
+            'team_id'    => $teamId, 'team_name' => $name, 'amount' => null, 'new_score' => null,
+            'ip'         => clientIp(),
+            'user_agent' => clientUserAgent(),
+        ]);
 
         jsonResponse($saved);
     }
@@ -104,9 +165,17 @@ try {
                 $team['score'] = 0;
             }
             unset($team);
-
             return $data;
         });
+
+        logAudit($auditFile, [
+            'timestamp'  => gmdate('c'),
+            'username'   => $currentUser['username'],
+            'action'     => 'reset-all',
+            'team_id'    => null, 'team_name' => null, 'amount' => null, 'new_score' => null,
+            'ip'         => clientIp(),
+            'user_agent' => clientUserAgent(),
+        ]);
 
         jsonResponse($saved);
     }

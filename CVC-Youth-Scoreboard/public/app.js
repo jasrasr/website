@@ -1,5 +1,5 @@
 // Filename: app.js
-// Revision : 1.8.0
+// Revision : 1.9.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
@@ -16,6 +16,7 @@
 // 1.6.0 Score font scaling now kicks in at 3 digits (was 4) to prevent overflow on large scores
 // 1.7.0 Added font size reduction for 9-digit (2.5vw) and 10+ digit (2vw) scores to prevent box overflow
 // 1.8.0 Use CSS custom property --viewer-cols so mobile media query can override column count
+// 1.9.0 Show logged-in user, logout/manage-users buttons, and Recent Activity section in admin
 
 const quickValues = [1, 3, 5, 10];
 const viewerPollIntervalMs = 2000;
@@ -121,10 +122,11 @@ function renderSharedHeader(data, pageType) {
   const title = data.title || 'CVC Youth Scoreboard';
   const updatedLabel = formatUpdatedAt(data.updatedAt);
   const updateMode = pageType === 'admin' ? 'Admin controls' : 'Viewer mode';
+  const username = pageType === 'admin' ? document.body.dataset.username : null;
 
   return `
     <div>
-      <p>${updateMode}</p>
+      <p>${updateMode}${username ? ` &mdash; ${username}` : ''}</p>
       <h1>${title}</h1>
       <p class="updated-at">Last updated: ${updatedLabel}</p>
     </div>
@@ -133,6 +135,10 @@ function renderSharedHeader(data, pageType) {
 
 function renderAdmin(data) {
   const app = document.querySelector('#app');
+  const role       = document.body.dataset.role || '';
+  const logoutUrl  = document.body.dataset.logoutUrl || './logout.php';
+  const adminUrl   = document.body.dataset.adminUrl || './admin-users.php';
+
   app.innerHTML = `
     <div class="page-shell">
       <header class="page-header">
@@ -144,14 +150,60 @@ function renderAdmin(data) {
           </form>
           <button class="secondary" id="open-viewer-button" type="button">Open Viewer Page</button>
           <button class="warning" id="reset-all-button" type="button">Reset All Teams</button>
+          ${role === 'admin' ? `<a class="au-btn" href="${adminUrl}">Manage Users</a>` : ''}
+          <a class="au-btn" href="${logoutUrl}">Sign Out</a>
         </div>
       </header>
       <p class="status-text" id="status-text">Scores save to JSON automatically after each change.</p>
       <main class="team-grid">
         ${data.teams.map(createAdminCard).join('')}
       </main>
+      <section id="activity-section" style="margin-top:1.5rem">
+        <button class="secondary" id="activity-toggle" type="button">Show Recent Activity</button>
+        <div id="activity-log" class="hidden" style="margin-top:1rem"></div>
+      </section>
     </div>
   `;
+}
+
+async function loadActivityLog() {
+  const log = document.querySelector('#activity-log');
+  try {
+    const response = await fetch('api.php?action=audit');
+    if (!response.ok) throw new Error('Failed to load.');
+    const { entries } = await response.json();
+    if (!entries || entries.length === 0) {
+      log.innerHTML = '<p class="status-text">No activity recorded yet.</p>';
+      return;
+    }
+    log.innerHTML = `
+      <div class="au-table-wrap">
+        <table class="au-table au-audit">
+          <thead>
+            <tr>
+              <th>Time (UTC)</th><th>User</th><th>Action</th>
+              <th>Team</th><th>Change</th><th>Score</th><th>IP</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${entries.map(e => `
+              <tr>
+                <td>${(e.timestamp || '').slice(0, 19)}</td>
+                <td>${e.username || ''}</td>
+                <td>${e.action || ''}</td>
+                <td>${e.team_name || '—'}</td>
+                <td>${e.amount != null ? (e.amount > 0 ? '+' : '') + e.amount : '—'}</td>
+                <td>${e.new_score != null ? e.new_score : '—'}</td>
+                <td>${e.ip || ''}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch {
+    log.innerHTML = '<p class="status-text">Unable to load activity log.</p>';
+  }
 }
 
 function renderViewer(data) {
@@ -218,6 +270,21 @@ async function handleAdminAction(event) {
 
     if (event.target.id === 'open-viewer-button') {
       window.open('index.php', '_blank', 'noopener');
+      return;
+    }
+
+    if (event.target.id === 'activity-toggle') {
+      const log     = document.querySelector('#activity-log');
+      const btn     = event.target;
+      const visible = !log.classList.contains('hidden');
+      if (visible) {
+        log.classList.add('hidden');
+        btn.textContent = 'Show Recent Activity';
+      } else {
+        log.classList.remove('hidden');
+        btn.textContent = 'Hide Recent Activity';
+        await loadActivityLog();
+      }
       return;
     }
 
