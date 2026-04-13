@@ -1,13 +1,15 @@
 /*
  * Filename: styles.css
- * Revision : 1.0.0
+ * Revision : 1.2.0
  * Description : Dark-themed responsive styles for CVC Scoreboard.
  *               Shared across all scoreboard instances (root, collide, youth, frontlines).
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-03-24
- * Modified Date : 2026-03-24
+ * Modified Date : 2026-04-13
  * Changelog :
  * 1.0.0 Initial release
+ * 1.1.0 Changed team-title to column layout so hint text renders below team name
+ * 1.2.0 Mobile viewer uses 2-column grid; reduced card min-height and padding for compact display
  */
 
 :root {
@@ -105,9 +107,9 @@ body.viewer-body {
 
 .team-title {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
 }
 
 .team-name {
@@ -278,22 +280,40 @@ input {
     width: 100%;
   }
 
-  .team-grid,
-  .viewer-grid {
+  .team-grid {
     grid-template-columns: 1fr;
     grid-template-rows: none;
   }
 
+  .viewer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: none;
+  }
+
+  .viewer-card {
+    min-height: 0;
+  }
+
+  .viewer-card .score-box {
+    min-height: 80px;
+  }
+
   .viewer-card .score-value {
-    font-size: clamp(2rem, 15vw, 4rem);
+    font-size: clamp(2rem, 10vw, 5rem);
   }
 
   .viewer-card .team-name {
-    font-size: clamp(1rem, 5vw, 1.5rem);
+    font-size: clamp(0.85rem, 3.5vw, 1.25rem);
   }
 
   .viewer-page {
     height: auto;
     overflow: auto;
+    padding: 0.75rem;
+  }
+
+  .viewer-page .page-header {
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
   }
 }
