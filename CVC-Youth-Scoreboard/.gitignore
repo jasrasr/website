@@ -1,2 +1,5 @@
 node_modules/
 .claude
+
+# Runtime data — scores, users, audit logs, credentials (server-side only)
+**/data/

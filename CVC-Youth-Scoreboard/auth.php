@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: auth.php
- * Revision : 1.0.0
+ * Revision : 1.1.0
  * Description : Shared authentication library for CVC Scoreboard.
  *               Handles sessions, user management, login/logout, and audit logging.
  *               Users stored in data/users.json with bcrypt-hashed passwords.
@@ -11,6 +11,7 @@
  * Modified Date : 2026-04-13
  * Changelog :
  * 1.0.0 Initial release; per-user auth, roles, scoreboard access, audit logging
+ * 1.1.0 Replaced hardcoded temp passwords with random generation; writes first-run-credentials.txt
  */
 
 const USERS_FILE     = __DIR__ . '/data/users.json';
@@ -153,16 +154,36 @@ function ensureUsersFile(): void
     }
 
     if (!is_file(USERS_FILE)) {
-        $defaults = [
-            makeUser('jason',  'cvc-admin',  'admin',  ALL_SCOREBOARDS),
-            makeUser('tate',   'cvc-tate',   'scorer', ALL_SCOREBOARDS),
-            makeUser('dahlia', 'cvc-dahlia', 'scorer', ALL_SCOREBOARDS),
-            makeUser('joe',    'cvc-joe',    'scorer', ALL_SCOREBOARDS),
-            makeUser('james',  'cvc-james',  'scorer', ALL_SCOREBOARDS),
+        $names = [
+            ['jason',  'admin',  ALL_SCOREBOARDS],
+            ['tate',   'scorer', ALL_SCOREBOARDS],
+            ['dahlia', 'scorer', ALL_SCOREBOARDS],
+            ['joe',    'scorer', ALL_SCOREBOARDS],
+            ['james',  'scorer', ALL_SCOREBOARDS],
         ];
+
+        $credentials = [];
+        $users       = [];
+        foreach ($names as [$username, $role, $scoreboards]) {
+            $password      = bin2hex(random_bytes(6)); // 12-char random hex
+            $users[]       = makeUser($username, $password, $role, $scoreboards);
+            $credentials[] = "{$username}: {$password}";
+        }
+
         file_put_contents(
             USERS_FILE,
-            json_encode(['users' => $defaults], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL,
+            json_encode(['users' => $users], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL,
+            LOCK_EX
+        );
+
+        // Write one-time credentials file — read this, then delete it
+        $credFile = dirname(USERS_FILE) . '/first-run-credentials.txt';
+        file_put_contents(
+            $credFile,
+            "CVC Scoreboard — First-Run Credentials\n"
+            . "Generated: " . gmdate('c') . "\n"
+            . "Delete this file after saving the passwords.\n\n"
+            . implode("\n", $credentials) . "\n",
             LOCK_EX
         );
     }
