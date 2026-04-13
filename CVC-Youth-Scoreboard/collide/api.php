@@ -1,14 +1,15 @@
 <?php declare(strict_types=1);
 /**
  * Filename: collide/api.php
- * Revision : 1.0.0
+ * Revision : 1.1.0
  * Description : REST API endpoint for CVC Collide Scoreboard score management.
  *               Handles reading, updating, resetting, and renaming teams and title.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-09
- * Modified Date : 2026-04-09
+ * Modified Date : 2026-04-13
  * Changelog :
  * 1.0.0 Initial release for Collide scoreboard instance
+ * 1.1.0 Allow negative scores (removed max(0) floor)
  */
 
 require __DIR__ . '/scoreboard_lib.php';
@@ -40,7 +41,7 @@ try {
             }
 
             $newScore = (int) ($data['teams'][$teamIndex]['score'] ?? 0) + (int) $amount;
-            $data['teams'][$teamIndex]['score'] = max(0, $newScore);
+            $data['teams'][$teamIndex]['score'] = $newScore;
 
             return $data;
         });

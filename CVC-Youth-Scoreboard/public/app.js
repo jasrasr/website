@@ -1,11 +1,11 @@
 // Filename: app.js
-// Revision : 1.7.0
+// Revision : 1.8.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
 // Author : Jason Lamb (with help from Claude Code)
 // Created Date : 2026-03-24
-// Modified Date : 2026-04-09
+// Modified Date : 2026-04-13
 // Changelog :
 // 1.0.0 Initial PHP release, converted from Node.js/Express
 // 1.1.0 Fixed API URL paths to use relative query params instead of REST-style paths
@@ -15,6 +15,7 @@
 // 1.5.0 Fixed Safari mobile scrolling; score font now scales by viewport height
 // 1.6.0 Score font scaling now kicks in at 3 digits (was 4) to prevent overflow on large scores
 // 1.7.0 Added font size reduction for 9-digit (2.5vw) and 10+ digit (2vw) scores to prevent box overflow
+// 1.8.0 Use CSS custom property --viewer-cols so mobile media query can override column count
 
 const quickValues = [1, 3, 5, 10];
 const viewerPollIntervalMs = 2000;
@@ -158,7 +159,7 @@ function renderViewer(data) {
   const teamCount = data.teams.length;
   const cols = teamCount <= 4 ? 2 : teamCount <= 6 ? 3 : 4;
   const rows = Math.ceil(teamCount / cols);
-  const gridStyle = `grid-template-columns: repeat(${cols}, minmax(0, 1fr)); grid-template-rows: repeat(${rows}, minmax(0, 1fr));`;
+  const gridStyle = `--viewer-cols: ${cols}; grid-template-rows: repeat(${rows}, minmax(0, 1fr));`;
 
   app.innerHTML = `
     <div class="viewer-page">
