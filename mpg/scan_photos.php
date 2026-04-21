@@ -1,12 +1,27 @@
 <?php
 // ============================================================================
 // File: scan_photos.php
-// Purpose: Capture photos of odometer, price/gallon, and pump total for auto-fill
-// Revision: 1.0
+// Purpose: Multi-photo upload, AI extracts values, saves entry directly
+// Revision: 2.0
 // Author: Jason Lamb
 // ============================================================================
 
 require_once __DIR__ . '/device_init.php';
+
+// Known plates for selector
+$logDir = __DIR__ . '/logs/';
+$knownPlates = [];
+if (is_dir($logDir)) {
+    foreach (glob($logDir . '*.json') as $f) {
+        $p = basename($f, '.json');
+        if ($p !== '') $knownPlates[] = $p;
+    }
+}
+sort($knownPlates);
+
+$canUseDropdown = $isIPWhitelisted || $isDeviceTrusted;
+$activePlate    = $_SESSION['active_plate'] ?? $defaultPlate ?? '';
+$today          = (new DateTime('now', new DateTimeZone('America/New_York')))->format('Y-m-d');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -16,276 +31,194 @@ require_once __DIR__ . '/device_init.php';
 <title>Scan Fuel Photos</title>
 <style>
 * { box-sizing: border-box; }
-body {
-    font-family: sans-serif;
-    max-width: 600px;
-    margin: auto;
-    padding: 1rem;
-    background: #f4f4f4;
-}
+body { font-family: sans-serif; max-width: 560px; margin: auto; padding: 1rem; background: #f4f4f4; }
 h2 { margin-bottom: 0.2rem; }
 .subtitle { color: #666; font-size: 0.88rem; margin-bottom: 1.2rem; }
 
-.card {
-    background: white;
-    border-radius: 10px;
-    padding: 1rem;
-    margin-bottom: 0.9rem;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+.upload-card {
+    background: white; border-radius: 10px; padding: 1.2rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1); margin-bottom: 1rem;
 }
-.card-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.4rem;
-}
-.card-icon { font-size: 1.3rem; }
-.card-title { font-weight: bold; font-size: 1rem; }
-.card-desc { color: #666; font-size: 0.83rem; margin-bottom: 0.7rem; margin-top: 0.2rem; }
+.upload-card p { color: #555; font-size: 0.85rem; margin: 0.3rem 0 0.9rem; }
 
-.capture-btn {
-    display: block;
-    width: 100%;
-    padding: 0.65rem;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 7px;
-    cursor: pointer;
-    font-size: 0.95rem;
-    text-align: center;
+#uploadBtn {
+    display: block; width: 100%; padding: 0.8rem;
+    background: #007bff; color: white; border: none;
+    border-radius: 8px; font-size: 1rem; cursor: pointer; text-align: center;
 }
-.capture-btn:hover { background: #0056b3; }
+#uploadBtn:hover { background: #0056b3; }
 input[type="file"] { display: none; }
 
-.preview-wrap { display: none; margin-top: 0.7rem; }
-.preview-wrap img {
-    width: 100%;
-    max-height: 170px;
-    object-fit: cover;
-    border-radius: 6px;
-    border: 1px solid #ddd;
-}
-.status-ok {
-    display: inline-block;
-    background: #d4edda;
-    color: #155724;
-    font-size: 0.78rem;
-    padding: 2px 8px;
-    border-radius: 10px;
-    margin-top: 4px;
-}
+#thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 0.8rem; }
+#thumbs img { width: 90px; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
+#photoCount { font-size: 0.82rem; color: #28a745; margin-top: 0.4rem; display: none; }
 
 #errorBox {
-    display: none;
-    background: #f8d7da;
-    color: #721c24;
-    padding: 0.7rem;
-    border-radius: 7px;
-    margin-bottom: 0.8rem;
-    font-size: 0.9rem;
+    display: none; background: #f8d7da; color: #721c24;
+    padding: 0.7rem; border-radius: 7px; margin-bottom: 0.8rem; font-size: 0.9rem;
 }
 
 #scanBtn {
-    display: block;
-    width: 100%;
-    padding: 0.85rem;
-    font-size: 1.05rem;
-    background: #28a745;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-top: 0.3rem;
+    display: block; width: 100%; padding: 0.85rem; font-size: 1.05rem;
+    background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer;
 }
 #scanBtn:hover { background: #1e7e34; }
 #scanBtn:disabled { background: #999; cursor: not-allowed; }
 
-.loading {
-    display: none;
-    text-align: center;
-    padding: 1.5rem 1rem;
-    color: #555;
-}
+.loading { display: none; text-align: center; padding: 1.5rem; color: #555; }
 .spinner {
-    display: inline-block;
-    width: 34px;
-    height: 34px;
-    border: 4px solid #ddd;
-    border-top-color: #007bff;
-    border-radius: 50%;
-    animation: spin 0.75s linear infinite;
-    margin-bottom: 0.5rem;
+    display: inline-block; width: 34px; height: 34px;
+    border: 4px solid #ddd; border-top-color: #007bff;
+    border-radius: 50%; animation: spin 0.75s linear infinite; margin-bottom: 0.5rem;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-#results {
-    display: none;
-    background: white;
-    border-radius: 10px;
-    padding: 1.1rem;
-    margin-top: 0.9rem;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+#review {
+    display: none; background: white; border-radius: 10px;
+    padding: 1.2rem; margin-top: 0.9rem; box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
-#results h3 { margin: 0 0 0.3rem 0; }
-#results .note { font-size: 0.82rem; color: #666; margin-bottom: 0.9rem; }
+#review h3 { margin: 0 0 0.3rem; }
+#review .note { font-size: 0.82rem; color: #666; margin-bottom: 1rem; }
 
-.result-row {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin-bottom: 0.6rem;
+.field { margin-bottom: 0.7rem; }
+.field label { display: block; font-size: 0.85rem; color: #444; margin-bottom: 0.2rem; }
+.field input, .field select {
+    width: 100%; padding: 0.45rem 0.6rem; border: 1px solid #ccc;
+    border-radius: 5px; font-size: 0.95rem;
 }
-.result-row label {
-    width: 150px;
-    flex-shrink: 0;
-    font-size: 0.88rem;
-    color: #444;
-}
-.result-row input {
-    flex: 1;
-    padding: 0.42rem 0.6rem;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 0.95rem;
-}
-.result-row input.filled { border-color: #28a745; background: #f6fff8; }
+.field input.filled { border-color: #28a745; background: #f6fff8; }
 
-#useValuesBtn {
-    display: block;
-    width: 100%;
-    padding: 0.8rem;
-    font-size: 1rem;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-top: 0.8rem;
+#saveBtn {
+    display: block; width: 100%; padding: 0.85rem; font-size: 1.05rem;
+    background: #28a745; color: white; border: none; border-radius: 8px;
+    cursor: pointer; margin-top: 0.8rem;
 }
-#useValuesBtn:hover { background: #0056b3; }
+#saveBtn:hover { background: #1e7e34; }
+
+.footer { margin-top: 2rem; padding-top: 0.5rem; border-top: 1px solid #ddd; color: #aaa; font-size: 0.75rem; text-align: center; }
+a { color: #007bff; text-decoration: none; }
 </style>
 </head>
 <body>
 
 <h2>📷 Scan Fuel Photos</h2>
-<p class="subtitle">Take up to 3 photos at the pump — skip any you'd rather type manually.</p>
+<p class="subtitle">Select up to 3 photos — odometer, price per gallon, pump total & gallons. AI figures out which is which.</p>
 
 <div id="errorBox"></div>
 
-<!-- Odometer -->
-<div class="card">
-    <div class="card-header">
-        <span class="card-icon">🔢</span>
-        <span class="card-title">Odometer Reading</span>
-    </div>
-    <p class="card-desc">Dashboard odometer showing total mileage (e.g. 84824.8 mi).</p>
-    <button class="capture-btn" onclick="document.getElementById('inputOdometer').click()">📷 Take / Upload Photo</button>
-    <input type="file" id="inputOdometer" accept="image/*" >
-    <div class="preview-wrap" id="previewOdometer">
-        <img id="imgOdometer" src="" alt="Odometer preview">
-        <span class="status-ok">✓ Photo added</span>
-    </div>
+<div class="upload-card">
+    <p>Select all your pump/odometer photos at once from your photo library.</p>
+    <button id="uploadBtn" onclick="document.getElementById('photoInput').click()">📷 Select Photos</button>
+    <input type="file" id="photoInput" accept="image/*" multiple>
+    <div id="photoCount"></div>
+    <div id="thumbs"></div>
 </div>
 
-<!-- Price per Gallon -->
-<div class="card">
-    <div class="card-header">
-        <span class="card-icon">💲</span>
-        <span class="card-title">Price per Gallon</span>
-    </div>
-    <p class="card-desc">Pump face showing the price (e.g. Regular $3.69 9/10).</p>
-    <button class="capture-btn" onclick="document.getElementById('inputPrice').click()">📷 Take / Upload Photo</button>
-    <input type="file" id="inputPrice" accept="image/*" >
-    <div class="preview-wrap" id="previewPrice">
-        <img id="imgPrice" src="" alt="Price per gallon preview">
-        <span class="status-ok">✓ Photo added</span>
-    </div>
-</div>
-
-<!-- Pump Total & Gallons -->
-<div class="card">
-    <div class="card-header">
-        <span class="card-icon">⛽</span>
-        <span class="card-title">Pump Total & Gallons</span>
-    </div>
-    <p class="card-desc">Pump display showing "THIS SALE $" amount and total GALLONS dispensed.</p>
-    <button class="capture-btn" onclick="document.getElementById('inputPump').click()">📷 Take / Upload Photo</button>
-    <input type="file" id="inputPump" accept="image/*" >
-    <div class="preview-wrap" id="previewPump">
-        <img id="imgPump" src="" alt="Pump total preview">
-        <span class="status-ok">✓ Photo added</span>
-    </div>
-</div>
-
-<button id="scanBtn" disabled>🔍 Extract Data from Photos</button>
+<button id="scanBtn" disabled>🔍 Scan &amp; Extract Data</button>
 
 <div class="loading" id="loadingDiv">
     <div class="spinner"></div>
     <div>Reading photos with AI…</div>
 </div>
 
-<div id="results">
-    <h3>Extracted Values</h3>
-    <p class="note">Review and correct any values before continuing.</p>
-    <div class="result-row">
+<div id="review">
+    <h3>Review &amp; Save</h3>
+    <p class="note">Correct anything that looks wrong, then tap Save Entry.</p>
+
+    <div class="field">
+        <label>License Plate</label>
+        <?php if ($canUseDropdown && !empty($knownPlates)): ?>
+        <select id="revPlate">
+            <option value="">-- Select Plate --</option>
+            <?php foreach ($knownPlates as $p): ?>
+            <option value="<?= htmlspecialchars($p) ?>" <?= strtoupper($activePlate) === $p ? 'selected' : '' ?>>
+                <?= htmlspecialchars($p) ?><?= (strtoupper($activePlate) === $p) ? ' (default)' : '' ?>
+            </option>
+            <?php endforeach; ?>
+        </select>
+        <?php else: ?>
+        <input type="text" id="revPlate" value="<?= htmlspecialchars($activePlate) ?>" placeholder="Enter plate">
+        <?php endif; ?>
+    </div>
+
+    <div class="field">
+        <label>Date</label>
+        <input type="date" id="revDate" value="<?= $today ?>">
+    </div>
+    <div class="field">
         <label>Odometer (mi)</label>
-        <input type="number" id="resOdometer" step="0.1" placeholder="e.g. 84824.8">
+        <input type="number" id="revOdometer" step="0.1" placeholder="e.g. 84824.8">
     </div>
-    <div class="result-row">
-        <label>Price / Gallon ($)</label>
-        <input type="number" id="resPricePerGallon" step="0.001" placeholder="e.g. 3.699">
+    <div class="field">
+        <label>Price per Gallon ($)</label>
+        <input type="number" id="revPrice" step="0.001" placeholder="e.g. 3.699">
     </div>
-    <div class="result-row">
+    <div class="field">
         <label>Total Cost ($)</label>
-        <input type="number" id="resTotalCost" step="0.01" placeholder="e.g. 42.76">
+        <input type="number" id="revTotal" step="0.01" placeholder="e.g. 42.76">
     </div>
-    <div class="result-row">
+    <div class="field">
         <label>Gallons</label>
-        <input type="number" id="resGallons" step="0.001" placeholder="e.g. 12.290">
+        <input type="number" id="revGallons" step="0.001" placeholder="e.g. 12.290">
     </div>
-    <button id="useValuesBtn">✅ Use These Values → Open Entry Form</button>
+
+    <button id="saveBtn">💾 Save Entry</button>
 </div>
+
+<!-- Hidden form that submits directly to save_log.php -->
+<form id="saveForm" method="post" action="save_log.php" style="display:none;">
+    <input type="hidden" name="licensePlate" id="fPlate">
+    <input type="hidden" name="date"         id="fDate">
+    <input type="hidden" name="odometer"     id="fOdometer">
+    <input type="hidden" name="pricePerGallon" id="fPrice">
+    <input type="hidden" name="totalPrice"   id="fTotal">
+    <input type="hidden" name="gallons"      id="fGallons">
+</form>
 
 <?php include 'menu.php'; ?>
 
-<div style="margin-top:2rem;padding-top:0.5rem;border-top:1px solid #ddd;color:#aaa;font-size:0.75rem;text-align:center;">
-    scan_photos.php — Rev 1.1 — Updated: <?php echo date('Y-m-d H:i', filemtime(__FILE__)); ?> ET
+<div class="footer">
+    scan_photos.php — Rev 2.0 — Updated: <?php echo date('Y-m-d H:i', filemtime(__FILE__)); ?> ET
 </div>
 
 <script>
-const photoInputs = {
-    odometer: { input: document.getElementById('inputOdometer'), preview: document.getElementById('previewOdometer'), img: document.getElementById('imgOdometer') },
-    price:    { input: document.getElementById('inputPrice'),    preview: document.getElementById('previewPrice'),    img: document.getElementById('imgPrice') },
-    pump:     { input: document.getElementById('inputPump'),     preview: document.getElementById('previewPump'),     img: document.getElementById('imgPump') }
-};
+const photoInput = document.getElementById('photoInput');
+const thumbsDiv  = document.getElementById('thumbs');
+const photoCount = document.getElementById('photoCount');
+const scanBtn    = document.getElementById('scanBtn');
 
-let fileCount = 0;
+photoInput.addEventListener('change', () => {
+    thumbsDiv.innerHTML = '';
+    const files = Array.from(photoInput.files);
+    if (!files.length) return;
 
-Object.values(photoInputs).forEach(({ input, preview, img }) => {
-    input.addEventListener('change', () => {
-        const file = input.files[0];
-        if (!file) return;
+    files.forEach(file => {
         const reader = new FileReader();
         reader.onload = e => {
+            const img = document.createElement('img');
             img.src = e.target.result;
-            preview.style.display = 'block';
+            thumbsDiv.appendChild(img);
         };
         reader.readAsDataURL(file);
-        fileCount++;
-        document.getElementById('scanBtn').disabled = false;
     });
+
+    photoCount.textContent = `${files.length} photo${files.length > 1 ? 's' : ''} selected`;
+    photoCount.style.display = 'block';
+    scanBtn.disabled = false;
+    document.getElementById('review').style.display = 'none';
+    document.getElementById('errorBox').style.display = 'none';
 });
 
-document.getElementById('scanBtn').addEventListener('click', async () => {
-    const formData = new FormData();
-    if (photoInputs.odometer.input.files[0]) formData.append('odometer', photoInputs.odometer.input.files[0]);
-    if (photoInputs.price.input.files[0])    formData.append('price',    photoInputs.price.input.files[0]);
-    if (photoInputs.pump.input.files[0])     formData.append('pump',     photoInputs.pump.input.files[0]);
+scanBtn.addEventListener('click', async () => {
+    const files = Array.from(photoInput.files);
+    if (!files.length) return;
 
-    document.getElementById('scanBtn').disabled = true;
+    const formData = new FormData();
+    files.forEach((f, i) => formData.append('images[]', f));
+
+    scanBtn.disabled = true;
     document.getElementById('loadingDiv').style.display = 'block';
-    document.getElementById('results').style.display = 'none';
+    document.getElementById('review').style.display = 'none';
     document.getElementById('errorBox').style.display = 'none';
 
     try {
@@ -295,41 +228,45 @@ document.getElementById('scanBtn').addEventListener('click', async () => {
 
         if (data.error) { showError(data.error); return; }
 
-        setResult('resOdometer',      data.odometer);
-        setResult('resPricePerGallon', data.pricePerGallon);
-        setResult('resTotalCost',      data.totalCost);
-        setResult('resGallons',        data.gallons);
+        setField('revOdometer', data.odometer);
+        setField('revPrice',    data.pricePerGallon);
+        setField('revTotal',    data.totalCost);
+        setField('revGallons',  data.gallons);
 
-        document.getElementById('results').style.display = 'block';
-        document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('review').style.display = 'block';
+        document.getElementById('review').scrollIntoView({ behavior: 'smooth' });
 
     } catch (e) {
         showError('Request failed: ' + e.message);
     } finally {
         document.getElementById('loadingDiv').style.display = 'none';
-        document.getElementById('scanBtn').disabled = false;
+        scanBtn.disabled = false;
     }
 });
 
-function setResult(id, val) {
+document.getElementById('saveBtn').addEventListener('click', () => {
+    const plate = document.getElementById('revPlate').value.trim();
+    if (!plate) { alert('Please enter or select a license plate.'); return; }
+
+    const odometer = document.getElementById('revOdometer').value;
+    if (!odometer) { alert('Odometer reading is required.'); return; }
+
+    document.getElementById('fPlate').value    = plate;
+    document.getElementById('fDate').value     = document.getElementById('revDate').value;
+    document.getElementById('fOdometer').value = odometer;
+    document.getElementById('fPrice').value    = document.getElementById('revPrice').value;
+    document.getElementById('fTotal').value    = document.getElementById('revTotal').value;
+    document.getElementById('fGallons').value  = document.getElementById('revGallons').value;
+
+    document.getElementById('saveForm').submit();
+});
+
+function setField(id, val) {
+    if (val === null || val === undefined || val === '') return;
     const el = document.getElementById(id);
-    if (val !== null && val !== undefined && val !== '') {
-        el.value = val;
-        el.classList.add('filled');
-    }
+    el.value = val;
+    el.classList.add('filled');
 }
-
-document.getElementById('useValuesBtn').addEventListener('click', () => {
-    const params = new URLSearchParams();
-    const fields = {
-        odometer:      document.getElementById('resOdometer').value,
-        pricePerGallon: document.getElementById('resPricePerGallon').value,
-        totalCost:     document.getElementById('resTotalCost').value,
-        gallons:       document.getElementById('resGallons').value
-    };
-    Object.entries(fields).forEach(([k, v]) => { if (v) params.set(k, v); });
-    window.location.href = 'fuel_form.php?' + params.toString();
-});
 
 function showError(msg) {
     const el = document.getElementById('errorBox');

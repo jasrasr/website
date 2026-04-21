@@ -1,21 +1,14 @@
 <?php
 // ============================================================================
 // File: process_photos.php
-// Purpose: Receive uploaded images, call OpenAI Vision API, return JSON
-// Revision: 1.0
+// Purpose: Accept multiple images, classify each with AI, return extracted values
+// Revision: 2.0
 // Author: Jason Lamb
 // ============================================================================
 
 header('Content-Type: application/json');
 
-// Load API key from .env
-$envPath = __DIR__ . '/.env';
-if (!file_exists($envPath)) {
-    echo json_encode(['error' => '.env file not found on server']);
-    exit;
-}
-
-$env    = parse_ini_file($envPath);
+$env = parse_ini_file(__DIR__ . '/.env');
 $apiKey = $env['OPENAI_API_KEY'] ?? '';
 
 if (empty($apiKey)) {
@@ -24,46 +17,31 @@ if (empty($apiKey)) {
 }
 
 // ─────────────────────────────────────────
-// Resize image and return base64-encoded JPEG
+// Resize and return base64 JPEG
 // ─────────────────────────────────────────
 function imageToBase64Jpeg($tmpPath, $mimeType, $maxDim = 1200) {
     if (!function_exists('imagecreatefromjpeg')) {
         return base64_encode(file_get_contents($tmpPath));
     }
-
     switch ($mimeType) {
         case 'image/jpeg': $src = @imagecreatefromjpeg($tmpPath); break;
         case 'image/png':  $src = @imagecreatefrompng($tmpPath);  break;
         case 'image/webp': $src = @imagecreatefromwebp($tmpPath); break;
         default:           $src = false;
     }
+    if (!$src) return base64_encode(file_get_contents($tmpPath));
 
-    if (!$src) {
-        return base64_encode(file_get_contents($tmpPath));
-    }
-
-    $w = imagesx($src);
-    $h = imagesy($src);
-
+    $w = imagesx($src); $h = imagesy($src);
     if ($w > $maxDim || $h > $maxDim) {
-        if ($w >= $h) {
-            $newW = $maxDim;
-            $newH = (int)round($h * $maxDim / $w);
-        } else {
-            $newH = $maxDim;
-            $newW = (int)round($w * $maxDim / $h);
-        }
+        if ($w >= $h) { $newW = $maxDim; $newH = (int)round($h * $maxDim / $w); }
+        else          { $newH = $maxDim; $newW = (int)round($w * $maxDim / $h); }
         $dst = imagecreatetruecolor($newW, $newH);
         imagecopyresampled($dst, $src, 0, 0, 0, 0, $newW, $newH, $w, $h);
         imagedestroy($src);
         $src = $dst;
     }
-
-    ob_start();
-    imagejpeg($src, null, 88);
-    $data = ob_get_clean();
+    ob_start(); imagejpeg($src, null, 88); $data = ob_get_clean();
     imagedestroy($src);
-
     return base64_encode($data);
 }
 
@@ -73,16 +51,13 @@ function imageToBase64Jpeg($tmpPath, $mimeType, $maxDim = 1200) {
 function callVision($apiKey, $base64Jpeg, $prompt) {
     $payload = json_encode([
         'model'      => 'gpt-4o-mini',
-        'max_tokens' => 150,
+        'max_tokens' => 200,
         'messages'   => [[
             'role'    => 'user',
             'content' => [
                 [
                     'type'      => 'image_url',
-                    'image_url' => [
-                        'url'    => 'data:image/jpeg;base64,' . $base64Jpeg,
-                        'detail' => 'high'
-                    ]
+                    'image_url' => ['url' => 'data:image/jpeg;base64,' . $base64Jpeg, 'detail' => 'high']
                 ],
                 ['type' => 'text', 'text' => $prompt]
             ]
@@ -95,75 +70,97 @@ function callVision($apiKey, $base64Jpeg, $prompt) {
         CURLOPT_POSTFIELDS     => $payload,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 30,
-        CURLOPT_HTTPHEADER     => [
-            'Content-Type: application/json',
-            'Authorization: Bearer ' . $apiKey
-        ]
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'Authorization: Bearer ' . $apiKey]
     ]);
-
     $response = curl_exec($ch);
-    $curlErr  = curl_error($ch);
     curl_close($ch);
-
-    if ($curlErr) return null;
 
     $data = json_decode($response, true);
     return trim($data['choices'][0]['message']['content'] ?? '');
 }
 
-function validUpload($key) {
-    return isset($_FILES[$key])
-        && $_FILES[$key]['error'] === UPLOAD_ERR_OK
-        && !empty($_FILES[$key]['tmp_name']);
+// ─────────────────────────────────────────
+// Classify and extract from one image
+// ─────────────────────────────────────────
+function extractFromImage($apiKey, $tmpPath, $mimeType) {
+    $b64 = imageToBase64Jpeg($tmpPath, $mimeType);
+
+    $prompt = <<<PROMPT
+You are analyzing a photo taken at a gas station during refueling. Determine what this photo shows and extract the relevant numbers.
+
+The photo will be ONE of these types:
+1. ODOMETER - vehicle dashboard showing total mileage (e.g. 84824.8 mi)
+2. PRICE - gas pump face showing price per gallon (e.g. Regular $3.69 9/10)
+3. PUMP - gas pump display showing sale total in dollars AND total gallons dispensed
+
+Rules:
+- For PRICE: if it shows 9/10 fraction, convert to decimal (3.69 9/10 = 3.699)
+- Return ONLY valid JSON, no markdown, no extra text
+
+Response format by type:
+- Odometer: {"type":"odometer","odometer":84824.8}
+- Price:    {"type":"price","pricePerGallon":3.699}
+- Pump:     {"type":"pump","totalCost":42.76,"gallons":12.290}
+PROMPT;
+
+    $text = callVision($apiKey, $b64, $prompt);
+
+    // Extract JSON (handle markdown code blocks if model adds them)
+    preg_match('/\{[^}]+\}/', $text, $matches);
+    if (empty($matches[0])) return null;
+
+    return json_decode($matches[0], true);
 }
 
+// ─────────────────────────────────────────
+// Process all uploaded images
+// ─────────────────────────────────────────
 $result = [];
 
-// --- Odometer ---
-if (validUpload('odometer')) {
-    $b64  = imageToBase64Jpeg($_FILES['odometer']['tmp_name'], $_FILES['odometer']['type']);
-    $text = callVision($apiKey, $b64,
-        "This is a photo of a vehicle odometer or instrument cluster. " .
-        "What is the total mileage reading? Return ONLY the number with up to one decimal place. " .
-        "No units, no extra text. Example: 84824.8"
-    );
-    // Strip any non-numeric characters except decimal point
-    $clean = preg_replace('/[^0-9.]/', '', $text);
-    $result['odometer'] = is_numeric($clean) ? $clean : null;
+if (empty($_FILES['images'])) {
+    echo json_encode(['error' => 'No images received']);
+    exit;
 }
 
-// --- Price per Gallon ---
-if (validUpload('price')) {
-    $b64  = imageToBase64Jpeg($_FILES['price']['tmp_name'], $_FILES['price']['type']);
-    $text = callVision($apiKey, $b64,
-        "This is a photo of a gas pump showing the price per gallon. " .
-        "What is the price per gallon for Regular Unleaded? " .
-        "If it shows a fraction like '9/10', convert to decimal (e.g. 3.69 9/10 = 3.699). " .
-        "Return ONLY the decimal number, no dollar sign, no extra text. Example: 3.699"
-    );
-    $clean = preg_replace('/[^0-9.]/', '', $text);
-    $result['pricePerGallon'] = is_numeric($clean) ? $clean : null;
+// Normalize $_FILES array for multiple uploads
+$files = [];
+foreach ($_FILES['images']['tmp_name'] as $i => $tmpName) {
+    if ($_FILES['images']['error'][$i] === UPLOAD_ERR_OK && !empty($tmpName)) {
+        $files[] = [
+            'tmp_name' => $tmpName,
+            'type'     => $_FILES['images']['type'][$i]
+        ];
+    }
 }
 
-// --- Pump Total & Gallons ---
-if (validUpload('pump')) {
-    $b64  = imageToBase64Jpeg($_FILES['pump']['tmp_name'], $_FILES['pump']['type']);
-    $text = callVision($apiKey, $b64,
-        "This is a photo of a gas pump display showing two numbers: " .
-        "the total dollar amount of the sale (labeled 'THIS SALE \$' or similar) " .
-        "and the total gallons dispensed (labeled 'GALLONS'). " .
-        "Return ONLY valid JSON with no markdown, no extra text. " .
-        "Example: {\"totalCost\": 42.76, \"gallons\": 12.290}"
-    );
+if (empty($files)) {
+    echo json_encode(['error' => 'No valid images uploaded']);
+    exit;
+}
 
-    // Extract JSON even if model wraps it in markdown
-    preg_match('/\{[^}]+\}/', $text, $matches);
-    if (!empty($matches[0])) {
-        $parsed = json_decode($matches[0], true);
-        if ($parsed) {
-            $result['totalCost'] = isset($parsed['totalCost']) ? (float)$parsed['totalCost'] : null;
-            $result['gallons']   = isset($parsed['gallons'])   ? (float)$parsed['gallons']   : null;
-        }
+foreach ($files as $file) {
+    $extracted = extractFromImage($apiKey, $file['tmp_name'], $file['type']);
+    if (!$extracted || !isset($extracted['type'])) continue;
+
+    switch ($extracted['type']) {
+        case 'odometer':
+            if (!isset($result['odometer']) && isset($extracted['odometer'])) {
+                $result['odometer'] = (float)$extracted['odometer'];
+            }
+            break;
+        case 'price':
+            if (!isset($result['pricePerGallon']) && isset($extracted['pricePerGallon'])) {
+                $result['pricePerGallon'] = (float)$extracted['pricePerGallon'];
+            }
+            break;
+        case 'pump':
+            if (!isset($result['totalCost']) && isset($extracted['totalCost'])) {
+                $result['totalCost'] = (float)$extracted['totalCost'];
+            }
+            if (!isset($result['gallons']) && isset($extracted['gallons'])) {
+                $result['gallons'] = (float)$extracted['gallons'];
+            }
+            break;
     }
 }
 
