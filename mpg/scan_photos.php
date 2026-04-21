@@ -181,7 +181,7 @@ input[type="file"] { display: none; }
     </div>
     <p class="card-desc">Dashboard odometer showing total mileage (e.g. 84824.8 mi).</p>
     <button class="capture-btn" onclick="document.getElementById('inputOdometer').click()">📷 Take / Upload Photo</button>
-    <input type="file" id="inputOdometer" accept="image/*" capture="environment">
+    <input type="file" id="inputOdometer" accept="image/*" >
     <div class="preview-wrap" id="previewOdometer">
         <img id="imgOdometer" src="" alt="Odometer preview">
         <span class="status-ok">✓ Photo added</span>
@@ -196,7 +196,7 @@ input[type="file"] { display: none; }
     </div>
     <p class="card-desc">Pump face showing the price (e.g. Regular $3.69 9/10).</p>
     <button class="capture-btn" onclick="document.getElementById('inputPrice').click()">📷 Take / Upload Photo</button>
-    <input type="file" id="inputPrice" accept="image/*" capture="environment">
+    <input type="file" id="inputPrice" accept="image/*" >
     <div class="preview-wrap" id="previewPrice">
         <img id="imgPrice" src="" alt="Price per gallon preview">
         <span class="status-ok">✓ Photo added</span>
@@ -211,7 +211,7 @@ input[type="file"] { display: none; }
     </div>
     <p class="card-desc">Pump display showing "THIS SALE $" amount and total GALLONS dispensed.</p>
     <button class="capture-btn" onclick="document.getElementById('inputPump').click()">📷 Take / Upload Photo</button>
-    <input type="file" id="inputPump" accept="image/*" capture="environment">
+    <input type="file" id="inputPump" accept="image/*" >
     <div class="preview-wrap" id="previewPump">
         <img id="imgPump" src="" alt="Pump total preview">
         <span class="status-ok">✓ Photo added</span>
