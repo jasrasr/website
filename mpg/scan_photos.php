@@ -183,6 +183,17 @@ a { color: #007bff; text-decoration: none; }
     </div>
 
     <button id="saveBtn">💾 Save Entry</button>
+    <div id="saveError" style="display:none;margin-top:0.7rem;background:#f8d7da;color:#721c24;padding:0.7rem;border-radius:6px;font-size:0.9rem;"></div>
+</div>
+
+<!-- Success card -->
+<div id="successCard" style="display:none;background:white;border-radius:10px;padding:1.2rem;margin-top:0.9rem;box-shadow:0 1px 4px rgba(0,0,0,0.1);border-left:5px solid #28a745;">
+    <h3 style="margin:0 0 0.6rem;color:#28a745;">✅ Entry Saved!</h3>
+    <div id="successDetails" style="font-size:0.9rem;line-height:1.8;"></div>
+    <div style="margin-top:1rem;display:flex;gap:0.7rem;flex-wrap:wrap;">
+        <a href="scan_photos.php" style="background:#007bff;color:white;padding:0.5rem 1rem;border-radius:6px;text-decoration:none;font-size:0.9rem;">📷 New Scan</a>
+        <a id="viewLatestLink" href="#" style="background:#6c757d;color:white;padding:0.5rem 1rem;border-radius:6px;text-decoration:none;font-size:0.9rem;">🔍 View Entry</a>
+    </div>
 </div>
 
 <!-- Lightbox -->
@@ -191,20 +202,11 @@ a { color: #007bff; text-decoration: none; }
     <img id="lightboxImg" src="" alt="Full size photo">
 </div>
 
-<!-- Hidden form that submits directly to save_log.php -->
-<form id="saveForm" method="post" action="save_log.php" style="display:none;">
-    <input type="hidden" name="licensePlate" id="fPlate">
-    <input type="hidden" name="date"         id="fDate">
-    <input type="hidden" name="odometer"     id="fOdometer">
-    <input type="hidden" name="pricePerGallon" id="fPrice">
-    <input type="hidden" name="totalPrice"   id="fTotal">
-    <input type="hidden" name="gallons"      id="fGallons">
-</form>
 
 <?php include 'menu.php'; ?>
 
 <div class="footer">
-    scan_photos.php — Rev 2.1 — Updated: <?php $mt = new DateTime('@'.filemtime(__FILE__)); $mt->setTimezone(new DateTimeZone('America/New_York')); echo $mt->format('Y-m-d h:i A T'); ?>
+    scan_photos.php — Rev 2.2 — Updated: <?php $mt = new DateTime('@'.filemtime(__FILE__)); $mt->setTimezone(new DateTimeZone('America/New_York')); echo $mt->format('Y-m-d H:i (g:i A T)'); ?>
 </div>
 
 <script>
@@ -272,22 +274,64 @@ scanBtn.addEventListener('click', async () => {
     }
 });
 
-document.getElementById('saveBtn').addEventListener('click', () => {
-    const plate = document.getElementById('revPlate').value.trim();
-    if (!plate) { alert('Please enter or select a license plate.'); return; }
-
+document.getElementById('saveBtn').addEventListener('click', async () => {
+    const plate    = document.getElementById('revPlate').value.trim();
     const odometer = document.getElementById('revOdometer').value;
-    if (!odometer) { alert('Odometer reading is required.'); return; }
 
-    document.getElementById('fPlate').value    = plate;
-    document.getElementById('fDate').value     = document.getElementById('revDate').value;
-    document.getElementById('fOdometer').value = odometer;
-    document.getElementById('fPrice').value    = document.getElementById('revPrice').value;
-    document.getElementById('fTotal').value    = document.getElementById('revTotal').value;
-    document.getElementById('fGallons').value  = document.getElementById('revGallons').value;
+    if (!plate)    { showSaveError('Please enter or select a license plate.'); return; }
+    if (!odometer) { showSaveError('Odometer reading is required.'); return; }
 
-    document.getElementById('saveForm').submit();
+    const saveBtn = document.getElementById('saveBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+    document.getElementById('saveError').style.display = 'none';
+
+    const body = new URLSearchParams({
+        licensePlate:    plate,
+        date:            document.getElementById('revDate').value,
+        odometer:        odometer,
+        pricePerGallon:  document.getElementById('revPrice').value,
+        totalPrice:      document.getElementById('revTotal').value,
+        gallons:         document.getElementById('revGallons').value
+    });
+
+    try {
+        const resp = await fetch('auto_save.php', { method: 'POST', body });
+        const data = await resp.json();
+
+        if (data.error) {
+            showSaveError(data.error);
+        } else {
+            // Show success card
+            document.getElementById('successDetails').innerHTML =
+                `<b>Plate:</b> ${data.plate}<br>
+                 <b>Date:</b> ${data.date}<br>
+                 <b>Odometer:</b> ${data.odometer}<br>
+                 <b>Miles driven:</b> ${data.miles}<br>
+                 <b>Gallons:</b> ${data.gallons}<br>
+                 <b>Price/gal:</b> $${data.price}<br>
+                 <b>Total:</b> $${data.total}<br>
+                 <b>MPG:</b> ${data.mpg}<br>
+                 <b>Submitted:</b> ${data.submitted}`;
+            document.getElementById('viewLatestLink').href = `view_latest.php?plate=${encodeURIComponent(data.plate)}`;
+            document.getElementById('successCard').style.display = 'block';
+            document.getElementById('review').style.display = 'none';
+            document.getElementById('successCard').scrollIntoView({ behavior: 'smooth' });
+        }
+    } catch (e) {
+        showSaveError('Save failed: ' + e.message);
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 Save Entry';
+    }
 });
+
+function showSaveError(msg) {
+    const el = document.getElementById('saveError');
+    el.textContent = '⚠️ ' + msg;
+    el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth' });
+}
 
 function setField(id, val) {
     if (val === null || val === undefined || val === '') return;

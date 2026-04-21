@@ -20,6 +20,23 @@ if (empty($apiKey)) {
 // Resize and return base64 JPEG
 // ─────────────────────────────────────────
 function imageToBase64Jpeg($tmpPath, $mimeType, $maxDim = 1200) {
+    // HEIC: try Imagick first
+    $isHeic = in_array(strtolower($mimeType), ['image/heic', 'image/heif']);
+    if ($isHeic) {
+        if (extension_loaded('imagick')) {
+            try {
+                $im = new Imagick($tmpPath);
+                $im->setImageFormat('jpeg');
+                $im->setImageCompressionQuality(88);
+                return base64_encode($im->getImageBlob());
+            } catch (Exception $e) {
+                // fall through to raw
+            }
+        }
+        // Imagick not available — send raw and hope OpenAI handles it
+        return base64_encode(file_get_contents($tmpPath));
+    }
+
     if (!function_exists('imagecreatefromjpeg')) {
         return base64_encode(file_get_contents($tmpPath));
     }
