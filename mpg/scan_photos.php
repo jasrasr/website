@@ -249,6 +249,10 @@ input[type="file"] { display: none; }
 
 <?php include 'menu.php'; ?>
 
+<div style="margin-top:2rem;padding-top:0.5rem;border-top:1px solid #ddd;color:#aaa;font-size:0.75rem;text-align:center;">
+    scan_photos.php — Rev 1.1 — Updated: <?php echo date('Y-m-d H:i', filemtime(__FILE__)); ?> ET
+</div>
+
 <script>
 const photoInputs = {
     odometer: { input: document.getElementById('inputOdometer'), preview: document.getElementById('previewOdometer'), img: document.getElementById('imgOdometer') },

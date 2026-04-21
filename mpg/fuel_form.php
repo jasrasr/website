@@ -156,6 +156,10 @@ The third is auto-calculated.
 
 <?php include 'menu.php'; ?>
 
+<div style="margin-top:2rem;padding-top:0.5rem;border-top:1px solid #ddd;color:#aaa;font-size:0.75rem;text-align:center;">
+    fuel_form.php — Rev 2.4 — Updated: <?php echo date('Y-m-d H:i', filemtime(__FILE__)); ?> ET
+</div>
+
 <script>
 const price   = document.getElementById('price');
 const total   = document.getElementById('total');
