@@ -87,11 +87,22 @@ button{margin-top:1.2rem;padding:0.5rem 1.2rem;}
 
 <h2>Fuel Entry</h2>
 
+<div id="formError" style="display:none;background:#f8d7da;color:#721c24;padding:0.7rem 1rem;border-radius:7px;margin-bottom:1rem;font-size:0.9rem;max-width:360px;"></div>
+
+<div id="successCard" style="display:none;background:white;border-radius:10px;padding:1.2rem;margin-bottom:1rem;box-shadow:0 1px 4px rgba(0,0,0,0.1);border-left:5px solid #28a745;max-width:360px;">
+    <h3 style="margin:0 0 0.6rem;color:#28a745;">✅ Entry Saved!</h3>
+    <div id="successDetails" style="font-size:0.9rem;line-height:1.8;"></div>
+    <div style="margin-top:1rem;display:flex;gap:0.7rem;flex-wrap:wrap;">
+        <a href="fuel_form.php" style="background:#007bff;color:white;padding:0.5rem 1rem;border-radius:6px;text-decoration:none;font-size:0.9rem;">+ New Entry</a>
+        <a id="viewLatestLink" href="#" style="background:#6c757d;color:white;padding:0.5rem 1rem;border-radius:6px;text-decoration:none;font-size:0.9rem;">🔍 View Entry</a>
+    </div>
+</div>
+
 <p style="margin-bottom:1rem;">
     <a href="scan_photos.php" style="background:#007bff;color:white;padding:0.4rem 0.9rem;border-radius:6px;text-decoration:none;font-size:0.9rem;">📷 Scan Photos Instead</a>
 </p>
 
-<form method="post" action="save_log.php" id="fuelForm">
+<form id="fuelForm">
 
 <?php if ($canUseDropdown && !empty($knownPlates)): ?>
 <label for="plateDropdown">Select a License Plate:</label>
@@ -151,13 +162,13 @@ Enter <strong>any two</strong> of Price, Total, Gallons.
 The third is auto-calculated.
 </div>
 
-<button type="submit">Save Entry</button>
+<button type="submit" id="submitBtn">Save Entry</button>
 </form>
 
 <?php include 'menu.php'; ?>
 
 <div style="margin-top:2rem;padding-top:0.5rem;border-top:1px solid #ddd;color:#aaa;font-size:0.75rem;text-align:center;">
-    fuel_form.php — Rev 2.4 — Updated: <?php $mt = new DateTime('@'.filemtime(__FILE__)); $mt->setTimezone(new DateTimeZone('America/New_York')); echo $mt->format('Y-m-d H:i (g:i A T)'); ?>
+    fuel_form.php — Rev 2.5 — Updated: <?php $mt = new DateTime('@'.filemtime(__FILE__)); $mt->setTimezone(new DateTimeZone('America/New_York')); echo $mt->format('Y-m-d H:i (g:i A T)'); ?>
 </div>
 
 <script>
@@ -199,6 +210,63 @@ function calculate(){
 
 // Run on load in case values were pre-filled from scan
 calculate();
+
+// ── AJAX form submission ──────────────────────────────────────────────────────
+document.getElementById('fuelForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving…';
+    document.getElementById('formError').style.display = 'none';
+
+    const form = e.target;
+    const body = new URLSearchParams({
+        plateDropdown:   form.plateDropdown?.value  ?? '',
+        licensePlate:    form.licensePlate?.value   ?? '',
+        date:            form.date?.value           ?? '',
+        odometer:        form.odometer?.value       ?? '',
+        pricePerGallon:  form.pricePerGallon?.value ?? '',
+        totalPrice:      form.totalPrice?.value     ?? '',
+        gallons:         form.gallons?.value        ?? ''
+    });
+
+    try {
+        const resp = await fetch('auto_save.php', { method: 'POST', body });
+        const data = await resp.json();
+
+        if (data.error) {
+            showFormError(data.error);
+        } else {
+            document.getElementById('successDetails').innerHTML =
+                `<b>Plate:</b> ${data.plate}<br>
+                 <b>Date:</b> ${data.date}<br>
+                 <b>Odometer:</b> ${data.odometer}<br>
+                 <b>Miles driven:</b> ${data.miles}<br>
+                 <b>Gallons:</b> ${data.gallons}<br>
+                 <b>Price/gal:</b> $${data.price}<br>
+                 <b>Total:</b> $${data.total}<br>
+                 <b>MPG:</b> ${data.mpg}<br>
+                 <b>Submitted:</b> ${data.submitted}`;
+            document.getElementById('viewLatestLink').href = `view_latest.php?plate=${encodeURIComponent(data.plate)}`;
+            document.getElementById('successCard').style.display = 'block';
+            document.getElementById('fuelForm').style.display = 'none';
+            document.getElementById('successCard').scrollIntoView({ behavior: 'smooth' });
+        }
+    } catch (err) {
+        showFormError('Save failed: ' + err.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Save Entry';
+    }
+});
+
+function showFormError(msg) {
+    const el = document.getElementById('formError');
+    el.textContent = '⚠️ ' + msg;
+    el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth' });
+}
 
 // Clear buttons
 document.querySelectorAll('.clear-btn').forEach(btn=>{

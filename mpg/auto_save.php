@@ -15,8 +15,10 @@ function fail($msg) {
     exit;
 }
 
-// ── Plate ────────────────────────────────────────────────────────────────────
-$plate = strtoupper(preg_replace('/[^A-Z0-9]/', '', $_POST['licensePlate'] ?? ''));
+// ── Plate (text field takes priority over dropdown) ───────────────────────────
+$dropdown = strtoupper(preg_replace('/[^A-Z0-9]/', '', $_POST['plateDropdown'] ?? ''));
+$textbox  = strtoupper(preg_replace('/[^A-Z0-9]/', '', $_POST['licensePlate']  ?? ''));
+$plate    = $textbox !== '' ? $textbox : $dropdown;
 if ($plate === '') fail('License plate is required.');
 $_SESSION['active_plate'] = $plate;
 
