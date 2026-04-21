@@ -96,6 +96,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $entries = loadEntries($logFile);
+
+// Sort display by date (preserves original numeric keys for edit/delete)
+$sortDir = ($_GET['sort'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
+uasort($entries, function($a, $b) use ($sortDir) {
+    $cmp = strcmp($a['date'] ?? '', $b['date'] ?? '');
+    return $sortDir === 'desc' ? -$cmp : $cmp;
+});
+
 $editIndex = isset($_GET['edit']) ? (int)$_GET['edit'] : -1;
 $msgDisplay = htmlspecialchars($_GET['msg'] ?? '');
 ?>
@@ -194,7 +202,7 @@ if ($editIndex >= 0 && isset($entries[$editIndex])):
 <thead>
 <tr>
     <th>#</th>
-    <th>Date</th>
+    <th><a href="?plate=<?php echo urlencode($plate); ?>&sort=<?php echo $sortDir === 'asc' ? 'desc' : 'asc'; ?>" style="color:inherit;text-decoration:none;">Date <?php echo $sortDir === 'asc' ? '▲' : '▼'; ?></a></th>
     <th>Odometer</th>
     <th>Miles</th>
     <th>Gallons</th>
