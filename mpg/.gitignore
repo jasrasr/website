@@ -5,3 +5,6 @@ make_hash.php
 php.ini
 phpinfo.php
 .claude
+logs/
+pictures/
+device_whitelist.json
