@@ -34,7 +34,45 @@ error_reporting(E_ALL);
             border: none;
         }
     </style>
+
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Primary Meta Tags -->
+    <title>MPG Tracker | Jason Lamb</title>
+    <meta name="title" content="MPG Tracker | Jason Lamb">
+    <meta name="description" content="Easily track your vehicle’s fuel efficiency, cost per mile, and MPG trends over time. Built by Jason Lamb at jasr.me.">
+
+    <!-- Open Graph / Facebook / Microsoft Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jasr.me/mpg/">
+    <meta property="og:title" content="MPG Tracker | Jason Lamb">
+    <meta property="og:description" content="Track your fuel logs and MPG history in a clean, interactive dashboard.">
+    <meta property="og:image" content="https://jasr.me/mpg/og-preview.jpg">
+    <meta property="og:site_name" content="jasr.me">
+    <meta property="og:locale" content="en_US">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://jasr.me/mpg/">
+    <meta name="twitter:title" content="MPG Tracker | Jason Lamb">
+    <meta name="twitter:description" content="Visualize your fuel economy and spending — updated automatically.">
+    <meta name="twitter:image" content="https://jasr.me/mpg/og-preview.jpg">
+
+    <!-- Microsoft Graph / Teams / Outlook -->
+    <meta name="msapplication-TileImage" content="https://jasr.me/mpg/og-preview.jpg">
+    <meta name="msapplication-TileColor" content="#007bff">
+
+    <!-- Browser UI & SEO -->
+    <meta name="theme-color" content="#007bff">
+    <link rel="canonical" href="https://jasr.me/mpg/">
+    <link rel="icon" href="https://jasr.me/favicon.ico" type="image/x-icon">
+
+    <!-- Optional: Social/Embed hint for better previews -->
+    <meta name="author" content="Jason Lamb">
+    <meta name="robots" content="index, follow">
 </head>
+
 <body>
 
 

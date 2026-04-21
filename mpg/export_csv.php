@@ -1,48 +1,82 @@
 <?php
-/*
-# Author        : Jason Lamb (with ChatGPT)
-# Rev 1.2 - added submission date/time
-# Script        : export_csv.php
-# Description   : Converts per-vehicle JSON fuel logs into downloadable CSV.
-# Usage         : export_csv.php?plate=jasrasr
-*/
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+?>
+<?php
+// ============================================================================
+// File: export_csv.php
+// Purpose: Export fuel log entries in CSV format
+// Revision: 1.5
+// ============================================================================
 
-# $plate = isset($_GET['plate']) ? strtolower(trim($_GET['plate'])) : ''; # LOWERCASE
-$plate = isset($_GET['plate']) ? strtoupper(trim($_GET['plate'])) : '';
-$logFile = "logs/$plate.json";
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-if (empty($plate)) {
-    exit("❌ License plate required (use ?plate=XXXX).");
+$plate = strtoupper(trim($_GET['plate'] ?? ''));
+$logFile = __DIR__ . "/logs/{$plate}.json";
+
+if (!$plate || !file_exists($logFile)) {
+    die("❌ No log found for license plate {$plate}.");
 }
 
-$safePlate = preg_replace("/[^a-zA-Z0-9]/", "_", $plate);
-$file = "logs/{$safePlate}.json";
-
-if (!file_exists($file)) {
-    exit("❌ Log file not found for license plate: <code>$plate</code>");
+$data = json_decode(file_get_contents($logFile), true);
+if (!is_array($data)) {
+    die("⚠️ Invalid data for {$plate}.");
 }
 
-$data = json_decode(file_get_contents($file), true);
-
+// CSV headers
 header('Content-Type: text/csv');
-header("Content-Disposition: attachment; filename=\"{$safePlate}_fuel_log.csv\"");
+header('Content-Disposition: attachment; filename="'.$plate.'_fuel_log.csv"');
 
 $csv = fopen('php://output', 'w');
-fputcsv($csv, ['Date', 'Odometer', 'Gallons', 'Price', 'Total', 'MPG', 'Submitted']);
 
-foreach ($data as $entry) {
-    fputcsv($csv, [
-        $entry['date'],
-        $entry['odometer'],
-        $entry['gallons'],
-        $entry['price'],
-        $entry['total'],
-        $entry['mpg'],
-        $entry['submitted'] ?? ''
-    ]);
+// ------------------------
+// Write CSV header row
+// ------------------------
+fputcsv(
+    $csv,
+    [
+        'license_plate',
+        'date',
+        'odometer',
+        'gallons',
+        'price_per_gallon',
+        'total_cost',
+        'mpg',
+        'submitted_et',
+        'ip_address'
+    ],
+    ",",
+    '"',
+    "\\"
+);
+
+// ------------------------
+// Write CSV rows
+// ------------------------
+foreach ($data as $row) {
+    fputcsv(
+        $csv,
+        [
+            $row['license_plate']    ?? "",
+            $row['date']             ?? "",
+            $row['odometer']         ?? "",
+            $row['gallons']          ?? "",
+            $row['price_per_gallon'] ?? "",
+            $row['total_cost']       ?? "",
+            $row['mpg']              ?? "",
+            $row['submitted_et']     ?? "",
+            $row['ip_address']       ?? ""
+        ],
+        ",",
+        '"',
+        "\\"
+    );
 }
-
 
 fclose($csv);
 exit;
 ?>
+
+<?php include 'menu.php'; ?>

@@ -1,57 +1,85 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+// ============================================================================
+// File: menu.php
+// Purpose: Navigation menu + compact stats summary (mobile friendly)
+// Revision: 1.6
+// ============================================================================
+
+require_once __DIR__ . '/device_init.php';
+
+// Active plate from session (or from device default)
+$plate = $_SESSION['active_plate'] ?? $defaultPlate;
+
+if ($plate && empty($_SESSION['active_plate'])) {
+    $_SESSION['active_plate'] = $plate;
 }
 
-$plate = isset($_GET['plate']) ? htmlspecialchars($_GET['plate']) : null;
+$summaryText = "";
+
+// If plate is valid, compute compact summary for menu
+if ($plate) {
+    $logFile = __DIR__ . "/logs/{$plate}.json";
+    if (file_exists($logFile)) {
+        $data = json_decode(file_get_contents($logFile), true);
+
+        $totalMiles = 0;
+        $totalGallons = 0;
+        $totalCost = 0;
+        $entryCount = 0;
+
+        foreach ($data as $entry) {
+            if (!isset($entry['miles']) || $entry['miles'] <= 0) continue;
+            if (!isset($entry['gallons']) || $entry['gallons'] <= 0) continue;
+
+            $totalMiles   += $entry['miles'];
+            $totalGallons += $entry['gallons'];
+            $totalCost    += $entry['total_cost'] ?? 0;
+            $entryCount++;
+        }
+
+        if ($entryCount > 0) {
+            $avgMPG      = round($totalMiles / $totalGallons, 2);
+            $costPerMile = $totalMiles > 0 ? round($totalCost / $totalMiles, 3) : 0;
+
+            $summaryText =
+                "MPG: {$avgMPG} | Miles: {$totalMiles} | CPM: \${$costPerMile}";
+        }
+    }
+}
 ?>
-
 <style>
-    .menu-bar {
-        font-family: sans-serif;
-        font-size: 14px;
-        position: absolute;
-        top: 10px;
-        right: 20px;
-        background: #f9f9f9;
-        border: 1px solid #ccc;
-        padding: 8px 12px;
-        border-radius: 6px;
-        box-shadow: 0 0 5px rgba(0,0,0,0.1);
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        align-items: center;
-    }
-
-    .menu-bar a {
-        text-decoration: none;
-        color: #333;
-    }
-
-    .menu-bar a:hover {
-        color: #007acc;
-        text-decoration: underline;
-    }
-
-    .menu-bar .icon {
-        margin-right: 3px;
-    }
+.menu-bar {
+    margin-top: 2rem;
+    padding: 1rem;
+    border-top: 1px solid #ccc;
+    color: #666;
+    font-size: 0.92rem;
+}
+.menu-bar a {
+    margin-right: 1.2rem;
+    text-decoration: none;
+    color: #007bff;
+}
 </style>
 
 <div class="menu-bar">
-    <span title="Menu Navigation">📂 MENU</span>
-    <a href="index.php" title="Go to Home"><span class="icon">🏠</span>Home</a>
+    <strong>Menu:</strong>
+    <a href="fuel_form.php">New Entry</a>
 
     <?php if ($plate): ?>
-        <a href="view_chart.php?plate=<?= $plate ?>" title="View Chart for Plate <?= $plate ?>"><span class="icon">📈</span>Chart</a>
-        <a href="view_latest.php?plate=<?= $plate ?>" title="Most Recent Entry"><span class="icon">🕒</span>Latest</a>
-        <a href="logs/<?= $plate ?>.json" title="Raw JSON Data"><span class="icon">🗂️</span>JSON</a>
-        <a href="export_csv.php?plate=<?= $plate ?>" title="Export CSV"><span class="icon">📤</span>CSV</a>
+        <a href="view_latest.php?plate=<?php echo urlencode($plate); ?>">My Last Entry</a>
+        <a href="view_chart.php?plate=<?php echo urlencode($plate); ?>">My MPG Chart</a>
+        <a href="view_stats.php?plate=<?php echo urlencode($plate); ?>">My Stats</a>
+
+        <?php if ($summaryText): ?>
+            <div style="margin-top:6px;color:#444;">
+                <?php echo $summaryText; ?>
+            </div>
+        <?php endif; ?>
     <?php endif; ?>
 
-    <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true): ?>
-        <a href="admin.php" title="Admin Dashboard"><span class="icon">🛠️</span>Admin</a>
-        <a href="logout.php" title="Log out of session"><span class="icon">🚪</span>Logout</a>
+    <?php if ($isAdminTrusted): ?>
+        <a href="admin.php">Admin</a>
+        <a href="devices_admin.php">Devices</a>
     <?php endif; ?>
 </div>
