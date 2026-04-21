@@ -50,7 +50,27 @@ h2 { margin-bottom: 0.2rem; }
 input[type="file"] { display: none; }
 
 #thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 0.8rem; }
-#thumbs img { width: 90px; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
+#thumbs img {
+    width: 90px; height: 70px; object-fit: cover; border-radius: 6px;
+    border: 2px solid #ddd; cursor: zoom-in; transition: border-color 0.15s;
+}
+#thumbs img:hover { border-color: #007bff; }
+
+/* Lightbox */
+#lightbox {
+    display: none; position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.92); justify-content: center; align-items: center;
+}
+#lightbox.open { display: flex; }
+#lightbox img {
+    max-width: 96vw; max-height: 92vh; object-fit: contain;
+    border-radius: 6px; box-shadow: 0 0 30px rgba(0,0,0,0.6);
+}
+#lightboxClose {
+    position: absolute; top: 14px; right: 18px;
+    color: white; font-size: 2rem; cursor: pointer;
+    line-height: 1; background: none; border: none; padding: 0;
+}
 #photoCount { font-size: 0.82rem; color: #28a745; margin-top: 0.4rem; display: none; }
 
 #errorBox {
@@ -165,6 +185,12 @@ a { color: #007bff; text-decoration: none; }
     <button id="saveBtn">💾 Save Entry</button>
 </div>
 
+<!-- Lightbox -->
+<div id="lightbox">
+    <button id="lightboxClose" onclick="closeLightbox()">✕</button>
+    <img id="lightboxImg" src="" alt="Full size photo">
+</div>
+
 <!-- Hidden form that submits directly to save_log.php -->
 <form id="saveForm" method="post" action="save_log.php" style="display:none;">
     <input type="hidden" name="licensePlate" id="fPlate">
@@ -178,7 +204,7 @@ a { color: #007bff; text-decoration: none; }
 <?php include 'menu.php'; ?>
 
 <div class="footer">
-    scan_photos.php — Rev 2.0 — Updated: <?php echo date('Y-m-d H:i', filemtime(__FILE__)); ?> ET
+    scan_photos.php — Rev 2.1 — Updated: <?php echo date('Y-m-d H:i', filemtime(__FILE__)); ?> ET
 </div>
 
 <script>
@@ -197,6 +223,8 @@ photoInput.addEventListener('change', () => {
         reader.onload = e => {
             const img = document.createElement('img');
             img.src = e.target.result;
+            img.title = 'Tap to expand';
+            img.addEventListener('click', () => openLightbox(e.target.result));
             thumbsDiv.appendChild(img);
         };
         reader.readAsDataURL(file);
@@ -267,6 +295,18 @@ function setField(id, val) {
     el.value = val;
     el.classList.add('filled');
 }
+
+function openLightbox(src) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('open');
+}
+// Close on backdrop tap
+document.getElementById('lightbox').addEventListener('click', e => {
+    if (e.target === document.getElementById('lightbox')) closeLightbox();
+});
 
 function showError(msg) {
     const el = document.getElementById('errorBox');
