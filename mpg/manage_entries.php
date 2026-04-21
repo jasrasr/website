@@ -1,75 +1,182 @@
 <?php
 // ============================================================================
 // File: manage_entries.php
-// Purpose: Manage individual entries for a given plate (verify per entry)
-// Revision: 1.0
+// Purpose: View, edit, and delete individual fuel log entries for a plate
+// Revision: 2.0
 // Author: Jason Lamb
 // ============================================================================
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
+if (session_status() === PHP_SESSION_NONE) session_start();
 
 require_once __DIR__ . '/device_init.php';
 
 if (!$isAdminTrusted) {
-    die("<h2>Access denied — your IP or device is not authorized.</h2>");
+    die("<h2>Access denied.</h2>");
 }
 
-
-
-$plate = strtoupper(trim($_GET['plate'] ?? ''));
-$plate = preg_replace('/[^A-Z0-9]/', '', $plate);
-
-if ($plate === '') {
-    die("<h2>Error: No license plate specified.</h2>");
-}
+$plate = strtoupper(preg_replace('/[^A-Z0-9]/', '', $_GET['plate'] ?? $_POST['plate'] ?? ''));
+if ($plate === '') die("<h2>No license plate specified.</h2>");
 
 $logFile = __DIR__ . "/logs/{$plate}.json";
-if (!file_exists($logFile)) {
-    die("<h2>No log file found for plate: " . htmlspecialchars($plate) . "</h2>");
+if (!file_exists($logFile)) die("<h2>No log file found for: " . htmlspecialchars($plate) . "</h2>");
+
+// ─────────────────────────────────────────
+// Recalculate miles and MPG for one entry
+// (based on the previous entry's odometer)
+// ─────────────────────────────────────────
+function recalcEntry(&$entries, $i) {
+    if (!isset($entries[$i])) return;
+    $prevOdo = ($i > 0) ? (float)($entries[$i - 1]['odometer'] ?? 0) : 0;
+    $odo     = (float)($entries[$i]['odometer'] ?? 0);
+    $gallons = (float)($entries[$i]['gallons']  ?? 0);
+    $miles   = ($prevOdo > 0 && $odo > $prevOdo) ? round($odo - $prevOdo, 1) : 0;
+    $entries[$i]['miles'] = $miles;
+    $entries[$i]['mpg']   = ($gallons > 0 && $miles > 0) ? round($miles / $gallons, 2) : 0;
 }
 
-$data = json_decode(file_get_contents($logFile), true);
-if (!is_array($data) || count($data) === 0) {
-    die("<h2>No entries found for plate: " . htmlspecialchars($plate) . "</h2>");
+function loadEntries($logFile) {
+    $decoded = json_decode(file_get_contents($logFile), true);
+    return is_array($decoded) ? array_values($decoded) : [];
 }
+
+function saveEntries($logFile, $entries) {
+    file_put_contents($logFile, json_encode(array_values($entries), JSON_PRETTY_PRINT), LOCK_EX);
+}
+
+$message = '';
+
+// ─────────────────────────────────────────
+// Handle POST actions
+// ─────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    $index  = isset($_POST['index']) ? (int)$_POST['index'] : -1;
+    $entries = loadEntries($logFile);
+
+    if ($action === 'delete' && isset($entries[$index])) {
+        array_splice($entries, $index, 1);
+        // Recalculate the entry that now sits at $index (was the one after deleted)
+        if (isset($entries[$index])) recalcEntry($entries, $index);
+        saveEntries($logFile, $entries);
+        $message = "Entry #{$index} deleted and miles recalculated.";
+
+    } elseif ($action === 'save' && isset($entries[$index])) {
+        $entries[$index]['date']            = trim($_POST['date'] ?? $entries[$index]['date']);
+        $entries[$index]['odometer']        = (float)($_POST['odometer']        ?? $entries[$index]['odometer']);
+        $entries[$index]['gallons']         = (float)($_POST['gallons']         ?? $entries[$index]['gallons']);
+        $entries[$index]['price_per_gallon']= (float)($_POST['price_per_gallon']?? $entries[$index]['price_per_gallon']);
+        $entries[$index]['total_cost']      = (float)($_POST['total_cost']      ?? $entries[$index]['total_cost']);
+        $entries[$index]['verified']        = ($_POST['verified'] ?? 'no') === 'yes' ? 'yes' : 'no';
+
+        // Recalculate this entry and the one after it
+        recalcEntry($entries, $index);
+        if (isset($entries[$index + 1])) recalcEntry($entries, $index + 1);
+
+        saveEntries($logFile, $entries);
+        $message = "Entry #{$index} saved. Miles and MPG recalculated.";
+    }
+
+    header("Location: manage_entries.php?plate={$plate}&msg=" . urlencode($message));
+    exit;
+}
+
+$entries = loadEntries($logFile);
+$editIndex = isset($_GET['edit']) ? (int)$_GET['edit'] : -1;
+$msgDisplay = htmlspecialchars($_GET['msg'] ?? '');
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Manage Entries - <?php echo htmlspecialchars($plate); ?></title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Entries – <?php echo htmlspecialchars($plate); ?></title>
 <style>
-body{font-family:sans-serif;max-width:1100px;margin:auto;padding-top:2rem;}
-table{width:100%;border-collapse:collapse;margin-top:2rem;}
-th,td{border:1px solid #ccc;padding:0.5rem;text-align:center;}
-th{background-color:#f2f2f2;}
+body{font-family:sans-serif;max-width:1200px;margin:auto;padding:1.5rem;}
+table{width:100%;border-collapse:collapse;margin-top:1.5rem;font-size:0.88rem;}
+th,td{border:1px solid #ccc;padding:0.45rem 0.5rem;text-align:center;}
+th{background:#f2f2f2;}
 .badge-yes{color:green;font-weight:bold;}
-.badge-no{color:red;font-weight:bold;}
-button.verify-btn{
-    background:green;
-    color:white;
-    border:none;
-    padding:6px 12px;
-    cursor:pointer;
-    border-radius:4px;
-}
-button.verify-btn:hover{
-    opacity:0.9;
-}
-a{text-decoration:none;color:#007BFF;}
+.badge-no{color:#c00;font-weight:bold;}
+.btn{border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:0.82rem;}
+.btn-verify{background:#28a745;color:white;}
+.btn-edit  {background:#007bff;color:white;}
+.btn-delete{background:#dc3545;color:white;}
+.btn:hover{opacity:0.85;}
+a{color:#007bff;text-decoration:none;}
+.msg{background:#d4edda;color:#155724;padding:0.6rem 1rem;border-radius:6px;margin-bottom:1rem;}
+.edit-card{background:#fff8e1;border:1px solid #ffc107;border-radius:8px;padding:1.2rem;margin:1.5rem 0;}
+.edit-card h3{margin:0 0 1rem 0;}
+.edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.7rem 1.2rem;}
+.edit-grid label{font-size:0.88rem;color:#444;}
+.edit-grid input, .edit-grid select{width:100%;padding:0.35rem 0.5rem;border:1px solid #ccc;border-radius:4px;font-size:0.92rem;}
+.edit-actions{margin-top:1rem;display:flex;gap:0.7rem;}
+.btn-save{background:#28a745;color:white;padding:0.5rem 1.2rem;font-size:0.95rem;}
+.btn-cancel{background:#6c757d;color:white;padding:0.5rem 1rem;font-size:0.95rem;text-decoration:none;display:inline-block;border-radius:4px;}
+.note{font-size:0.8rem;color:#666;margin-top:0.4rem;}
 </style>
 </head>
 <body>
 
-<h2>Manage Entries for License Plate: <?php echo htmlspecialchars($plate); ?></h2>
+<h2>Manage Entries — <?php echo htmlspecialchars($plate); ?></h2>
 <p><a href="admin.php">← Back to Admin Panel</a></p>
+
+<?php if ($msgDisplay): ?>
+<div class="msg">✓ <?php echo $msgDisplay; ?></div>
+<?php endif; ?>
+
+<?php
+// ─────────────────────────────────────────
+// Edit form (shown inline when ?edit=N)
+// ─────────────────────────────────────────
+if ($editIndex >= 0 && isset($entries[$editIndex])):
+    $e = $entries[$editIndex];
+?>
+<div class="edit-card">
+    <h3>Edit Entry #<?php echo $editIndex; ?></h3>
+    <form method="post" action="manage_entries.php">
+        <input type="hidden" name="action" value="save">
+        <input type="hidden" name="plate"  value="<?php echo htmlspecialchars($plate); ?>">
+        <input type="hidden" name="index"  value="<?php echo $editIndex; ?>">
+        <div class="edit-grid">
+            <div>
+                <label>Date</label>
+                <input type="date" name="date" value="<?php echo htmlspecialchars($e['date'] ?? ''); ?>">
+            </div>
+            <div>
+                <label>Odometer</label>
+                <input type="number" name="odometer" step="0.1" value="<?php echo $e['odometer'] ?? ''; ?>">
+            </div>
+            <div>
+                <label>Gallons</label>
+                <input type="number" name="gallons" step="0.001" value="<?php echo $e['gallons'] ?? ''; ?>">
+            </div>
+            <div>
+                <label>Price per Gallon ($)</label>
+                <input type="number" name="price_per_gallon" step="0.001" value="<?php echo $e['price_per_gallon'] ?? ''; ?>">
+            </div>
+            <div>
+                <label>Total Cost ($)</label>
+                <input type="number" name="total_cost" step="0.01" value="<?php echo $e['total_cost'] ?? ''; ?>">
+            </div>
+            <div>
+                <label>Verified</label>
+                <select name="verified">
+                    <option value="no"  <?php echo ($e['verified'] ?? 'no') === 'no'  ? 'selected' : ''; ?>>No</option>
+                    <option value="yes" <?php echo ($e['verified'] ?? 'no') === 'yes' ? 'selected' : ''; ?>>Yes</option>
+                </select>
+            </div>
+        </div>
+        <p class="note">Miles and MPG are recalculated automatically on save. If you change the odometer, the next entry's miles/MPG will also be updated.</p>
+        <div class="edit-actions">
+            <button type="submit" class="btn btn-save">💾 Save Changes</button>
+            <a href="manage_entries.php?plate=<?php echo urlencode($plate); ?>" class="btn-cancel">Cancel</a>
+        </div>
+    </form>
+</div>
+<?php endif; ?>
 
 <table>
 <thead>
@@ -80,53 +187,52 @@ a{text-decoration:none;color:#007BFF;}
     <th>Miles</th>
     <th>Gallons</th>
     <th>Price/Gal</th>
-    <th>Total Cost</th>
+    <th>Total</th>
     <th>MPG</th>
     <th>Submitted (ET)</th>
     <th>Verified</th>
-    <th>Action</th>
+    <th>Actions</th>
 </tr>
 </thead>
 <tbody>
-<?php foreach ($data as $index => $entry): 
-    $verified = strtolower($entry['verified'] ?? 'no');
+<?php foreach ($entries as $i => $entry):
+    $verified   = strtolower($entry['verified'] ?? 'no');
     $isVerified = ($verified === 'yes');
+    $rowStyle   = ($i === $editIndex) ? ' style="background:#fff8e1;"' : '';
 ?>
-<tr>
-    <td><?php echo $index; ?></td>
+<tr<?php echo $rowStyle; ?>>
+    <td><?php echo $i; ?></td>
     <td><?php echo htmlspecialchars($entry['date'] ?? '—'); ?></td>
     <td><?php echo htmlspecialchars($entry['odometer'] ?? '—'); ?></td>
     <td><?php echo htmlspecialchars($entry['miles'] ?? '—'); ?></td>
     <td><?php echo htmlspecialchars($entry['gallons'] ?? '—'); ?></td>
-    <td><?php echo isset($entry['price_per_gallon']) ? number_format((float)$entry['price_per_gallon'], 3) : '—'; ?></td>
+    <td><?php echo isset($entry['price_per_gallon']) ? '$' . number_format((float)$entry['price_per_gallon'], 3) : '—'; ?></td>
     <td><?php echo isset($entry['total_cost']) ? '$' . number_format((float)$entry['total_cost'], 2) : '—'; ?></td>
     <td><?php echo htmlspecialchars($entry['mpg'] ?? '—'); ?></td>
-    <td><?php echo htmlspecialchars($entry['submitted_et'] ?? '—'); ?></td>
-    <td>
-        <?php if ($isVerified): ?>
-            <span class="badge-yes">Yes</span>
-        <?php else: ?>
-            <span class="badge-no">No</span>
-        <?php endif; ?>
-    </td>
-    <td>
+    <td style="font-size:0.8rem;"><?php echo htmlspecialchars($entry['submitted_et'] ?? '—'); ?></td>
+    <td><?php echo $isVerified ? '<span class="badge-yes">Yes</span>' : '<span class="badge-no">No</span>'; ?></td>
+    <td style="white-space:nowrap;">
         <?php if (!$isVerified): ?>
-            <form method="post" action="verify_entry.php" style="display:inline;">
-                <input type="hidden" name="plate" value="<?php echo htmlspecialchars($plate); ?>">
-                <input type="hidden" name="index" value="<?php echo $index; ?>">
-                <button type="submit" class="verify-btn">Verify</button>
-            </form>
-        <?php else: ?>
-            <!-- No action for already verified entries -->
-            <span class="badge-yes">Verified ✔</span>
+        <form method="post" action="verify_entry.php" style="display:inline;">
+            <input type="hidden" name="plate" value="<?php echo htmlspecialchars($plate); ?>">
+            <input type="hidden" name="index" value="<?php echo $i; ?>">
+            <button type="submit" class="btn btn-verify">✔ Verify</button>
+        </form>
         <?php endif; ?>
+        <a href="manage_entries.php?plate=<?php echo urlencode($plate); ?>&edit=<?php echo $i; ?>" class="btn btn-edit">✏️ Edit</a>
+        <form method="post" action="manage_entries.php" style="display:inline;"
+              onsubmit="return confirm('Delete entry #<?php echo $i; ?> (<?php echo htmlspecialchars($entry['date'] ?? ''); ?>)? Miles for the next entry will be recalculated.');">
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="plate"  value="<?php echo htmlspecialchars($plate); ?>">
+            <input type="hidden" name="index"  value="<?php echo $i; ?>">
+            <button type="submit" class="btn btn-delete">🗑 Delete</button>
+        </form>
     </td>
 </tr>
 <?php endforeach; ?>
 </tbody>
 </table>
 
+<?php include 'menu.php'; ?>
 </body>
 </html>
-
-<?php include 'menu.php'; ?>

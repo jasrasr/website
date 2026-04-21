@@ -65,6 +65,7 @@ if ($plate) {
 <div class="menu-bar">
     <strong>Menu:</strong>
     <a href="fuel_form.php">New Entry</a>
+    <a href="scan_photos.php">📷 Scan</a>
 
     <?php if ($plate): ?>
         <a href="view_latest.php?plate=<?php echo urlencode($plate); ?>">My Last Entry</a>

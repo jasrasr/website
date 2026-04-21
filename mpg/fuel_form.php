@@ -37,6 +37,14 @@ if ($activePlate && empty($_SESSION['active_plate'])) {
 
 // Today's date default
 $today = (new DateTime('now', new DateTimeZone('America/New_York')))->format('Y-m-d');
+
+// Pre-fill values passed from scan_photos.php via GET
+$prefill = [
+    'odometer'       => isset($_GET['odometer'])       ? (float)$_GET['odometer']      : null,
+    'pricePerGallon' => isset($_GET['pricePerGallon'])  ? (float)$_GET['pricePerGallon'] : null,
+    'totalPrice'     => isset($_GET['totalCost'])       ? (float)$_GET['totalCost']      : null,
+    'gallons'        => isset($_GET['gallons'])         ? (float)$_GET['gallons']        : null,
+];
 ?>
 <!DOCTYPE html>
 <html>
@@ -79,6 +87,10 @@ button{margin-top:1.2rem;padding:0.5rem 1.2rem;}
 
 <h2>Fuel Entry</h2>
 
+<p style="margin-bottom:1rem;">
+    <a href="scan_photos.php" style="background:#007bff;color:white;padding:0.4rem 0.9rem;border-radius:6px;text-decoration:none;font-size:0.9rem;">📷 Scan Photos Instead</a>
+</p>
+
 <form method="post" action="save_log.php" id="fuelForm">
 
 <?php if ($canUseDropdown && !empty($knownPlates)): ?>
@@ -108,24 +120,28 @@ button{margin-top:1.2rem;padding:0.5rem 1.2rem;}
 <input type="date" name="date" value="<?= $today ?>">
 
 <label>Odometer Reading (up to .#)</label>
-<input type="number" name="odometer" step="0.1" min="0">
+<input type="number" name="odometer" step="0.1" min="0"
+       value="<?= $prefill['odometer'] !== null ? $prefill['odometer'] : '' ?>">
 
 <label>
-    Price per Gallon ($, enter .### — .009 added automatically)
+    Price per Gallon ($) — enter 2 decimals (e.g. 3.69) and .009 is added, or enter full price (e.g. 3.699)
 </label>
 <div style="display:flex;gap:6px;align-items:center;">
-    <input type="number" id="price" name="pricePerGallon" step="0.001" min="0">
+    <input type="number" id="price" name="pricePerGallon" step="0.001" min="0"
+           value="<?= $prefill['pricePerGallon'] !== null ? $prefill['pricePerGallon'] : '' ?>">
     <button type="button" class="clear-btn" data-clear="price">✖</button>
 </div>
 <label>Total Price ($)</label>
 <div style="display:flex;gap:6px;align-items:center;">
-    <input type="number" id="total" name="totalPrice" step="0.01" min="0">
+    <input type="number" id="total" name="totalPrice" step="0.01" min="0"
+           value="<?= $prefill['totalPrice'] !== null ? $prefill['totalPrice'] : '' ?>">
     <button type="button" class="clear-btn" data-clear="total">✖</button>
 </div>
 
 <label>Total Gallons (up to .###)</label>
 <div style="display:flex;gap:6px;align-items:center;">
-    <input type="number" id="gallons" name="gallons" step="0.001" min="0">
+    <input type="number" id="gallons" name="gallons" step="0.001" min="0"
+           value="<?= $prefill['gallons'] !== null ? $prefill['gallons'] : '' ?>">
     <button type="button" class="clear-btn" data-clear="gallons">✖</button>
 </div>
 
@@ -176,6 +192,9 @@ function calculate(){
 [price,total,gallons].forEach(el=>{
     el.addEventListener('input', calculate);
 });
+
+// Run on load in case values were pre-filled from scan
+calculate();
 
 // Clear buttons
 document.querySelectorAll('.clear-btn').forEach(btn=>{

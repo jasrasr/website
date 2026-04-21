@@ -80,8 +80,12 @@ if (is_null($ttl_input)) {
     $gal_input = round($ttl_input / $pg_input, 3);
 }
 
-// Apply your +0.009 rule to price
-$price_per_gallon = $pg_input + 0.009;
+// Add +0.009 only if the raw input has 2 or fewer decimal places (e.g. "3.69" → 3.699).
+// If the user already entered 3 decimal places (e.g. "3.699" from a scan), use as-is.
+$pg_decimals = strlen(ltrim(substr($pg_input_raw, strpos($pg_input_raw, '.') + 1), ''));
+$price_per_gallon = (strpos($pg_input_raw, '.') !== false && $pg_decimals >= 3)
+    ? $pg_input
+    : $pg_input + 0.009;
 $gallons          = $gal_input;
 $total_cost       = $ttl_input;
 
