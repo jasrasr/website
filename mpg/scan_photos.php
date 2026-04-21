@@ -204,7 +204,7 @@ a { color: #007bff; text-decoration: none; }
 <?php include 'menu.php'; ?>
 
 <div class="footer">
-    scan_photos.php — Rev 2.1 — Updated: <?php echo date('Y-m-d H:i', filemtime(__FILE__)); ?> ET
+    scan_photos.php — Rev 2.1 — Updated: <?php $mt = new DateTime('@'.filemtime(__FILE__)); $mt->setTimezone(new DateTimeZone('America/New_York')); echo $mt->format('Y-m-d h:i A T'); ?>
 </div>
 
 <script>

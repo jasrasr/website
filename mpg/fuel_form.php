@@ -157,7 +157,7 @@ The third is auto-calculated.
 <?php include 'menu.php'; ?>
 
 <div style="margin-top:2rem;padding-top:0.5rem;border-top:1px solid #ddd;color:#aaa;font-size:0.75rem;text-align:center;">
-    fuel_form.php — Rev 2.4 — Updated: <?php echo date('Y-m-d H:i', filemtime(__FILE__)); ?> ET
+    fuel_form.php — Rev 2.4 — Updated: <?php $mt = new DateTime('@'.filemtime(__FILE__)); $mt->setTimezone(new DateTimeZone('America/New_York')); echo $mt->format('Y-m-d h:i A T'); ?>
 </div>
 
 <script>
