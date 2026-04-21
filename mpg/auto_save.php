@@ -82,6 +82,8 @@ $mpg = ($gallons > 0 && $miles > 0) ? round($miles / $gallons, 2) : 0;
 $submittedET = (new DateTime('now', new DateTimeZone('America/New_York')))->format('Y-m-d H:i:s T');
 
 // ── Save ──────────────────────────────────────────────────────────────────────
+$source = ($_POST['source'] ?? 'manual') === 'scan' ? 'scan' : 'manual';
+
 $entries[] = [
     'license_plate'    => $plate,
     'date'             => $date,
@@ -94,6 +96,7 @@ $entries[] = [
     'submitted_et'     => $submittedET,
     'ip_address'       => $visitorIP,
     'device_id'        => $deviceId,
+    'source'           => $source,
     'verified'         => 'no'
 ];
 

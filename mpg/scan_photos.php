@@ -292,7 +292,8 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
         odometer:        odometer,
         pricePerGallon:  document.getElementById('revPrice').value,
         totalPrice:      document.getElementById('revTotal').value,
-        gallons:         document.getElementById('revGallons').value
+        gallons:         document.getElementById('revGallons').value,
+        source:          'scan'
     });
 
     try {

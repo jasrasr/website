@@ -210,6 +210,7 @@ if ($editIndex >= 0 && isset($entries[$editIndex])):
     <th>Total</th>
     <th>MPG</th>
     <th>Submitted (ET)</th>
+    <th>Source</th>
     <th>Verified</th>
     <th>Actions</th>
 </tr>
@@ -230,6 +231,7 @@ if ($editIndex >= 0 && isset($entries[$editIndex])):
     <td><?php echo isset($entry['total_cost']) ? '$' . number_format((float)$entry['total_cost'], 2) : '—'; ?></td>
     <td><?php echo htmlspecialchars($entry['mpg'] ?? '—'); ?></td>
     <td style="font-size:0.8rem;"><?php echo htmlspecialchars($entry['submitted_et'] ?? '—'); ?></td>
+    <td><?php $src = $entry['source'] ?? 'manual'; echo $src === 'scan' ? '📷' : '⌨️'; ?></td>
     <td><?php echo $isVerified ? '<span class="badge-yes">Yes</span>' : '<span class="badge-no">No</span>'; ?></td>
     <td style="white-space:nowrap;">
         <?php if (!$isVerified): ?>
