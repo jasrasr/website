@@ -77,6 +77,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         saveEntries($logFile, $entries);
         $message = "Entry #{$index} saved. Miles and MPG recalculated.";
+
+    } elseif ($action === 'save_json') {
+        $raw = $_POST['raw_json'] ?? '';
+        $parsed = json_decode($raw, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $message = "ERROR: Invalid JSON — " . json_last_error_msg() . ". Nothing was saved.";
+        } elseif (!is_array($parsed)) {
+            $message = "ERROR: JSON must be an array of entries.";
+        } else {
+            file_put_contents($logFile, json_encode(array_values($parsed), JSON_PRETTY_PRINT), LOCK_EX);
+            $message = "Raw JSON saved successfully (" . count($parsed) . " entries).";
+        }
     }
 
     header("Location: manage_entries.php?plate={$plate}&msg=" . urlencode($message));
@@ -232,6 +244,87 @@ if ($editIndex >= 0 && isset($entries[$editIndex])):
 <?php endforeach; ?>
 </tbody>
 </table>
+
+<!-- Raw JSON Editor -->
+<div style="margin-top:2.5rem;">
+    <h3 style="cursor:pointer;user-select:none;" onclick="toggleJson()" id="jsonToggleHeader">
+        ▶ Raw JSON Editor <span style="font-size:0.8rem;color:#888;font-weight:normal;">(click to expand)</span>
+    </h3>
+    <div id="jsonEditor" style="display:none;">
+        <p style="font-size:0.85rem;color:#666;margin-top:0;">
+            ⚠️ Edit with care — no automatic recalculation here. Saves directly to the JSON file.
+        </p>
+        <div id="jsonError" style="display:none;background:#f8d7da;color:#721c24;padding:0.6rem;border-radius:6px;margin-bottom:0.6rem;font-size:0.88rem;"></div>
+        <textarea id="jsonTextarea" spellcheck="false" style="width:100%;height:420px;font-family:monospace;font-size:0.82rem;border:1px solid #ccc;border-radius:6px;padding:0.7rem;resize:vertical;"><?php echo htmlspecialchars(file_get_contents($logFile)); ?></textarea>
+        <div style="margin-top:0.6rem;display:flex;gap:0.7rem;align-items:center;">
+            <button onclick="saveJson()" style="background:#dc3545;color:white;border:none;padding:0.55rem 1.2rem;border-radius:6px;cursor:pointer;font-size:0.95rem;">💾 Save Raw JSON</button>
+            <button onclick="formatJson()" style="background:#6c757d;color:white;border:none;padding:0.55rem 1rem;border-radius:6px;cursor:pointer;font-size:0.95rem;">{ } Format</button>
+            <span id="jsonStatus" style="font-size:0.85rem;color:#28a745;"></span>
+        </div>
+    </div>
+</div>
+
+<form id="jsonSaveForm" method="post" action="manage_entries.php" style="display:none;">
+    <input type="hidden" name="action" value="save_json">
+    <input type="hidden" name="plate" value="<?php echo htmlspecialchars($plate); ?>">
+    <input type="hidden" name="raw_json" id="jsonHidden">
+</form>
+
+<script>
+function toggleJson() {
+    const el = document.getElementById('jsonEditor');
+    const hdr = document.getElementById('jsonToggleHeader');
+    const open = el.style.display === 'none';
+    el.style.display = open ? 'block' : 'none';
+    hdr.innerHTML = (open ? '▼' : '▶') + ' Raw JSON Editor <span style="font-size:0.8rem;color:#888;font-weight:normal;">(click to ' + (open ? 'collapse' : 'expand') + ')</span>';
+}
+
+function formatJson() {
+    const ta = document.getElementById('jsonTextarea');
+    try {
+        const parsed = JSON.parse(ta.value);
+        ta.value = JSON.stringify(parsed, null, 4);
+        document.getElementById('jsonStatus').textContent = '✓ Formatted';
+        document.getElementById('jsonError').style.display = 'none';
+    } catch (e) {
+        showJsonError('Invalid JSON: ' + e.message);
+    }
+}
+
+function saveJson() {
+    const ta = document.getElementById('jsonTextarea');
+    try {
+        const parsed = JSON.parse(ta.value);
+        if (!Array.isArray(parsed)) { showJsonError('JSON must be an array [ ... ]'); return; }
+        if (!confirm('Save raw JSON? This overwrites all ' + parsed.length + ' entries directly.')) return;
+        document.getElementById('jsonHidden').value = JSON.stringify(parsed);
+        document.getElementById('jsonSaveForm').submit();
+    } catch (e) {
+        showJsonError('Invalid JSON: ' + e.message);
+    }
+}
+
+function showJsonError(msg) {
+    const el = document.getElementById('jsonError');
+    el.textContent = '⚠️ ' + msg;
+    el.style.display = 'block';
+}
+
+// Live JSON validation as you type
+document.getElementById('jsonTextarea').addEventListener('input', () => {
+    const ta = document.getElementById('jsonTextarea');
+    const status = document.getElementById('jsonStatus');
+    try {
+        JSON.parse(ta.value);
+        status.textContent = '✓ Valid JSON';
+        status.style.color = '#28a745';
+        document.getElementById('jsonError').style.display = 'none';
+    } catch (e) {
+        status.textContent = '✗ Invalid JSON';
+        status.style.color = '#dc3545';
+    }
+});
+</script>
 
 <?php include 'menu.php'; ?>
 </body>
