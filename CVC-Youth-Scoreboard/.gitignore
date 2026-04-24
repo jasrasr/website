@@ -3,3 +3,4 @@ node_modules/
 
 # Runtime data — scores, users, audit logs, credentials (server-side only)
 **/data/
+first-run-credentials.txt
