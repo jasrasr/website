@@ -1,17 +1,18 @@
 <?php declare(strict_types=1);
 /**
  * Filename: auth.php
- * Revision : 1.1.0
+ * Revision : 1.2.0
  * Description : Shared authentication library for CVC Scoreboard.
  *               Handles sessions, user management, login/logout, and audit logging.
  *               Users stored in data/users.json with bcrypt-hashed passwords.
  *               Default users auto-created on first load.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-13
- * Modified Date : 2026-04-13
+ * Modified Date : 2026-04-24
  * Changelog :
  * 1.0.0 Initial release; per-user auth, roles, scoreboard access, audit logging
  * 1.1.0 Replaced hardcoded temp passwords with random generation; writes first-run-credentials.txt
+ * 1.2.0 Default passwords set to cvc-[username] pattern instead of random hex
  */
 
 const USERS_FILE     = __DIR__ . '/data/users.json';
@@ -165,7 +166,7 @@ function ensureUsersFile(): void
         $credentials = [];
         $users       = [];
         foreach ($names as [$username, $role, $scoreboards]) {
-            $password      = bin2hex(random_bytes(6)); // 12-char random hex
+            $password      = 'cvc-' . $username;
             $users[]       = makeUser($username, $password, $role, $scoreboards);
             $credentials[] = "{$username}: {$password}";
         }
