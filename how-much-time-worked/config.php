@@ -1,7 +1,7 @@
 <?php
 /*
     Timeclock Photo Logger
-    Revision: 1.2.1
+    Revision: 1.2.2
     Author: Jason Lamb (with help from Claude Code CLI)
     Created: 2026-04-27
     Modified: 2026-04-27
@@ -11,6 +11,7 @@
     1.1.0 per-employee JSON files instead of single hours.json
     1.2.0 remove unused fields: unit, job, carry_over_tips, declared_tips, charge_tips
     1.2.1 improved employee name parsing — positional (line after Unit #) instead of regex guess
+    1.2.2 fix OCR field parsing for two-column receipt layout (times, shift/week hours)
 */
 
 declare(strict_types=1);
@@ -18,7 +19,7 @@ declare(strict_types=1);
 date_default_timezone_set('America/New_York');
 
 const APP_NAME = 'Timeclock Photo Logger';
-const APP_REVISION = '1.2.1';
+const APP_REVISION = '1.2.2';
 const APP_UPDATED = '2026-04-27';
 
 const DATA_DIR = __DIR__ . '/data';
@@ -183,19 +184,31 @@ function parseClockSlipText(string $text): array
         $result['date'] = normalizeDateInput($m[1]);
     }
 
-    if (preg_match('/Time\s*in\s*:\s*([^\n]+)/i', $clean, $m)) {
-        $result['time_in'] = trim($m[1]);
+    // Times — find all H:MM AM/PM patterns in order; first = time_in, second = time_out.
+    // Handles OCR layouts where labels and values land on separate lines.
+    preg_match_all('/\b(\d{1,2}:\d{2}[ \t]*(AM|PM))\b/i', $clean, $timeMatches);
+    if (!empty($timeMatches[1])) {
+        $result['time_in'] = trim($timeMatches[1][0]);
+        if (isset($timeMatches[1][1])) {
+            $result['time_out'] = trim($timeMatches[1][1]);
+        }
     }
 
-    if (preg_match('/Time\s*out\s*:\s*([^\n]+)/i', $clean, $m)) {
-        $result['time_out'] = trim($m[1]);
-    }
-
-    if (preg_match('/Hours\s*this\s*shift\s*:\s*([^\n]+)/i', $clean, $m)) {
+    // Shift hours — value may appear on the line before the label, same line, or line after.
+    if (preg_match('/(\d{1,3}:\d{2})[ \t]*\n[ \t]*[^\n]*hours[ \t]*this[ \t]*shift/i', $clean, $m)) {
+        $result['printed_shift_hours'] = trim($m[1]);
+    } elseif (preg_match('/hours[ \t]*this[ \t]*shift[ \t]*:[ \t]*(\d[^\n]+)/i', $clean, $m)) {
+        $result['printed_shift_hours'] = trim($m[1]);
+    } elseif (preg_match('/hours[ \t]*this[ \t]*shift[ \t]*:[ \t]*\n[ \t]*(\d[^\n]+)/i', $clean, $m)) {
         $result['printed_shift_hours'] = trim($m[1]);
     }
 
-    if (preg_match('/Hours\s*this\s*week\s*:\s*([^\n]+)/i', $clean, $m)) {
+    // Week hours — same variations.
+    if (preg_match('/(\d{1,3}(?::\d{2})?)[ \t]*\n[ \t]*[^\n]*hours[ \t]*this[ \t]*week/i', $clean, $m)) {
+        $result['printed_week_hours'] = trim($m[1]);
+    } elseif (preg_match('/hours[ \t]*this[ \t]*week[ \t]*:[ \t]*(\d[^\n]+)/i', $clean, $m)) {
+        $result['printed_week_hours'] = trim($m[1]);
+    } elseif (preg_match('/hours[ \t]*this[ \t]*week[ \t]*:[ \t]*\n[ \t]*(\d[^\n]+)/i', $clean, $m)) {
         $result['printed_week_hours'] = trim($m[1]);
     }
 
