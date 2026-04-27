@@ -28,8 +28,16 @@ const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 // manual = no OCR; user types/corrects fields after upload
 // tesseract = attempts local shell command: tesseract image stdout
 // ocrspace = calls OCR.Space API if OCRSPACE_API_KEY is configured
-const OCR_MODE = 'manual';
-const OCRSPACE_API_KEY = '';
+const OCR_MODE = 'ocrspace'; //manual or ocrspace
+
+// API keys are loaded from secrets.php (not committed to git).
+// Copy secrets.example.php to secrets.php and fill in your key.
+if (file_exists(__DIR__ . '/secrets.php')) {
+    require_once __DIR__ . '/secrets.php';
+}
+if (!defined('OCRSPACE_API_KEY')) {
+    define('OCRSPACE_API_KEY', '');
+}
 
 $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
 

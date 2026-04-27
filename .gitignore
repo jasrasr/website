@@ -1,0 +1,6 @@
+# Secrets — never commit real API keys
+how-much-time-worked/secrets.php
+
+# App data and uploads
+how-much-time-worked/data/
+how-much-time-worked/uploads/
