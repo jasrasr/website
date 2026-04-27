@@ -1,10 +1,14 @@
 <?php
 /*
     Timeclock Photo Logger
-    Revision: 1.0.0
-    Author: Jason Lamb (with help from ChatGPT)
+    Revision: 1.1.0
+    Author: Jason Lamb (with help from Claude Code CLI)
     Created: 2026-04-27
-    Description: Shared configuration for image upload, OCR review, JSON logging, and hour calculations.
+    Modified: 2026-04-27
+    Description: Shared configuration for image upload, OCR review, per-employee JSON logging, and hour calculations.
+    Changelog:
+    1.0.0 initial release
+    1.1.0 per-employee JSON files instead of single hours.json
 */
 
 declare(strict_types=1);
@@ -12,11 +16,11 @@ declare(strict_types=1);
 date_default_timezone_set('America/New_York');
 
 const APP_NAME = 'Timeclock Photo Logger';
-const APP_REVISION = '1.0.0';
+const APP_REVISION = '1.1.0';
 
 const DATA_DIR = __DIR__ . '/data';
+const DATA_EMPLOYEES_DIR = DATA_DIR . '/employees';
 const UPLOAD_DIR = __DIR__ . '/uploads';
-const LOG_FILE = DATA_DIR . '/hours.json';
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
 // OCR mode options:
@@ -30,14 +34,10 @@ $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
 
 function ensureAppFolders(): void
 {
-    foreach ([DATA_DIR, UPLOAD_DIR] as $dir) {
+    foreach ([DATA_DIR, DATA_EMPLOYEES_DIR, UPLOAD_DIR] as $dir) {
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
         }
-    }
-
-    if (!file_exists(LOG_FILE)) {
-        file_put_contents(LOG_FILE, json_encode([], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     }
 }
 
@@ -46,18 +46,58 @@ function h(?string $value): string
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
+function slugifyEmployee(string $name): string
+{
+    $slug = strtolower(trim($name));
+    $slug = preg_replace('/[^a-z0-9]+/', '_', $slug);
+    return trim($slug, '_') ?: 'unknown';
+}
+
+function getEmployeeLogFile(string $employee): string
+{
+    return DATA_EMPLOYEES_DIR . '/' . slugifyEmployee($employee) . '.json';
+}
+
+function readEmployeeEntries(string $employee): array
+{
+    ensureAppFolders();
+    $file = getEmployeeLogFile($employee);
+    if (!file_exists($file)) {
+        return [];
+    }
+    $json = file_get_contents($file);
+    $entries = json_decode($json ?: '[]', true);
+    return is_array($entries) ? $entries : [];
+}
+
+function writeEmployeeEntries(string $employee, array $entries): void
+{
+    ensureAppFolders();
+    $file = getEmployeeLogFile($employee);
+    file_put_contents($file, json_encode(array_values($entries), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+}
+
+// Reads all employee files merged and sorted by date descending.
 function readEntries(): array
 {
     ensureAppFolders();
-    $json = file_get_contents(LOG_FILE);
-    $entries = json_decode($json ?: '[]', true);
-    return is_array($entries) ? $entries : [];
+    $entries = [];
+    $files = glob(DATA_EMPLOYEES_DIR . '/*.json') ?: [];
+    foreach ($files as $file) {
+        $json = file_get_contents($file);
+        $data = json_decode($json ?: '[]', true);
+        if (is_array($data)) {
+            $entries = array_merge($entries, $data);
+        }
+    }
+    usort($entries, fn($a, $b) => strcmp(($b['date'] ?? ''), ($a['date'] ?? '')));
+    return $entries;
 }
 
 function writeEntries(array $entries): void
 {
     ensureAppFolders();
-    file_put_contents(LOG_FILE, json_encode(array_values($entries), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    file_put_contents(DATA_DIR . '/hours.json', json_encode(array_values($entries), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 }
 
 function normalizeDateInput(string $date): string

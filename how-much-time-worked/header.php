@@ -14,5 +14,4 @@
         <a href="manual.php">Manual Entry</a>
         <a href="view.php">View Log</a>
         <a href="stats.php">Stats</a>
-        <a href="data/hours.json">Raw JSON</a>
     </div>

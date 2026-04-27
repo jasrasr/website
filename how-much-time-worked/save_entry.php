@@ -44,7 +44,7 @@ $entry = [
     'submitted_at' => date('Y-m-d H:i:s T'),
 ];
 
-$entries = readEntries();
+$entries = readEmployeeEntries($entry['employee']);
 
 // Duplicate protection: same employee/date/time-in/time-out is considered same shift.
 foreach ($entries as $existing) {
@@ -59,7 +59,7 @@ foreach ($entries as $existing) {
 
 $entries[] = $entry;
 usort($entries, fn($a, $b) => strcmp(($b['date'] ?? ''), ($a['date'] ?? '')));
-writeEntries($entries);
+writeEmployeeEntries($entry['employee'], $entries);
 
 header('Location: view.php?saved=1');
 exit;
