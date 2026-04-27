@@ -1,4 +1,15 @@
 <?php
+/*
+    Filename    : review.php
+    Revision    : 1.2.0
+    Description : Review and correct OCR-parsed fields before saving to JSON log
+    Author      : Jason Lamb (with help from Claude Code CLI)
+    Created     : 2026-04-27
+    Modified    : 2026-04-27
+    Changelog   :
+    1.0.0 initial release
+    1.2.0 removed unit, job, and tip fields
+*/
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
 $file = basename($_GET['file'] ?? '');

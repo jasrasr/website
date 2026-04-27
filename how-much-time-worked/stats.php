@@ -1,4 +1,15 @@
 <?php
+/*
+    Filename    : stats.php
+    Revision    : 1.1.0
+    Description : Displays total hours by employee, ISO week, and month
+    Author      : Jason Lamb (with help from Claude Code CLI)
+    Created     : 2026-04-27
+    Modified    : 2026-04-27
+    Changelog   :
+    1.0.0 initial release
+    1.1.0 reads from per-employee JSON files
+*/
 require_once __DIR__ . '/config.php';
 $entries = readEntries();
 $byWeek = [];

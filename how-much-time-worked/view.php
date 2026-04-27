@@ -1,4 +1,16 @@
 <?php
+/*
+    Filename    : view.php
+    Revision    : 1.2.0
+    Description : View all saved shift entries across all employees
+    Author      : Jason Lamb (with help from Claude Code CLI)
+    Created     : 2026-04-27
+    Modified    : 2026-04-27
+    Changelog   :
+    1.0.0 initial release
+    1.1.0 reads from per-employee JSON files
+    1.2.0 removed unit, job, and tip columns
+*/
 require_once __DIR__ . '/config.php';
 $entries = readEntries();
 $totalMinutes = array_sum(array_map(fn($e) => (int)($e['shift_minutes'] ?? 0), $entries));

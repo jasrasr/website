@@ -1,4 +1,16 @@
 <?php
+/*
+    Filename    : upload.php
+    Revision    : 1.2.0
+    Description : Handles photo upload, runs OCR if configured, saves parsed JSON, redirects to review
+    Author      : Jason Lamb (with help from Claude Code CLI)
+    Created     : 2026-04-27
+    Modified    : 2026-04-27
+    Changelog   :
+    1.0.0 initial release
+    1.1.0 added OCR.Space support via secrets.php
+    1.2.0 removed unused fields
+*/
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
 

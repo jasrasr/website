@@ -1,4 +1,17 @@
-<?php include __DIR__ . '/header.php'; ?>
+<?php
+/*
+    Filename    : manual.php
+    Revision    : 1.2.0
+    Description : Manual time entry form — submit a shift without uploading a photo
+    Author      : Jason Lamb (with help from Claude Code CLI)
+    Created     : 2026-04-27
+    Modified    : 2026-04-27
+    Changelog   :
+    1.0.0 initial release
+    1.2.0 removed unit, job, and tip fields
+*/
+include __DIR__ . '/header.php';
+?>
 <h1>Manual Entry</h1>
 <div class="card">
 <form action="save_entry.php" method="post">

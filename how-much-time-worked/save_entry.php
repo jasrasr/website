@@ -1,4 +1,16 @@
 <?php
+/*
+    Filename    : save_entry.php
+    Revision    : 1.2.0
+    Description : Validates and saves a shift entry to the employee's JSON log file
+    Author      : Jason Lamb (with help from Claude Code CLI)
+    Created     : 2026-04-27
+    Modified    : 2026-04-27
+    Changelog   :
+    1.0.0 initial release
+    1.1.0 switched to per-employee JSON files
+    1.2.0 removed unit, job, and tip fields
+*/
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
 

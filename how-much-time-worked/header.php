@@ -1,4 +1,16 @@
-<?php require_once __DIR__ . '/config.php'; ensureAppFolders(); ?>
+<?php
+/*
+    Filename    : header.php
+    Revision    : 1.1.0
+    Description : Shared HTML header and navigation included at the top of every page
+    Author      : Jason Lamb (with help from Claude Code CLI)
+    Created     : 2026-04-27
+    Modified    : 2026-04-27
+    Changelog   :
+    1.0.0 initial release
+    1.1.0 removed Raw JSON nav link
+*/
+require_once __DIR__ . '/config.php'; ensureAppFolders(); ?>
 <!doctype html>
 <html lang="en">
 <head>
