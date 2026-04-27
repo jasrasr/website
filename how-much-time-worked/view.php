@@ -1,7 +1,7 @@
 <?php
 /*
     Filename    : view.php
-    Revision    : 1.2.0
+    Revision    : 1.2.3
     Description : View all saved shift entries across all employees
     Author      : Jason Lamb (with help from Claude Code CLI)
     Created     : 2026-04-27
@@ -10,6 +10,7 @@
     1.0.0 initial release
     1.1.0 reads from per-employee JSON files
     1.2.0 removed unit, job, and tip columns
+    1.2.3 removed Week Printed and Warning columns
 */
 require_once __DIR__ . '/config.php';
 $entries = readEntries();
@@ -26,7 +27,7 @@ include __DIR__ . '/header.php';
 <table>
     <thead>
         <tr>
-            <th>Date</th><th>Employee</th><th>In</th><th>Out</th><th>Calculated</th><th>Printed</th><th>Week Printed</th><th>Warning</th><th>Source</th>
+            <th>Date</th><th>Employee</th><th>In</th><th>Out</th><th>Calculated</th><th>Printed</th><th>Source</th>
         </tr>
     </thead>
     <tbody>
@@ -38,8 +39,6 @@ include __DIR__ . '/header.php';
             <td><?= h($e['time_out'] ?? '') ?></td>
             <td><?= h($e['display_shift_hours'] ?? '') ?></td>
             <td><?= h($e['printed_shift_hours'] ?? '') ?></td>
-            <td><?= h($e['printed_week_hours'] ?? '') ?></td>
-            <td><?= h($e['review_warning'] ?? '') ?></td>
             <td>
                 <?php if (!empty($e['source_file']) && ($e['source_file'] !== 'manual-entry')): ?>
                     <a href="uploads/<?= h($e['source_file']) ?>">photo</a>
