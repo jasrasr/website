@@ -17,6 +17,7 @@ date_default_timezone_set('America/New_York');
 
 const APP_NAME = 'Timeclock Photo Logger';
 const APP_REVISION = '1.1.0';
+const APP_UPDATED = '2026-04-27';
 
 const DATA_DIR = __DIR__ . '/data';
 const DATA_EMPLOYEES_DIR = DATA_DIR . '/employees';
