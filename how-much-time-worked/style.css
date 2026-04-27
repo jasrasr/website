@@ -1,0 +1,19 @@
+:root { --border: #d8d8d8; --bg: #f6f7f8; --text: #202124; --muted: #666; }
+body { font-family: Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 24px; }
+.container { max-width: 1000px; margin: 0 auto; background: white; border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+h1 { margin-top: 0; }
+a { color: #0645ad; }
+.nav { margin-bottom: 18px; }
+.nav a { margin-right: 14px; }
+.card { border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin: 16px 0; background: #fff; }
+label { display: block; font-weight: 700; margin-top: 12px; }
+input, textarea, select { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; }
+button, .button { display: inline-block; margin-top: 16px; padding: 10px 14px; border: 0; border-radius: 8px; background: #202124; color: white; text-decoration: none; cursor: pointer; }
+table { border-collapse: collapse; width: 100%; margin-top: 16px; }
+th, td { border: 1px solid var(--border); padding: 8px; text-align: left; vertical-align: top; }
+th { background: #eee; }
+.notice { background: #fff8d6; border: 1px solid #e5d47a; padding: 12px; border-radius: 8px; }
+.good { background: #e8f5e9; border: 1px solid #a5d6a7; padding: 12px; border-radius: 8px; }
+.bad { background: #ffebee; border: 1px solid #ef9a9a; padding: 12px; border-radius: 8px; }
+.small { color: var(--muted); font-size: 13px; }
+img.preview { max-width: 320px; max-height: 420px; border: 1px solid var(--border); border-radius: 8px; }
