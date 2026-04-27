@@ -1,7 +1,7 @@
 <?php
 /*
     Timeclock Photo Logger
-    Revision: 1.2.3
+    Revision: 1.3.0
     Author: Jason Lamb (with help from Claude Code CLI)
     Created: 2026-04-27
     Modified: 2026-04-27
@@ -13,6 +13,7 @@
     1.2.1 improved employee name parsing — positional (line after Unit #) instead of regex guess
     1.2.2 fix OCR field parsing for two-column receipt layout (times, shift/week hours)
     1.2.3 handle truncated "Hours this" label for week hours; allow bare number values
+    1.3.0 add bi-weekly pay period support with anchor date and helper functions
 */
 
 declare(strict_types=1);
@@ -20,8 +21,13 @@ declare(strict_types=1);
 date_default_timezone_set('America/New_York');
 
 const APP_NAME = 'Timeclock Photo Logger';
-const APP_REVISION = '1.2.3';
+const APP_REVISION = '1.3.0';
 const APP_UPDATED = '2026-04-27';
+
+// Pay period anchor — the first day of a known pay period.
+// Period length is 14 days (bi-weekly). Update this if the anchor ever shifts.
+const PAY_PERIOD_ANCHOR = '2026-04-14';
+const PAY_PERIOD_DAYS   = 14;
 
 const DATA_DIR = __DIR__ . '/data';
 const DATA_EMPLOYEES_DIR = DATA_DIR . '/employees';
@@ -165,6 +171,26 @@ function parsePrintedHoursToMinutes(string $value): ?int
     }
 
     return null;
+}
+
+// Returns ['start' => 'Y-m-d', 'end' => 'Y-m-d'] for the pay period containing $date.
+function getPayPeriodForDate(string $date): array
+{
+    $anchor = new DateTime(PAY_PERIOD_ANCHOR);
+    $dt     = new DateTime($date);
+    $diff   = (int)$anchor->diff($dt)->days;
+    $sign   = ($dt >= $anchor) ? 1 : -1;
+    $offset = ($sign === 1)
+        ? intdiv($diff, PAY_PERIOD_DAYS) * PAY_PERIOD_DAYS
+        : -(intdiv($diff + PAY_PERIOD_DAYS - 1, PAY_PERIOD_DAYS) * PAY_PERIOD_DAYS);
+    $start  = (clone $anchor)->modify("{$offset} days");
+    $end    = (clone $start)->modify('+' . (PAY_PERIOD_DAYS - 1) . ' days');
+    return ['start' => $start->format('Y-m-d'), 'end' => $end->format('Y-m-d')];
+}
+
+function getCurrentPayPeriod(): array
+{
+    return getPayPeriodForDate(date('Y-m-d'));
 }
 
 function parseClockSlipText(string $text): array
