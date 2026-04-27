@@ -1,7 +1,7 @@
 <?php
 /*
     Timeclock Photo Logger
-    Revision: 1.2.2
+    Revision: 1.2.3
     Author: Jason Lamb (with help from Claude Code CLI)
     Created: 2026-04-27
     Modified: 2026-04-27
@@ -12,6 +12,7 @@
     1.2.0 remove unused fields: unit, job, carry_over_tips, declared_tips, charge_tips
     1.2.1 improved employee name parsing — positional (line after Unit #) instead of regex guess
     1.2.2 fix OCR field parsing for two-column receipt layout (times, shift/week hours)
+    1.2.3 handle truncated "Hours this" label for week hours; allow bare number values
 */
 
 declare(strict_types=1);
@@ -19,7 +20,7 @@ declare(strict_types=1);
 date_default_timezone_set('America/New_York');
 
 const APP_NAME = 'Timeclock Photo Logger';
-const APP_REVISION = '1.2.2';
+const APP_REVISION = '1.2.3';
 const APP_UPDATED = '2026-04-27';
 
 const DATA_DIR = __DIR__ . '/data';
@@ -203,8 +204,8 @@ function parseClockSlipText(string $text): array
         $result['printed_shift_hours'] = trim($m[1]);
     }
 
-    // Week hours — same variations.
-    if (preg_match('/(\d{1,3}(?::\d{2})?)[ \t]*\n[ \t]*[^\n]*hours[ \t]*this[ \t]*week/i', $clean, $m)) {
+    // Week hours — same variations. Also handles OCR truncating "Hours this week:" to "Hours this".
+    if (preg_match('/(\d{1,3}(?::\d{2})?)[ \t]*\n[ \t]*hours[ \t]*this(?![ \t]*shift)/i', $clean, $m)) {
         $result['printed_week_hours'] = trim($m[1]);
     } elseif (preg_match('/hours[ \t]*this[ \t]*week[ \t]*:[ \t]*(\d[^\n]+)/i', $clean, $m)) {
         $result['printed_week_hours'] = trim($m[1]);
