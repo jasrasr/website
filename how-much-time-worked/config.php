@@ -1,7 +1,7 @@
 <?php
 /*
     Timeclock Photo Logger
-    Revision: 1.1.0
+    Revision: 1.2.0
     Author: Jason Lamb (with help from Claude Code CLI)
     Created: 2026-04-27
     Modified: 2026-04-27
@@ -9,6 +9,7 @@
     Changelog:
     1.0.0 initial release
     1.1.0 per-employee JSON files instead of single hours.json
+    1.2.0 remove unused fields: unit, job, carry_over_tips, declared_tips, charge_tips
 */
 
 declare(strict_types=1);
@@ -16,7 +17,7 @@ declare(strict_types=1);
 date_default_timezone_set('America/New_York');
 
 const APP_NAME = 'Timeclock Photo Logger';
-const APP_REVISION = '1.1.0';
+const APP_REVISION = '1.2.0';
 const APP_UPDATED = '2026-04-27';
 
 const DATA_DIR = __DIR__ . '/data';
@@ -168,30 +169,17 @@ function parseClockSlipText(string $text): array
     $clean = preg_replace('/\r\n|\r/', "\n", $text);
 
     $result = [
-        'unit' => '',
         'date' => date('Y-m-d'),
         'employee' => '',
-        'job' => '',
         'time_in' => '',
         'time_out' => '',
         'printed_shift_hours' => '',
         'printed_week_hours' => '',
-        'carry_over_tips' => '0.00',
-        'declared_tips' => '0.00',
-        'charge_tips' => '0.00',
         'ocr_text' => $text,
     ];
 
-    if (preg_match('/Unit\s*#?\s*(\d+)/i', $clean, $m)) {
-        $result['unit'] = $m[1];
-    }
-
     if (preg_match('/(\d{1,2}\/\d{1,2}\/\d{4})/', $clean, $m)) {
         $result['date'] = normalizeDateInput($m[1]);
-    }
-
-    if (preg_match('/Job\s*:\s*([^\n]+)/i', $clean, $m)) {
-        $result['job'] = trim($m[1]);
     }
 
     if (preg_match('/Time\s*in\s*:\s*([^\n]+)/i', $clean, $m)) {
@@ -210,19 +198,7 @@ function parseClockSlipText(string $text): array
         $result['printed_week_hours'] = trim($m[1]);
     }
 
-    if (preg_match('/Carry\s*Over\s*Tips\s*:\s*\$?([0-9.]+)/i', $clean, $m)) {
-        $result['carry_over_tips'] = $m[1];
-    }
-
-    if (preg_match('/Declared\s*Tips\s*:\s*\$?([0-9.]+)/i', $clean, $m)) {
-        $result['declared_tips'] = $m[1];
-    }
-
-    if (preg_match('/Charge\s*Tips\s*:\s*\$?([0-9.]+)/i', $clean, $m)) {
-        $result['charge_tips'] = $m[1];
-    }
-
-    // Best-effort employee name: line after the date/unit/header area and before Job.
+    // Best-effort employee name: line after the date/header area and before Time In.
     $lines = array_values(array_filter(array_map('trim', explode("\n", $clean))));
     foreach ($lines as $line) {
         if (preg_match('/^[A-Z][a-z]+\s+[A-Z][a-z]+$/', $line) && !preg_match('/Employee|Clock|Unit|Job|Time|Hours|Tips/i', $line)) {

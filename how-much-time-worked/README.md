@@ -76,14 +76,11 @@ Employee files are created automatically on first save. The filename is derived 
 
 | Field | Description |
 |-------|-------------|
-| Unit | Unit/location number |
 | Date | Shift date |
 | Employee | Employee name |
-| Job | Job code or description |
 | Time In / Time Out | Shift start and end times |
 | Printed Shift Hours | Hours shown on the slip |
 | Printed Week Hours | Weekly hours shown on the slip |
-| Carry Over / Declared / Charge Tips | Tip fields |
 
 ## Revision History
 
@@ -91,3 +88,4 @@ Employee files are created automatically on first save. The filename is derived 
 |---------|-------|
 | 1.0.0 | Initial release |
 | 1.1.0 | Per-employee JSON files instead of single hours.json |
+| 1.2.0 | Remove unused fields: unit, job, carry over/declared/charge tips |
