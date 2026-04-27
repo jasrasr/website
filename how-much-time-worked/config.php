@@ -1,7 +1,7 @@
 <?php
 /*
     Timeclock Photo Logger
-    Revision: 1.2.0
+    Revision: 1.2.1
     Author: Jason Lamb (with help from Claude Code CLI)
     Created: 2026-04-27
     Modified: 2026-04-27
@@ -10,6 +10,7 @@
     1.0.0 initial release
     1.1.0 per-employee JSON files instead of single hours.json
     1.2.0 remove unused fields: unit, job, carry_over_tips, declared_tips, charge_tips
+    1.2.1 improved employee name parsing — positional (line after Unit #) instead of regex guess
 */
 
 declare(strict_types=1);
@@ -17,7 +18,7 @@ declare(strict_types=1);
 date_default_timezone_set('America/New_York');
 
 const APP_NAME = 'Timeclock Photo Logger';
-const APP_REVISION = '1.2.0';
+const APP_REVISION = '1.2.1';
 const APP_UPDATED = '2026-04-27';
 
 const DATA_DIR = __DIR__ . '/data';
@@ -198,11 +199,14 @@ function parseClockSlipText(string $text): array
         $result['printed_week_hours'] = trim($m[1]);
     }
 
-    // Best-effort employee name: line after the date/header area and before Time In.
+    // Employee name is the line immediately after the "Unit #XXXX  DATE" line.
     $lines = array_values(array_filter(array_map('trim', explode("\n", $clean))));
-    foreach ($lines as $line) {
-        if (preg_match('/^[A-Z][a-z]+\s+[A-Z][a-z]+$/', $line) && !preg_match('/Employee|Clock|Unit|Job|Time|Hours|Tips/i', $line)) {
-            $result['employee'] = $line;
+    foreach ($lines as $i => $line) {
+        if (preg_match('/Unit\s*#/i', $line) && isset($lines[$i + 1])) {
+            $candidate = $lines[$i + 1];
+            if (!preg_match('/^Job|^Time|^Hours|^Employee|^Clock/i', $candidate)) {
+                $result['employee'] = $candidate;
+            }
             break;
         }
     }
