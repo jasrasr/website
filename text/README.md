@@ -20,6 +20,8 @@ Viewing the raw JSON file through the page also requires a password. Configure i
 
 ## Storage
 
-The page stores text on the web server in `text/data/text-copy.json`. The `data` folder and JSON file are created automatically when the page runs.
+The page stores text on the web server in `text/data/text-copy.json`. The `data` folder and live JSON file are created automatically when the page runs.
+
+For public GitHub reference, `text/text-copy.sample.json` shows the expected JSON structure without committing live server data.
 
 The app includes `text/data/.htaccess` to block direct browser access to files in `text/data/` on Apache-compatible hosts. The JSON and password files are ignored by Git.
