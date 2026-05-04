@@ -1,9 +1,14 @@
 # Secrets — never commit real API keys
 how-much-time-worked/secrets.php
 
+# Local Codex/agent instructions
+AGENTS.md
+
 # App data and uploads
 how-much-time-worked/data/
 how-much-time-worked/uploads/
+text/data/*.json
+text/data/*password*.txt
 
 # Example/sample files
 how-much-time-worked/example.jpg

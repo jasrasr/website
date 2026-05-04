@@ -17,6 +17,8 @@ date_default_timezone_set('America/New_York');
 
 const TEXT_COPY_DATA_DIR = __DIR__ . '/data';
 const TEXT_COPY_DATA_FILE = TEXT_COPY_DATA_DIR . '/text-copy.json';
+const TEXT_COPY_SAVE_PASSWORD_FILE = TEXT_COPY_DATA_DIR . '/save-password.txt';
+const TEXT_COPY_RAW_JSON_PASSWORD_FILE = TEXT_COPY_DATA_DIR . '/raw-json-password.txt';
 const TEXT_COPY_MAX_BYTES = 500000;
 
 function ensureTextCopyDataFile(): void
@@ -26,7 +28,7 @@ function ensureTextCopyDataFile(): void
     }
 
     if (!file_exists(TEXT_COPY_DATA_FILE)) {
-        saveTextCopyData('');
+        writeTextCopyData('');
     }
 }
 
@@ -47,7 +49,7 @@ function loadTextCopyData(): array
     ];
 }
 
-function saveTextCopyData(string $text): bool
+function writeTextCopyData(string $text): bool
 {
     if (!is_dir(TEXT_COPY_DATA_DIR)) {
         mkdir(TEXT_COPY_DATA_DIR, 0755, true);
@@ -77,6 +79,47 @@ function saveTextCopyData(string $text): bool
     return true;
 }
 
+function getConfiguredPassword(string $envName, string $filePath): ?string
+{
+    $password = getenv($envName);
+    if (is_string($password) && $password !== '') {
+        return $password;
+    }
+
+    if (is_file($filePath)) {
+        $password = trim((string)file_get_contents($filePath));
+        if ($password !== '') {
+            return $password;
+        }
+    }
+
+    return null;
+}
+
+function requirePassword(string $providedPassword, string $envName, string $filePath, string $label): void
+{
+    $expectedPassword = getConfiguredPassword($envName, $filePath);
+
+    if ($expectedPassword === null) {
+        sendJson(['ok' => false, 'error' => $label . ' password is not configured.'], 503);
+    }
+
+    if (!hash_equals($expectedPassword, $providedPassword)) {
+        sendJson(['ok' => false, 'error' => 'Invalid password.'], 403);
+    }
+}
+
+function sendRawJsonFile(string $password): never
+{
+    requirePassword($password, 'TEXT_COPY_RAW_JSON_PASSWORD', TEXT_COPY_RAW_JSON_PASSWORD_FILE, 'Raw JSON');
+
+    ensureTextCopyDataFile();
+    header('Content-Type: application/json; charset=utf-8');
+    header('Content-Disposition: inline; filename="text-copy.json"');
+    readfile(TEXT_COPY_DATA_FILE);
+    exit;
+}
+
 function sendJson(array $payload, int $status = 200): never
 {
     http_response_code($status);
@@ -89,14 +132,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'load') 
     sendJson(['ok' => true, 'data' => loadTextCopyData()]);
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'raw_json') {
+    sendRawJsonFile((string)($_POST['password'] ?? ''));
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save') {
     $text = (string)($_POST['text'] ?? '');
+    requirePassword((string)($_POST['password'] ?? ''), 'TEXT_COPY_SAVE_PASSWORD', TEXT_COPY_SAVE_PASSWORD_FILE, 'Save');
 
     if (strlen($text) > TEXT_COPY_MAX_BYTES) {
         sendJson(['ok' => false, 'error' => 'Text is too large.'], 413);
     }
 
-    if (!saveTextCopyData($text)) {
+    if (!writeTextCopyData($text)) {
         sendJson(['ok' => false, 'error' => 'Could not save text.'], 500);
     }
 
@@ -110,7 +158,7 @@ $initialData = loadTextCopyData();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shared Edit and Copy Text</title>
+    <title>Shared Text</title>
     <style>
         :root {
             --bg: #f3eadf;
@@ -190,6 +238,22 @@ $initialData = loadTextCopyData();
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
+        }
+
+        .raw-json-form {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .raw-json-form input {
+            min-width: 190px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 10px 14px;
+            color: var(--ink);
+            background: #fffaf3;
+            font: 700 0.9rem/1 Arial, sans-serif;
         }
 
         button {
@@ -284,7 +348,9 @@ $initialData = loadTextCopyData();
             }
 
             .actions,
+            .raw-json-form,
             .toolbar,
+            .raw-json-form input,
             button {
                 width: 100%;
             }
@@ -304,7 +370,7 @@ $initialData = loadTextCopyData();
 <body>
     <main>
         <section class="hero" aria-labelledby="page-title">
-            <h1 id="page-title">Shared<br>Text</h1>
+            <h1 id="page-title">Shared Text</h1>
             <p class="subtitle">Edit text on one computer, save it to the server, then open this same page from another computer and load or copy it.</p>
         </section>
 
@@ -317,6 +383,14 @@ $initialData = loadTextCopyData();
                     <button id="selectBtn" class="secondary" type="button">Select All</button>
                     <button id="clearBtn" class="danger" type="button">Clear</button>
                 </div>
+                <div class="raw-json-form" role="group" aria-label="Save password">
+                    <input id="savePassword" type="password" aria-label="Save password" placeholder="Save password" autocomplete="current-password" required>
+                </div>
+                <form class="raw-json-form" method="post" target="_blank">
+                    <input type="hidden" name="action" value="raw_json">
+                    <input type="password" name="password" aria-label="Raw JSON password" placeholder="JSON password" autocomplete="current-password" required>
+                    <button class="secondary" type="submit">View JSON</button>
+                </form>
                 <div id="status" class="status">Loading...</div>
             </div>
 
@@ -336,6 +410,7 @@ $initialData = loadTextCopyData();
         const copyBtn = document.getElementById('copyBtn');
         const selectBtn = document.getElementById('selectBtn');
         const clearBtn = document.getElementById('clearBtn');
+        const savePassword = document.getElementById('savePassword');
 
         let toastTimer = null;
         let lastSavedAt = initialData.updated_at || null;
@@ -365,6 +440,7 @@ $initialData = loadTextCopyData();
             const body = new URLSearchParams();
             body.set('action', 'save');
             body.set('text', textInput.value);
+            body.set('password', savePassword.value);
 
             const response = await fetch(window.location.pathname, {
                 method: 'POST',
