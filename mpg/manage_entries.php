@@ -2,7 +2,7 @@
 // ============================================================================
 // File: manage_entries.php
 // Purpose: View, edit, and delete individual fuel log entries for a plate
-// Revision: 2.0
+// Revision: 2.1
 // Author: Jason Lamb
 // ============================================================================
 
@@ -253,6 +253,22 @@ if ($editIndex >= 0 && isset($entries[$editIndex])):
 </tr>
 <?php endforeach; ?>
 </tbody>
+<tfoot>
+<tr>
+    <th>#</th>
+    <th>Date</th>
+    <th>Odometer</th>
+    <th>Miles</th>
+    <th>Gallons</th>
+    <th>Price/Gal</th>
+    <th>Total</th>
+    <th>MPG</th>
+    <th>Submitted (ET)</th>
+    <th>Source</th>
+    <th>Verified</th>
+    <th>Actions</th>
+</tr>
+</tfoot>
 </table>
 
 <!-- Raw JSON Editor -->

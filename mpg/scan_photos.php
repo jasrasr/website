@@ -2,7 +2,7 @@
 // ============================================================================
 // File: scan_photos.php
 // Purpose: Multi-photo upload, AI extracts values, saves entry directly
-// Revision: 2.0
+// Revision: 2.1
 // Author: Jason Lamb
 // ============================================================================
 
@@ -50,11 +50,21 @@ h2 { margin-bottom: 0.2rem; }
 input[type="file"] { display: none; }
 
 #thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 0.8rem; }
+.thumb-wrap {
+    position: relative; display: inline-block; width: 90px; height: 70px;
+}
 #thumbs img {
     width: 90px; height: 70px; object-fit: cover; border-radius: 6px;
     border: 2px solid #ddd; cursor: zoom-in; transition: border-color 0.15s;
 }
 #thumbs img:hover { border-color: #007bff; }
+.thumb-remove {
+    position: absolute; top: -6px; right: -6px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #dc3545; color: white; border: none;
+    font-size: 0.7rem; line-height: 20px; text-align: center;
+    cursor: pointer; padding: 0; font-weight: bold;
+}
 
 /* Lightbox */
 #lightbox {
@@ -206,7 +216,7 @@ a { color: #007bff; text-decoration: none; }
 <?php include 'menu.php'; ?>
 
 <div class="footer">
-    scan_photos.php — Rev 2.2 — Updated: <?php $mt = new DateTime('@'.filemtime(__FILE__)); $mt->setTimezone(new DateTimeZone('America/New_York')); echo $mt->format('Y-m-d H:i (g:i A T)'); ?>
+    scan_photos.php — Rev 2.3 — Updated: <?php $mt = new DateTime('@'.filemtime(__FILE__)); $mt->setTimezone(new DateTimeZone('America/New_York')); echo $mt->format('Y-m-d H:i (g:i A T)'); ?>
 </div>
 
 <script>
@@ -215,36 +225,75 @@ const thumbsDiv  = document.getElementById('thumbs');
 const photoCount = document.getElementById('photoCount');
 const scanBtn    = document.getElementById('scanBtn');
 
-photoInput.addEventListener('change', () => {
-    thumbsDiv.innerHTML = '';
-    const files = Array.from(photoInput.files);
-    if (!files.length) return;
+let allFiles = [];
 
-    files.forEach(file => {
+function renderThumbs() {
+    thumbsDiv.innerHTML = '';
+    allFiles.forEach((file, idx) => {
         const reader = new FileReader();
         reader.onload = e => {
+            const wrap = document.createElement('div');
+            wrap.className = 'thumb-wrap';
+
             const img = document.createElement('img');
             img.src = e.target.result;
             img.title = 'Tap to expand';
             img.addEventListener('click', () => openLightbox(e.target.result));
-            thumbsDiv.appendChild(img);
+
+            const btn = document.createElement('button');
+            btn.className = 'thumb-remove';
+            btn.textContent = '✕';
+            btn.title = 'Remove photo';
+            btn.addEventListener('click', () => {
+                allFiles.splice(idx, 1);
+                renderThumbs();
+                updatePhotoCount();
+            });
+
+            wrap.appendChild(img);
+            wrap.appendChild(btn);
+            thumbsDiv.appendChild(wrap);
         };
         reader.readAsDataURL(file);
     });
+}
 
-    photoCount.textContent = `${files.length} photo${files.length > 1 ? 's' : ''} selected`;
-    photoCount.style.display = 'block';
-    scanBtn.disabled = false;
+function updatePhotoCount() {
+    const n = allFiles.length;
+    if (n === 0) {
+        photoCount.style.display = 'none';
+        scanBtn.disabled = true;
+    } else {
+        photoCount.textContent = `${n} photo${n > 1 ? 's' : ''} selected`;
+        photoCount.style.display = 'block';
+        scanBtn.disabled = false;
+    }
+}
+
+photoInput.addEventListener('change', () => {
+    const newFiles = Array.from(photoInput.files);
+    if (!newFiles.length) return;
+
+    newFiles.forEach(f => {
+        // Avoid exact duplicates (same name + size)
+        const isDupe = allFiles.some(x => x.name === f.name && x.size === f.size);
+        if (!isDupe) allFiles.push(f);
+    });
+
+    // Reset input so re-selecting same file triggers change again
+    photoInput.value = '';
+
+    renderThumbs();
+    updatePhotoCount();
     document.getElementById('review').style.display = 'none';
     document.getElementById('errorBox').style.display = 'none';
 });
 
 scanBtn.addEventListener('click', async () => {
-    const files = Array.from(photoInput.files);
-    if (!files.length) return;
+    if (!allFiles.length) return;
 
     const formData = new FormData();
-    files.forEach((f, i) => formData.append('images[]', f));
+    allFiles.forEach(f => formData.append('images[]', f));
 
     scanBtn.disabled = true;
     document.getElementById('loadingDiv').style.display = 'block';
