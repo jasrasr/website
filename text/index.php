@@ -4,7 +4,8 @@ File Name   : index.php
 Project     : /text
 Author      : Jason Lamb (with help from ChatGPT)
 Created     : 2026-05-04
-Revision    : 1.0
+Modified    : 2026-05-05 10:09:05 -04:00
+Revision    : 1.1
 
 Purpose:
 - Server-backed scratch pad for editing text and retrieving it from another device.
@@ -15,6 +16,8 @@ declare(strict_types=1);
 
 date_default_timezone_set('America/New_York');
 
+const TEXT_COPY_PAGE_REVISION = '1.1';
+const TEXT_COPY_PAGE_MODIFIED = '2026-05-05 10:09:05 -04:00';
 const TEXT_COPY_DATA_DIR = __DIR__ . '/data';
 const TEXT_COPY_DATA_FILE = TEXT_COPY_DATA_DIR . '/text-copy.json';
 const TEXT_COPY_SAVE_PASSWORD_FILE = TEXT_COPY_DATA_DIR . '/save-password.txt';
@@ -215,6 +218,13 @@ $initialData = loadTextCopyData();
             line-height: 1.45;
         }
 
+        .revision {
+            max-width: 430px;
+            margin: 8px 0 0;
+            color: var(--muted);
+            font: 700 0.78rem/1.3 Arial, sans-serif;
+        }
+
         .panel {
             overflow: hidden;
             border: 1px solid var(--line);
@@ -343,6 +353,10 @@ $initialData = loadTextCopyData();
                 margin-top: 12px;
             }
 
+            .revision {
+                margin-top: 8px;
+            }
+
             .toolbar {
                 align-items: stretch;
             }
@@ -371,7 +385,10 @@ $initialData = loadTextCopyData();
     <main>
         <section class="hero" aria-labelledby="page-title">
             <h1 id="page-title">Shared Text</h1>
-            <p class="subtitle">Edit text on one computer, save it to the server, then open this same page from another computer and load or copy it.</p>
+            <div>
+                <p class="subtitle">Edit text on one computer, save it to the server, then open this same page from another computer and load or copy it.</p>
+                <p class="revision">Revision <?php echo htmlspecialchars(TEXT_COPY_PAGE_REVISION, ENT_QUOTES, 'UTF-8'); ?> | Modified <?php echo htmlspecialchars(TEXT_COPY_PAGE_MODIFIED, ENT_QUOTES, 'UTF-8'); ?></p>
+            </div>
         </section>
 
         <section class="panel" aria-label="Shared text editor">
