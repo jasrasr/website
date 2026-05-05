@@ -20,7 +20,9 @@ Viewing the raw JSON file through the page also requires a password. Configure i
 
 ## Storage
 
-The page stores text on the web server in `text/data/text-copy.json`. The `data` folder and live JSON file are created automatically when the page runs.
+The page stores the latest text on the web server in `text/data/text-copy.json`. The `data` folder and live JSON file are created automatically when the page runs.
+
+Each save also writes a timestamped snapshot in `text/data/history/`, using a filename like `text-copy-20260505-132447.json`. The history folder is created on the first save, and the app keeps the newest 10 history JSON files while deleting older snapshots automatically.
 
 For public GitHub reference, `text/text-copy.sample.json` shows the expected JSON structure without committing live server data.
 

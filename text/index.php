@@ -4,8 +4,8 @@ File Name   : index.php
 Project     : /text
 Author      : Jason Lamb (with help from ChatGPT)
 Created     : 2026-05-04
-Modified    : 2026-05-05 10:09:05 -04:00
-Revision    : 1.1
+Modified    : 2026-05-05 13:24:47 -04:00
+Revision    : 1.2
 
 Purpose:
 - Server-backed scratch pad for editing text and retrieving it from another device.
@@ -16,13 +16,15 @@ declare(strict_types=1);
 
 date_default_timezone_set('America/New_York');
 
-const TEXT_COPY_PAGE_REVISION = '1.1';
-const TEXT_COPY_PAGE_MODIFIED = '2026-05-05 10:09:05 -04:00';
+const TEXT_COPY_PAGE_REVISION = '1.2';
+const TEXT_COPY_PAGE_MODIFIED = '2026-05-05 13:24:47 -04:00';
 const TEXT_COPY_DATA_DIR = __DIR__ . '/data';
+const TEXT_COPY_HISTORY_DIR = TEXT_COPY_DATA_DIR . '/history';
 const TEXT_COPY_DATA_FILE = TEXT_COPY_DATA_DIR . '/text-copy.json';
 const TEXT_COPY_SAVE_PASSWORD_FILE = TEXT_COPY_DATA_DIR . '/save-password.txt';
 const TEXT_COPY_RAW_JSON_PASSWORD_FILE = TEXT_COPY_DATA_DIR . '/raw-json-password.txt';
 const TEXT_COPY_MAX_BYTES = 500000;
+const TEXT_COPY_HISTORY_LIMIT = 10;
 
 function ensureTextCopyDataFile(): void
 {
@@ -31,7 +33,7 @@ function ensureTextCopyDataFile(): void
     }
 
     if (!file_exists(TEXT_COPY_DATA_FILE)) {
-        writeTextCopyData('');
+        writeJsonPayload(TEXT_COPY_DATA_FILE, buildTextCopyPayload(''));
     }
 }
 
@@ -52,19 +54,23 @@ function loadTextCopyData(): array
     ];
 }
 
-function writeTextCopyData(string $text): bool
+function buildTextCopyPayload(string $text): array
 {
-    if (!is_dir(TEXT_COPY_DATA_DIR)) {
-        mkdir(TEXT_COPY_DATA_DIR, 0755, true);
-    }
-
-    $payload = [
+    return [
         'text' => $text,
         'updated_at' => date('c'),
         'bytes' => strlen($text),
     ];
+}
 
-    $fp = fopen(TEXT_COPY_DATA_FILE, 'c+');
+function writeJsonPayload(string $filePath, array $payload): bool
+{
+    $directory = dirname($filePath);
+    if (!is_dir($directory)) {
+        mkdir($directory, 0755, true);
+    }
+
+    $fp = fopen($filePath, 'c+');
     if (!$fp || !flock($fp, LOCK_EX)) {
         if ($fp) {
             fclose($fp);
@@ -79,6 +85,43 @@ function writeTextCopyData(string $text): bool
     flock($fp, LOCK_UN);
     fclose($fp);
 
+    return true;
+}
+
+function pruneTextCopyHistory(): void
+{
+    $historyFiles = glob(TEXT_COPY_HISTORY_DIR . '/text-copy-*.json');
+    if (!is_array($historyFiles) || count($historyFiles) <= TEXT_COPY_HISTORY_LIMIT) {
+        return;
+    }
+
+    rsort($historyFiles, SORT_STRING);
+    foreach (array_slice($historyFiles, TEXT_COPY_HISTORY_LIMIT) as $oldFile) {
+        if (is_file($oldFile)) {
+            unlink($oldFile);
+        }
+    }
+}
+
+function writeTextCopyData(string $text): bool
+{
+    $payload = buildTextCopyPayload($text);
+
+    if (!writeJsonPayload(TEXT_COPY_DATA_FILE, $payload)) {
+        return false;
+    }
+
+    $historySuffix = date('Ymd-His');
+    $historyFile = TEXT_COPY_HISTORY_DIR . '/text-copy-' . $historySuffix . '.json';
+    for ($copy = 1; file_exists($historyFile); $copy++) {
+        $historyFile = TEXT_COPY_HISTORY_DIR . '/text-copy-' . $historySuffix . '-' . str_pad((string)$copy, 2, '0', STR_PAD_LEFT) . '.json';
+    }
+
+    if (!writeJsonPayload($historyFile, $payload)) {
+        return false;
+    }
+
+    pruneTextCopyHistory();
     return true;
 }
 
@@ -256,6 +299,7 @@ $initialData = loadTextCopyData();
             margin-left: auto;
         }
 
+        .actions input,
         .raw-json-form input {
             min-width: 190px;
             border: 1px solid var(--line);
@@ -364,6 +408,7 @@ $initialData = loadTextCopyData();
             .actions,
             .raw-json-form,
             .toolbar,
+            .actions input,
             .raw-json-form input,
             button {
                 width: 100%;
@@ -395,13 +440,11 @@ $initialData = loadTextCopyData();
             <div class="toolbar">
                 <div class="actions">
                     <button id="saveBtn" type="button">Save Shared Text</button>
+                    <input id="savePassword" type="password" aria-label="Enter Password to Save" placeholder="Enter Password to Save" autocomplete="current-password" required>
                     <button id="loadBtn" class="secondary" type="button">Load Latest</button>
                     <button id="copyBtn" class="secondary" type="button">Copy Text</button>
                     <button id="selectBtn" class="secondary" type="button">Select All</button>
                     <button id="clearBtn" class="danger" type="button">Clear</button>
-                </div>
-                <div class="raw-json-form" role="group" aria-label="Save password">
-                    <input id="savePassword" type="password" aria-label="Save password" placeholder="Save password" autocomplete="current-password" required>
                 </div>
                 <form class="raw-json-form" method="post" target="_blank">
                     <input type="hidden" name="action" value="raw_json">

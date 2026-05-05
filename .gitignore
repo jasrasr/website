@@ -8,6 +8,7 @@ AGENTS.md
 how-much-time-worked/data/
 how-much-time-worked/uploads/
 text/data/*.json
+text/data/**/*.json
 text/data/*password*.txt
 
 # Example/sample files
