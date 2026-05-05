@@ -4,8 +4,8 @@ File Name   : index.php
 Project     : /text
 Author      : Jason Lamb (with help from ChatGPT)
 Created     : 2026-05-04
-Modified    : 2026-05-05 13:24:47 -04:00
-Revision    : 1.2
+Modified    : 2026-05-05 14:43:53 -04:00
+Revision    : 1.3
 
 Purpose:
 - Server-backed scratch pad for editing text and retrieving it from another device.
@@ -16,8 +16,8 @@ declare(strict_types=1);
 
 date_default_timezone_set('America/New_York');
 
-const TEXT_COPY_PAGE_REVISION = '1.2';
-const TEXT_COPY_PAGE_MODIFIED = '2026-05-05 13:24:47 -04:00';
+const TEXT_COPY_PAGE_REVISION = '1.3';
+const TEXT_COPY_PAGE_MODIFIED = '2026-05-05 14:43:53 -04:00';
 const TEXT_COPY_DATA_DIR = __DIR__ . '/data';
 const TEXT_COPY_HISTORY_DIR = TEXT_COPY_DATA_DIR . '/history';
 const TEXT_COPY_DATA_FILE = TEXT_COPY_DATA_DIR . '/text-copy.json';
@@ -446,7 +446,7 @@ $initialData = loadTextCopyData();
                     <button id="selectBtn" class="secondary" type="button">Select All</button>
                     <button id="clearBtn" class="danger" type="button">Clear</button>
                 </div>
-                <form class="raw-json-form" method="post" target="_blank">
+                <form id="rawJsonForm" class="raw-json-form" method="post" target="_blank">
                     <input type="hidden" name="action" value="raw_json">
                     <input type="password" name="password" aria-label="Raw JSON password" placeholder="JSON password" autocomplete="current-password" required>
                     <button class="secondary" type="submit">View JSON</button>
@@ -471,6 +471,7 @@ $initialData = loadTextCopyData();
         const selectBtn = document.getElementById('selectBtn');
         const clearBtn = document.getElementById('clearBtn');
         const savePassword = document.getElementById('savePassword');
+        const rawJsonForm = document.getElementById('rawJsonForm');
 
         let toastTimer = null;
         let lastSavedAt = initialData.updated_at || null;
@@ -549,6 +550,18 @@ $initialData = loadTextCopyData();
 
         textInput.addEventListener('input', updateStatus);
         saveBtn.addEventListener('click', () => saveText().catch(error => showToast(error.message)));
+        savePassword.addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                saveText().catch(error => showToast(error.message));
+            }
+        });
+        rawJsonForm.addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                rawJsonForm.requestSubmit();
+            }
+        });
         loadBtn.addEventListener('click', () => loadText().catch(error => showToast(error.message)));
         copyBtn.addEventListener('click', copyText);
         selectBtn.addEventListener('click', () => {
