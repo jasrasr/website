@@ -7,6 +7,14 @@ AGENTS.md
 # App data and uploads
 how-much-time-worked/data/
 how-much-time-worked/uploads/
+computers/logs/*.json
+computers/logs1/*.json
+computers/ratelimit/*.json
+computers/save_log.php
+computers/view.php
+computers/dashboard-dynamic.php
+computers/local/heartbeat.ps1
+computers/local/heartbeat-task.xml
 text/data/*.json
 text/data/**/*.json
 text/data/*password*.txt
