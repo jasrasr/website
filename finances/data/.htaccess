@@ -1,0 +1,4 @@
+# File: data/.htaccess
+# Purpose: Blocks direct browser access to generated finance data files.
+
+Require all denied
