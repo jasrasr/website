@@ -1,0 +1,145 @@
+:root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --border: #d7dce2;
+    --text: #20242a;
+    --muted: #59616c;
+    --accent: #155dfc;
+    --accent-dark: #0f46be;
+}
+
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    padding: 24px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
+.nav {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+a { color: var(--accent-dark); }
+h1, h2 { margin-top: 0; }
+
+.page-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 18px;
+    align-items: start;
+}
+
+.card, .status-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.status-box {
+    min-width: 170px;
+    line-height: 1.7;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(130px, 1fr));
+    gap: 12px;
+}
+
+.stats-grid .card span {
+    display: block;
+    font-size: 28px;
+    margin-top: 8px;
+}
+
+.small {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+input[type="file"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fbfcfd;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+button {
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #fff;
+    background: var(--accent);
+    cursor: pointer;
+    font-size: 15px;
+}
+
+button:hover { background: var(--accent-dark); }
+button:disabled { background: #89909a; cursor: not-allowed; }
+button.secondary { background: #4b5563; }
+
+.progress {
+    height: 12px;
+    overflow: hidden;
+    margin-top: 14px;
+    border-radius: 999px;
+    background: #dce2ea;
+}
+
+#progressBar {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    transition: width .2s ease;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: #fff;
+}
+
+th, td {
+    border: 1px solid var(--border);
+    padding: 9px;
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+
+th {
+    background: #eef1f5;
+}
+
+@media (max-width: 760px) {
+    body { padding: 14px; }
+    .page-header { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+    table { font-size: 13px; }
+}
