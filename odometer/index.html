@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Odometer Speedometer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <main class="page">
+
+    <h1>Odometer Emulator</h1>
+
+    <div class="odometer" id="odometer"></div>
+
+    <div class="speedometer">
+
+      <div class="gauge">
+        <div class="needle" id="needle"></div>
+        <div class="gauge-center"></div>
+        <div class="mph-label" id="speedLabel">MPH</div>
+      </div>
+
+      <div class="speed-readout">
+        <span id="speedReadout">0 MPH</span>
+      </div>
+
+    </div>
+
+    <div class="inputs">
+
+      <label>
+        Start Reading
+        <input
+          id="startReading"
+          type="number"
+          min="0"
+          max="999999.999"
+          step="0.001"
+          value="0.000"
+        />
+      </label>
+
+      <label>
+        Speed
+        <input
+          id="speedInput"
+          type="number"
+          min="0"
+          max="210"
+          step="1"
+          value="0"
+        />
+      </label>
+
+    </div>
+
+    <div class="controls">
+
+      <button id="unitToggle">
+        Mode : MPH
+      </button>
+
+      <button id="setBtn">
+        Set Reading
+      </button>
+
+      <button id="startBtn">
+        Start
+      </button>
+
+      <button id="stopBtn">
+        Stop
+      </button>
+
+      <button id="resetBtn">
+        Reset
+      </button>
+
+    </div>
+
+  </main>
+
+  <script src="script.js"></script>
+
+</body>
+</html>
