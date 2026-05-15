@@ -2,7 +2,7 @@
 // ============================================================================
 // File: auto_save.php
 // Purpose: Save fuel entry from scan_photos, return JSON success or error
-// Revision: 1.0
+// Revision: 1.0.1
 // Author: Jason Lamb
 // ============================================================================
 
@@ -16,8 +16,8 @@ function fail($msg) {
 }
 
 // ── Plate (text field takes priority over dropdown) ───────────────────────────
-$dropdown = strtoupper(preg_replace('/[^A-Z0-9]/', '', $_POST['plateDropdown'] ?? ''));
-$textbox  = strtoupper(preg_replace('/[^A-Z0-9]/', '', $_POST['licensePlate']  ?? ''));
+$dropdown = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($_POST['plateDropdown'] ?? '')));
+$textbox  = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($_POST['licensePlate']  ?? '')));
 $plate    = $textbox !== '' ? $textbox : $dropdown;
 if ($plate === '') fail('License plate is required.');
 $_SESSION['active_plate'] = $plate;

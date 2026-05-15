@@ -17,7 +17,7 @@ if (!$isAdminTrusted) {
     die("<h2>Access denied.</h2>");
 }
 
-$plate = strtoupper(preg_replace('/[^A-Z0-9]/', '', $_GET['plate'] ?? $_POST['plate'] ?? ''));
+$plate = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($_GET['plate'] ?? $_POST['plate'] ?? '')));
 if ($plate === '') die("<h2>No license plate specified.</h2>");
 
 $logFile = __DIR__ . "/logs/{$plate}.json";
