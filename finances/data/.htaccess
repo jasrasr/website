@@ -1,4 +1,7 @@
 # File: data/.htaccess
 # Purpose: Blocks direct browser access to generated finance data files.
+# Revision: 1.1
+# Revision Log:
+# - 2026-05-15: Added revision metadata to the file header.
 
 Require all denied

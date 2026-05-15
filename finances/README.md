@@ -1,6 +1,9 @@
 <!--
 File: README.md
 Purpose: Documents setup and usage for the finances budget tracker.
+Revision: 1.1
+Revision Log:
+- 2026-05-15: Added revision metadata to the file header.
 -->
 
 # Budget Tracker

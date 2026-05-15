@@ -1,6 +1,9 @@
 <?php
 // File: index.php
 // Purpose: Runs the shared finance budget tracker web interface.
+// Revision: 1.2
+// Revision Log:
+// - 2026-05-15: Added revision metadata to the file header.
 
 declare(strict_types=1);
 
@@ -9,8 +12,19 @@ session_start([
     'cookie_samesite' => 'Lax',
 ]);
 
-const APP_REVISION = '1.0';
+const APP_REVISION = '1.2';
 const DEFAULT_SAMPLE_PASSWORD = 'budget123';
+
+function app_modified_label(): string
+{
+    $modifiedAt = filemtime(__FILE__);
+    if ($modifiedAt === false) {
+        return 'unknown';
+    }
+
+    $date = new DateTimeImmutable('@' . $modifiedAt);
+    return $date->setTimezone(new DateTimeZone('America/New_York'))->format('Y-m-d g:i A T');
+}
 
 function app_config(): array
 {
@@ -186,6 +200,7 @@ if (isset($_GET['api'])) {
 
 $signedInUser = current_user();
 $defaultLoginActive = is_default_login_active($config);
+$appModifiedLabel = app_modified_label();
 ?>
 <!doctype html>
 <html lang="en">
@@ -231,7 +246,8 @@ $defaultLoginActive = is_default_login_active($config);
     .stat { padding: 15px; min-height: 118px; display: grid; align-content: space-between; gap: 10px; }
     .label { color: var(--muted); font-size: .88rem; font-weight: 700; text-transform: uppercase; }
     .value { font-size: clamp(1.45rem, 2.2vw, 2rem); font-weight: 800; line-height: 1.1; overflow-wrap: anywhere; }
-    .detail, .footer-note, .save-status { color: var(--muted); font-size: .9rem; line-height: 1.35; }
+    .detail, .footer-note, .save-status, .revision-meta { color: var(--muted); font-size: .9rem; line-height: 1.35; }
+    .revision-meta { margin-top: 8px; color: #dfe9e5; }
     .layout { display: grid; grid-template-columns: minmax(300px, 390px) minmax(0, 1fr); gap: 18px; align-items: start; }
     .panel-header { padding: 16px 16px 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
     .panel-body { padding: 16px; }
@@ -277,7 +293,12 @@ $defaultLoginActive = is_default_login_active($config);
 <?php if ($signedInUser === null): ?>
   <main class="login-card">
     <section class="panel">
-      <div class="panel-header"><h1>Budget Tracker</h1></div>
+      <div class="panel-header">
+        <div>
+          <h1>Budget Tracker</h1>
+          <p class="detail">Revision <?= APP_REVISION ?> | Modified <?= htmlspecialchars($appModifiedLabel, ENT_QUOTES, 'UTF-8') ?></p>
+        </div>
+      </div>
       <div class="panel-body">
         <form class="form-grid" method="post">
           <input type="hidden" name="action" value="login">
@@ -306,6 +327,7 @@ $defaultLoginActive = is_default_login_active($config);
       <div>
         <h1>Budget Tracker</h1>
         <p class="subtitle">Plan paychecks, expenses, food spending, car costs, gas, insurance, and subscriptions with monthly and annual projections.</p>
+        <p class="revision-meta">Revision <?= APP_REVISION ?> | Modified <?= htmlspecialchars($appModifiedLabel, ENT_QUOTES, 'UTF-8') ?></p>
       </div>
       <div class="actions" aria-label="Budget actions">
         <span class="save-status" id="saveStatus">Signed in as <?= htmlspecialchars($signedInUser, ENT_QUOTES, 'UTF-8') ?></span>
@@ -390,7 +412,7 @@ $defaultLoginActive = is_default_login_active($config);
       <div class="empty hidden" id="emptyState">Add income and expenses to start building a budget.</div>
     </section>
 
-    <p class="footer-note">Revision <?= APP_REVISION ?>. Data saves to this user's JSON file on the server.</p>
+    <p class="footer-note">Revision <?= APP_REVISION ?> | Modified <?= htmlspecialchars($appModifiedLabel, ENT_QUOTES, 'UTF-8') ?>. Data saves to this user's JSON file on the server.</p>
   </main>
 
   <script>

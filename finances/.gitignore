@@ -1,5 +1,8 @@
 # File: .gitignore
 # Purpose: Excludes local finance secrets and generated budget data.
+# Revision: 1.1
+# Revision Log:
+# - 2026-05-15: Added revision metadata to the file header.
 
 /data/*.json
 /security.md
