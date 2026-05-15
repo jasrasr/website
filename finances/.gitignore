@@ -1,5 +1,5 @@
 # File: .gitignore
 # Purpose: Excludes local finance secrets and generated budget data.
 
-/config.local.php
 /data/*.json
+/security.md
