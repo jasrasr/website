@@ -227,6 +227,10 @@ const scanBtn    = document.getElementById('scanBtn');
 
 let allFiles = [];
 
+function normalizePlateInput(value) {
+    return value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
 function renderThumbs() {
     thumbsDiv.innerHTML = '';
     allFiles.forEach((file, idx) => {
@@ -324,11 +328,13 @@ scanBtn.addEventListener('click', async () => {
 });
 
 document.getElementById('saveBtn').addEventListener('click', async () => {
-    const plate    = document.getElementById('revPlate').value.trim();
+    const plateEl  = document.getElementById('revPlate');
+    const plate    = normalizePlateInput(plateEl.value);
     const odometer = document.getElementById('revOdometer').value;
 
     if (!plate)    { showSaveError('Please enter or select a license plate.'); return; }
     if (!odometer) { showSaveError('Odometer reading is required.'); return; }
+    plateEl.value = plate;
 
     const saveBtn = document.getElementById('saveBtn');
     saveBtn.disabled = true;

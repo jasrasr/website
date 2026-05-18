@@ -211,6 +211,10 @@ function calculate(){
 // Run on load in case values were pre-filled from scan
 calculate();
 
+function normalizePlateInput(value) {
+    return value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
 // ── AJAX form submission ──────────────────────────────────────────────────────
 document.getElementById('fuelForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -221,9 +225,13 @@ document.getElementById('fuelForm').addEventListener('submit', async (e) => {
     document.getElementById('formError').style.display = 'none';
 
     const form = e.target;
+    const plateDropdown = normalizePlateInput(form.plateDropdown?.value ?? '');
+    const licensePlate = normalizePlateInput(form.licensePlate?.value ?? '');
+    if (form.licensePlate) form.licensePlate.value = licensePlate;
+
     const body = new URLSearchParams({
-        plateDropdown:   form.plateDropdown?.value  ?? '',
-        licensePlate:    form.licensePlate?.value   ?? '',
+        plateDropdown:   plateDropdown,
+        licensePlate:    licensePlate,
         date:            form.date?.value           ?? '',
         odometer:        form.odometer?.value       ?? '',
         pricePerGallon:  form.pricePerGallon?.value ?? '',
