@@ -1,4 +1,34 @@
-const odometer = document.getElementById("odometer");
+/*
+Revision      : 1.7.0
+Description   : JavaScript logic for realistic odometer and speedometer emulator.
+                Includes analog flip animation, continuous distance calculations,
+                animated speedometer movement, and MPH/KPH switching.
+Author        : Jason Lamb (with help from ChatGPT)
+Created Date  : 2026-05-15
+Modified Date : 2026-05-17
+
+Features:
+- Continuous odometer calculations
+- Realistic MPH/KPH speed conversion
+- Analog flip digit animation
+- Animated speedometer needle
+- Dynamic gauge tick generation
+- Leading zero placeholder formatting
+- Real-time display updates
+
+Change Log:
+1.0.0 - Initial odometer logic
+1.1.0 - Added configurable starting value
+1.2.0 - Added decimal precision support
+1.3.0 - Added animated odometer updates
+1.4.0 - Added speedometer calculations
+1.5.0 - Corrected MPH distance math
+1.6.0 - Added MPH/KPH switching
+1.7.0 - Added analog flip animations and speed tick rendering
+*/
+
+const odometer =
+  document.getElementById("odometer");
 
 const startReadingInput =
   document.getElementById("startReading");
@@ -30,6 +60,9 @@ const speedReadout =
 const speedLabel =
   document.getElementById("speedLabel");
 
+const ticks =
+  document.getElementById("ticks");
+
 const maxValue = 999999.999;
 
 const decimalPlaces = 3;
@@ -46,26 +79,99 @@ function buildOdometer() {
 
   odometer.innerHTML = "";
 
-  const template = "000000.000";
+  const template =
+    "000000.000";
 
   for (const char of template) {
 
-    const div =
+    const shell =
       document.createElement("div");
 
     if (char === ".") {
 
-      div.className = "decimal";
-      div.textContent = ".";
+      shell.className = "decimal";
+
+      shell.textContent = ".";
 
     } else {
 
-      div.className = "digit";
-      div.textContent = "0";
+      shell.className = "digit";
 
+      const inner =
+        document.createElement("div");
+
+      inner.className =
+        "digit-inner";
+
+      inner.textContent = "0";
+
+      shell.appendChild(inner);
     }
 
-    odometer.appendChild(div);
+    odometer.appendChild(shell);
+  }
+}
+
+function buildSpeedTicks() {
+
+  ticks.innerHTML = "";
+
+  const maxGauge =
+    unitMode === "MPH"
+      ? 130
+      : 210;
+
+  const minorStep =
+    unitMode === "MPH"
+      ? 5
+      : 10;
+
+  const majorStep =
+    unitMode === "MPH"
+      ? 10
+      : 20;
+
+  for (
+    let speed = 0;
+    speed <= maxGauge;
+    speed += minorStep
+  ) {
+
+    const angle =
+      -90 +
+      (
+        speed / maxGauge
+      ) * 180;
+
+    const tick =
+      document.createElement("div");
+
+    tick.className =
+      speed % majorStep === 0
+        ? "tick major"
+        : "tick";
+
+    tick.style.transform =
+      `translateX(-50%) rotate(${angle}deg)`;
+
+    if (speed % majorStep === 0) {
+
+      const label =
+        document.createElement("div");
+
+      label.className =
+        "tick-label";
+
+      label.textContent =
+        speed;
+
+      label.style.transform =
+        `translateX(-50%) rotate(${-angle}deg)`;
+
+      tick.appendChild(label);
+    }
+
+    ticks.appendChild(tick);
   }
 }
 
@@ -114,25 +220,51 @@ function updateOdometer() {
   const items =
     [...odometer.children];
 
-  for (let i = 0; i < formatted.length; i++) {
+  for (
+    let i = 0;
+    i < formatted.length;
+    i++
+  ) {
 
     const char =
       formatted[i];
 
-    const item =
+    const shell =
       items[i];
 
-    if (item.textContent !== char) {
+    if (char === ".") {
+      continue;
+    }
 
-      item.classList.add("roll");
+    const inner =
+      shell.querySelector(
+        ".digit-inner"
+      );
 
-      item.textContent = char;
+    if (
+      inner &&
+      inner.textContent !== char
+    ) {
+
+      inner.classList.remove(
+        "flip"
+      );
+
+      void inner.offsetWidth;
+
+      inner.textContent = char;
+
+      inner.classList.add(
+        "flip"
+      );
 
       setTimeout(() => {
 
-        item.classList.remove("roll");
+        inner.classList.remove(
+          "flip"
+        );
 
-      }, 100);
+      }, 180);
     }
   }
 }
@@ -140,7 +272,10 @@ function updateOdometer() {
 function getSpeedValue() {
 
   const speed =
-    parseInt(speedInput.value, 10);
+    parseInt(
+      speedInput.value,
+      10
+    );
 
   if (
     Number.isNaN(speed) ||
@@ -154,10 +289,7 @@ function getSpeedValue() {
 
 function getDistancePerSecond() {
 
-  const speed =
-    getSpeedValue();
-
-  return speed / 3600;
+  return getSpeedValue() / 3600;
 }
 
 function updateSpeedometer() {
@@ -173,8 +305,10 @@ function updateSpeedometer() {
   const angle =
     -90 +
     (
-      Math.min(speed, maxGauge)
-      / maxGauge
+      Math.min(
+        speed,
+        maxGauge
+      ) / maxGauge
     ) * 180;
 
   needle.style.transform =
@@ -209,16 +343,15 @@ function animate(timestamp) {
   }
 
   const elapsedSeconds =
-    (timestamp - lastTimestamp)
-    / 1000;
+    (
+      timestamp -
+      lastTimestamp
+    ) / 1000;
 
   lastTimestamp = timestamp;
 
-  const distancePerSecond =
-    getDistancePerSecond();
-
   value +=
-    distancePerSecond
+    getDistancePerSecond()
     * elapsedSeconds;
 
   if (value >= maxValue) {
@@ -229,6 +362,7 @@ function animate(timestamp) {
   }
 
   updateOdometer();
+
   updateSpeedometer();
 
   if (animationFrame) {
@@ -264,6 +398,7 @@ function stopOdometer() {
   }
 
   animationFrame = null;
+
   lastTimestamp = null;
 }
 
@@ -277,6 +412,7 @@ function resetOdometer() {
     "000000.000";
 
   updateOdometer();
+
   updateSpeedometer();
 }
 
@@ -291,13 +427,19 @@ unitToggle.addEventListener(
       unitToggle.textContent =
         "Mode : KPH";
 
+      speedInput.max = "210";
+
     } else {
 
       unitMode = "MPH";
 
       unitToggle.textContent =
         "Mode : MPH";
+
+      speedInput.max = "130";
     }
+
+    buildSpeedTicks();
 
     updateSpeedometer();
   }
@@ -330,8 +472,11 @@ resetBtn.addEventListener(
 
 buildOdometer();
 
+buildSpeedTicks();
+
 startReadingInput.value =
   "000000.000";
 
 updateOdometer();
+
 updateSpeedometer();
