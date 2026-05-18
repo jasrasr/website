@@ -5,6 +5,6 @@ This is where I will dump HTML/CSS/JS scripts. I started my own website back in 
 - secure text sender [jasr.me/secure](https://jasr.me/secure)
    - Fork of PrivateBin [github.com/PrivateBin/PrivateBin](https://github.com/PrivateBin/PrivateBin)
 - random password generator [jasr.me/pw](https://jasr.me/pw)
-   - reated with the help from ChatGPT
+   - Created with the help from ChatGPT
 - Miles Per Gallon (MPG) Tracker [jasr.me/mpg](https://jasr.me/mpg)
    - Created with the help from ChatGPT
