@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerts Admin — Time Clock</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f4f4f4;
+            color: #222;
+            min-height: 100vh;
+        }
+
+        /* ── PIN gate ── */
+        .pin-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .pin-box {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 36px 40px;
+            width: 100%;
+            max-width: 380px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+
+        .pin-box h1 { font-size: 22px; margin-bottom: 6px; }
+        .pin-box .sub { font-size: 13px; color: #888; margin-bottom: 24px; }
+        .pin-box label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; }
+
+        .pin-box input[type="password"] {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+
+        .pin-error { font-size: 13px; color: #cc2222; margin-bottom: 12px; min-height: 18px; }
+
+        .admin-content { display: none; padding: 40px 20px; }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 12px;
+        }
+
+        .file-meta {
+            display: inline-flex;
+            gap: 20px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 8px 16px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .file-meta span strong {
+            color: #222;
+        }
+
+        /* Token setup */
+        .token-section {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .token-section h2 {
+            font-size: 15px;
+            margin-bottom: 10px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .token-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .token-row input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        /* Add alert */
+        .add-section {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .add-section h2 {
+            font-size: 15px;
+            margin-bottom: 14px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .form-row input[type="text"] {
+            flex: 1;
+            min-width: 0;
+            padding: 10px 14px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .form-row select {
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            background: #fff;
+            max-width: 100%;
+        }
+
+        @media (max-width: 600px) {
+            .admin-content { padding: 20px 14px; }
+            .form-row { flex-direction: column; }
+            .form-row input[type="text"],
+            .form-row select,
+            .form-row button { width: 100%; }
+            .alert-item { flex-wrap: wrap; }
+            .alert-item .actions { width: 100%; justify-content: flex-end; }
+            .file-meta { flex-direction: column; gap: 6px; }
+            .save-row { flex-direction: column; align-items: flex-start; }
+            .save-row button { width: 100%; }
+            .token-row { flex-wrap: wrap; }
+            .token-row input { width: 100%; }
+        }
+
+        /* Buttons */
+        button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-primary { background: #1a7fa8; color: #fff; }
+        .btn-primary:hover { background: #155f80; }
+        .btn-save { background: #2a9d4e; color: #fff; }
+        .btn-save:hover { background: #1f7a3b; }
+        .btn-danger { background: #cc2222; color: #fff; padding: 6px 12px; font-size: 13px; }
+        .btn-danger:hover { background: #a81a1a; }
+        .btn-sm { background: #eee; color: #333; padding: 6px 12px; font-size: 13px; }
+        .btn-sm:hover { background: #ddd; }
+
+        /* Alert list */
+        .list-section h2 {
+            font-size: 15px;
+            margin-bottom: 14px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .alert-item {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert-item .badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .badge-info    { background: #e8f4fb; color: #1a7fa8; }
+        .badge-warning { background: #fff3e0; color: #b85c00; }
+        .badge-urgent  { background: #fdecea; color: #cc0000; }
+        .badge-watch   { background: #fff8e1; color: #cc9900; }
+        .badge-severe  { background: #fdecea; color: #cc0000; font-size: 12px; }
+
+        .alert-item .msg {
+            flex: 1;
+            font-size: 16px;
+        }
+
+        .alert-item .actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .empty-list {
+            color: #aaa;
+            font-style: italic;
+            font-size: 15px;
+            padding: 16px 0;
+        }
+
+        /* Status */
+        #status {
+            margin-top: 16px;
+            font-size: 14px;
+            min-height: 20px;
+        }
+
+        #status.ok  { color: #2a9d4e; }
+        #status.err { color: #cc2222; }
+
+        .save-row {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ── PIN gate ── -->
+    <div class="pin-screen" id="pin-screen">
+        <div class="pin-box">
+            <h1>Alerts Admin</h1>
+            <p class="sub">jasr.me/github — Enter your PIN to continue.</p>
+            <div class="pin-error" id="pin-error"></div>
+            <label>PIN</label>
+            <input type="password" id="pin-input" placeholder="Enter PIN"
+                   onkeydown="if(event.key==='Enter') checkPin()">
+            <button class="btn-primary" style="width:100%;" onclick="checkPin()">Unlock</button>
+        </div>
+    </div>
+
+    <!-- ── Admin content ── -->
+    <div class="admin-content" id="admin-content">
+<div class="container">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <h1>Alerts &amp; Notices Admin</h1>
+        <button class="btn-primary" onclick="window.open('index.html','_blank')">&#128337; View Clock</button>
+    </div>
+    <p class="subtitle">Changes are saved directly to the repo and appear on the clock within 1 minute.</p>
+    <div class="file-meta">
+        <span>Rev: <strong id="meta-rev">—</strong></span>
+        <span>Last Modified: <strong id="meta-date">—</strong></span>
+    </div>
+
+    <!-- GitHub Token -->
+    <div class="token-section">
+        <h2>GitHub Token</h2>
+        <div class="token-row">
+            <input type="password" id="token-input" placeholder="Paste your GitHub Personal Access Token (stored locally, never sent to repo)">
+            <button class="btn-primary" onclick="saveToken()">Save</button>
+            <button class="btn-sm" onclick="clearToken()">Clear</button>
+        </div>
+    </div>
+
+    <!-- Add Alert -->
+    <div class="add-section">
+        <h2>Add Alert</h2>
+        <div class="form-row">
+            <input type="text" id="new-message" placeholder="Enter alert message..." onkeydown="if(event.key==='Enter') addAlert()">
+            <select id="new-type">
+                <option value="info">Info</option>
+                <option value="warning">Warning</option>
+                <option value="urgent">Urgent</option>
+                <option value="watch">⚠ Watch (large yellow)</option>
+                <option value="severe">🔴 Severe Warning (large red)</option>
+            </select>
+            <button class="btn-primary" onclick="addAlert()">Add</button>
+        </div>
+    </div>
+
+    <!-- Alert List -->
+    <div class="list-section">
+        <h2>Current Alerts</h2>
+        <div id="alert-list"><div class="empty-list">Loading...</div></div>
+        <div class="save-row">
+            <button class="btn-save" onclick="saveAlerts()">Save &amp; Publish</button>
+            <div id="status"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const REPO  = 'jasrasr/website';
+    const FILE  = 'time-clock/alerts.json';
+    const API   = `https://api.github.com/repos/${REPO}/contents/${FILE}`;
+
+    let alerts = [];
+    let fileSha = '';
+    let fileRev = 1;
+    let fileLastModified = '';
+
+    // ── Token ──────────────────────────────────────────────────────────
+    function getToken() { return localStorage.getItem('tc_gh_token') || ''; }
+
+    function saveToken() {
+        const val = document.getElementById('token-input').value.trim();
+        if (val) {
+            localStorage.setItem('tc_gh_token', val);
+            document.getElementById('token-input').value = '';
+            setStatus('Token saved.', 'ok');
+            loadAlerts();
+        }
+    }
+
+    function clearToken() {
+        localStorage.removeItem('tc_gh_token');
+        document.getElementById('token-input').value = '';
+        setStatus('Token cleared.', 'ok');
+    }
+
+    // ── Load ───────────────────────────────────────────────────────────
+    async function loadAlerts() {
+        try {
+            const res = await fetch(API, {
+                headers: { Authorization: `token ${getToken()}` }
+            });
+            if (!res.ok) throw new Error(`GitHub API error ${res.status}`);
+            const data = await res.json();
+            fileSha = data.sha;
+            const decoded = JSON.parse(atob(data.content));
+            alerts = decoded.alerts || [];
+            fileRev = decoded.rev || 1;
+            fileLastModified = decoded.lastModified || '';
+            updateMeta();
+            renderList();
+        } catch (err) {
+            setStatus(`Load failed: ${err.message}`, 'err');
+            renderList();
+        }
+    }
+
+    // ── Render ─────────────────────────────────────────────────────────
+    function renderList() {
+        const el = document.getElementById('alert-list');
+        if (alerts.length === 0) {
+            el.innerHTML = '<div class="empty-list">No alerts — add one above.</div>';
+            return;
+        }
+        el.innerHTML = alerts.map((a, i) => `
+            <div class="alert-item">
+                <span class="badge badge-${a.type}">${a.type}</span>
+                <span class="msg">${escHtml(a.message)}</span>
+                <div class="actions">
+                    <button class="btn-sm" onclick="moveUp(${i})">▲</button>
+                    <button class="btn-sm" onclick="moveDown(${i})">▼</button>
+                    <button class="btn-danger" onclick="removeAlert(${i})">Remove</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ── Mutate ─────────────────────────────────────────────────────────
+    function addAlert() {
+        const msg = document.getElementById('new-message').value.trim();
+        const type = document.getElementById('new-type').value;
+        if (!msg) return;
+        alerts.push({ id: Date.now(), message: msg, type });
+        document.getElementById('new-message').value = '';
+        renderList();
+        setStatus('', '');
+    }
+
+    function removeAlert(i) {
+        alerts.splice(i, 1);
+        renderList();
+    }
+
+    function moveUp(i) {
+        if (i === 0) return;
+        [alerts[i - 1], alerts[i]] = [alerts[i], alerts[i - 1]];
+        renderList();
+    }
+
+    function moveDown(i) {
+        if (i === alerts.length - 1) return;
+        [alerts[i], alerts[i + 1]] = [alerts[i + 1], alerts[i]];
+        renderList();
+    }
+
+    // ── Save ───────────────────────────────────────────────────────────
+    async function saveAlerts() {
+        const token = getToken();
+        if (!token) { setStatus('No token saved — paste your GitHub token above first.', 'err'); return; }
+        setStatus('Saving...', '');
+        try {
+            // Always fetch the latest SHA right before saving to avoid stale SHA errors
+            const getRes = await fetch(API, {
+                headers: { Authorization: `token ${token}` }
+            });
+            if (!getRes.ok) {
+                const err = await getRes.json();
+                throw new Error(err.message || getRes.status);
+            }
+            const getData = await getRes.json();
+            fileSha = getData.sha;
+
+            fileRev++;
+            fileLastModified = new Date().toLocaleString('en-US', {
+                month: '2-digit', day: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+            });
+            updateMeta();
+            const content = btoa(JSON.stringify({ rev: fileRev, lastModified: fileLastModified, alerts }, null, 2) + '\n');
+            const body = { message: 'Update alerts.json', content, sha: fileSha };
+            const putRes = await fetch(API, {
+                method: 'PUT',
+                headers: {
+                    Authorization: `token ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+            if (!putRes.ok) {
+                const err = await putRes.json();
+                throw new Error(err.message || putRes.status);
+            }
+            const putData = await putRes.json();
+            fileSha = putData.content.sha;
+            setStatus('Saved! Clock will update within 1 minute.', 'ok');
+        } catch (err) {
+            setStatus(`Save failed: ${err.message}`, 'err');
+        }
+    }
+
+    // ── Meta display ───────────────────────────────────────────────────
+    function updateMeta() {
+        document.getElementById('meta-rev').textContent = fileRev;
+        document.getElementById('meta-date').textContent = fileLastModified || 'Never';
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────────
+    function setStatus(msg, cls) {
+        const el = document.getElementById('status');
+        el.textContent = msg;
+        el.className = cls;
+    }
+
+    function escHtml(str) {
+        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // ── Init ───────────────────────────────────────────────────────────
+    if (getToken()) {
+        loadAlerts();
+    } else {
+        document.getElementById('alert-list').innerHTML =
+            '<div class="empty-list">Enter your GitHub token above to load alerts.</div>';
+    }
+
+    // ── PIN gate ────────────────────────────────────────────────────────
+    // SHA-256 hash of your PIN. Default PIN: changeme
+    // To generate a new hash: https://emn178.github.io/online-tools/sha256.html
+    const PIN_HASH = '057ba03d6c44104863dc7361fe4578965d1887360f90a0895882e58a6248fc86';
+
+    async function checkPin() {
+        const pin = document.getElementById('pin-input').value;
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
+        const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+        if (hash === PIN_HASH) {
+            sessionStorage.setItem('tc_pin_ok', '1');
+            document.getElementById('pin-screen').style.display = 'none';
+            document.getElementById('admin-content').style.display = 'block';
+        } else {
+            document.getElementById('pin-error').textContent = 'Incorrect PIN.';
+        }
+    }
+
+    if (sessionStorage.getItem('tc_pin_ok') === '1') {
+        document.getElementById('pin-screen').style.display = 'none';
+        document.getElementById('admin-content').style.display = 'block';
+    }
+</script>
+
+</div><!-- /admin-content -->
+</body>
+</html>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Clock</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #ffffff;
+            color: #000000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100dvh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Header ── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 28px 60px;
+            background: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+            flex-shrink: 0;
+        }
+
+        /* ── Logo ── */
+        .logo-area {
+            min-width: 220px;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-area img {
+            max-height: 120px;
+            max-width: 360px;
+            object-fit: contain;
+        }
+
+        .logo-placeholder {
+            width: 180px;
+            height: 52px;
+            background: #e0e0e0;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            font-size: 13px;
+            letter-spacing: 1px;
+            border: 1px dashed #aaaaaa;
+        }
+
+        /* ── Date ── */
+        .date-area {
+            flex: 1;
+            text-align: center;
+        }
+
+        .date-text {
+            font-size: 54px;
+            font-weight: 700;
+            color: #222222;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── Weather ── */
+        .weather-area {
+            min-width: 280px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .weather-top {
+            display: flex;
+            align-items: baseline;
+            gap: 14px;
+        }
+
+        .weather-temp {
+            font-size: 52px;
+            font-weight: 700;
+            line-height: 1;
+            color: #000000;
+        }
+
+        .weather-desc {
+            font-size: 44px;
+            color: #444;
+        }
+
+        .weather-precip {
+            font-size: 18px;
+            color: #1a7fa8;
+        }
+
+        .weather-loading {
+            font-size: 18px;
+            color: #999;
+        }
+
+        /* ── Alerts ── */
+        .alerts-bar {
+            background: #000000;
+            border-top: none;
+            padding: 10px 0;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            height: 25vh;
+            overflow: hidden;
+        }
+
+        @keyframes tc-marquee {
+            from { transform: translateX(100vw); }
+            to   { transform: translateX(-100%); }
+        }
+
+        .alerts-content {
+            color: #ffffff;
+            white-space: nowrap;
+            display: inline-block;
+            line-height: 1.15;
+            text-transform: uppercase;
+            font-size: 18vh;
+        }
+
+        .alerts-content.empty {
+            color: #555;
+            font-style: italic;
+        }
+
+        .alerts-content.type-warning {
+            color: #ffaa00;
+            font-weight: 600;
+        }
+
+        .alerts-content.type-urgent {
+            color: #ff4444;
+            font-weight: 700;
+        }
+
+        .alerts-content.type-watch {
+            color: #ffdd00;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .alerts-content.type-severe {
+            color: #ff2222;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* ── Clock ── */
+        .clock-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .clock-wrapper {
+            display: flex;
+            align-items: flex-end;
+            gap: 0.3em;
+        }
+
+        .clock-ampm {
+            font-size: clamp(20px, 3vw, 60px);
+            font-weight: 700;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #555;
+            padding-bottom: 0.15em;
+            line-height: 1;
+        }
+
+        .clock {
+            font-size: clamp(80px, 18vw, 320px);
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: #000000;
+            font-family: Arial, Helvetica, sans-serif;
+            text-shadow: none;
+            line-height: 1;
+            user-select: none;
+        }
+
+        /* ── Mobile (portrait) ── */
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 14px;
+                gap: 8px;
+            }
+            .logo-area {
+                min-width: unset;
+            }
+            .logo-area img {
+                max-height: 44px;
+                max-width: 130px;
+            }
+            .logo-placeholder {
+                width: 100px;
+                height: 34px;
+                font-size: 10px;
+            }
+            .date-text {
+                font-size: 16px;
+                letter-spacing: 0;
+            }
+            .weather-area {
+                min-width: unset;
+                gap: 2px;
+            }
+            .weather-top {
+                gap: 6px;
+            }
+            .weather-temp {
+                font-size: 26px;
+            }
+            .weather-desc {
+                font-size: 16px;
+            }
+            .weather-precip {
+                font-size: 11px;
+            }
+            .clock {
+                font-size: clamp(40px, min(14vh, 18vw), 320px);
+            }
+            .clock-ampm {
+                font-size: clamp(10px, min(3.5vh, 4vw), 60px);
+            }
+            .alerts-content {
+                font-size: 11vh;
+            }
+        }
+
+        /* ── Landscape mobile (e.g. iPhone in landscape) ── */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .header {
+                padding: 6px 20px;
+            }
+            .logo-area img {
+                max-height: 36px;
+                max-width: 120px;
+            }
+            .date-text {
+                font-size: 16px;
+            }
+            .weather-temp {
+                font-size: 24px;
+            }
+            .weather-desc {
+                font-size: 16px;
+            }
+            .weather-precip {
+                display: none;
+            }
+            .alerts-bar {
+                height: 18vh;
+            }
+            .alerts-content {
+                font-size: 9vh;
+            }
+            .clock {
+                font-size: clamp(50px, 16vh, 320px);
+            }
+            .clock-ampm {
+                font-size: clamp(10px, 4vh, 60px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+
+        <!-- Logo -->
+        <div class="logo-area">
+            <img id="company-logo" src="logo.png" alt="Company Logo"
+                 onerror="this.style.display='none'; document.getElementById('logo-placeholder').style.display='flex';">
+            <div id="logo-placeholder" class="logo-placeholder" style="display:none;">COMPANY LOGO</div>
+        </div>
+
+        <!-- Date -->
+        <div class="date-area">
+            <div class="date-text" id="date-display"></div>
+        </div>
+
+        <!-- Weather -->
+        <div class="weather-area" id="weather-area">
+            <div class="weather-loading">Loading weather...</div>
+        </div>
+
+    </div>
+
+    <!-- Clock -->
+    <div class="clock-container">
+        <div class="clock-wrapper">
+            <div class="clock" id="clock-display">--:--:--</div>
+            <div class="clock-ampm" id="clock-ampm"></div>
+        </div>
+    </div>
+
+    <!-- Alerts & Notices -->
+    <div class="alerts-bar" onclick="window.open('admin.html','_blank')" style="cursor:pointer;">
+        <div class="alerts-content" id="alerts-content">No current alerts</div>
+    </div>
+
+    <script>
+        // ── Clock & Date ──────────────────────────────────────────────────
+        // Time is synced to worldtimeapi.org (America/New_York).
+        // Offset is applied to every tick so the clock scrolls smoothly
+        // but stays locked to authoritative server time.
+        let timeOffset = 0;
+
+        async function syncTime() {
+            try {
+                const fetchedAt = Date.now();
+                const res  = await fetch('https://worldtimeapi.org/api/timezone/America/New_York');
+                const data = await res.json();
+                const serverMs = data.unixtime * 1000;
+                timeOffset = serverMs - fetchedAt;
+            } catch (e) {
+                // fall back to local clock if sync fails
+                timeOffset = 0;
+            }
+        }
+
+        function updateClock() {
+            const now = new Date(Date.now() + timeOffset);
+
+            const hours = now.getHours();
+            let h = hours % 12 || 12;
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock-display').textContent = `${h}:${m}:${s}`;
+            document.getElementById('clock-ampm').textContent = hours >= 12 ? 'PM' : 'AM';
+
+            const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('date-display').textContent =
+                now.toLocaleDateString('en-US', opts);
+        }
+
+        syncTime().then(() => {
+            updateClock();
+            setInterval(updateClock, 1000);
+            setInterval(syncTime, 30 * 60 * 1000); // resync every 30 minutes
+        });
+
+        // ── Weather (Open-Meteo — no API key required) ────────────────────
+        // Coordinates for zip 44420 (Brookfield Township, OH)
+        const LAT = 41.2367;
+        const LON = -80.5703;
+
+        const WMO_DESC = {
+            0: 'Clear Sky',
+            1: 'Mainly Clear', 2: 'Partly Cloudy', 3: 'Overcast',
+            45: 'Fog', 48: 'Freezing Fog',
+            51: 'Light Drizzle', 53: 'Drizzle', 55: 'Heavy Drizzle',
+            61: 'Light Rain', 63: 'Rain', 65: 'Heavy Rain',
+            71: 'Light Snow', 73: 'Snow', 75: 'Heavy Snow',
+            77: 'Snow Grains',
+            80: 'Rain Showers', 81: 'Rain Showers', 82: 'Violent Rain Showers',
+            85: 'Snow Showers', 86: 'Heavy Snow Showers',
+            95: 'Thunderstorm',
+            96: 'Thunderstorm w/ Hail', 99: 'Thunderstorm w/ Heavy Hail'
+        };
+
+        async function fetchWeather() {
+            try {
+                const url =
+                    `https://api.open-meteo.com/v1/forecast` +
+                    `?latitude=${LAT}&longitude=${LON}` +
+                    `&current=temperature_2m,weather_code` +
+                    `&daily=precipitation_probability_max,snowfall_sum,weather_code` +
+                    `&temperature_unit=fahrenheit` +
+                    `&timezone=America%2FNew_York` +
+                    `&forecast_days=1`;
+
+                const res = await fetch(url);
+                const data = await res.json();
+
+                const tempF = Math.round(data.current.temperature_2m);
+                const code = data.current.weather_code;
+                const desc = WMO_DESC[code] || 'Unknown';
+
+                const rainPct  = data.daily.precipitation_probability_max[0] ?? 0;
+                const snowfall = data.daily.snowfall_sum[0] ?? 0;
+
+                let precipLine;
+                if (snowfall > 0.1) {
+                    precipLine = `❄ Snow: ${snowfall}" expected · ${rainPct}% precip chance`;
+                } else if (rainPct >= 20) {
+                    precipLine = `🌧 Rain: ${rainPct}% chance today`;
+                } else {
+                    precipLine = `No significant precipitation today`;
+                }
+
+                document.getElementById('weather-area').innerHTML = `
+                    <div class="weather-top">
+                        <div class="weather-temp">${tempF}°F</div>
+                        <div class="weather-desc">${desc}</div>
+                    </div>
+                    <div class="weather-precip">${precipLine}</div>
+                `;
+            } catch (err) {
+                document.getElementById('weather-area').innerHTML =
+                    `<div class="weather-loading">Weather unavailable</div>`;
+            }
+        }
+
+        fetchWeather();
+        setInterval(fetchWeather, 10 * 60 * 1000); // refresh every 10 minutes
+
+        // ── Alerts ───────────────────────────────────────────────────────
+        let alertsList = [];
+        let alertIndex = 0;
+
+        function startMarquee() {
+            const el = document.getElementById('alerts-content');
+            el.style.animation = 'none';
+            el.offsetWidth; // force reflow to reset animation
+            const speed    = 150; // px per second
+            const duration = Math.max(4, (window.innerWidth + el.scrollWidth) / speed);
+            el.style.animation = `tc-marquee ${duration.toFixed(2)}s linear 1`;
+        }
+
+        function showAlert() {
+            const el = document.getElementById('alerts-content');
+            if (alertsList.length === 0) {
+                el.className    = 'alerts-content empty';
+                el.textContent  = 'No current alerts';
+            } else {
+                const a = alertsList[alertIndex % alertsList.length];
+                el.className   = 'alerts-content' + (a.type ? ` type-${a.type}` : '');
+                el.textContent = a.message;
+                alertIndex++;
+            }
+            startMarquee();
+        }
+
+        document.getElementById('alerts-content').addEventListener('animationend', showAlert);
+
+        // Fetches from raw GitHub every minute — works on any computer, local or networked
+        const ALERTS_URL = 'https://raw.githubusercontent.com/jasrasr/website/main/time-clock/alerts.json';
+
+        async function fetchAlerts() {
+            try {
+                const res  = await fetch(`${ALERTS_URL}?_=${Date.now()}`);
+                const data = await res.json();
+                const wasEmpty = alertsList.length === 0;
+                alertsList = data.alerts || [];
+                if (wasEmpty) { alertIndex = 0; showAlert(); }
+            } catch (err) {
+                // silently keep existing alerts if fetch fails
+            }
+        }
+
+        fetchAlerts();
+        setInterval(fetchAlerts, 60 * 1000); // reload from GitHub every minute
+        showAlert();
+    </script>
+
+</body>
+</html>

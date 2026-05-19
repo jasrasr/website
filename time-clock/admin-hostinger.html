@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerts Admin — jasr.me</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f4f4f4;
+            color: #222;
+            min-height: 100vh;
+        }
+
+        /* ── Auth screens ── */
+        .auth-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .auth-box {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 36px 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+
+        .auth-box h1 {
+            font-size: 22px;
+            margin-bottom: 6px;
+        }
+
+        .auth-box .sub {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 24px;
+        }
+
+        .auth-box label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 6px;
+        }
+
+        .auth-box input[type="password"] {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+
+        .auth-box input[type="password"]:focus {
+            outline: none;
+            border-color: #1a7fa8;
+        }
+
+        .auth-error {
+            font-size: 13px;
+            color: #cc2222;
+            margin-bottom: 12px;
+            min-height: 18px;
+        }
+
+        /* ── Main admin ── */
+        .admin-wrap {
+            display: none;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        h1 { font-size: 24px; }
+
+        .subtitle {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 12px;
+        }
+
+        .file-meta {
+            display: inline-flex;
+            gap: 20px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 8px 16px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .file-meta span strong { color: #222; }
+
+        /* Sections */
+        .section {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .section h2 {
+            font-size: 15px;
+            margin-bottom: 14px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .form-row input[type="text"] {
+            flex: 1;
+            min-width: 0;
+            padding: 10px 14px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .form-row select {
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            background: #fff;
+            max-width: 100%;
+        }
+
+        @media (max-width: 600px) {
+            .admin-wrap { padding: 20px 14px; }
+            .form-row { flex-direction: column; }
+            .form-row input[type="text"],
+            .form-row select,
+            .form-row button { width: 100%; }
+            .alert-item { flex-wrap: wrap; }
+            .alert-item .actions { width: 100%; justify-content: flex-end; }
+            .file-meta { flex-direction: column; gap: 6px; }
+            .save-row { flex-direction: column; align-items: flex-start; }
+            .save-row button { width: 100%; }
+        }
+
+        /* Buttons */
+        button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-primary { background: #1a7fa8; color: #fff; }
+        .btn-primary:hover { background: #155f80; }
+        .btn-save { background: #2a9d4e; color: #fff; }
+        .btn-save:hover { background: #1f7a3b; }
+        .btn-danger { background: #cc2222; color: #fff; padding: 6px 12px; font-size: 13px; }
+        .btn-danger:hover { background: #a81a1a; }
+        .btn-sm { background: #eee; color: #333; padding: 6px 12px; font-size: 13px; }
+        .btn-sm:hover { background: #ddd; }
+        .btn-logout { background: #eee; color: #555; padding: 8px 14px; font-size: 13px; }
+        .btn-logout:hover { background: #ddd; }
+
+        /* Alert list */
+        .alert-item {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .badge-info    { background: #e8f4fb; color: #1a7fa8; }
+        .badge-warning { background: #fff3e0; color: #b85c00; }
+        .badge-urgent  { background: #fdecea; color: #cc0000; }
+        .badge-watch   { background: #fff8e1; color: #cc9900; }
+        .badge-severe  { background: #fdecea; color: #cc0000; font-size: 12px; }
+
+        .alert-item .msg { flex: 1; font-size: 16px; }
+        .alert-item .actions { display: flex; gap: 6px; }
+
+        .empty-list {
+            color: #aaa;
+            font-style: italic;
+            font-size: 15px;
+            padding: 16px 0;
+        }
+
+        #status { margin-top: 16px; font-size: 14px; min-height: 20px; }
+        #status.ok  { color: #2a9d4e; }
+        #status.err { color: #cc2222; }
+
+        .save-row {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ── Login / Setup screen ── -->
+    <div class="auth-screen" id="auth-screen">
+        <div class="auth-box" id="auth-box">
+            <h1 id="auth-title">Alerts Admin</h1>
+            <p class="sub" id="auth-sub">Sign in to manage alerts for jasr.me</p>
+            <div class="auth-error" id="auth-error"></div>
+
+            <!-- Setup form (first run) -->
+            <div id="setup-form" style="display:none;">
+                <label>Create Password</label>
+                <input type="password" id="setup-pw" placeholder="At least 6 characters">
+                <label>Confirm Password</label>
+                <input type="password" id="setup-pw2" placeholder="Repeat password"
+                       onkeydown="if(event.key==='Enter') doSetup()">
+                <button class="btn-save" style="width:100%;" onclick="doSetup()">Create Password &amp; Sign In</button>
+            </div>
+
+            <!-- Login form -->
+            <div id="login-form">
+                <label>Password</label>
+                <input type="password" id="login-pw" placeholder="Enter password"
+                       onkeydown="if(event.key==='Enter') doLogin()">
+                <button class="btn-primary" style="width:100%;" onclick="doLogin()">Sign In</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Main admin UI ── -->
+    <div class="admin-wrap" id="admin-wrap">
+        <div class="container">
+
+            <div class="top-bar">
+                <h1>Alerts Admin <small style="font-size:14px;color:#888;">jasr.me</small></h1>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn-primary" onclick="window.open('index-hostinger.html','_blank')">&#128337; View Clock</button>
+                    <button class="btn-logout" onclick="doLogout()">Sign Out</button>
+                </div>
+            </div>
+            <p class="subtitle">Changes write directly to jasr.me and appear on the clock within 1 minute.</p>
+
+            <div class="file-meta">
+                <span>Rev: <strong id="meta-rev">—</strong></span>
+                <span>Last Modified: <strong id="meta-date">—</strong></span>
+            </div>
+
+            <!-- Add alert -->
+            <div class="section">
+                <h2>Add Alert</h2>
+                <div class="form-row">
+                    <input type="text" id="new-message" placeholder="Enter alert message..."
+                           onkeydown="if(event.key==='Enter') addAlert()">
+                    <select id="new-type">
+                        <option value="info">Info</option>
+                        <option value="warning">Warning</option>
+                        <option value="urgent">Urgent</option>
+                        <option value="watch">⚠ Watch (large yellow)</option>
+                        <option value="severe">🔴 Severe Warning (large red)</option>
+                    </select>
+                    <button class="btn-primary" onclick="addAlert()">Add</button>
+                </div>
+            </div>
+
+            <!-- Alert list -->
+            <div>
+                <h2 style="font-size:15px;color:#555;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;">
+                    Current Alerts
+                </h2>
+                <div id="alert-list"><div class="empty-list">Loading...</div></div>
+                <div class="save-row">
+                    <button class="btn-save" onclick="saveAlerts()">Save &amp; Publish</button>
+                    <div id="status"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const API = 'save-alerts.php';
+
+        let alerts      = [];
+        let fileRev     = 1;
+        let lastModified = '';
+        let authToken   = localStorage.getItem('tc_host_token') || '';
+
+        // ── Init ──────────────────────────────────────────────────────────
+        async function init() {
+            const res  = await fetch(`${API}?action=status`, { method: 'POST', body: '{}' });
+            const data = await res.json();
+
+            if (!data.configured) {
+                // First run — show setup form
+                document.getElementById('auth-title').textContent = 'First-Time Setup';
+                document.getElementById('auth-sub').textContent   = 'Create a password to protect this admin page.';
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('setup-form').style.display = 'block';
+                return;
+            }
+
+            if (authToken) {
+                await loadAlerts();
+            }
+        }
+
+        // ── Setup ─────────────────────────────────────────────────────────
+        async function doSetup() {
+            const pw  = document.getElementById('setup-pw').value;
+            const pw2 = document.getElementById('setup-pw2').value;
+            setAuthError('');
+            try {
+                const res  = await apiPost('setup', { password: pw, confirm: pw2 });
+                const data = await res.json();
+                if (!res.ok) { setAuthError(data.error); return; }
+                // Auto-login after setup
+                document.getElementById('login-pw').value = pw;
+                document.getElementById('login-form').style.display = 'block';
+                document.getElementById('setup-form').style.display = 'none';
+                document.getElementById('auth-title').textContent = 'Alerts Admin';
+                document.getElementById('auth-sub').textContent   = 'Password created. Sign in below.';
+                await doLogin(pw);
+            } catch (e) {
+                setAuthError('Setup failed: ' + e.message);
+            }
+        }
+
+        // ── Login ─────────────────────────────────────────────────────────
+        async function doLogin(pw) {
+            const password = pw || document.getElementById('login-pw').value;
+            setAuthError('');
+            try {
+                const res  = await apiPost('login', { password });
+                const data = await res.json();
+                if (!res.ok) { setAuthError(data.error || 'Invalid password'); return; }
+                authToken = data.token;
+                localStorage.setItem('tc_host_token', authToken);
+                showAdmin();
+                await loadAlerts();
+            } catch (e) {
+                setAuthError('Login failed: ' + e.message);
+            }
+        }
+
+        // ── Logout ────────────────────────────────────────────────────────
+        function doLogout() {
+            authToken = '';
+            localStorage.removeItem('tc_host_token');
+            document.getElementById('admin-wrap').style.display = 'none';
+            document.getElementById('auth-screen').style.display = 'flex';
+            document.getElementById('login-pw').value = '';
+        }
+
+        // ── Load ──────────────────────────────────────────────────────────
+        async function loadAlerts() {
+            try {
+                const res  = await apiPost('load', {});
+                if (res.status === 401) { doLogout(); return; }
+                const data = await res.json();
+                alerts       = data.alerts || [];
+                fileRev      = data.rev || 1;
+                lastModified = data.lastModified || '';
+                updateMeta();
+                renderList();
+                showAdmin();
+            } catch (e) {
+                setStatus('Load failed: ' + e.message, 'err');
+            }
+        }
+
+        // ── Render ────────────────────────────────────────────────────────
+        function renderList() {
+            const el = document.getElementById('alert-list');
+            if (alerts.length === 0) {
+                el.innerHTML = '<div class="empty-list">No alerts — add one above.</div>';
+                return;
+            }
+            el.innerHTML = alerts.map((a, i) => `
+                <div class="alert-item">
+                    <span class="badge badge-${a.type}">${a.type}</span>
+                    <span class="msg">${escHtml(a.message)}</span>
+                    <div class="actions">
+                        <button class="btn-sm" onclick="moveUp(${i})">▲</button>
+                        <button class="btn-sm" onclick="moveDown(${i})">▼</button>
+                        <button class="btn-danger" onclick="removeAlert(${i})">Remove</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ── Mutate ────────────────────────────────────────────────────────
+        function addAlert() {
+            const msg  = document.getElementById('new-message').value.trim();
+            const type = document.getElementById('new-type').value;
+            if (!msg) return;
+            alerts.push({ id: Date.now(), message: msg, type });
+            document.getElementById('new-message').value = '';
+            renderList();
+            setStatus('', '');
+        }
+
+        function removeAlert(i) { alerts.splice(i, 1); renderList(); }
+
+        function moveUp(i) {
+            if (i === 0) return;
+            [alerts[i - 1], alerts[i]] = [alerts[i], alerts[i - 1]];
+            renderList();
+        }
+
+        function moveDown(i) {
+            if (i === alerts.length - 1) return;
+            [alerts[i], alerts[i + 1]] = [alerts[i + 1], alerts[i]];
+            renderList();
+        }
+
+        // ── Save ──────────────────────────────────────────────────────────
+        async function saveAlerts() {
+            setStatus('Saving...', '');
+            try {
+                const res  = await apiPost('save', { rev: fileRev, alerts });
+                if (res.status === 401) { doLogout(); return; }
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || res.status);
+                fileRev      = data.rev;
+                lastModified = data.lastModified;
+                updateMeta();
+                setStatus('Saved! Clock will update within 1 minute.', 'ok');
+            } catch (e) {
+                setStatus('Save failed: ' + e.message, 'err');
+            }
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────────
+        function apiPost(action, body) {
+            return fetch(`${API}?action=${action}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Auth-Token': authToken
+                },
+                body: JSON.stringify(body)
+            });
+        }
+
+        function showAdmin() {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('admin-wrap').style.display  = 'block';
+        }
+
+        function updateMeta() {
+            document.getElementById('meta-rev').textContent  = fileRev;
+            document.getElementById('meta-date').textContent = lastModified || 'Never';
+        }
+
+        function setAuthError(msg) { document.getElementById('auth-error').textContent = msg; }
+
+        function setStatus(msg, cls) {
+            const el = document.getElementById('status');
+            el.textContent = msg;
+            el.className   = cls;
+        }
+
+        function escHtml(str) {
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        init();
+    </script>
+</body>
+</html>

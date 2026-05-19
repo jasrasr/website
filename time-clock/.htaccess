@@ -1,0 +1,8 @@
+# Serve index-hostinger.html as the default page
+DirectoryIndex index-hostinger.html index.html
+
+# Block direct access to config and token files
+<FilesMatch "^\.(alerts_config|alerts_token)$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
