@@ -1,7 +1,13 @@
 <?php
 /**
- * save-alerts.php — Alerts backend for jasr.me time-clock
- * Handles first-time setup, login, load, and save actions.
+ * Filename   : save-alerts.php
+ * Revision   : 1.0.0
+ * Description: Alerts backend for jasr.me time-clock; handles setup, login, load, and save
+ * Author     : Jason Lamb (with help from Claude Code CLI)
+ * Created    : 2026-04-21
+ * Modified   : 2026-04-21
+ * Changelog  :
+ * 1.0.0  initial release
  */
 
 $configFile = __DIR__ . '/.alerts_config';
