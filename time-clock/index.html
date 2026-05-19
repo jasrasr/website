@@ -457,7 +457,7 @@
         document.getElementById('alerts-content').addEventListener('animationend', showAlert);
 
         // Fetches from raw GitHub every minute — works on any computer, local or networked
-        const ALERTS_URL = 'https://raw.githubusercontent.com/jasrasr/website/main/time-clock/alerts.json';
+        const ALERTS_URL = 'alerts.json';
 
         async function fetchAlerts() {
             try {
