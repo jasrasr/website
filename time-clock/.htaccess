@@ -8,7 +8,7 @@
 # 1.0.0  initial release
 
 # Serve index-hostinger.html as the default page
-DirectoryIndex index-hostinger.html index.html
+DirectoryIndex index.html
 
 # Block direct access to config and token files
 <FilesMatch "^\.(alerts_config|alerts_token)$">

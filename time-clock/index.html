@@ -1,13 +1,14 @@
 <!--
     Filename   : index.html
-    Revision   : 1.1.0
+    Revision   : 1.2.0
     Description: Time clock and weather display page for jasr.me/time-clock
     Author     : Jason Lamb (with help from Claude Code CLI)
     Created    : 2026-04-20
-    Modified   : 2026-05-19
+    Modified   : 2026-05-20
     Changelog  :
     1.0.0  initial release
     1.1.0  use relative path for alerts.json URL
+    1.2.0  load Noto Color Emoji from CDN for Pi compatibility; double weather-precip font size
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -15,6 +16,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Time Clock</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -111,8 +113,9 @@
         }
 
         .weather-precip {
-            font-size: 18px;
+            font-size: 36px;
             color: #1a7fa8;
+            font-family: 'Noto Color Emoji', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .weather-loading {
