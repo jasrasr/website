@@ -1,15 +1,16 @@
 <!--
     Filename   : admin.html
-    Revision   : 2.0.0
+    Revision   : 2.0.1
     Description: Alerts admin page with PIN gate; reads/writes via save-alerts.php
     Author     : Jason Lamb (with help from Claude Code CLI)
     Created    : 2026-04-20
-    Modified   : 2026-05-19
+    Modified   : 2026-05-20
     Changelog  :
     1.0.0  initial release (GitHub API based)
     1.1.0  added PIN gate
     1.2.0  updated repo reference to jasrasr/website
     2.0.0  rewritten to use relative paths (alerts.json + save-alerts.php)
+    2.0.1  add demo PIN hint text on login screen
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -264,6 +265,7 @@
             <label>PIN</label>
             <input type="password" id="pin-input" placeholder="Enter PIN"
                    onkeydown="if(event.key==='Enter') checkPin()">
+            <p style="font-size:12px;color:#aaa;margin-bottom:12px;">Demo PIN: <strong>changeme</strong></p>
             <button class="btn-primary" style="width:100%;" onclick="checkPin()">Unlock</button>
         </div>
     </div>
