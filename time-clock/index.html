@@ -1,6 +1,6 @@
 <!--
     Filename   : index.html
-    Revision   : 1.2.0
+    Revision   : 1.2.1
     Description: Time clock and weather display page for jasr.me/time-clock
     Author     : Jason Lamb (with help from Claude Code CLI)
     Created    : 2026-04-20
@@ -9,6 +9,7 @@
     1.0.0  initial release
     1.1.0  use relative path for alerts.json URL
     1.2.0  load Noto Color Emoji from CDN for Pi compatibility; double weather-precip font size
+    1.2.1  scope emoji font to span only to fix digit spacing issue
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -115,7 +116,10 @@
         .weather-precip {
             font-size: 36px;
             color: #1a7fa8;
-            font-family: 'Noto Color Emoji', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .weather-emoji {
+            font-family: 'Noto Color Emoji', sans-serif;
         }
 
         .weather-loading {
@@ -418,9 +422,9 @@
 
                 let precipLine;
                 if (snowfall > 0.1) {
-                    precipLine = `❄ Snow: ${snowfall}" expected · ${rainPct}% precip chance`;
+                    precipLine = `<span class="weather-emoji">❄</span> Snow: ${snowfall}" expected · ${rainPct}% precip chance`;
                 } else if (rainPct >= 20) {
-                    precipLine = `🌧 Rain: ${rainPct}% chance today`;
+                    precipLine = `<span class="weather-emoji">🌧</span> Rain: ${rainPct}% chance today`;
                 } else {
                     precipLine = `No significant precipitation today`;
                 }
