@@ -12,6 +12,7 @@
  * 1.1.1  store lastModified as Unix timestamp; browser converts to local time
  * 1.2.0  write alerts-backup.json before every save for manual recovery
  * 1.3.0  keep rolling 10-revision history in alerts-backup.json
+ * 1.3.1  add human-readable savedAt field to each backup entry
  */
 
 $alertsFile = __DIR__ . '/alerts.json';
@@ -52,7 +53,9 @@ if ($action === 'save') {
 
     // Snapshot current alerts.json into rolling backup history
     if (file_exists($alertsFile)) {
-        $current  = json_decode(file_get_contents($alertsFile), true);
+        $current            = json_decode(file_get_contents($alertsFile), true);
+        $tz = new DateTimeZone('America/New_York');
+        $current['savedAt'] = (new DateTime('now', $tz))->format('Y-m-d h:i:s A T');
         $existing = file_exists($backupFile)
             ? (json_decode(file_get_contents($backupFile), true)['backups'] ?? [])
             : [];

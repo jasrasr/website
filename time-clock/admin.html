@@ -496,6 +496,12 @@
             });
             const data = await res.json();
             updateAlarmStatus(type, data.active);
+            // Refresh all others since server clears them on activate
+            if (action === 'on') {
+                for (const t of ['demo', 'fire', 'shooter']) {
+                    if (t !== type) await loadAlarmStatus(t);
+                }
+            }
         } catch (err) {
             el.textContent = 'Error: ' + err.message;
         }
