@@ -1,6 +1,6 @@
 <!--
     Filename   : admin.html
-    Revision   : 2.1.1
+    Revision   : 2.2.0
     Description: Alerts admin page with PIN gate; reads/writes via save-alerts.php
     Author     : Jason Lamb (with help from Claude Code CLI)
     Created    : 2026-04-20
@@ -12,7 +12,8 @@
     2.0.0  rewritten to use relative paths (alerts.json + save-alerts.php)
     2.0.1  add demo PIN hint text on login screen
     2.1.0  remove server sign-in layer; PIN gate is sufficient for demo
-    2.1.1  convert lastModified from Unix timestamp to browser local time
+    2.1.1  convert lastModified from Unix timestamp to browser local time; add Updates link
+    2.2.0  add fire alarm activate/clear section with live status
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -246,7 +247,10 @@
 
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
             <h1>Alerts &amp; Notices Admin</h1>
-            <button class="btn-primary" onclick="window.open('index.html','_blank')">&#128337; View Clock</button>
+            <div style="display:flex;gap:8px;">
+                <button class="btn-sm" onclick="window.location.href='updates.html'">&#128196; Updates</button>
+                <button class="btn-primary" onclick="window.open('index.html','_blank')">&#128337; View Clock</button>
+            </div>
         </div>
         <p class="subtitle">Changes are saved directly to the server and appear on the clock within seconds.</p>
         <div class="file-meta">
@@ -277,6 +281,17 @@
             <div class="save-row">
                 <button class="btn-save" onclick="saveAlerts()">Save &amp; Publish</button>
                 <div id="status"></div>
+            </div>
+        </div>
+
+        <!-- Fire Alarm -->
+        <div class="add-section" style="margin-top:24px;">
+            <h2>&#128293; Fire Alarm</h2>
+            <p style="font-size:13px;color:#888;margin-bottom:14px;">Triggers a full-screen evacuation overlay on all kiosk displays within 5 seconds.</p>
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+                <button class="btn-danger" onclick="setFireAlarm('on')">&#128293; Activate Fire Alarm</button>
+                <button class="btn-save" onclick="setFireAlarm('off')">&#10003; Clear Fire Alarm</button>
+                <span id="alarm-status" style="font-size:13px;color:#888;"></span>
             </div>
         </div>
 
@@ -405,14 +420,51 @@
         }
     }
 
+    if (sessionStorage.getItem('tc_pin_ok') === '1') {
+        showAdmin();
+    }
+
+    // ── Fire Alarm ─────────────────────────────────────────────────────────
+    async function loadFireAlarmStatus() {
+        try {
+            const res  = await fetch('set-alarm.php?_=' + Date.now());
+            const data = await res.json();
+            updateAlarmStatus(data.active);
+        } catch (err) {
+            document.getElementById('alarm-status').textContent = 'Status unavailable';
+        }
+    }
+
+    async function setFireAlarm(action) {
+        const el = document.getElementById('alarm-status');
+        el.textContent = action === 'on' ? 'Activating...' : 'Clearing...';
+        try {
+            const res  = await fetch('set-alarm.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action })
+            });
+            const data = await res.json();
+            updateAlarmStatus(data.active);
+        } catch (err) {
+            el.textContent = 'Error: ' + err.message;
+        }
+    }
+
+    function updateAlarmStatus(active) {
+        const el = document.getElementById('alarm-status');
+        if (active) {
+            el.innerHTML = '<strong style="color:#cc2222;">&#9679; ACTIVE — overlays showing on all displays</strong>';
+        } else {
+            el.innerHTML = '<strong style="color:#2a9d4e;">&#9679; Inactive</strong>';
+        }
+    }
+
     function showAdmin() {
         document.getElementById('pin-screen').style.display  = 'none';
         document.getElementById('admin-content').style.display = 'block';
         loadAlerts();
-    }
-
-    if (sessionStorage.getItem('tc_pin_ok') === '1') {
-        showAdmin();
+        loadFireAlarmStatus();
     }
 </script>
 

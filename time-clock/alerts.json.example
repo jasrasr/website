@@ -1,0 +1,31 @@
+{
+  "rev": 1,
+  "lastModified": 0,
+  "alerts": [
+    {
+      "id": 1000000000000,
+      "message": "Example info alert",
+      "type": "info"
+    },
+    {
+      "id": 1000000000001,
+      "message": "Example warning alert",
+      "type": "warning"
+    },
+    {
+      "id": 1000000000002,
+      "message": "Example urgent alert",
+      "type": "urgent"
+    },
+    {
+      "id": 1000000000003,
+      "message": "Example watch alert",
+      "type": "watch"
+    },
+    {
+      "id": 1000000000004,
+      "message": "Example severe alert",
+      "type": "severe"
+    }
+  ]
+}

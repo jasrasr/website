@@ -4,6 +4,15 @@ how-much-time-worked/secrets.php
 # Local Codex/agent instructions
 AGENTS.md
 
+# Claude Code local settings — never deploy to server
+**/.claude/
+.claude/
+
+# Time clock — server-managed data (never overwrite with git pull)
+time-clock/alerts.json
+time-clock/alerts-backup.json
+time-clock/fire-alarm.json
+
 # App data and uploads
 how-much-time-worked/data/
 how-much-time-worked/uploads/

@@ -1,0 +1,254 @@
+<!--
+    Filename   : updates.html
+    Revision   : 1.0.0
+    Description: Revision history for all time-clock files
+    Author     : Jason Lamb (with help from Claude Code CLI)
+    Created    : 2026-05-22
+    Modified   : 2026-05-22
+    Changelog  :
+    1.0.0  initial release
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Updates &amp; Revision History — Time Clock</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f4f4f4;
+            color: #222;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        h1 { font-size: 24px; }
+
+        .subtitle {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 28px;
+        }
+
+        button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-primary { background: #1a7fa8; color: #fff; }
+        .btn-primary:hover { background: #155f80; }
+
+        .file-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+        }
+
+        .file-card-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .file-name {
+            font-size: 17px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            color: #1a7fa8;
+        }
+
+        .file-desc {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 14px;
+        }
+
+        .current-rev {
+            font-size: 13px;
+            font-weight: 600;
+            background: #e8f4fb;
+            color: #1a7fa8;
+            padding: 3px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th {
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #999;
+            padding: 0 8px 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        td {
+            padding: 8px 8px 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: top;
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        .rev-num {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            color: #333;
+            white-space: nowrap;
+        }
+
+        .rev-latest .rev-num {
+            color: #1a7fa8;
+        }
+
+        .rev-note { color: #444; }
+
+        @media (max-width: 600px) {
+            body { padding: 20px 14px; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="page-header">
+        <h1>Updates &amp; Revision History</h1>
+        <button class="btn-primary" onclick="window.location.href='admin.html'">&#9664; Back to Admin</button>
+    </div>
+    <p class="subtitle">Changelog for all jasr.me/time-clock files.</p>
+
+    <!-- index.html -->
+    <div class="file-card">
+        <div class="file-card-header">
+            <span class="file-name">index.html</span>
+            <span class="current-rev">Current: v1.4.0</span>
+        </div>
+        <p class="file-desc">Main kiosk display — time, date, weather, alerts marquee, NWS overlay, fire alarm overlay.</p>
+        <table>
+            <thead>
+                <tr><th>Rev</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+                <tr class="rev-latest"><td class="rev-num">1.4.0</td><td class="rev-note">Add fire alarm overlay; polls fire-alarm.json every 5 seconds</td></tr>
+                <tr><td class="rev-num">1.3.0</td><td class="rev-note">Add NWS live alert fetch; full-screen overlay for severe/extreme warnings</td></tr>
+                <tr><td class="rev-num">1.2.1</td><td class="rev-note">Scope emoji font to span only to fix digit spacing issue</td></tr>
+                <tr><td class="rev-num">1.2.0</td><td class="rev-note">Load Noto Color Emoji from CDN for Pi compatibility; double weather-precip font size</td></tr>
+                <tr><td class="rev-num">1.1.0</td><td class="rev-note">Use relative path for alerts.json URL</td></tr>
+                <tr><td class="rev-num">1.0.0</td><td class="rev-note">Initial release</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- admin.html -->
+    <div class="file-card">
+        <div class="file-card-header">
+            <span class="file-name">admin.html</span>
+            <span class="current-rev">Current: v2.2.0</span>
+        </div>
+        <p class="file-desc">Alerts admin panel — PIN-gated, reads/writes alerts.json via save-alerts.php; fire alarm controls.</p>
+        <table>
+            <thead>
+                <tr><th>Rev</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+                <tr class="rev-latest"><td class="rev-num">2.2.0</td><td class="rev-note">Add fire alarm activate/clear section with live status</td></tr>
+                <tr><td class="rev-num">2.1.1</td><td class="rev-note">Convert lastModified from Unix timestamp to browser local time; add Updates link</td></tr>
+                <tr><td class="rev-num">2.1.0</td><td class="rev-note">Remove server sign-in layer; PIN gate is sufficient for demo</td></tr>
+                <tr><td class="rev-num">2.0.1</td><td class="rev-note">Add demo PIN hint text on login screen</td></tr>
+                <tr><td class="rev-num">2.0.0</td><td class="rev-note">Rewritten to use relative paths (alerts.json + save-alerts.php)</td></tr>
+                <tr><td class="rev-num">1.2.0</td><td class="rev-note">Updated repo reference to jasrasr/website</td></tr>
+                <tr><td class="rev-num">1.1.0</td><td class="rev-note">Added PIN gate</td></tr>
+                <tr><td class="rev-num">1.0.0</td><td class="rev-note">Initial release (GitHub API based)</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- save-alerts.php -->
+    <div class="file-card">
+        <div class="file-card-header">
+            <span class="file-name">save-alerts.php</span>
+            <span class="current-rev">Current: v1.2.0</span>
+        </div>
+        <p class="file-desc">Server backend — loads and saves alerts.json; writes backup before every save.</p>
+        <table>
+            <thead>
+                <tr><th>Rev</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+                <tr class="rev-latest"><td class="rev-num">1.2.0</td><td class="rev-note">Write alerts-backup.json before every save for manual recovery</td></tr>
+                <tr><td class="rev-num">1.1.1</td><td class="rev-note">Store lastModified as Unix timestamp; browser converts to local time</td></tr>
+                <tr><td class="rev-num">1.1.0</td><td class="rev-note">Remove token auth for demo — PIN gate on admin.html is sufficient</td></tr>
+                <tr><td class="rev-num">1.0.0</td><td class="rev-note">Initial release</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- updates.html -->
+    <div class="file-card">
+        <div class="file-card-header">
+            <span class="file-name">updates.html</span>
+            <span class="current-rev">Current: v1.0.0</span>
+        </div>
+        <p class="file-desc">This page — revision history for all time-clock files.</p>
+        <table>
+            <thead>
+                <tr><th>Rev</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+                <tr class="rev-latest"><td class="rev-num">1.0.0</td><td class="rev-note">Initial release</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- set-alarm.php -->
+    <div class="file-card">
+        <div class="file-card-header">
+            <span class="file-name">set-alarm.php</span>
+            <span class="current-rev">Current: v1.0.0</span>
+        </div>
+        <p class="file-desc">Fire alarm toggle endpoint — GET returns status, POST on/off writes fire-alarm.json.</p>
+        <table>
+            <thead>
+                <tr><th>Rev</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+                <tr class="rev-latest"><td class="rev-num">1.0.0</td><td class="rev-note">Initial release</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+</body>
+</html>

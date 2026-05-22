@@ -1,6 +1,6 @@
 <!--
     Filename   : index.html
-    Revision   : 1.3.0
+    Revision   : 1.4.0
     Description: Time clock and weather display page for jasr.me/time-clock
     Author     : Jason Lamb (with help from Claude Code CLI)
     Created    : 2026-04-20
@@ -11,6 +11,7 @@
     1.2.0  load Noto Color Emoji from CDN for Pi compatibility; double weather-precip font size
     1.2.1  scope emoji font to span only to fix digit spacing issue
     1.3.0  add NWS live alert fetch; full-screen overlay for severe/extreme warnings
+    1.4.0  add fire alarm overlay; polls fire-alarm.json every 5 seconds
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -270,6 +271,48 @@
             text-transform: uppercase;
         }
 
+        /* ── Fire Alarm Overlay ── */
+        #fire-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10000; /* above NWS overlay */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+            animation: fire-flash 0.6s ease-in-out infinite;
+        }
+
+        #fire-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fire-flash {
+            0%, 100% { background: #cc3300; }
+            50%       { background: #ff6600; }
+        }
+
+        .fire-overlay-title {
+            font-size: clamp(70px, 15vw, 220px);
+            font-weight: 900;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            line-height: 1;
+            text-shadow: 0 4px 24px rgba(0,0,0,0.6);
+        }
+
+        .fire-overlay-sub {
+            font-size: clamp(30px, 5vw, 80px);
+            font-weight: 800;
+            color: #ffe0cc;
+            margin-top: 20px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
         /* ── Mobile (portrait) ── */
         @media (max-width: 768px) {
             .header {
@@ -376,6 +419,12 @@
             <div class="weather-loading">Loading weather...</div>
         </div>
 
+    </div>
+
+    <!-- Fire Alarm Overlay -->
+    <div id="fire-overlay">
+        <div class="fire-overlay-title">&#128293; Fire Alarm</div>
+        <div class="fire-overlay-sub">Evacuate Immediately</div>
     </div>
 
     <!-- NWS Severe Weather Overlay -->
@@ -593,7 +642,9 @@
 
         async function fetchNWSAlerts() {
             try {
-                const res  = await fetch(`https://api.weather.gov/alerts/active?point=${LAT},${LON}`);
+                //const res  = await fetch(`https://api.weather.gov/alerts/active?point=${LAT},${LON}`);
+                // sample
+                const res  = await fetch(`https://api.weather.gov/alerts/active?point=34.2,-82.11`);
                 const data = await res.json();
                 const features = (data.features || []).filter(f => f.properties.status === 'Actual');
 
@@ -619,6 +670,20 @@
 
         fetchNWSAlerts();
         setInterval(fetchNWSAlerts, 5 * 60 * 1000); // refresh every 5 minutes
+
+        // ── Fire Alarm Poll ──────────────────────────────────────────────
+        async function fetchFireAlarm() {
+            try {
+                const res  = await fetch(`fire-alarm.json?_=${Date.now()}`);
+                const data = await res.json();
+                document.getElementById('fire-overlay').classList.toggle('active', !!data.active);
+            } catch (err) {
+                // silently ignore — don't clear overlay on fetch failure
+            }
+        }
+
+        fetchFireAlarm();
+        setInterval(fetchFireAlarm, 5 * 1000); // check every 5 seconds
     </script>
 
 </body>
