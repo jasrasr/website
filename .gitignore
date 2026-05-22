@@ -12,6 +12,8 @@ AGENTS.md
 time-clock/alerts.json
 time-clock/alerts-backup.json
 time-clock/fire-alarm.json
+time-clock/active-shooter.json
+time-clock/demo-alert.json
 
 # App data and uploads
 how-much-time-worked/data/

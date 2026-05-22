@@ -1,0 +1,10 @@
+{
+  "deployedAt": 1779482445,
+  "files": {
+    "index.html": "1.5.0",
+    "admin.html": "2.4.0",
+    "save-alerts.php": "1.2.0",
+    "set-alarm.php": "1.1.0",
+    "updates.html": "1.0.0"
+  }
+}

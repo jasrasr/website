@@ -1,5 +1,16 @@
 {
-  "rev": 1,
-  "lastModified": 0,
-  "alerts": []
+  "backups": [
+    {
+      "rev": 2,
+      "lastModified": 1000000002,
+      "alerts": [
+        { "id": 1000000000000, "message": "Example alert", "type": "info" }
+      ]
+    },
+    {
+      "rev": 1,
+      "lastModified": 1000000001,
+      "alerts": []
+    }
+  ]
 }

@@ -1,6 +1,6 @@
 <!--
     Filename   : index.html
-    Revision   : 1.4.0
+    Revision   : 1.5.0
     Description: Time clock and weather display page for jasr.me/time-clock
     Author     : Jason Lamb (with help from Claude Code CLI)
     Created    : 2026-04-20
@@ -12,6 +12,7 @@
     1.2.1  scope emoji font to span only to fix digit spacing issue
     1.3.0  add NWS live alert fetch; full-screen overlay for severe/extreme warnings
     1.4.0  add fire alarm overlay; polls fire-alarm.json every 5 seconds
+    1.5.0  add active shooter/lockdown overlay; polls active-shooter.json every 5 seconds
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -313,6 +314,57 @@
             text-transform: uppercase;
         }
 
+        .overlay-clock {
+            font-size: clamp(28px, 4vw, 64px);
+            font-weight: 700;
+            color: rgba(255,255,255,0.6);
+            margin-top: 28px;
+            font-family: Arial, Helvetica, sans-serif;
+            letter-spacing: 0.05em;
+        }
+
+        /* ── Active Shooter Overlay ── */
+        #shooter-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10001; /* above fire overlay */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+            animation: shooter-flash 0.8s ease-in-out infinite;
+        }
+
+        #shooter-overlay.active {
+            display: flex;
+        }
+
+        @keyframes shooter-flash {
+            0%, 100% { background: #1a1a1a; }
+            50%       { background: #2d0000; }
+        }
+
+        .shooter-overlay-title {
+            font-size: clamp(52px, 10vw, 150px);
+            font-weight: 900;
+            color: #ffdd00;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            line-height: 1.1;
+            text-shadow: 0 4px 24px rgba(0,0,0,0.8);
+        }
+
+        .shooter-overlay-sub {
+            font-size: clamp(28px, 4.5vw, 72px);
+            font-weight: 800;
+            color: #ffffff;
+            margin-top: 20px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
         /* ── Mobile (portrait) ── */
         @media (max-width: 768px) {
             .header {
@@ -421,11 +473,27 @@
 
     </div>
 
+    <!-- Active Shooter Overlay -->
+    <div id="shooter-overlay">
+        <div class="shooter-overlay-title">&#9888; Active Threat</div>
+        <div class="shooter-overlay-sub">Lockdown — Run / Hide / Fight</div>
+        <div class="overlay-clock" id="shooter-overlay-clock"></div>
+    </div>
+
     <!-- Fire Alarm Overlay -->
     <div id="fire-overlay">
         <div class="fire-overlay-title">&#128293; Fire Alarm</div>
         <div class="fire-overlay-sub">Evacuate Immediately</div>
+        <div class="overlay-clock" id="fire-overlay-clock"></div>
     </div>
+
+    <!-- Demo Alert Overlay -->
+    <div id="demo-overlay" style="display:none;position:fixed;inset:0;z-index:9998;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;background:#1a5276;animation:demo-flash 1.4s ease-in-out infinite;">
+        <div style="font-size:clamp(52px,10vw,150px);font-weight:900;color:#ffffff;text-transform:uppercase;letter-spacing:5px;line-height:1.1;">&#128276; Demo Alert</div>
+        <div style="font-size:clamp(24px,4vw,64px);font-weight:700;color:#aed6f1;margin-top:20px;letter-spacing:3px;text-transform:uppercase;">This is a Test — Not a Real Emergency</div>
+        <div class="overlay-clock" id="demo-overlay-clock"></div>
+    </div>
+    <style>@keyframes demo-flash { 0%,100%{background:#1a5276} 50%{background:#2471a3} }</style>
 
     <!-- NWS Severe Weather Overlay -->
     <div id="nws-overlay">
@@ -474,8 +542,13 @@
             let h = hours % 12 || 12;
             const m = String(now.getMinutes()).padStart(2, '0');
             const s = String(now.getSeconds()).padStart(2, '0');
+            const timeStr = `${h}:${m}:${s} ${hours >= 12 ? 'PM' : 'AM'}`;
             document.getElementById('clock-display').textContent = `${h}:${m}:${s}`;
             document.getElementById('clock-ampm').textContent = hours >= 12 ? 'PM' : 'AM';
+            ['fire-overlay-clock','shooter-overlay-clock','demo-overlay-clock'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = timeStr;
+            });
 
             const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             document.getElementById('date-display').textContent =
@@ -684,6 +757,34 @@
 
         fetchFireAlarm();
         setInterval(fetchFireAlarm, 5 * 1000); // check every 5 seconds
+
+        // ── Active Shooter Poll ──────────────────────────────────────────
+        async function fetchShooterAlarm() {
+            try {
+                const res  = await fetch(`active-shooter.json?_=${Date.now()}`);
+                const data = await res.json();
+                document.getElementById('shooter-overlay').classList.toggle('active', !!data.active);
+            } catch (err) {
+                // silently ignore — don't clear overlay on fetch failure
+            }
+        }
+
+        fetchShooterAlarm();
+        setInterval(fetchShooterAlarm, 5 * 1000); // check every 5 seconds
+
+        // ── Demo Alert Poll ──────────────────────────────────────────────
+        async function fetchDemoAlarm() {
+            try {
+                const res  = await fetch(`demo-alert.json?_=${Date.now()}`);
+                const data = await res.json();
+                document.getElementById('demo-overlay').style.display = data.active ? 'flex' : 'none';
+            } catch (err) {
+                // silently ignore
+            }
+        }
+
+        fetchDemoAlarm();
+        setInterval(fetchDemoAlarm, 5 * 1000);
     </script>
 
 </body>

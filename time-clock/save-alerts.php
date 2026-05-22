@@ -1,7 +1,7 @@
 <?php
 /**
  * Filename   : save-alerts.php
- * Revision   : 1.2.0
+ * Revision   : 1.3.0
  * Description: Alerts backend for jasr.me time-clock; handles load and save
  * Author     : Jason Lamb (with help from Claude Code CLI)
  * Created    : 2026-04-21
@@ -11,10 +11,12 @@
  * 1.1.0  remove token auth for demo — PIN gate on admin.html is sufficient
  * 1.1.1  store lastModified as Unix timestamp; browser converts to local time
  * 1.2.0  write alerts-backup.json before every save for manual recovery
+ * 1.3.0  keep rolling 10-revision history in alerts-backup.json
  */
 
-$alertsFile  = __DIR__ . '/alerts.json';
-$backupFile  = __DIR__ . '/alerts-backup.json';
+$alertsFile = __DIR__ . '/alerts.json';
+$backupFile = __DIR__ . '/alerts-backup.json';
+const MAX_BACKUPS = 10;
 
 header('Content-Type: application/json');
 
@@ -41,15 +43,24 @@ if ($action === 'load') {
 // ── Save alerts ───────────────────────────────────────────────────────────
 if ($action === 'save') {
     $rev          = ((int)($input['rev'] ?? 0)) + 1;
-    $lastModified = time(); // Unix timestamp — client converts to local time
+    $lastModified = time();
     $data = [
         'rev'          => $rev,
         'lastModified' => $lastModified,
         'alerts'       => $input['alerts'] ?? []
     ];
+
+    // Snapshot current alerts.json into rolling backup history
     if (file_exists($alertsFile)) {
-        copy($alertsFile, $backupFile);
+        $current  = json_decode(file_get_contents($alertsFile), true);
+        $existing = file_exists($backupFile)
+            ? (json_decode(file_get_contents($backupFile), true)['backups'] ?? [])
+            : [];
+        array_unshift($existing, $current);
+        $backups = array_slice($existing, 0, MAX_BACKUPS);
+        file_put_contents($backupFile, json_encode(['backups' => $backups], JSON_PRETTY_PRINT) . "\n");
     }
+
     file_put_contents($alertsFile, json_encode($data, JSON_PRETTY_PRINT) . "\n");
     echo json_encode(['success' => true, 'rev' => $rev, 'lastModified' => $lastModified]);
     exit;
