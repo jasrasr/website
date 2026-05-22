@@ -1,14 +1,15 @@
 <?php
 /**
  * Filename   : save-alerts.php
- * Revision   : 1.1.0
+ * Revision   : 1.1.1
  * Description: Alerts backend for jasr.me time-clock; handles load and save
  * Author     : Jason Lamb (with help from Claude Code CLI)
  * Created    : 2026-04-21
- * Modified   : 2026-05-20
+ * Modified   : 2026-05-22
  * Changelog  :
  * 1.0.0  initial release
  * 1.1.0  remove token auth for demo — PIN gate on admin.html is sufficient
+ * 1.1.1  store lastModified as Unix timestamp; browser converts to local time
  */
 
 $alertsFile = __DIR__ . '/alerts.json';
@@ -38,7 +39,7 @@ if ($action === 'load') {
 // ── Save alerts ───────────────────────────────────────────────────────────
 if ($action === 'save') {
     $rev          = ((int)($input['rev'] ?? 0)) + 1;
-    $lastModified = date('m/d/Y, h:i:s A');
+    $lastModified = time(); // Unix timestamp — client converts to local time
     $data = [
         'rev'          => $rev,
         'lastModified' => $lastModified,

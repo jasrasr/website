@@ -1,10 +1,10 @@
 <!--
     Filename   : admin.html
-    Revision   : 2.1.0
+    Revision   : 2.1.1
     Description: Alerts admin page with PIN gate; reads/writes via save-alerts.php
     Author     : Jason Lamb (with help from Claude Code CLI)
     Created    : 2026-04-20
-    Modified   : 2026-05-20
+    Modified   : 2026-05-22
     Changelog  :
     1.0.0  initial release (GitHub API based)
     1.1.0  added PIN gate
@@ -12,6 +12,7 @@
     2.0.0  rewritten to use relative paths (alerts.json + save-alerts.php)
     2.0.1  add demo PIN hint text on login screen
     2.1.0  remove server sign-in layer; PIN gate is sufficient for demo
+    2.1.1  convert lastModified from Unix timestamp to browser local time
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -372,7 +373,9 @@
     // ── Meta / helpers ─────────────────────────────────────────────────────
     function updateMeta() {
         document.getElementById('meta-rev').textContent  = fileRev;
-        document.getElementById('meta-date').textContent = fileLastModified || 'Never';
+        document.getElementById('meta-date').textContent = fileLastModified
+            ? new Date(fileLastModified * 1000).toLocaleString()
+            : 'Never';
     }
 
     function setStatus(msg, cls) {
