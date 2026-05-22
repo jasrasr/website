@@ -1,12 +1,13 @@
 <!--
     Filename   : updates.html
-    Revision   : 1.0.0
+    Revision   : 1.1.0
     Description: Revision history for all time-clock files
     Author     : Jason Lamb (with help from Claude Code CLI)
     Created    : 2026-05-22
     Modified   : 2026-05-22
     Changelog  :
     1.0.0  initial release
+    1.1.0  add planned features / future phases section
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -256,6 +257,34 @@
             <tbody>
                 <tr class="rev-latest"><td class="rev-num">1.1.0</td><td class="rev-note">Add type parameter to support multiple alarm types (fire, shooter)</td></tr>
                 <tr><td class="rev-num">1.0.0</td><td class="rev-note">Initial release (fire alarm only)</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <!-- ── Planned Features ── -->
+    <div style="margin-top:36px;margin-bottom:8px;">
+        <h2 style="font-size:18px;color:#555;border-bottom:2px solid #ddd;padding-bottom:8px;">Planned Features</h2>
+    </div>
+
+    <!-- Phase 2: Device Tracking -->
+    <div class="file-card" style="border-color:#2a9d4e;background:#f0faf4;">
+        <div class="file-card-header">
+            <span class="file-name" style="color:#2a9d4e;">Phase 2 — Device Inventory &amp; Tracking</span>
+            <span class="current-rev" style="background:#e0f5e9;color:#2a9d4e;">Planned</span>
+        </div>
+        <p class="file-desc">Online status dashboard showing all active kiosk displays — color-coded by last check-in time, grouped by building and zone.</p>
+        <table>
+            <thead>
+                <tr><th>Feature</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td class="rev-num" style="color:#2a9d4e;">Heartbeat</td><td class="rev-note">Each kiosk sends a periodic ping to <code>heartbeat.php</code> — stored in <code>devices.json</code></td></tr>
+                <tr><td class="rev-num" style="color:#2a9d4e;">Status Colors</td><td class="rev-note">🟢 Active (&lt;5 min) &nbsp; 🟡 Stale (5–30 min) &nbsp; 🔴 Offline (&gt;30 min) &nbsp; ⚪ Never seen</td></tr>
+                <tr><td class="rev-num" style="color:#2a9d4e;">Device Naming</td><td class="rev-note">Admin can assign friendly names (e.g. "Break Room TV", "Front Lobby Kiosk")</td></tr>
+                <tr><td class="rev-num" style="color:#2a9d4e;">Grouping</td><td class="rev-note">Devices grouped by Building and Zone/Section for multi-location deployments</td></tr>
+                <tr><td class="rev-num" style="color:#2a9d4e;">Last Seen</td><td class="rev-note">Timestamp of most recent heartbeat shown per device</td></tr>
+                <tr><td class="rev-num" style="color:#2a9d4e;">New Files</td><td class="rev-note"><code>heartbeat.php</code>, <code>devices.json</code>, <code>devices.html</code> (or new admin tab)</td></tr>
             </tbody>
         </table>
     </div>

@@ -14,6 +14,10 @@ time-clock/alerts-backup.json
 time-clock/fire-alarm.json
 time-clock/active-shooter.json
 time-clock/demo-alert.json
+time-clock/weather-demo.json
+
+# Superpowers brainstorm sessions — local only
+**/.superpowers/
 
 # App data and uploads
 how-much-time-worked/data/
