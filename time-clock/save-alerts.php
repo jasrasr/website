@@ -1,17 +1,16 @@
 <?php
 /**
  * Filename   : save-alerts.php
- * Revision   : 1.0.0
- * Description: Alerts backend for jasr.me time-clock; handles setup, login, load, and save
+ * Revision   : 1.1.0
+ * Description: Alerts backend for jasr.me time-clock; handles load and save
  * Author     : Jason Lamb (with help from Claude Code CLI)
  * Created    : 2026-04-21
- * Modified   : 2026-04-21
+ * Modified   : 2026-05-20
  * Changelog  :
  * 1.0.0  initial release
+ * 1.1.0  remove token auth for demo — PIN gate on admin.html is sufficient
  */
 
-$configFile = __DIR__ . '/.alerts_config';
-$tokenFile  = __DIR__ . '/.alerts_token';
 $alertsFile = __DIR__ . '/alerts.json';
 
 header('Content-Type: application/json');
@@ -25,73 +24,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $action = $_GET['action'] ?? '';
 $input  = json_decode(file_get_contents('php://input'), true) ?? [];
-
-// ── Setup (first run only) ────────────────────────────────────────────────
-if ($action === 'setup') {
-    if (file_exists($configFile)) {
-        http_response_code(403);
-        echo json_encode(['error' => 'Already configured']);
-        exit;
-    }
-    $password = $input['password'] ?? '';
-    $confirm  = $input['confirm']  ?? '';
-    if (strlen($password) < 6) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Password must be at least 6 characters']);
-        exit;
-    }
-    if ($password !== $confirm) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Passwords do not match']);
-        exit;
-    }
-    $hash = password_hash($password, PASSWORD_DEFAULT);
-    file_put_contents($configFile, $hash);
-    echo json_encode(['success' => true]);
-    exit;
-}
-
-// ── Status check ─────────────────────────────────────────────────────────
-if ($action === 'status') {
-    echo json_encode(['configured' => file_exists($configFile)]);
-    exit;
-}
-
-// ── Login ─────────────────────────────────────────────────────────────────
-if ($action === 'login') {
-    if (!file_exists($configFile)) {
-        http_response_code(503);
-        echo json_encode(['error' => 'Not configured', 'setup_required' => true]);
-        exit;
-    }
-    $hash     = trim(file_get_contents($configFile));
-    $password = $input['password'] ?? '';
-    if (!password_verify($password, $hash)) {
-        http_response_code(401);
-        echo json_encode(['error' => 'Invalid password']);
-        exit;
-    }
-    $token  = bin2hex(random_bytes(32));
-    $expiry = time() + (8 * 3600); // 8-hour session
-    file_put_contents($tokenFile, "$token:$expiry");
-    echo json_encode(['success' => true, 'token' => $token]);
-    exit;
-}
-
-// ── Token validation ──────────────────────────────────────────────────────
-function validateToken($tokenFile) {
-    $provided = $_SERVER['HTTP_X_AUTH_TOKEN'] ?? '';
-    if (!$provided || !file_exists($tokenFile)) return false;
-    $parts = explode(':', trim(file_get_contents($tokenFile)), 2);
-    if (count($parts) !== 2) return false;
-    return $provided === $parts[0] && time() < (int)$parts[1];
-}
-
-if (!validateToken($tokenFile)) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Not authenticated or session expired']);
-    exit;
-}
 
 // ── Load alerts ───────────────────────────────────────────────────────────
 if ($action === 'load') {

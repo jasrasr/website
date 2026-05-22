@@ -1,6 +1,6 @@
 <!--
     Filename   : admin.html
-    Revision   : 2.0.1
+    Revision   : 2.1.0
     Description: Alerts admin page with PIN gate; reads/writes via save-alerts.php
     Author     : Jason Lamb (with help from Claude Code CLI)
     Created    : 2026-04-20
@@ -11,6 +11,7 @@
     1.2.0  updated repo reference to jasrasr/website
     2.0.0  rewritten to use relative paths (alerts.json + save-alerts.php)
     2.0.1  add demo PIN hint text on login screen
+    2.1.0  remove server sign-in layer; PIN gate is sufficient for demo
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -91,36 +92,6 @@
 
         .file-meta span strong { color: #222; }
 
-        /* Server auth section */
-        .server-auth {
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 24px;
-        }
-
-        .server-auth h2 {
-            font-size: 15px;
-            margin-bottom: 10px;
-            color: #555;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .server-auth .row {
-            display: flex;
-            gap: 8px;
-        }
-
-        .server-auth input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
         /* Add alert */
         .add-section {
             background: #fff;
@@ -174,9 +145,7 @@
             .file-meta { flex-direction: column; gap: 6px; }
             .save-row { flex-direction: column; align-items: flex-start; }
             .save-row button { width: 100%; }
-            .server-auth .row { flex-wrap: wrap; }
-            .server-auth input { width: 100%; }
-        }
+}
 
         /* Buttons */
         button {
@@ -284,17 +253,6 @@
             <span>Last Modified: <strong id="meta-date">—</strong></span>
         </div>
 
-        <!-- Server auth (shown only when no valid session token) -->
-        <div class="server-auth" id="server-auth" style="display:none;">
-            <h2>Server Sign-In</h2>
-            <div class="row">
-                <input type="password" id="server-pw" placeholder="Enter server password"
-                       onkeydown="if(event.key==='Enter') doLogin()">
-                <button class="btn-primary" onclick="doLogin()">Sign In</button>
-            </div>
-            <div id="login-error" style="font-size:13px;color:#cc2222;margin-top:8px;min-height:18px;"></div>
-        </div>
-
         <!-- Add Alert -->
         <div class="add-section">
             <h2>Add Alert</h2>
@@ -328,32 +286,6 @@
     let alerts          = [];
     let fileRev         = 1;
     let fileLastModified = '';
-
-    // ── Server auth ────────────────────────────────────────────────────────
-    function getToken() { return localStorage.getItem('tc_host_token') || ''; }
-
-    async function doLogin() {
-        const pw = document.getElementById('server-pw').value;
-        document.getElementById('login-error').textContent = '';
-        try {
-            const res  = await fetch('save-alerts.php?action=login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: pw })
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                document.getElementById('login-error').textContent = data.error || 'Invalid password';
-                return;
-            }
-            localStorage.setItem('tc_host_token', data.token);
-            document.getElementById('server-auth').style.display = 'none';
-            document.getElementById('server-pw').value = '';
-            await loadAlerts();
-        } catch (e) {
-            document.getElementById('login-error').textContent = 'Login failed: ' + e.message;
-        }
-    }
 
     // ── Load ───────────────────────────────────────────────────────────────
     async function loadAlerts() {
@@ -419,28 +351,13 @@
 
     // ── Save ───────────────────────────────────────────────────────────────
     async function saveAlerts() {
-        const token = getToken();
-        if (!token) {
-            document.getElementById('server-auth').style.display = 'block';
-            setStatus('Sign in above to save.', 'err');
-            return;
-        }
         setStatus('Saving...', '');
         try {
             const res = await fetch('save-alerts.php?action=save', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Auth-Token': token
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ rev: fileRev, alerts })
             });
-            if (res.status === 401) {
-                localStorage.removeItem('tc_host_token');
-                document.getElementById('server-auth').style.display = 'block';
-                setStatus('Session expired — sign in above.', 'err');
-                return;
-            }
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || res.status);
             fileRev          = data.rev;
@@ -488,9 +405,6 @@
     function showAdmin() {
         document.getElementById('pin-screen').style.display  = 'none';
         document.getElementById('admin-content').style.display = 'block';
-        if (!getToken()) {
-            document.getElementById('server-auth').style.display = 'block';
-        }
         loadAlerts();
     }
 

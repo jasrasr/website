@@ -8,3 +8,5 @@ This is where I will dump HTML/CSS/JS scripts. I started my own website back in 
    - Created with the help from ChatGPT
 - Miles Per Gallon (MPG) Tracker [jasr.me/mpg](https://jasr.me/mpg)
    - Created with the help from ChatGPT
+- Time Clock Kiosk Display [jasr.me/time-clock](https://jasr.me/time-clock)
+   - Full-screen clock, weather, and scrolling alerts — runs on Raspberry Pi CM4 kiosk
