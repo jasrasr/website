@@ -715,7 +715,8 @@
 
         async function fetchNWSAlerts() {
             try {
-                const res  = await fetch(`https://api.weather.gov/alerts/active?point=${LAT},${LON}`);
+                //const res  = await fetch(`https://api.weather.gov/alerts/active?point=${LAT},${LON}`); // Girard OH (live)
+                const res  = await fetch(`https://api.weather.gov/alerts/active?point=30.64,-89.82`); // TEST: St. Tammany LA
                 // TEST COORDS — swap above line with one of these to demo the overlay:
                 // Greenwood SC (Severe Thunderstorm Warning):  point=34.2,-82.11
                 // St. Tammany LA (Severe Thunderstorm Warning): point=30.64,-89.82
