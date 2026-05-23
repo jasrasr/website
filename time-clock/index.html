@@ -1,6 +1,6 @@
 <!--
     Filename   : index.html
-    Revision   : 1.5.0
+    Revision   : 1.6.0
     Description: Time clock and weather display page for jasr.me/time-clock
     Author     : Jason Lamb (with help from Claude Code CLI)
     Created    : 2026-04-20
@@ -13,6 +13,7 @@
     1.3.0  add NWS live alert fetch; full-screen overlay for severe/extreme warnings
     1.4.0  add fire alarm overlay; polls fire-alarm.json every 5 seconds
     1.5.0  add active shooter/lockdown overlay; polls active-shooter.json every 5 seconds
+    1.6.0  fix NWS overlay to use correct TV broadcast colors per event type; add weather advisory demo overlay
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -223,6 +224,8 @@
 
         /* ── NWS Severe Weather Overlay ── */
         #nws-overlay {
+            --nws-base:   #cc0000;
+            --nws-bright: #ff1111;
             display: none;
             position: fixed;
             inset: 0;
@@ -232,7 +235,7 @@
             justify-content: center;
             text-align: center;
             padding: 40px;
-            background: #cc0000;
+            background: var(--nws-base);
             animation: nws-flash 1.2s ease-in-out infinite;
         }
 
@@ -241,8 +244,8 @@
         }
 
         @keyframes nws-flash {
-            0%, 100% { background: #cc0000; }
-            50%       { background: #ff1111; }
+            0%, 100% { background: var(--nws-base); }
+            50%       { background: var(--nws-bright); }
         }
 
         .nws-overlay-event {
@@ -493,6 +496,15 @@
         <div style="font-size:clamp(24px,4vw,64px);font-weight:700;color:#aed6f1;margin-top:20px;letter-spacing:3px;text-transform:uppercase;">This is a Test — Not a Real Emergency</div>
         <div class="overlay-clock" id="demo-overlay-clock"></div>
     </div>
+
+    <!-- Weather Advisory Demo Overlay -->
+    <div id="weather-demo-overlay" style="display:none;position:fixed;inset:0;z-index:10003;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;background:#1a5276;animation:demo-flash 1.4s ease-in-out infinite;">
+        <div style="font-size:clamp(14px,1.8vw,26px);font-weight:700;color:#5bc8f5;letter-spacing:3px;text-transform:uppercase;margin-bottom:12px;">&#128203; WEATHER ADVISORY &#8212; DEMO</div>
+        <div id="weather-demo-event" style="font-size:clamp(52px,10vw,150px);font-weight:900;color:#ffffff;text-transform:uppercase;letter-spacing:5px;line-height:1.1;">Severe Thunderstorm Warning</div>
+        <div id="weather-demo-headline" style="font-size:clamp(18px,2.8vw,44px);font-weight:600;color:#aad4f5;margin-top:20px;letter-spacing:2px;max-width:90%;">Severe Thunderstorm Warning issued by NWS Cleveland OH</div>
+        <div style="font-size:clamp(12px,1.5vw,22px);color:#7fb8d8;margin-top:16px;letter-spacing:3px;text-transform:uppercase;">&#9651; NATIONAL WEATHER SERVICE &#8212; THIS IS A DRILL</div>
+        <div class="overlay-clock" id="weather-demo-overlay-clock"></div>
+    </div>
     <style>@keyframes demo-flash { 0%,100%{background:#1a5276} 50%{background:#2471a3} }</style>
 
     <!-- NWS Severe Weather Overlay -->
@@ -545,7 +557,7 @@
             const timeStr = `${h}:${m}:${s} ${hours >= 12 ? 'PM' : 'AM'}`;
             document.getElementById('clock-display').textContent = `${h}:${m}:${s}`;
             document.getElementById('clock-ampm').textContent = hours >= 12 ? 'PM' : 'AM';
-            ['fire-overlay-clock','shooter-overlay-clock','demo-overlay-clock'].forEach(id => {
+            ['fire-overlay-clock','shooter-overlay-clock','demo-overlay-clock','weather-demo-overlay-clock'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.textContent = timeStr;
             });
@@ -689,6 +701,23 @@
             'extreme wind warning'
         ];
 
+        const NWS_EVENT_COLORS = {
+            tornado:      { base: '#cc0000', bright: '#ff2222' },
+            thunderstorm: { base: '#FF8C00', bright: '#ffaa44' },
+            flood:        { base: '#006400', bright: '#009900' },
+            watch:        { base: '#b8860b', bright: '#e6a817' },
+            default:      { base: '#444444', bright: '#666666' },
+        };
+
+        function getNWSColors(event) {
+            const e = (event || '').toLowerCase();
+            if (e.includes('tornado warning') || e.includes('tornado emergency') || e.includes('extreme wind warning')) return NWS_EVENT_COLORS.tornado;
+            if (e.includes('severe thunderstorm warning')) return NWS_EVENT_COLORS.thunderstorm;
+            if (e.includes('flash flood warning') || e.includes('flash flood emergency')) return NWS_EVENT_COLORS.flood;
+            if (e.includes('tornado watch') || e.includes('severe thunderstorm watch')) return NWS_EVENT_COLORS.watch;
+            return NWS_EVENT_COLORS.default;
+        }
+
         function nwsSeverityToType(severity, event) {
             const e = event.toLowerCase();
             if (severity === 'Extreme' || OVERLAY_EVENTS.some(x => e.includes(x))) return 'severe';
@@ -705,6 +734,9 @@
             const overlay = document.getElementById('nws-overlay');
             const top = nwsAlerts.find(a => a._overlay);
             if (top) {
+                const colors = getNWSColors(top._event);
+                overlay.style.setProperty('--nws-base',   colors.base);
+                overlay.style.setProperty('--nws-bright',  colors.bright);
                 document.getElementById('nws-overlay-event').textContent    = top._event;
                 document.getElementById('nws-overlay-headline').textContent = top._headline || top._event;
                 overlay.classList.add('active');
@@ -787,6 +819,28 @@
 
         fetchDemoAlarm();
         setInterval(fetchDemoAlarm, 5 * 1000);
+
+        // ── Weather Advisory Demo Poll ───────────────────────────────
+        async function fetchWeatherDemo() {
+            try {
+                const res  = await fetch(`weather-demo.json?_=${Date.now()}`);
+                const data = await res.json();
+                const active = data.active && data.expiresAt && (Date.now() / 1000) < data.expiresAt;
+                const overlay = document.getElementById('weather-demo-overlay');
+                if (active) {
+                    document.getElementById('weather-demo-event').textContent    = data.event    || 'Severe Thunderstorm Warning';
+                    document.getElementById('weather-demo-headline').textContent = data.headline || 'Severe Thunderstorm Warning issued by NWS Cleveland OH';
+                    overlay.style.display = 'flex';
+                } else {
+                    overlay.style.display = 'none';
+                }
+            } catch (err) {
+                // silently ignore — don't clear overlay on fetch failure
+            }
+        }
+
+        fetchWeatherDemo();
+        setInterval(fetchWeatherDemo, 5 * 1000);
     </script>
 
 </body>
