@@ -1,5 +1,5 @@
 # Filename: Get-NWSWeatherAlerts.ps1
-# Revision : 1.0.1
+# Revision : 1.1.0
 # Description : Fetches live NWS weather alerts for a given zone, saves raw JSON, generates an HTML demo, and opens it in the browser
 # Author : Jason Lamb (with help from Claude Code CLI)
 # Created Date : 2026-05-22
@@ -7,11 +7,13 @@
 # Changelog :
 # 1.0.0 initial release
 # 1.0.1 wrap email in parentheses in User-Agent to fix .NET header validation error
+# 1.1.0 add -PostToKiosk switch to push first severe alert to jasr.me time-clock overlay
 
 param (
-    [string]$Zone     = "LAC103",
-    [string]$AreaName = "St. Tammany Parish, LA",
-    [switch]$NoBrowser
+    [string]$Zone        = "LAC103",
+    [string]$AreaName    = "St. Tammany Parish, LA",
+    [switch]$NoBrowser,
+    [switch]$PostToKiosk
 )
 
 $exportBase = "C:\Users\Jason.Lamb\OneDrive - Cooper Machinery Services\powershell-exports"
@@ -194,8 +196,50 @@ if (-not $NoBrowser) {
     Write-Host "Opened in browser." -ForegroundColor Cyan
 }
 
+# --- Post to Kiosk ---
+if ($PostToKiosk) {
+    # Pick first Extreme or Severe alert; fall back to any alert
+    $target = $response.features | Where-Object {
+        $_.properties.severity -in @('Extreme', 'Severe')
+    } | Select-Object -First 1
+    if (-not $target) { $target = $response.features | Select-Object -First 1 }
+
+    if (-not $target) {
+        Write-Host "No alerts to post — kiosk not updated." -ForegroundColor Yellow
+    } else {
+        $p = $target.properties
+        $kioskBody = @{
+            type       = 'weather'
+            action     = 'on'
+            event      = $p.event
+            headline   = $p.headline
+            senderName = $p.senderName
+        } | ConvertTo-Json -Compress
+
+        Write-Host "Posting to kiosk: $($p.event)" -ForegroundColor Cyan
+        try {
+            $kioskRes = Invoke-RestMethod `
+                -Uri 'https://jasr.me/time-clock/set-alarm.php' `
+                -Method POST `
+                -ContentType 'application/json' `
+                -Body $kioskBody `
+                -Headers @{ 'User-Agent' = 'NWSAlertViewer/1.0 (jason.lamb@cooperservices.com)' } `
+                -ErrorAction Stop
+            Write-Host "Kiosk updated — overlay active for 5 minutes." -ForegroundColor Green
+            Write-Host "  Event     : $($p.event)" -ForegroundColor White
+            Write-Host "  Headline  : $($p.headline)" -ForegroundColor White
+            Write-Host "  Sender    : $($p.senderName)" -ForegroundColor White
+            Write-Host "  Clear via : https://jasr.me/time-clock/admin.html" -ForegroundColor DarkCyan
+        } catch {
+            Write-Host "ERROR posting to kiosk: $($_.Exception.Message)" -ForegroundColor Red
+        }
+    }
+}
+
 # Example Usage:
 #   .\Get-NWSWeatherAlerts.ps1
 #   .\Get-NWSWeatherAlerts.ps1 -Zone "LAC103" -AreaName "St. Tammany Parish, LA"
 #   .\Get-NWSWeatherAlerts.ps1 -Zone "TXC113" -AreaName "Dallas County, TX"
 #   .\Get-NWSWeatherAlerts.ps1 -Zone "LAC103" -NoBrowser
+#   .\Get-NWSWeatherAlerts.ps1 -Zone "LAC103" -PostToKiosk
+#   .\Get-NWSWeatherAlerts.ps1 -Zone "LAC103" -NoBrowser -PostToKiosk

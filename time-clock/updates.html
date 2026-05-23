@@ -1,6 +1,6 @@
 <!--
     Filename   : updates.html
-    Revision   : 1.2.0
+    Revision   : 1.3.0
     Description: Revision history for all time-clock files
     Author     : Jason Lamb (with help from Claude Code CLI)
     Created    : 2026-05-22
@@ -9,6 +9,7 @@
     1.0.0  initial release
     1.1.0  add planned features / future phases section
     1.2.0  update current versions and changelogs for weather advisory demo release
+    1.3.0  update changelogs for NWS real-data integration (admin 2.6, set-alarm 1.4, PS 1.1)
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -154,8 +155,8 @@
     <!-- Latest Update Banner -->
     <div style="background:#1a7fa8;color:#fff;border-radius:8px;padding:20px 24px;margin-bottom:28px;">
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:0.8;margin-bottom:4px;">Latest Update</div>
-        <div style="font-size:20px;font-weight:700;margin-bottom:4px;">Weather Advisory Demo &amp; NWS Broadcast Colors</div>
-        <div style="font-size:14px;opacity:0.85;">Added a blue weather advisory demo overlay (5-minute auto-expiry) triggered from the admin panel. Real NWS alerts now use TV broadcast standard colors: red for tornado, orange for severe thunderstorm, green for flash flood. Demo is clearly blue so it will not cause public alarm.</div>
+        <div style="font-size:20px;font-weight:700;margin-bottom:4px;">Real NWS Data Integration — Admin Input Fields &amp; PowerShell Push</div>
+        <div style="font-size:14px;opacity:0.85;">Admin panel now has Event and Headline text fields in the Weather Advisory Demo section — paste real NWS data and activate. PowerShell script gains <code style="background:rgba(0,0,0,0.2);padding:1px 5px;border-radius:3px;">-PostToKiosk</code> switch that fetches live alerts and automatically pushes the first severe warning to the kiosk overlay.</div>
     </div>
 
     <!-- index.html -->
@@ -187,7 +188,7 @@
     <div class="file-card">
         <div class="file-card-header">
             <span class="file-name">admin.html</span>
-            <span class="current-rev">Current: v2.5.0</span>
+            <span class="current-rev">Current: v2.6.0</span>
         </div>
         <p class="file-desc">Alerts admin panel — PIN-gated, reads/writes alerts.json via save-alerts.php; fire alarm controls; weather advisory demo.</p>
         <table>
@@ -195,7 +196,8 @@
                 <tr><th>Rev</th><th>Notes</th></tr>
             </thead>
             <tbody>
-                <tr class="rev-latest"><td class="rev-num">2.5.0</td><td class="rev-note">Add weather advisory demo section with 5-minute countdown</td></tr>
+                <tr class="rev-latest"><td class="rev-num">2.6.0</td><td class="rev-note">Add event/headline input fields to weather demo; send to set-alarm.php on activate</td></tr>
+                <tr><td class="rev-num">2.5.0</td><td class="rev-note">Add weather advisory demo section with 5-minute countdown</td></tr>
                 <tr><td class="rev-num">2.4.0</td><td class="rev-note">Add active shooter/lockdown section; refactor alarm functions to support multiple types</td></tr>
                 <tr><td class="rev-num">2.3.0</td><td class="rev-note">Show site file versions and deploy date alongside alerts rev/last saved</td></tr>
                 <tr><td class="rev-num">2.2.0</td><td class="rev-note">Add fire alarm activate/clear section with live status</td></tr>
@@ -234,7 +236,7 @@
     <div class="file-card">
         <div class="file-card-header">
             <span class="file-name">updates.html</span>
-            <span class="current-rev">Current: v1.1.0</span>
+            <span class="current-rev">Current: v1.3.0</span>
         </div>
         <p class="file-desc">This page — revision history for all time-clock files.</p>
         <table>
@@ -242,7 +244,9 @@
                 <tr><th>Rev</th><th>Notes</th></tr>
             </thead>
             <tbody>
-                <tr class="rev-latest"><td class="rev-num">1.1.0</td><td class="rev-note">Update current versions and changelogs for weather advisory demo release</td></tr>
+                <tr class="rev-latest"><td class="rev-num">1.3.0</td><td class="rev-note">Update changelogs for NWS real-data integration (admin 2.6, set-alarm 1.4, PS 1.1)</td></tr>
+                <tr><td class="rev-num">1.2.0</td><td class="rev-note">Update current versions and changelogs for weather advisory demo release</td></tr>
+                <tr><td class="rev-num">1.1.0</td><td class="rev-note">Add planned features / future phases section</td></tr>
                 <tr><td class="rev-num">1.0.0</td><td class="rev-note">Initial release</td></tr>
             </tbody>
         </table>
@@ -252,7 +256,7 @@
     <div class="file-card">
         <div class="file-card-header">
             <span class="file-name">set-alarm.php</span>
-            <span class="current-rev">Current: v1.3.0</span>
+            <span class="current-rev">Current: v1.4.0</span>
         </div>
         <p class="file-desc">Emergency alert toggle endpoint — supports fire, active-shooter, demo, and weather types via type parameter.</p>
         <table>
@@ -260,7 +264,8 @@
                 <tr><th>Rev</th><th>Notes</th></tr>
             </thead>
             <tbody>
-                <tr class="rev-latest"><td class="rev-num">1.3.0</td><td class="rev-note">Add weather demo alarm type with 5-minute expiresAt auto-expiry</td></tr>
+                <tr class="rev-latest"><td class="rev-num">1.4.0</td><td class="rev-note">Accept custom event/headline/senderName from POST body for weather type</td></tr>
+                <tr><td class="rev-num">1.3.0</td><td class="rev-note">Add weather demo alarm type with 5-minute expiresAt auto-expiry</td></tr>
                 <tr><td class="rev-num">1.2.0</td><td class="rev-note">Activating one alarm type auto-clears all others (mutual exclusivity)</td></tr>
                 <tr><td class="rev-num">1.1.0</td><td class="rev-note">Add type parameter to support multiple alarm types (fire, shooter)</td></tr>
                 <tr><td class="rev-num">1.0.0</td><td class="rev-note">Initial release (fire alarm only)</td></tr>

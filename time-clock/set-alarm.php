@@ -1,7 +1,7 @@
 <?php
 /**
  * Filename   : set-alarm.php
- * Revision   : 1.3.0
+ * Revision   : 1.4.0
  * Description: Emergency alert toggle endpoint for jasr.me time-clock
  * Author     : Jason Lamb (with help from Claude Code CLI)
  * Created    : 2026-05-22
@@ -11,6 +11,7 @@
  * 1.1.0  add type parameter to support multiple alarm types (fire, shooter, demo)
  * 1.2.0  activating one alarm type auto-clears all others (mutual exclusivity)
  * 1.3.0  add weather demo alarm type with 5-minute expiresAt auto-expiry
+ * 1.4.0  accept custom event/headline/senderName from POST body for weather type
  */
 
 $alarmTypes = [
@@ -94,9 +95,9 @@ if ($action === 'on') {
             'active'      => true,
             'triggeredAt' => $now,
             'expiresAt'   => $now + 300,
-            'event'       => 'Severe Thunderstorm Warning',
-            'headline'    => 'Severe Thunderstorm Warning issued by NWS Cleveland OH',
-            'senderName'  => 'NWS Cleveland OH',
+            'event'       => $input['event']      ?? 'Severe Thunderstorm Warning',
+            'headline'    => $input['headline']   ?? 'Severe Thunderstorm Warning issued by NWS Cleveland OH',
+            'senderName'  => $input['senderName'] ?? 'NWS Cleveland OH',
         ];
     } else {
         $data = ['active' => true, 'triggeredAt' => $now, 'message' => $message];

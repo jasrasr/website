@@ -1,10 +1,10 @@
 <!--
     Filename   : admin.html
-    Revision   : 2.5.0
+    Revision   : 2.6.0
     Description: Alerts admin page with PIN gate; reads/writes via save-alerts.php
     Author     : Jason Lamb (with help from Claude Code CLI)
     Created    : 2026-04-20
-    Modified   : 2026-05-22
+    Modified   : 2026-05-23
     Changelog  :
     1.0.0  initial release (GitHub API based)
     1.1.0  added PIN gate
@@ -17,6 +17,7 @@
     2.3.0  show site file versions and deploy date alongside alerts rev/last saved
     2.4.0  add active shooter/lockdown section; refactor alarm functions to support multiple types
     2.5.0  add weather advisory demo section with 5-minute countdown
+    2.6.0  add event/headline input fields to weather demo; send to set-alarm.php on activate
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -327,9 +328,15 @@
         <!-- Weather Advisory Demo -->
         <div class="add-section" style="margin-top:12px;border-color:#1a5276;background:#eaf4fb;">
             <h2 style="color:#1a5276;">&#127785; Weather Advisory Demo</h2>
-            <p style="font-size:13px;color:#555;margin-bottom:14px;">Triggers a blue weather overlay with NWS-format content for Girard, OH (Trumbull County). Auto-clears after 5 minutes. Blue color — will not cause public alarm.</p>
-            <div style="background:#fff;border:1px solid #ccc;border-radius:6px;padding:8px 14px;margin-bottom:12px;font-size:12px;color:#555;">
-                <strong>Data source:</strong> NWS Cleveland OH &nbsp;&middot;&nbsp; Trumbull County, OH (Girard area)
+            <p style="font-size:13px;color:#555;margin-bottom:14px;">Triggers a blue weather overlay. Paste real NWS data below or leave blank to use defaults. Auto-clears after 5 minutes. Blue color — will not cause public alarm.</p>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
+                <input type="text" id="weather-event"
+                       placeholder="Event (e.g. Severe Thunderstorm Warning)"
+                       style="width:100%;padding:10px 14px;border:1px solid #b0c8e0;border-radius:6px;font-size:14px;background:#fff;">
+                <input type="text" id="weather-headline"
+                       placeholder="Headline (e.g. Severe Thunderstorm Warning issued by NWS Cleveland OH)"
+                       style="width:100%;padding:10px 14px;border:1px solid #b0c8e0;border-radius:6px;font-size:14px;background:#fff;">
+                <p style="font-size:11px;color:#888;margin:0;">Leave blank for defaults &nbsp;&middot;&nbsp; Or use <code>.\Get-NWSWeatherAlerts.ps1 -PostToKiosk</code> to push real NWS data directly</p>
             </div>
             <div id="weather-demo-countdown" style="display:none;background:#1a5276;border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#aed6f1;justify-content:space-between;align-items:center;">
                 <span>&#9200; Demo expires in: <strong id="weather-demo-timer" style="color:#fff;">5:00</strong></span>
@@ -536,11 +543,18 @@
     async function setAlarm(type, action) {
         const el = document.getElementById(`alarm-status-${type}`);
         el.textContent = action === 'on' ? 'Activating...' : 'Clearing...';
+        const body = { type, action };
+        if (type === 'weather' && action === 'on') {
+            const ev = (document.getElementById('weather-event')?.value    || '').trim();
+            const hl = (document.getElementById('weather-headline')?.value || '').trim();
+            if (ev) body.event    = ev;
+            if (hl) body.headline = hl;
+        }
         try {
             const res  = await fetch('set-alarm.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type, action })
+                body: JSON.stringify(body)
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || res.status);
