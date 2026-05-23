@@ -1,11 +1,12 @@
 # Filename: Get-NWSWeatherAlerts.ps1
-# Revision : 1.0.0
+# Revision : 1.0.1
 # Description : Fetches live NWS weather alerts for a given zone, saves raw JSON, generates an HTML demo, and opens it in the browser
 # Author : Jason Lamb (with help from Claude Code CLI)
 # Created Date : 2026-05-22
-# Modified Date : 2026-05-22
+# Modified Date : 2026-05-23
 # Changelog :
 # 1.0.0 initial release
+# 1.0.1 wrap email in parentheses in User-Agent to fix .NET header validation error
 
 param (
     [string]$Zone     = "LAC103",
@@ -23,7 +24,7 @@ Write-Host "Fetching NWS alerts for zone $Zone ($AreaName)..." -ForegroundColor 
 try {
     $response = Invoke-RestMethod `
         -Uri "https://api.weather.gov/alerts/active?zone=$Zone" `
-        -Headers @{ 'User-Agent' = 'NWSAlertViewer/1.0 jason.lamb@cooperservices.com'; 'Accept' = 'application/geo+json' } `
+        -Headers @{ 'User-Agent' = 'NWSAlertViewer/1.0 (jason.lamb@cooperservices.com)'; 'Accept' = 'application/geo+json' } `
         -ErrorAction Stop
 } catch {
     Write-Host "ERROR: Failed to fetch NWS data — $($_.Exception.Message)" -ForegroundColor Red
