@@ -1,6 +1,6 @@
 <!--
     Filename   : index.html
-    Revision   : 1.6.0
+    Revision   : 1.7.0
     Description: Time clock and weather display page for jasr.me/time-clock
     Author     : Jason Lamb (with help from Claude Code CLI)
     Created    : 2026-04-20
@@ -14,6 +14,7 @@
     1.4.0  add fire alarm overlay; polls fire-alarm.json every 5 seconds
     1.5.0  add active shooter/lockdown overlay; polls active-shooter.json every 5 seconds
     1.6.0  fix NWS overlay to use correct TV broadcast colors per event type; add weather advisory demo overlay
+    1.7.0  add countdown timer and expiry time to weather advisory demo overlay
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -503,6 +504,7 @@
         <div id="weather-demo-event" style="font-size:clamp(52px,10vw,150px);font-weight:900;color:#ffffff;text-transform:uppercase;letter-spacing:5px;line-height:1.1;">Severe Thunderstorm Warning</div>
         <div id="weather-demo-headline" style="font-size:clamp(18px,2.8vw,44px);font-weight:600;color:#aad4f5;margin-top:20px;letter-spacing:2px;max-width:90%;">Severe Thunderstorm Warning issued by NWS Cleveland OH</div>
         <div style="font-size:clamp(12px,1.5vw,22px);color:#7fb8d8;margin-top:16px;letter-spacing:3px;text-transform:uppercase;">&#9651; NATIONAL WEATHER SERVICE &#8212; THIS IS A DRILL</div>
+        <div id="weather-demo-overlay-countdown" style="font-size:clamp(13px,1.6vw,24px);color:#aad4f5;margin-top:18px;letter-spacing:1px;"></div>
         <div class="overlay-clock" id="weather-demo-overlay-clock"></div>
     </div>
     <style>@keyframes demo-flash { 0%,100%{background:#1a5276} 50%{background:#2471a3} }</style>
@@ -821,6 +823,18 @@
         setInterval(fetchDemoAlarm, 5 * 1000);
 
         // ── Weather Advisory Demo Poll ───────────────────────────────
+        let weatherDemoCountdownInterval = null;
+
+        function updateWeatherDemoCountdown(expiresAt) {
+            const el = document.getElementById('weather-demo-overlay-countdown');
+            if (!el) return;
+            const remaining = Math.max(0, expiresAt - Math.floor(Date.now() / 1000));
+            const m = Math.floor(remaining / 60);
+            const s = String(remaining % 60).padStart(2, '0');
+            const expiresTime = new Date(expiresAt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            el.textContent = `⏰ Demo expires in: ${m}:${s}  ·  auto-clears at ${expiresTime}`;
+        }
+
         async function fetchWeatherDemo() {
             try {
                 const res  = await fetch(`weather-demo.json?_=${Date.now()}`);
@@ -831,8 +845,14 @@
                     document.getElementById('weather-demo-event').textContent    = data.event    || 'Severe Thunderstorm Warning';
                     document.getElementById('weather-demo-headline').textContent = data.headline || 'Severe Thunderstorm Warning issued by NWS Cleveland OH';
                     overlay.style.display = 'flex';
+                    if (!weatherDemoCountdownInterval) {
+                        updateWeatherDemoCountdown(data.expiresAt);
+                        weatherDemoCountdownInterval = setInterval(() => updateWeatherDemoCountdown(data.expiresAt), 1000);
+                    }
                 } else {
                     overlay.style.display = 'none';
+                    clearInterval(weatherDemoCountdownInterval);
+                    weatherDemoCountdownInterval = null;
                 }
             } catch (err) {
                 // silently ignore — don't clear overlay on fetch failure
