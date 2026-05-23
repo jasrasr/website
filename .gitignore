@@ -19,6 +19,9 @@ time-clock/weather-demo.json
 # Superpowers brainstorm sessions — local only
 **/.superpowers/
 
+# Git worktrees — local only
+.worktrees/
+
 # App data and uploads
 how-much-time-worked/data/
 how-much-time-worked/uploads/
