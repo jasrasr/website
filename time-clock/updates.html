@@ -1,13 +1,14 @@
 <!--
     Filename   : updates.html
-    Revision   : 1.1.0
+    Revision   : 1.2.0
     Description: Revision history for all time-clock files
     Author     : Jason Lamb (with help from Claude Code CLI)
     Created    : 2026-05-22
-    Modified   : 2026-05-22
+    Modified   : 2026-05-23
     Changelog  :
     1.0.0  initial release
     1.1.0  add planned features / future phases section
+    1.2.0  update current versions and changelogs for weather advisory demo release
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -153,23 +154,24 @@
     <!-- Latest Update Banner -->
     <div style="background:#1a7fa8;color:#fff;border-radius:8px;padding:20px 24px;margin-bottom:28px;">
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:0.8;margin-bottom:4px;">Latest Update</div>
-        <div style="font-size:20px;font-weight:700;margin-bottom:4px;">Emergency Alerts — Fire, Active Threat &amp; Demo</div>
-        <div style="font-size:14px;opacity:0.85;">Added full-screen overlays for fire alarm, active shooter/lockdown, and a safe demo test alert. All triggered from the admin panel and cleared automatically within 5 seconds across all kiosk displays. Clock remains visible on each overlay.</div>
+        <div style="font-size:20px;font-weight:700;margin-bottom:4px;">Weather Advisory Demo &amp; NWS Broadcast Colors</div>
+        <div style="font-size:14px;opacity:0.85;">Added a blue weather advisory demo overlay (5-minute auto-expiry) triggered from the admin panel. Real NWS alerts now use TV broadcast standard colors: red for tornado, orange for severe thunderstorm, green for flash flood. Demo is clearly blue so it will not cause public alarm.</div>
     </div>
 
     <!-- index.html -->
     <div class="file-card">
         <div class="file-card-header">
             <span class="file-name">index.html</span>
-            <span class="current-rev">Current: v1.4.0</span>
+            <span class="current-rev">Current: v1.6.0</span>
         </div>
-        <p class="file-desc">Main kiosk display — time, date, weather, alerts marquee, NWS overlay, fire alarm overlay.</p>
+        <p class="file-desc">Main kiosk display — time, date, weather, alerts marquee, NWS overlay, fire alarm overlay, weather advisory demo overlay.</p>
         <table>
             <thead>
                 <tr><th>Rev</th><th>Notes</th></tr>
             </thead>
             <tbody>
-                <tr class="rev-latest"><td class="rev-num">1.5.0</td><td class="rev-note">Add active shooter/lockdown overlay; polls active-shooter.json every 5 seconds</td></tr>
+                <tr class="rev-latest"><td class="rev-num">1.6.0</td><td class="rev-note">Fix NWS overlay to use TV broadcast colors per event type; add weather advisory demo overlay</td></tr>
+                <tr><td class="rev-num">1.5.0</td><td class="rev-note">Add active shooter/lockdown overlay; polls active-shooter.json every 5 seconds</td></tr>
                 <tr><td class="rev-num">1.4.0</td><td class="rev-note">Add fire alarm overlay; polls fire-alarm.json every 5 seconds</td></tr>
                 <tr><td class="rev-num">1.3.0</td><td class="rev-note">Add NWS live alert fetch; full-screen overlay for severe/extreme warnings</td></tr>
                 <tr><td class="rev-num">1.2.1</td><td class="rev-note">Scope emoji font to span only to fix digit spacing issue</td></tr>
@@ -184,15 +186,16 @@
     <div class="file-card">
         <div class="file-card-header">
             <span class="file-name">admin.html</span>
-            <span class="current-rev">Current: v2.2.0</span>
+            <span class="current-rev">Current: v2.5.0</span>
         </div>
-        <p class="file-desc">Alerts admin panel — PIN-gated, reads/writes alerts.json via save-alerts.php; fire alarm controls.</p>
+        <p class="file-desc">Alerts admin panel — PIN-gated, reads/writes alerts.json via save-alerts.php; fire alarm controls; weather advisory demo.</p>
         <table>
             <thead>
                 <tr><th>Rev</th><th>Notes</th></tr>
             </thead>
             <tbody>
-                <tr class="rev-latest"><td class="rev-num">2.4.0</td><td class="rev-note">Add active shooter/lockdown section; refactor alarm functions to support multiple types</td></tr>
+                <tr class="rev-latest"><td class="rev-num">2.5.0</td><td class="rev-note">Add weather advisory demo section with 5-minute countdown</td></tr>
+                <tr><td class="rev-num">2.4.0</td><td class="rev-note">Add active shooter/lockdown section; refactor alarm functions to support multiple types</td></tr>
                 <tr><td class="rev-num">2.3.0</td><td class="rev-note">Show site file versions and deploy date alongside alerts rev/last saved</td></tr>
                 <tr><td class="rev-num">2.2.0</td><td class="rev-note">Add fire alarm activate/clear section with live status</td></tr>
                 <tr><td class="rev-num">2.1.1</td><td class="rev-note">Convert lastModified from Unix timestamp to browser local time; add Updates link</td></tr>
@@ -230,7 +233,7 @@
     <div class="file-card">
         <div class="file-card-header">
             <span class="file-name">updates.html</span>
-            <span class="current-rev">Current: v1.0.0</span>
+            <span class="current-rev">Current: v1.1.0</span>
         </div>
         <p class="file-desc">This page — revision history for all time-clock files.</p>
         <table>
@@ -238,7 +241,8 @@
                 <tr><th>Rev</th><th>Notes</th></tr>
             </thead>
             <tbody>
-                <tr class="rev-latest"><td class="rev-num">1.0.0</td><td class="rev-note">Initial release</td></tr>
+                <tr class="rev-latest"><td class="rev-num">1.1.0</td><td class="rev-note">Update current versions and changelogs for weather advisory demo release</td></tr>
+                <tr><td class="rev-num">1.0.0</td><td class="rev-note">Initial release</td></tr>
             </tbody>
         </table>
     </div>
@@ -247,15 +251,17 @@
     <div class="file-card">
         <div class="file-card-header">
             <span class="file-name">set-alarm.php</span>
-            <span class="current-rev">Current: v1.1.0</span>
+            <span class="current-rev">Current: v1.3.0</span>
         </div>
-        <p class="file-desc">Emergency alert toggle endpoint — supports fire and active-shooter types via type parameter.</p>
+        <p class="file-desc">Emergency alert toggle endpoint — supports fire, active-shooter, demo, and weather types via type parameter.</p>
         <table>
             <thead>
                 <tr><th>Rev</th><th>Notes</th></tr>
             </thead>
             <tbody>
-                <tr class="rev-latest"><td class="rev-num">1.1.0</td><td class="rev-note">Add type parameter to support multiple alarm types (fire, shooter)</td></tr>
+                <tr class="rev-latest"><td class="rev-num">1.3.0</td><td class="rev-note">Add weather demo alarm type with 5-minute expiresAt auto-expiry</td></tr>
+                <tr><td class="rev-num">1.2.0</td><td class="rev-note">Activating one alarm type auto-clears all others (mutual exclusivity)</td></tr>
+                <tr><td class="rev-num">1.1.0</td><td class="rev-note">Add type parameter to support multiple alarm types (fire, shooter)</td></tr>
                 <tr><td class="rev-num">1.0.0</td><td class="rev-note">Initial release (fire alarm only)</td></tr>
             </tbody>
         </table>
