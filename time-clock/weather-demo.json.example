@@ -1,0 +1,8 @@
+{
+  "active": false,
+  "triggeredAt": null,
+  "expiresAt": null,
+  "event": "Severe Thunderstorm Warning",
+  "headline": "Severe Thunderstorm Warning issued by NWS Cleveland OH",
+  "senderName": "NWS Cleveland OH"
+}
