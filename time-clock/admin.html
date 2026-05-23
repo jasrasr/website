@@ -1,6 +1,6 @@
 <!--
     Filename   : admin.html
-    Revision   : 2.4.0
+    Revision   : 2.5.0
     Description: Alerts admin page with PIN gate; reads/writes via save-alerts.php
     Author     : Jason Lamb (with help from Claude Code CLI)
     Created    : 2026-04-20
@@ -16,6 +16,7 @@
     2.2.0  add fire alarm activate/clear section with live status
     2.3.0  show site file versions and deploy date alongside alerts rev/last saved
     2.4.0  add active shooter/lockdown section; refactor alarm functions to support multiple types
+    2.5.0  add weather advisory demo section with 5-minute countdown
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -323,6 +324,24 @@
             </div>
         </div>
 
+        <!-- Weather Advisory Demo -->
+        <div class="add-section" style="margin-top:12px;border-color:#1a5276;background:#eaf4fb;">
+            <h2 style="color:#1a5276;">&#127785; Weather Advisory Demo</h2>
+            <p style="font-size:13px;color:#555;margin-bottom:14px;">Triggers a blue weather overlay with NWS-format content for Girard, OH (Trumbull County). Auto-clears after 5 minutes. Blue color — will not cause public alarm.</p>
+            <div style="background:#fff;border:1px solid #ccc;border-radius:6px;padding:8px 14px;margin-bottom:12px;font-size:12px;color:#555;">
+                <strong>Data source:</strong> NWS Cleveland OH &nbsp;&middot;&nbsp; Trumbull County, OH (Girard area)
+            </div>
+            <div id="weather-demo-countdown" style="display:none;background:#1a5276;border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#aed6f1;justify-content:space-between;align-items:center;">
+                <span>&#9200; Demo expires in: <strong id="weather-demo-timer" style="color:#fff;">5:00</strong></span>
+                <span id="weather-demo-expires-at" style="font-size:11px;"></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+                <button style="background:#1a5276;color:#fff;padding:10px 18px;border:none;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;" onclick="setAlarm('weather','on')">&#127785; Activate (5 min)</button>
+                <button class="btn-save" onclick="setAlarm('weather','off')">&#10003; Clear</button>
+                <span id="alarm-status-weather" style="font-size:13px;color:#888;"></span>
+            </div>
+        </div>
+
     </div>
     </div>
 
@@ -330,6 +349,31 @@
     let alerts          = [];
     let fileRev         = 1;
     let fileLastModified = '';
+    let weatherCountdownInterval = null;
+
+    // ── Weather Demo Countdown ────────────────────────────────────────────
+    function startWeatherCountdown(expiresAt) {
+        clearInterval(weatherCountdownInterval);
+        const countdownEl  = document.getElementById('weather-demo-countdown');
+        const timerEl      = document.getElementById('weather-demo-timer');
+        const expiresAtEl  = document.getElementById('weather-demo-expires-at');
+
+        const expiresDate = new Date(expiresAt * 1000);
+        expiresAtEl.textContent = 'auto-clears at ' + expiresDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        countdownEl.style.display = 'flex';
+
+        weatherCountdownInterval = setInterval(() => {
+            const remaining = Math.max(0, expiresAt - Math.floor(Date.now() / 1000));
+            const m = Math.floor(remaining / 60);
+            const s = String(remaining % 60).padStart(2, '0');
+            timerEl.textContent = `${m}:${s}`;
+            if (remaining === 0) {
+                clearInterval(weatherCountdownInterval);
+                countdownEl.style.display = 'none';
+                loadAlarmStatus('weather');
+            }
+        }, 1000);
+    }
 
     // ── Version ────────────────────────────────────────────────────────────
     async function loadVersion() {
@@ -472,6 +516,7 @@
         await loadAlarmStatus('demo');
         await loadAlarmStatus('fire');
         await loadAlarmStatus('shooter');
+        await loadAlarmStatus('weather');
     }
 
     async function loadAlarmStatus(type) {
@@ -480,6 +525,9 @@
             const res  = await fetch(`set-alarm.php?type=${type}&_=` + Date.now());
             const data = await res.json();
             updateAlarmStatus(type, data.active);
+            if (type === 'weather' && data.active && data.expiresAt) {
+                startWeatherCountdown(data.expiresAt);
+            }
         } catch (err) {
             document.getElementById(elId).textContent = 'Status unavailable';
         }
@@ -495,10 +543,18 @@
                 body: JSON.stringify({ type, action })
             });
             const data = await res.json();
+            if (!res.ok) throw new Error(data.error || res.status);
             updateAlarmStatus(type, data.active);
+            if (type === 'weather' && action === 'on' && data.expiresAt) {
+                startWeatherCountdown(data.expiresAt);
+            }
+            if (type === 'weather' && action === 'off') {
+                clearInterval(weatherCountdownInterval);
+                document.getElementById('weather-demo-countdown').style.display = 'none';
+            }
             // Refresh all others since server clears them on activate
             if (action === 'on') {
-                for (const t of ['demo', 'fire', 'shooter']) {
+                for (const t of ['demo', 'fire', 'shooter', 'weather']) {
                     if (t !== type) await loadAlarmStatus(t);
                 }
             }
