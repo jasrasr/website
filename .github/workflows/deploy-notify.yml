@@ -1,0 +1,44 @@
+name: Deploy Notification
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Hostinger webhook to process
+        run: sleep 15
+
+      - name: Check live site deployed
+        id: check
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://jasr.me/time-clock/version.json)
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+          if [ "$STATUS" != "200" ]; then
+            echo "result=FAILED (HTTP $STATUS)" >> $GITHUB_OUTPUT
+          else
+            echo "result=SUCCESS" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send email notification
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.office365.com
+          server_port: 587
+          secure: false
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "jasr.me deploy ${{ steps.check.outputs.result }} — ${{ github.event.head_commit.message }}"
+          to: jason.lamb@cooperservices.com
+          from: ${{ secrets.MAIL_USERNAME }}
+          body: |
+            Deploy ${{ steps.check.outputs.result }}
+
+            Commit: ${{ github.event.head_commit.message }}
+            Branch: ${{ github.ref_name }}
+            By: ${{ github.actor }}
+            Time: ${{ github.event.head_commit.timestamp }}
+
+            Site: https://jasr.me/time-clock/
