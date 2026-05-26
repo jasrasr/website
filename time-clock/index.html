@@ -1,6 +1,6 @@
 <!--
     Filename   : index.html
-    Revision   : 1.7.0
+    Revision   : 1.7.1
     Description: Time clock and weather display page for jasr.me/time-clock
     Author     : Jason Lamb (with help from Claude Code CLI)
     Created    : 2026-04-20
@@ -15,6 +15,7 @@
     1.5.0  add active shooter/lockdown overlay; polls active-shooter.json every 5 seconds
     1.6.0  fix NWS overlay to use correct TV broadcast colors per event type; add weather advisory demo overlay
     1.7.0  add countdown timer and expiry time to weather advisory demo overlay
+    1.7.1  revert NWS fetch to live Girard OH coordinates; log weather fetch errors to console
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -606,6 +607,7 @@
                     `&forecast_days=1`;
 
                 const res = await fetch(url);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
 
                 const tempF = Math.round(data.current.temperature_2m);
@@ -632,6 +634,7 @@
                     <div class="weather-precip">${precipLine}</div>
                 `;
             } catch (err) {
+                console.error('Weather fetch failed:', err);
                 document.getElementById('weather-area').innerHTML =
                     `<div class="weather-loading">Weather unavailable</div>`;
             }
@@ -749,11 +752,7 @@
 
         async function fetchNWSAlerts() {
             try {
-                //const res  = await fetch(`https://api.weather.gov/alerts/active?point=${LAT},${LON}`); // Girard OH (live)
-                const res  = await fetch(`https://api.weather.gov/alerts/active?point=30.64,-89.82`); // TEST: St. Tammany LA
-                // TEST COORDS — swap above line with one of these to demo the overlay:
-                // Greenwood SC (Severe Thunderstorm Warning):  point=34.2,-82.11
-                // St. Tammany LA (Severe Thunderstorm Warning): point=30.64,-89.82
+                const res  = await fetch(`https://api.weather.gov/alerts/active?point=${LAT},${LON}`);
                 const data = await res.json();
                 const features = (data.features || []).filter(f => f.properties.status === 'Actual');
 
