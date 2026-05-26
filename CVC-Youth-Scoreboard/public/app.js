@@ -1,11 +1,11 @@
 // Filename: app.js
-// Revision : 1.10.0
+// Revision : 1.11.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
 // Author : Jason Lamb (with help from Claude Code)
 // Created Date : 2026-03-24
-// Modified Date : 2026-04-13
+// Modified Date : 2026-05-26
 // Changelog :
 // 1.0.0 Initial PHP release, converted from Node.js/Express
 // 1.1.0 Fixed API URL paths to use relative query params instead of REST-style paths
@@ -18,6 +18,7 @@
 // 1.8.0 Use CSS custom property --viewer-cols so mobile media query can override column count
 // 1.9.0 Show logged-in user, logout/manage-users buttons, and Recent Activity section in admin
 // 1.10.0 Persist activity log open state across auto-refreshes
+// 1.11.0 Move admin menu controls to page bottom; add quick-entry link and clickable viewer header
 
 const quickValues = [1, 3, 5, 10];
 const viewerPollIntervalMs = 2000;
@@ -145,16 +146,6 @@ async function renderAdmin(data) {
     <div class="page-shell">
       <header class="page-header">
         ${renderSharedHeader(data, 'admin')}
-        <div class="header-actions">
-          <form data-action="title-form" style="display:flex;gap:0.5rem;">
-            <input name="pageTitle" type="text" value="${data.title}" aria-label="Scoreboard title" />
-            <button class="secondary" type="submit">Update Title</button>
-          </form>
-          <button class="secondary" id="open-viewer-button" type="button">Open Viewer Page</button>
-          <button class="warning" id="reset-all-button" type="button">Reset All Teams</button>
-          ${role === 'admin' ? `<a class="au-btn" href="${adminUrl}">Manage Users</a>` : ''}
-          <a class="au-btn" href="${logoutUrl}">Sign Out</a>
-        </div>
       </header>
       <p class="status-text" id="status-text">Scores save to JSON automatically after each change.</p>
       <main class="team-grid">
@@ -163,6 +154,17 @@ async function renderAdmin(data) {
       <section id="activity-section" style="margin-top:1.5rem">
         <button class="secondary" id="activity-toggle" type="button">Show Recent Activity</button>
         <div id="activity-log" class="hidden" style="margin-top:1rem"></div>
+      </section>
+      <section class="admin-footer-actions" aria-label="Scoreboard admin actions">
+        <form class="admin-title-form" data-action="title-form">
+          <input name="pageTitle" type="text" value="${data.title}" aria-label="Scoreboard title" />
+          <button class="secondary" type="submit">Update Title</button>
+        </form>
+        <a class="au-btn" href="enter-scores-quick.php">Quick Entry</a>
+        <button class="secondary" id="open-viewer-button" type="button">Open Viewer Page</button>
+        <button class="warning" id="reset-all-button" type="button">Reset All Teams</button>
+        ${role === 'admin' ? `<a class="au-btn" href="${adminUrl}">Manage Users</a>` : ''}
+        <a class="au-btn" href="${logoutUrl}">Sign Out</a>
       </section>
     </div>
   `;
@@ -232,7 +234,7 @@ function renderViewer(data) {
 
   app.innerHTML = `
     <div class="viewer-page">
-      <header class="page-header">
+      <header class="page-header viewer-admin-link" id="viewer-admin-header" role="button" tabindex="0" title="Open score entry">
         ${renderSharedHeader(data, 'viewer')}
         <div class="header-actions">
           <div class="updated-at">Auto-refresh every ${viewerPollIntervalMs / 1000} seconds</div>
@@ -347,6 +349,20 @@ async function handleAdminAction(event) {
   }
 }
 
+function handleViewerAction(event) {
+  const header = event.target.closest('#viewer-admin-header');
+  if (!header) {
+    return;
+  }
+
+  if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') {
+    return;
+  }
+
+  event.preventDefault();
+  window.open('enter-scores.php', '_blank', 'noopener');
+}
+
 async function init() {
   const pageType = document.body.dataset.pageType;
   await refreshPage(pageType);
@@ -354,6 +370,9 @@ async function init() {
   if (pageType === 'admin') {
     document.addEventListener('click', handleAdminAction);
     document.addEventListener('submit', handleAdminAction);
+  } else {
+    document.addEventListener('click', handleViewerAction);
+    document.addEventListener('keydown', handleViewerAction);
   }
 
   const pollIntervalMs = pageType === 'viewer' ? viewerPollIntervalMs : adminPollIntervalMs;

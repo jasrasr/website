@@ -1,11 +1,12 @@
 // Filename: quick-entry.js
-// Revision : 1.0.0
+// Revision : 1.1.0
 // Description : Compact score-entry behavior for CVC Youth Scoreboard quick entry page.
 // Author : Jason Lamb (with help from Codex CLI)
 // Created Date : 2026-05-26
 // Modified Date : 2026-05-26
 // Changelog :
 // 1.0.0 initial release
+// 1.1.0 Move navigation links to footer and keep team selection compact on mobile
 
 const quickEntryValues = [1, 3, 5, 10];
 const quickEntryPollIntervalMs = 10000;
@@ -160,24 +161,7 @@ function renderQuickEntry() {
     text: username ? `Quick entry - ${username}` : 'Quick entry'
   }));
 
-  const links = makeElement('div', { className: 'quick-links' });
-  links.appendChild(makeElement('a', {
-    className: 'au-btn',
-    text: 'Full Admin',
-    attributes: { href: './enter-scores.php' }
-  }));
-  links.appendChild(makeElement('a', {
-    className: 'au-btn',
-    text: 'Viewer',
-    attributes: { href: './index.php', target: '_blank', rel: 'noopener' }
-  }));
-  links.appendChild(makeElement('a', {
-    className: 'au-btn',
-    text: 'Sign Out',
-    attributes: { href: logoutUrl }
-  }));
-
-  header.append(title, links);
+  header.appendChild(title);
 
   const teamPanel = makeElement('section', { className: 'quick-panel' });
   teamPanel.appendChild(makeElement('p', {
@@ -249,7 +233,24 @@ function renderQuickEntry() {
     attributes: { href: '#', id: 'quick-refresh' }
   }));
 
-  app.append(header, teamPanel, actionPanel, statusRow);
+  const links = makeElement('div', { className: 'quick-links' });
+  links.appendChild(makeElement('a', {
+    className: 'au-btn',
+    text: 'Full Admin',
+    attributes: { href: './enter-scores.php' }
+  }));
+  links.appendChild(makeElement('a', {
+    className: 'au-btn',
+    text: 'Viewer',
+    attributes: { href: './index.php', target: '_blank', rel: 'noopener' }
+  }));
+  links.appendChild(makeElement('a', {
+    className: 'au-btn',
+    text: 'Sign Out',
+    attributes: { href: logoutUrl }
+  }));
+
+  app.append(header, teamPanel, actionPanel, statusRow, links);
 }
 
 async function applyScoreChange(teamId, amount) {

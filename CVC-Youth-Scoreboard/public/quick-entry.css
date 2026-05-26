@@ -1,12 +1,13 @@
 /*
  * Filename: quick-entry.css
- * Revision : 1.0.0
+ * Revision : 1.1.0
  * Description : Compact score-entry styles for CVC Youth Scoreboard quick entry page.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-05-26
  * Modified Date : 2026-05-26
  * Changelog :
  * 1.0.0 initial release
+ * 1.1.0 Moved navigation links to footer and kept team buttons at half/third width on mobile
  */
 
 .quick-entry-body {
@@ -48,6 +49,7 @@
   gap: 0.5rem;
   flex-wrap: wrap;
   justify-content: flex-end;
+  margin-top: 0.75rem;
 }
 
 .quick-panel {
@@ -179,7 +181,7 @@
 
   .quick-links > *,
   .quick-status-row .au-btn {
-    width: 100%;
+    flex: 1 1 calc(50% - 0.5rem);
   }
 
   .quick-team-grid {
@@ -192,7 +194,6 @@
 }
 
 @media (max-width: 420px) {
-  .quick-team-grid,
   .quick-manual-form {
     grid-template-columns: 1fr;
   }
