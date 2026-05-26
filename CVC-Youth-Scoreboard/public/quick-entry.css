@@ -1,0 +1,199 @@
+/*
+ * Filename: quick-entry.css
+ * Revision : 1.0.0
+ * Description : Compact score-entry styles for CVC Youth Scoreboard quick entry page.
+ * Author : Jason Lamb (with help from Codex CLI)
+ * Created Date : 2026-05-26
+ * Modified Date : 2026-05-26
+ * Changelog :
+ * 1.0.0 initial release
+ */
+
+.quick-entry-body {
+  min-height: 100vh;
+  background: #0b1120;
+}
+
+.quick-entry-shell {
+  width: min(980px, calc(100vw - 1rem));
+  margin: 0 auto;
+  padding: 0.75rem 0 1.25rem;
+}
+
+.quick-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+}
+
+.quick-title {
+  min-width: 0;
+}
+
+.quick-title h1 {
+  margin: 0;
+  font-size: clamp(1.25rem, 4vw, 2rem);
+  line-height: 1.1;
+}
+
+.quick-title p {
+  margin: 0.2rem 0 0;
+}
+
+.quick-links {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.quick-panel {
+  padding: 0.75rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.82);
+  box-shadow: var(--shadow);
+}
+
+.quick-section-label {
+  margin: 0 0 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.quick-team-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.quick-team-button {
+  min-height: 72px;
+  padding: 0.55rem;
+  border-color: color-mix(in srgb, var(--team-color) 60%, white 8%);
+  background: color-mix(in srgb, var(--team-color) 32%, rgba(15, 23, 42, 0.9));
+  text-align: left;
+}
+
+.quick-team-button[aria-pressed="true"] {
+  outline: 3px solid rgba(255, 255, 255, 0.72);
+  outline-offset: 2px;
+}
+
+.quick-team-name,
+.quick-team-score {
+  display: block;
+}
+
+.quick-team-name {
+  font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+  line-height: 1.1;
+}
+
+.quick-team-score {
+  margin-top: 0.25rem;
+  font-size: clamp(1.3rem, 5vw, 2.2rem);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.quick-action-panel {
+  margin-top: 0.75rem;
+  border-color: color-mix(in srgb, var(--selected-team-color, #64748b) 65%, white 8%);
+}
+
+.quick-selected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.quick-selected h2 {
+  margin: 0;
+  font-size: clamp(1.1rem, 4vw, 1.8rem);
+}
+
+.quick-selected-score {
+  font-size: clamp(2rem, 9vw, 4rem);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.quick-score-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.quick-score-grid button {
+  min-height: 64px;
+  font-size: clamp(1.05rem, 4vw, 1.5rem);
+}
+
+.quick-manual-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.quick-manual-form input,
+.quick-manual-form button {
+  min-height: 58px;
+}
+
+.quick-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.quick-status-row p {
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .quick-header,
+  .quick-status-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .quick-links,
+  .quick-status-row .au-btn {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .quick-links > *,
+  .quick-status-row .au-btn {
+    width: 100%;
+  }
+
+  .quick-team-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .quick-score-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .quick-team-grid,
+  .quick-manual-form {
+    grid-template-columns: 1fr;
+  }
+}
