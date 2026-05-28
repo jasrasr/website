@@ -1,0 +1,9 @@
+{
+  "name": "PSNotify",
+  "short_name": "PSNotify",
+  "start_url": "/psnotify/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#111827",
+  "description": "Self-hosted PowerShell notifications viewer"
+}

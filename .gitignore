@@ -36,6 +36,8 @@ computers/local/heartbeat-task.xml
 text/data/*.json
 text/data/**/*.json
 text/data/*password*.txt
+psnotify/config.local.php
+psnotify/data/*.json
 smart-404/data/404-requests.jsonl
 smart-404/data/smart-404-admin-password.php
 smart-404/data/smart-404-map.json

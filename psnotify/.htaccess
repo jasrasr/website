@@ -1,0 +1,18 @@
+# Filename : .htaccess
+# Revision : 1.1
+# Description : Route topic-style notification posts to publish.php inside /psnotify
+# Author : Jason Lamb (with help from ChatGPT)
+# Created Date : 2026-03-20
+# Modified Date : 2026-03-20
+# Changelog :
+# 1.0 initial release
+# 1.1 standardized header and changelog format
+
+RewriteEngine On
+RewriteBase /psnotify/
+
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+RewriteRule ^([A-Za-z0-9._~-]+)$ publish.php?topic=$1 [QSA,L]
