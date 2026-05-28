@@ -48,6 +48,7 @@ header('Content-Type: text/html; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 
+$passwordValue = '';
 $hash = '';
 $error = '';
 
@@ -56,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($password === '') {
         $error = 'Enter a password to hash.';
     } else {
+        $passwordValue = $password;
         $hash = password_hash($password, PASSWORD_DEFAULT);
     }
 }
@@ -88,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 <main>
     <h1>Create Password Hash</h1>
-    <p class="note">This page does not save the password or generated hash. Keep this helper protected and available only over HTTPS.</p>
+    <p class="note">This page does not save the password or generated hash. The password is only echoed back on this response for reference. Keep this helper protected and available only over HTTPS.</p>
 
     <?php if ($error !== ''): ?>
         <p class="error"><?= h($error) ?></p>
@@ -101,6 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 
     <?php if ($hash !== ''): ?>
+        <h2>Original Password</h2>
+        <textarea readonly><?= h($passwordValue) ?></textarea>
         <h2>Hash</h2>
         <textarea readonly><?= h($hash) ?></textarea>
     <?php endif; ?>
