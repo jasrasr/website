@@ -10,14 +10,14 @@ Do not overwrite live server data files with sample files. Use the sample files 
 
 Live files that should stay untracked:
 
-- `data/404-requests.jsonl`
-- `data/smart-404-admin-password.php`
-- `data/smart-404-map.json`
-- `data/smart-404-malicious.json`
+- `smart-404-data/404-requests.jsonl`
+- `smart-404-data/smart-404-admin-password.php`
+- `smart-404-data/smart-404-map.json`
+- `smart-404-data/smart-404-malicious.json`
 
 Sample files committed for reference:
 
-- `data/404-requests.sample.jsonl`
-- `data/smart-404-admin-password.sample.php`
-- `data/smart-404-map.sample.json`
-- `data/smart-404-malicious.sample.json`
+- `smart-404-data/404-requests.sample.jsonl`
+- `smart-404-data/smart-404-admin-password.sample.php`
+- `smart-404-data/smart-404-map.sample.json`
+- `smart-404-data/smart-404-malicious.sample.json`

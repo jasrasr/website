@@ -38,10 +38,10 @@ text/data/**/*.json
 text/data/*password*.txt
 psnotify/config.local.php
 psnotify/data/*.json
-smart-404/data/404-requests.jsonl
-smart-404/data/smart-404-admin-password.php
-smart-404/data/smart-404-map.json
-smart-404/data/smart-404-malicious.json
+smart-404/smart-404-data/404-requests.jsonl
+smart-404/smart-404-data/smart-404-admin-password.php
+smart-404/smart-404-data/smart-404-map.json
+smart-404/smart-404-data/smart-404-malicious.json
 
 # Example/sample files
 how-much-time-worked/example.jpg

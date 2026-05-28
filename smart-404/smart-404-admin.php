@@ -15,7 +15,7 @@ Changelog:
 
 declare(strict_types=1);
 
-const SMART_404_DATA_DIR = __DIR__ . '/data';
+const SMART_404_DATA_DIR = __DIR__ . '/smart-404-data';
 const SMART_404_LOG_FILE = SMART_404_DATA_DIR . '/404-requests.jsonl';
 const SMART_404_MAP_FILE = SMART_404_DATA_DIR . '/smart-404-map.json';
 const SMART_404_MALICIOUS_FILE = SMART_404_DATA_DIR . '/smart-404-malicious.json';
@@ -538,7 +538,7 @@ $uniquePaths = count(array_unique(array_map(fn ($entry) => $entry['path'] ?? '',
 <?php if (!$configured): ?>
     <section class="login">
         <h2>Password Required</h2>
-        <p>Create <code>data/smart-404-admin-password.php</code> using the sample file before this admin page can be used.</p>
+        <p>Create <code>smart-404-data/smart-404-admin-password.php</code> using the sample file before this admin page can be used.</p>
     </section>
 <?php elseif (!$authenticated): ?>
     <section class="login">
