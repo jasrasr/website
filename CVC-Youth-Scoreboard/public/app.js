@@ -1,5 +1,5 @@
 // Filename: app.js
-// Revision : 1.11.0
+// Revision : 1.12.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
@@ -19,6 +19,7 @@
 // 1.9.0 Show logged-in user, logout/manage-users buttons, and Recent Activity section in admin
 // 1.10.0 Persist activity log open state across auto-refreshes
 // 1.11.0 Move admin menu controls to page bottom; add quick-entry link and clickable viewer header
+// 1.12.0 Add signed-in user change-password footer link
 
 const quickValues = [1, 3, 5, 10];
 const viewerPollIntervalMs = 2000;
@@ -141,6 +142,7 @@ async function renderAdmin(data) {
   const role       = document.body.dataset.role || '';
   const logoutUrl  = document.body.dataset.logoutUrl || './logout.php';
   const adminUrl   = document.body.dataset.adminUrl || './admin-users.php';
+  const passwordUrl = document.body.dataset.passwordUrl || './change-password.php';
 
   app.innerHTML = `
     <div class="page-shell">
@@ -164,6 +166,7 @@ async function renderAdmin(data) {
         <button class="secondary" id="open-viewer-button" type="button">Open Viewer Page</button>
         <button class="warning" id="reset-all-button" type="button">Reset All Teams</button>
         ${role === 'admin' ? `<a class="au-btn" href="${adminUrl}">Manage Users</a>` : ''}
+        <a class="au-btn" href="${passwordUrl}">Change Password</a>
         <a class="au-btn" href="${logoutUrl}">Sign Out</a>
       </section>
     </div>

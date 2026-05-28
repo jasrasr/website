@@ -1,5 +1,5 @@
 // Filename: quick-entry.js
-// Revision : 1.1.0
+// Revision : 1.2.0
 // Description : Compact score-entry behavior for CVC Youth Scoreboard quick entry page.
 // Author : Jason Lamb (with help from Codex CLI)
 // Created Date : 2026-05-26
@@ -7,6 +7,7 @@
 // Changelog :
 // 1.0.0 initial release
 // 1.1.0 Move navigation links to footer and keep team selection compact on mobile
+// 1.2.0 Add signed-in user change-password footer link
 
 const quickEntryValues = [1, 3, 5, 10];
 const quickEntryPollIntervalMs = 10000;
@@ -145,6 +146,7 @@ function renderQuickEntry() {
   const app = document.querySelector('#quick-entry-app');
   const selectedTeam = getSelectedTeam();
   const logoutUrl = document.body.dataset.logoutUrl || './logout.php';
+  const passwordUrl = document.body.dataset.passwordUrl || './change-password.php';
   const username = document.body.dataset.username || '';
 
   if (!app || !quickData || !selectedTeam) {
@@ -243,6 +245,11 @@ function renderQuickEntry() {
     className: 'au-btn',
     text: 'Viewer',
     attributes: { href: './index.php', target: '_blank', rel: 'noopener' }
+  }));
+  links.appendChild(makeElement('a', {
+    className: 'au-btn',
+    text: 'Change Password',
+    attributes: { href: passwordUrl }
   }));
   links.appendChild(makeElement('a', {
     className: 'au-btn',

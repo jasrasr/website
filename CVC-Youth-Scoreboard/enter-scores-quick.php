@@ -1,14 +1,15 @@
 <?php declare(strict_types=1);
 /**
  * Filename: enter-scores-quick.php
- * Revision : 1.0.0
+ * Revision : 1.1.0
  * Description : Compact test score entry page for CVC Youth Scoreboard.
  *               Provides fast team selection and quick/manual score updates.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-05-26
- * Modified Date : 2026-05-26
+ * Modified Date : 2026-05-28
  * Changelog :
  * 1.0.0 initial release
+ * 1.1.0 Added change-password URL for signed-in users
  */
 
 require __DIR__ . '/auth.php';
@@ -28,6 +29,7 @@ $user = requireAuth('root', './login.php');
     data-username="<?= htmlspecialchars($user['username']) ?>"
     data-role="<?= htmlspecialchars($user['role']) ?>"
     data-logout-url="./logout.php"
+    data-password-url="./change-password.php?return=enter-scores-quick.php"
   >
     <div id="quick-entry-app" class="quick-entry-shell">
       <p class="status-text">Loading quick score entry...</p>

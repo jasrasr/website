@@ -1,18 +1,19 @@
 <?php declare(strict_types=1);
 /**
  * Filename: auth.php
- * Revision : 1.2.0
+ * Revision : 1.3.0
  * Description : Shared authentication library for CVC Scoreboard.
  *               Handles sessions, user management, login/logout, and audit logging.
  *               Users stored in data/users.json with bcrypt-hashed passwords.
  *               Default users auto-created on first load.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-13
- * Modified Date : 2026-04-24
+ * Modified Date : 2026-05-28
  * Changelog :
  * 1.0.0 Initial release; per-user auth, roles, scoreboard access, audit logging
  * 1.1.0 Replaced hardcoded temp passwords with random generation; writes first-run-credentials.txt
  * 1.2.0 Default passwords set to cvc-[username] pattern instead of random hex
+ * 1.3.0 Added signed-in user password change helper
  */
 
 const USERS_FILE     = __DIR__ . '/data/users.json';
@@ -213,6 +214,41 @@ function attemptLogin(string $username, string $password): ?array
         }
     }
     return null;
+}
+
+function changeCurrentUserPassword(string $userId, string $currentPassword, string $newPassword): array
+{
+    if ($currentPassword === '' || $newPassword === '') {
+        return ['ok' => false, 'message' => 'Current password and new password are required.'];
+    }
+
+    $users = loadUsers();
+
+    foreach ($users as &$user) {
+        if (($user['id'] ?? '') !== $userId) {
+            continue;
+        }
+
+        if (!password_verify($currentPassword, $user['password_hash'] ?? '')) {
+            return ['ok' => false, 'message' => 'Current password is incorrect.'];
+        }
+
+        $user['password_hash'] = password_hash($newPassword, PASSWORD_DEFAULT);
+        saveUsers($users);
+
+        authStart();
+        $_SESSION[AUTH_SESSION] = [
+            'id'          => $user['id'],
+            'username'    => $user['username'],
+            'role'        => $user['role'],
+            'scoreboards' => $user['scoreboards'] ?? [],
+        ];
+
+        return ['ok' => true, 'message' => 'Password updated.'];
+    }
+    unset($user);
+
+    return ['ok' => false, 'message' => 'Signed-in user was not found.'];
 }
 
 // ---------------------------------------------------------------------------
