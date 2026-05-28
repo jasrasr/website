@@ -1,0 +1,20 @@
+[
+  {
+    "type": "prefix",
+    "value": "wp-admin",
+    "note": "Common automated WordPress probe",
+    "created_utc": "2026-05-28T00:00:00+00:00"
+  },
+  {
+    "type": "exact",
+    "value": ".env",
+    "note": "Environment file probe",
+    "created_utc": "2026-05-28T00:00:00+00:00"
+  },
+  {
+    "type": "contains",
+    "value": "phpmyadmin",
+    "note": "Database admin panel probe",
+    "created_utc": "2026-05-28T00:00:00+00:00"
+  }
+]
