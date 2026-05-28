@@ -10,14 +10,37 @@ Do not overwrite live server data files with sample files. Use the sample files 
 
 Live files that should stay untracked:
 
-- `smart-404-data/404-requests.jsonl`
-- `smart-404-data/smart-404-admin-password.php`
-- `smart-404-data/smart-404-map.json`
-- `smart-404-data/smart-404-malicious.json`
+* `smart-404-data/404-requests.jsonl`
+* `smart-404-data/smart-404-admin-password.php`
+* `smart-404-data/smart-404-map.json`
+* `smart-404-data/smart-404-malicious.json`
 
 Sample files committed for reference:
 
-- `smart-404-data/404-requests.sample.jsonl`
-- `smart-404-data/smart-404-admin-password.sample.php`
-- `smart-404-data/smart-404-map.sample.json`
-- `smart-404-data/smart-404-malicious.sample.json`
+* `smart-404-data/404-requests.sample.jsonl`
+* `smart-404-data/smart-404-admin-password.sample.php`
+* `smart-404-data/smart-404-map.sample.json`
+* `smart-404-data/smart-404-malicious.sample.json`
+
+
+
+**Reminder for Jason**
+
+
+Copy only these files to /root
+
+* `smart-404-data`
+* `yourls-plugin`
+* `HOSTINGER-UPLOAD.md`
+* `smart-404-admin.php`
+* `smart-404.php`
+
+
+
+These are for Github and project tracking
+
+* `.htaccess`
+* `.htaccess-051826`
+* `create-password-hash.php`
+* `README.md`
+

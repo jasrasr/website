@@ -19,6 +19,4 @@ RewriteRule ^.*$ /yourls-loader.php [L]
 </IfModule>
 # END YOURLS
 
-ErrorDocument 404 /smart-404.php
-
-AddType text/vcard .vcf
+# Add other items below here
