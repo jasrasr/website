@@ -1,11 +1,11 @@
 /*
  * Filename: styles.css
- * Revision : 1.5.0
+ * Revision : 1.5.1
  * Description : Dark-themed responsive styles for CVC Scoreboard.
  *               Shared across all scoreboard instances (root, collide, youth, frontlines).
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-03-24
- * Modified Date : 2026-05-26
+ * Modified Date : 2026-06-02
  * Changelog :
  * 1.0.0 Initial release
  * 1.1.0 Changed team-title to column layout so hint text renders below team name
@@ -13,6 +13,7 @@
  * 1.3.0 viewer-grid uses --viewer-cols custom property so media query overrides JS column count; score-box overflow hidden
  * 1.4.0 Added login page, admin-users page, and audit table styles
  * 1.5.0 Added bottom admin action bar and clickable viewer header affordance
+ * 1.5.1 Prevent 12-team viewer cards from collapsing under tablet-width grid overrides
  */
 
 :root {
@@ -498,7 +499,8 @@ input {
 
   .viewer-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(3, minmax(0, 1fr));
+    grid-template-rows: none;
+    grid-auto-rows: minmax(160px, auto);
   }
 }
 
