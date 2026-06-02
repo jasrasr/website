@@ -1,0 +1,15 @@
+# Local secrets
+config/config.php
+
+# Runtime/generated data
+data/drafts/*.json
+data/drafts/*.txt
+data/rate-limit/*.json
+data/*.json
+*.log
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
