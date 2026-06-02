@@ -2,11 +2,11 @@
 /*
     Project      : AI Writing Tool
     File         : index.php
-    Revision     : 1.0.0
+    Revision     : 1.1.0
     Created      : 2026-06-01
-    Updated      : 2026-06-01
-    Author       : Jason Lamb / ChatGPT
-    Description  : Main browser interface for live writing, local change tracking, and AI suggestions.
+    Updated      : 2026-06-02
+    Author       : Jason Lamb (with help from Claude Code CLI)
+    Description  : Main browser interface for live writing or project note-taking, with local change tracking and AI insights/suggestions.
 */
 ?>
 <!doctype html>
@@ -16,18 +16,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="A lightweight browser-based writing tool with live AI suggestions and local change tracking.">
     <title>AI Writing Tool</title>
-    <link rel="stylesheet" href="assets/style.css?v=1.0.0">
+    <link rel="stylesheet" href="assets/style.css?v=1.1.0">
 </head>
 <body>
     <header class="site-header">
         <div>
-            <p class="eyebrow">Revision 1.0.0</p>
+            <p class="eyebrow">Revision 1.1.0</p>
             <h1>AI Writing Tool</h1>
-            <p class="subhead">Write on the left. Review AI suggestions on the right. Save nothing to the server unless you add that later. Good. Less accidental data landfill.</p>
+            <p class="subhead">Type notes, drafts, or tasks on the left. Get writing edits or project insights on the right. Nothing saves to the server unless you add that later.</p>
         </div>
         <div class="header-actions">
             <button id="btnAnalyze" class="primary-button" type="button">Analyze Now</button>
             <button id="btnDownloadDraft" type="button">Download Draft</button>
+            <button id="btnDownloadSuggestions" type="button">Download Suggestions</button>
+            <button id="btnDownloadBoth" type="button">Download Both</button>
             <button id="btnClear" class="danger-button" type="button">Clear</button>
         </div>
     </header>
@@ -65,12 +67,21 @@
                     <label>
                         Review mode
                         <select id="reviewMode">
-                            <option value="balanced" selected>Balanced</option>
-                            <option value="grammar">Grammar only</option>
-                            <option value="clarity">Clarity</option>
-                            <option value="professional">Professional tone</option>
-                            <option value="concise">Make concise</option>
-                            <option value="friendly">Friendlier tone</option>
+                            <optgroup label="Writing review">
+                                <option value="balanced" selected>Balanced</option>
+                                <option value="grammar">Grammar only</option>
+                                <option value="clarity">Clarity</option>
+                                <option value="professional">Professional tone</option>
+                                <option value="concise">Make concise</option>
+                                <option value="friendly">Friendlier tone</option>
+                            </optgroup>
+                            <optgroup label="Project insights">
+                                <option value="brain_dump">Brain dump review</option>
+                                <option value="task_breakdown">Task breakdown</option>
+                                <option value="technical_advisor">Technical advisor</option>
+                                <option value="sharpening_questions">Sharpening questions</option>
+                                <option value="risks_gotchas">Risks &amp; gotchas</option>
+                            </optgroup>
                         </select>
                     </label>
                     <label>
@@ -87,6 +98,11 @@
 
             <div id="suggestionsOutput" class="suggestions-output" tabindex="0">
                 <p class="muted">Suggestions will appear here after analysis.</p>
+            </div>
+
+            <div class="stats-row" aria-live="polite">
+                <span id="tokenLast">Last : - tokens</span>
+                <span id="tokenSession">Session : 0 tokens</span>
             </div>
 
             <div class="button-row">
@@ -109,10 +125,11 @@
 
     <footer class="site-footer">
         <span>AI Writing Tool</span>
-        <span>Revision 1.0.0</span>
-        <span>Updated : 2026-06-01</span>
+        <span>Revision 1.1.0</span>
+        <span>Updated : 2026-06-02</span>
+        <span><a href="changelog.php">View changelog</a></span>
     </footer>
 
-    <script src="assets/app.js?v=1.0.0" defer></script>
+    <script src="assets/app.js?v=1.1.0" defer></script>
 </body>
 </html>

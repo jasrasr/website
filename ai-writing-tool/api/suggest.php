@@ -2,10 +2,10 @@
 /*
     Project      : AI Writing Tool
     File         : api/suggest.php
-    Revision     : 1.0.0
+    Revision     : 1.1.0
     Created      : 2026-06-01
-    Updated      : 2026-06-01
-    Description  : Server-side API proxy that sends draft text to the OpenAI Responses API.
+    Updated      : 2026-06-02
+    Description  : Server-side API proxy that sends draft text to the OpenAI Responses API. Supports writing-review and project-insight modes.
 
     Important:
     - Do not put your API key in JavaScript.
@@ -60,7 +60,12 @@ $reviewMode = sanitizeOption((string)($payload['reviewMode'] ?? 'balanced'), [
     'clarity',
     'professional',
     'concise',
-    'friendly'
+    'friendly',
+    'brain_dump',
+    'task_breakdown',
+    'technical_advisor',
+    'sharpening_questions',
+    'risks_gotchas'
 ], 'balanced');
 $outputType = sanitizeOption((string)($payload['outputType'] ?? 'suggestions'), [
     'suggestions',
@@ -93,33 +98,62 @@ if ($suggestions === '') {
     respondJson(['error' => 'OpenAI returned no readable text.'], 502);
 }
 
+$usage = $result['usage'] ?? [];
+
 respondJson([
     'suggestions' => $suggestions,
     'model' => $model,
     'reviewMode' => $reviewMode,
-    'outputType' => $outputType
+    'outputType' => $outputType,
+    'usage' => [
+        'input_tokens' => (int)($usage['input_tokens'] ?? 0),
+        'output_tokens' => (int)($usage['output_tokens'] ?? 0),
+        'total_tokens' => (int)($usage['total_tokens'] ?? 0)
+    ]
 ]);
 
 function buildInstructions(string $reviewMode, string $outputType): string
 {
+    $writingModes = ['balanced', 'grammar', 'clarity', 'professional', 'concise', 'friendly'];
+    $insightModes = ['brain_dump', 'task_breakdown', 'technical_advisor', 'sharpening_questions', 'risks_gotchas'];
+
     $modeInstructions = [
+        // Writing review modes
         'balanced' => 'Review for grammar, clarity, structure, and usefulness.',
         'grammar' => 'Focus only on spelling, grammar, punctuation, and obvious wording issues.',
         'clarity' => 'Focus on making the writing easier to understand without changing the core meaning.',
         'professional' => 'Focus on making the writing polished, direct, and professional.',
         'concise' => 'Focus on removing unnecessary words while preserving meaning.',
-        'friendly' => 'Focus on making the writing warmer and more approachable without becoming goofy.'
+        'friendly' => 'Focus on making the writing warmer and more approachable without becoming goofy.',
+
+        // Project insight modes
+        'brain_dump' => 'Treat the input as a project brain dump or work notes. Surface useful things the writer may have forgotten, relevant tips, common risks for this kind of work, and 1-2 sharpening questions. Adapt to the topic (technical, business, personal, IT, etc).',
+        'task_breakdown' => 'Treat the input as a task or work item. Suggest concrete subtasks, hidden dependencies, prerequisites, and risks. Be specific to the domain mentioned.',
+        'technical_advisor' => 'Treat the input as technical or IT-related notes (servers, Active Directory, Microsoft 365, PowerShell, networking, security, scripting, etc). Offer best practices, security considerations, and common gotchas relevant to the specific technology mentioned. Cite specific cmdlets, commands, or settings when useful.',
+        'sharpening_questions' => 'Ask 3-5 focused Socratic questions that challenge assumptions, clarify intent, or expose gaps in thinking. No suggestions or advice. Questions only.',
+        'risks_gotchas' => 'Identify the most likely things that could go wrong with what is described. Cover failure modes, security implications, performance pitfalls, edge cases, and operational risks. Be specific to the domain.'
     ];
 
     $outputInstructions = [
-        'suggestions' => 'Return a concise numbered list of practical suggestions. Include a short example only where useful.',
+        'suggestions' => 'Return a concise numbered list of practical items. Include a short example only where useful.',
         'rewrite' => 'Return a clean rewritten version first, then a short list of what changed.',
-        'outline' => 'Return a structured outline based on the draft.',
-        'questions' => 'Return the most important questions the writer should answer to improve the draft.'
+        'outline' => 'Return a structured outline based on the input.',
+        'questions' => 'Return the most important questions the writer should answer to improve the input.'
     ];
 
-    return "You are an editing assistant for a browser-based writing tool. " .
-        "Be direct, accurate, and practical. Do not invent facts. " .
+    $isWritingMode = in_array($reviewMode, $writingModes, true);
+    $isInsightMode = in_array($reviewMode, $insightModes, true);
+
+    if ($isInsightMode) {
+        $basePrompt = "You are a thinking partner for a browser-based notes tool. " .
+            "The user is jotting project notes, tasks, or technical work, not drafting prose. " .
+            "Be direct, accurate, and practical. Do not invent facts. ";
+    } else {
+        $basePrompt = "You are an editing assistant for a browser-based writing tool. " .
+            "Be direct, accurate, and practical. Do not invent facts. ";
+    }
+
+    return $basePrompt .
         ($modeInstructions[$reviewMode] ?? $modeInstructions['balanced']) . ' ' .
         ($outputInstructions[$outputType] ?? $outputInstructions['suggestions']) . ' ' .
         "Avoid markdown tables. Keep the response useful and compact.";

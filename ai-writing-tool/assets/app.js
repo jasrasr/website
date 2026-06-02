@@ -1,9 +1,9 @@
 /*
     Project      : AI Writing Tool
     File         : assets/app.js
-    Revision     : 1.0.0
+    Revision     : 1.1.0
     Created      : 2026-06-01
-    Updated      : 2026-06-01
+    Updated      : 2026-06-02
     Description  : Tracks local draft edits, debounces AI analysis calls, and updates the UI.
 
     Notes:
@@ -38,8 +38,12 @@
         wordCount: document.getElementById("wordCount"),
         lastSaved: document.getElementById("lastSaved"),
         changeLog: document.getElementById("changeLog"),
+        tokenLast: document.getElementById("tokenLast"),
+        tokenSession: document.getElementById("tokenSession"),
         btnAnalyze: document.getElementById("btnAnalyze"),
         btnDownloadDraft: document.getElementById("btnDownloadDraft"),
+        btnDownloadSuggestions: document.getElementById("btnDownloadSuggestions"),
+        btnDownloadBoth: document.getElementById("btnDownloadBoth"),
         btnClear: document.getElementById("btnClear"),
         btnCopySuggestions: document.getElementById("btnCopySuggestions"),
         btnCopyDraft: document.getElementById("btnCopyDraft"),
@@ -51,6 +55,7 @@
     let previousText = "";
     let lastAnalyzedText = "";
     let activeController = null;
+    let sessionTokens = { input: 0, output: 0, total: 0 };
 
     function init() {
         const storedDraft = localStorage.getItem(STORAGE_KEYS.draft) || "";
@@ -70,6 +75,8 @@
         elements.draftText.addEventListener("input", handleDraftInput);
         elements.btnAnalyze.addEventListener("click", () => analyzeDraft({ manual: true }));
         elements.btnDownloadDraft.addEventListener("click", downloadDraft);
+        elements.btnDownloadSuggestions.addEventListener("click", downloadSuggestions);
+        elements.btnDownloadBoth.addEventListener("click", downloadBoth);
         elements.btnClear.addEventListener("click", clearDraft);
         elements.btnCopySuggestions.addEventListener("click", copySuggestions);
         elements.btnCopyDraft.addEventListener("click", copyDraft);
@@ -178,6 +185,7 @@
             lastAnalyzedText = text;
             setSuggestions(formatSuggestionText(data.suggestions));
             setStatus(`Updated : ${new Date().toLocaleTimeString()}`);
+            updateTokenStats(data.usage);
         } catch (error) {
             if (error.name === "AbortError") {
                 return;
@@ -277,16 +285,56 @@
 
     function downloadDraft() {
         const text = elements.draftText.value;
+        if (!text.trim()) {
+            setStatus("Nothing to download. Draft is empty.");
+            return;
+        }
+        downloadTextFile(text, "draft");
+    }
+
+    function downloadSuggestions() {
+        const text = elements.suggestionsOutput.innerText.trim();
+        if (!text || text === "Suggestions will appear here after analysis.") {
+            setStatus("Nothing to download. No suggestions yet.");
+            return;
+        }
+        downloadTextFile(text, "suggestions");
+    }
+
+    function downloadBoth() {
+        const draft = elements.draftText.value;
+        const suggestions = elements.suggestionsOutput.innerText.trim();
+
+        if (!draft.trim() && !suggestions) {
+            setStatus("Nothing to download.");
+            return;
+        }
+
+        const divider = "\n\n" + "=".repeat(60) + "\n\n";
+        const parts = [];
+
+        if (draft.trim()) {
+            parts.push("=== DRAFT ===\n\n" + draft);
+        }
+        if (suggestions && suggestions !== "Suggestions will appear here after analysis.") {
+            parts.push("=== SUGGESTIONS ===\n\n" + suggestions);
+        }
+
+        downloadTextFile(parts.join(divider), "draft-and-suggestions");
+    }
+
+    function downloadTextFile(text, suffix) {
         const stamp = new Date().toISOString().replace(/[:.]/g, "-");
         const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
         const link = document.createElement("a");
 
         link.href = URL.createObjectURL(blob);
-        link.download = `ai-writing-draft-${stamp}.txt`;
+        link.download = `ai-writing-${suffix}-${stamp}.txt`;
         document.body.appendChild(link);
         link.click();
         link.remove();
         URL.revokeObjectURL(link.href);
+        setStatus(`Downloaded ${suffix}.txt`);
     }
 
     async function copySuggestions() {
@@ -323,6 +371,24 @@
 
     function setStatus(message) {
         elements.statusText.textContent = message;
+    }
+
+    function updateTokenStats(usage) {
+        if (!usage) {
+            return;
+        }
+        const inLast = Number(usage.input_tokens) || 0;
+        const outLast = Number(usage.output_tokens) || 0;
+        const totalLast = Number(usage.total_tokens) || (inLast + outLast);
+
+        sessionTokens.input += inLast;
+        sessionTokens.output += outLast;
+        sessionTokens.total += totalLast;
+
+        elements.tokenLast.textContent =
+            `Last : ${totalLast.toLocaleString()} tokens (${inLast.toLocaleString()} in / ${outLast.toLocaleString()} out)`;
+        elements.tokenSession.textContent =
+            `Session : ${sessionTokens.total.toLocaleString()} tokens (${sessionTokens.input.toLocaleString()} in / ${sessionTokens.output.toLocaleString()} out)`;
     }
 
     function setLoading(isLoading) {
