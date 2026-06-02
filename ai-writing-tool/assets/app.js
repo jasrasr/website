@@ -22,6 +22,7 @@
 
     const SETTINGS = {
         debounceMs: 1800,
+        changeLogDebounceMs: 1000,
         minAutoAnalyzeCharacters: 20,
         maxChangeLogItems: 100
     };
@@ -46,6 +47,7 @@
     };
 
     let analyzeTimer = null;
+    let changeLogTimer = null;
     let previousText = "";
     let lastAnalyzedText = "";
     let activeController = null;
@@ -79,8 +81,7 @@
     function handleDraftInput() {
         const currentText = elements.draftText.value;
 
-        recordChange(previousText, currentText);
-        previousText = currentText;
+        queueChangeLogEntry();
 
         saveDraftLocally(currentText);
         updateStats();
@@ -88,6 +89,15 @@
         if (elements.autoAnalyze.checked) {
             queueAnalysis();
         }
+    }
+
+    function queueChangeLogEntry() {
+        window.clearTimeout(changeLogTimer);
+        changeLogTimer = window.setTimeout(() => {
+            const currentText = elements.draftText.value;
+            recordChange(previousText, currentText);
+            previousText = currentText;
+        }, SETTINGS.changeLogDebounceMs);
     }
 
     function saveDraftLocally(text) {
