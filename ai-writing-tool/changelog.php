@@ -14,7 +14,7 @@ $currentRevision = '1.1.0';
 $changelog = [
     [
         'version'  => '1.1.0',
-        'datetime' => '2026-06-02 19:00 ET',
+        'datetime' => '2026-06-02 17:00 EDT',
         'summary'  => 'Added project-insight modes, expanded download options, and token usage tracking.',
         'files'    => [
             'index.php — Review mode dropdown now grouped into "Writing review" and "Project insights" (5 new modes: Brain dump, Task breakdown, Technical advisor, Sharpening questions, Risks & gotchas). Added Download Suggestions and Download Both buttons. Added token usage display.',
@@ -26,7 +26,7 @@ $changelog = [
     ],
     [
         'version'  => '1.0.1',
-        'datetime' => '2026-06-02 18:30 ET',
+        'datetime' => '2026-06-02 16:30 EDT',
         'summary'  => 'Debounced the local change log so entries record after a 1 second pause in typing instead of on every keystroke. Added web-viewable changelog page linked from the footer.',
         'files'    => [
             'assets/app.js — added changeLogDebounceMs setting and queueChangeLogEntry() function',

@@ -27,6 +27,13 @@ All instances share a single set of frontend files in `public/`:
 - `public/styles.css` — all styling; changes here apply to every instance
 - `public/app.js` — all frontend logic; changes here apply to every instance
 
+## Admin Navigation
+
+- `changelog.php` — signed-in web view of `CHANGELOG.md`; update `CHANGELOG.md` only when adding entries.
+- `scoreboards.php` — admin-only navigation page with Viewer, Full Admin, and Quick Entry links for every scoreboard.
+- The admin footer shows `Changelog` to signed-in scorekeepers and admins.
+- The admin footer shows `Scoreboards` only when the signed-in user has the `admin` role.
+
 ## Where to Make Changes
 
 Use this split when deciding whether an update is global or tied to one scoreboard:
@@ -39,6 +46,9 @@ Use this split when deciding whether an update is global or tied to one scoreboa
 | Quick-entry page shell or links for one scoreboard | `<instance>/enter-scores-quick.php` | Instance-specific |
 | Score operations, audit logging payloads, API auth behavior | `<instance>/api.php` | Instance-specific |
 | Team list, default title, team colors, data file helper behavior | `<instance>/scoreboard_lib.php` | Instance-specific |
+| Project changelog content | `CHANGELOG.md` | Global |
+| Web changelog display | `changelog.php` | Global |
+| Admin-only scoreboard navigation | `scoreboards.php` | Global |
 | Current live scores or renamed team display names | `<instance>/data/scores.json` | Instance-specific runtime data |
 | Audit history | `<instance>/data/audit.json` | Instance-specific runtime data |
 

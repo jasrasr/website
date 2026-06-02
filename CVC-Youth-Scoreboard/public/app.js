@@ -1,11 +1,11 @@
 // Filename: app.js
-// Revision : 1.12.0
+// Revision : 1.13.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
 // Author : Jason Lamb (with help from Claude Code)
 // Created Date : 2026-03-24
-// Modified Date : 2026-05-26
+// Modified Date : 2026-06-02
 // Changelog :
 // 1.0.0 Initial PHP release, converted from Node.js/Express
 // 1.1.0 Fixed API URL paths to use relative query params instead of REST-style paths
@@ -20,6 +20,7 @@
 // 1.10.0 Persist activity log open state across auto-refreshes
 // 1.11.0 Move admin menu controls to page bottom; add quick-entry link and clickable viewer header
 // 1.12.0 Add signed-in user change-password footer link
+// 1.13.0 Add changelog footer link and admin-only all-scoreboards navigation link
 
 const quickValues = [1, 3, 5, 10];
 const viewerPollIntervalMs = 2000;
@@ -143,6 +144,8 @@ async function renderAdmin(data) {
   const logoutUrl  = document.body.dataset.logoutUrl || './logout.php';
   const adminUrl   = document.body.dataset.adminUrl || './admin-users.php';
   const passwordUrl = document.body.dataset.passwordUrl || './change-password.php';
+  const changelogUrl = document.body.dataset.changelogUrl || './changelog.php';
+  const scoreboardsUrl = document.body.dataset.scoreboardsUrl || './scoreboards.php';
 
   app.innerHTML = `
     <div class="page-shell">
@@ -166,6 +169,8 @@ async function renderAdmin(data) {
         <button class="secondary" id="open-viewer-button" type="button">Open Viewer Page</button>
         <button class="warning" id="reset-all-button" type="button">Reset All Teams</button>
         ${role === 'admin' ? `<a class="au-btn" href="${adminUrl}">Manage Users</a>` : ''}
+        ${role === 'admin' ? `<a class="au-btn" href="${scoreboardsUrl}">Scoreboards</a>` : ''}
+        <a class="au-btn" href="${changelogUrl}">Changelog</a>
         <a class="au-btn" href="${passwordUrl}">Change Password</a>
         <a class="au-btn" href="${logoutUrl}">Sign Out</a>
       </section>
