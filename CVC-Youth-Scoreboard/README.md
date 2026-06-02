@@ -19,6 +19,7 @@ Each instance has:
 - `scoreboard_lib.php` — instance-specific team definitions and data helpers
 - `data/scores.json` — persisted scores (auto-created on first load)
 - `data/audit.json` — audit log for score changes, resets, renames, and title updates
+- `data/*.sample.json` — public-safe templates for duplicating runtime files
 
 ## Shared Assets
 
@@ -33,6 +34,19 @@ All instances share a single set of frontend files in `public/`:
 - `scoreboards.php` — admin-only navigation page with Viewer, Full Admin, and Quick Entry links for every scoreboard.
 - The admin footer shows `Changelog` to signed-in scorekeepers and admins.
 - The admin footer shows `Scoreboards` only when the signed-in user has the `admin` role.
+
+## Runtime Samples
+
+Live runtime files are ignored by Git, but public-safe samples are committed so the app can be duplicated cleanly:
+
+- `data/scores.sample.json`
+- `data/users.sample.json`
+- `data/audit.sample.json`
+- `<instance>/data/scores.sample.json`
+- `<instance>/data/audit.sample.json`
+- `first-run-credentials.txt.sample`
+
+Do not commit live `scores.json`, `users.json`, `audit.json`, or `first-run-credentials.txt` files. The app creates missing live files on first use.
 
 ## Where to Make Changes
 
@@ -86,3 +100,5 @@ A live demo is available for public testing — use this instead of the producti
 ## Deploying
 
 Upload the project folder to your host. Make sure each instance's `data/` folder is writable by PHP so scores can be saved. The `data/scores.json` file is created automatically on first load.
+
+Recommended hardening: block direct public web access to all `data/` folders, or move runtime data outside the web root. First-run user passwords are generated into `data/first-run-credentials.txt`; read them once, save them securely, and delete that file from the server.

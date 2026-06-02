@@ -1,0 +1,14 @@
+[
+  {
+    "timestamp": "2026-06-02T00:00:00+00:00",
+    "username": "example-admin",
+    "action": "rename-team",
+    "team_id": "sixth-grade",
+    "team_name": "6th Grade",
+    "amount": null,
+    "new_score": null,
+    "ip": "127.0.0.1",
+    "user_agent": "Example User Agent"
+  }
+]
+

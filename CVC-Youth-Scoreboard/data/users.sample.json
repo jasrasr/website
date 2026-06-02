@@ -1,0 +1,18 @@
+{
+  "users": [
+    {
+      "id": "user-example",
+      "username": "example-admin",
+      "password_hash": "$2y$10$replace-with-password-hash-generated-by-the-app",
+      "role": "admin",
+      "scoreboards": [
+        "root",
+        "youth",
+        "collide",
+        "frontlines"
+      ],
+      "created_at": "2026-06-02T00:00:00+00:00"
+    }
+  ]
+}
+

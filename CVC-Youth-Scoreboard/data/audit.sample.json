@@ -1,0 +1,14 @@
+[
+  {
+    "timestamp": "2026-06-02T00:00:00+00:00",
+    "username": "example-admin",
+    "action": "adjust",
+    "team_id": "sixth-grade-boys",
+    "team_name": "6th Grade Boys",
+    "amount": 1,
+    "new_score": 1,
+    "ip": "127.0.0.1",
+    "user_agent": "Example User Agent"
+  }
+]
+

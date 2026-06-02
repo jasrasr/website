@@ -1,0 +1,14 @@
+[
+  {
+    "timestamp": "2026-06-02T00:00:00+00:00",
+    "username": "example-admin",
+    "action": "reset-all",
+    "team_id": null,
+    "team_name": null,
+    "amount": null,
+    "new_score": null,
+    "ip": "127.0.0.1",
+    "user_agent": "Example User Agent"
+  }
+]
+
