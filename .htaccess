@@ -1,0 +1,10 @@
+RewriteEngine On
+
+# justjason.fyi serves only the just-jason/ subfolder of this repo.
+# This rule rewrites the docroot so visitors to justjason.fyi/foo
+# see content from public_html/just-jason/foo without a visible
+# /just-jason/ in the URL. Only fires when the host matches
+# justjason.fyi (or www) so jasr.me deployments are unaffected.
+RewriteCond %{HTTP_HOST} ^(www\.)?justjason\.fyi$ [NC]
+RewriteCond %{REQUEST_URI} !^/just-jason/
+RewriteRule ^(.*)$ /just-jason/$1 [L]
