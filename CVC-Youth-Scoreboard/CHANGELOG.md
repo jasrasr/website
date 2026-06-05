@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-06-05
+
+### Added
+- Public viewer, full admin (`enter-scores.php`), and quick entry (`enter-scores-quick.php`) pages now show a place-rank badge on every team card: `1st`, `2nd`, `3rd`, `4th`, and so on.
+- Top 3 ranks use gold, silver, and bronze badges; 4th and below use a neutral badge.
+- Ranks recompute live on every render (every 2 seconds on the viewer, every 10 seconds on admin/quick-entry), so they update alongside scores.
+- Tied scores share the same rank (standard competition ranking: `1, 1, 3, 4`).
+- Quick entry shows the rank badge on each team-select button and inline next to the selected team's name.
+
 ## 2026-06-02
 
 ### GitHub Issue Updates
@@ -78,10 +87,10 @@ This inventory was built from each file's header revision notes.
 - `frontlines/scoreboard_lib.php` revision 1.1.0, modified 2026-04-13: Frontlines defaults updated from 10 to 12 teams.
 
 #### Shared Frontend
-- `public/app.js` revision 1.15.0, modified 2026-06-03: Shared viewer/admin logic, polling, rename/title support, dynamic viewer layout, activity log, footer actions, change-password link, changelog link, admin-only scoreboards link, admin A-Z team ordering, viewer score ordering, and full-admin positive quick buttons.
-- `public/quick-entry.css` revision 1.2.0, modified 2026-06-03: Compact quick-entry styling with footer navigation, mobile-friendly team buttons, centered score text, compact quick score buttons, and manual negative-score note.
-- `public/quick-entry.js` revision 1.3.0, modified 2026-06-03: Compact quick-entry behavior with footer navigation, change-password link, `+1/+10/+100/+1000` quick buttons, and manual negative-score note.
-- `public/styles.css` revision 1.6.1, modified 2026-06-03: Shared dark responsive styling, auth/admin/audit styles, footer actions, viewer header affordance, 12-team tablet-width layout fix, centered button labels, three-wide mobile landscape viewer layout, and landscape row-flow fix.
+- `public/app.js` revision 1.16.0, modified 2026-06-05: Shared viewer/admin logic, polling, rename/title support, dynamic viewer layout, activity log, footer actions, change-password link, changelog link, admin-only scoreboards link, admin A-Z team ordering, viewer score ordering, full-admin positive quick buttons, and 1st/2nd/3rd place rank badges on viewer and admin team cards.
+- `public/quick-entry.css` revision 1.3.0, modified 2026-06-05: Compact quick-entry styling with footer navigation, mobile-friendly team buttons, centered score text, compact quick score buttons, manual negative-score note, and rank-badge anchoring on team buttons and inline selected-team header.
+- `public/quick-entry.js` revision 1.4.0, modified 2026-06-05: Compact quick-entry behavior with footer navigation, change-password link, `+1/+10/+100/+1000` quick buttons, manual negative-score note, and 1st/2nd/3rd place rank badges on team buttons and selected-team header.
+- `public/styles.css` revision 1.7.0, modified 2026-06-05: Shared dark responsive styling, auth/admin/audit styles, footer actions, viewer header affordance, 12-team tablet-width layout fix, centered button labels, three-wide mobile landscape viewer layout, landscape row-flow fix, and gold/silver/bronze rank-badge styles.
 
 #### Tests
 - `tests/change-password-test.php` revision 1.0.0, modified 2026-05-28: Lightweight verification for signed-in password changes.

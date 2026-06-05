@@ -25,8 +25,10 @@ Each instance has:
 
 All instances share a single set of frontend files in `public/`:
 
-- `public/styles.css` — all styling; changes here apply to every instance
-- `public/app.js` — all frontend logic; changes here apply to every instance
+- `public/styles.css` — all viewer/admin styling; changes here apply to every instance
+- `public/app.js` — viewer/admin frontend logic; changes here apply to every instance
+- `public/quick-entry.css` — quick-entry styling; changes here apply to every instance
+- `public/quick-entry.js` — quick-entry frontend logic; changes here apply to every instance
 
 ## Admin Navigation
 
@@ -86,6 +88,7 @@ For API behavior changes, check all four API files unless the request is only fo
 - Dynamic viewer grid columns that adapt to the number of teams.
 - Viewer page orders teams from highest score to lowest score.
 - Admin score cards order teams alphabetically by team name.
+- Place-rank badges (`1st`, `2nd`, `3rd`, ...) appear on every team card on the viewer, admin, and quick-entry pages; top 3 use gold/silver/bronze styling and ties share rank.
 - Score font scales with viewport size and shrinks for larger numbers.
 - Responsive layout for large screens, tablets, and phones including Safari mobile portrait and landscape.
 - Multiple scorekeepers supported via file locking.
