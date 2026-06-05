@@ -1,5 +1,5 @@
 // Filename: app.js
-// Revision : 1.14.0
+// Revision : 1.15.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
@@ -22,8 +22,9 @@
 // 1.12.0 Add signed-in user change-password footer link
 // 1.13.0 Add changelog footer link and admin-only all-scoreboards navigation link
 // 1.14.0 Sort admin teams A-Z and viewer teams by score for GitHub issues 4 and 6
+// 1.15.0 Match full-admin quick buttons to quick-entry positive scoring buttons
 
-const quickValues = [1, 3, 5, 10];
+const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
 const adminPollIntervalMs = 10000;
 let currentData = null;
@@ -99,7 +100,6 @@ function createQuickButtons(teamId) {
   return quickValues
     .map((value) => `
       <button class="positive" type="button" data-action="adjust" data-team-id="${teamId}" data-amount="${value}">+${value}</button>
-      <button class="negative" type="button" data-action="adjust" data-team-id="${teamId}" data-amount="-${value}">-${value}</button>
     `)
     .join('');
 }
@@ -117,6 +117,7 @@ function createAdminCard(team) {
       <div class="button-grid">
         ${createQuickButtons(team.id)}
       </div>
+      <div class="updated-at score-note">Use custom amount for negative scoring.</div>
       <form class="custom-controls" data-action="custom-form" data-team-id="${team.id}">
         <input name="customAmount" type="number" inputmode="numeric" step="1" placeholder="Custom +/- amount" aria-label="Custom amount for ${team.name}" />
         <button class="secondary" type="submit">Apply</button>

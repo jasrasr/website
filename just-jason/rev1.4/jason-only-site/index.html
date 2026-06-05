@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Jason">
+  <title>Jason</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <!--
+    Project: Just Jason Jamboree Junction
+    File: index.html
+    Revision: 1.4.0
+    Updated: 2026-06-04
+    Change: Reworked the page into randomized Jason-only paragraph text with grayscale fading every 100 Jason words.
+  -->
+  <main class="page" aria-label="Jason">
+    <section class="cover" aria-label="Jason">
+      <div class="cover-title" aria-hidden="true">
+        <span>Jason</span>
+        <span>Jason</span>
+        <span>Jason</span>
+        <span>Jason</span>
+      </div>
+    </section>
+
+    <section class="jason-prose" id="jasonText" aria-label="Jason"></section>
+    <div class="scroll-sentinel" id="scrollSentinel" aria-hidden="true"></div>
+  </main>
+
+  <footer class="jason-counter" aria-label="Visible Jason count">
+    <span>Count :</span>
+    <output id="jasonCount">0</output>
+  </footer>
+
+  <script src="assets/js/script.js"></script>
+</body>
+</html>

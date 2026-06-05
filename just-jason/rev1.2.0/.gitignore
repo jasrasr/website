@@ -1,0 +1,11 @@
+# Runtime/system files
+.DS_Store
+Thumbs.db
+
+# Local editor files
+.vscode/
+.idea/
+
+# Logs/temp
+*.log
+*.tmp

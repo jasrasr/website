@@ -28,6 +28,8 @@ assertContains($appJs, 'sortTeamsByName', 'Admin cards should use a named A-Z te
 assertContains($appJs, 'sortTeamsByScore', 'Viewer cards should use a named score-order helper.');
 assertContains($appJs, 'sortTeamsByName(data.teams).map(createAdminCard)', 'Admin rendering should order team cards A-Z.');
 assertContains($appJs, 'sortTeamsByScore(data.teams).map(createViewerCard)', 'Viewer rendering should order teams by score.');
+assertContains($appJs, 'const quickValues = [1, 10, 100, 1000];', 'Full admin quick buttons should be +1, +10, +100, +1000.');
+assertContains($appJs, 'Use custom amount for negative scoring.', 'Full admin should explain manual negative scoring.');
 
 assertContains($quickJs, 'const quickEntryValues = [1, 10, 100, 1000];', 'Quick-entry buttons should be +1, +10, +100, +1000.');
 assertContains($quickJs, 'quick-manual-note', 'Quick-entry should show a note for negative manual scoring.');
@@ -36,6 +38,8 @@ assertContains($quickJs, 'Enter -1, -10, or another negative number', 'Quick-ent
 assertContains($styles, 'text-align: center;', 'Shared button styling should center button text.');
 assertContains($styles, 'orientation: landscape', 'Viewer mobile landscape layout should have a dedicated rule.');
 assertContains($styles, 'repeat(3, minmax(0, 1fr))', 'Viewer mobile landscape layout should support three columns.');
+assertContains($styles, 'body.viewer-body', 'Viewer landscape rule should release viewport-height constraints.');
+assertContains($styles, 'flex: none;', 'Viewer landscape grid should use normal document flow instead of squeezing rows.');
 
 assertContains($quickCss, '.quick-team-score', 'Quick-entry team score style should be present.');
 assertContains($quickCss, '.quick-manual-note', 'Quick-entry negative scoring note style should be present.');

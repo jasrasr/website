@@ -75,7 +75,7 @@ For API behavior changes, check all four API files unless the request is only fo
 
 ## Features
 
-- Quick-entry buttons for `+1`, `+10`, `+100`, and `+1000`; use the manual amount box for negative scoring.
+- Quick buttons use `+1`, `+10`, `+100`, and `+1000`; use the custom/manual amount box for negative scoring.
 - Custom positive or negative score entry for each team.
 - Reset one team or reset all teams at once.
 - Rename teams and update the scoreboard title from the admin page.
@@ -87,7 +87,7 @@ For API behavior changes, check all four API files unless the request is only fo
 - Viewer page orders teams from highest score to lowest score.
 - Admin score cards order teams alphabetically by team name.
 - Score font scales with viewport size and shrinks for larger numbers.
-- Responsive layout for large screens, tablets, and phones including Safari mobile.
+- Responsive layout for large screens, tablets, and phones including Safari mobile portrait and landscape.
 - Multiple scorekeepers supported via file locking.
 
 ## Demo

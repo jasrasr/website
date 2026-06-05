@@ -9,6 +9,8 @@
 - Issue #6: Admin score cards now sort teams alphabetically by name, and quick-entry score text is centered.
 - Issue #7: Shared button styling now centers button labels.
 - Added `tests/github-issues-layout-test.php` to lock in the issue-driven UI behavior.
+- Full admin score buttons now also use only `+1`, `+10`, `+100`, and `+1000`, with a note to use the custom amount field for negative scoring.
+- Phone landscape viewer layout now uses normal scrolling document flow so rows do not overlap when browser chrome reduces viewport height.
 
 ### Added
 - Added a web-viewable changelog page linked from the admin footer.
@@ -76,10 +78,10 @@ This inventory was built from each file's header revision notes.
 - `frontlines/scoreboard_lib.php` revision 1.1.0, modified 2026-04-13: Frontlines defaults updated from 10 to 12 teams.
 
 #### Shared Frontend
-- `public/app.js` revision 1.14.0, modified 2026-06-03: Shared viewer/admin logic, polling, rename/title support, dynamic viewer layout, activity log, footer actions, change-password link, changelog link, admin-only scoreboards link, admin A-Z team ordering, and viewer score ordering.
+- `public/app.js` revision 1.15.0, modified 2026-06-03: Shared viewer/admin logic, polling, rename/title support, dynamic viewer layout, activity log, footer actions, change-password link, changelog link, admin-only scoreboards link, admin A-Z team ordering, viewer score ordering, and full-admin positive quick buttons.
 - `public/quick-entry.css` revision 1.2.0, modified 2026-06-03: Compact quick-entry styling with footer navigation, mobile-friendly team buttons, centered score text, compact quick score buttons, and manual negative-score note.
 - `public/quick-entry.js` revision 1.3.0, modified 2026-06-03: Compact quick-entry behavior with footer navigation, change-password link, `+1/+10/+100/+1000` quick buttons, and manual negative-score note.
-- `public/styles.css` revision 1.6.0, modified 2026-06-03: Shared dark responsive styling, auth/admin/audit styles, footer actions, viewer header affordance, 12-team tablet-width layout fix, centered button labels, and three-wide mobile landscape viewer layout.
+- `public/styles.css` revision 1.6.1, modified 2026-06-03: Shared dark responsive styling, auth/admin/audit styles, footer actions, viewer header affordance, 12-team tablet-width layout fix, centered button labels, three-wide mobile landscape viewer layout, and landscape row-flow fix.
 
 #### Tests
 - `tests/change-password-test.php` revision 1.0.0, modified 2026-05-28: Lightweight verification for signed-in password changes.
