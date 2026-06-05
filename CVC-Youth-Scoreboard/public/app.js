@@ -1,11 +1,11 @@
 // Filename: app.js
-// Revision : 1.13.0
+// Revision : 1.14.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
 // Author : Jason Lamb (with help from Claude Code)
 // Created Date : 2026-03-24
-// Modified Date : 2026-06-02
+// Modified Date : 2026-06-03
 // Changelog :
 // 1.0.0 Initial PHP release, converted from Node.js/Express
 // 1.1.0 Fixed API URL paths to use relative query params instead of REST-style paths
@@ -21,6 +21,7 @@
 // 1.11.0 Move admin menu controls to page bottom; add quick-entry link and clickable viewer header
 // 1.12.0 Add signed-in user change-password footer link
 // 1.13.0 Add changelog footer link and admin-only all-scoreboards navigation link
+// 1.14.0 Sort admin teams A-Z and viewer teams by score for GitHub issues 4 and 6
 
 const quickValues = [1, 3, 5, 10];
 const viewerPollIntervalMs = 2000;
@@ -71,6 +72,27 @@ function scoreFontStyle(score) {
   if (len <= 2) return '';
   const vw = len === 3 ? 9 : len === 4 ? 7 : len === 5 ? 5 : len <= 8 ? 4 : len === 9 ? 2.5 : 2;
   return `style="font-size: clamp(1.5rem, min(${vw}vw, ${vw}vh), 7rem);"`;
+}
+
+function sortTeamsByName(teams) {
+  return [...teams].sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), undefined, {
+    sensitivity: 'base',
+    numeric: true
+  }));
+}
+
+function sortTeamsByScore(teams) {
+  return [...teams].sort((a, b) => {
+    const scoreDifference = Number(b.score || 0) - Number(a.score || 0);
+    if (scoreDifference !== 0) {
+      return scoreDifference;
+    }
+
+    return String(a.name || '').localeCompare(String(b.name || ''), undefined, {
+      sensitivity: 'base',
+      numeric: true
+    });
+  });
 }
 
 function createQuickButtons(teamId) {
@@ -154,7 +176,7 @@ async function renderAdmin(data) {
       </header>
       <p class="status-text" id="status-text">Scores save to JSON automatically after each change.</p>
       <main class="team-grid">
-        ${data.teams.map(createAdminCard).join('')}
+        ${sortTeamsByName(data.teams).map(createAdminCard).join('')}
       </main>
       <section id="activity-section" style="margin-top:1.5rem">
         <button class="secondary" id="activity-toggle" type="button">Show Recent Activity</button>
@@ -249,7 +271,7 @@ function renderViewer(data) {
         </div>
       </header>
       <main class="viewer-grid" style="${gridStyle}">
-        ${data.teams.map(createViewerCard).join('')}
+        ${sortTeamsByScore(data.teams).map(createViewerCard).join('')}
       </main>
     </div>
   `;

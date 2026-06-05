@@ -75,7 +75,7 @@ For API behavior changes, check all four API files unless the request is only fo
 
 ## Features
 
-- Quick buttons for `+1`, `+3`, `+5`, `+10` and matching negatives per team.
+- Quick-entry buttons for `+1`, `+10`, `+100`, and `+1000`; use the manual amount box for negative scoring.
 - Custom positive or negative score entry for each team.
 - Reset one team or reset all teams at once.
 - Rename teams and update the scoreboard title from the admin page.
@@ -84,6 +84,8 @@ For API behavior changes, check all four API files unless the request is only fo
 - Viewer page automatically refreshes every 2 seconds.
 - Admin page polls every 10 seconds; skips re-render when an input is focused.
 - Dynamic viewer grid columns that adapt to the number of teams.
+- Viewer page orders teams from highest score to lowest score.
+- Admin score cards order teams alphabetically by team name.
 - Score font scales with viewport size and shrinks for larger numbers.
 - Responsive layout for large screens, tablets, and phones including Safari mobile.
 - Multiple scorekeepers supported via file locking.

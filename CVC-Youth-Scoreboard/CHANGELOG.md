@@ -2,6 +2,14 @@
 
 ## 2026-06-02
 
+### GitHub Issue Updates
+- Issue #3: Added a mobile landscape viewer rule so scoreboards can show three columns wide without the prior two-column shrink.
+- Issue #4: Public viewer now orders teams from highest score to lowest score, with team name as the tie-breaker.
+- Issue #5: Quick-entry score buttons are now `+1`, `+10`, `+100`, and `+1000`; negative quick buttons were removed, and the manual amount area explains using `-1`, `-10`, or another negative number for minus scoring.
+- Issue #6: Admin score cards now sort teams alphabetically by name, and quick-entry score text is centered.
+- Issue #7: Shared button styling now centers button labels.
+- Added `tests/github-issues-layout-test.php` to lock in the issue-driven UI behavior.
+
 ### Added
 - Added a web-viewable changelog page linked from the admin footer.
 - Added an admin-only scoreboard navigation page for Root, Collide, Youth, and Frontlines.
@@ -68,12 +76,13 @@ This inventory was built from each file's header revision notes.
 - `frontlines/scoreboard_lib.php` revision 1.1.0, modified 2026-04-13: Frontlines defaults updated from 10 to 12 teams.
 
 #### Shared Frontend
-- `public/app.js` revision 1.13.0, modified 2026-06-02: Shared viewer/admin logic, polling, rename/title support, dynamic viewer layout, activity log, footer actions, change-password link, changelog link, and admin-only scoreboards link.
-- `public/quick-entry.css` revision 1.1.0, modified 2026-05-26: Compact quick-entry styling with footer navigation and mobile-friendly team buttons.
-- `public/quick-entry.js` revision 1.2.0, modified 2026-05-26: Compact quick-entry behavior with footer navigation and change-password link.
-- `public/styles.css` revision 1.5.1, modified 2026-06-02: Shared dark responsive styling, auth/admin/audit styles, footer actions, viewer header affordance, and 12-team tablet-width layout fix.
+- `public/app.js` revision 1.14.0, modified 2026-06-03: Shared viewer/admin logic, polling, rename/title support, dynamic viewer layout, activity log, footer actions, change-password link, changelog link, admin-only scoreboards link, admin A-Z team ordering, and viewer score ordering.
+- `public/quick-entry.css` revision 1.2.0, modified 2026-06-03: Compact quick-entry styling with footer navigation, mobile-friendly team buttons, centered score text, compact quick score buttons, and manual negative-score note.
+- `public/quick-entry.js` revision 1.3.0, modified 2026-06-03: Compact quick-entry behavior with footer navigation, change-password link, `+1/+10/+100/+1000` quick buttons, and manual negative-score note.
+- `public/styles.css` revision 1.6.0, modified 2026-06-03: Shared dark responsive styling, auth/admin/audit styles, footer actions, viewer header affordance, 12-team tablet-width layout fix, centered button labels, and three-wide mobile landscape viewer layout.
 
 #### Tests
 - `tests/change-password-test.php` revision 1.0.0, modified 2026-05-28: Lightweight verification for signed-in password changes.
+- `tests/github-issues-layout-test.php` revision 1.0.0, modified 2026-06-03: Static verification for GitHub issue driven scoreboard layout updates.
 - `tests/navigation-pages-test.php` revision 1.0.0, modified 2026-06-02: Static verification for changelog and admin navigation pages.
 - `tests/runtime-samples-test.php` revision 1.0.0, modified 2026-06-02: Static verification for public-safe runtime samples and random first-run password behavior.

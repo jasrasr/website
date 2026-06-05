@@ -1,13 +1,14 @@
 /*
  * Filename: quick-entry.css
- * Revision : 1.1.0
+ * Revision : 1.2.0
  * Description : Compact score-entry styles for CVC Youth Scoreboard quick entry page.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-05-26
- * Modified Date : 2026-05-26
+ * Modified Date : 2026-06-03
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Moved navigation links to footer and kept team buttons at half/third width on mobile
+ * 1.2.0 Center score text, compact quick score buttons, and add manual negative-score note
  */
 
 .quick-entry-body {
@@ -76,11 +77,15 @@
 }
 
 .quick-team-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   min-height: 72px;
   padding: 0.55rem;
   border-color: color-mix(in srgb, var(--team-color) 60%, white 8%);
   background: color-mix(in srgb, var(--team-color) 32%, rgba(15, 23, 42, 0.9));
-  text-align: left;
+  text-align: center;
 }
 
 .quick-team-button[aria-pressed="true"] {
@@ -103,6 +108,7 @@
   font-size: clamp(1.3rem, 5vw, 2.2rem);
   font-weight: 800;
   line-height: 1;
+  text-align: center;
 }
 
 .quick-action-panel {
@@ -134,12 +140,13 @@
 .quick-score-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
+  gap: 0.35rem;
 }
 
 .quick-score-grid button {
-  min-height: 64px;
-  font-size: clamp(1.05rem, 4vw, 1.5rem);
+  min-height: 48px;
+  padding: 0.45rem;
+  font-size: clamp(0.95rem, 3vw, 1.25rem);
 }
 
 .quick-manual-form {
@@ -152,6 +159,13 @@
 .quick-manual-form input,
 .quick-manual-form button {
   min-height: 58px;
+}
+
+.quick-manual-note {
+  margin: 0.5rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-align: center;
 }
 
 .quick-status-row {
@@ -189,7 +203,7 @@
   }
 
   .quick-score-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 

@@ -1,15 +1,16 @@
 // Filename: quick-entry.js
-// Revision : 1.2.0
+// Revision : 1.3.0
 // Description : Compact score-entry behavior for CVC Youth Scoreboard quick entry page.
 // Author : Jason Lamb (with help from Codex CLI)
 // Created Date : 2026-05-26
-// Modified Date : 2026-05-26
+// Modified Date : 2026-06-03
 // Changelog :
 // 1.0.0 initial release
 // 1.1.0 Move navigation links to footer and keep team selection compact on mobile
 // 1.2.0 Add signed-in user change-password footer link
+// 1.3.0 Use +1/+10/+100/+1000 buttons and manual negative-score note
 
-const quickEntryValues = [1, 3, 5, 10];
+const quickEntryValues = [1, 10, 100, 1000];
 const quickEntryPollIntervalMs = 10000;
 
 let quickData = null;
@@ -199,7 +200,6 @@ function renderQuickEntry() {
 
   const scoreGrid = makeElement('div', { className: 'quick-score-grid' });
   quickEntryValues.forEach((value) => scoreGrid.appendChild(renderScoreButton(value, selectedTeam)));
-  quickEntryValues.forEach((value) => scoreGrid.appendChild(renderScoreButton(-value, selectedTeam)));
 
   const manualForm = makeElement('form', {
     className: 'quick-manual-form',
@@ -220,8 +220,12 @@ function renderQuickEntry() {
     text: 'Apply',
     attributes: { type: 'submit' }
   }));
+  const manualNote = makeElement('p', {
+    className: 'quick-manual-note',
+    text: 'Enter -1, -10, or another negative number for minus scoring.'
+  });
 
-  actionPanel.append(selectedHeader, scoreGrid, manualForm);
+  actionPanel.append(selectedHeader, scoreGrid, manualForm, manualNote);
 
   const statusRow = makeElement('div', { className: 'quick-status-row' });
   statusRow.appendChild(makeElement('p', {
