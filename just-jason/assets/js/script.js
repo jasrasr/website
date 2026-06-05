@@ -1,87 +1,184 @@
 /*
   Project: Just Jason Jamboree Junction
   File: assets/js/script.js
-  Revision: 1.1.0
-  Author: Jason Lamb / ChatGPT
-  Created: 2026-06-02
-  Modified: 2026-06-02
-  Description: Adds repeatable Jason text blocks and simulates an infinite Jason stream.
+  Revision: 1.4.3
+  Updated: 2026-06-04
+  Change: Fade is now controlled by two editable constants — fadePercentPerStep and paragraphsPerStep. Default: 5% darker per paragraph.
 */
-
 (function () {
   'use strict';
 
-  // Main DOM references used by the Jason generator.
-  const stream = document.getElementById('jasonStream');
-  const countElement = document.getElementById('jasonCount');
-  const addButton = document.getElementById('addJason');
-  const shuffleButton = document.getElementById('shuffleJason');
+  const textArea = document.getElementById('jasonText');
+  const countOutput = document.getElementById('jasonCount');
 
-  // Different safe sentence patterns. Every visible word remains Jason-adjacent.
-  const sentencePatterns = [
-    '<strong>Jason</strong> Jason Jason Jason Jason Jason Jason Jason. <em>Jason Jason Jason.</em>',
-    'Just Jason Jamboree Junction: Jason Jason Jason Jason; Jason Jason Jason Jason Jason.',
-    'Jason Jason Jason Jason Jason — Jason Jason Jason Jason Jason Jason.',
-    'Jason? Jason. Jason! Jason Jason Jason Jason Jason Jason Jason.',
-    'Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason.',
-    'Jolly Jason joins the Jamboree Junction. Jason Jason Jason Jason Jason.'
-  ];
+  const paragraphsPerBatch = 14;
 
-  // Returns one paragraph made of randomized Jason sentence patterns.
-  function createJasonParagraph(sentenceCount) {
-    const sentences = [];
+  // ---- Fade controls ----------------------------------------------------
+  // Tweak these two values to change how fast the text fades to black.
+  //   fadePercentPerStep = how many percentage points darker each step is
+  //                        (5 = drop brightness by 5% of pure white per step).
+  //   paragraphsPerStep  = how many paragraphs share a color before stepping.
+  //
+  // Examples:
+  //   fadePercentPerStep=5, paragraphsPerStep=1 -> 5% darker every paragraph
+  //                                                (fully black after 20 paragraphs)
+  //   fadePercentPerStep=1, paragraphsPerStep=3 -> 1% darker every 3 paragraphs
+  //                                                (fully black after 300 paragraphs)
+  // -----------------------------------------------------------------------
+  const fadePercentPerStep = 5;
+  const paragraphsPerStep = 1;
 
-    for (let index = 0; index < sentenceCount; index += 1) {
-      const randomIndex = Math.floor(Math.random() * sentencePatterns.length);
-      sentences.push(sentencePatterns[randomIndex]);
-    }
+  // Only cover words that actually say "Jason" count toward the tally.
+  const coverJasonCount = document.querySelectorAll('.cover-title .is-jason').length;
 
-    return sentences.join(' ');
+  // Deterministic pseudo-random seed so the page has a random-looking rhythm
+  // without changing every refresh like a caffeinated slot machine.
+  let randomSeed = 441444;
+  let generatedJasonCount = 0;
+  let generatedParagraphCount = 0;
+  let isAddingBatch = false;
+
+  function seededRandom() {
+    randomSeed = (randomSeed * 1664525 + 1013904223) % 4294967296;
+    return randomSeed / 4294967296;
   }
 
-  // Adds a card to the stream. More cards means more Jason. This is science-adjacent.
-  function addJasonCard() {
-    const card = document.createElement('article');
-    const sentenceCount = Math.floor(Math.random() * 5) + 4;
-
-    card.className = 'jason-card';
-    card.innerHTML = createJasonParagraph(sentenceCount);
-    stream.appendChild(card);
-
-    updateJasonCount();
+  function getRandomInteger(minimum, maximum) {
+    return Math.floor(seededRandom() * (maximum - minimum + 1)) + minimum;
   }
 
-  // Clears the existing cards and creates a new set.
-  function shuffleJasonCards() {
-    stream.innerHTML = '';
-
-    for (let index = 0; index < 7; index += 1) {
-      addJasonCard();
-    }
+  function chance(probability) {
+    return seededRandom() < probability;
   }
 
-  // Counts visible instances of the word Jason across the page body.
+  function getGrayForParagraph(paragraphIndex) {
+    const stepIndex = Math.floor(paragraphIndex / paragraphsPerStep);
+    const brightnessPercent = Math.max(0, 100 - stepIndex * fadePercentPerStep);
+    const grayValue = Math.round(255 * brightnessPercent / 100);
+    const hexPair = grayValue.toString(16).padStart(2, '0');
+
+    return `#${hexPair}${hexPair}${hexPair}`;
+  }
+
+  function getTotalJasonCount() {
+    return coverJasonCount + generatedJasonCount;
+  }
+
   function updateJasonCount() {
-    const matches = document.body.innerText.match(/Jason/g) || [];
-    countElement.textContent = matches.length.toLocaleString();
+    if (!countOutput) {
+      return;
+    }
+
+    countOutput.textContent = getTotalJasonCount().toLocaleString();
   }
 
-  // Adds more Jason automatically when the user nears the bottom of the page.
-  function handleInfiniteScroll() {
-    const pixelsFromBottom = document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
+  function addJasonWord(sentence) {
+    generatedJasonCount += 1;
 
-    if (pixelsFromBottom < 420) {
-      addJasonCard();
+    const word = document.createElement('span');
+    word.className = 'jason-word';
+    word.textContent = 'Jason';
+
+    // Sprinkle in a small amount of bold / italic / underline accents.
+    const styleRoll = seededRandom();
+    if (styleRoll < 0.06) {
+      word.classList.add('is-bold');
+    } else if (styleRoll < 0.11) {
+      word.classList.add('is-italic');
+    } else if (styleRoll < 0.15) {
+      word.classList.add('is-underline');
+    }
+
+    // Independent size accent — small / large / huge — for emphasis.
+    const sizeRoll = seededRandom();
+    if (sizeRoll < 0.05) {
+      word.classList.add('is-small');
+    } else if (sizeRoll < 0.09) {
+      word.classList.add('is-large');
+    } else if (sizeRoll < 0.105) {
+      word.classList.add('is-huge');
+    }
+
+    sentence.appendChild(word);
+  }
+
+  function addJasonSentence(paragraph, wordCount) {
+    const sentence = document.createElement('span');
+    sentence.className = 'jason-sentence';
+
+    for (let index = 0; index < wordCount; index += 1) {
+      addJasonWord(sentence);
+
+      if (index < wordCount - 1) {
+        sentence.appendChild(document.createTextNode(' '));
+      }
+    }
+
+    sentence.appendChild(document.createTextNode('. '));
+    paragraph.appendChild(sentence);
+  }
+
+  function addJasonParagraph(fragment) {
+    const paragraph = document.createElement('p');
+    paragraph.className = 'jason-paragraph';
+    paragraph.style.color = getGrayForParagraph(generatedParagraphCount);
+
+    // Some paragraphs open with a superscript "Jason" — like a citation mark.
+    if (chance(0.32)) {
+      const superscript = document.createElement('sup');
+      superscript.className = 'jason-superscript';
+      superscript.textContent = 'Jason';
+      paragraph.appendChild(superscript);
+      generatedJasonCount += 1;
+    }
+
+    const sentenceCount = getRandomInteger(2, 9);
+
+    for (let sentenceIndex = 0; sentenceIndex < sentenceCount; sentenceIndex += 1) {
+      const wordCount = getRandomInteger(3, 22);
+      addJasonSentence(paragraph, wordCount);
+    }
+
+    fragment.appendChild(paragraph);
+    generatedParagraphCount += 1;
+  }
+
+  function addJasonBatch() {
+    if (isAddingBatch || !textArea) {
+      return;
+    }
+
+    isAddingBatch = true;
+
+    const fragment = document.createDocumentFragment();
+
+    for (let index = 0; index < paragraphsPerBatch; index += 1) {
+      addJasonParagraph(fragment);
+    }
+
+    textArea.appendChild(fragment);
+    updateJasonCount();
+    isAddingBatch = false;
+  }
+
+  function nearBottom() {
+    return window.innerHeight + window.scrollY >= document.body.offsetHeight - 900;
+  }
+
+  function handleScroll() {
+    if (nearBottom()) {
+      addJasonBatch();
     }
   }
 
-  // Initial Jason load.
-  shuffleJasonCards();
+  function startInfiniteScroll() {
+    window.addEventListener('scroll', handleScroll, { passive: true });
+  }
 
-  // Button events.
-  addButton.addEventListener('click', addJasonCard);
-  shuffleButton.addEventListener('click', shuffleJasonCards);
-
-  // Passive scroll listener keeps the page responsive while generating more Jason.
-  window.addEventListener('scroll', handleInfiniteScroll, { passive: true });
+  // Load enough Jason to immediately look like a page of repeated text.
+  addJasonBatch();
+  addJasonBatch();
+  addJasonBatch();
+  updateJasonCount();
+  startInfiniteScroll();
 })();

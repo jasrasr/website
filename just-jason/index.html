@@ -1,102 +1,37 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <!--
-    Project: Just Jason Jamboree Junction
-    File: index.html
-    Revision: 1.1.0
-    Author: Jason Lamb / ChatGPT
-    Created: 2026-06-02
-    Modified: 2026-06-02
-    Description: Static parody-style website where nearly every visible word is Jason, now branded as Just Jason Jamboree Junction.
-  -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Just Jason Jamboree Junction. Jason, but more Jason. Because apparently one Jason was not operationally sufficient.">
-  <title>Just Jason Jamboree Junction</title>
+  <meta name="description" content="Jason">
+  <title>Jason</title>
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to Jason</a>
-
-  <header class="site-header" aria-label="Site header">
-    <div class="brand">JJJJ</div>
-    <nav class="nav" aria-label="Primary navigation">
-      <a href="#cover">Just</a>
-      <a href="#about">Jamboree</a>
-      <a href="#generator">Junction</a>
-    </nav>
-  </header>
-
-  <main id="main">
-    <section id="cover" class="cover-section" aria-labelledby="cover-title">
-      <div class="cover-art">
-        <p class="eyebrow">Just Jason Jamboree Junction</p>
-        <h1 id="cover-title" class="title-stack">
-          <span>Just</span>
-          <span>Jason</span>
-        </h1>
-        <p class="junction-title">Jamboree Junction</p>
-
-        <div class="cloud" aria-hidden="true">
-          <span></span><span></span><span></span><span></span>
-        </div>
-
-        <div class="cover-meta">
-          <p class="small-title">JJJJ</p>
-          <p class="subtitle">Just Jason. Jamboree. Junction.</p>
-          <p class="quote">“Jason… Jason Jason Jason Jason Jason Jason Jason.” — Jason Jason</p>
-        </div>
-      </div>
+  <!--
+    Project: Just Jason Jamboree Junction
+    File: index.html
+    Revision: 1.4.3
+    Updated: 2026-06-04
+    Change: Fade rate moved to editable constants in script.js (default 5% darker per paragraph).
+  -->
+  <main class="page" aria-label="Just Jason Jamboree Junction">
+    <section class="cover" aria-label="Just Jason Jamboree Junction">
+      <h1 class="cover-title">
+        <span class="cover-word cover-just">Just</span>
+        <span class="cover-word cover-jason is-jason">Jason</span>
+        <span class="cover-word cover-jamboree">Jamboree</span>
+        <span class="cover-word cover-junction">Junction</span>
+      </h1>
     </section>
 
-    <section id="about" class="back-cover" aria-labelledby="about-title">
-      <p class="copyright">Jasoned Material</p>
-      <h2 id="about-title">Just Jason, Jamboree-Junction Jason</h2>
-      <blockquote>
-        “Jason Jason Jason… Jason Jason, Jason Jason, Jason Jason Jason.”
-        <cite>— Jason Jason</cite>
-      </blockquote>
-
-      <article class="jason-copy">
-        <p><span class="dropcap">J</span>ust Jason Jamboree Junction: Jason Jason Jason Jason Jason Jason Jason, Jason Jason Jason Jason Jason Jason Jason Jason. Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason.</p>
-        <p>Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason. Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason.</p>
-        <p>Jason Jason Jason Jason Jason Jason Jason — Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason.</p>
-      </article>
-
-      <div class="author-row">
-        <div class="avatar" aria-hidden="true">J</div>
-        <div>
-          <h3>Jason Jason Jason</h3>
-          <p>Jason Jason Jason Jason Jason Jason Jason. Jason Jason Jason Jason Jason Jason Jason Jason Jason.</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="generator" class="generator-section" aria-labelledby="generator-title">
-      <div class="generator-header">
-        <div>
-          <p class="eyebrow">Jamboree Engine</p>
-          <h2 id="generator-title">More Jason at the Junction. Still nonsense, but now it has branding.</h2>
-        </div>
-        <div class="controls" aria-label="Jason controls">
-          <button id="addJason" type="button">Add Jason</button>
-          <button id="shuffleJason" type="button">Shuffle Jason</button>
-        </div>
-      </div>
-
-      <div class="stats" aria-live="polite">
-        <span>Total visible Jasons:</span>
-        <strong id="jasonCount">0</strong>
-      </div>
-
-      <div id="jasonStream" class="jason-stream" aria-label="Infinite Jason text stream"></div>
-    </section>
+    <section class="jason-prose" id="jasonText" aria-label="Jason"></section>
+    <div class="scroll-sentinel" id="scrollSentinel" aria-hidden="true"></div>
   </main>
 
-  <footer class="site-footer">
-    <p>Just Jason Jamboree Junction • Revision 1.1.0 • Updated 2026-06-02</p>
-    <p>Jason Jason Jason Jason Jason Jason Jason Jason Jason Jason.</p>
+  <footer class="jason-counter" aria-label="Visible Jason count">
+    <span>Count :</span>
+    <output id="jasonCount">0</output>
   </footer>
 
   <script src="assets/js/script.js"></script>

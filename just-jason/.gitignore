@@ -1,15 +1,11 @@
-# Local/editor files
+# Runtime/system files
 .DS_Store
 Thumbs.db
+
+# Local editor files
 .vscode/
 .idea/
 
-# Logs and generated runtime files
+# Logs/temp
 *.log
-logs/
-tmp/
-temp/
-
-# Dependency folders if this ever grows beyond static HTML/CSS/JS
-node_modules/
-vendor/
+*.tmp
