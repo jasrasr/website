@@ -4,6 +4,9 @@ how-much-time-worked/secrets.php
 # Local Codex/agent instructions
 AGENTS.md
 
+# Local notes (not tracked)
+TODO.md
+
 # Claude Code local settings — never deploy to server
 **/.claude/
 .claude/
