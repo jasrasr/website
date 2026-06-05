@@ -8,18 +8,38 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for Hostinger webhook to process
-        run: sleep 15
+      - name: Wait for Hostinger webhooks to process
+        run: sleep 25
 
-      - name: Check live site deployed
-        id: check
+      - name: Check jasr.me deployed
+        id: check_jasr
         run: |
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://jasr.me/time-clock/version.json)
           echo "status=$STATUS" >> $GITHUB_OUTPUT
-          if [ "$STATUS" != "200" ]; then
-            echo "result=FAILED (HTTP $STATUS)" >> $GITHUB_OUTPUT
-          else
+          if [ "$STATUS" = "200" ]; then
             echo "result=SUCCESS" >> $GITHUB_OUTPUT
+          else
+            echo "result=FAILED (HTTP $STATUS)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check justjason.fyi deployed
+        id: check_jj
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://justjason.fyi/)
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+          if [ "$STATUS" = "200" ]; then
+            echo "result=SUCCESS" >> $GITHUB_OUTPUT
+          else
+            echo "result=FAILED (HTTP $STATUS)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Compute overall result
+        id: overall
+        run: |
+          if [ "${{ steps.check_jasr.outputs.status }}" = "200" ] && [ "${{ steps.check_jj.outputs.status }}" = "200" ]; then
+            echo "result=SUCCESS" >> $GITHUB_OUTPUT
+          else
+            echo "result=FAILED" >> $GITHUB_OUTPUT
           fi
 
       - name: Send email notification
@@ -30,15 +50,20 @@ jobs:
           secure: false
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          subject: "jasr.me deploy ${{ steps.check.outputs.result }} — ${{ github.event.head_commit.message }}"
+          subject: "Deploy ${{ steps.overall.outputs.result }} — jasr.me ${{ steps.check_jasr.outputs.status }}, justjason.fyi ${{ steps.check_jj.outputs.status }} — ${{ github.event.head_commit.message }}"
           to: jason.lamb@cooperservices.com
           from: ${{ secrets.MAIL_USERNAME }}
           body: |
-            Deploy ${{ steps.check.outputs.result }}
+            Deploy ${{ steps.overall.outputs.result }}
 
-            Commit: ${{ github.event.head_commit.message }}
-            Branch: ${{ github.ref_name }}
-            By: ${{ github.actor }}
-            Time: ${{ github.event.head_commit.timestamp }}
+            jasr.me           : ${{ steps.check_jasr.outputs.result }}  (HTTP ${{ steps.check_jasr.outputs.status }})
+            justjason.fyi     : ${{ steps.check_jj.outputs.result }}  (HTTP ${{ steps.check_jj.outputs.status }})
 
-            Site: https://jasr.me/time-clock/
+            Commit : ${{ github.event.head_commit.message }}
+            Branch : ${{ github.ref_name }}
+            By     : ${{ github.actor }}
+            Time   : ${{ github.event.head_commit.timestamp }}
+
+            Sites:
+              https://jasr.me/time-clock/
+              https://justjason.fyi/
