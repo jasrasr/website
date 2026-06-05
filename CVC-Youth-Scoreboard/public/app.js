@@ -1,11 +1,11 @@
 // Filename: app.js
-// Revision : 1.15.0
+// Revision : 1.16.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
 // Author : Jason Lamb (with help from Claude Code)
 // Created Date : 2026-03-24
-// Modified Date : 2026-06-03
+// Modified Date : 2026-06-05
 // Changelog :
 // 1.0.0 Initial PHP release, converted from Node.js/Express
 // 1.1.0 Fixed API URL paths to use relative query params instead of REST-style paths
@@ -23,6 +23,7 @@
 // 1.13.0 Add changelog footer link and admin-only all-scoreboards navigation link
 // 1.14.0 Sort admin teams A-Z and viewer teams by score for GitHub issues 4 and 6
 // 1.15.0 Match full-admin quick buttons to quick-entry positive scoring buttons
+// 1.16.0 Show 1st/2nd/3rd place rank badge on viewer and admin team cards
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -96,6 +97,39 @@ function sortTeamsByScore(teams) {
   });
 }
 
+function ordinalSuffix(n) {
+  const abs = Math.abs(n);
+  const mod100 = abs % 100;
+  if (mod100 >= 11 && mod100 <= 13) return `${n}th`;
+  switch (abs % 10) {
+    case 1: return `${n}st`;
+    case 2: return `${n}nd`;
+    case 3: return `${n}rd`;
+    default: return `${n}th`;
+  }
+}
+
+// Returns Map<teamId, rank> using standard competition ranking (tied scores share rank: 1, 1, 3).
+function computeRanks(teams) {
+  const sorted = sortTeamsByScore(teams);
+  const ranks = new Map();
+  let lastScore = null;
+  let lastRank = 0;
+  sorted.forEach((team, index) => {
+    const score = Number(team.score || 0);
+    const rank = score === lastScore ? lastRank : index + 1;
+    ranks.set(team.id, rank);
+    lastScore = score;
+    lastRank = rank;
+  });
+  return ranks;
+}
+
+function rankBadgeHtml(rank) {
+  const medalClass = rank === 1 ? 'rank-gold' : rank === 2 ? 'rank-silver' : rank === 3 ? 'rank-bronze' : 'rank-plain';
+  return `<div class="rank-badge ${medalClass}" aria-label="Rank ${ordinalSuffix(rank)}">${ordinalSuffix(rank)}</div>`;
+}
+
 function createQuickButtons(teamId) {
   return quickValues
     .map((value) => `
@@ -104,9 +138,10 @@ function createQuickButtons(teamId) {
     .join('');
 }
 
-function createAdminCard(team) {
+function createAdminCard(team, rank) {
   return `
     <section class="team-card" style="--team-color: ${team.color};">
+      ${rankBadgeHtml(rank)}
       <div class="team-title">
         <div class="team-name">${team.name}</div>
         <div class="updated-at">Tap buttons to update</div>
@@ -133,9 +168,10 @@ function createAdminCard(team) {
   `;
 }
 
-function createViewerCard(team) {
+function createViewerCard(team, rank) {
   return `
     <section class="team-card viewer-card" style="--team-color: ${team.color};">
+      ${rankBadgeHtml(rank)}
       <div class="team-title">
         <div class="team-name">${team.name}</div>
       </div>
@@ -177,7 +213,10 @@ async function renderAdmin(data) {
       </header>
       <p class="status-text" id="status-text">Scores save to JSON automatically after each change.</p>
       <main class="team-grid">
-        ${sortTeamsByName(data.teams).map(createAdminCard).join('')}
+        ${(() => {
+          const ranks = computeRanks(data.teams);
+          return sortTeamsByName(data.teams).map((team) => createAdminCard(team, ranks.get(team.id))).join('');
+        })()}
       </main>
       <section id="activity-section" style="margin-top:1.5rem">
         <button class="secondary" id="activity-toggle" type="button">Show Recent Activity</button>
@@ -272,7 +311,10 @@ function renderViewer(data) {
         </div>
       </header>
       <main class="viewer-grid" style="${gridStyle}">
-        ${sortTeamsByScore(data.teams).map(createViewerCard).join('')}
+        ${(() => {
+          const ranks = computeRanks(data.teams);
+          return sortTeamsByScore(data.teams).map((team) => createViewerCard(team, ranks.get(team.id))).join('');
+        })()}
       </main>
     </div>
   `;

@@ -1,11 +1,11 @@
 /*
  * Filename: styles.css
- * Revision : 1.6.1
+ * Revision : 1.7.0
  * Description : Dark-themed responsive styles for CVC Scoreboard.
  *               Shared across all scoreboard instances (root, collide, youth, frontlines).
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-03-24
- * Modified Date : 2026-06-03
+ * Modified Date : 2026-06-05
  * Changelog :
  * 1.0.0 Initial release
  * 1.1.0 Changed team-title to column layout so hint text renders below team name
@@ -16,6 +16,7 @@
  * 1.5.1 Prevent 12-team viewer cards from collapsing under tablet-width grid overrides
  * 1.6.0 Center button labels and use three-wide mobile landscape viewer layout
  * 1.6.1 Let phone landscape viewer rows flow normally instead of squeezing into viewport height
+ * 1.7.0 Added rank-badge styles (gold/silver/bronze top-right corner) for 1st/2nd/3rd place
  */
 
 :root {
@@ -128,6 +129,7 @@ body.viewer-body {
 }
 
 .team-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -498,6 +500,58 @@ input {
 
 .au-modal-card h3 {
   margin: 0 0 1rem;
+}
+
+/* ── Rank badges (1st / 2nd / 3rd place indicators) ─────────────────────── */
+
+.rank-badge {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+  min-width: 2.4rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  color: #0f172a;
+  background: rgba(226, 232, 240, 0.92);
+  border: 1px solid rgba(15, 23, 42, 0.35);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+.rank-gold {
+  background: linear-gradient(180deg, #fde68a 0%, #f59e0b 100%);
+  border-color: #b45309;
+  color: #422006;
+}
+
+.rank-silver {
+  background: linear-gradient(180deg, #f1f5f9 0%, #94a3b8 100%);
+  border-color: #475569;
+  color: #1e293b;
+}
+
+.rank-bronze {
+  background: linear-gradient(180deg, #fcd9b1 0%, #b45309 100%);
+  border-color: #7c2d12;
+  color: #3b1b08;
+}
+
+.rank-plain {
+  background: rgba(148, 163, 184, 0.22);
+  border-color: rgba(148, 163, 184, 0.45);
+  color: var(--text-main);
+}
+
+.viewer-card .rank-badge {
+  top: 0.45rem;
+  right: 0.45rem;
+  font-size: clamp(0.75rem, min(1.4vw, 1.6vh), 1.25rem);
+  padding: 0.18rem 0.55rem;
 }
 
 /* ── Responsive overrides ────────────────────────────────────────────────── */

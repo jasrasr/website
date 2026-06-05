@@ -1,14 +1,15 @@
 // Filename: quick-entry.js
-// Revision : 1.3.0
+// Revision : 1.4.0
 // Description : Compact score-entry behavior for CVC Youth Scoreboard quick entry page.
 // Author : Jason Lamb (with help from Codex CLI)
 // Created Date : 2026-05-26
-// Modified Date : 2026-06-03
+// Modified Date : 2026-06-05
 // Changelog :
 // 1.0.0 initial release
 // 1.1.0 Move navigation links to footer and keep team selection compact on mobile
 // 1.2.0 Add signed-in user change-password footer link
 // 1.3.0 Use +1/+10/+100/+1000 buttons and manual negative-score note
+// 1.4.0 Show 1st/2nd/3rd place rank badge on each team button and selected team header
 
 const quickEntryValues = [1, 10, 100, 1000];
 const quickEntryPollIntervalMs = 10000;
@@ -33,6 +34,48 @@ function getSelectedTeam() {
   }
 
   return quickData.teams.find((team) => team.id === selectedTeamId) || quickData.teams[0];
+}
+
+function quickOrdinalSuffix(n) {
+  const abs = Math.abs(n);
+  const mod100 = abs % 100;
+  if (mod100 >= 11 && mod100 <= 13) return `${n}th`;
+  switch (abs % 10) {
+    case 1: return `${n}st`;
+    case 2: return `${n}nd`;
+    case 3: return `${n}rd`;
+    default: return `${n}th`;
+  }
+}
+
+// Standard competition ranking (tied scores share rank: 1, 1, 3). Returns Map<teamId, rank>.
+function computeQuickRanks(teams) {
+  const sorted = [...teams].sort((a, b) => {
+    const diff = Number(b.score || 0) - Number(a.score || 0);
+    if (diff !== 0) return diff;
+    return String(a.name || '').localeCompare(String(b.name || ''), undefined, {
+      sensitivity: 'base',
+      numeric: true
+    });
+  });
+  const ranks = new Map();
+  let lastScore = null;
+  let lastRank = 0;
+  sorted.forEach((team, index) => {
+    const score = Number(team.score || 0);
+    const rank = score === lastScore ? lastRank : index + 1;
+    ranks.set(team.id, rank);
+    lastScore = score;
+    lastRank = rank;
+  });
+  return ranks;
+}
+
+function rankBadgeClass(rank) {
+  if (rank === 1) return 'rank-gold';
+  if (rank === 2) return 'rank-silver';
+  if (rank === 3) return 'rank-bronze';
+  return 'rank-plain';
 }
 
 async function fetchQuickScores() {
@@ -100,7 +143,7 @@ function makeElement(tagName, options = {}) {
   return element;
 }
 
-function renderTeamButton(team, selectedTeam) {
+function renderTeamButton(team, selectedTeam, rank) {
   const button = makeElement('button', {
     className: 'quick-team-button',
     attributes: {
@@ -113,6 +156,14 @@ function renderTeamButton(team, selectedTeam) {
       teamId: team.id
     }
   });
+
+  if (rank) {
+    button.appendChild(makeElement('span', {
+      className: `rank-badge ${rankBadgeClass(rank)}`,
+      text: quickOrdinalSuffix(rank),
+      attributes: { 'aria-label': `Rank ${quickOrdinalSuffix(rank)}` }
+    }));
+  }
 
   button.appendChild(makeElement('span', {
     className: 'quick-team-name',
@@ -172,9 +223,10 @@ function renderQuickEntry() {
     text: 'Team'
   }));
 
+  const ranks = computeQuickRanks(quickData.teams);
   const teamGrid = makeElement('div', { className: 'quick-team-grid' });
   quickData.teams.forEach((team) => {
-    teamGrid.appendChild(renderTeamButton(team, selectedTeam));
+    teamGrid.appendChild(renderTeamButton(team, selectedTeam, ranks.get(team.id)));
   });
   teamPanel.appendChild(teamGrid);
 
@@ -191,7 +243,17 @@ function renderQuickEntry() {
     className: 'quick-section-label',
     text: 'Selected'
   }));
-  selectedTitle.appendChild(makeElement('h2', { text: selectedTeam.name }));
+  const selectedRank = ranks.get(selectedTeam.id);
+  const selectedNameRow = makeElement('div', { className: 'quick-selected-name-row' });
+  if (selectedRank) {
+    selectedNameRow.appendChild(makeElement('span', {
+      className: `rank-badge ${rankBadgeClass(selectedRank)}`,
+      text: quickOrdinalSuffix(selectedRank),
+      attributes: { 'aria-label': `Rank ${quickOrdinalSuffix(selectedRank)}` }
+    }));
+  }
+  selectedNameRow.appendChild(makeElement('h2', { text: selectedTeam.name }));
+  selectedTitle.appendChild(selectedNameRow);
   selectedHeader.appendChild(selectedTitle);
   selectedHeader.appendChild(makeElement('div', {
     className: 'quick-selected-score',

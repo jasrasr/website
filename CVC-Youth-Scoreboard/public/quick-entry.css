@@ -1,14 +1,15 @@
 /*
  * Filename: quick-entry.css
- * Revision : 1.2.0
+ * Revision : 1.3.0
  * Description : Compact score-entry styles for CVC Youth Scoreboard quick entry page.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-05-26
- * Modified Date : 2026-06-03
+ * Modified Date : 2026-06-05
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Moved navigation links to footer and kept team buttons at half/third width on mobile
  * 1.2.0 Center score text, compact quick score buttons, and add manual negative-score note
+ * 1.3.0 Anchor rank badge to team button corner and inline rank with selected team name
  */
 
 .quick-entry-body {
@@ -77,6 +78,7 @@
 }
 
 .quick-team-button {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -86,6 +88,14 @@
   border-color: color-mix(in srgb, var(--team-color) 60%, white 8%);
   background: color-mix(in srgb, var(--team-color) 32%, rgba(15, 23, 42, 0.9));
   text-align: center;
+}
+
+.quick-team-button .rank-badge {
+  top: 0.3rem;
+  right: 0.3rem;
+  font-size: 0.7rem;
+  min-width: 1.9rem;
+  padding: 0.1rem 0.4rem;
 }
 
 .quick-team-button[aria-pressed="true"] {
@@ -129,6 +139,19 @@
 .quick-selected h2 {
   margin: 0;
   font-size: clamp(1.1rem, 4vw, 1.8rem);
+}
+
+.quick-selected-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.quick-selected-name-row .rank-badge {
+  position: static;
+  font-size: 0.85rem;
+  padding: 0.15rem 0.55rem;
 }
 
 .quick-selected-score {
