@@ -1,6 +1,6 @@
 /*
  * Filename: styles.css
- * Revision : 1.8.0
+ * Revision : 1.8.1
  * Description : Dark-themed responsive styles for CVC Scoreboard.
  *               Shared across all scoreboard instances (root, collide, youth, frontlines).
  * Author : Jason Lamb (with help from Claude Code)
@@ -18,6 +18,7 @@
  * 1.6.1 Let phone landscape viewer rows flow normally instead of squeezing into viewport height
  * 1.7.0 Added rank-badge styles (gold/silver/bronze top-right corner) for 1st/2nd/3rd place
  * 1.8.0 Use --viewer-rows custom prop so narrow-desktop breakpoint can size rows; added .sort-note styling; let viewer-page scroll past 1100px width
+ * 1.8.1 Center .au-btn text horizontally so footer link buttons no longer left-align when stretched
  */
 
 :root {
@@ -362,6 +363,7 @@ input {
 .au-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: 48px;
   padding: 0.7rem 0.9rem;
   border-radius: 14px;
@@ -370,6 +372,7 @@ input {
   color: var(--text-main);
   font: inherit;
   font-weight: 700;
+  text-align: center;
   text-decoration: none;
   cursor: pointer;
   transition: transform 0.15s ease, background 0.15s ease;

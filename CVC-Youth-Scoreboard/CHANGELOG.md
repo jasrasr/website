@@ -3,6 +3,7 @@
 ## 2026-06-08
 
 ### Fixed
+- Footer link buttons (`.au-btn`) on `enter-scores.php` and `enter-scores-quick.php` now center their text horizontally; previously Quick Entry, Changelog, Change Password, Sign Out (and all `*-quick.php` footer buttons in mobile-stretched layouts) left-aligned because the shared class was missing `justify-content: center`.
 - Quick entry team buttons (`enter-scores-quick.php`) now sort A-Z by name, matching the full admin page.
 - Viewer page no longer compresses the top rows on narrow-desktop layouts (e.g., 50% docked windows). The `--viewer-rows` custom property now lets the responsive breakpoint actually override row sizing; previously an inline JS style took priority over the media query and squeezed the first rows. Below 1100px width the viewer page now scrolls naturally with a 180px row minimum and a 110px score-box minimum.
 - Quick entry "Last updated" timestamp no longer includes the locale comma between date and time (now renders as `6/6/26 4:25 PM`).
@@ -101,7 +102,7 @@ This inventory was built from each file's header revision notes.
 - `public/app.js` revision 1.17.0, modified 2026-06-08: Shared viewer/admin logic, polling, rename/title support, dynamic viewer layout, activity log, footer actions, change-password link, changelog link, admin-only scoreboards link, admin A-Z team ordering, viewer score ordering, full-admin positive quick buttons, 1st/2nd/3rd place rank badges, sort-order notes on admin and viewer pages, and `--viewer-rows` custom property for responsive grid sizing.
 - `public/quick-entry.css` revision 1.4.0, modified 2026-06-08: Compact quick-entry styling with footer navigation, mobile-friendly team buttons, centered score text, compact quick score buttons, manual negative-score note, rank-badge anchoring on team buttons and inline selected-team header, and quick-status-block / quick-revision styles.
 - `public/quick-entry.js` revision 1.5.0, modified 2026-06-08: Compact quick-entry behavior with footer navigation, change-password link, `+1/+10/+100/+1000` quick buttons, manual negative-score note, 1st/2nd/3rd place rank badges, A-Z team button sorting, A-Z sort note, on-page revision display under last-updated, and comma-free date/time formatting.
-- `public/styles.css` revision 1.8.0, modified 2026-06-08: Shared dark responsive styling, auth/admin/audit styles, footer actions, viewer header affordance, 12-team tablet-width layout fix, centered button labels, three-wide mobile landscape viewer layout, landscape row-flow fix, gold/silver/bronze rank-badge styles, `.sort-note` styling, `--viewer-rows` row sizing, and narrow-desktop viewer scroll/min-height fix.
+- `public/styles.css` revision 1.8.1, modified 2026-06-08: Shared dark responsive styling, auth/admin/audit styles, footer actions, viewer header affordance, 12-team tablet-width layout fix, centered button labels, three-wide mobile landscape viewer layout, landscape row-flow fix, gold/silver/bronze rank-badge styles, `.sort-note` styling, `--viewer-rows` row sizing, narrow-desktop viewer scroll/min-height fix, and centered `.au-btn` text.
 
 #### Tests
 - `tests/change-password-test.php` revision 1.0.0, modified 2026-05-28: Lightweight verification for signed-in password changes.
