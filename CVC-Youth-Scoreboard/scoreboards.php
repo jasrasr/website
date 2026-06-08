@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: scoreboards.php
- * Revision : 1.1.0
+ * Revision : 1.2.0
  * Description : Navigation page for all CVC Scoreboard instances the signed-in user can access.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-02
@@ -9,6 +9,7 @@
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Opened to any signed-in user; filters listed instances by user's scoreboard access
+ * 1.2.0 Moved header actions to a bottom footer bar; added Change Password link
  */
 
 require __DIR__ . '/auth.php';
@@ -68,10 +69,6 @@ $roleLabel = ($currentUser['role'] ?? '') === 'admin' ? 'Admin' : 'Scorer';
           <h1>Scoreboards</h1>
           <p class="updated-at">Signed in as <?= htmlspecialchars($currentUser['username']) ?></p>
         </div>
-        <div class="header-actions">
-          <a class="au-btn" href="./changelog.php">Changelog</a>
-          <a class="au-btn" href="./logout.php">Sign Out</a>
-        </div>
       </header>
 
       <main class="team-grid">
@@ -92,6 +89,12 @@ $roleLabel = ($currentUser['role'] ?? '') === 'admin' ? 'Admin' : 'Scorer';
           <?php endforeach; ?>
         <?php endif; ?>
       </main>
+
+      <section class="admin-footer-actions" aria-label="Scoreboards page actions">
+        <a class="au-btn" href="./changelog.php">Changelog</a>
+        <a class="au-btn" href="./change-password.php?return=scoreboards.php">Change Password</a>
+        <a class="au-btn" href="./logout.php">Sign Out</a>
+      </section>
     </div>
   </body>
 </html>

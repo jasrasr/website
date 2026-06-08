@@ -7,6 +7,7 @@
 - `scoreboards.php` is now accessible to any signed-in user, not just admins. The list is filtered to only the scoreboard instances the signed-in user has access to. Admins still see all four; scorers see only their assigned ones. Header role label reads "Admin" or "Scorer" depending on the signed-in user.
 - Scoreboards footer button on the admin page (`enter-scores.php`) is now visible to all signed-in users (was admin-only). "Manage Users" remains admin-only.
 - Added a **Scoreboards** footer link to the quick entry page (`enter-scores-quick.php`) so scorers can jump between their accessible instances without going through the full admin page first.
+- `scoreboards.php` now has a bottom action bar (matching the admin page pattern) with **Changelog**, **Change Password**, and **Sign Out** buttons. Header right-side buttons were removed in favor of this more visible footer bar.
 - Added `requireSignedIn()` helper to `auth.php` for pages open to any authenticated user.
 
 ### Fixed
@@ -82,7 +83,7 @@ This inventory was built from each file's header revision notes.
 - `login.php` revision 1.0.0, modified 2026-04-13: Login page and session creation.
 - `logout.php` revision 1.0.0, modified 2026-04-13: Session destroy and login redirect.
 - `scoreboard_lib.php` revision 1.0.0, modified 2026-04-09: Root default team data and JSON read/write helpers.
-- `scoreboards.php` revision 1.1.0, modified 2026-06-08: Navigation for scoreboard instances the signed-in user can access (admins see all; scorers see only their assigned).
+- `scoreboards.php` revision 1.2.0, modified 2026-06-08: Navigation for scoreboard instances the signed-in user can access (admins see all; scorers see only their assigned); bottom action bar with Changelog, Change Password, and Sign Out.
 
 #### Collide Instance
 - `collide/api.php` revision 1.2.0, modified 2026-04-13: Collide API with negative scores, auth, and audit logging.
