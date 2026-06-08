@@ -1,11 +1,11 @@
 // Filename: app.js
-// Revision : 1.16.0
+// Revision : 1.17.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
 // Author : Jason Lamb (with help from Claude Code)
 // Created Date : 2026-03-24
-// Modified Date : 2026-06-05
+// Modified Date : 2026-06-08
 // Changelog :
 // 1.0.0 Initial PHP release, converted from Node.js/Express
 // 1.1.0 Fixed API URL paths to use relative query params instead of REST-style paths
@@ -24,6 +24,7 @@
 // 1.14.0 Sort admin teams A-Z and viewer teams by score for GitHub issues 4 and 6
 // 1.15.0 Match full-admin quick buttons to quick-entry positive scoring buttons
 // 1.16.0 Show 1st/2nd/3rd place rank badge on viewer and admin team cards
+// 1.17.0 Add sort-order note to admin (A-Z) and viewer (by score) pages; expose --viewer-rows custom property so responsive breakpoints can override grid row sizing
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -212,6 +213,7 @@ async function renderAdmin(data) {
         ${renderSharedHeader(data, 'admin')}
       </header>
       <p class="status-text" id="status-text">Scores save to JSON automatically after each change.</p>
+      <p class="sort-note">Teams are sorted A-Z by name.</p>
       <main class="team-grid">
         ${(() => {
           const ranks = computeRanks(data.teams);
@@ -300,7 +302,7 @@ function renderViewer(data) {
   const teamCount = data.teams.length;
   const cols = teamCount <= 4 ? 2 : teamCount <= 6 ? 3 : 4;
   const rows = Math.ceil(teamCount / cols);
-  const gridStyle = `--viewer-cols: ${cols}; grid-template-rows: repeat(${rows}, minmax(0, 1fr));`;
+  const gridStyle = `--viewer-cols: ${cols}; --viewer-rows: ${rows};`;
 
   app.innerHTML = `
     <div class="viewer-page">
@@ -308,6 +310,7 @@ function renderViewer(data) {
         ${renderSharedHeader(data, 'viewer')}
         <div class="header-actions">
           <div class="updated-at">Auto-refresh every ${viewerPollIntervalMs / 1000} seconds</div>
+          <div class="updated-at">Teams sorted by score (1st, 2nd, 3rd...)</div>
         </div>
       </header>
       <main class="viewer-grid" style="${gridStyle}">

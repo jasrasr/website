@@ -86,9 +86,10 @@ For API behavior changes, check all four API files unless the request is only fo
 - Viewer page automatically refreshes every 2 seconds.
 - Admin page polls every 10 seconds; skips re-render when an input is focused.
 - Dynamic viewer grid columns that adapt to the number of teams.
-- Viewer page orders teams from highest score to lowest score.
-- Admin score cards order teams alphabetically by team name.
+- Viewer page orders teams from highest score to lowest score; viewer header shows a "Teams sorted by score (1st, 2nd, 3rd...)" note.
+- Admin and quick-entry pages order teams alphabetically A-Z by team name and show a "Teams are sorted A-Z by name." note.
 - Place-rank badges (`1st`, `2nd`, `3rd`, ...) appear on every team card on the viewer, admin, and quick-entry pages; top 3 use gold/silver/bronze styling and ties share rank.
+- Quick-entry page shows the running script revision (`v1.x.x`) directly under "Last updated" so it is obvious which version is loaded.
 - Score font scales with viewport size and shrinks for larger numbers.
 - Responsive layout for large screens, tablets, and phones including Safari mobile portrait and landscape.
 - Multiple scorekeepers supported via file locking.

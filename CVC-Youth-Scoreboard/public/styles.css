@@ -1,11 +1,11 @@
 /*
  * Filename: styles.css
- * Revision : 1.7.0
+ * Revision : 1.8.0
  * Description : Dark-themed responsive styles for CVC Scoreboard.
  *               Shared across all scoreboard instances (root, collide, youth, frontlines).
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-03-24
- * Modified Date : 2026-06-05
+ * Modified Date : 2026-06-08
  * Changelog :
  * 1.0.0 Initial release
  * 1.1.0 Changed team-title to column layout so hint text renders below team name
@@ -17,6 +17,7 @@
  * 1.6.0 Center button labels and use three-wide mobile landscape viewer layout
  * 1.6.1 Let phone landscape viewer rows flow normally instead of squeezing into viewport height
  * 1.7.0 Added rank-badge styles (gold/silver/bronze top-right corner) for 1st/2nd/3rd place
+ * 1.8.0 Use --viewer-rows custom prop so narrow-desktop breakpoint can size rows; added .sort-note styling; let viewer-page scroll past 1100px width
  */
 
 :root {
@@ -263,7 +264,7 @@ input {
   flex: 1;
   display: grid;
   grid-template-columns: repeat(var(--viewer-cols, 3), minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(var(--viewer-rows, 2), minmax(0, 1fr));
   gap: 1rem;
   min-height: 0;
 }
@@ -502,6 +503,15 @@ input {
   margin: 0 0 1rem;
 }
 
+/* ── Sort-order note (shown on admin/viewer/quick pages) ────────────────── */
+
+.sort-note {
+  margin: 0 0 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
 /* ── Rank badges (1st / 2nd / 3rd place indicators) ─────────────────────── */
 
 .rank-badge {
@@ -561,10 +571,25 @@ input {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  body.viewer-body {
+    overflow: auto;
+  }
+
+  .viewer-page {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
   .viewer-grid {
+    flex: none;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: none;
-    grid-auto-rows: minmax(160px, auto);
+    grid-auto-rows: minmax(180px, auto);
+  }
+
+  .viewer-card .score-box {
+    min-height: 110px;
   }
 }
 

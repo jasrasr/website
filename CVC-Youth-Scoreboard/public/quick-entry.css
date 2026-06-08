@@ -1,15 +1,16 @@
 /*
  * Filename: quick-entry.css
- * Revision : 1.3.0
+ * Revision : 1.4.0
  * Description : Compact score-entry styles for CVC Youth Scoreboard quick entry page.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-05-26
- * Modified Date : 2026-06-05
+ * Modified Date : 2026-06-08
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Moved navigation links to footer and kept team buttons at half/third width on mobile
  * 1.2.0 Center score text, compact quick score buttons, and add manual negative-score note
  * 1.3.0 Anchor rank badge to team button corner and inline rank with selected team name
+ * 1.4.0 Added quick-status-block and quick-revision styles for revision display under last-updated
  */
 
 .quick-entry-body {
@@ -201,6 +202,19 @@
 
 .quick-status-row p {
   margin: 0;
+}
+
+.quick-status-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.quick-revision {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
 }
 
 @media (max-width: 720px) {

@@ -1,16 +1,18 @@
 // Filename: quick-entry.js
-// Revision : 1.4.0
+// Revision : 1.5.0
 // Description : Compact score-entry behavior for CVC Youth Scoreboard quick entry page.
 // Author : Jason Lamb (with help from Codex CLI)
 // Created Date : 2026-05-26
-// Modified Date : 2026-06-05
+// Modified Date : 2026-06-08
 // Changelog :
 // 1.0.0 initial release
 // 1.1.0 Move navigation links to footer and keep team selection compact on mobile
 // 1.2.0 Add signed-in user change-password footer link
 // 1.3.0 Use +1/+10/+100/+1000 buttons and manual negative-score note
 // 1.4.0 Show 1st/2nd/3rd place rank badge on each team button and selected team header
+// 1.5.0 Sort team buttons A-Z; show revision next to last-updated; drop comma in date/time; add sort note
 
+const QUICK_ENTRY_REVISION = '1.5.0';
 const quickEntryValues = [1, 10, 100, 1000];
 const quickEntryPollIntervalMs = 10000;
 
@@ -22,10 +24,10 @@ function formatQuickUpdatedAt(updatedAt) {
     return 'No score updates yet';
   }
 
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'short',
-    timeStyle: 'short'
-  }).format(new Date(updatedAt));
+  const d = new Date(updatedAt);
+  const dateStr = new Intl.DateTimeFormat(undefined, { dateStyle: 'short' }).format(d);
+  const timeStr = new Intl.DateTimeFormat(undefined, { timeStyle: 'short' }).format(d);
+  return `${dateStr} ${timeStr}`;
 }
 
 function getSelectedTeam() {
@@ -222,10 +224,20 @@ function renderQuickEntry() {
     className: 'quick-section-label',
     text: 'Team'
   }));
+  teamPanel.appendChild(makeElement('p', {
+    className: 'sort-note',
+    text: 'Teams are sorted A-Z by name.'
+  }));
 
   const ranks = computeQuickRanks(quickData.teams);
+  const sortedTeams = [...quickData.teams].sort((a, b) =>
+    String(a.name || '').localeCompare(String(b.name || ''), undefined, {
+      sensitivity: 'base',
+      numeric: true
+    })
+  );
   const teamGrid = makeElement('div', { className: 'quick-team-grid' });
-  quickData.teams.forEach((team) => {
+  sortedTeams.forEach((team) => {
     teamGrid.appendChild(renderTeamButton(team, selectedTeam, ranks.get(team.id)));
   });
   teamPanel.appendChild(teamGrid);
@@ -290,11 +302,17 @@ function renderQuickEntry() {
   actionPanel.append(selectedHeader, scoreGrid, manualForm, manualNote);
 
   const statusRow = makeElement('div', { className: 'quick-status-row' });
-  statusRow.appendChild(makeElement('p', {
+  const statusBlock = makeElement('div', { className: 'quick-status-block' });
+  statusBlock.appendChild(makeElement('p', {
     id: 'quick-status',
     className: 'status-text',
     text: `Last updated: ${formatQuickUpdatedAt(quickData.updatedAt)}`
   }));
+  statusBlock.appendChild(makeElement('p', {
+    className: 'quick-revision',
+    text: `v${QUICK_ENTRY_REVISION}`
+  }));
+  statusRow.appendChild(statusBlock);
   statusRow.appendChild(makeElement('a', {
     className: 'au-btn',
     text: 'Refresh',
