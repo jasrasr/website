@@ -2,6 +2,13 @@
 
 ## 2026-06-08
 
+### Access & Navigation
+- `changelog.php` is now accessible to any signed-in user (was gated on root-scoreboard access). The Scoreboard button in the changelog header now reads **Scoreboards** and links to `scoreboards.php` (the access-filtered nav hub) instead of the root admin page.
+- `scoreboards.php` is now accessible to any signed-in user, not just admins. The list is filtered to only the scoreboard instances the signed-in user has access to. Admins still see all four; scorers see only their assigned ones. Header role label reads "Admin" or "Scorer" depending on the signed-in user.
+- Scoreboards footer button on the admin page (`enter-scores.php`) is now visible to all signed-in users (was admin-only). "Manage Users" remains admin-only.
+- Added a **Scoreboards** footer link to the quick entry page (`enter-scores-quick.php`) so scorers can jump between their accessible instances without going through the full admin page first.
+- Added `requireSignedIn()` helper to `auth.php` for pages open to any authenticated user.
+
 ### Fixed
 - Footer link buttons (`.au-btn`) on `enter-scores.php` and `enter-scores-quick.php` now center their text horizontally; previously Quick Entry, Changelog, Change Password, Sign Out (and all `*-quick.php` footer buttons in mobile-stretched layouts) left-aligned because the shared class was missing `justify-content: center`.
 - Quick entry team buttons (`enter-scores-quick.php`) now sort A-Z by name, matching the full admin page.
@@ -66,42 +73,42 @@ This inventory was built from each file's header revision notes.
 #### Root PHP
 - `admin-users.php` revision 1.0.0, modified 2026-04-13: Admin-only user management and merged audit log page.
 - `api.php` revision 1.4.0, modified 2026-04-13: Root scoreboard API with query-param routing, team/title rename actions, negative scores, auth, and audit logging.
-- `auth.php` revision 1.4.0, modified 2026-06-02: Shared auth library with sessions, roles, scoreboard access, audit helpers, signed-in password changes, and random first-run passwords.
+- `auth.php` revision 1.5.0, modified 2026-06-08: Shared auth library with sessions, roles, scoreboard access, audit helpers, signed-in password changes, random first-run passwords, and `requireSignedIn` helper for pages open to any authenticated user.
 - `change-password.php` revision 1.0.0, modified 2026-05-28: Signed-in self-service password update page.
-- `changelog.php` revision 1.0.0, modified 2026-06-02: Signed-in web viewer for `CHANGELOG.md`.
+- `changelog.php` revision 1.1.0, modified 2026-06-08: Signed-in web viewer for `CHANGELOG.md`; uses `requireSignedIn` and links back to `scoreboards.php`.
 - `enter-scores.php` revision 1.3.0, modified 2026-06-02: Root admin page with auth data attributes, change-password URL, changelog URL, and all-scoreboards URL.
-- `enter-scores-quick.php` revision 1.1.0, modified 2026-05-28: Root compact score entry page with change-password URL.
+- `enter-scores-quick.php` revision 1.2.0, modified 2026-06-08: Root compact score entry page with change-password and scoreboards URLs.
 - `index.php` revision 1.1.0, modified 2026-04-09: Root public viewer page after admin moved to `enter-scores.php`.
 - `login.php` revision 1.0.0, modified 2026-04-13: Login page and session creation.
 - `logout.php` revision 1.0.0, modified 2026-04-13: Session destroy and login redirect.
 - `scoreboard_lib.php` revision 1.0.0, modified 2026-04-09: Root default team data and JSON read/write helpers.
-- `scoreboards.php` revision 1.0.0, modified 2026-06-02: Admin-only navigation for all scoreboard instances.
+- `scoreboards.php` revision 1.1.0, modified 2026-06-08: Navigation for scoreboard instances the signed-in user can access (admins see all; scorers see only their assigned).
 
 #### Collide Instance
 - `collide/api.php` revision 1.2.0, modified 2026-04-13: Collide API with negative scores, auth, and audit logging.
 - `collide/enter-scores.php` revision 1.3.0, modified 2026-06-02: Collide admin page with changelog and all-scoreboards URLs.
-- `collide/enter-scores-quick.php` revision 1.1.0, modified 2026-05-28: Collide compact score entry page with change-password URL.
+- `collide/enter-scores-quick.php` revision 1.2.0, modified 2026-06-08: Collide compact score entry page with change-password and scoreboards URLs.
 - `collide/index.php` revision 1.0.0, modified 2026-04-09: Collide public viewer page.
 - `collide/scoreboard_lib.php` revision 1.0.0, modified 2026-04-09: Collide six-team defaults and data helpers.
 
 #### Youth Instance
 - `youth/api.php` revision 1.2.0, modified 2026-04-13: Youth API with negative scores, auth, and audit logging.
 - `youth/enter-scores.php` revision 1.3.0, modified 2026-06-02: Youth admin page with changelog and all-scoreboards URLs.
-- `youth/enter-scores-quick.php` revision 1.1.0, modified 2026-05-28: Youth compact score entry page with change-password URL.
+- `youth/enter-scores-quick.php` revision 1.2.0, modified 2026-06-08: Youth compact score entry page with change-password and scoreboards URLs.
 - `youth/index.php` revision 1.0.0, modified 2026-04-09: Youth public viewer page.
 - `youth/scoreboard_lib.php` revision 1.0.0, modified 2026-04-09: Youth eight-team defaults and data helpers.
 
 #### Frontlines Instance
 - `frontlines/api.php` revision 1.2.0, modified 2026-04-13: Frontlines API with negative scores, auth, and audit logging.
 - `frontlines/enter-scores.php` revision 1.3.0, modified 2026-06-02: Frontlines admin page with changelog and all-scoreboards URLs.
-- `frontlines/enter-scores-quick.php` revision 1.1.0, modified 2026-05-28: Frontlines compact score entry page with change-password URL.
+- `frontlines/enter-scores-quick.php` revision 1.2.0, modified 2026-06-08: Frontlines compact score entry page with change-password and scoreboards URLs.
 - `frontlines/index.php` revision 1.0.0, modified 2026-04-09: Frontlines public viewer page.
 - `frontlines/scoreboard_lib.php` revision 1.1.0, modified 2026-04-13: Frontlines defaults updated from 10 to 12 teams.
 
 #### Shared Frontend
-- `public/app.js` revision 1.17.0, modified 2026-06-08: Shared viewer/admin logic, polling, rename/title support, dynamic viewer layout, activity log, footer actions, change-password link, changelog link, admin-only scoreboards link, admin A-Z team ordering, viewer score ordering, full-admin positive quick buttons, 1st/2nd/3rd place rank badges, sort-order notes on admin and viewer pages, and `--viewer-rows` custom property for responsive grid sizing.
+- `public/app.js` revision 1.18.0, modified 2026-06-08: Shared viewer/admin logic, polling, rename/title support, dynamic viewer layout, activity log, footer actions, change-password link, changelog link, all-users scoreboards link, admin A-Z team ordering, viewer score ordering, full-admin positive quick buttons, 1st/2nd/3rd place rank badges, sort-order notes on admin and viewer pages, and `--viewer-rows` custom property for responsive grid sizing.
 - `public/quick-entry.css` revision 1.4.0, modified 2026-06-08: Compact quick-entry styling with footer navigation, mobile-friendly team buttons, centered score text, compact quick score buttons, manual negative-score note, rank-badge anchoring on team buttons and inline selected-team header, and quick-status-block / quick-revision styles.
-- `public/quick-entry.js` revision 1.5.0, modified 2026-06-08: Compact quick-entry behavior with footer navigation, change-password link, `+1/+10/+100/+1000` quick buttons, manual negative-score note, 1st/2nd/3rd place rank badges, A-Z team button sorting, A-Z sort note, on-page revision display under last-updated, and comma-free date/time formatting.
+- `public/quick-entry.js` revision 1.6.0, modified 2026-06-08: Compact quick-entry behavior with footer navigation, change-password link, scoreboards link, `+1/+10/+100/+1000` quick buttons, manual negative-score note, 1st/2nd/3rd place rank badges, A-Z team button sorting, A-Z sort note, on-page revision display under last-updated, and comma-free date/time formatting.
 - `public/styles.css` revision 1.8.1, modified 2026-06-08: Shared dark responsive styling, auth/admin/audit styles, footer actions, viewer header affordance, 12-team tablet-width layout fix, centered button labels, three-wide mobile landscape viewer layout, landscape row-flow fix, gold/silver/bronze rank-badge styles, `.sort-note` styling, `--viewer-rows` row sizing, narrow-desktop viewer scroll/min-height fix, and centered `.au-btn` text.
 
 #### Tests

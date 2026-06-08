@@ -32,10 +32,17 @@ All instances share a single set of frontend files in `public/`:
 
 ## Admin Navigation
 
-- `changelog.php` — signed-in web view of `CHANGELOG.md`; update `CHANGELOG.md` only when adding entries.
-- `scoreboards.php` — admin-only navigation page with Viewer, Full Admin, and Quick Entry links for every scoreboard.
-- The admin footer shows `Changelog` to signed-in scorekeepers and admins.
-- The admin footer shows `Scoreboards` only when the signed-in user has the `admin` role.
+- `changelog.php` — web view of `CHANGELOG.md`; accessible to any signed-in user. Update `CHANGELOG.md` only when adding entries.
+- `scoreboards.php` — navigation page listing Viewer, Full Admin, and Quick Entry links for the scoreboard instances the signed-in user can access. Admins see all four; scorers see only the instances assigned in `data/users.json`.
+- The Full Admin page (`enter-scores.php`) footer shows `Changelog` and `Scoreboards` to every signed-in user; `Manage Users` is admin-only.
+- The Quick Entry page (`enter-scores-quick.php`) footer shows `Scoreboards` so scorers can jump between their accessible instances without going through Full Admin first.
+
+### Access helpers in `auth.php`
+
+- `requireAuth($scoreboardId, $loginUrl)` — page must be signed in AND have access to that scoreboard.
+- `requireAuthJson($scoreboardId)` — API equivalent; returns JSON 401/403 instead of redirecting.
+- `requireSignedIn($loginUrl)` — page only needs an authenticated session; used by `changelog.php` and `scoreboards.php`.
+- `requireAdmin($loginUrl)` — page requires `role === 'admin'`; used by `admin-users.php`.
 
 ## Runtime Samples
 

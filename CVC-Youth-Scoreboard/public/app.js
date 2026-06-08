@@ -1,5 +1,5 @@
 // Filename: app.js
-// Revision : 1.17.0
+// Revision : 1.18.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
@@ -25,6 +25,7 @@
 // 1.15.0 Match full-admin quick buttons to quick-entry positive scoring buttons
 // 1.16.0 Show 1st/2nd/3rd place rank badge on viewer and admin team cards
 // 1.17.0 Add sort-order note to admin (A-Z) and viewer (by score) pages; expose --viewer-rows custom property so responsive breakpoints can override grid row sizing
+// 1.18.0 Show Scoreboards footer button to all signed-in users (was admin-only)
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -233,7 +234,7 @@ async function renderAdmin(data) {
         <button class="secondary" id="open-viewer-button" type="button">Open Viewer Page</button>
         <button class="warning" id="reset-all-button" type="button">Reset All Teams</button>
         ${role === 'admin' ? `<a class="au-btn" href="${adminUrl}">Manage Users</a>` : ''}
-        ${role === 'admin' ? `<a class="au-btn" href="${scoreboardsUrl}">Scoreboards</a>` : ''}
+        <a class="au-btn" href="${scoreboardsUrl}">Scoreboards</a>
         <a class="au-btn" href="${changelogUrl}">Changelog</a>
         <a class="au-btn" href="${passwordUrl}">Change Password</a>
         <a class="au-btn" href="${logoutUrl}">Sign Out</a>

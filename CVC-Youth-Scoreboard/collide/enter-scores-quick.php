@@ -1,15 +1,16 @@
 <?php declare(strict_types=1);
 /**
  * Filename: collide/enter-scores-quick.php
- * Revision : 1.1.0
+ * Revision : 1.2.0
  * Description : Compact test score entry page for CVC Collide Scoreboard.
  *               Provides fast team selection and quick/manual score updates.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-05-26
- * Modified Date : 2026-05-28
+ * Modified Date : 2026-06-08
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Added change-password URL for signed-in users
+ * 1.2.0 Added scoreboards-url data attribute for footer Scoreboards link
  */
 
 require __DIR__ . '/../auth.php';
@@ -30,6 +31,7 @@ $user = requireAuth('collide', '../login.php');
     data-role="<?= htmlspecialchars($user['role']) ?>"
     data-logout-url="../logout.php"
     data-password-url="../change-password.php?return=collide/enter-scores-quick.php"
+    data-scoreboards-url="../scoreboards.php"
   >
     <div id="quick-entry-app" class="quick-entry-shell">
       <p class="status-text">Loading quick score entry...</p>

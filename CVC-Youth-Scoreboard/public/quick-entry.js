@@ -1,5 +1,5 @@
 // Filename: quick-entry.js
-// Revision : 1.5.0
+// Revision : 1.6.0
 // Description : Compact score-entry behavior for CVC Youth Scoreboard quick entry page.
 // Author : Jason Lamb (with help from Codex CLI)
 // Created Date : 2026-05-26
@@ -11,8 +11,9 @@
 // 1.3.0 Use +1/+10/+100/+1000 buttons and manual negative-score note
 // 1.4.0 Show 1st/2nd/3rd place rank badge on each team button and selected team header
 // 1.5.0 Sort team buttons A-Z; show revision next to last-updated; drop comma in date/time; add sort note
+// 1.6.0 Add Scoreboards footer link (reads data-scoreboards-url)
 
-const QUICK_ENTRY_REVISION = '1.5.0';
+const QUICK_ENTRY_REVISION = '1.6.0';
 const quickEntryValues = [1, 10, 100, 1000];
 const quickEntryPollIntervalMs = 10000;
 
@@ -201,6 +202,7 @@ function renderQuickEntry() {
   const selectedTeam = getSelectedTeam();
   const logoutUrl = document.body.dataset.logoutUrl || './logout.php';
   const passwordUrl = document.body.dataset.passwordUrl || './change-password.php';
+  const scoreboardsUrl = document.body.dataset.scoreboardsUrl || './scoreboards.php';
   const username = document.body.dataset.username || '';
 
   if (!app || !quickData || !selectedTeam) {
@@ -329,6 +331,11 @@ function renderQuickEntry() {
     className: 'au-btn',
     text: 'Viewer',
     attributes: { href: './index.php', target: '_blank', rel: 'noopener' }
+  }));
+  links.appendChild(makeElement('a', {
+    className: 'au-btn',
+    text: 'Scoreboards',
+    attributes: { href: scoreboardsUrl }
   }));
   links.appendChild(makeElement('a', {
     className: 'au-btn',

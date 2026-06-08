@@ -1,17 +1,18 @@
 <?php declare(strict_types=1);
 /**
  * Filename: changelog.php
- * Revision : 1.0.0
+ * Revision : 1.1.0
  * Description : Signed-in web viewer for the CVC Scoreboard CHANGELOG.md file.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-02
- * Modified Date : 2026-06-02
+ * Modified Date : 2026-06-08
  * Changelog :
  * 1.0.0 initial release
+ * 1.1.0 Use requireSignedIn (no root-scoreboard gate); Scoreboard button now points to scoreboards.php
  */
 
 require __DIR__ . '/auth.php';
-$user = requireAuth('root', './login.php');
+$user = requireSignedIn('./login.php');
 
 $changelogFile = __DIR__ . '/CHANGELOG.md';
 $markdown = is_file($changelogFile) ? file_get_contents($changelogFile) : '# Changelog' . PHP_EOL . PHP_EOL . 'No changelog entries found.';
@@ -89,7 +90,7 @@ function renderChangelogMarkdown(string $markdown): string
           <p class="updated-at">Source: CHANGELOG.md</p>
         </div>
         <div class="header-actions">
-          <a class="au-btn" href="./enter-scores.php">Scoreboard</a>
+          <a class="au-btn" href="./scoreboards.php">Scoreboards</a>
           <a class="au-btn" href="./logout.php">Sign Out</a>
         </div>
       </header>
