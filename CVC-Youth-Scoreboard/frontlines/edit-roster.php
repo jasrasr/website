@@ -1,13 +1,14 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/edit-roster.php
- * Revision : 1.0.0
+ * Revision : 1.0.1
  * Description : Authenticated editor for Frontlines team leaders, members, gender, and grade.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-09
  * Modified Date : 2026-06-09
  * Changelog :
  * 1.0.0 Initial roster editor
+ * 1.0.1 Changed team sponsor label to plural wording
  */
 
 require __DIR__ . '/../auth.php';
@@ -103,7 +104,7 @@ $roster = readFrontlinesRosterData();
             <div class="roster-editor-heading">
               <h2><?= h($teamName) ?> Team</h2>
               <label>
-                <span>Team Sponsor</span>
+                <span>Team Sponsor(s)</span>
                 <input name="sponsor[<?= h($teamId) ?>]" type="text" value="<?= h((string) ($teamRoster['sponsor'] ?? '')) ?>" />
               </label>
             </div>
