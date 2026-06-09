@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: scoreboards.php
- * Revision : 1.2.0
+ * Revision : 1.3.0
  * Description : Navigation page for all CVC Scoreboard instances the signed-in user can access.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-02
@@ -106,4 +106,3 @@ $roleLabel = ($currentUser['role'] ?? '') === 'admin' ? 'Admin' : 'Scorer';
     </div>
   </body>
 </html>
-

@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/enter-scores-quick.php
- * Revision : 1.2.0
+ * Revision : 1.3.0
  * Description : Compact test score entry page for CVC Frontlines Scoreboard.
  *               Provides fast team selection and quick/manual score updates.
  * Author : Jason Lamb (with help from Codex CLI)
@@ -11,6 +11,7 @@
  * 1.0.0 initial release
  * 1.1.0 Added change-password URL for signed-in users
  * 1.2.0 Added scoreboards-url data attribute for footer Scoreboards link
+ * 1.3.0 Added roster navigation URLs
  */
 
 require __DIR__ . '/../auth.php';
@@ -32,6 +33,8 @@ $user = requireAuth('frontlines', '../login.php');
     data-logout-url="../logout.php"
     data-password-url="../change-password.php?return=frontlines/enter-scores-quick.php"
     data-scoreboards-url="../scoreboards.php"
+    data-roster-url="./teams.php"
+    data-edit-roster-url="./edit-roster.php"
   >
     <div id="quick-entry-app" class="quick-entry-shell">
       <p class="status-text">Loading quick score entry...</p>

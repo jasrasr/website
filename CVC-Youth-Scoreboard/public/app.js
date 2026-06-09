@@ -1,5 +1,5 @@
 // Filename: app.js
-// Revision : 1.18.0
+// Revision : 1.19.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
@@ -26,6 +26,7 @@
 // 1.16.0 Show 1st/2nd/3rd place rank badge on viewer and admin team cards
 // 1.17.0 Add sort-order note to admin (A-Z) and viewer (by score) pages; expose --viewer-rows custom property so responsive breakpoints can override grid row sizing
 // 1.18.0 Show Scoreboards footer button to all signed-in users (was admin-only)
+// 1.19.0 Add optional Frontlines roster links to viewer/admin pages
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -207,6 +208,8 @@ async function renderAdmin(data) {
   const passwordUrl = document.body.dataset.passwordUrl || './change-password.php';
   const changelogUrl = document.body.dataset.changelogUrl || './changelog.php';
   const scoreboardsUrl = document.body.dataset.scoreboardsUrl || './scoreboards.php';
+  const rosterUrl = document.body.dataset.rosterUrl || '';
+  const editRosterUrl = document.body.dataset.editRosterUrl || '';
 
   app.innerHTML = `
     <div class="page-shell">
@@ -232,6 +235,8 @@ async function renderAdmin(data) {
         </form>
         <a class="au-btn" href="enter-scores-quick.php">Quick Entry</a>
         <button class="secondary" id="open-viewer-button" type="button">Open Viewer Page</button>
+        ${rosterUrl ? `<a class="au-btn" href="${rosterUrl}">Roster</a>` : ''}
+        ${editRosterUrl ? `<a class="au-btn" href="${editRosterUrl}">Edit Roster</a>` : ''}
         <button class="warning" id="reset-all-button" type="button">Reset All Teams</button>
         ${role === 'admin' ? `<a class="au-btn" href="${adminUrl}">Manage Users</a>` : ''}
         <a class="au-btn" href="${scoreboardsUrl}">Scoreboards</a>
@@ -300,6 +305,7 @@ async function loadActivityLog() {
 
 function renderViewer(data) {
   const app = document.querySelector('#app');
+  const rosterUrl = document.body.dataset.rosterUrl || '';
   const teamCount = data.teams.length;
   const cols = teamCount <= 4 ? 2 : teamCount <= 6 ? 3 : 4;
   const rows = Math.ceil(teamCount / cols);
@@ -312,6 +318,7 @@ function renderViewer(data) {
         <div class="header-actions">
           <div class="updated-at">Auto-refresh every ${viewerPollIntervalMs / 1000} seconds</div>
           <div class="updated-at">Teams sorted by score (1st, 2nd, 3rd...)</div>
+          ${rosterUrl ? `<a class="au-btn" href="${rosterUrl}">Roster</a>` : ''}
         </div>
       </header>
       <main class="viewer-grid" style="${gridStyle}">
@@ -427,6 +434,10 @@ async function handleAdminAction(event) {
 }
 
 function handleViewerAction(event) {
+  if (event.target.closest('a')) {
+    return;
+  }
+
   const header = event.target.closest('#viewer-admin-header');
   if (!header) {
     return;

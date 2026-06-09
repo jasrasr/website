@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/team_roster.php
- * Revision : 2.0.0
+ * Revision : 2.2.0
  * Description : Frontlines 2026 roster defaults plus JSON/CSV persistence helpers.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-09
@@ -9,6 +9,8 @@
  * Changelog :
  * 1.0.0 Initial roster from Frontlines 2026 team screenshots
  * 2.0.0 Added editable JSON storage and CSV export with gender/grade fields
+ * 2.1.0 Added CSV role column for Leader, Sponsor, and Youth rows
+ * 2.2.0 Reordered CSV columns and added youth gender probability guesses
  */
 
 const FRONTLINES_ROSTER_JSON = __DIR__ . '/data/team-roster.json';
@@ -194,7 +196,7 @@ function writeFrontlinesRosterCsv(array $data): void
         throw new RuntimeException('Unable to write roster CSV.');
     }
 
-    fputcsv($handle, ['member_leader_name', 'team_name', 'gender', 'grade']);
+    fputcsv($handle, frontlinesRosterCsvHeaders());
     foreach (frontlinesRosterCsvRows($data) as $row) {
         fputcsv($handle, $row);
     }
@@ -213,17 +215,215 @@ function frontlinesRosterCsvRows(array $data): array
     $rows = [];
     foreach ($data['teams'] ?? [] as $teamId => $teamRoster) {
         $teamName = $teamNames[$teamId] ?? $teamId;
-        foreach (['leaders', 'members'] as $group) {
-            foreach ($teamRoster[$group] ?? [] as $person) {
-                $rows[] = [
-                    $person['name'] ?? '',
-                    $teamName,
-                    $person['gender'] ?? '',
-                    $person['grade'] ?? '',
-                ];
-            }
+        foreach ($teamRoster['leaders'] ?? [] as $person) {
+            $rows[] = frontlinesRosterCsvRow($person, $teamName, 'Leader');
+        }
+
+        $sponsor = trim((string) ($teamRoster['sponsor'] ?? ''));
+        if ($sponsor !== '') {
+            $rows[] = [$sponsor, $teamName, 'Sponsor', '', '', ''];
+        }
+
+        foreach ($teamRoster['members'] ?? [] as $person) {
+            $rows[] = frontlinesRosterCsvRow($person, $teamName, 'Youth');
         }
     }
 
     return $rows;
+}
+
+function frontlinesRosterCsvHeaders(): array
+{
+    return ['name', 'team_name', 'role', 'gender', 'gender_probability', 'grade'];
+}
+
+function frontlinesRosterCsvRow(array $person, string $teamName, string $role): array
+{
+    $gender = trim((string) ($person['gender'] ?? ''));
+    $probability = '';
+    if ($role === 'Youth' && $gender === '') {
+        [$gender, $probability] = frontlinesGuessGender((string) ($person['name'] ?? ''));
+    }
+
+    return [
+        $person['name'] ?? '',
+        $teamName,
+        $role,
+        $role === 'Youth' ? $gender : '',
+        $role === 'Youth' ? $probability : '',
+        $person['grade'] ?? '',
+    ];
+}
+
+function frontlinesGuessGender(string $name): array
+{
+    $firstName = strtolower((string) preg_replace('/[^A-Za-z].*$/', '', trim($name)));
+    $guesses = [
+        'abbie' => ['F', '95%'],
+        'abby' => ['F', '95%'],
+        'addison' => ['F', '78%'],
+        'addi' => ['F', '85%'],
+        'adele' => ['F', '99%'],
+        'aidan' => ['M', '92%'],
+        'aidrian' => ['M', '80%'],
+        'alden' => ['M', '86%'],
+        'alex' => ['M', '65%'],
+        'alexis' => ['F', '82%'],
+        'amya' => ['F', '92%'],
+        'andrew' => ['M', '99%'],
+        'anthony' => ['M', '99%'],
+        'ariel' => ['F', '72%'],
+        'arianna' => ['F', '99%'],
+        'arlen' => ['M', '72%'],
+        'asher' => ['M', '99%'],
+        'ashton' => ['M', '78%'],
+        'aubrey' => ['F', '86%'],
+        'aubrie' => ['F', '96%'],
+        'ava' => ['F', '99%'],
+        'ayla' => ['F', '99%'],
+        'becket' => ['M', '95%'],
+        'beckit' => ['M', '85%'],
+        'bella' => ['F', '99%'],
+        'bence' => ['M', '95%'],
+        'brennan' => ['M', '94%'],
+        'brandon' => ['M', '99%'],
+        'brayden' => ['M', '98%'],
+        'brianna' => ['F', '99%'],
+        'bryce' => ['M', '95%'],
+        'cadence' => ['F', '78%'],
+        'caleb' => ['M', '99%'],
+        'callan' => ['M', '75%'],
+        'cameron' => ['M', '72%'],
+        'cara' => ['F', '99%'],
+        'carter' => ['M', '94%'],
+        'cassidy' => ['F', '88%'],
+        'catalina' => ['F', '99%'],
+        'chai' => ['M', '60%'],
+        'charlotte' => ['F', '99%'],
+        'chloe' => ['F', '99%'],
+        'christine' => ['F', '99%'],
+        'clark' => ['M', '99%'],
+        'cole' => ['M', '96%'],
+        'colin' => ['M', '99%'],
+        'danica' => ['F', '99%'],
+        'dante' => ['M', '99%'],
+        'darci' => ['F', '96%'],
+        'david' => ['M', '99%'],
+        'derek' => ['M', '99%'],
+        'elijah' => ['M', '99%'],
+        'elise' => ['F', '98%'],
+        'elizabeth' => ['F', '99%'],
+        'elle' => ['F', '98%'],
+        'ellie' => ['F', '99%'],
+        'ella' => ['F', '99%'],
+        'emma' => ['F', '99%'],
+        'eian' => ['M', '90%'],
+        'ethan' => ['M', '99%'],
+        'eva' => ['F', '99%'],
+        'ezekiel' => ['M', '99%'],
+        'ezra' => ['M', '96%'],
+        'faith' => ['F', '99%'],
+        'felicity' => ['F', '99%'],
+        'francesca' => ['F', '99%'],
+        'gage' => ['M', '98%'],
+        'gili' => ['F', '60%'],
+        'grace' => ['F', '99%'],
+        'grady' => ['M', '98%'],
+        'grayson' => ['M', '88%'],
+        'grey' => ['M', '65%'],
+        'haddon' => ['M', '85%'],
+        'halle' => ['F', '94%'],
+        'hannah' => ['F', '99%'],
+        'helena' => ['F', '99%'],
+        'hope' => ['F', '99%'],
+        'hosanna' => ['F', '96%'],
+        'hosea' => ['M', '98%'],
+        'hudson' => ['M', '99%'],
+        'isaac' => ['M', '99%'],
+        'jacob' => ['M', '99%'],
+        'jake' => ['M', '99%'],
+        'james' => ['M', '99%'],
+        'jayda' => ['F', '98%'],
+        'jennifer' => ['F', '99%'],
+        'jeremiah' => ['M', '99%'],
+        'johnny' => ['M', '99%'],
+        'jonas' => ['M', '99%'],
+        'jonathan' => ['M', '99%'],
+        'jordan' => ['M', '65%'],
+        'joseph' => ['M', '99%'],
+        'josiah' => ['M', '99%'],
+        'joy' => ['F', '98%'],
+        'justice' => ['M', '58%'],
+        'joshua' => ['M', '99%'],
+        'julianna' => ['F', '99%'],
+        'kendall' => ['F', '72%'],
+        'kealynn' => ['F', '94%'],
+        'kesi' => ['F', '65%'],
+        'kristian' => ['M', '88%'],
+        'kylie' => ['F', '99%'],
+        'lauren' => ['F', '98%'],
+        'lillian' => ['F', '99%'],
+        'lily' => ['F', '99%'],
+        'lincoln' => ['M', '96%'],
+        'lindsey' => ['F', '84%'],
+        'logan' => ['M', '82%'],
+        'lucas' => ['M', '99%'],
+        'lucia' => ['F', '99%'],
+        'luca' => ['M', '92%'],
+        'lydia' => ['F', '99%'],
+        'maame' => ['F', '80%'],
+        'malachi' => ['M', '99%'],
+        'marco' => ['M', '99%'],
+        'mari' => ['F', '88%'],
+        'maranata' => ['F', '70%'],
+        'mary' => ['F', '99%'],
+        'mercy' => ['F', '92%'],
+        'mia' => ['F', '99%'],
+        'micah' => ['M', '85%'],
+        'misha' => ['M', '55%'],
+        'morayoifeoluwa' => ['F', '55%'],
+        'nana' => ['M', '55%'],
+        'naomi' => ['F', '99%'],
+        'naomie' => ['F', '98%'],
+        'nathan' => ['M', '99%'],
+        'navara' => ['F', '70%'],
+        'niko' => ['M', '95%'],
+        'noah' => ['M', '99%'],
+        'olivia' => ['F', '99%'],
+        'owen' => ['M', '99%'],
+        'pelumi' => ['F', '55%'],
+        'quinn' => ['M', '58%'],
+        'raegan' => ['F', '85%'],
+        'raiden' => ['M', '85%'],
+        'robby' => ['M', '99%'],
+        'robert' => ['M', '99%'],
+        'roman' => ['M', '99%'],
+        'ryan' => ['M', '88%'],
+        'sami' => ['F', '62%'],
+        'samantha' => ['F', '99%'],
+        'sarah' => ['F', '99%'],
+        'savannah' => ['F', '99%'],
+        'sawyer' => ['M', '72%'],
+        'scarlett' => ['F', '99%'],
+        'selah' => ['F', '92%'],
+        'skyasha' => ['F', '70%'],
+        'sophia' => ['F', '99%'],
+        'stella' => ['F', '99%'],
+        'steven' => ['M', '99%'],
+        'timi' => ['M', '60%'],
+        'trevor' => ['M', '99%'],
+        'tristan' => ['M', '86%'],
+        'vanessa' => ['F', '99%'],
+        'veronica' => ['F', '99%'],
+        'vivian' => ['F', '99%'],
+        'violetta' => ['F', '99%'],
+        'vlad' => ['M', '99%'],
+        'wendy' => ['F', '99%'],
+        'wesley' => ['M', '99%'],
+        'weston' => ['M', '99%'],
+        'william' => ['M', '99%'],
+        'zeke' => ['M', '99%'],
+    ];
+
+    return $guesses[$firstName] ?? ['', ''];
 }
