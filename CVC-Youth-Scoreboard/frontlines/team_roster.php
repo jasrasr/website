@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/team_roster.php
- * Revision : 2.2.0
+ * Revision : 2.3.0
  * Description : Frontlines 2026 roster defaults plus JSON/CSV persistence helpers.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-09
@@ -11,14 +11,16 @@
  * 2.0.0 Added editable JSON storage and CSV export with gender/grade fields
  * 2.1.0 Added CSV role column for Leader, Sponsor, and Youth rows
  * 2.2.0 Reordered CSV columns and added youth gender probability guesses
+ * 2.3.0 Load gender/grade defaults from tracked roster CSV import
  */
 
 const FRONTLINES_ROSTER_JSON = __DIR__ . '/data/team-roster.json';
 const FRONTLINES_ROSTER_CSV = __DIR__ . '/data/team-roster.csv';
+const FRONTLINES_ROSTER_DEFAULTS_CSV = __DIR__ . '/team-roster-defaults.csv';
 
 function frontlinesRosterDefaultData(): array
 {
-    return [
+    return frontlinesApplyRosterCsvDefaults([
         'updatedAt' => null,
         'teams' => [
             'team-red' => frontlinesRosterTeam(
@@ -82,7 +84,7 @@ function frontlinesRosterDefaultData(): array
                 'Alysia Hanson'
             ),
         ],
-    ];
+    ]);
 }
 
 function frontlinesRosterTeam(array $leaders, array $members, string $sponsor): array
@@ -154,13 +156,118 @@ function frontlinesNormalizeRosterData(array $data): array
     foreach ($defaults['teams'] as $teamId => $defaultTeam) {
         $team = is_array($data['teams'][$teamId] ?? null) ? $data['teams'][$teamId] : $defaultTeam;
         $normalized['teams'][$teamId] = [
-            'leaders' => frontlinesNormalizeRosterPeople($team['leaders'] ?? []),
-            'members' => frontlinesNormalizeRosterPeople($team['members'] ?? []),
-            'sponsor' => trim((string) ($team['sponsor'] ?? '')),
+            'leaders' => frontlinesMergeRosterPeopleDefaults(
+                frontlinesNormalizeRosterPeople($team['leaders'] ?? []),
+                frontlinesNormalizeRosterPeople($defaultTeam['leaders'] ?? [])
+            ),
+            'members' => frontlinesMergeRosterPeopleDefaults(
+                frontlinesNormalizeRosterPeople($team['members'] ?? []),
+                frontlinesNormalizeRosterPeople($defaultTeam['members'] ?? [])
+            ),
+            'sponsor' => trim((string) ($team['sponsor'] ?? '')) ?: trim((string) ($defaultTeam['sponsor'] ?? '')),
         ];
     }
 
     return $normalized;
+}
+
+function frontlinesApplyRosterCsvDefaults(array $data): array
+{
+    if (!is_file(FRONTLINES_ROSTER_DEFAULTS_CSV)) {
+        return $data;
+    }
+
+    $handle = fopen(FRONTLINES_ROSTER_DEFAULTS_CSV, 'rb');
+    if ($handle === false) {
+        return $data;
+    }
+
+    $headers = fgetcsv($handle);
+    if (!is_array($headers)) {
+        fclose($handle);
+        return $data;
+    }
+
+    $teamIdsByName = [];
+    foreach (scoreboardDefaultData()['teams'] as $team) {
+        $teamIdsByName[$team['name'] . ' Team'] = $team['id'];
+    }
+
+    while (($values = fgetcsv($handle)) !== false) {
+        $row = array_combine($headers, $values);
+        if (!is_array($row)) {
+            continue;
+        }
+
+        $name = trim((string) ($row['name'] ?? ''));
+        $teamId = $teamIdsByName[trim((string) ($row['team_name'] ?? ''))] ?? null;
+        $role = strtolower(trim((string) ($row['role'] ?? '')));
+        if ($name === '' || $teamId === null || !isset($data['teams'][$teamId])) {
+            continue;
+        }
+
+        $gender = frontlinesCleanRosterCsvValue((string) ($row['gender'] ?? ''));
+        $grade = frontlinesCleanRosterCsvValue((string) ($row['grade'] ?? ''));
+
+        if ($role === 'leader') {
+            $data['teams'][$teamId]['leaders'] = frontlinesUpsertRosterPersonDefaults($data['teams'][$teamId]['leaders'], $name, $gender, $grade);
+        } elseif ($role === 'youth') {
+            $data['teams'][$teamId]['members'] = frontlinesUpsertRosterPersonDefaults($data['teams'][$teamId]['members'], $name, $gender, $grade);
+        } elseif ($role === 'sponsor') {
+            $data['teams'][$teamId]['sponsor'] = $name;
+        }
+    }
+
+    fclose($handle);
+    return $data;
+}
+
+function frontlinesUpsertRosterPersonDefaults(array $people, string $name, string $gender, string $grade): array
+{
+    foreach ($people as $index => $person) {
+        if (strcasecmp((string) ($person['name'] ?? ''), $name) !== 0) {
+            continue;
+        }
+
+        $people[$index] = frontlinesRosterPerson(
+            (string) ($person['name'] ?? $name),
+            frontlinesCleanRosterCsvValue((string) ($person['gender'] ?? '')) ?: $gender,
+            frontlinesCleanRosterCsvValue((string) ($person['grade'] ?? '')) ?: $grade
+        );
+        return $people;
+    }
+
+    $people[] = frontlinesRosterPerson($name, $gender, $grade);
+    return $people;
+}
+
+function frontlinesMergeRosterPeopleDefaults(array $people, array $defaults): array
+{
+    $defaultsByName = [];
+    foreach ($defaults as $person) {
+        $defaultsByName[strtolower((string) ($person['name'] ?? ''))] = $person;
+    }
+
+    foreach ($people as $index => $person) {
+        $default = $defaultsByName[strtolower((string) ($person['name'] ?? ''))] ?? null;
+        if ($default === null) {
+            continue;
+        }
+
+        $people[$index] = frontlinesRosterPerson(
+            (string) ($person['name'] ?? ''),
+            frontlinesCleanRosterCsvValue((string) ($person['gender'] ?? '')) ?: frontlinesCleanRosterCsvValue((string) ($default['gender'] ?? '')),
+            frontlinesCleanRosterCsvValue((string) ($person['grade'] ?? '')) ?: frontlinesCleanRosterCsvValue((string) ($default['grade'] ?? ''))
+        );
+    }
+
+    return $people;
+}
+
+function frontlinesCleanRosterCsvValue(string $value): string
+{
+    $value = trim($value);
+    return strtoupper($value) === 'N/A' ? '' : $value;
 }
 
 function frontlinesNormalizeRosterPeople(array $people): array

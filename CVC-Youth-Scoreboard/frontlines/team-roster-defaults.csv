@@ -1,0 +1,250 @@
+name,team_name,role,gender,gender_probability,grade
+Jon Sutton,Red Team,Leader,N/A,N/A,N/A
+Kris Sutton,Red Team,Leader,N/A,N/A,N/A
+Jordyn Hauser,Red Team,Leader,N/A,N/A,N/A
+Skyview Staff,Red Team,Sponsor,N/A,N/A,N/A
+Hope Sherman,Red Team,Youth,F,,
+Aidan Winkler,Red Team,Youth,M,,HS
+Adele Mansfield,Red Team,Youth,F,,HS
+Eva Carson,Red Team,Youth,F,,
+Alden Brinkley,Red Team,Youth,F,,
+Jacob Kasmer,Red Team,Youth,M,,
+Grey Hileman,Red Team,Youth,M,65%,
+Nathan Bakai,Red Team,Youth,M,,
+Ava Chrisopulos,Red Team,Youth,F,,
+Niko Djordjevich,Red Team,Youth,M,,
+Joy Heindel,Red Team,Youth,F,,
+Ayla Londrico,Red Team,Youth,F,99%,
+Mary Ella Sizemore,Red Team,Youth,F,,
+Tristan Szeszak,Red Team,Youth,M,,
+Arlen Manduzic,Red Team,Youth,M,,
+Stella Springer,Red Team,Youth,F,,
+Jacob Sizemore,Red Team,Youth,M,,9
+Jason Lamb,Maroon Team,Leader,N/A,N/A,N/A
+Cort Cable,Maroon Team,Leader,N/A,N/A,N/A
+Ryan Dale,Maroon Team,Leader,N/A,N/A,N/A
+Skyview Staff,Maroon Team,Sponsor,N/A,N/A,N/A
+Jake Archaki,Maroon Team,Youth,M,,HS
+Owen Jenks,Maroon Team,Youth,M,,
+Charlotte Eimers,Maroon Team,Youth,F,,
+Grace Johnson,Maroon Team,Youth,F,,
+Aidrian Stevens,Maroon Team,Youth,M,,
+Faith Miliano,Maroon Team,Youth,F,,
+James Kutsar,Maroon Team,Youth,M,,
+Maame Asafu Adjaye,Maroon Team,Youth,F,80%,
+Francesca Cruse,Maroon Team,Youth,F,,
+Andrew Hanson,Maroon Team,Youth,M,,
+Robert Koenig,Maroon Team,Youth,M,,
+Ryan Zerminski,Maroon Team,Youth,M,,
+Elise Clement,Maroon Team,Youth,F,,
+Brennan Render,Maroon Team,Youth,M,94%,
+Vanessa Klinesmith,Maroon Team,Youth,F,,
+Jillian Bolczak,Maroon Team,Youth,F,,
+Julianna Hernandez,Maroon Team,Youth,F,,
+Dave Gutting,Orange Team,Leader,N/A,N/A,N/A
+Brad Luczywo,Orange Team,Leader,N/A,N/A,N/A
+Josh Hudak,Orange Team,Leader,N/A,N/A,N/A
+Skyview Staff,Orange Team,Sponsor,N/A,N/A,N/A
+Elijah Zaccardelli,Orange Team,Youth,M,99%,
+Alex Lamb,Orange Team,Youth,M,65%,12
+Logan Valenti,Orange Team,Youth,M,82%,GRAD
+Cadence Kasmer,Orange Team,Youth,F,78%,
+Aubrie Hamilton,Orange Team,Youth,F,96%,
+Ella Rowles,Orange Team,Youth,F,99%,
+Colin Bay,Orange Team,Youth,M,99%,9
+Grace Heindel,Orange Team,Youth,F,99%,
+Wesley Phillips,Orange Team,Youth,M,99%,
+Helena Zelenka,Orange Team,Youth,F,99%,
+Andrew Nary,Orange Team,Youth,M,99%,
+Elizabeth Poelking,Orange Team,Youth,F,99%,
+Ezra Howard,Orange Team,Youth,M,96%,
+Lily Smith,Orange Team,Youth,F,99%,
+Nathan Walter,Orange Team,Youth,M,99%,
+Charlotte Intihar,Orange Team,Youth,F,99%,
+Kyle Gustafson,Yellow Team,Leader,N/A,N/A,N/A
+Monica Hatton,Yellow Team,Leader,N/A,N/A,N/A
+Kaylee Rauch,Yellow Team,Leader,N/A,N/A,N/A
+Skyview Staff,Yellow Team,Sponsor,N/A,N/A,N/A
+Malachi Lafontaine,Yellow Team,Youth,M,99%,HS
+Bella McKeever,Yellow Team,Youth,F,99%,
+Raegan Smith,Yellow Team,Youth,F,85%,
+Skyasha Riggins,Yellow Team,Youth,F,70%,
+Jennifer Bolczak,Yellow Team,Youth,F,99%,
+Sophia Hetsler,Yellow Team,Youth,F,99%,
+Catalina Serrano,Yellow Team,Youth,F,99%,
+Jonas Tretter,Yellow Team,Youth,M,99%,
+Micah Zaccardelli,Yellow Team,Youth,M,85%,
+Naomi Knapik,Yellow Team,Youth,F,99%,
+Samantha Lavinder,Yellow Team,Youth,F,99%,
+Arianna Szesak,Yellow Team,Youth,F,99%,
+Bence Hornyak,Yellow Team,Youth,M,95%,
+Kealynn Trimble,Yellow Team,Youth,F,94%,
+Joshua Tinter,Yellow Team,Youth,M,99%,
+Isaac Hearst,Yellow Team,Youth,M,99%,
+Jonathan Sizemore,Yellow Team,Youth,M,99%,9
+Joelle Cole,Light Green Team,Leader,N/A,N/A,N/A
+Dan Sahli,Light Green Team,Leader,N/A,N/A,N/A
+Inna Cherevko,Light Green Team,Leader,N/A,N/A,N/A
+Angelica Prindle,Light Green Team,Sponsor,N/A,N/A,N/A
+Chai Beard,Light Green Team,Youth,M,60%,
+C.J Fitzgerald,Light Green Team,Youth,,,
+Lydia Poelking,Light Green Team,Youth,F,99%,
+Gage Defendorf,Light Green Team,Youth,M,98%,9
+Christine Brinkley,Light Green Team,Youth,F,99%,
+Andrew Zerminski,Light Green Team,Youth,M,99%,
+Lily Hearst,Light Green Team,Youth,F,99%,
+Kesi Van De Pitte,Light Green Team,Youth,F,65%,
+Jeremiah Zaccardelli,Light Green Team,Youth,M,99%,9
+Ava Taylor,Light Green Team,Youth,F,99%,
+Lincoln Misch,Light Green Team,Youth,M,96%,
+Hannah Luczywo,Light Green Team,Youth,F,99%,
+Cameron Campo,Light Green Team,Youth,M,72%,
+Hannah Gosnell,Light Green Team,Youth,F,99%,
+Savannah Cruse,Light Green Team,Youth,F,99%,
+Brandon Lockhart,Light Green Team,Youth,M,99%,
+Lucia Hallier,Light Green Team,Youth,F,99%,
+Hannah Defendorf,Dark Green Team,Leader,N/A,N/A,N/A
+Aaron Archacki,Dark Green Team,Leader,N/A,N/A,N/A
+Simonne Benoit,Dark Green Team,Leader,N/A,N/A,N/A
+Vinny Malone,Dark Green Team,Sponsor,N/A,N/A,N/A
+Dante Arena,Dark Green Team,Youth,M,99%,
+Alexis Brody,Dark Green Team,Youth,F,82%,
+Johnny Zacardelli,Dark Green Team,Youth,M,99%,
+Halle Luczywo,Dark Green Team,Youth,F,94%,HS
+Wendy Sutton,Dark Green Team,Youth,F,99%,
+Brayden Howard,Dark Green Team,Youth,M,98%,
+Veronica Cimino,Dark Green Team,Youth,F,99%,
+Pelumi Lawal,Dark Green Team,Youth,F,55%,
+Aubrey Render,Dark Green Team,Youth,F,86%,
+Amya Thomas,Dark Green Team,Youth,F,92%,
+Noah Brown,Dark Green Team,Youth,M,99%,
+Mercy Beard,Dark Green Team,Youth,F,92%,
+Noah Brown,Dark Green Team,Youth,M,99%,
+Hannah Busch,Dark Green Team,Youth,F,99%,
+Caleb Duncan,Dark Green Team,Youth,M,99%,
+Nana Kwasi Asafu Adjaye,Dark Green Team,Youth,M,55%,
+David Powell,Dark Green Team,Youth,M,99%,9
+Diane Archaki,Light Blue Team,Leader,N/A,N/A,N/A
+Matt Howard,Light Blue Team,Leader,N/A,N/A,N/A
+Jenny Hayes,Light Blue Team,Leader,N/A,N/A,N/A
+Paula Londrico,Light Blue Team,Sponsor,N/A,N/A,N/A
+Josiah Didea,Light Blue Team,Youth,M,99%,12
+Sophia Siley,Light Blue Team,Youth,F,99%,
+Sarah Poelking,Light Blue Team,Youth,F,99%,
+Addi Fankhauser,Light Blue Team,Youth,F,85%,
+Sophia Cozmyk,Light Blue Team,Youth,F,99%,
+Grayson Kieschnik,Light Blue Team,Youth,M,88%,9
+Chloe Cutright,Light Blue Team,Youth,F,99%,9
+Sawyer Schneider,Light Blue Team,Youth,M,72%,9
+Abbie Carson,Light Blue Team,Youth,F,95%,
+Zeke Siley,Light Blue Team,Youth,M,99%,
+Nathan Mansfield,Light Blue Team,Youth,M,99%,
+Lily Rutti,Light Blue Team,Youth,F,99%,
+Grady Hoover,Light Blue Team,Youth,M,98%,
+Addison Frey,Light Blue Team,Youth,F,78%,
+Andrew McGregor,Light Blue Team,Youth,M,99%,
+Gili Kawczak,Light Blue Team,Youth,F,60%,
+Isaac Lockhart,Light Blue Team,Youth,M,99%,
+Jeanette Cable,Royal Blue Team,Leader,N/A,N/A,N/A
+Viveka Jenks,Royal Blue Team,Leader,N/A,N/A,N/A
+Sam Londrico,Royal Blue Team,Leader,N/A,N/A,N/A
+Talia Cole,Royal Blue Team,Sponsor,N/A,N/A,N/A
+Cole Hileman,Royal Blue Team,Youth,M,96%,12
+Mari Hopkins,Royal Blue Team,Youth,F,88%,HS
+Weston Kiner,Royal Blue Team,Youth,M,99%,
+Stella Siley,Royal Blue Team,Youth,F,99%,
+James Carson,Royal Blue Team,Youth,M,99%,
+Brianna Steward,Royal Blue Team,Youth,F,99%,
+Cassidy Rubin,Royal Blue Team,Youth,F,88%,
+Joseph Bolczak,Royal Blue Team,Youth,M,99%,
+Lauren Sahli,Royal Blue Team,Youth,F,98%,
+Danica DAmico,Royal Blue Team,Youth,F,99%,
+Steven Castro,Royal Blue Team,Youth,M,99%,
+Jordan Hamilton,Royal Blue Team,Youth,M,65%,
+Olivia Cole,Royal Blue Team,Youth,F,99%,
+Ariel Piasecki,Royal Blue Team,Youth,F,72%,
+Daniel Bakai,Royal Blue Team,Youth,,,
+Bobbie Kawczak,Royal Blue Team,Youth,,,
+Jayda Boone,Royal Blue Team,Youth,F,98%,
+Vince Pozar,Navy Team,Leader,N/A,N/A,N/A
+Emma Hamilton,Navy Team,Leader,N/A,N/A,N/A
+Andy Bay,Navy Team,Leader,N/A,N/A,N/A
+Marcus Cutright,Navy Team,Sponsor,N/A,N/A,N/A
+Bryce Defendorf,Navy Team,Youth,M,95%,HS
+Naomie Siley,Navy Team,Youth,F,98%,
+Maranata Gomez,Navy Team,Youth,F,70%,
+Addi Tretter,Navy Team,Youth,F,85%,
+Elizabeth Chepelev,Navy Team,Youth,F,99%,
+Trevor Riha,Navy Team,Youth,M,99%,9
+Sophia Lantvit,Navy Team,Youth,F,99%,
+Justice Sexton,Navy Team,Youth,M,58%,
+Selah Scialabba,Navy Team,Youth,F,92%,
+Vlad Piasecki,Navy Team,Youth,M,99%,MS
+Lindsey Fitzgerald,Navy Team,Youth,F,84%,
+Stella Randels,Navy Team,Youth,F,99%,
+Ethan Duncan,Navy Team,Youth,M,99%,9
+Lillian Kawczak,Navy Team,Youth,F,99%,
+Elijah Lantvit,Navy Team,Youth,M,99%,
+Quinn Patton,Navy Team,Youth,M,58%,
+Kristian Van De Pitte,Navy Team,Youth,M,88%,
+Fred Defendorf,Pink Team,Leader,N/A,N/A,N/A
+Rene Piasecki,Pink Team,Leader,N/A,N/A,N/A
+Jeanette Fitzgerald,Pink Team,Leader,N/A,N/A,N/A
+Mary Shreve/Grace Valenti,Pink Team,Sponsor,N/A,N/A,N/A
+Clark Defendorf,Pink Team,Youth,M,99%,HS
+Abby Sutton,Pink Team,Youth,F,95%,
+Aubrey Garcia,Pink Team,Youth,F,86%,
+Logan Gray,Pink Team,Youth,M,82%,
+Hosea Cole,Pink Team,Youth,M,98%,9
+Ava Busch,Pink Team,Youth,F,99%,
+Anthony Knapik,Pink Team,Youth,M,99%,
+Eian Sykes,Pink Team,Youth,M,90%,
+Kendall Lavinder,Pink Team,Youth,F,72%,
+Luca Tinter,Pink Team,Youth,M,92%,
+Carter Edlind,Pink Team,Youth,M,94%,
+Ava Hannah,Pink Team,Youth,F,99%,
+Josiah Wolfe,Pink Team,Youth,M,99%,
+William Hanson,Pink Team,Youth,M,99%,9
+Ashton Frey,Pink Team,Youth,M,78%,
+Joy Wolfenbarger,Pink Team,Youth,F,98%,
+Amy Gustafson,Purple Team,Leader,N/A,N/A,N/A
+Julie Bay,Purple Team,Leader,N/A,N/A,N/A
+Traci Schimpf,Purple Team,Leader,N/A,N/A,N/A
+John Chrisopulos/Jeff Eicher,Purple Team,Sponsor,N/A,N/A,N/A
+Nathan Sutton,Purple Team,Youth,M,99%,GRAD
+Scarlett Sherman,Purple Team,Youth,F,99%,
+Navara Trimble,Purple Team,Youth,F,70%,
+Ava Weatherbie,Purple Team,Youth,F,99%,
+Hudson Defendorf,Purple Team,Youth,M,99%,6
+Misha Tinter,Purple Team,Youth,M,55%,
+Beckit Cole,Purple Team,Youth,M,85%,12
+Haddon Elvington,Purple Team,Youth,M,85%,
+Kylie Perrico,Purple Team,Youth,F,99%,
+Felicity Kawczak,Purple Team,Youth,F,99%,
+Lucas Phillips,Purple Team,Youth,M,99%,
+Derek Keller,Purple Team,Youth,M,99%,
+Sami Eimers,Purple Team,Youth,F,62%,
+Violetta Meuti,Purple Team,Youth,F,99%,
+Cara Cole,Purple Team,Youth,F,99%,
+Robby Smith,Purple Team,Youth,M,99%,
+Linda Valenti,Smoke Team,Leader,N/A,N/A,N/A
+Daniel Diaz,Smoke Team,Leader,N/A,N/A,N/A
+Kim Brody,Smoke Team,Leader,N/A,N/A,N/A
+Alysia Hanson,Smoke Team,Sponsor,N/A,N/A,N/A
+Morayoifeoluwa Oguntoyinbo,Smoke Team,Youth,F,55%,
+Asher Beard,Smoke Team,Youth,M,99%,
+Mia Londrico,Smoke Team,Youth,F,99%,
+Roman Bossman,Smoke Team,Youth,M,99%,
+Elle Hileman,Smoke Team,Youth,F,98%,
+Marco Gillota,Smoke Team,Youth,M,99%,
+Ellie Peak,Smoke Team,Youth,F,99%,
+Francesca Tinter,Smoke Team,Youth,F,99%,
+Vivian Rowell,Smoke Team,Youth,F,99%,
+Raiden Ballinger,Smoke Team,Youth,M,85%,
+Timi Lawal,Smoke Team,Youth,M,60%,
+Eli Graham,Smoke Team,Youth,,,
+Callan Stevens,Smoke Team,Youth,M,75%,
+Hosanna Beard,Smoke Team,Youth,F,96%,
+Darci Duncan,Smoke Team,Youth,F,96%,
+Elizabeth Seiter,Smoke Team,Youth,F,99%,
+Emma Jacobson,Smoke Team,Youth,F,99%,
