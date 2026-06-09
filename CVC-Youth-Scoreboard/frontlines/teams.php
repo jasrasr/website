@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/teams.php
- * Revision : 1.2.0
+ * Revision : 1.3.0
  * Description : Public Frontlines team roster page with leaders, members, and sponsors.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-09
@@ -10,6 +10,7 @@
  * 1.0.0 Initial Frontlines-only team roster page
  * 1.1.0 Load editable roster data and link CSV export
  * 1.2.0 Added authenticated roster editor link
+ * 1.3.0 Randomized team card order and added intro blurb
  */
 
 require __DIR__ . '/scoreboard_lib.php';
@@ -18,6 +19,7 @@ require __DIR__ . '/team_roster.php';
 $scoreboard = readScoreboardData();
 $roster = readFrontlinesRosterData();
 $teams = $scoreboard['teams'] ?? scoreboardDefaultData()['teams'];
+shuffle($teams);
 
 function h(string $value): string
 {
@@ -47,6 +49,10 @@ function h(string $value): string
           <a class="au-btn" href="./enter-scores.php">Score Entry</a>
         </div>
       </header>
+
+      <section class="au-section">
+        <p class="status-text">Teams are shown in a fresh random order each time this roster loads.</p>
+      </section>
 
       <main class="roster-grid">
         <?php foreach ($teams as $team): ?>
