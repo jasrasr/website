@@ -10,6 +10,7 @@
  * 1.0.0 initial release
  * 1.1.0 Opened to any signed-in user; filters listed instances by user's scoreboard access
  * 1.2.0 Moved header actions to a bottom footer bar; added Change Password link
+ * 1.3.0 Added Frontlines team roster link
  */
 
 require __DIR__ . '/auth.php';
@@ -22,6 +23,7 @@ $scoreboards = [
         'viewer' => './index.php',
         'admin' => './enter-scores.php',
         'quick' => './enter-scores-quick.php',
+        'teams' => null,
     ],
     [
         'id' => 'collide',
@@ -29,6 +31,7 @@ $scoreboards = [
         'viewer' => './collide/index.php',
         'admin' => './collide/enter-scores.php',
         'quick' => './collide/enter-scores-quick.php',
+        'teams' => null,
     ],
     [
         'id' => 'youth',
@@ -36,6 +39,7 @@ $scoreboards = [
         'viewer' => './youth/index.php',
         'admin' => './youth/enter-scores.php',
         'quick' => './youth/enter-scores-quick.php',
+        'teams' => null,
     ],
     [
         'id' => 'frontlines',
@@ -43,6 +47,7 @@ $scoreboards = [
         'viewer' => './frontlines/index.php',
         'admin' => './frontlines/enter-scores.php',
         'quick' => './frontlines/enter-scores-quick.php',
+        'teams' => './frontlines/teams.php',
     ],
 ];
 
@@ -84,6 +89,9 @@ $roleLabel = ($currentUser['role'] ?? '') === 'admin' ? 'Admin' : 'Scorer';
                 <a class="au-btn" href="<?= htmlspecialchars($scoreboard['viewer']) ?>">Viewer</a>
                 <a class="au-btn" href="<?= htmlspecialchars($scoreboard['admin']) ?>">Full Admin</a>
                 <a class="au-btn" href="<?= htmlspecialchars($scoreboard['quick']) ?>">Quick Entry</a>
+                <?php if (!empty($scoreboard['teams'])): ?>
+                  <a class="au-btn" href="<?= htmlspecialchars($scoreboard['teams']) ?>">Teams</a>
+                <?php endif; ?>
               </div>
             </section>
           <?php endforeach; ?>
