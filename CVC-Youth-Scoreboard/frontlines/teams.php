@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/teams.php
- * Revision : 1.3.2
+ * Revision : 1.3.3
  * Description : Public Frontlines team roster page with leaders, members, and sponsors.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-09
@@ -13,6 +13,7 @@
  * 1.3.0 Randomized team card order and added intro blurb
  * 1.3.1 Moved random-order blurb into roster header copy
  * 1.3.2 Show roster header action buttons only for signed-in admins
+ * 1.3.3 Keep public Scoreboard link visible while admin links stay gated
  */
 
 require __DIR__ . '/../auth.php';
@@ -48,14 +49,14 @@ function h(string $value): string
           <p class="updated-at">Roster for the Frontlines scoreboard teams.</p>
           <p class="updated-at">Teams are shown in a fresh random order each time this roster loads.</p>
         </div>
-        <?php if ($isAdmin): ?>
-          <div class="header-actions">
-            <a class="au-btn" href="./index.php">Scoreboard</a>
+        <div class="header-actions">
+          <a class="au-btn" href="./index.php">Scoreboard</a>
+          <?php if ($isAdmin): ?>
             <a class="au-btn" href="./team-roster.csv.php">CSV</a>
             <a class="au-btn" href="./edit-roster.php">Edit Roster</a>
             <a class="au-btn" href="./enter-scores.php">Score Entry</a>
-          </div>
-        <?php endif; ?>
+          <?php endif; ?>
+        </div>
       </header>
 
       <main class="roster-grid">
