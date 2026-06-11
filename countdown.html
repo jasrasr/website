@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Count to Integration with Cooper</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #1f2937, #020617);
+      color: #f8fafc;
+      font-family: Consolas, "Courier New", monospace;
+      text-align: center;
+    }
+
+    .wrap {
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 5rem);
+      margin-bottom: 2rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    #countdown {
+      font-size: clamp(3rem, 12vw, 12rem);
+      font-weight: 900;
+      line-height: 1;
+      text-shadow: 0 0 25px rgba(56, 189, 248, 0.65);
+    }
+
+    .labels {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-top: 1rem;
+      font-size: clamp(0.8rem, 2vw, 1.5rem);
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+
+    .target {
+      margin-top: 2rem;
+      font-size: 1.1rem;
+      color: #cbd5e1;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>Count to Integration with Cooper</h1>
+
+    <div id="countdown">Loading...</div>
+
+    <div class="labels">
+      <div>Days</div>
+      <div>Hours</div>
+      <div>Minutes</div>
+      <div>Seconds</div>
+    </div>
+
+    <div class="target">Target: August 10, 2026 at 8:00 AM</div>
+  </main>
+
+  <script>
+    const targetDate = new Date("August 10, 2026 08:00:00").getTime();
+
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const distance = targetDate - now;
+
+      if (distance <= 0) {
+        document.getElementById("countdown").textContent = "00 : 00 : 00 : 00";
+        document.querySelector(".target").textContent = "Integration time has arrived.";
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((distance / (1000 * 60)) % 60);
+      const seconds = Math.floor((distance / 1000) % 60);
+
+      document.getElementById("countdown").textContent =
+        `${String(days).padStart(2, "0")} : ` +
+        `${String(hours).padStart(2, "0")} : ` +
+        `${String(minutes).padStart(2, "0")} : ` +
+        `${String(seconds).padStart(2, "0")}`;
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  </script>
+</body>
+</html>
