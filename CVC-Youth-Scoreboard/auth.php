@@ -1,14 +1,14 @@
 <?php declare(strict_types=1);
 /**
  * Filename: auth.php
- * Revision : 1.5.0
+ * Revision : 1.6.0
  * Description : Shared authentication library for CVC Scoreboard.
  *               Handles sessions, user management, login/logout, and audit logging.
  *               Users stored in data/users.json with bcrypt-hashed passwords.
  *               Default users auto-created on first load.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-13
- * Modified Date : 2026-06-08
+ * Modified Date : 2026-06-12
  * Changelog :
  * 1.0.0 Initial release; per-user auth, roles, scoreboard access, audit logging
  * 1.1.0 Replaced hardcoded temp passwords with random generation; writes first-run-credentials.txt
@@ -16,6 +16,7 @@
  * 1.3.0 Added signed-in user password change helper
  * 1.4.0 Restored random first-run passwords so public source does not define usable defaults
  * 1.5.0 Added requireSignedIn helper for pages open to any authenticated user
+ * 1.6.0 Track modified_at on users; requireAuth redirects to scoreboards.php on missing access
  */
 
 const USERS_FILE     = __DIR__ . '/data/users.json';
@@ -59,8 +60,9 @@ function requireAuth(string $scoreboardId, string $loginUrl): array
     }
 
     if (!in_array($scoreboardId, $user['scoreboards'] ?? [], true)) {
-        http_response_code(403);
-        echo authErrorPage("You do not have access to this scoreboard.", $loginUrl);
+        $base            = rtrim(str_replace('\\', '/', dirname($loginUrl)), '/');
+        $scoreboardsUrl  = ($base === '' || $base === '.') ? 'scoreboards.php' : $base . '/scoreboards.php';
+        header("Location: {$scoreboardsUrl}?denied=" . urlencode($scoreboardId));
         exit;
     }
 

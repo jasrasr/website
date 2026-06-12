@@ -1,16 +1,17 @@
 <?php declare(strict_types=1);
 /**
  * Filename: scoreboards.php
- * Revision : 1.3.0
+ * Revision : 1.4.0
  * Description : Navigation page for all CVC Scoreboard instances the signed-in user can access.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-02
- * Modified Date : 2026-06-08
+ * Modified Date : 2026-06-12
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Opened to any signed-in user; filters listed instances by user's scoreboard access
  * 1.2.0 Moved header actions to a bottom footer bar; added Change Password link
  * 1.3.0 Added Frontlines team roster link
+ * 1.4.0 Show notice when redirected here after attempting an off-limits scoreboard
  */
 
 require __DIR__ . '/auth.php';
@@ -57,6 +58,17 @@ $visibleScoreboards = array_values(array_filter(
     static fn(array $sb): bool => in_array($sb['id'], $userScoreboards, true)
 ));
 $roleLabel = ($currentUser['role'] ?? '') === 'admin' ? 'Admin' : 'Scorer';
+
+$deniedScoreboard = '';
+if (isset($_GET['denied'])) {
+    $candidate = strtolower(trim((string) $_GET['denied']));
+    foreach ($scoreboards as $sb) {
+        if ($sb['id'] === $candidate) {
+            $deniedScoreboard = $sb['name'];
+            break;
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -75,6 +87,12 @@ $roleLabel = ($currentUser['role'] ?? '') === 'admin' ? 'Admin' : 'Scorer';
           <p class="updated-at">Signed in as <?= htmlspecialchars($currentUser['username']) ?></p>
         </div>
       </header>
+
+      <?php if ($deniedScoreboard !== ''): ?>
+        <p class="status-text" style="color:var(--warning)">
+          You do not have access to the <?= htmlspecialchars($deniedScoreboard) ?> scoreboard. Pick one of yours below.
+        </p>
+      <?php endif; ?>
 
       <main class="team-grid">
         <?php if (empty($visibleScoreboards)): ?>
