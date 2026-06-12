@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/teams.php
- * Revision : 1.4.0
+ * Revision : 1.5.0
  * Description : Public Frontlines team roster page with leaders, members, and sponsors.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-09
@@ -15,6 +15,7 @@
  * 1.3.2 Show roster header action buttons only for signed-in admins
  * 1.3.3 Keep public Scoreboard link visible while admin links stay gated
  * 1.4.0 Append gender/grade suffix to team member rows (e.g., "Alex Lamb - M/12")
+ * 1.5.0 Show roster last-updated timestamp in header
  */
 
 require __DIR__ . '/../auth.php';
@@ -27,6 +28,15 @@ $scoreboard = readScoreboardData();
 $roster = readFrontlinesRosterData();
 $teams = $scoreboard['teams'] ?? scoreboardDefaultData()['teams'];
 shuffle($teams);
+
+$rosterUpdatedAt = (string) ($roster['updatedAt'] ?? '');
+$rosterUpdatedDisplay = '';
+if ($rosterUpdatedAt !== '') {
+    $ts = strtotime($rosterUpdatedAt);
+    if ($ts !== false) {
+        $rosterUpdatedDisplay = date('M j, Y \a\t g:i A', $ts);
+    }
+}
 
 function h(string $value): string
 {
@@ -48,6 +58,9 @@ function h(string $value): string
           <p>Frontlines 2026</p>
           <h1>Team Leaders &amp; Members</h1>
           <p class="updated-at">Roster for the Frontlines scoreboard teams.</p>
+          <?php if ($rosterUpdatedDisplay !== ''): ?>
+            <p class="updated-at">Roster last updated: <?= h($rosterUpdatedDisplay) ?></p>
+          <?php endif; ?>
           <p class="updated-at">Teams are shown in a fresh random order each time this roster loads.</p>
         </div>
         <div class="header-actions">
