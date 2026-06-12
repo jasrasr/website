@@ -1,101 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Count to Integration with Cooper</title>
-  <style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Count to Integration with Cooper</title>
+
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    width: 100%;
+    min-height: 100dvh;
+    background: radial-gradient(circle at top, #1f2937, #020617);
+    color: #f8fafc;
+    font-family: Consolas, "Courier New", monospace;
+    overflow-x: hidden;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  main {
+    width: min(96vw, 1800px);
+    padding: clamp(1rem, 3vw, 4rem);
+    text-align: center;
+  }
+
+  h1 {
+    margin: 0 0 clamp(2rem, 5vh, 5rem);
+    font-size: clamp(2rem, 5vw, 5.5rem);
+    line-height: 1.15;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .countdown {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(1rem, 3vw, 4rem);
+    align-items: end;
+  }
+
+  .value {
+    font-size: clamp(4rem, 11vw, 13rem);
+    font-weight: 900;
+    line-height: 0.9;
+    text-shadow: 0 0 28px rgba(56, 189, 248, 0.7);
+    white-space: nowrap;
+  }
+
+  .label {
+    margin-top: 1rem;
+    font-size: clamp(0.8rem, 1.4vw, 1.7rem);
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+  }
+
+  .target {
+    margin-top: clamp(2rem, 5vh, 4rem);
+    font-size: clamp(1rem, 2vw, 2rem);
+    color: #cbd5e1;
+  }
+
+  @media (orientation: portrait) {
     body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
       align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle at top, #1f2937, #020617);
-      color: #f8fafc;
-      font-family: Consolas, "Courier New", monospace;
-      text-align: center;
     }
 
-    .wrap {
-      padding: 2rem;
+    main {
+      width: 100vw;
+      padding: 1.5rem;
     }
 
     h1 {
-      font-size: clamp(2rem, 5vw, 5rem);
-      margin-bottom: 2rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      font-size: clamp(2rem, 8vw, 4rem);
+      margin-bottom: 3rem;
     }
 
-    #countdown {
-      font-size: clamp(3rem, 12vw, 12rem);
-      font-weight: 900;
-      line-height: 1;
-      text-shadow: 0 0 25px rgba(56, 189, 248, 0.65);
+    .countdown {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2.5rem 1.5rem;
     }
 
-    .labels {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1rem;
-      margin-top: 1rem;
-      font-size: clamp(0.8rem, 2vw, 1.5rem);
-      color: #94a3b8;
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
+    .value {
+      font-size: clamp(4rem, 20vw, 7rem);
+    }
+
+    .label {
+      font-size: clamp(0.8rem, 3vw, 1.2rem);
+      letter-spacing: 0.18em;
     }
 
     .target {
-      margin-top: 2rem;
-      font-size: 1.1rem;
-      color: #cbd5e1;
+      font-size: clamp(1rem, 4vw, 1.4rem);
+      line-height: 1.4;
     }
-  </style>
+  }
+
+  @media (max-height: 500px) and (orientation: landscape) {
+    h1 {
+      font-size: clamp(1.5rem, 4vw, 3rem);
+      margin-bottom: 1.5rem;
+    }
+
+    .value {
+      font-size: clamp(3rem, 9vw, 7rem);
+    }
+
+    .target {
+      margin-top: 1.5rem;
+      font-size: 1rem;
+    }
+  }
+</style>
 </head>
+
 <body>
-  <main class="wrap">
-    <h1>Count to Integration with Cooper</h1>
+<main>
+  <h1>Count to Integration with Cooper</h1>
 
-    <div id="countdown">Loading...</div>
-
-    <div class="labels">
-      <div>Days</div>
-      <div>Hours</div>
-      <div>Minutes</div>
-      <div>Seconds</div>
+  <section class="countdown">
+    <div class="unit">
+      <div id="days" class="value">00</div>
+      <div class="label">Days</div>
     </div>
 
-    <div class="target">Target: August 10, 2026 at 8:00 AM</div>
-  </main>
+    <div class="unit">
+      <div id="hours" class="value">00</div>
+      <div class="label">Hours</div>
+    </div>
 
-  <script>
-    const targetDate = new Date("August 10, 2026 08:00:00").getTime();
+    <div class="unit">
+      <div id="minutes" class="value">00</div>
+      <div class="label">Minutes</div>
+    </div>
 
-    function updateCountdown() {
-      const now = new Date().getTime();
-      const distance = targetDate - now;
+    <div class="unit">
+      <div id="seconds" class="value">00</div>
+      <div class="label">Seconds</div>
+    </div>
+  </section>
 
-      if (distance <= 0) {
-        document.getElementById("countdown").textContent = "00 : 00 : 00 : 00";
-        document.querySelector(".target").textContent = "Integration time has arrived.";
-        return;
-      }
+  <div class="target">Target: August 10, 2026 at 8:00 AM</div>
+</main>
 
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((distance / (1000 * 60)) % 60);
-      const seconds = Math.floor((distance / 1000) % 60);
+<script>
+  const targetDate = new Date("August 10, 2026 08:00:00").getTime();
 
-      document.getElementById("countdown").textContent =
-        `${String(days).padStart(2, "0")} : ` +
-        `${String(hours).padStart(2, "0")} : ` +
-        `${String(minutes).padStart(2, "0")} : ` +
-        `${String(seconds).padStart(2, "0")}`;
+  function updateCountdown() {
+    const now = Date.now();
+    const distance = targetDate - now;
+
+    if (distance <= 0) {
+      document.getElementById("days").textContent = "00";
+      document.getElementById("hours").textContent = "00";
+      document.getElementById("minutes").textContent = "00";
+      document.getElementById("seconds").textContent = "00";
+      document.querySelector(".target").textContent = "Integration time has arrived.";
+      return;
     }
 
-    updateCountdown();
-    setInterval(updateCountdown, 1000);
-  </script>
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((distance / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((distance / (1000 * 60)) % 60);
+    const seconds = Math.floor((distance / 1000) % 60);
+
+    document.getElementById("days").textContent = days;
+    document.getElementById("hours").textContent = String(hours).padStart(2, "0");
+    document.getElementById("minutes").textContent = String(minutes).padStart(2, "0");
+    document.getElementById("seconds").textContent = String(seconds).padStart(2, "0");
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+</script>
 </body>
 </html>
