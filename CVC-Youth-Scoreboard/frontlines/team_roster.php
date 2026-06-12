@@ -1,17 +1,18 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/team_roster.php
- * Revision : 2.3.0
+ * Revision : 2.4.0
  * Description : Frontlines 2026 roster defaults plus JSON/CSV persistence helpers.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-09
- * Modified Date : 2026-06-09
+ * Modified Date : 2026-06-12
  * Changelog :
  * 1.0.0 Initial roster from Frontlines 2026 team screenshots
  * 2.0.0 Added editable JSON storage and CSV export with gender/grade fields
  * 2.1.0 Added CSV role column for Leader, Sponsor, and Youth rows
  * 2.2.0 Reordered CSV columns and added youth gender probability guesses
  * 2.3.0 Load gender/grade defaults from tracked roster CSV import
+ * 2.4.0 Add Chris Banto, Vivien Banto, Claudia Banto, Olga Soljaga to defaults
  */
 
 const FRONTLINES_ROSTER_JSON = __DIR__ . '/data/team-roster.json';
@@ -50,7 +51,7 @@ function frontlinesRosterDefaultData(): array
             ),
             'team-dark-green' => frontlinesRosterTeam(
                 ['Hannah Defendorf', 'Aaron Archacki', 'Simonne Benoit'],
-                ['Dante Arena', 'Alexis Brody', 'Johnny Zacardelli', 'Halle Luczywo', 'Wendy Sutton', 'Brayden Howard', 'Veronica Cimino', 'Pelumi Lawal', 'Aubrey Render', 'Amya Thomas', 'Noah Brown', 'Mercy Beard', 'Noah Brown', 'Hannah Busch', 'Caleb Duncan', 'Nana Kwasi Asafu Adjaye', 'David Powell'],
+                ['Dante Arena', 'Alexis Brody', 'Johnny Zacardelli', 'Halle Luczywo', 'Wendy Sutton', 'Brayden Howard', 'Veronica Cimino', 'Pelumi Lawal', 'Aubrey Render', 'Amya Thomas', 'Noah Brown', 'Mercy Beard', 'Noah Brown', 'Hannah Busch', 'Caleb Duncan', 'Nana Kwasi Asafu Adjaye', 'David Powell', 'Chris Banto'],
                 'Vinny Malone'
             ),
             'team-light-blue' => frontlinesRosterTeam(
@@ -70,17 +71,17 @@ function frontlinesRosterDefaultData(): array
             ),
             'team-pink' => frontlinesRosterTeam(
                 ['Fred Defendorf', 'Rene Piasecki', 'Jeanette Fitzgerald'],
-                ['Clark Defendorf', 'Abby Sutton', 'Aubrey Garcia', 'Logan Gray', 'Hosea Cole', 'Ava Busch', 'Anthony Knapik', 'Eian Sykes', 'Kendall Lavinder', 'Luca Tinter', 'Carter Edlind', 'Ava Hannah', 'Josiah Wolfe', 'William Hanson', 'Ashton Frey', 'Joy Wolfenbarger'],
+                ['Clark Defendorf', 'Abby Sutton', 'Aubrey Garcia', 'Logan Gray', 'Hosea Cole', 'Ava Busch', 'Anthony Knapik', 'Eian Sykes', 'Kendall Lavinder', 'Luca Tinter', 'Carter Edlind', 'Ava Hannah', 'Josiah Wolfe', 'William Hanson', 'Ashton Frey', 'Joy Wolfenbarger', 'Vivien Banto'],
                 'Mary Shreve/Grace Valenti'
             ),
             'team-purple' => frontlinesRosterTeam(
                 ['Amy Gustafson', 'Julie Bay', 'Traci Schimpf'],
-                ['Nathan Sutton', 'Scarlett Sherman', 'Navara Trimble', 'Ava Weatherbie', 'Hudson Defendorf', 'Misha Tinter', 'Beckit Cole', 'Haddon Elvington', 'Kylie Perrico', 'Felicity Kawczak', 'Lucas Phillips', 'Derek Keller', 'Sami Eimers', 'Violetta Meuti', 'Cara Cole', 'Robby Smith'],
+                ['Nathan Sutton', 'Scarlett Sherman', 'Navara Trimble', 'Ava Weatherbie', 'Hudson Defendorf', 'Misha Tinter', 'Beckit Cole', 'Haddon Elvington', 'Kylie Perrico', 'Felicity Kawczak', 'Lucas Phillips', 'Derek Keller', 'Sami Eimers', 'Violetta Meuti', 'Cara Cole', 'Robby Smith', 'Claudia Banto'],
                 'John Chrisopulos/Jeff Eicher'
             ),
             'team-smoke' => frontlinesRosterTeam(
                 ['Linda Valenti', 'Daniel Diaz', 'Kim Brody'],
-                ['Morayoifeoluwa Oguntoyinbo', 'Asher Beard', 'Mia Londrico', 'Roman Bossman', 'Elle Hileman', 'Marco Gillota', 'Ellie Peak', 'Francesca Tinter', 'Vivian Rowell', 'Raiden Ballinger', 'Timi Lawal', 'Eli Graham', 'Callan Stevens', 'Hosanna Beard', 'Darci Duncan', 'Elizabeth Seiter', 'Emma Jacobson'],
+                ['Morayoifeoluwa Oguntoyinbo', 'Asher Beard', 'Mia Londrico', 'Roman Bossman', 'Elle Hileman', 'Marco Gillota', 'Ellie Peak', 'Francesca Tinter', 'Vivian Rowell', 'Raiden Ballinger', 'Timi Lawal', 'Eli Graham', 'Callan Stevens', 'Hosanna Beard', 'Darci Duncan', 'Elizabeth Seiter', 'Emma Jacobson', 'Olga Soljaga'],
                 'Alysia Hanson'
             ),
         ],
