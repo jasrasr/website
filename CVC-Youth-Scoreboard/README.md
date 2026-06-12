@@ -86,10 +86,13 @@ For API behavior changes, check all four API files unless the request is only fo
 
 - Quick buttons use `+1`, `+10`, `+100`, and `+1000`; use the custom/manual amount box for negative scoring.
 - Custom positive or negative score entry for each team.
-- Reset one team or reset all teams at once.
-- Rename teams and update the scoreboard title from the admin page.
+- Reset a single team's score to zero (per-card on full admin, and for the selected team on quick entry) or reset all teams at once.
+- Rename teams and update the scoreboard title from the admin page. Apply/Rename buttons sit inline with their text inputs on the full admin.
+- **Add and remove teams** from the full admin page. Each card has a Remove Team button (with confirm). The Add Team form between the team grid and activity log lets admins pick a name + color and append a team on the fly; the server generates a unique `team-{random}` id.
 - Scores saved to `data/scores.json` after each change.
-- Audit log records score changes, team resets, board resets, team renames, and title updates.
+- Audit log records score changes, team resets, board resets, team add/remove, team renames, and title updates. The audit log is visible both on the full admin page and on quick entry (collapsible "Show Recent Activity" section).
+- Quick entry no longer auto-selects a team on load — a placeholder prompts the user to pick a team first, preventing accidental score changes after refresh.
+- Top-banner shortcuts on the full admin (`View Scoreboard`, `Quick Score`) jump between viewer, quick entry, and full admin without scrolling to the footer.
 - Viewer page automatically refreshes every 2 seconds.
 - Admin page polls every 10 seconds; skips re-render when an input is focused.
 - Dynamic viewer grid columns that adapt to the number of teams.
@@ -100,6 +103,19 @@ For API behavior changes, check all four API files unless the request is only fo
 - Score font scales with viewport size and shrinks for larger numbers.
 - Responsive layout for large screens, tablets, and phones including Safari mobile portrait and landscape.
 - Multiple scorekeepers supported via file locking.
+
+## User Management
+
+`admin-users.php` (admin-only) lists every user with **Username**, **Role**, **Scoreboards**, **Created**, **Modified**, and per-row Edit / Reset PW / Delete actions.
+
+- **Edit** opens a modal where admins can change the username, role, and per-scoreboard access. Renaming yourself also updates the active session so subsequent requests use the new name.
+- **`modified_at`** is tracked on user creation, edit, and password reset; the Modified column shows the date of the last change. Pre-existing users without a `modified_at` value show blank until their first edit.
+- **Frontlines Roster** access: the roster pages (`teams.php`, `edit-roster.php`) gate `Edit Roster` to admins; viewers and scorers see the public roster only.
+
+## Access Control
+
+- Signed-in users who hit a scoreboard they don't have access to (e.g., `/youth/enter-scores.php` for a scorer without Youth) are redirected to `scoreboards.php?denied=<id>` instead of seeing a 403 error page. The Scoreboards page reads the param and shows a banner explaining which scoreboard was off-limits.
+- Public GETs on each instance's `api.php?action=scores` remain open (so the viewer doesn't need a login). All write actions and the audit endpoint require `requireAuthJson()`.
 
 ## Demo
 

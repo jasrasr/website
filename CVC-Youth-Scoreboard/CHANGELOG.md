@@ -1,5 +1,39 @@
 # Changelog
 
+## 2026-06-12
+
+### Frontlines Roster
+- Team member rows now show a `Name - Gender/Grade` suffix (e.g., `Alex Lamb - M/HS`). Falls back gracefully when only one field is set, or shows just the name when neither is.
+- Imported gender/grade for every youth in the roster from the 2026 cabin PDF (`frontlines 2026 cabins.pdf`). Cabin assignments determine grade buckets (6 / 7 / 8 / HS / GRAD); gender is now confirmed from the cabin (corrected M↔F for Grey Hileman, Chai Beard, Quinn Patton, Misha Tinter, Alden Brinkley).
+- Added the 4 new kids who joined since the previous import: **Chris Banto** (Dark Green), **Vivien Banto** (Pink), **Claudia Banto** (Purple), **Olga Soljaga** (Smoke).
+- Renamed `C.J Fitzgerald` → `Connor "CJ" Fitzgerald` in the CSV/PHP defaults.
+- `teams.php` header now shows a `Roster last updated: ...` timestamp pulled from `data/team-roster.json`. The intro copy was collapsed into one paragraph with the random-order sentence italicized.
+- README now has a "Frontlines Roster — Pending" section flagging **Andrew Johnson** (HS / Cedar House) as a kid in the PDF who still needs a team color assigned.
+
+### Quick Entry (`enter-scores-quick.php`)
+- New **Reset Score to Zero** button (with confirm dialog) for the selected team.
+- New collapsible **Show Recent Activity** audit log section — mirrors the full admin view. Available to scorers as well, since the API endpoint already allowed it.
+- Page no longer auto-selects the first team on load; users must explicitly pick a team before any score buttons appear. Prevents accidental score changes after refresh. A "Select a team above to enter scores." placeholder shows in the action panel until a team is chosen.
+- Renamed **Viewer** footer button to **View Scoreboard**.
+
+### Full Admin (`enter-scores.php`)
+- Per-card **Reset Team** button renamed to **Reset Score to Zero** for clarity (it only zeroes the score; it never touched the team name).
+- Per-card **Remove Team** button added (red `negative` button next to Reset, with confirm). Deletes the team and its score from the data file.
+- New **Add Team** form between the team grid and activity log: text input + HTML5 color picker + Add Team button. Server generates a unique `team-{random}` id and appends to the teams array.
+- Top banner now has **View Scoreboard** (opens viewer in new tab) and **Quick Score** (jumps to quick entry) links. The footer button previously labelled "Open Viewer Page" is now also **View Scoreboard** for consistency.
+- Custom amount **Apply** button and team-rename **Rename** button now sit inline with their respective inputs instead of wrapping to their own row.
+
+### API
+- New `add-team` and `remove-team` actions on every instance (`api.php`, `collide/api.php`, `youth/api.php`, `frontlines/api.php`). Both are POST, require auth + scoreboard access, and write to the audit log. `add-team` validates the name and the `#RRGGBB` color (defaulting to `#64748b` if malformed).
+
+### User Admin (`admin-users.php`)
+- **Fixed broken Edit button.** The inline `onclick` was embedding raw `json_encode()` output containing unescaped double quotes, which silently broke the HTML attribute and killed the click handler. Refactored to `data-*` attributes + event delegation.
+- Edit modal can now change the **username** (with uniqueness check). Renaming yourself also updates the active session so subsequent requests use the new name.
+- New **Modified** column next to **Created**. `modified_at` is now tracked on user creation, edit, and password reset (defaults to `created_at` for new users). Existing pre-existing users show blank until their first edit.
+
+### Auth
+- Signed-in users who hit a scoreboard they don't have access to (e.g., `/youth/enter-scores.php` for a scorer without Youth) are now redirected to `scoreboards.php?denied=<id>` instead of seeing the 403 error page. `scoreboards.php` reads the param and shows a warning banner: `"You do not have access to the <Name> scoreboard. Pick one of yours below."`
+
 ## 2026-06-08
 
 ### Access & Navigation
