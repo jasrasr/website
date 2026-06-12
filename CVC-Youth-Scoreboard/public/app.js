@@ -1,5 +1,5 @@
 // Filename: app.js
-// Revision : 1.20.0
+// Revision : 1.21.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
@@ -28,6 +28,7 @@
 // 1.18.0 Show Scoreboards footer button to all signed-in users (was admin-only)
 // 1.19.0 Add optional Frontlines roster links to viewer/admin pages
 // 1.20.0 Rename per-team reset button to "Reset Score to Zero" for clarity
+// 1.21.0 Add View Scoreboard + Quick Score links to admin top banner; rename footer "Open Viewer Page" to "View Scoreboard"
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -216,6 +217,10 @@ async function renderAdmin(data) {
     <div class="page-shell">
       <header class="page-header">
         ${renderSharedHeader(data, 'admin')}
+        <div class="header-actions">
+          <a class="au-btn" href="index.php" target="_blank" rel="noopener">View Scoreboard</a>
+          <a class="au-btn" href="enter-scores-quick.php">Quick Score</a>
+        </div>
       </header>
       <p class="status-text" id="status-text">Scores save to JSON automatically after each change.</p>
       <p class="sort-note">Teams are sorted A-Z by name.</p>
@@ -235,7 +240,7 @@ async function renderAdmin(data) {
           <button class="secondary" type="submit">Update Title</button>
         </form>
         <a class="au-btn" href="enter-scores-quick.php">Quick Entry</a>
-        <button class="secondary" id="open-viewer-button" type="button">Open Viewer Page</button>
+        <button class="secondary" id="open-viewer-button" type="button">View Scoreboard</button>
         ${rosterUrl ? `<a class="au-btn" href="${rosterUrl}">Roster</a>` : ''}
         ${editRosterUrl ? `<a class="au-btn" href="${editRosterUrl}">Edit Roster</a>` : ''}
         <button class="warning" id="reset-all-button" type="button">Reset All Teams</button>
