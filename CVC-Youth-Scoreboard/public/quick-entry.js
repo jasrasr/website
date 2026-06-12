@@ -1,9 +1,9 @@
 // Filename: quick-entry.js
-// Revision : 1.7.0
+// Revision : 1.8.0
 // Description : Compact score-entry behavior for CVC Youth Scoreboard quick entry page.
 // Author : Jason Lamb (with help from Codex CLI)
 // Created Date : 2026-05-26
-// Modified Date : 2026-06-08
+// Modified Date : 2026-06-12
 // Changelog :
 // 1.0.0 initial release
 // 1.1.0 Move navigation links to footer and keep team selection compact on mobile
@@ -13,13 +13,15 @@
 // 1.5.0 Sort team buttons A-Z; show revision next to last-updated; drop comma in date/time; add sort note
 // 1.6.0 Add Scoreboards footer link (reads data-scoreboards-url)
 // 1.7.0 Add optional Frontlines roster links
+// 1.8.0 Add Reset-to-0 button for the selected team and a collapsible audit log section
 
-const QUICK_ENTRY_REVISION = '1.7.0';
+const QUICK_ENTRY_REVISION = '1.8.0';
 const quickEntryValues = [1, 10, 100, 1000];
 const quickEntryPollIntervalMs = 10000;
 
 let quickData = null;
 let selectedTeamId = null;
+let quickActivityLogOpen = false;
 
 function formatQuickUpdatedAt(updatedAt) {
   if (!updatedAt) {
@@ -112,6 +114,79 @@ async function postQuickScore(teamId, amount) {
 
   quickData = await response.json();
   return quickData;
+}
+
+async function postQuickReset(teamId) {
+  const response = await fetch(`api.php?action=reset-team&team=${encodeURIComponent(teamId)}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({})
+  });
+
+  if (!response.ok) {
+    const { error } = await response.json().catch(() => ({ error: 'Reset failed.' }));
+    throw new Error(error || 'Reset failed.');
+  }
+
+  quickData = await response.json();
+  return quickData;
+}
+
+async function loadQuickActivityLog() {
+  const log = document.querySelector('#quick-activity-log');
+  if (!log) return;
+  try {
+    const response = await fetch('api.php?action=audit');
+    if (!response.ok) throw new Error('Failed to load.');
+    const { entries } = await response.json();
+    if (!entries || entries.length === 0) {
+      log.innerHTML = '<p class="status-text">No activity recorded yet.</p>';
+      return;
+    }
+    log.innerHTML = `
+      <div class="au-table-wrap">
+        <table class="au-table au-audit">
+          <thead>
+            <tr>
+              <th>Time (UTC)</th><th>User</th><th>Action</th>
+              <th>Team</th><th>Change</th><th>Score</th><th>IP</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${entries.map((e) => `
+              <tr>
+                <td>${(e.timestamp || '').slice(0, 19)}</td>
+                <td>${e.username || ''}</td>
+                <td>${e.action || ''}</td>
+                <td>${e.team_name || '—'}</td>
+                <td>${e.amount != null ? (e.amount > 0 ? '+' : '') + e.amount : '—'}</td>
+                <td>${e.new_score != null ? e.new_score : '—'}</td>
+                <td>${e.ip || ''}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch {
+    log.innerHTML = '<p class="status-text">Unable to load activity log.</p>';
+  }
+}
+
+function syncQuickActivityLog() {
+  const log = document.querySelector('#quick-activity-log');
+  const btn = document.querySelector('#quick-activity-toggle');
+  if (!log || !btn) return Promise.resolve();
+  if (quickActivityLogOpen) {
+    log.classList.remove('hidden');
+    btn.textContent = 'Hide Recent Activity';
+    return loadQuickActivityLog();
+  }
+  log.classList.add('hidden');
+  btn.textContent = 'Show Recent Activity';
+  return Promise.resolve();
 }
 
 function setQuickStatus(message) {
@@ -304,7 +379,14 @@ function renderQuickEntry() {
     text: 'Enter -1, -10, or another negative number for minus scoring.'
   });
 
-  actionPanel.append(selectedHeader, scoreGrid, manualForm, manualNote);
+  const resetButton = makeElement('button', {
+    className: 'warning quick-reset-button',
+    text: 'Reset Score to Zero',
+    attributes: { type: 'button' },
+    dataset: { action: 'reset-selected', teamId: selectedTeam.id }
+  });
+
+  actionPanel.append(selectedHeader, scoreGrid, manualForm, manualNote, resetButton);
 
   const statusRow = makeElement('div', { className: 'quick-status-row' });
   const statusBlock = makeElement('div', { className: 'quick-status-block' });
@@ -365,7 +447,22 @@ function renderQuickEntry() {
     attributes: { href: logoutUrl }
   }));
 
-  app.append(header, teamPanel, actionPanel, statusRow, links);
+  const activitySection = makeElement('section', {
+    className: 'quick-activity-section',
+    attributes: { 'aria-label': 'Recent activity' }
+  });
+  activitySection.appendChild(makeElement('button', {
+    className: 'secondary',
+    text: 'Show Recent Activity',
+    attributes: { type: 'button', id: 'quick-activity-toggle' }
+  }));
+  activitySection.appendChild(makeElement('div', {
+    className: 'hidden',
+    attributes: { id: 'quick-activity-log' }
+  }));
+
+  app.append(header, teamPanel, actionPanel, statusRow, activitySection, links);
+  syncQuickActivityLog();
 }
 
 async function applyScoreChange(teamId, amount) {
@@ -376,7 +473,7 @@ async function applyScoreChange(teamId, amount) {
 }
 
 async function handleQuickClick(event) {
-  const actionElement = event.target.closest('[data-action], #quick-refresh');
+  const actionElement = event.target.closest('[data-action], #quick-refresh, #quick-activity-toggle');
   if (!actionElement) {
     return;
   }
@@ -390,6 +487,12 @@ async function handleQuickClick(event) {
       return;
     }
 
+    if (actionElement.id === 'quick-activity-toggle') {
+      quickActivityLogOpen = !quickActivityLogOpen;
+      await syncQuickActivityLog();
+      return;
+    }
+
     const action = actionElement.dataset.action;
 
     if (action === 'select-team') {
@@ -400,6 +503,19 @@ async function handleQuickClick(event) {
 
     if (action === 'adjust-score') {
       await applyScoreChange(actionElement.dataset.teamId, Number(actionElement.dataset.amount));
+      return;
+    }
+
+    if (action === 'reset-selected') {
+      const teamId = actionElement.dataset.teamId;
+      const team = quickData?.teams?.find((t) => t.id === teamId);
+      const teamName = team?.name || 'team';
+      if (!window.confirm(`Reset ${teamName} score to 0?`)) {
+        return;
+      }
+      await postQuickReset(teamId);
+      renderQuickEntry();
+      setQuickStatus(`${teamName} score reset to 0.`);
     }
   } catch (error) {
     setQuickStatus(error.message);

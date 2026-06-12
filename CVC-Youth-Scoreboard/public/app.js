@@ -1,11 +1,11 @@
 // Filename: app.js
-// Revision : 1.19.0
+// Revision : 1.20.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
 // Author : Jason Lamb (with help from Claude Code)
 // Created Date : 2026-03-24
-// Modified Date : 2026-06-08
+// Modified Date : 2026-06-12
 // Changelog :
 // 1.0.0 Initial PHP release, converted from Node.js/Express
 // 1.1.0 Fixed API URL paths to use relative query params instead of REST-style paths
@@ -27,6 +27,7 @@
 // 1.17.0 Add sort-order note to admin (A-Z) and viewer (by score) pages; expose --viewer-rows custom property so responsive breakpoints can override grid row sizing
 // 1.18.0 Show Scoreboards footer button to all signed-in users (was admin-only)
 // 1.19.0 Add optional Frontlines roster links to viewer/admin pages
+// 1.20.0 Rename per-team reset button to "Reset Score to Zero" for clarity
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -165,7 +166,7 @@ function createAdminCard(team, rank) {
         <button class="secondary" type="submit">Rename</button>
       </form>
       <div class="card-footer">
-        <button class="warning" type="button" data-action="reset-team" data-team-id="${team.id}">Reset Team</button>
+        <button class="warning" type="button" data-action="reset-team" data-team-id="${team.id}">Reset Score to Zero</button>
       </div>
     </section>
   `;
