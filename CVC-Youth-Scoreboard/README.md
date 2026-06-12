@@ -115,3 +115,7 @@ A live demo is available for public testing — use this instead of the producti
 Upload the project folder to your host. Make sure each instance's `data/` folder is writable by PHP so scores can be saved. The `data/scores.json` file is created automatically on first load.
 
 Recommended hardening: block direct public web access to all `data/` folders, or move runtime data outside the web root. First-run user passwords are generated into `data/first-run-credentials.txt`; read them once, save them securely, and delete that file from the server.
+
+## Frontlines Roster — Pending
+
+- **Andrew Johnson** — listed in 2026 Frontlines cabin PDF (HS Boys / Cedar House, M/HS) but not yet assigned to a team color. Add to `frontlines/team_roster.php` and `frontlines/team-roster-defaults.csv` once a team is chosen.
