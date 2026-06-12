@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/teams.php
- * Revision : 1.3.3
+ * Revision : 1.4.0
  * Description : Public Frontlines team roster page with leaders, members, and sponsors.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-09
- * Modified Date : 2026-06-09
+ * Modified Date : 2026-06-12
  * Changelog :
  * 1.0.0 Initial Frontlines-only team roster page
  * 1.1.0 Load editable roster data and link CSV export
@@ -14,6 +14,7 @@
  * 1.3.1 Moved random-order blurb into roster header copy
  * 1.3.2 Show roster header action buttons only for signed-in admins
  * 1.3.3 Keep public Scoreboard link visible while admin links stay gated
+ * 1.4.0 Append gender/grade suffix to team member rows (e.g., "Alex Lamb - M/12")
  */
 
 require __DIR__ . '/../auth.php';
@@ -90,7 +91,20 @@ function h(string $value): string
               <h3>Team Members</h3>
               <ul class="roster-list">
                 <?php foreach ($teamRoster['members'] as $member): ?>
-                  <li><?= h((string) ($member['name'] ?? '')) ?></li>
+                  <?php
+                    $memberName = (string) ($member['name'] ?? '');
+                    $memberGender = trim((string) ($member['gender'] ?? ''));
+                    $memberGrade = trim((string) ($member['grade'] ?? ''));
+                    $memberSuffix = '';
+                    if ($memberGender !== '' && $memberGrade !== '') {
+                        $memberSuffix = ' - ' . $memberGender . '/' . $memberGrade;
+                    } elseif ($memberGender !== '') {
+                        $memberSuffix = ' - ' . $memberGender;
+                    } elseif ($memberGrade !== '') {
+                        $memberSuffix = ' - ' . $memberGrade;
+                    }
+                  ?>
+                  <li><?= h($memberName . $memberSuffix) ?></li>
                 <?php endforeach; ?>
               </ul>
             </div>
