@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/team_roster.php
- * Revision : 2.4.0
+ * Revision : 2.4.1
  * Description : Frontlines 2026 roster defaults plus JSON/CSV persistence helpers.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-09
@@ -13,6 +13,7 @@
  * 2.2.0 Reordered CSV columns and added youth gender probability guesses
  * 2.3.0 Load gender/grade defaults from tracked roster CSV import
  * 2.4.0 Add Chris Banto, Vivien Banto, Claudia Banto, Olga Soljaga to defaults
+ * 2.4.1 Rename C.J Fitzgerald to Connor "CJ" Fitzgerald
  */
 
 const FRONTLINES_ROSTER_JSON = __DIR__ . '/data/team-roster.json';
@@ -46,7 +47,7 @@ function frontlinesRosterDefaultData(): array
             ),
             'team-light-green' => frontlinesRosterTeam(
                 ['Joelle Cole', 'Dan Sahli', 'Inna Cherevko'],
-                ['Chai Beard', 'C.J Fitzgerald', 'Lydia Poelking', 'Gage Defendorf', 'Christine Brinkley', 'Andrew Zerminski', 'Lily Hearst', 'Kesi Van De Pitte', 'Jeremiah Zaccardelli', 'Ava Taylor', 'Lincoln Misch', 'Hannah Luczywo', 'Cameron Campo', 'Hannah Gosnell', 'Savannah Cruse', 'Brandon Lockhart', 'Lucia Hallier'],
+                ['Chai Beard', 'Connor "CJ" Fitzgerald', 'Lydia Poelking', 'Gage Defendorf', 'Christine Brinkley', 'Andrew Zerminski', 'Lily Hearst', 'Kesi Van De Pitte', 'Jeremiah Zaccardelli', 'Ava Taylor', 'Lincoln Misch', 'Hannah Luczywo', 'Cameron Campo', 'Hannah Gosnell', 'Savannah Cruse', 'Brandon Lockhart', 'Lucia Hallier'],
                 'Angelica Prindle'
             ),
             'team-dark-green' => frontlinesRosterTeam(
