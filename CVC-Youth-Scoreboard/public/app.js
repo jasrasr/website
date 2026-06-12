@@ -1,5 +1,5 @@
 // Filename: app.js
-// Revision : 1.21.0
+// Revision : 1.22.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
@@ -29,6 +29,7 @@
 // 1.19.0 Add optional Frontlines roster links to viewer/admin pages
 // 1.20.0 Rename per-team reset button to "Reset Score to Zero" for clarity
 // 1.21.0 Add View Scoreboard + Quick Score links to admin top banner; rename footer "Open Viewer Page" to "View Scoreboard"
+// 1.22.0 Add per-card Remove Team button and Add Team form on full admin
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -168,6 +169,7 @@ function createAdminCard(team, rank) {
       </form>
       <div class="card-footer">
         <button class="warning" type="button" data-action="reset-team" data-team-id="${team.id}">Reset Score to Zero</button>
+        <button class="negative" type="button" data-action="remove-team" data-team-id="${team.id}">Remove Team</button>
       </div>
     </section>
   `;
@@ -230,6 +232,13 @@ async function renderAdmin(data) {
           return sortTeamsByName(data.teams).map((team) => createAdminCard(team, ranks.get(team.id))).join('');
         })()}
       </main>
+      <section class="admin-add-team" aria-label="Add a team" style="margin-top:1.5rem">
+        <form class="custom-controls" data-action="add-team-form">
+          <input name="newTeamName" type="text" placeholder="New team name" aria-label="New team name" required />
+          <input name="newTeamColor" type="color" value="#64748b" aria-label="New team color" />
+          <button class="positive" type="submit">Add Team</button>
+        </form>
+      </section>
       <section id="activity-section" style="margin-top:1.5rem">
         <button class="secondary" id="activity-toggle" type="button">Show Recent Activity</button>
         <div id="activity-log" class="hidden" style="margin-top:1rem"></div>
@@ -372,6 +381,18 @@ async function handleAdminAction(event) {
         await postJson(`api.php?action=reset-team&team=${teamId}`);
       }
 
+      if (action === 'remove-team') {
+        const team = currentData?.teams?.find((t) => t.id === teamId);
+        const teamName = team?.name || 'this team';
+        if (!window.confirm(`Remove ${teamName}? This deletes the team and all of its score data.`)) {
+          return;
+        }
+        await postJson(`api.php?action=remove-team&team=${teamId}`);
+        renderAdmin(currentData);
+        setStatus(`${teamName} removed at ${formatUpdatedAt(currentData.updatedAt)}`);
+        return;
+      }
+
       renderAdmin(currentData);
       setStatus(`Saved at ${formatUpdatedAt(currentData.updatedAt)}`);
       return;
@@ -399,6 +420,19 @@ async function handleAdminAction(event) {
       event.preventDefault();
       const teamId = form.dataset.teamId;
       const formData = new FormData(form);
+
+      if (form.dataset.action === 'add-team-form') {
+        const name  = String(formData.get('newTeamName') || '').trim();
+        const color = String(formData.get('newTeamColor') || '#64748b');
+        if (!name) {
+          setStatus('New team name cannot be empty.');
+          return;
+        }
+        await postJson('api.php?action=add-team', { name, color });
+        renderAdmin(currentData);
+        setStatus(`Team "${name}" added at ${formatUpdatedAt(currentData.updatedAt)}`);
+        return;
+      }
 
       if (form.dataset.action === 'title-form') {
         const title = formData.get('pageTitle').trim();

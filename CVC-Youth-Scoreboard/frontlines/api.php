@@ -180,6 +180,71 @@ try {
         jsonResponse($saved);
     }
 
+    if ($action === 'add-team') {
+        $payload = readJsonRequestBody();
+        $name    = trim($payload['name'] ?? '');
+        $color   = trim($payload['color'] ?? '');
+        if ($name === '') {
+            jsonResponse(['error' => 'Team name cannot be empty.'], 400);
+        }
+        if (!preg_match('/^#[0-9a-fA-F]{6}$/', $color)) {
+            $color = '#64748b';
+        }
+
+        $newTeamId = 'team-' . bin2hex(random_bytes(4));
+
+        $saved = writeScoreboardData(function (array $data) use ($newTeamId, $name, $color): array {
+            $data['teams'][] = [
+                'id'    => $newTeamId,
+                'name'  => $name,
+                'color' => $color,
+                'score' => 0,
+            ];
+            return $data;
+        });
+
+        logAudit($auditFile, [
+            'timestamp'  => gmdate('c'),
+            'username'   => $currentUser['username'],
+            'action'     => 'add-team',
+            'team_id'    => $newTeamId,
+            'team_name'  => $name,
+            'amount'     => null,
+            'new_score'  => 0,
+            'ip'         => clientIp(),
+            'user_agent' => clientUserAgent(),
+        ]);
+
+        jsonResponse($saved);
+    }
+
+    if ($action === 'remove-team') {
+        $removedName = '';
+        $saved = writeScoreboardData(function (array $data) use ($teamId, &$removedName): array {
+            $teamIndex = findTeamIndex($data, $teamId);
+            if ($teamIndex === null) {
+                throw new InvalidArgumentException('Team not found.');
+            }
+            $removedName = (string) ($data['teams'][$teamIndex]['name'] ?? '');
+            array_splice($data['teams'], $teamIndex, 1);
+            return $data;
+        });
+
+        logAudit($auditFile, [
+            'timestamp'  => gmdate('c'),
+            'username'   => $currentUser['username'],
+            'action'     => 'remove-team',
+            'team_id'    => $teamId,
+            'team_name'  => $removedName,
+            'amount'     => null,
+            'new_score'  => null,
+            'ip'         => clientIp(),
+            'user_agent' => clientUserAgent(),
+        ]);
+
+        jsonResponse($saved);
+    }
+
     jsonResponse(['error' => 'Unknown action.'], 404);
 } catch (InvalidArgumentException $exception) {
     jsonResponse(['error' => $exception->getMessage()], 404);
