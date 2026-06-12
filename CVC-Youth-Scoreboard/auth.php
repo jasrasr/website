@@ -212,13 +212,15 @@ function ensureUsersFile(): void
 
 function makeUser(string $username, string $password, string $role, array $scoreboards): array
 {
+    $now = gmdate('c');
     return [
         'id'            => 'user-' . bin2hex(random_bytes(6)),
         'username'      => $username,
         'password_hash' => password_hash($password, PASSWORD_DEFAULT),
         'role'          => $role,
         'scoreboards'   => $scoreboards,
-        'created_at'    => gmdate('c'),
+        'created_at'    => $now,
+        'modified_at'   => $now,
     ];
 }
 

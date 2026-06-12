@@ -1,5 +1,5 @@
 // Filename: quick-entry.js
-// Revision : 1.8.0
+// Revision : 1.9.0
 // Description : Compact score-entry behavior for CVC Youth Scoreboard quick entry page.
 // Author : Jason Lamb (with help from Codex CLI)
 // Created Date : 2026-05-26
@@ -14,8 +14,9 @@
 // 1.6.0 Add Scoreboards footer link (reads data-scoreboards-url)
 // 1.7.0 Add optional Frontlines roster links
 // 1.8.0 Add Reset-to-0 button for the selected team and a collapsible audit log section
+// 1.9.0 Rename Viewer link to View Scoreboard; do not auto-select a team on page load
 
-const QUICK_ENTRY_REVISION = '1.8.0';
+const QUICK_ENTRY_REVISION = '1.9.0';
 const quickEntryValues = [1, 10, 100, 1000];
 const quickEntryPollIntervalMs = 10000;
 
@@ -35,11 +36,11 @@ function formatQuickUpdatedAt(updatedAt) {
 }
 
 function getSelectedTeam() {
-  if (!quickData?.teams?.length) {
+  if (!quickData?.teams?.length || !selectedTeamId) {
     return null;
   }
 
-  return quickData.teams.find((team) => team.id === selectedTeamId) || quickData.teams[0];
+  return quickData.teams.find((team) => team.id === selectedTeamId) || null;
 }
 
 function quickOrdinalSuffix(n) {
@@ -91,10 +92,6 @@ async function fetchQuickScores() {
   }
 
   quickData = await response.json();
-  if (!selectedTeamId && quickData.teams?.length) {
-    selectedTeamId = quickData.teams[0].id;
-  }
-
   return quickData;
 }
 
@@ -223,11 +220,12 @@ function makeElement(tagName, options = {}) {
 }
 
 function renderTeamButton(team, selectedTeam, rank) {
+  const isSelected = !!selectedTeam && team.id === selectedTeam.id;
   const button = makeElement('button', {
     className: 'quick-team-button',
     attributes: {
       type: 'button',
-      'aria-pressed': team.id === selectedTeam.id ? 'true' : 'false',
+      'aria-pressed': isSelected ? 'true' : 'false',
       style: `--team-color: ${team.color}`
     },
     dataset: {
@@ -283,7 +281,7 @@ function renderQuickEntry() {
   const editRosterUrl = document.body.dataset.editRosterUrl || '';
   const username = document.body.dataset.username || '';
 
-  if (!app || !quickData || !selectedTeam) {
+  if (!app || !quickData) {
     return;
   }
 
@@ -324,69 +322,74 @@ function renderQuickEntry() {
 
   const actionPanel = makeElement('section', {
     className: 'quick-panel quick-action-panel',
-    attributes: {
-      style: `--selected-team-color: ${selectedTeam.color}`
-    }
+    attributes: selectedTeam ? { style: `--selected-team-color: ${selectedTeam.color}` } : {}
   });
 
-  const selectedHeader = makeElement('div', { className: 'quick-selected' });
-  const selectedTitle = makeElement('div');
-  selectedTitle.appendChild(makeElement('p', {
-    className: 'quick-section-label',
-    text: 'Selected'
-  }));
-  const selectedRank = ranks.get(selectedTeam.id);
-  const selectedNameRow = makeElement('div', { className: 'quick-selected-name-row' });
-  if (selectedRank) {
-    selectedNameRow.appendChild(makeElement('span', {
-      className: `rank-badge ${rankBadgeClass(selectedRank)}`,
-      text: quickOrdinalSuffix(selectedRank),
-      attributes: { 'aria-label': `Rank ${quickOrdinalSuffix(selectedRank)}` }
+  if (!selectedTeam) {
+    actionPanel.appendChild(makeElement('p', {
+      className: 'status-text',
+      text: 'Select a team above to enter scores.'
     }));
-  }
-  selectedNameRow.appendChild(makeElement('h2', { text: selectedTeam.name }));
-  selectedTitle.appendChild(selectedNameRow);
-  selectedHeader.appendChild(selectedTitle);
-  selectedHeader.appendChild(makeElement('div', {
-    className: 'quick-selected-score',
-    text: String(selectedTeam.score)
-  }));
-
-  const scoreGrid = makeElement('div', { className: 'quick-score-grid' });
-  quickEntryValues.forEach((value) => scoreGrid.appendChild(renderScoreButton(value, selectedTeam)));
-
-  const manualForm = makeElement('form', {
-    className: 'quick-manual-form',
-    dataset: { action: 'manual-score', teamId: selectedTeam.id }
-  });
-  manualForm.appendChild(makeElement('input', {
-    attributes: {
-      name: 'manualAmount',
-      type: 'number',
-      inputmode: 'numeric',
-      step: '1',
-      placeholder: 'Manual +/- amount',
-      'aria-label': `Manual score change for ${selectedTeam.name}`
+  } else {
+    const selectedHeader = makeElement('div', { className: 'quick-selected' });
+    const selectedTitle = makeElement('div');
+    selectedTitle.appendChild(makeElement('p', {
+      className: 'quick-section-label',
+      text: 'Selected'
+    }));
+    const selectedRank = ranks.get(selectedTeam.id);
+    const selectedNameRow = makeElement('div', { className: 'quick-selected-name-row' });
+    if (selectedRank) {
+      selectedNameRow.appendChild(makeElement('span', {
+        className: `rank-badge ${rankBadgeClass(selectedRank)}`,
+        text: quickOrdinalSuffix(selectedRank),
+        attributes: { 'aria-label': `Rank ${quickOrdinalSuffix(selectedRank)}` }
+      }));
     }
-  }));
-  manualForm.appendChild(makeElement('button', {
-    className: 'secondary',
-    text: 'Apply',
-    attributes: { type: 'submit' }
-  }));
-  const manualNote = makeElement('p', {
-    className: 'quick-manual-note',
-    text: 'Enter -1, -10, or another negative number for minus scoring.'
-  });
+    selectedNameRow.appendChild(makeElement('h2', { text: selectedTeam.name }));
+    selectedTitle.appendChild(selectedNameRow);
+    selectedHeader.appendChild(selectedTitle);
+    selectedHeader.appendChild(makeElement('div', {
+      className: 'quick-selected-score',
+      text: String(selectedTeam.score)
+    }));
 
-  const resetButton = makeElement('button', {
-    className: 'warning quick-reset-button',
-    text: 'Reset Score to Zero',
-    attributes: { type: 'button' },
-    dataset: { action: 'reset-selected', teamId: selectedTeam.id }
-  });
+    const scoreGrid = makeElement('div', { className: 'quick-score-grid' });
+    quickEntryValues.forEach((value) => scoreGrid.appendChild(renderScoreButton(value, selectedTeam)));
 
-  actionPanel.append(selectedHeader, scoreGrid, manualForm, manualNote, resetButton);
+    const manualForm = makeElement('form', {
+      className: 'quick-manual-form',
+      dataset: { action: 'manual-score', teamId: selectedTeam.id }
+    });
+    manualForm.appendChild(makeElement('input', {
+      attributes: {
+        name: 'manualAmount',
+        type: 'number',
+        inputmode: 'numeric',
+        step: '1',
+        placeholder: 'Manual +/- amount',
+        'aria-label': `Manual score change for ${selectedTeam.name}`
+      }
+    }));
+    manualForm.appendChild(makeElement('button', {
+      className: 'secondary',
+      text: 'Apply',
+      attributes: { type: 'submit' }
+    }));
+    const manualNote = makeElement('p', {
+      className: 'quick-manual-note',
+      text: 'Enter -1, -10, or another negative number for minus scoring.'
+    });
+
+    const resetButton = makeElement('button', {
+      className: 'warning quick-reset-button',
+      text: 'Reset Score to Zero',
+      attributes: { type: 'button' },
+      dataset: { action: 'reset-selected', teamId: selectedTeam.id }
+    });
+
+    actionPanel.append(selectedHeader, scoreGrid, manualForm, manualNote, resetButton);
+  }
 
   const statusRow = makeElement('div', { className: 'quick-status-row' });
   const statusBlock = makeElement('div', { className: 'quick-status-block' });
@@ -414,7 +417,7 @@ function renderQuickEntry() {
   }));
   links.appendChild(makeElement('a', {
     className: 'au-btn',
-    text: 'Viewer',
+    text: 'View Scoreboard',
     attributes: { href: './index.php', target: '_blank', rel: 'noopener' }
   }));
   if (rosterUrl) {

@@ -1,14 +1,16 @@
 <?php declare(strict_types=1);
 /**
  * Filename: admin-users.php
- * Revision : 1.0.0
+ * Revision : 1.1.0
  * Description : Admin-only page for managing scoreboard users and viewing audit logs.
- *               Supports add, edit (role/scoreboards), reset password, and delete.
+ *               Supports add, edit (username/role/scoreboards), reset password, and delete.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-13
- * Modified Date : 2026-04-13
+ * Modified Date : 2026-06-12
  * Changelog :
  * 1.0.0 Initial release
+ * 1.1.0 Fix Edit button (refactor inline onclick to data-attribute handler);
+ *       allow editing username; track and display modified_at
  */
 
 require __DIR__ . '/auth.php';
@@ -47,23 +49,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'update-user') {
         $userId      = $_POST['user_id'] ?? '';
+        $newUsername = trim($_POST['username'] ?? '');
         $role        = ($_POST['role'] ?? '') === 'admin' ? 'admin' : 'scorer';
         $scoreboards = array_values(array_intersect($_POST['scoreboards'] ?? [], ALL_SCOREBOARDS));
 
-        foreach ($users as &$user) {
-            if ($user['id'] === $userId) {
-                $user['role']       = $role;
-                $user['scoreboards'] = $scoreboards;
-                if ($currentUser['id'] === $userId) {
-                    $_SESSION[AUTH_SESSION]['role']       = $role;
-                    $_SESSION[AUTH_SESSION]['scoreboards'] = $scoreboards;
+        if ($newUsername === '') {
+            $error = 'Username cannot be empty.';
+        } else {
+            $conflict = false;
+            foreach ($users as $u) {
+                if ($u['id'] !== $userId && strcasecmp($u['username'] ?? '', $newUsername) === 0) {
+                    $conflict = true;
+                    break;
                 }
-                $message = "User '{$user['username']}' updated.";
-                break;
+            }
+            if ($conflict) {
+                $error = "Username '{$newUsername}' is already taken.";
+            } else {
+                foreach ($users as &$user) {
+                    if ($user['id'] === $userId) {
+                        $user['username']    = $newUsername;
+                        $user['role']        = $role;
+                        $user['scoreboards'] = $scoreboards;
+                        $user['modified_at'] = gmdate('c');
+                        if ($currentUser['id'] === $userId) {
+                            $_SESSION[AUTH_SESSION]['username']    = $newUsername;
+                            $_SESSION[AUTH_SESSION]['role']        = $role;
+                            $_SESSION[AUTH_SESSION]['scoreboards'] = $scoreboards;
+                        }
+                        $message = "User '{$user['username']}' updated.";
+                        break;
+                    }
+                }
+                unset($user);
+                saveUsers($users);
             }
         }
-        unset($user);
-        saveUsers($users);
     }
 
     if ($action === 'reset-password') {
@@ -76,6 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             foreach ($users as &$user) {
                 if ($user['id'] === $userId) {
                     $user['password_hash'] = password_hash($password, PASSWORD_DEFAULT);
+                    $user['modified_at']   = gmdate('c');
                     $message = "Password reset for '{$user['username']}'.";
                     break;
                 }
@@ -164,7 +186,7 @@ function sbChecked(array $user, string $sb): string
           <table class="au-table">
             <thead>
               <tr>
-                <th>Username</th><th>Role</th><th>Scoreboards</th><th>Created</th><th>Actions</th>
+                <th>Username</th><th>Role</th><th>Scoreboards</th><th>Created</th><th>Modified</th><th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -177,19 +199,21 @@ function sbChecked(array $user, string $sb): string
                 <td><?= htmlspecialchars($u['role']) ?></td>
                 <td><?= htmlspecialchars(implode(', ', $u['scoreboards'] ?? [])) ?></td>
                 <td><?= htmlspecialchars(substr($u['created_at'] ?? '', 0, 10)) ?></td>
+                <td><?= htmlspecialchars(substr($u['modified_at'] ?? '', 0, 10)) ?></td>
                 <td class="au-actions">
                   <button
                     type="button"
-                    onclick="openEdit(
-                      '<?= htmlspecialchars($u['id'], ENT_QUOTES) ?>',
-                      '<?= htmlspecialchars($u['username'], ENT_QUOTES) ?>',
-                      '<?= htmlspecialchars($u['role'], ENT_QUOTES) ?>',
-                      <?= json_encode($u['scoreboards'] ?? []) ?>
-                    )"
+                    class="js-edit-user"
+                    data-id="<?= htmlspecialchars($u['id'], ENT_QUOTES) ?>"
+                    data-username="<?= htmlspecialchars($u['username'], ENT_QUOTES) ?>"
+                    data-role="<?= htmlspecialchars($u['role'], ENT_QUOTES) ?>"
+                    data-scoreboards="<?= htmlspecialchars(json_encode($u['scoreboards'] ?? []), ENT_QUOTES) ?>"
                   >Edit</button>
                   <button
                     type="button"
-                    onclick="openPwReset('<?= htmlspecialchars($u['id'], ENT_QUOTES) ?>', '<?= htmlspecialchars($u['username'], ENT_QUOTES) ?>')"
+                    class="js-reset-pw"
+                    data-id="<?= htmlspecialchars($u['id'], ENT_QUOTES) ?>"
+                    data-username="<?= htmlspecialchars($u['username'], ENT_QUOTES) ?>"
                   >Reset PW</button>
                   <?php if ($u['id'] !== $currentUser['id']): ?>
                   <form method="POST" style="display:inline" onsubmit="return confirm('Delete <?= htmlspecialchars($u['username'], ENT_QUOTES) ?>?')">
@@ -283,6 +307,11 @@ function sbChecked(array $user, string $sb): string
           <input type="hidden" name="action" value="update-user" />
           <input type="hidden" name="user_id" id="edit-id" />
           <div class="au-row">
+            <label style="flex:1">Username:
+              <input type="text" name="username" id="edit-username" autocapitalize="none" spellcheck="false" required />
+            </label>
+          </div>
+          <div class="au-row">
             <label>Role:
               <select name="role" id="edit-role">
                 <option value="scorer">Scorer</option>
@@ -301,7 +330,7 @@ function sbChecked(array $user, string $sb): string
           </div>
           <div class="au-row" style="margin-top:.5rem">
             <button class="positive" type="submit">Save</button>
-            <button type="button" onclick="closeModals()">Cancel</button>
+            <button type="button" class="js-modal-cancel">Cancel</button>
           </div>
         </form>
       </div>
@@ -317,7 +346,7 @@ function sbChecked(array $user, string $sb): string
           <div class="au-row">
             <input type="password" name="password" placeholder="New password" required />
             <button class="positive" type="submit">Set Password</button>
-            <button type="button" onclick="closeModals()">Cancel</button>
+            <button type="button" class="js-modal-cancel">Cancel</button>
           </div>
         </form>
       </div>
@@ -325,8 +354,9 @@ function sbChecked(array $user, string $sb): string
 
     <script>
       function openEdit(id, username, role, scoreboards) {
-        document.getElementById('edit-id').value   = id;
+        document.getElementById('edit-id').value = id;
         document.getElementById('edit-name').textContent = username;
+        document.getElementById('edit-username').value = username;
         document.getElementById('edit-role').value = role;
         document.querySelectorAll('.edit-sb').forEach(cb => {
           cb.checked = scoreboards.includes(cb.dataset.sb);
@@ -342,6 +372,23 @@ function sbChecked(array $user, string $sb): string
         document.getElementById('modal-edit').classList.add('hidden');
         document.getElementById('modal-pw').classList.add('hidden');
       }
+      document.addEventListener('click', event => {
+        const editBtn = event.target.closest('.js-edit-user');
+        if (editBtn) {
+          let scoreboards = [];
+          try { scoreboards = JSON.parse(editBtn.dataset.scoreboards || '[]'); } catch {}
+          openEdit(editBtn.dataset.id, editBtn.dataset.username, editBtn.dataset.role, scoreboards);
+          return;
+        }
+        const pwBtn = event.target.closest('.js-reset-pw');
+        if (pwBtn) {
+          openPwReset(pwBtn.dataset.id, pwBtn.dataset.username);
+          return;
+        }
+        if (event.target.classList.contains('js-modal-cancel')) {
+          closeModals();
+        }
+      });
       document.querySelectorAll('.au-modal').forEach(m =>
         m.addEventListener('click', e => { if (e.target === m) closeModals(); })
       );
