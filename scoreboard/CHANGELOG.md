@@ -1,6 +1,11 @@
 # Changelog
 
-## 2026-06-13
+Current project version: **v1.4.0**
+
+## v1.4.0 - 2026-06-13
+
+### Changelog
+- Added the current overall project version and versioned release headings alongside each changelog date.
 
 ### Default Scoreboard
 - Renamed the root scoreboard's user-facing label to **Default** while keeping the internal `root` id for existing permissions and data.
@@ -16,7 +21,7 @@
 - `login.php` sends forced-reset users directly to `change-password.php`.
 - After a successful password change, the user's `must_change_password` flag is cleared and their line is removed from `data/first-run-credentials.txt`.
 
-## 2026-06-12
+## v1.3.0 - 2026-06-12
 
 ### Frontlines Roster
 - Team member rows now show a `Name - Gender/Grade` suffix (e.g., `Alex Lamb - M/HS`). Falls back gracefully when only one field is set, or shows just the name when neither is.
@@ -50,7 +55,7 @@
 ### Auth
 - Signed-in users who hit a scoreboard they don't have access to (e.g., `/youth/enter-scores.php` for a scorer without Youth) are now redirected to `scoreboards.php?denied=<id>` instead of seeing the 403 error page. `scoreboards.php` reads the param and shows a warning banner: `"You do not have access to the <Name> scoreboard. Pick one of yours below."`
 
-## 2026-06-08
+## v1.2.0 - 2026-06-08
 
 ### Access & Navigation
 - `changelog.php` is now accessible to any signed-in user (was gated on root-scoreboard access). The Scoreboard button in the changelog header now reads **Scoreboards** and links to `scoreboards.php` (the access-filtered nav hub) instead of the root admin page.
@@ -70,7 +75,7 @@
 - Notes in `enter-scores.php` and `enter-scores-quick.php` that read "Teams are sorted A-Z by name." Note in the viewer header that reads "Teams sorted by score (1st, 2nd, 3rd...)".
 - Quick entry now shows the running script revision (`v1.5.0`) directly under "Last updated" so testers can confirm which version they are looking at.
 
-## 2026-06-05
+## v1.1.0 - 2026-06-05
 
 ### Added
 - Public viewer, full admin (`enter-scores.php`), and quick entry (`enter-scores-quick.php`) pages now show a place-rank badge on every team card: `1st`, `2nd`, `3rd`, `4th`, and so on.
@@ -79,7 +84,7 @@
 - Tied scores share the same rank (standard competition ranking: `1, 1, 3, 4`).
 - Quick entry shows the rank badge on each team-select button and inline next to the selected team's name.
 
-## 2026-06-02
+## v1.0.0 - 2026-06-02
 
 ### GitHub Issue Updates
 - Issue #3: Added a mobile landscape viewer rule so scoreboards can show three columns wide without the prior two-column shrink.
@@ -165,5 +170,5 @@ This inventory was built from each file's header revision notes.
 #### Tests
 - `tests/change-password-test.php` revision 1.1.0, modified 2026-06-13: Lightweight verification for signed-in password changes, forced-change clearing, and first-run credential cleanup.
 - `tests/github-issues-layout-test.php` revision 1.2.0, modified 2026-06-13: Static verification for GitHub issue driven scoreboard layout updates and Add Team labels.
-- `tests/navigation-pages-test.php` revision 1.2.0, modified 2026-06-13: Static verification for changelog and scoreboard navigation pages with the Default label.
+- `tests/navigation-pages-test.php` revision 1.3.0, modified 2026-06-13: Static verification for changelog project-version headings and scoreboard navigation pages with the Default label.
 - `tests/runtime-samples-test.php` revision 1.3.0, modified 2026-06-13: Static verification for public-safe runtime samples, root default team labels, data-folder hardening, forced first-run password changes, and first-run admin/scorer generation.
