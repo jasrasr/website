@@ -1,9 +1,9 @@
 // Filename: quick-entry.js
-// Revision : 1.9.0
-// Description : Compact score-entry behavior for CVC Youth Scoreboard quick entry page.
+// Revision : 1.10.0
+// Description : Compact score-entry behavior for scoreboard quick entry pages.
 // Author : Jason Lamb (with help from Codex CLI)
 // Created Date : 2026-05-26
-// Modified Date : 2026-06-12
+// Modified Date : 2026-06-13
 // Changelog :
 // 1.0.0 initial release
 // 1.1.0 Move navigation links to footer and keep team selection compact on mobile
@@ -15,8 +15,9 @@
 // 1.7.0 Add optional Frontlines roster links
 // 1.8.0 Add Reset-to-0 button for the selected team and a collapsible audit log section
 // 1.9.0 Rename Viewer link to View Scoreboard; do not auto-select a team on page load
+// 1.10.0 Rename default fallback title to Live Scoreboard
 
-const QUICK_ENTRY_REVISION = '1.9.0';
+const QUICK_ENTRY_REVISION = '1.10.0';
 const quickEntryValues = [1, 10, 100, 1000];
 const quickEntryPollIntervalMs = 10000;
 
@@ -289,7 +290,7 @@ function renderQuickEntry() {
 
   const header = makeElement('header', { className: 'quick-header' });
   const title = makeElement('div', { className: 'quick-title' });
-  title.appendChild(makeElement('h1', { text: quickData.title || 'CVC Youth Scoreboard' }));
+  title.appendChild(makeElement('h1', { text: quickData.title || 'Live Scoreboard' }));
   title.appendChild(makeElement('p', {
     className: 'updated-at',
     text: username ? `Quick entry - ${username}` : 'Quick entry'

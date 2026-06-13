@@ -1,16 +1,17 @@
 <?php declare(strict_types=1);
 /**
  * Filename: admin-users.php
- * Revision : 1.1.0
+ * Revision : 1.2.0
  * Description : Admin-only page for managing scoreboard users and viewing audit logs.
  *               Supports add, edit (username/role/scoreboards), reset password, and delete.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-13
- * Modified Date : 2026-06-12
+ * Modified Date : 2026-06-13
  * Changelog :
  * 1.0.0 Initial release
  * 1.1.0 Fix Edit button (refactor inline onclick to data-attribute handler);
  *       allow editing username; track and display modified_at
+ * 1.2.0 Force password changes after user creation/reset; label root as Default
  */
 
 require __DIR__ . '/auth.php';
@@ -41,9 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (count(array_filter($users, fn($u) => $u['username'] === $username)) > 0) {
             $error = "Username '{$username}' already exists.";
         } else {
-            $users[] = makeUser($username, $password, $role, $scoreboards);
+            $users[] = makeUser($username, $password, $role, $scoreboards, true);
             saveUsers($users);
-            $message = "User '{$username}' created.";
+            $message = "User '{$username}' created and must change password on first sign-in.";
         }
     }
 
@@ -97,8 +98,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             foreach ($users as &$user) {
                 if ($user['id'] === $userId) {
                     $user['password_hash'] = password_hash($password, PASSWORD_DEFAULT);
+                    $user['must_change_password'] = true;
                     $user['modified_at']   = gmdate('c');
-                    $message = "Password reset for '{$user['username']}'.";
+                    removeFirstRunCredential($user['username']);
+                    if ($currentUser['id'] === $userId) {
+                        $_SESSION[AUTH_SESSION]['must_change_password'] = true;
+                    }
+                    $message = "Password reset for '{$user['username']}'. They must change it on next sign-in.";
                     break;
                 }
             }
@@ -147,6 +153,16 @@ $auditEntries = array_slice($auditEntries, 0, 200);
 function sbChecked(array $user, string $sb): string
 {
     return in_array($sb, $user['scoreboards'] ?? [], true) ? 'checked' : '';
+}
+
+function sbLabel(string $sb): string
+{
+    return $sb === 'root' ? 'Default' : ucfirst($sb);
+}
+
+function userScoreboardLabels(array $user): string
+{
+    return implode(', ', array_map('sbLabel', $user['scoreboards'] ?? []));
 }
 ?>
 <!DOCTYPE html>
@@ -197,7 +213,7 @@ function sbChecked(array $user, string $sb): string
                   <?= $u['id'] === $currentUser['id'] ? ' <em style="opacity:.5">(you)</em>' : '' ?>
                 </td>
                 <td><?= htmlspecialchars($u['role']) ?></td>
-                <td><?= htmlspecialchars(implode(', ', $u['scoreboards'] ?? [])) ?></td>
+                <td><?= htmlspecialchars(userScoreboardLabels($u)) ?></td>
                 <td><?= htmlspecialchars(substr($u['created_at'] ?? '', 0, 10)) ?></td>
                 <td><?= htmlspecialchars(substr($u['modified_at'] ?? '', 0, 10)) ?></td>
                 <td class="au-actions">
@@ -248,7 +264,7 @@ function sbChecked(array $user, string $sb): string
             <?php foreach (ALL_SCOREBOARDS as $sb): ?>
               <label class="au-check">
                 <input type="checkbox" name="scoreboards[]" value="<?= $sb ?>" checked />
-                <?= ucfirst($sb) ?>
+                <?= htmlspecialchars(sbLabel($sb)) ?>
               </label>
             <?php endforeach; ?>
             <button class="positive" type="submit">Add User</button>
@@ -324,7 +340,7 @@ function sbChecked(array $user, string $sb): string
             <?php foreach (ALL_SCOREBOARDS as $sb): ?>
               <label class="au-check">
                 <input type="checkbox" name="scoreboards[]" value="<?= $sb ?>" class="edit-sb" data-sb="<?= $sb ?>" />
-                <?= ucfirst($sb) ?>
+                <?= htmlspecialchars(sbLabel($sb)) ?>
               </label>
             <?php endforeach; ?>
           </div>

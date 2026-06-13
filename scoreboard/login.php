@@ -1,19 +1,26 @@
 <?php declare(strict_types=1);
 /**
  * Filename: login.php
- * Revision : 1.0.0
+ * Revision : 1.1.0
  * Description : Login page for CVC Scoreboard admin. Handles session creation.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-13
- * Modified Date : 2026-04-13
+ * Modified Date : 2026-06-13
  * Changelog :
  * 1.0.0 Initial release
+ * 1.1.0 Redirect forced-reset users directly to change-password.php
  */
 
 require __DIR__ . '/auth.php';
 authStart();
+$signedInUser = authUser();
 
-if (authUser() !== null) {
+if ($signedInUser !== null) {
+    if (authPasswordChangeRequired($signedInUser)) {
+        header('Location: ./change-password.php?force=1&return=scoreboards.php');
+        exit;
+    }
+
     header('Location: ./enter-scores.php');
     exit;
 }
@@ -29,6 +36,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user = attemptLogin($username, $password);
     if ($user !== null) {
         $_SESSION[AUTH_SESSION] = $user;
+        if (authPasswordChangeRequired($user)) {
+            header('Location: ./change-password.php?force=1&return=scoreboards.php');
+            exit;
+        }
         header('Location: ' . $postRedirect);
         exit;
     }

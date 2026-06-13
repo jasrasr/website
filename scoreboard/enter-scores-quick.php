@@ -1,16 +1,17 @@
 <?php declare(strict_types=1);
 /**
  * Filename: enter-scores-quick.php
- * Revision : 1.2.0
- * Description : Compact test score entry page for CVC Youth Scoreboard.
+ * Revision : 1.3.0
+ * Description : Compact test score entry page for the default Live Scoreboard.
  *               Provides fast team selection and quick/manual score updates.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-05-26
- * Modified Date : 2026-06-08
+ * Modified Date : 2026-06-13
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Added change-password URL for signed-in users
  * 1.2.0 Added scoreboards-url data attribute for footer Scoreboards link
+ * 1.3.0 Rename root/default page title to Live Scoreboard
  */
 
 require __DIR__ . '/auth.php';
@@ -21,7 +22,7 @@ $user = requireAuth('root', './login.php');
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CVC Youth Scoreboard Quick Entry</title>
+    <title>Live Scoreboard Quick Entry</title>
     <link rel="stylesheet" href="./public/styles.css?v=<?= filemtime(__DIR__ . '/public/styles.css') ?>" />
     <link rel="stylesheet" href="./public/quick-entry.css?v=<?= filemtime(__DIR__ . '/public/quick-entry.css') ?>" />
   </head>

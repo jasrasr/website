@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: navigation-pages-test.php
- * Revision : 1.1.0
+ * Revision : 1.2.0
  * Description : Lightweight static verification for scoreboard navigation and changelog pages.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-02
@@ -9,6 +9,7 @@
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Updated access assertions for signed-in scoreboard navigation
+ * 1.2.0 Expect Default label for the root scoreboard id
  */
 
 function assertContains(string $haystack, string $needle, string $message): void
@@ -49,7 +50,7 @@ assertContains($changelogPage, "CHANGELOG.md", 'changelog.php should render CHAN
 
 assertContains($scoreboardsPage, "requireSignedIn('./login.php')", 'scoreboards.php should require a signed-in user.');
 assertContains($scoreboardsPage, '$visibleScoreboards', 'scoreboards.php should filter the list to the user\'s accessible scoreboards.');
-foreach (['Root', 'Collide', 'Youth', 'Frontlines'] as $label) {
+foreach (['Default', 'Collide', 'Youth', 'Frontlines'] as $label) {
     assertContains($scoreboardsPage, $label, "scoreboards.php should list {$label}.");
 }
 

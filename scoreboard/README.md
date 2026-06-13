@@ -6,7 +6,7 @@ A PHP scoreboard app for tracking team scores across multiple ministry instances
 
 | Instance | Path | Teams |
 |----------|------|-------|
-| Root | `/` | 6th–8th Grade Boys/Girls (6 teams) |
+| Default | `/` | 6th–8th Grade Boys/Girls (6 teams) |
 | Collide | `/collide/` | 6th–8th Boys/Girls (6 teams) |
 | Youth | `/youth/` | 6th–12th Grade + Grads (8 teams) |
 | Frontlines | `/frontlines/` | Red, Maroon, Orange, Yellow, Light Green, Dark Green, Light Blue, Royal Blue, Navy, Pink, Purple, Smoke (12 teams) |
@@ -43,6 +43,7 @@ All instances share a single set of frontend files in `public/`:
 - `requireAuthJson($scoreboardId)` — API equivalent; returns JSON 401/403 instead of redirecting.
 - `requireSignedIn($loginUrl)` — page only needs an authenticated session; used by `changelog.php` and `scoreboards.php`.
 - `requireAdmin($loginUrl)` — page requires `role === 'admin'`; used by `admin-users.php`.
+- First-run and admin-reset passwords require the user to set a new password before using the scoreboards.
 
 ## Runtime Samples
 
@@ -110,6 +111,7 @@ For API behavior changes, check all four API files unless the request is only fo
 
 - **Edit** opens a modal where admins can change the username, role, and per-scoreboard access. Renaming yourself also updates the active session so subsequent requests use the new name.
 - **`modified_at`** is tracked on user creation, edit, and password reset; the Modified column shows the date of the last change. Pre-existing users without a `modified_at` value show blank until their first edit.
+- **Created/reset passwords** are treated as temporary. The user must change the password on next sign-in before continuing.
 - **Frontlines Roster** access: the roster pages (`teams.php`, `edit-roster.php`) gate `Edit Roster` to admins; viewers and scorers see the public roster only.
 
 ## Access Control
@@ -130,7 +132,7 @@ The production scoreboard is not open to the public.
 
 Upload the `scoreboard` project folder to your host. Make sure each instance's `data/` folder is writable by PHP so scores can be saved. The `data/scores.json` file is created automatically on first load.
 
-The committed `data/.htaccess` files block direct public web access to runtime data folders on Apache-compatible hosts. If your host does not honor `.htaccess`, move runtime data outside the web root or add equivalent server rules. First-run user passwords are generated into `data/first-run-credentials.txt`; read them once, save them securely, and delete that file from the server.
+The committed `data/.htaccess` files block direct public web access to runtime data folders on Apache-compatible hosts. If your host does not honor `.htaccess`, move runtime data outside the web root or add equivalent server rules. First-run user passwords are generated into `data/first-run-credentials.txt`; users must change those passwords before continuing, and each used line is removed after that user changes their password. Delete the file after all first-run credentials are used.
 
 ## Frontlines Roster — Pending
 

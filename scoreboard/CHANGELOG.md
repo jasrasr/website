@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-06-13
+
+### Default Scoreboard
+- Renamed the root scoreboard's user-facing label to **Default** while keeping the internal `root` id for existing permissions and data.
+- Renamed the default/root scoreboard title to **Live Scoreboard** in the default data, sample data, root page titles, and shared frontend fallbacks.
+
+### Auth
+- First-run generated users and admin-created/reset users now must change their password before they can continue into scoreboard pages or APIs.
+- `login.php` sends forced-reset users directly to `change-password.php`.
+- After a successful password change, the user's `must_change_password` flag is cleared and their line is removed from `data/first-run-credentials.txt`.
+
 ## 2026-06-12
 
 ### Frontlines Roster
@@ -106,18 +117,18 @@
 This inventory was built from each file's header revision notes.
 
 #### Root PHP
-- `admin-users.php` revision 1.0.0, modified 2026-04-13: Admin-only user management and merged audit log page.
+- `admin-users.php` revision 1.2.0, modified 2026-06-13: Admin-only user management and merged audit log page; created/reset passwords require a change and root access displays as Default.
 - `api.php` revision 1.4.0, modified 2026-04-13: Root scoreboard API with query-param routing, team/title rename actions, negative scores, auth, and audit logging.
-- `auth.php` revision 1.5.0, modified 2026-06-08: Shared auth library with sessions, roles, scoreboard access, audit helpers, signed-in password changes, random first-run passwords, and `requireSignedIn` helper for pages open to any authenticated user.
-- `change-password.php` revision 1.0.0, modified 2026-05-28: Signed-in self-service password update page.
+- `auth.php` revision 1.7.0, modified 2026-06-13: Shared auth library with sessions, roles, scoreboard access, audit helpers, signed-in password changes, forced first-run/reset password changes, random first-run passwords, and first-run credential cleanup.
+- `change-password.php` revision 1.1.0, modified 2026-06-13: Signed-in self-service password update page with forced-change support.
 - `changelog.php` revision 1.1.0, modified 2026-06-08: Signed-in web viewer for `CHANGELOG.md`; uses `requireSignedIn` and links back to `scoreboards.php`.
-- `enter-scores.php` revision 1.3.0, modified 2026-06-02: Root admin page with auth data attributes, change-password URL, changelog URL, and all-scoreboards URL.
-- `enter-scores-quick.php` revision 1.2.0, modified 2026-06-08: Root compact score entry page with change-password and scoreboards URLs.
-- `index.php` revision 1.1.0, modified 2026-04-09: Root public viewer page after admin moved to `enter-scores.php`.
-- `login.php` revision 1.0.0, modified 2026-04-13: Login page and session creation.
+- `enter-scores.php` revision 1.4.0, modified 2026-06-13: Default admin page with auth data attributes, change-password URL, changelog URL, all-scoreboards URL, and Live Scoreboard page title.
+- `enter-scores-quick.php` revision 1.3.0, modified 2026-06-13: Default compact score entry page with change-password and scoreboards URLs.
+- `index.php` revision 1.2.0, modified 2026-06-13: Default public viewer page after admin moved to `enter-scores.php`.
+- `login.php` revision 1.1.0, modified 2026-06-13: Login page and session creation; forced-reset users are sent to `change-password.php`.
 - `logout.php` revision 1.0.0, modified 2026-04-13: Session destroy and login redirect.
-- `scoreboard_lib.php` revision 1.0.0, modified 2026-04-09: Root default team data and JSON read/write helpers.
-- `scoreboards.php` revision 1.2.0, modified 2026-06-08: Navigation for scoreboard instances the signed-in user can access (admins see all; scorers see only their assigned); bottom action bar with Changelog, Change Password, and Sign Out.
+- `scoreboard_lib.php` revision 1.1.0, modified 2026-06-13: Default team data and JSON read/write helpers; default title is Live Scoreboard.
+- `scoreboards.php` revision 1.5.0, modified 2026-06-13: Navigation for scoreboard instances the signed-in user can access; root scoreboard displays as Default; bottom action bar with Changelog, Change Password, and Sign Out.
 
 #### Collide Instance
 - `collide/api.php` revision 1.2.0, modified 2026-04-13: Collide API with negative scores, auth, and audit logging.
@@ -141,13 +152,13 @@ This inventory was built from each file's header revision notes.
 - `frontlines/scoreboard_lib.php` revision 1.1.0, modified 2026-04-13: Frontlines defaults updated from 10 to 12 teams.
 
 #### Shared Frontend
-- `public/app.js` revision 1.18.0, modified 2026-06-08: Shared viewer/admin logic, polling, rename/title support, dynamic viewer layout, activity log, footer actions, change-password link, changelog link, all-users scoreboards link, admin A-Z team ordering, viewer score ordering, full-admin positive quick buttons, 1st/2nd/3rd place rank badges, sort-order notes on admin and viewer pages, and `--viewer-rows` custom property for responsive grid sizing.
+- `public/app.js` revision 1.23.0, modified 2026-06-13: Shared viewer/admin logic, polling, rename/title support, dynamic viewer layout, activity log, footer actions, change-password link, changelog link, all-users scoreboards link, admin A-Z team ordering, viewer score ordering, full-admin positive quick buttons, 1st/2nd/3rd place rank badges, sort-order notes on admin and viewer pages, add/remove teams, and Live Scoreboard fallback title.
 - `public/quick-entry.css` revision 1.4.0, modified 2026-06-08: Compact quick-entry styling with footer navigation, mobile-friendly team buttons, centered score text, compact quick score buttons, manual negative-score note, rank-badge anchoring on team buttons and inline selected-team header, and quick-status-block / quick-revision styles.
-- `public/quick-entry.js` revision 1.6.0, modified 2026-06-08: Compact quick-entry behavior with footer navigation, change-password link, scoreboards link, `+1/+10/+100/+1000` quick buttons, manual negative-score note, 1st/2nd/3rd place rank badges, A-Z team button sorting, A-Z sort note, on-page revision display under last-updated, and comma-free date/time formatting.
+- `public/quick-entry.js` revision 1.10.0, modified 2026-06-13: Compact quick-entry behavior with footer navigation, change-password link, scoreboards link, `+1/+10/+100/+1000` quick buttons, manual negative-score note, 1st/2nd/3rd place rank badges, A-Z team button sorting, A-Z sort note, on-page revision display under last-updated, and Live Scoreboard fallback title.
 - `public/styles.css` revision 1.8.1, modified 2026-06-08: Shared dark responsive styling, auth/admin/audit styles, footer actions, viewer header affordance, 12-team tablet-width layout fix, centered button labels, three-wide mobile landscape viewer layout, landscape row-flow fix, gold/silver/bronze rank-badge styles, `.sort-note` styling, `--viewer-rows` row sizing, narrow-desktop viewer scroll/min-height fix, and centered `.au-btn` text.
 
 #### Tests
-- `tests/change-password-test.php` revision 1.0.0, modified 2026-05-28: Lightweight verification for signed-in password changes.
+- `tests/change-password-test.php` revision 1.1.0, modified 2026-06-13: Lightweight verification for signed-in password changes, forced-change clearing, and first-run credential cleanup.
 - `tests/github-issues-layout-test.php` revision 1.0.0, modified 2026-06-03: Static verification for GitHub issue driven scoreboard layout updates.
-- `tests/navigation-pages-test.php` revision 1.0.0, modified 2026-06-02: Static verification for changelog and admin navigation pages.
-- `tests/runtime-samples-test.php` revision 1.0.0, modified 2026-06-02: Static verification for public-safe runtime samples and random first-run password behavior.
+- `tests/navigation-pages-test.php` revision 1.2.0, modified 2026-06-13: Static verification for changelog and scoreboard navigation pages with the Default label.
+- `tests/runtime-samples-test.php` revision 1.1.0, modified 2026-06-13: Static verification for public-safe runtime samples, data-folder hardening, forced first-run password changes, and random first-run password behavior.

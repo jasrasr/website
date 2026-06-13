@@ -1,13 +1,14 @@
 <?php declare(strict_types=1);
 /**
  * Filename: change-password.php
- * Revision : 1.0.0
+ * Revision : 1.1.0
  * Description : Signed-in user page for updating their own CVC Scoreboard password.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-05-28
- * Modified Date : 2026-05-28
+ * Modified Date : 2026-06-13
  * Changelog :
  * 1.0.0 initial release
+ * 1.1.0 Support forced password changes for first-run and reset credentials
  */
 
 require __DIR__ . '/auth.php';
@@ -24,6 +25,10 @@ if ($currentUser === null) {
 $safeReturnPaths = [
     './enter-scores.php',
     'enter-scores.php',
+    './scoreboards.php',
+    'scoreboards.php',
+    './changelog.php',
+    'changelog.php',
     'youth/enter-scores.php',
     'collide/enter-scores.php',
     'frontlines/enter-scores.php',
@@ -40,6 +45,7 @@ if (!in_array($returnTo, $safeReturnPaths, true)) {
 
 $message = '';
 $error = '';
+$forceChange = authPasswordChangeRequired($currentUser);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $returnTo = $_POST['return'] ?? $returnTo;
@@ -58,6 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($result['ok']) {
             $message = $result['message'];
             $currentUser = authUser();
+            $forceChange = false;
         } else {
             $error = $result['message'];
         }
@@ -76,7 +83,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="login-page">
       <div class="login-card">
         <h1>Change Password</h1>
-        <p class="login-subtitle">Signed in as <?= htmlspecialchars($currentUser['username'] ?? '') ?></p>
+        <p class="login-subtitle">
+          <?= $forceChange ? 'Set a new password before continuing.' : 'Signed in as ' . htmlspecialchars($currentUser['username'] ?? '') ?>
+        </p>
         <?php if ($message !== ''): ?>
           <p class="login-error" style="color:var(--positive)"><?= htmlspecialchars($message) ?></p>
         <?php endif; ?>
@@ -117,9 +126,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
           <button type="submit" class="login-button">Update Password</button>
         </form>
-        <p class="status-text" style="margin-top:1rem">
-          <a class="au-btn" href="<?= htmlspecialchars($returnTo, ENT_QUOTES, 'UTF-8') ?>">Back to Scoreboard</a>
-        </p>
+        <?php if (!$forceChange): ?>
+          <p class="status-text" style="margin-top:1rem">
+            <a class="au-btn" href="<?= htmlspecialchars($returnTo, ENT_QUOTES, 'UTF-8') ?>">Back to Scoreboard</a>
+          </p>
+        <?php endif; ?>
       </div>
     </div>
   </body>

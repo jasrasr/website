@@ -1,17 +1,18 @@
 <?php declare(strict_types=1);
 /**
  * Filename: scoreboards.php
- * Revision : 1.4.0
+ * Revision : 1.5.0
  * Description : Navigation page for all CVC Scoreboard instances the signed-in user can access.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-02
- * Modified Date : 2026-06-12
+ * Modified Date : 2026-06-13
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Opened to any signed-in user; filters listed instances by user's scoreboard access
  * 1.2.0 Moved header actions to a bottom footer bar; added Change Password link
  * 1.3.0 Added Frontlines team roster link
  * 1.4.0 Show notice when redirected here after attempting an off-limits scoreboard
+ * 1.5.0 Rename Root scoreboard label to Default
  */
 
 require __DIR__ . '/auth.php';
@@ -20,7 +21,7 @@ $currentUser = requireSignedIn('./login.php');
 $scoreboards = [
     [
         'id' => 'root',
-        'name' => 'Root',
+        'name' => 'Default',
         'viewer' => './index.php',
         'admin' => './enter-scores.php',
         'quick' => './enter-scores-quick.php',

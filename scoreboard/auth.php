@@ -1,14 +1,14 @@
 <?php declare(strict_types=1);
 /**
  * Filename: auth.php
- * Revision : 1.6.0
+ * Revision : 1.7.0
  * Description : Shared authentication library for CVC Scoreboard.
  *               Handles sessions, user management, login/logout, and audit logging.
  *               Users stored in data/users.json with bcrypt-hashed passwords.
  *               Default users auto-created on first load.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-13
- * Modified Date : 2026-06-12
+ * Modified Date : 2026-06-13
  * Changelog :
  * 1.0.0 Initial release; per-user auth, roles, scoreboard access, audit logging
  * 1.1.0 Replaced hardcoded temp passwords with random generation; writes first-run-credentials.txt
@@ -17,9 +17,11 @@
  * 1.4.0 Restored random first-run passwords so public source does not define usable defaults
  * 1.5.0 Added requireSignedIn helper for pages open to any authenticated user
  * 1.6.0 Track modified_at on users; requireAuth redirects to scoreboards.php on missing access
+ * 1.7.0 Force first-run/reset password changes and remove used first-run credentials
  */
 
 const USERS_FILE     = __DIR__ . '/data/users.json';
+const FIRST_RUN_CREDENTIALS_FILE = __DIR__ . '/data/first-run-credentials.txt';
 const AUTH_SESSION   = 'cvc_user';
 const ALL_SCOREBOARDS = ['root', 'youth', 'collide', 'frontlines'];
 
@@ -41,6 +43,28 @@ function authUser(): ?array
     return $_SESSION[AUTH_SESSION] ?? null;
 }
 
+function authPasswordChangeRequired(array $user): bool
+{
+    return !empty($user['must_change_password']);
+}
+
+function authPasswordChangeUrl(string $loginUrl): string
+{
+    $base = rtrim(str_replace('\\', '/', dirname($loginUrl)), '/');
+    return ($base === '' || $base === '.') ? './change-password.php' : $base . '/change-password.php';
+}
+
+function authRedirectIfPasswordChangeRequired(array $user, string $loginUrl): void
+{
+    if (!authPasswordChangeRequired($user)) {
+        return;
+    }
+
+    $changePasswordUrl = authPasswordChangeUrl($loginUrl);
+    header("Location: {$changePasswordUrl}?force=1&return=scoreboards.php");
+    exit;
+}
+
 // ---------------------------------------------------------------------------
 // Access guards
 // ---------------------------------------------------------------------------
@@ -58,6 +82,8 @@ function requireAuth(string $scoreboardId, string $loginUrl): array
         header("Location: {$loginUrl}?redirect={$redirect}");
         exit;
     }
+
+    authRedirectIfPasswordChangeRequired($user, $loginUrl);
 
     if (!in_array($scoreboardId, $user['scoreboards'] ?? [], true)) {
         $base            = rtrim(str_replace('\\', '/', dirname($loginUrl)), '/');
@@ -81,6 +107,13 @@ function requireAuthJson(string $scoreboardId): array
         http_response_code(401);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode(['error' => 'Authentication required.']);
+        exit;
+    }
+
+    if (authPasswordChangeRequired($user)) {
+        http_response_code(403);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['error' => 'Password change required.']);
         exit;
     }
 
@@ -108,6 +141,8 @@ function requireSignedIn(string $loginUrl): array
         exit;
     }
 
+    authRedirectIfPasswordChangeRequired($user, $loginUrl);
+
     return $user;
 }
 
@@ -123,6 +158,8 @@ function requireAdmin(string $loginUrl): array
         header("Location: {$loginUrl}");
         exit;
     }
+
+    authRedirectIfPasswordChangeRequired($user, $loginUrl);
 
     if (($user['role'] ?? '') !== 'admin') {
         http_response_code(403);
@@ -189,7 +226,7 @@ function ensureUsersFile(): void
         $users       = [];
         foreach ($names as [$username, $role, $scoreboards]) {
             $password      = bin2hex(random_bytes(8));
-            $users[]       = makeUser($username, $password, $role, $scoreboards);
+            $users[]       = makeUser($username, $password, $role, $scoreboards, true);
             $credentials[] = "{$username}: {$password}";
         }
 
@@ -205,14 +242,15 @@ function ensureUsersFile(): void
             $credFile,
             "CVC Scoreboard — First-Run Credentials\n"
             . "Generated: " . gmdate('c') . "\n"
-            . "Delete this file after saving the passwords.\n\n"
+            . "Users must change these passwords before continuing.\n"
+            . "Each line is removed automatically after that user changes their password.\n\n"
             . implode("\n", $credentials) . "\n",
             LOCK_EX
         );
     }
 }
 
-function makeUser(string $username, string $password, string $role, array $scoreboards): array
+function makeUser(string $username, string $password, string $role, array $scoreboards, bool $mustChangePassword = false): array
 {
     $now = gmdate('c');
     return [
@@ -221,9 +259,40 @@ function makeUser(string $username, string $password, string $role, array $score
         'password_hash' => password_hash($password, PASSWORD_DEFAULT),
         'role'          => $role,
         'scoreboards'   => $scoreboards,
+        'must_change_password' => $mustChangePassword,
         'created_at'    => $now,
         'modified_at'   => $now,
     ];
+}
+
+function removeFirstRunCredential(string $username): void
+{
+    if (!is_file(FIRST_RUN_CREDENTIALS_FILE)) {
+        return;
+    }
+
+    $lines = file(FIRST_RUN_CREDENTIALS_FILE, FILE_IGNORE_NEW_LINES);
+    if ($lines === false) {
+        return;
+    }
+
+    $updated = [];
+    $removed = false;
+    $pattern = '/^' . preg_quote($username, '/') . ':\s+.+$/';
+
+    foreach ($lines as $line) {
+        if (preg_match($pattern, $line) === 1) {
+            $removed = true;
+            continue;
+        }
+        $updated[] = $line;
+    }
+
+    if (!$removed) {
+        return;
+    }
+
+    file_put_contents(FIRST_RUN_CREDENTIALS_FILE, rtrim(implode(PHP_EOL, $updated)) . PHP_EOL, LOCK_EX);
 }
 
 function attemptLogin(string $username, string $password): ?array
@@ -257,7 +326,10 @@ function changeCurrentUserPassword(string $userId, string $currentPassword, stri
         }
 
         $user['password_hash'] = password_hash($newPassword, PASSWORD_DEFAULT);
+        $user['must_change_password'] = false;
+        $user['modified_at'] = gmdate('c');
         saveUsers($users);
+        removeFirstRunCredential($user['username']);
 
         authStart();
         $_SESSION[AUTH_SESSION] = [
@@ -265,6 +337,7 @@ function changeCurrentUserPassword(string $userId, string $currentPassword, stri
             'username'    => $user['username'],
             'role'        => $user['role'],
             'scoreboards' => $user['scoreboards'] ?? [],
+            'must_change_password' => false,
         ];
 
         return ['ok' => true, 'message' => 'Password updated.'];
