@@ -11,6 +11,7 @@
 - The **Add Team** form now shows visible labels for the new team name and color fields, and the Add Team button includes an "or press Enter" helper.
 
 ### Auth
+- First-run generation now creates only two temporary users: `admin` and `scorer`, both using password `password` and both forced to change it before continuing.
 - First-run generated users and admin-created/reset users now must change their password before they can continue into scoreboard pages or APIs.
 - `login.php` sends forced-reset users directly to `change-password.php`.
 - After a successful password change, the user's `must_change_password` flag is cleared and their line is removed from `data/first-run-credentials.txt`.
@@ -123,7 +124,7 @@ This inventory was built from each file's header revision notes.
 #### Root PHP
 - `admin-users.php` revision 1.2.0, modified 2026-06-13: Admin-only user management and merged audit log page; created/reset passwords require a change and root access displays as Default.
 - `api.php` revision 1.4.0, modified 2026-04-13: Root scoreboard API with query-param routing, team/title rename actions, negative scores, auth, and audit logging.
-- `auth.php` revision 1.7.0, modified 2026-06-13: Shared auth library with sessions, roles, scoreboard access, audit helpers, signed-in password changes, forced first-run/reset password changes, random first-run passwords, and first-run credential cleanup.
+- `auth.php` revision 1.8.0, modified 2026-06-13: Shared auth library with sessions, roles, scoreboard access, audit helpers, signed-in password changes, forced first-run/reset password changes, two temporary first-run users, and first-run credential cleanup.
 - `change-password.php` revision 1.1.0, modified 2026-06-13: Signed-in self-service password update page with forced-change support.
 - `changelog.php` revision 1.1.0, modified 2026-06-08: Signed-in web viewer for `CHANGELOG.md`; uses `requireSignedIn` and links back to `scoreboards.php`.
 - `enter-scores.php` revision 1.4.0, modified 2026-06-13: Default admin page with auth data attributes, change-password URL, changelog URL, all-scoreboards URL, and Live Scoreboard page title.
@@ -165,4 +166,4 @@ This inventory was built from each file's header revision notes.
 - `tests/change-password-test.php` revision 1.1.0, modified 2026-06-13: Lightweight verification for signed-in password changes, forced-change clearing, and first-run credential cleanup.
 - `tests/github-issues-layout-test.php` revision 1.2.0, modified 2026-06-13: Static verification for GitHub issue driven scoreboard layout updates and Add Team labels.
 - `tests/navigation-pages-test.php` revision 1.2.0, modified 2026-06-13: Static verification for changelog and scoreboard navigation pages with the Default label.
-- `tests/runtime-samples-test.php` revision 1.2.0, modified 2026-06-13: Static verification for public-safe runtime samples, root default team labels, data-folder hardening, forced first-run password changes, and random first-run password behavior.
+- `tests/runtime-samples-test.php` revision 1.3.0, modified 2026-06-13: Static verification for public-safe runtime samples, root default team labels, data-folder hardening, forced first-run password changes, and first-run admin/scorer generation.

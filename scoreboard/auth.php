@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: auth.php
- * Revision : 1.7.0
+ * Revision : 1.8.0
  * Description : Shared authentication library for CVC Scoreboard.
  *               Handles sessions, user management, login/logout, and audit logging.
  *               Users stored in data/users.json with bcrypt-hashed passwords.
@@ -18,12 +18,14 @@
  * 1.5.0 Added requireSignedIn helper for pages open to any authenticated user
  * 1.6.0 Track modified_at on users; requireAuth redirects to scoreboards.php on missing access
  * 1.7.0 Force first-run/reset password changes and remove used first-run credentials
+ * 1.8.0 Create two first-run users (admin/scorer) with temporary password password
  */
 
 const USERS_FILE     = __DIR__ . '/data/users.json';
 const FIRST_RUN_CREDENTIALS_FILE = __DIR__ . '/data/first-run-credentials.txt';
 const AUTH_SESSION   = 'cvc_user';
 const ALL_SCOREBOARDS = ['root', 'youth', 'collide', 'frontlines'];
+const DEFAULT_FIRST_RUN_PASSWORD = 'password';
 
 // ---------------------------------------------------------------------------
 // Session
@@ -215,17 +217,14 @@ function ensureUsersFile(): void
 
     if (!is_file(USERS_FILE)) {
         $names = [
-            ['jason',  'admin',  ALL_SCOREBOARDS],
-            ['tate',   'scorer', ALL_SCOREBOARDS],
-            ['dahlia', 'scorer', ALL_SCOREBOARDS],
-            ['joe',    'scorer', ALL_SCOREBOARDS],
-            ['james',  'scorer', ALL_SCOREBOARDS],
+            ['admin',  'admin',  ALL_SCOREBOARDS],
+            ['scorer', 'scorer', ALL_SCOREBOARDS],
         ];
 
         $credentials = [];
         $users       = [];
         foreach ($names as [$username, $role, $scoreboards]) {
-            $password      = bin2hex(random_bytes(8));
+            $password      = DEFAULT_FIRST_RUN_PASSWORD;
             $users[]       = makeUser($username, $password, $role, $scoreboards, true);
             $credentials[] = "{$username}: {$password}";
         }
@@ -236,13 +235,14 @@ function ensureUsersFile(): void
             LOCK_EX
         );
 
-        // Write one-time credentials file — read this, then delete it
+        // Write first-run credentials file so installers know the temporary login.
         $credFile = dirname(USERS_FILE) . '/first-run-credentials.txt';
         file_put_contents(
             $credFile,
             "CVC Scoreboard — First-Run Credentials\n"
             . "Generated: " . gmdate('c') . "\n"
-            . "Users must change these passwords before continuing.\n"
+            . "Temporary password for first sign-in: " . DEFAULT_FIRST_RUN_PASSWORD . "\n"
+            . "Users must change this password before continuing.\n"
             . "Each line is removed automatically after that user changes their password.\n\n"
             . implode("\n", $credentials) . "\n",
             LOCK_EX

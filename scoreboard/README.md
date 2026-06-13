@@ -56,7 +56,7 @@ Live runtime files are ignored by Git, but public-safe samples are committed so 
 - `<instance>/data/audit.sample.json`
 - `first-run-credentials.txt.sample`
 
-Do not commit live `scores.json`, `users.json`, `audit.json`, or `first-run-credentials.txt` files. The app creates missing live files on first use.
+Do not commit live `scores.json`, `users.json`, `audit.json`, or `first-run-credentials.txt` files. The app creates missing live files on first use. If `data/users.json` is missing, first use creates two temporary users: `admin` and `scorer`, both with password `password`. Both users must set a new password before they can continue.
 
 ## Where to Make Changes
 
@@ -132,7 +132,7 @@ The production scoreboard is not open to the public.
 
 Upload the `scoreboard` project folder to your host. Make sure each instance's `data/` folder is writable by PHP so scores can be saved. The `data/scores.json` file is created automatically on first load.
 
-The committed `data/.htaccess` files block direct public web access to runtime data folders on Apache-compatible hosts. If your host does not honor `.htaccess`, move runtime data outside the web root or add equivalent server rules. First-run user passwords are generated into `data/first-run-credentials.txt`; users must change those passwords before continuing, and each used line is removed after that user changes their password. Delete the file after all first-run credentials are used.
+The committed `data/.htaccess` files block direct public web access to runtime data folders on Apache-compatible hosts. If your host does not honor `.htaccess`, move runtime data outside the web root or add equivalent server rules. First-run users are written to `data/first-run-credentials.txt`; both use the temporary password `password`, must change it before continuing, and each used line is removed after that user changes their password. Delete the file after all first-run credentials are used.
 
 ## Frontlines Roster — Pending
 
