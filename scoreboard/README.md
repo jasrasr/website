@@ -6,7 +6,7 @@ A PHP scoreboard app for tracking team scores across multiple ministry instances
 
 | Instance | Path | Teams |
 |----------|------|-------|
-| Default | `/` | 6th–8th Grade Boys/Girls (6 teams) |
+| Default | `/` | Team 1–Team 6 |
 | Collide | `/collide/` | 6th–8th Boys/Girls (6 teams) |
 | Youth | `/youth/` | 6th–12th Grade + Grads (8 teams) |
 | Frontlines | `/frontlines/` | Red, Maroon, Orange, Yellow, Light Green, Dark Green, Light Blue, Royal Blue, Navy, Pink, Purple, Smoke (12 teams) |
@@ -89,7 +89,7 @@ For API behavior changes, check all four API files unless the request is only fo
 - Custom positive or negative score entry for each team.
 - Reset a single team's score to zero (per-card on full admin, and for the selected team on quick entry) or reset all teams at once.
 - Rename teams and update the scoreboard title from the admin page. Apply/Rename buttons sit inline with their text inputs on the full admin.
-- **Add and remove teams** from the full admin page. Each card has a Remove Team button (with confirm). The Add Team form between the team grid and activity log lets admins pick a name + color and append a team on the fly; the server generates a unique `team-{random}` id.
+- **Add and remove teams** from the full admin page. Each card has a Remove Team button (with confirm). The Add Team form between the team grid and activity log has labeled name/color fields and can be submitted with the Add Team button or Enter; the server generates a unique `team-{random}` id.
 - Scores saved to `data/scores.json` after each change.
 - Audit log records score changes, team resets, board resets, team add/remove, team renames, and title updates. The audit log is visible both on the full admin page and on quick entry (collapsible "Show Recent Activity" section).
 - Quick entry no longer auto-selects a team on load — a placeholder prompts the user to pick a team first, preventing accidental score changes after refresh.

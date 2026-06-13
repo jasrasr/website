@@ -4,7 +4,7 @@
     "username": "example-admin",
     "action": "adjust",
     "team_id": "sixth-grade-boys",
-    "team_name": "6th Grade Boys",
+    "team_name": "Team 1",
     "amount": 1,
     "new_score": 1,
     "ip": "127.0.0.1",

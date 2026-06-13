@@ -5,6 +5,10 @@
 ### Default Scoreboard
 - Renamed the root scoreboard's user-facing label to **Default** while keeping the internal `root` id for existing permissions and data.
 - Renamed the default/root scoreboard title to **Live Scoreboard** in the default data, sample data, root page titles, and shared frontend fallbacks.
+- Renamed the default team labels from grade/gender names to **Team 1** through **Team 6** in the root defaults and committed sample/live data.
+
+### Full Admin (`enter-scores.php`)
+- The **Add Team** form now shows visible labels for the new team name and color fields, and the Add Team button includes an "or press Enter" helper.
 
 ### Auth
 - First-run generated users and admin-created/reset users now must change their password before they can continue into scoreboard pages or APIs.
@@ -127,7 +131,7 @@ This inventory was built from each file's header revision notes.
 - `index.php` revision 1.2.0, modified 2026-06-13: Default public viewer page after admin moved to `enter-scores.php`.
 - `login.php` revision 1.1.0, modified 2026-06-13: Login page and session creation; forced-reset users are sent to `change-password.php`.
 - `logout.php` revision 1.0.0, modified 2026-04-13: Session destroy and login redirect.
-- `scoreboard_lib.php` revision 1.1.0, modified 2026-06-13: Default team data and JSON read/write helpers; default title is Live Scoreboard.
+- `scoreboard_lib.php` revision 1.2.0, modified 2026-06-13: Default team data and JSON read/write helpers; default title is Live Scoreboard and default team labels are Team 1 through Team 6.
 - `scoreboards.php` revision 1.5.0, modified 2026-06-13: Navigation for scoreboard instances the signed-in user can access; root scoreboard displays as Default; bottom action bar with Changelog, Change Password, and Sign Out.
 
 #### Collide Instance
@@ -152,13 +156,13 @@ This inventory was built from each file's header revision notes.
 - `frontlines/scoreboard_lib.php` revision 1.1.0, modified 2026-04-13: Frontlines defaults updated from 10 to 12 teams.
 
 #### Shared Frontend
-- `public/app.js` revision 1.23.0, modified 2026-06-13: Shared viewer/admin logic, polling, rename/title support, dynamic viewer layout, activity log, footer actions, change-password link, changelog link, all-users scoreboards link, admin A-Z team ordering, viewer score ordering, full-admin positive quick buttons, 1st/2nd/3rd place rank badges, sort-order notes on admin and viewer pages, add/remove teams, and Live Scoreboard fallback title.
+- `public/app.js` revision 1.24.0, modified 2026-06-13: Shared viewer/admin logic, polling, rename/title support, dynamic viewer layout, activity log, footer actions, change-password link, changelog link, all-users scoreboards link, admin A-Z team ordering, viewer score ordering, full-admin positive quick buttons, 1st/2nd/3rd place rank badges, sort-order notes on admin and viewer pages, add/remove teams, labeled Add Team controls, and Live Scoreboard fallback title.
 - `public/quick-entry.css` revision 1.4.0, modified 2026-06-08: Compact quick-entry styling with footer navigation, mobile-friendly team buttons, centered score text, compact quick score buttons, manual negative-score note, rank-badge anchoring on team buttons and inline selected-team header, and quick-status-block / quick-revision styles.
 - `public/quick-entry.js` revision 1.10.0, modified 2026-06-13: Compact quick-entry behavior with footer navigation, change-password link, scoreboards link, `+1/+10/+100/+1000` quick buttons, manual negative-score note, 1st/2nd/3rd place rank badges, A-Z team button sorting, A-Z sort note, on-page revision display under last-updated, and Live Scoreboard fallback title.
-- `public/styles.css` revision 1.8.1, modified 2026-06-08: Shared dark responsive styling, auth/admin/audit styles, footer actions, viewer header affordance, 12-team tablet-width layout fix, centered button labels, three-wide mobile landscape viewer layout, landscape row-flow fix, gold/silver/bronze rank-badge styles, `.sort-note` styling, `--viewer-rows` row sizing, narrow-desktop viewer scroll/min-height fix, and centered `.au-btn` text.
+- `public/styles.css` revision 1.9.2, modified 2026-06-13: Shared dark responsive styling, auth/admin/audit styles, footer actions, viewer header affordance, 12-team tablet-width layout fix, centered button labels, three-wide mobile landscape viewer layout, landscape row-flow fix, gold/silver/bronze rank-badge styles, `.sort-note` styling, `--viewer-rows` row sizing, narrow-desktop viewer scroll/min-height fix, centered `.au-btn` text, Frontlines roster styles, and labeled Add Team form styles.
 
 #### Tests
 - `tests/change-password-test.php` revision 1.1.0, modified 2026-06-13: Lightweight verification for signed-in password changes, forced-change clearing, and first-run credential cleanup.
-- `tests/github-issues-layout-test.php` revision 1.0.0, modified 2026-06-03: Static verification for GitHub issue driven scoreboard layout updates.
+- `tests/github-issues-layout-test.php` revision 1.2.0, modified 2026-06-13: Static verification for GitHub issue driven scoreboard layout updates and Add Team labels.
 - `tests/navigation-pages-test.php` revision 1.2.0, modified 2026-06-13: Static verification for changelog and scoreboard navigation pages with the Default label.
-- `tests/runtime-samples-test.php` revision 1.1.0, modified 2026-06-13: Static verification for public-safe runtime samples, data-folder hardening, forced first-run password changes, and random first-run password behavior.
+- `tests/runtime-samples-test.php` revision 1.2.0, modified 2026-06-13: Static verification for public-safe runtime samples, root default team labels, data-folder hardening, forced first-run password changes, and random first-run password behavior.

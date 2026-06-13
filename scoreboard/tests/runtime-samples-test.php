@@ -1,14 +1,15 @@
 <?php declare(strict_types=1);
 /**
  * Filename: runtime-samples-test.php
- * Revision : 1.1.0
- * Description : Verifies public-safe runtime sample files and random first-run password behavior.
+ * Revision : 1.2.0
+ * Description : Verifies public-safe runtime sample files, default teams, and random first-run password behavior.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-02
  * Modified Date : 2026-06-13
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Verify data-folder hardening and forced first-run password changes
+ * 1.2.0 Verify root sample team labels use Team 1 through Team 6
  */
 
 function assertTrue(bool $condition, string $message): void
@@ -47,6 +48,10 @@ foreach ($requiredSamples as $relativePath) {
         assertTrue(is_array($decoded), "{$relativePath} should contain valid JSON.");
     }
 }
+
+$rootScoresSample = json_decode(file_get_contents($root . '/data/scores.sample.json') ?: '', true);
+$rootTeamNames = array_map(fn($team) => $team['name'] ?? '', $rootScoresSample['teams'] ?? []);
+assertTrue($rootTeamNames === ['Team 1', 'Team 2', 'Team 3', 'Team 4', 'Team 5', 'Team 6'], 'Root scores sample should use Team 1 through Team 6 labels.');
 
 $auth = file_get_contents($root . '/auth.php') ?: '';
 assertTrue(strpos($auth, "bin2hex(random_bytes(8))") !== false, 'auth.php should generate random first-run passwords.');

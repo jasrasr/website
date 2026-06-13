@@ -1,11 +1,11 @@
 /*
  * Filename: styles.css
- * Revision : 1.9.1
+ * Revision : 1.9.2
  * Description : Dark-themed responsive styles for CVC Scoreboard.
  *               Shared across all scoreboard instances (root, collide, youth, frontlines).
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-03-24
- * Modified Date : 2026-06-08
+ * Modified Date : 2026-06-13
  * Changelog :
  * 1.0.0 Initial release
  * 1.1.0 Changed team-title to column layout so hint text renders below team name
@@ -21,6 +21,7 @@
  * 1.8.1 Center .au-btn text horizontally so footer link buttons no longer left-align when stretched
  * 1.9.0 Added Frontlines roster page styles
  * 1.9.1 Added Frontlines roster editor styles
+ * 1.9.2 Added labeled Add Team form layout and helper text styling
  */
 
 :root {
@@ -115,6 +116,45 @@ body.viewer-body {
   display: flex;
   gap: 0.5rem;
   flex: 1 1 320px;
+}
+
+.admin-add-team {
+  margin-top: 1.5rem;
+}
+
+.add-team-form {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(110px, 160px) minmax(140px, auto);
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.form-field {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.form-field input {
+  width: 100%;
+}
+
+.color-field input {
+  min-width: 5rem;
+  padding: 0.35rem;
+}
+
+.add-team-button {
+  flex-direction: column;
+  gap: 0.1rem;
+  line-height: 1.1;
+}
+
+.add-team-button small {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
 }
 
 .viewer-admin-link {
@@ -810,9 +850,14 @@ input {
   }
 
   .admin-footer-actions,
-  .admin-title-form {
+  .admin-title-form,
+  .add-team-form {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .add-team-form {
+    display: flex;
   }
 
   .team-grid {

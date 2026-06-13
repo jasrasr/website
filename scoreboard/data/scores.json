@@ -4,37 +4,37 @@
   "teams": [
     {
       "id": "sixth-grade-boys",
-      "name": "6th Grade Boys",
+      "name": "Team 1",
       "color": "#1d4ed8",
       "score": 0
     },
     {
       "id": "sixth-grade-girls",
-      "name": "6th Grade Girls",
+      "name": "Team 2",
       "color": "#db2777",
       "score": 0
     },
     {
       "id": "seventh-grade-boys",
-      "name": "7th Grade Boys",
+      "name": "Team 3",
       "color": "#0f766e",
       "score": 0
     },
     {
       "id": "seventh-grade-girls",
-      "name": "7th Grade Girls",
+      "name": "Team 4",
       "color": "#7c3aed",
       "score": 0
     },
     {
       "id": "eighth-grade-boys",
-      "name": "8th Grade Boys",
+      "name": "Team 5",
       "color": "#ea580c",
       "score": 0
     },
     {
       "id": "eighth-grade-girls",
-      "name": "8th Grade Girls",
+      "name": "Team 6",
       "color": "#15803d",
       "score": 0
     }

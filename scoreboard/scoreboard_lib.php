@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 /**
  * Filename: scoreboard_lib.php
- * Revision : 1.1.0
- * Description : Core library for CVC Youth Scoreboard. Defines default team data,
+ * Revision : 1.2.0
+ * Description : Core library for the default CVC Scoreboard. Defines default team data,
  *               handles JSON file read/write with file locking, and HTTP JSON responses.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-09
@@ -10,6 +10,7 @@
  * Changelog :
  * 1.0.0 Initial PHP release, converted from Node.js/Express
  * 1.1.0 Rename default scoreboard title to Live Scoreboard
+ * 1.2.0 Rename default team labels to Team 1 through Team 6
  */
 
 const SCOREBOARD_DATA_FILE = __DIR__ . '/data/scores.json';
@@ -22,37 +23,37 @@ function scoreboardDefaultData(): array
         'teams' => [
             [
                 'id' => 'sixth-grade-boys',
-                'name' => '6th Grade Boys',
+                'name' => 'Team 1',
                 'color' => '#1d4ed8',
                 'score' => 0,
             ],
             [
                 'id' => 'sixth-grade-girls',
-                'name' => '6th Grade Girls',
+                'name' => 'Team 2',
                 'color' => '#db2777',
                 'score' => 0,
             ],
             [
                 'id' => 'seventh-grade-boys',
-                'name' => '7th Grade Boys',
+                'name' => 'Team 3',
                 'color' => '#0f766e',
                 'score' => 0,
             ],
             [
                 'id' => 'seventh-grade-girls',
-                'name' => '7th Grade Girls',
+                'name' => 'Team 4',
                 'color' => '#7c3aed',
                 'score' => 0,
             ],
             [
                 'id' => 'eighth-grade-boys',
-                'name' => '8th Grade Boys',
+                'name' => 'Team 5',
                 'color' => '#ea580c',
                 'score' => 0,
             ],
             [
                 'id' => 'eighth-grade-girls',
-                'name' => '8th Grade Girls',
+                'name' => 'Team 6',
                 'color' => '#15803d',
                 'score' => 0,
             ],

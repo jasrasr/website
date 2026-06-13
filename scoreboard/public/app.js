@@ -1,5 +1,5 @@
 // Filename: app.js
-// Revision : 1.23.0
+// Revision : 1.24.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
@@ -31,6 +31,7 @@
 // 1.21.0 Add View Scoreboard + Quick Score links to admin top banner; rename footer "Open Viewer Page" to "View Scoreboard"
 // 1.22.0 Add per-card Remove Team button and Add Team form on full admin
 // 1.23.0 Rename default fallback title to Live Scoreboard
+// 1.24.0 Add visible labels and Enter-submit helper text to the Add Team form
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -233,11 +234,20 @@ async function renderAdmin(data) {
           return sortTeamsByName(data.teams).map((team) => createAdminCard(team, ranks.get(team.id))).join('');
         })()}
       </main>
-      <section class="admin-add-team" aria-label="Add a team" style="margin-top:1.5rem">
-        <form class="custom-controls" data-action="add-team-form">
-          <input name="newTeamName" type="text" placeholder="New team name" aria-label="New team name" required />
-          <input name="newTeamColor" type="color" value="#64748b" aria-label="New team color" />
-          <button class="positive" type="submit">Add Team</button>
+      <section class="admin-add-team" aria-label="Add a team">
+        <form class="add-team-form" data-action="add-team-form">
+          <label class="form-field">
+            <span>New Team Name</span>
+            <input name="newTeamName" type="text" placeholder="Team name" required />
+          </label>
+          <label class="form-field color-field">
+            <span>Color</span>
+            <input name="newTeamColor" type="color" value="#64748b" />
+          </label>
+          <button class="positive add-team-button" type="submit">
+            <span>Add Team</span>
+            <small>or press Enter</small>
+          </button>
         </form>
       </section>
       <section id="activity-section" style="margin-top:1.5rem">
