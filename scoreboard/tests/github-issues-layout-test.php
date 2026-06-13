@@ -1,13 +1,14 @@
 <?php declare(strict_types=1);
 /**
  * Filename: github-issues-layout-test.php
- * Revision : 1.0.0
+ * Revision : 1.1.0
  * Description : Static verification for GitHub issue driven scoreboard layout updates.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-03
- * Modified Date : 2026-06-03
+ * Modified Date : 2026-06-13
  * Changelog :
  * 1.0.0 initial release
+ * 1.1.0 Updated sort assertions for rank-aware card rendering callbacks
  */
 
 function assertContains(string $haystack, string $needle, string $message): void
@@ -26,8 +27,8 @@ $quickCss = file_get_contents($root . '/public/quick-entry.css') ?: '';
 
 assertContains($appJs, 'sortTeamsByName', 'Admin cards should use a named A-Z team sort helper.');
 assertContains($appJs, 'sortTeamsByScore', 'Viewer cards should use a named score-order helper.');
-assertContains($appJs, 'sortTeamsByName(data.teams).map(createAdminCard)', 'Admin rendering should order team cards A-Z.');
-assertContains($appJs, 'sortTeamsByScore(data.teams).map(createViewerCard)', 'Viewer rendering should order teams by score.');
+assertContains($appJs, 'sortTeamsByName(data.teams).map((team) => createAdminCard', 'Admin rendering should order team cards A-Z.');
+assertContains($appJs, 'sortTeamsByScore(data.teams).map((team) => createViewerCard', 'Viewer rendering should order teams by score.');
 assertContains($appJs, 'const quickValues = [1, 10, 100, 1000];', 'Full admin quick buttons should be +1, +10, +100, +1000.');
 assertContains($appJs, 'Use custom amount for negative scoring.', 'Full admin should explain manual negative scoring.');
 

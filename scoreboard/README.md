@@ -117,18 +117,18 @@ For API behavior changes, check all four API files unless the request is only fo
 - Signed-in users who hit a scoreboard they don't have access to (e.g., `/youth/enter-scores.php` for a scorer without Youth) are redirected to `scoreboards.php?denied=<id>` instead of seeing a 403 error page. The Scoreboards page reads the param and shows a banner explaining which scoreboard was off-limits.
 - Public GETs on each instance's `api.php?action=scores` remain open (so the viewer doesn't need a login). All write actions and the audit endpoint require `requireAuthJson()`.
 
-## Demo
+## Public URLs
 
-A live demo is available for public testing — use this instead of the production scoreboards:
+Hostinger deploys this repository under `/github`, and this project folder is named `scoreboard`.
 
-- `https://jasr.me/scoreboard-demo/` — admin page (try it out)
-- `https://jasr.me/scoreboard-demo/index.php` — viewer page
+- `https://jasr.me/github/scoreboard/` — production scoreboard after `main` deploys
+- `https://jasr.me/github-test/scoreboard/` — staging scoreboard from the `change-scoreboard-url` branch
 
-> Note: `https://jasr.me/scoreboard/` is the production scoreboard and is not open to the public.
+The production scoreboard is not open to the public.
 
 ## Deploying
 
-Upload the project folder to your host. Make sure each instance's `data/` folder is writable by PHP so scores can be saved. The `data/scores.json` file is created automatically on first load.
+Upload the `scoreboard` project folder to your host. Make sure each instance's `data/` folder is writable by PHP so scores can be saved. The `data/scores.json` file is created automatically on first load.
 
 Recommended hardening: block direct public web access to all `data/` folders, or move runtime data outside the web root. First-run user passwords are generated into `data/first-run-credentials.txt`; read them once, save them securely, and delete that file from the server.
 
