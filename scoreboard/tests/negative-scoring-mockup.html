@@ -1,6 +1,6 @@
 <!--
   Filename: negative-scoring-mockup.html
-  Revision : 1.0.0
+  Revision : 1.1.0
   Description : Interactive visual mockup of three add/remove score control
                 layouts for the custom-amount input on the scoreboard admin
                 and quick-entry pages. Standalone HTML so it can be opened
@@ -10,6 +10,8 @@
   Modified Date : 2026-06-17
   Changelog :
   1.0.0 initial release
+  1.1.0 Rename buttons to "Add Score"/"Subtract Score"; input now shows the
+        negative sign live (e.g. "-100") whenever Subtract mode is active
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -141,8 +143,8 @@
       <h2>Option A &mdash; side-by-side + / &minus; toggle</h2>
       <p class="mockup-desc">Pick mode first (green + is default), then type digits and Apply. Numeric keypad stays on iOS &amp; Android.</p>
       <div class="mode-row" data-role="opt-a-modes">
-        <button type="button" class="positive is-active" data-mode="add">+ Add</button>
-        <button type="button" class="negative" data-mode="remove">&minus; Remove</button>
+        <button type="button" class="positive is-active" data-mode="add">+ Add Score</button>
+        <button type="button" class="negative" data-mode="remove">&minus; Subtract Score</button>
       </div>
       <form class="mockup-form" data-opt="a">
         <input type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Amount" aria-label="Amount" />
@@ -155,7 +157,7 @@
       <h2>Option B &mdash; single toggle that flips sign</h2>
       <p class="mockup-desc">One button toggles between Add (green) and Remove (red). Smaller footprint but you have to read the mode before submitting.</p>
       <form class="mockup-form" data-opt="b">
-        <button type="button" class="positive toggle-single" data-role="opt-b-toggle" data-mode="add">+ Add</button>
+        <button type="button" class="positive toggle-single" data-role="opt-b-toggle" data-mode="add">+ Add Score</button>
         <input type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Amount" aria-label="Amount" />
         <button type="submit" class="secondary">Apply</button>
       </form>
@@ -168,8 +170,8 @@
       <form class="mockup-form opt-c-form" data-opt="c">
         <input type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Amount" aria-label="Amount" />
         <div class="submit-pair">
-          <button type="submit" class="positive" data-action="add">+ Add</button>
-          <button type="submit" class="negative" data-action="remove">&minus; Remove</button>
+          <button type="submit" class="positive" data-action="add">+ Add Score</button>
+          <button type="submit" class="negative" data-action="remove">&minus; Subtract Score</button>
         </div>
       </form>
       <p class="mockup-result" data-result="c">Submitted amount will appear here</p>
@@ -193,15 +195,23 @@
         return parseInt(digits, 10);
       }
 
+      function syncSignedInput(input, mode) {
+        const digits = (input.value || '').replace(/[^0-9]/g, '');
+        input.value = digits === '' ? '' : (mode === 'remove' ? '-' + digits : digits);
+      }
+
       // Option A: side-by-side mode toggle
       const optAModes = document.querySelector('[data-role="opt-a-modes"]');
+      const optAInput = document.querySelector('form[data-opt="a"] input');
       let optAMode = 'add';
       optAModes.addEventListener('click', (event) => {
         const button = event.target.closest('button[data-mode]');
         if (!button) return;
         optAMode = button.dataset.mode;
         optAModes.querySelectorAll('button').forEach((b) => b.classList.toggle('is-active', b === button));
+        syncSignedInput(optAInput, optAMode);
       });
+      optAInput.addEventListener('input', () => syncSignedInput(optAInput, optAMode));
       document.querySelector('form[data-opt="a"]').addEventListener('submit', (event) => {
         event.preventDefault();
         const amount = readAmount(event.target);
@@ -215,13 +225,16 @@
 
       // Option B: single sign-flip button
       const optBToggle = document.querySelector('[data-role="opt-b-toggle"]');
+      const optBInput = document.querySelector('form[data-opt="b"] input');
       optBToggle.addEventListener('click', () => {
         const next = optBToggle.dataset.mode === 'add' ? 'remove' : 'add';
         optBToggle.dataset.mode = next;
         optBToggle.classList.toggle('positive', next === 'add');
         optBToggle.classList.toggle('negative', next === 'remove');
-        optBToggle.innerHTML = next === 'add' ? '+ Add' : '&minus; Remove';
+        optBToggle.innerHTML = next === 'add' ? '+ Add Score' : '&minus; Subtract Score';
+        syncSignedInput(optBInput, next);
       });
+      optBInput.addEventListener('input', () => syncSignedInput(optBInput, optBToggle.dataset.mode));
       document.querySelector('form[data-opt="b"]').addEventListener('submit', (event) => {
         event.preventDefault();
         const amount = readAmount(event.target);
