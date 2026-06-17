@@ -1,6 +1,6 @@
 /*
  * Filename: styles.css
- * Revision : 1.10.0
+ * Revision : 1.10.1
  * Description : Dark-themed responsive styles for CVC Scoreboard.
  *               Shared across all scoreboard instances (root, collide, youth, frontlines).
  * Author : Jason Lamb (with help from Claude Code)
@@ -23,6 +23,7 @@
  * 1.9.1 Added Frontlines roster editor styles
  * 1.9.2 Added labeled Add Team form layout and helper text styling
  * 1.10.0 Added custom-controls stacked layout with Add/Subtract Score mode toggle row
+ * 1.10.1 Removed dead .custom-controls-stacked rule; mode-row is now a direct child of .team-card
  */
 
 :root {
@@ -235,13 +236,6 @@ body.viewer-body {
 .custom-controls input {
   flex: 1 1 0;
   min-width: 0;
-}
-
-.custom-controls-stacked {
-  flex-direction: column;
-  flex-wrap: nowrap;
-  align-items: stretch;
-  gap: 0.5rem;
 }
 
 .custom-mode-row {

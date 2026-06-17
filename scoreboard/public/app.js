@@ -1,5 +1,5 @@
 // Filename: app.js
-// Revision : 1.26.0
+// Revision : 1.27.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
@@ -34,6 +34,7 @@
 // 1.24.0 Add visible labels and Enter-submit helper text to the Add Team form
 // 1.25.0 Custom amount input now accepts a minus sign on mobile (text input with numeric inputmode and signed pattern)
 // 1.26.0 Add green "+ Add Score" / red "− Subtract Score" toggle above custom-amount input; input shows live -N when Subtract mode is active so iOS users can subtract without typing a minus sign
+// 1.27.0 Move per-card mode toggle above the +1/+10/+100/+1000 quick buttons and flip those buttons to red -1/-10/-100/-1000 when Subtract mode is active (matches quick-entry behavior)
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -151,11 +152,16 @@ function rankBadgeHtml(rank) {
   return `<div class="rank-badge ${medalClass}" aria-label="Rank ${ordinalSuffix(rank)}">${ordinalSuffix(rank)}</div>`;
 }
 
-function createQuickButtons(teamId) {
+function createQuickButtons(teamId, mode) {
   return quickValues
-    .map((value) => `
-      <button class="positive" type="button" data-action="adjust" data-team-id="${teamId}" data-amount="${value}">+${value}</button>
-    `)
+    .map((value) => {
+      const signed = mode === 'remove' ? -value : value;
+      const cls = signed > 0 ? 'positive' : 'negative';
+      const display = signed > 0 ? `+${signed}` : String(signed);
+      return `
+      <button class="${cls}" type="button" data-action="adjust" data-team-id="${teamId}" data-amount="${signed}">${display}</button>
+    `;
+    })
     .join('');
 }
 
@@ -173,14 +179,14 @@ function createAdminCard(team, rank) {
       <div class="score-box">
         <div class="score-value" ${scoreFontStyle(team.score)}>${team.score}</div>
       </div>
-      <div class="button-grid">
-        ${createQuickButtons(team.id)}
+      <div class="custom-mode-row">
+        <button type="button" class="positive custom-mode-button${addActive}" data-action="set-custom-mode" data-team-id="${team.id}" data-mode="add">+ Add Score</button>
+        <button type="button" class="negative custom-mode-button${removeActive}" data-action="set-custom-mode" data-team-id="${team.id}" data-mode="remove">&minus; Subtract Score</button>
       </div>
-      <form class="custom-controls custom-controls-stacked" data-action="custom-form" data-team-id="${team.id}">
-        <div class="custom-mode-row">
-          <button type="button" class="positive custom-mode-button${addActive}" data-action="set-custom-mode" data-team-id="${team.id}" data-mode="add">+ Add Score</button>
-          <button type="button" class="negative custom-mode-button${removeActive}" data-action="set-custom-mode" data-team-id="${team.id}" data-mode="remove">&minus; Subtract Score</button>
-        </div>
+      <div class="button-grid">
+        ${createQuickButtons(team.id, mode)}
+      </div>
+      <form class="custom-controls" data-action="custom-form" data-team-id="${team.id}">
         <div class="custom-input-row">
           <input name="customAmount" type="text" inputmode="numeric" pattern="-?[0-9]*" placeholder="Amount" aria-label="Custom amount for ${team.name}" />
           <button class="secondary" type="submit">Apply</button>
@@ -406,12 +412,20 @@ async function handleAdminAction(event) {
       if (action === 'set-custom-mode') {
         const newMode = actionButton.dataset.mode === 'remove' ? 'remove' : 'add';
         customScoreModes.set(teamId, newMode);
-        const modeForm = actionButton.closest('form[data-action="custom-form"]');
-        if (modeForm) {
-          modeForm.querySelectorAll('.custom-mode-button').forEach((b) => {
+        const card = actionButton.closest('.team-card');
+        if (card) {
+          card.querySelectorAll('.custom-mode-button').forEach((b) => {
             b.classList.toggle('is-active', b.dataset.mode === newMode);
           });
-          const modeInput = modeForm.querySelector('input[name="customAmount"]');
+          card.querySelectorAll('.button-grid button[data-action="adjust"]').forEach((b) => {
+            const magnitude = Math.abs(Number(b.dataset.amount) || 0);
+            const signed = newMode === 'remove' ? -magnitude : magnitude;
+            b.dataset.amount = String(signed);
+            b.textContent = signed > 0 ? `+${signed}` : String(signed);
+            b.classList.toggle('positive', signed > 0);
+            b.classList.toggle('negative', signed < 0);
+          });
+          const modeInput = card.querySelector('input[name="customAmount"]');
           syncSignedInput(modeInput, newMode);
           if (modeInput) modeInput.focus();
         }

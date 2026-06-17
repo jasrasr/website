@@ -1,6 +1,13 @@
 # Changelog
 
-Current project version: **v1.5.0**
+Current project version: **v1.5.1**
+
+## v1.5.1 - 2026-06-17
+
+### Full Admin (`enter-scores.php`)
+- The **Add Score / Subtract Score** toggle now sits **above** each team card's `+1 / +10 / +100 / +1000` quick buttons (was previously below them), matching the quick-entry layout.
+- Those quick buttons now flip to red `-1 / -10 / -100 / -1000` the moment **− Subtract Score** is selected on that team's card, so one tap subtracts. Mode is still tracked independently per-team across the 10-second admin re-render.
+- Dropped the unused `.custom-controls-stacked` CSS class now that the mode row lives outside the custom-amount form.
 
 ## v1.5.0 - 2026-06-17
 
