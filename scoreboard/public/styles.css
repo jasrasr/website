@@ -1,0 +1,1002 @@
+/*
+ * Filename: styles.css
+ * Revision : 1.10.0
+ * Description : Dark-themed responsive styles for CVC Scoreboard.
+ *               Shared across all scoreboard instances (root, collide, youth, frontlines).
+ * Author : Jason Lamb (with help from Claude Code)
+ * Created Date : 2026-03-24
+ * Modified Date : 2026-06-17
+ * Changelog :
+ * 1.0.0 Initial release
+ * 1.1.0 Changed team-title to column layout so hint text renders below team name
+ * 1.2.0 Mobile viewer uses 2-column grid; reduced card min-height and padding for compact display
+ * 1.3.0 viewer-grid uses --viewer-cols custom property so media query overrides JS column count; score-box overflow hidden
+ * 1.4.0 Added login page, admin-users page, and audit table styles
+ * 1.5.0 Added bottom admin action bar and clickable viewer header affordance
+ * 1.5.1 Prevent 12-team viewer cards from collapsing under tablet-width grid overrides
+ * 1.6.0 Center button labels and use three-wide mobile landscape viewer layout
+ * 1.6.1 Let phone landscape viewer rows flow normally instead of squeezing into viewport height
+ * 1.7.0 Added rank-badge styles (gold/silver/bronze top-right corner) for 1st/2nd/3rd place
+ * 1.8.0 Use --viewer-rows custom prop so narrow-desktop breakpoint can size rows; added .sort-note styling; let viewer-page scroll past 1100px width
+ * 1.8.1 Center .au-btn text horizontally so footer link buttons no longer left-align when stretched
+ * 1.9.0 Added Frontlines roster page styles
+ * 1.9.1 Added Frontlines roster editor styles
+ * 1.9.2 Added labeled Add Team form layout and helper text styling
+ * 1.10.0 Added custom-controls stacked layout with Add/Subtract Score mode toggle row
+ */
+
+:root {
+  --page-bg: #0f172a;
+  --panel-bg: rgba(15, 23, 42, 0.78);
+  --panel-border: rgba(148, 163, 184, 0.24);
+  --text-main: #f8fafc;
+  --text-muted: #cbd5e1;
+  --button-bg: rgba(255, 255, 255, 0.1);
+  --button-border: rgba(255, 255, 255, 0.14);
+  --positive: #16a34a;
+  --negative: #dc2626;
+  --warning: #f59e0b;
+  --shadow: 0 24px 80px rgba(15, 23, 42, 0.45);
+  color-scheme: dark;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #1e293b 0%, #0f172a 45%, #020617 100%);
+  color: var(--text-main);
+}
+
+body.viewer-body {
+  overflow: hidden;
+}
+
+.page-shell {
+  width: min(1600px, calc(100vw - 2rem));
+  margin: 0 auto;
+  padding: 1rem 0 2rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  margin: 1rem 0 1.5rem;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+}
+
+.page-header h1,
+.page-header h2,
+.page-header p {
+  margin: 0;
+}
+
+.page-header h1,
+.page-header h2 {
+  font-size: clamp(1.8rem, 3vw, 3rem);
+}
+
+.page-header p,
+.status-text,
+.updated-at {
+  color: var(--text-muted);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.admin-title-form {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1 1 320px;
+}
+
+.admin-add-team {
+  margin-top: 1.5rem;
+}
+
+.add-team-form {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(110px, 160px) minmax(140px, auto);
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.form-field {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.form-field input {
+  width: 100%;
+}
+
+.color-field input {
+  min-width: 5rem;
+  padding: 0.35rem;
+}
+
+.add-team-button {
+  flex-direction: column;
+  gap: 0.1rem;
+  line-height: 1.1;
+}
+
+.add-team-button small {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.viewer-admin-link {
+  cursor: pointer;
+}
+
+.viewer-admin-link:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.72);
+  outline-offset: 3px;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.team-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 320px;
+  padding: 1.1rem;
+  border-radius: 26px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--team-color) 26%, rgba(15, 23, 42, 0.96)) 0%, rgba(15, 23, 42, 0.96) 100%);
+  border: 1px solid color-mix(in srgb, var(--team-color) 65%, white 8%);
+  box-shadow: var(--shadow);
+}
+
+.team-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+}
+
+.team-name {
+  font-size: clamp(1.15rem, 2vw, 1.7rem);
+  font-weight: 700;
+}
+
+.score-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 132px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.score-value {
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.score-note {
+  text-align: center;
+}
+
+.button-row,
+.custom-controls,
+.viewer-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.custom-controls {
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+
+.custom-controls input {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.custom-controls-stacked {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.custom-mode-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.custom-mode-row .custom-mode-button {
+  min-height: 44px;
+  padding: 0.55rem 0.7rem;
+}
+
+.custom-mode-button:not(.is-active) {
+  background: rgba(148, 163, 184, 0.16);
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.custom-mode-button.is-active.positive {
+  outline: 2px solid var(--positive);
+  outline-offset: 1px;
+}
+
+.custom-mode-button.is-active.negative {
+  outline: 2px solid var(--negative);
+  outline-offset: 1px;
+}
+
+.custom-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.custom-input-row input {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+button,
+input {
+  border-radius: 14px;
+  border: 1px solid var(--button-border);
+  background: var(--button-bg);
+  color: var(--text-main);
+  font: inherit;
+}
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0.7rem 0.9rem;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+button:hover,
+button:focus-visible {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+button.positive {
+  background: color-mix(in srgb, var(--positive) 55%, rgba(15, 23, 42, 0.7));
+}
+
+button.negative {
+  background: color-mix(in srgb, var(--negative) 55%, rgba(15, 23, 42, 0.7));
+}
+
+button.warning {
+  background: color-mix(in srgb, var(--warning) 55%, rgba(15, 23, 42, 0.7));
+}
+
+button.secondary {
+  background: rgba(148, 163, 184, 0.16);
+}
+
+input {
+  flex: 1 1 120px;
+  min-height: 48px;
+  padding: 0.7rem 0.9rem;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.viewer-page {
+  height: 100vh;
+  height: 100dvh;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+.viewer-page .page-header {
+  margin: 0 0 1rem;
+}
+
+.viewer-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(var(--viewer-cols, 3), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--viewer-rows, 2), minmax(0, 1fr));
+  gap: 1rem;
+  min-height: 0;
+}
+
+.viewer-card {
+  min-height: 0;
+}
+
+.viewer-card .score-box {
+  flex: 1;
+  min-height: 0;
+}
+
+.viewer-card .score-value {
+  font-size: clamp(2rem, min(13vw, 13vh), 10rem);
+}
+
+.viewer-card .team-name {
+  font-size: clamp(0.9rem, min(2vw, 2vh), 2rem);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ── Login page ─────────────────────────────────────────────────────────── */
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.login-card {
+  width: min(420px, 100%);
+  padding: 2rem;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.login-card h1 {
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  margin: 0 0 0.25rem;
+}
+
+.login-subtitle {
+  color: var(--text-muted);
+  margin: 0 0 1.5rem;
+}
+
+.login-error {
+  color: var(--negative);
+  margin: 0 0 1rem;
+  font-weight: 600;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: left;
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.login-field label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.login-field input {
+  flex: none;
+  width: 100%;
+}
+
+.login-button {
+  width: 100%;
+  margin-top: 0.25rem;
+  background: color-mix(in srgb, #3b82f6 55%, rgba(15, 23, 42, 0.7));
+  border-color: #3b82f6;
+}
+
+/* ── Admin-users / audit shared styles ──────────────────────────────────── */
+
+.au-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0.7rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid var(--button-border);
+  background: var(--button-bg);
+  color: var(--text-main);
+  font: inherit;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.au-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.au-section {
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+}
+
+.au-heading {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.au-table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+.au-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.au-table th,
+.au-table td {
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--panel-border);
+  white-space: nowrap;
+}
+
+.au-table th {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.au-table tr:last-child td {
+  border-bottom: none;
+}
+
+.au-audit .au-ua {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.au-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.au-actions button,
+.au-actions .negative {
+  min-height: 36px;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.82rem;
+}
+
+/* -- Team roster page ------------------------------------------------------ */
+
+.roster-shell {
+  width: min(1500px, calc(100vw - 2rem));
+}
+
+.roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.roster-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 100%;
+  padding: 1.1rem;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid color-mix(in srgb, var(--team-color) 70%, white 10%);
+  box-shadow: var(--shadow);
+}
+
+.roster-mark {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  width: 7.25rem;
+  height: 7.25rem;
+  margin: 0 auto 0.25rem;
+  border: 0.42rem solid var(--team-color);
+  border-radius: 50%;
+  color: color-mix(in srgb, var(--team-color) 82%, white 18%);
+  text-align: center;
+  text-transform: uppercase;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  transform: rotate(-8deg);
+}
+
+.roster-mark span {
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.roster-mark strong {
+  margin-top: 0.18rem;
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+
+.roster-title {
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.45);
+  text-align: center;
+}
+
+.roster-title h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
+.roster-section {
+  text-align: center;
+}
+
+.roster-section h3 {
+  margin: 0 0 0.75rem;
+  color: var(--text-main);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.roster-list {
+  display: grid;
+  gap: 0.32rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+  line-height: 1.25;
+}
+
+.roster-leaders {
+  color: var(--text-main);
+  font-weight: 800;
+}
+
+.roster-members {
+  flex: 1;
+}
+
+.roster-sponsor {
+  min-height: 2.4em;
+  margin: auto 0 0;
+  color: #94a3b8;
+  text-align: center;
+  line-height: 1.35;
+}
+
+.roster-editor-shell {
+  width: min(1400px, calc(100vw - 2rem));
+}
+
+.roster-editor-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.roster-editor-team {
+  border-color: color-mix(in srgb, var(--team-color) 60%, var(--panel-border));
+}
+
+.roster-editor-heading {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(240px, 420px);
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 1.25rem;
+}
+
+.roster-editor-heading h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+
+.roster-editor-heading label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.roster-edit-table {
+  display: grid;
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+}
+
+.roster-edit-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(90px, 140px) minmax(90px, 140px);
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.roster-edit-head {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.roster-save-message {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  border-radius: 8px;
+  background: rgba(22, 163, 74, 0.12);
+  color: #bbf7d0;
+}
+
+.roster-editor-actions {
+  position: sticky;
+  bottom: 1rem;
+  z-index: 5;
+}
+
+.au-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.au-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.au-row input[type="text"],
+.au-row input[type="password"],
+.au-row select {
+  flex: 1 1 140px;
+}
+
+.au-check {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.au-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 100;
+}
+
+.au-modal.hidden {
+  display: none;
+}
+
+.au-modal-card {
+  width: min(480px, 100%);
+  padding: 1.5rem;
+  background: #1e293b;
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+}
+
+.au-modal-card h3 {
+  margin: 0 0 1rem;
+}
+
+/* ── Sort-order note (shown on admin/viewer/quick pages) ────────────────── */
+
+.sort-note {
+  margin: 0 0 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* ── Rank badges (1st / 2nd / 3rd place indicators) ─────────────────────── */
+
+.rank-badge {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+  min-width: 2.4rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  color: #0f172a;
+  background: rgba(226, 232, 240, 0.92);
+  border: 1px solid rgba(15, 23, 42, 0.35);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+.rank-gold {
+  background: linear-gradient(180deg, #fde68a 0%, #f59e0b 100%);
+  border-color: #b45309;
+  color: #422006;
+}
+
+.rank-silver {
+  background: linear-gradient(180deg, #f1f5f9 0%, #94a3b8 100%);
+  border-color: #475569;
+  color: #1e293b;
+}
+
+.rank-bronze {
+  background: linear-gradient(180deg, #fcd9b1 0%, #b45309 100%);
+  border-color: #7c2d12;
+  color: #3b1b08;
+}
+
+.rank-plain {
+  background: rgba(148, 163, 184, 0.22);
+  border-color: rgba(148, 163, 184, 0.45);
+  color: var(--text-main);
+}
+
+.viewer-card .rank-badge {
+  top: 0.45rem;
+  right: 0.45rem;
+  font-size: clamp(0.75rem, min(1.4vw, 1.6vh), 1.25rem);
+  padding: 0.18rem 0.55rem;
+}
+
+/* ── Responsive overrides ────────────────────────────────────────────────── */
+
+@media (max-width: 1100px) {
+  .button-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.viewer-body {
+    overflow: auto;
+  }
+
+  .viewer-page {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .viewer-grid {
+    flex: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: none;
+    grid-auto-rows: minmax(180px, auto);
+  }
+
+  .viewer-card .score-box {
+    min-height: 110px;
+  }
+}
+
+@media (max-width: 720px) {
+  body.viewer-body {
+    overflow: auto;
+  }
+
+  .page-shell {
+    width: min(100vw - 1rem, 100%);
+  }
+
+  .page-header {
+    padding: 1rem;
+    border-radius: 18px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .header-actions > *,
+  .admin-footer-actions > *,
+  .admin-title-form {
+    width: 100%;
+  }
+
+  .admin-footer-actions,
+  .admin-title-form,
+  .add-team-form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .add-team-form {
+    display: flex;
+  }
+
+  .team-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+
+  .roster-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .roster-editor-shell {
+    width: min(100vw - 1rem, 100%);
+  }
+
+  .roster-editor-heading,
+  .roster-edit-row {
+    grid-template-columns: 1fr;
+  }
+
+  .roster-edit-head {
+    display: none;
+  }
+
+  .roster-editor-actions {
+    position: static;
+  }
+
+  .viewer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: none;
+  }
+
+  .viewer-card {
+    min-height: 0;
+  }
+
+  .viewer-card .score-box {
+    min-height: 80px;
+  }
+
+  .viewer-card .score-value {
+    font-size: clamp(2rem, 10vw, 5rem);
+  }
+
+  .viewer-card .team-name {
+    font-size: clamp(0.85rem, 3.5vw, 1.25rem);
+  }
+
+  .viewer-page {
+    height: auto;
+    overflow: auto;
+    padding: 0.75rem;
+  }
+
+  .viewer-page .page-header {
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  body.viewer-body {
+    overflow: auto;
+  }
+
+  .viewer-page {
+    height: auto;
+    min-height: 100dvh;
+    overflow: auto;
+  }
+
+  .viewer-page .page-header {
+    margin-bottom: 0.75rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .viewer-grid {
+    flex: none;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: minmax(180px, auto);
+  }
+
+  .viewer-card {
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .viewer-card .score-box {
+    min-height: 92px;
+  }
+
+  .viewer-card .score-value {
+    font-size: clamp(2rem, min(9vw, 14vh), 5rem);
+  }
+}

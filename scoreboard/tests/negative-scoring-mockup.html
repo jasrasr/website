@@ -1,0 +1,278 @@
+<!--
+  Filename: negative-scoring-mockup.html
+  Revision : 1.1.0
+  Description : Interactive visual mockup of three add/remove score control
+                layouts for the custom-amount input on the scoreboard admin
+                and quick-entry pages. Standalone HTML so it can be opened
+                on a phone without auth.
+  Author : Jason Lamb (with help from Claude Code)
+  Created Date : 2026-06-17
+  Modified Date : 2026-06-17
+  Changelog :
+  1.0.0 initial release
+  1.1.0 Rename buttons to "Add Score"/"Subtract Score"; input now shows the
+        negative sign live (e.g. "-100") whenever Subtract mode is active
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Negative Scoring Layout Mockup</title>
+    <link rel="stylesheet" href="../public/styles.css" />
+    <style>
+      body {
+        padding: 1rem;
+        max-width: 540px;
+        margin: 0 auto;
+      }
+      .mockup-intro {
+        margin: 0 0 1.5rem;
+      }
+      .mockup-intro h1 {
+        margin: 0 0 0.5rem;
+        font-size: 1.4rem;
+      }
+      .mockup-intro p {
+        margin: 0;
+        color: var(--text-soft, #94a3b8);
+        font-size: 0.95rem;
+      }
+      .mockup-option {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 1rem;
+        margin-bottom: 1.25rem;
+      }
+      .mockup-option h2 {
+        margin: 0 0 0.25rem;
+        font-size: 1.05rem;
+      }
+      .mockup-option .mockup-desc {
+        margin: 0 0 0.9rem;
+        color: var(--text-soft, #94a3b8);
+        font-size: 0.85rem;
+      }
+      .mockup-result {
+        margin: 0.75rem 0 0;
+        padding: 0.6rem 0.8rem;
+        border-radius: 10px;
+        background: rgba(15, 23, 42, 0.55);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.9rem;
+        min-height: 2.2rem;
+        display: flex;
+        align-items: center;
+      }
+      .mode-row {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.6rem;
+      }
+      .mode-row button {
+        flex: 1 1 0;
+        min-height: 44px;
+      }
+      .mode-row button.is-active.positive {
+        outline: 2px solid var(--positive, #22c55e);
+        outline-offset: 1px;
+      }
+      .mode-row button.is-active.negative {
+        outline: 2px solid var(--negative, #ef4444);
+        outline-offset: 1px;
+      }
+      .mode-row button:not(.is-active) {
+        background: rgba(148, 163, 184, 0.12) !important;
+        color: var(--text-soft, #94a3b8);
+      }
+      .mockup-form {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: nowrap;
+        align-items: stretch;
+      }
+      .mockup-form input {
+        flex: 1 1 0;
+        min-width: 0;
+      }
+      .mockup-form .submit-pair {
+        display: flex;
+        gap: 0.5rem;
+      }
+      .opt-c-form {
+        flex-wrap: wrap;
+      }
+      .opt-c-form input {
+        flex: 1 1 100%;
+        margin-bottom: 0.5rem;
+      }
+      .opt-c-form .submit-pair {
+        flex: 1 1 100%;
+      }
+      .opt-c-form .submit-pair button {
+        flex: 1 1 0;
+      }
+      .toggle-single {
+        min-width: 6.5rem;
+      }
+      .reset-note {
+        margin: 0.5rem 0 0;
+        font-size: 0.8rem;
+        color: var(--text-soft, #94a3b8);
+      }
+      .reset-note button {
+        background: transparent;
+        border: none;
+        color: var(--text-soft, #94a3b8);
+        padding: 0;
+        min-height: 0;
+        text-decoration: underline;
+        cursor: pointer;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="mockup-intro">
+      <h1>Negative Scoring Layout Mockup</h1>
+      <p>Tap each option to see how it would feel on your phone. Each shows the amount that would be submitted to the team's score.</p>
+    </div>
+
+    <section class="mockup-option" id="opt-a">
+      <h2>Option A &mdash; side-by-side + / &minus; toggle</h2>
+      <p class="mockup-desc">Pick mode first (green + is default), then type digits and Apply. Numeric keypad stays on iOS &amp; Android.</p>
+      <div class="mode-row" data-role="opt-a-modes">
+        <button type="button" class="positive is-active" data-mode="add">+ Add Score</button>
+        <button type="button" class="negative" data-mode="remove">&minus; Subtract Score</button>
+      </div>
+      <form class="mockup-form" data-opt="a">
+        <input type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Amount" aria-label="Amount" />
+        <button type="submit" class="secondary">Apply</button>
+      </form>
+      <p class="mockup-result" data-result="a">Submitted amount will appear here</p>
+    </section>
+
+    <section class="mockup-option" id="opt-b">
+      <h2>Option B &mdash; single toggle that flips sign</h2>
+      <p class="mockup-desc">One button toggles between Add (green) and Remove (red). Smaller footprint but you have to read the mode before submitting.</p>
+      <form class="mockup-form" data-opt="b">
+        <button type="button" class="positive toggle-single" data-role="opt-b-toggle" data-mode="add">+ Add Score</button>
+        <input type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Amount" aria-label="Amount" />
+        <button type="submit" class="secondary">Apply</button>
+      </form>
+      <p class="mockup-result" data-result="b">Submitted amount will appear here</p>
+    </section>
+
+    <section class="mockup-option" id="opt-c">
+      <h2>Option C &mdash; separate Add &amp; Remove submit buttons</h2>
+      <p class="mockup-desc">No mode state. Type a number, then tap either green Add or red Remove to submit directly.</p>
+      <form class="mockup-form opt-c-form" data-opt="c">
+        <input type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Amount" aria-label="Amount" />
+        <div class="submit-pair">
+          <button type="submit" class="positive" data-action="add">+ Add Score</button>
+          <button type="submit" class="negative" data-action="remove">&minus; Subtract Score</button>
+        </div>
+      </form>
+      <p class="mockup-result" data-result="c">Submitted amount will appear here</p>
+    </section>
+
+    <p class="reset-note">
+      <button type="button" id="reset-all">Reset all results</button>
+    </p>
+
+    <script>
+      function setResult(opt, message) {
+        const el = document.querySelector(`[data-result="${opt}"]`);
+        if (el) el.textContent = message;
+      }
+
+      function readAmount(form) {
+        const input = form.querySelector('input');
+        const raw = (input.value || '').trim();
+        const digits = raw.replace(/[^0-9]/g, '');
+        if (!digits) return null;
+        return parseInt(digits, 10);
+      }
+
+      function syncSignedInput(input, mode) {
+        const digits = (input.value || '').replace(/[^0-9]/g, '');
+        input.value = digits === '' ? '' : (mode === 'remove' ? '-' + digits : digits);
+      }
+
+      // Option A: side-by-side mode toggle
+      const optAModes = document.querySelector('[data-role="opt-a-modes"]');
+      const optAInput = document.querySelector('form[data-opt="a"] input');
+      let optAMode = 'add';
+      optAModes.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-mode]');
+        if (!button) return;
+        optAMode = button.dataset.mode;
+        optAModes.querySelectorAll('button').forEach((b) => b.classList.toggle('is-active', b === button));
+        syncSignedInput(optAInput, optAMode);
+      });
+      optAInput.addEventListener('input', () => syncSignedInput(optAInput, optAMode));
+      document.querySelector('form[data-opt="a"]').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const amount = readAmount(event.target);
+        if (amount === null || amount === 0) {
+          setResult('a', 'Enter a number greater than 0.');
+          return;
+        }
+        const signed = optAMode === 'remove' ? -amount : amount;
+        setResult('a', `Would submit: ${signed > 0 ? '+' : ''}${signed}`);
+      });
+
+      // Option B: single sign-flip button
+      const optBToggle = document.querySelector('[data-role="opt-b-toggle"]');
+      const optBInput = document.querySelector('form[data-opt="b"] input');
+      optBToggle.addEventListener('click', () => {
+        const next = optBToggle.dataset.mode === 'add' ? 'remove' : 'add';
+        optBToggle.dataset.mode = next;
+        optBToggle.classList.toggle('positive', next === 'add');
+        optBToggle.classList.toggle('negative', next === 'remove');
+        optBToggle.innerHTML = next === 'add' ? '+ Add Score' : '&minus; Subtract Score';
+        syncSignedInput(optBInput, next);
+      });
+      optBInput.addEventListener('input', () => syncSignedInput(optBInput, optBToggle.dataset.mode));
+      document.querySelector('form[data-opt="b"]').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const amount = readAmount(event.target);
+        if (amount === null || amount === 0) {
+          setResult('b', 'Enter a number greater than 0.');
+          return;
+        }
+        const signed = optBToggle.dataset.mode === 'remove' ? -amount : amount;
+        setResult('b', `Would submit: ${signed > 0 ? '+' : ''}${signed}`);
+      });
+
+      // Option C: two submit buttons
+      const optCForm = document.querySelector('form[data-opt="c"]');
+      let lastOptCAction = 'add';
+      optCForm.querySelectorAll('button[data-action]').forEach((button) => {
+        button.addEventListener('click', () => {
+          lastOptCAction = button.dataset.action;
+        });
+      });
+      optCForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const amount = readAmount(event.target);
+        if (amount === null || amount === 0) {
+          setResult('c', 'Enter a number greater than 0.');
+          return;
+        }
+        const signed = lastOptCAction === 'remove' ? -amount : amount;
+        setResult('c', `Would submit: ${signed > 0 ? '+' : ''}${signed}`);
+      });
+
+      document.getElementById('reset-all').addEventListener('click', () => {
+        document.querySelectorAll('.mockup-result').forEach((el) => {
+          el.textContent = 'Submitted amount will appear here';
+        });
+        document.querySelectorAll('.mockup-form input').forEach((input) => {
+          input.value = '';
+        });
+      });
+    </script>
+  </body>
+</html>

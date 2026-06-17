@@ -1,0 +1,42 @@
+<?php declare(strict_types=1);
+/**
+ * Filename: enter-scores-quick.php
+ * Revision : 1.3.0
+ * Description : Compact test score entry page for the default Live Scoreboard.
+ *               Provides fast team selection and quick/manual score updates.
+ * Author : Jason Lamb (with help from Codex CLI)
+ * Created Date : 2026-05-26
+ * Modified Date : 2026-06-13
+ * Changelog :
+ * 1.0.0 initial release
+ * 1.1.0 Added change-password URL for signed-in users
+ * 1.2.0 Added scoreboards-url data attribute for footer Scoreboards link
+ * 1.3.0 Rename root/default page title to Live Scoreboard
+ */
+
+require __DIR__ . '/auth.php';
+$user = requireAuth('root', './login.php');
+?>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Live Scoreboard Quick Entry</title>
+    <link rel="stylesheet" href="./public/styles.css?v=<?= filemtime(__DIR__ . '/public/styles.css') ?>" />
+    <link rel="stylesheet" href="./public/quick-entry.css?v=<?= filemtime(__DIR__ . '/public/quick-entry.css') ?>" />
+  </head>
+  <body
+    class="quick-entry-body"
+    data-username="<?= htmlspecialchars($user['username']) ?>"
+    data-role="<?= htmlspecialchars($user['role']) ?>"
+    data-logout-url="./logout.php"
+    data-password-url="./change-password.php?return=enter-scores-quick.php"
+    data-scoreboards-url="./scoreboards.php"
+  >
+    <div id="quick-entry-app" class="quick-entry-shell">
+      <p class="status-text">Loading quick score entry...</p>
+    </div>
+    <script src="./public/quick-entry.js?v=<?= filemtime(__DIR__ . '/public/quick-entry.js') ?>" defer></script>
+  </body>
+</html>

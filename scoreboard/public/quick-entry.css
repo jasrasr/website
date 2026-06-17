@@ -1,0 +1,286 @@
+/*
+ * Filename: quick-entry.css
+ * Revision : 1.6.0
+ * Description : Compact score-entry styles for CVC Youth Scoreboard quick entry page.
+ * Author : Jason Lamb (with help from Codex CLI)
+ * Created Date : 2026-05-26
+ * Modified Date : 2026-06-17
+ * Changelog :
+ * 1.0.0 initial release
+ * 1.1.0 Moved navigation links to footer and kept team buttons at half/third width on mobile
+ * 1.2.0 Center score text, compact quick score buttons, and add manual negative-score note
+ * 1.3.0 Anchor rank badge to team button corner and inline rank with selected team name
+ * 1.4.0 Added quick-status-block and quick-revision styles for revision display under last-updated
+ * 1.5.0 Stack manual form as Add/Subtract Score mode row above amount input row
+ * 1.6.0 Move mode row out of manual form so it sits above the quick score grid; add bottom margin to space it from the grid
+ */
+
+.quick-entry-body {
+  min-height: 100vh;
+  background: #0b1120;
+}
+
+.quick-entry-shell {
+  width: min(980px, calc(100vw - 1rem));
+  margin: 0 auto;
+  padding: 0.75rem 0 1.25rem;
+}
+
+.quick-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+}
+
+.quick-title {
+  min-width: 0;
+}
+
+.quick-title h1 {
+  margin: 0;
+  font-size: clamp(1.25rem, 4vw, 2rem);
+  line-height: 1.1;
+}
+
+.quick-title p {
+  margin: 0.2rem 0 0;
+}
+
+.quick-links {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+
+.quick-panel {
+  padding: 0.75rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.82);
+  box-shadow: var(--shadow);
+}
+
+.quick-section-label {
+  margin: 0 0 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.quick-team-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.quick-team-button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 72px;
+  padding: 0.55rem;
+  border-color: color-mix(in srgb, var(--team-color) 60%, white 8%);
+  background: color-mix(in srgb, var(--team-color) 32%, rgba(15, 23, 42, 0.9));
+  text-align: center;
+}
+
+.quick-team-button .rank-badge {
+  top: 0.3rem;
+  right: 0.3rem;
+  font-size: 0.7rem;
+  min-width: 1.9rem;
+  padding: 0.1rem 0.4rem;
+}
+
+.quick-team-button[aria-pressed="true"] {
+  outline: 3px solid rgba(255, 255, 255, 0.72);
+  outline-offset: 2px;
+}
+
+.quick-team-name,
+.quick-team-score {
+  display: block;
+}
+
+.quick-team-name {
+  font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+  line-height: 1.1;
+}
+
+.quick-team-score {
+  margin-top: 0.25rem;
+  font-size: clamp(1.3rem, 5vw, 2.2rem);
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+}
+
+.quick-action-panel {
+  margin-top: 0.75rem;
+  border-color: color-mix(in srgb, var(--selected-team-color, #64748b) 65%, white 8%);
+}
+
+.quick-selected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.quick-selected h2 {
+  margin: 0;
+  font-size: clamp(1.1rem, 4vw, 1.8rem);
+}
+
+.quick-selected-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.quick-selected-name-row .rank-badge {
+  position: static;
+  font-size: 0.85rem;
+  padding: 0.15rem 0.55rem;
+}
+
+.quick-selected-score {
+  font-size: clamp(2rem, 9vw, 4rem);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.quick-score-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.quick-score-grid button {
+  min-height: 48px;
+  padding: 0.45rem;
+  font-size: clamp(0.95rem, 3vw, 1.25rem);
+}
+
+.quick-manual-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.quick-manual-mode-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.quick-manual-mode-row .quick-manual-mode-button {
+  min-height: 52px;
+}
+
+.quick-manual-mode-button:not(.is-active) {
+  background: rgba(148, 163, 184, 0.16);
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.quick-manual-mode-button.is-active.positive {
+  outline: 2px solid var(--positive);
+  outline-offset: 1px;
+}
+
+.quick-manual-mode-button.is-active.negative {
+  outline: 2px solid var(--negative);
+  outline-offset: 1px;
+}
+
+.quick-manual-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+}
+
+.quick-manual-input-row input,
+.quick-manual-input-row button {
+  min-height: 58px;
+}
+
+.quick-manual-note {
+  margin: 0.5rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.quick-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.quick-status-row p {
+  margin: 0;
+}
+
+.quick-status-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.quick-revision {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 720px) {
+  .quick-header,
+  .quick-status-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .quick-links,
+  .quick-status-row .au-btn {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .quick-links > *,
+  .quick-status-row .au-btn {
+    flex: 1 1 calc(50% - 0.5rem);
+  }
+
+  .quick-team-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .quick-score-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .quick-manual-input-row {
+    grid-template-columns: 1fr;
+  }
+}
