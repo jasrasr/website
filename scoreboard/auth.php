@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: auth.php
- * Revision : 1.8.0
+ * Revision : 1.9.0
  * Description : Shared authentication library for CVC Scoreboard.
  *               Handles sessions, user management, login/logout, and audit logging.
  *               Users stored in data/users.json with bcrypt-hashed passwords.
@@ -19,6 +19,7 @@
  * 1.6.0 Track modified_at on users; requireAuth redirects to scoreboards.php on missing access
  * 1.7.0 Force first-run/reset password changes and remove used first-run credentials
  * 1.8.0 Create two first-run users (admin/scorer) with temporary password password
+ * 1.9.0 Extend session retention: 7-day idle (session.gc_maxlifetime), 30-day cookie lifetime; mark HttpOnly + SameSite=Lax + Secure on HTTPS
  */
 
 const USERS_FILE     = __DIR__ . '/data/users.json';
@@ -31,10 +32,21 @@ const DEFAULT_FIRST_RUN_PASSWORD = 'password';
 // Session
 // ---------------------------------------------------------------------------
 
+const AUTH_SESSION_IDLE_SECONDS   = 7 * 24 * 60 * 60;   // 7 days of idle before the session can be GC'd
+const AUTH_SESSION_COOKIE_SECONDS = 30 * 24 * 60 * 60;  // 30 days the cookie itself lives in the browser
+
 function authStart(): void
 {
     if (session_status() === PHP_SESSION_NONE) {
-        session_set_cookie_params(['path' => '/']);
+        // Keep server-side session files around longer so idle sessions survive.
+        ini_set('session.gc_maxlifetime', (string) AUTH_SESSION_IDLE_SECONDS);
+        session_set_cookie_params([
+            'lifetime' => AUTH_SESSION_COOKIE_SECONDS,
+            'path'     => '/',
+            'samesite' => 'Lax',
+            'httponly' => true,
+            'secure'   => !empty($_SERVER['HTTPS']),
+        ]);
         session_start();
     }
 }

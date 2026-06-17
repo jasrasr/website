@@ -1,6 +1,15 @@
 # Changelog
 
-Current project version: **v1.6.0**
+Current project version: **v1.6.1**
+
+## v1.6.1 - 2026-06-17
+
+### Auth (`auth.php` v1.9.0)
+- Extended session retention so users stay signed in much longer:
+  - `session.gc_maxlifetime` raised to **7 days idle** (was PHP's 24-minute default).
+  - `session.cookie_lifetime` raised to **30 days** (was 0 / browser-session).
+- Hardened the session cookie with `SameSite=Lax`, `HttpOnly`, and `Secure` flag on HTTPS.
+- Note: server-side session files live in PHP's `session.save_path` (typically `/tmp`), outside the repo — `git pull` from the deploy webhook does not affect them.
 
 ## v1.6.0 - 2026-06-17
 
