@@ -1,11 +1,11 @@
 // Filename: app.js
-// Revision : 1.24.0
+// Revision : 1.25.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
 // Author : Jason Lamb (with help from Claude Code)
 // Created Date : 2026-03-24
-// Modified Date : 2026-06-13
+// Modified Date : 2026-06-17
 // Changelog :
 // 1.0.0 Initial PHP release, converted from Node.js/Express
 // 1.1.0 Fixed API URL paths to use relative query params instead of REST-style paths
@@ -32,6 +32,7 @@
 // 1.22.0 Add per-card Remove Team button and Add Team form on full admin
 // 1.23.0 Rename default fallback title to Live Scoreboard
 // 1.24.0 Add visible labels and Enter-submit helper text to the Add Team form
+// 1.25.0 Custom amount input now accepts a minus sign on mobile (text input with numeric inputmode and signed pattern)
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -162,7 +163,7 @@ function createAdminCard(team, rank) {
       </div>
       <div class="updated-at score-note">Use custom amount for negative scoring.</div>
       <form class="custom-controls" data-action="custom-form" data-team-id="${team.id}">
-        <input name="customAmount" type="number" inputmode="numeric" step="1" placeholder="Custom +/- amount" aria-label="Custom amount for ${team.name}" />
+        <input name="customAmount" type="text" inputmode="numeric" pattern="-?[0-9]*" placeholder="Custom +/- amount" aria-label="Custom amount for ${team.name}" />
         <button class="secondary" type="submit">Apply</button>
       </form>
       <form class="custom-controls" data-action="rename-form" data-team-id="${team.id}">

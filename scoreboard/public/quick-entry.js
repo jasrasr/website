@@ -1,9 +1,9 @@
 // Filename: quick-entry.js
-// Revision : 1.10.0
+// Revision : 1.11.0
 // Description : Compact score-entry behavior for scoreboard quick entry pages.
 // Author : Jason Lamb (with help from Codex CLI)
 // Created Date : 2026-05-26
-// Modified Date : 2026-06-13
+// Modified Date : 2026-06-17
 // Changelog :
 // 1.0.0 initial release
 // 1.1.0 Move navigation links to footer and keep team selection compact on mobile
@@ -16,8 +16,9 @@
 // 1.8.0 Add Reset-to-0 button for the selected team and a collapsible audit log section
 // 1.9.0 Rename Viewer link to View Scoreboard; do not auto-select a team on page load
 // 1.10.0 Rename default fallback title to Live Scoreboard
+// 1.11.0 Manual amount input now accepts a minus sign on mobile (text input with numeric inputmode and signed pattern)
 
-const QUICK_ENTRY_REVISION = '1.10.0';
+const QUICK_ENTRY_REVISION = '1.11.0';
 const quickEntryValues = [1, 10, 100, 1000];
 const quickEntryPollIntervalMs = 10000;
 
@@ -365,9 +366,9 @@ function renderQuickEntry() {
     manualForm.appendChild(makeElement('input', {
       attributes: {
         name: 'manualAmount',
-        type: 'number',
+        type: 'text',
         inputmode: 'numeric',
-        step: '1',
+        pattern: '-?[0-9]*',
         placeholder: 'Manual +/- amount',
         'aria-label': `Manual score change for ${selectedTeam.name}`
       }
