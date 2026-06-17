@@ -1,16 +1,17 @@
 <?php declare(strict_types=1);
 /**
  * Filename: navigation-pages-test.php
- * Revision : 1.3.0
+ * Revision : 1.4.0
  * Description : Lightweight static verification for scoreboard navigation and changelog pages.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-02
- * Modified Date : 2026-06-13
+ * Modified Date : 2026-06-17
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Updated access assertions for signed-in scoreboard navigation
  * 1.2.0 Expect Default label for the root scoreboard id
  * 1.3.0 Verify changelog headings include project version and date
+ * 1.4.0 Bumped pinned project version assertion from v1.4.0 to v1.5.1
  */
 
 function assertContains(string $haystack, string $needle, string $message): void
@@ -47,8 +48,8 @@ $scoreboardsPage = file_get_contents($scoreboardsPagePath) ?: '';
 $appJs = file_get_contents($appJsPath) ?: '';
 $adminShell = file_get_contents($adminShellPath) ?: '';
 
-assertContains($changelog, 'Current project version: **v1.4.0**', 'CHANGELOG.md should state the current project version.');
-assertContains($changelog, '## v1.4.0 - 2026-06-13', 'CHANGELOG.md latest entry should include project version and date.');
+assertContains($changelog, 'Current project version: **v1.5.1**', 'CHANGELOG.md should state the current project version.');
+assertContains($changelog, '## v1.5.1 - 2026-06-17', 'CHANGELOG.md latest entry should include project version and date.');
 assertContains($changelog, '## v1.0.0 - 2026-06-02', 'CHANGELOG.md initial entry should include project version and date.');
 assertContains($changelogPage, "requireSignedIn('./login.php')", 'changelog.php should require a signed-in user.');
 assertContains($changelogPage, "CHANGELOG.md", 'changelog.php should render CHANGELOG.md instead of duplicating changelog content.');

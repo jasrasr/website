@@ -1,19 +1,22 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/scoreboard_lib.php
- * Revision : 1.1.0
+ * Revision : 1.2.0
  * Description : Core library for CVC Frontlines Scoreboard. Defines 12 teams,
  *               handles JSON file read/write with file locking.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-09
- * Modified Date : 2026-04-13
+ * Modified Date : 2026-06-17
  * Changelog :
  * 1.0.0 Initial release for Frontlines scoreboard instance (10 teams)
  * 1.1.0 Updated to 12 teams: red, maroon, orange, yellow, light green, dark green,
  *       light blue, royal blue, navy, pink, purple, smoke
+ * 1.2.0 Added category helpers: read/write categories.json with locking and award-count
+ *       computed from the existing audit log
  */
 
 const SCOREBOARD_DATA_FILE = __DIR__ . '/data/scores.json';
+const CATEGORIES_DATA_FILE = __DIR__ . '/data/categories.json';
 
 function scoreboardDefaultData(): array
 {
@@ -188,4 +191,126 @@ function readJsonRequestBody(): array
 
     $decoded = json_decode($raw, true);
     return is_array($decoded) ? $decoded : [];
+}
+
+function defaultCategoriesData(): array
+{
+    return [
+        'updatedAt' => null,
+        'categories' => [],
+    ];
+}
+
+function ensureCategoriesDataFile(): void
+{
+    $directory = dirname(CATEGORIES_DATA_FILE);
+    if (!is_dir($directory)) {
+        mkdir($directory, 0775, true);
+    }
+
+    if (!is_file(CATEGORIES_DATA_FILE)) {
+        file_put_contents(
+            CATEGORIES_DATA_FILE,
+            json_encode(defaultCategoriesData(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL,
+            LOCK_EX
+        );
+    }
+}
+
+function readCategoriesData(): array
+{
+    ensureCategoriesDataFile();
+
+    $raw = file_get_contents(CATEGORIES_DATA_FILE);
+    $decoded = json_decode($raw ?: '', true);
+    if (!is_array($decoded)) {
+        return defaultCategoriesData();
+    }
+    if (!isset($decoded['categories']) || !is_array($decoded['categories'])) {
+        $decoded['categories'] = [];
+    }
+    return $decoded;
+}
+
+function writeCategoriesData(callable $callback): array
+{
+    ensureCategoriesDataFile();
+
+    $handle = fopen(CATEGORIES_DATA_FILE, 'c+');
+    if ($handle === false) {
+        throw new RuntimeException('Unable to open the categories data file.');
+    }
+
+    try {
+        if (!flock($handle, LOCK_EX)) {
+            throw new RuntimeException('Unable to lock the categories data file.');
+        }
+
+        rewind($handle);
+        $raw = stream_get_contents($handle);
+        $current = json_decode($raw ?: '', true);
+        if (!is_array($current)) {
+            $current = defaultCategoriesData();
+        }
+        if (!isset($current['categories']) || !is_array($current['categories'])) {
+            $current['categories'] = [];
+        }
+
+        $updated = $callback($current);
+        $updated['updatedAt'] = gmdate('c');
+
+        $encoded = json_encode($updated, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if ($encoded === false) {
+            throw new RuntimeException('Unable to encode the categories data.');
+        }
+
+        ftruncate($handle, 0);
+        rewind($handle);
+        fwrite($handle, $encoded . PHP_EOL);
+        fflush($handle);
+        flock($handle, LOCK_UN);
+
+        return $updated;
+    } finally {
+        fclose($handle);
+    }
+}
+
+function findCategoryIndex(array $data, string $categoryId): ?int
+{
+    foreach ($data['categories'] ?? [] as $index => $category) {
+        if (($category['id'] ?? '') === $categoryId) {
+            return $index;
+        }
+    }
+
+    return null;
+}
+
+function countCategoryAwards(string $auditFile, string $teamId, string $categoryId): int
+{
+    if (!is_file($auditFile)) {
+        return 0;
+    }
+    $data = json_decode(file_get_contents($auditFile) ?: '', true);
+    if (!is_array($data)) {
+        return 0;
+    }
+    $count = 0;
+    foreach ($data as $entry) {
+        if (!is_array($entry)) {
+            continue;
+        }
+        if (($entry['action'] ?? '') !== 'award-category') {
+            continue;
+        }
+        if (($entry['team_id'] ?? '') !== $teamId) {
+            continue;
+        }
+        if (($entry['category_id'] ?? '') !== $categoryId) {
+            continue;
+        }
+        $count++;
+    }
+    return $count;
 }
