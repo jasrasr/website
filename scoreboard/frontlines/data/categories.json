@@ -1,0 +1,50 @@
+{
+  "updatedAt": "2026-06-17T22:00:00+00:00",
+  "categories": [
+    {
+      "id": "cat-clean-table",
+      "name": "Clean Table",
+      "points": 10,
+      "maxAwardsPerTeam": null,
+      "active": true,
+      "created_at": "2026-06-17T22:00:00+00:00",
+      "modified_at": "2026-06-17T22:00:00+00:00"
+    },
+    {
+      "id": "cat-good-listeners",
+      "name": "Good Listeners",
+      "points": 20,
+      "maxAwardsPerTeam": null,
+      "active": true,
+      "created_at": "2026-06-17T22:00:00+00:00",
+      "modified_at": "2026-06-17T22:00:00+00:00"
+    },
+    {
+      "id": "cat-good-sportsmanship",
+      "name": "Good Sportsmanship",
+      "points": 30,
+      "maxAwardsPerTeam": null,
+      "active": true,
+      "created_at": "2026-06-17T22:00:00+00:00",
+      "modified_at": "2026-06-17T22:00:00+00:00"
+    },
+    {
+      "id": "cat-creativity",
+      "name": "Creativity",
+      "points": 40,
+      "maxAwardsPerTeam": null,
+      "active": true,
+      "created_at": "2026-06-17T22:00:00+00:00",
+      "modified_at": "2026-06-17T22:00:00+00:00"
+    },
+    {
+      "id": "cat-happy-birthday",
+      "name": "Happy Birthday",
+      "points": -1,
+      "maxAwardsPerTeam": null,
+      "active": true,
+      "created_at": "2026-06-17T22:00:00+00:00",
+      "modified_at": "2026-06-17T22:00:00+00:00"
+    }
+  ]
+}

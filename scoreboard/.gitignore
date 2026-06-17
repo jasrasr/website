@@ -7,5 +7,8 @@ node_modules/
 !**/data/.htaccess
 !**/data/*.sample.json
 !**/data/README.md
+# Frontlines categories are code-managed config (deployed via git, not in-app edited).
+# If you ever want categories editable in-app instead, drop this line.
+!**/data/categories.json
 first-run-credentials.txt
 SECURITY-TODO.md
