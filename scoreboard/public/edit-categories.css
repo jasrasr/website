@@ -1,0 +1,108 @@
+/*
+ * Filename: edit-categories.css
+ * Revision : 1.0.0
+ * Description : Styles for the Frontlines goal categories admin editor.
+ * Author : Jason Lamb (with help from Claude Code)
+ * Created Date : 2026-06-17
+ * Modified Date : 2026-06-17
+ * Changelog :
+ * 1.0.0 initial release
+ */
+
+.edit-categories-body {
+  min-height: 100vh;
+  background: #0b1120;
+}
+
+#edit-categories-app {
+  width: min(900px, calc(100vw - 1rem));
+  margin: 0 auto;
+  padding: 0.75rem 0 1.5rem;
+}
+
+.category-add,
+.category-list {
+  margin-top: 1rem;
+}
+
+.category-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.category-add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.category-row-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: 0.6rem;
+  align-items: end;
+}
+
+.category-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.category-field span {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.category-field input[type="text"],
+.category-field input[type="number"] {
+  width: 100%;
+}
+
+.category-field-active {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.category-field-active input {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.category-row-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.category-row-actions button {
+  min-width: 5.5rem;
+}
+
+@media (max-width: 720px) {
+  .category-row-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .category-field-active {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 440px) {
+  .category-row-grid {
+    grid-template-columns: 1fr;
+  }
+  .category-row-actions {
+    justify-content: stretch;
+  }
+  .category-row-actions button {
+    flex: 1 1 0;
+  }
+}

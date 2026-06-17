@@ -1,6 +1,40 @@
 # Changelog
 
-Current project version: **v1.5.1**
+Current project version: **v1.6.0**
+
+## v1.6.0 - 2026-06-17
+
+### Frontlines Goal Categories (new feature, Frontlines-only)
+
+A new way to score Frontlines events: pre-define point-value goals (e.g., "Water Challenge +100", "Late to Activity -25") and award them with a single tap on the scorer page. Modeled after the existing roster feature — Frontlines-only, with separate admin-edit and scorer-entry pages.
+
+**New pages:**
+- `frontlines/enter-scores-category.php` — scorer + admin page. Pick a team, then tap a goal button to award its point value. Buttons are color-coded by sign (green for positive, red for penalty). Buttons visually disable once a team has reached the category's `maxAwardsPerTeam` cap (server-side cap enforcement is the source of truth — the API returns 409 if the client miscounts). Collapsible recent-activity log mirrors the quick-entry pattern.
+- `frontlines/edit-categories.php` — admin-only page for managing the category list. Add/edit/delete categories, set point value (signed integer, negative allowed), set `maxAwardsPerTeam` (positive integer or unlimited), toggle the `active` flag.
+
+**New data file:** `frontlines/data/categories.json` (protected by the existing `.htaccess`). Sample seed file added at `frontlines/data/categories.sample.json`.
+
+**New REST API actions on `frontlines/api.php` (v1.3.0):**
+- `GET ?action=list-categories` — any authed Frontlines user.
+- `POST ?action=add-category` — admin only.
+- `POST ?action=update-category&category=<id>` — admin only.
+- `POST ?action=remove-category&category=<id>` — admin only.
+- `POST ?action=award-category&team=<id>&category=<id>` — admin **+ scorer**. Enforces `maxAwardsPerTeam` by counting prior `award-category` audit entries; returns 409 if the cap is hit. Logs a verbose audit entry (team name, category name, signed points, new score).
+
+**Lib (`frontlines/scoreboard_lib.php` v1.2.0):**
+- `defaultCategoriesData`, `ensure/read/writeCategoriesData` (with `flock`-protected writes), `findCategoryIndex`, `countCategoryAwards`.
+
+**Cross-page navigation:**
+- `app.js` (v1.28.0) and `quick-entry.js` (v1.14.0) now render **Enter Categories** and **Edit Categories** footer links when the corresponding URLs are present on the body element. Non-Frontlines instances simply don't set the URLs, so the links don't appear there.
+- `frontlines/enter-scores.php` (v1.5.0) and `frontlines/enter-scores-quick.php` (v1.4.0) expose `data-category-entry-url` for everyone and `data-edit-categories-url` only when `role === 'admin'`.
+- `frontlines/teams.php` (v1.6.0) and `frontlines/edit-roster.php` (v1.1.0) now link to **Enter Categories** and **Edit Categories** from their existing admin header areas.
+
+**Permissions:**
+- **Edit** categories: admins only (server-side + UI-gated).
+- **Award** categories: admins + scorers with Frontlines access.
+
+**Tests:**
+- New `scoreboard/tests/frontlines-categories-test.php` exercises the lib (read/write/find/count-from-audit), verifies the new page shells, and asserts the cross-page navigation wiring.
 
 ## v1.5.1 - 2026-06-17
 

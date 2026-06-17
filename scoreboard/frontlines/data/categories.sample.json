@@ -1,0 +1,23 @@
+{
+  "updatedAt": null,
+  "categories": [
+    {
+      "id": "cat-example-water",
+      "name": "Water Challenge",
+      "points": 100,
+      "maxAwardsPerTeam": 1,
+      "active": true,
+      "created_at": "2026-06-17T00:00:00+00:00",
+      "modified_at": "2026-06-17T00:00:00+00:00"
+    },
+    {
+      "id": "cat-example-late",
+      "name": "Late to Activity",
+      "points": -25,
+      "maxAwardsPerTeam": null,
+      "active": true,
+      "created_at": "2026-06-17T00:00:00+00:00",
+      "modified_at": "2026-06-17T00:00:00+00:00"
+    }
+  ]
+}

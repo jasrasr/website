@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/teams.php
- * Revision : 1.5.1
+ * Revision : 1.6.0
  * Description : Public Frontlines team roster page with leaders, members, and sponsors.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-09
- * Modified Date : 2026-06-12
+ * Modified Date : 2026-06-17
  * Changelog :
  * 1.0.0 Initial Frontlines-only team roster page
  * 1.1.0 Load editable roster data and link CSV export
@@ -17,6 +17,7 @@
  * 1.4.0 Append gender/grade suffix to team member rows (e.g., "Alex Lamb - M/12")
  * 1.5.0 Show roster last-updated timestamp in header
  * 1.5.1 Combine roster header copy into one paragraph, italicize random-order note
+ * 1.6.0 Added admin header links to Enter Categories and Edit Categories pages
  */
 
 require __DIR__ . '/../auth.php';
@@ -72,6 +73,8 @@ function h(string $value): string
             <a class="au-btn" href="./team-roster.csv.php">CSV</a>
             <a class="au-btn" href="./edit-roster.php">Edit Roster</a>
             <a class="au-btn" href="./enter-scores.php">Score Entry</a>
+            <a class="au-btn" href="./enter-scores-category.php">Enter Categories</a>
+            <a class="au-btn" href="./edit-categories.php">Edit Categories</a>
           <?php endif; ?>
         </div>
       </header>

@@ -1,5 +1,5 @@
 // Filename: app.js
-// Revision : 1.27.0
+// Revision : 1.28.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
@@ -35,6 +35,7 @@
 // 1.25.0 Custom amount input now accepts a minus sign on mobile (text input with numeric inputmode and signed pattern)
 // 1.26.0 Add green "+ Add Score" / red "− Subtract Score" toggle above custom-amount input; input shows live -N when Subtract mode is active so iOS users can subtract without typing a minus sign
 // 1.27.0 Move per-card mode toggle above the +1/+10/+100/+1000 quick buttons and flip those buttons to red -1/-10/-100/-1000 when Subtract mode is active (matches quick-entry behavior)
+// 1.28.0 Render Enter Categories and Edit Categories footer links when the corresponding URL data attributes are present (Frontlines-only categories feature)
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -243,6 +244,8 @@ async function renderAdmin(data) {
   const scoreboardsUrl = document.body.dataset.scoreboardsUrl || './scoreboards.php';
   const rosterUrl = document.body.dataset.rosterUrl || '';
   const editRosterUrl = document.body.dataset.editRosterUrl || '';
+  const categoryEntryUrl = document.body.dataset.categoryEntryUrl || '';
+  const editCategoriesUrl = document.body.dataset.editCategoriesUrl || '';
 
   app.innerHTML = `
     <div class="page-shell">
@@ -287,9 +290,11 @@ async function renderAdmin(data) {
           <button class="secondary" type="submit">Update Title</button>
         </form>
         <a class="au-btn" href="enter-scores-quick.php">Quick Entry</a>
+        ${categoryEntryUrl ? `<a class="au-btn" href="${categoryEntryUrl}">Enter Categories</a>` : ''}
         <button class="secondary" id="open-viewer-button" type="button">View Scoreboard</button>
         ${rosterUrl ? `<a class="au-btn" href="${rosterUrl}">Roster</a>` : ''}
         ${editRosterUrl ? `<a class="au-btn" href="${editRosterUrl}">Edit Roster</a>` : ''}
+        ${editCategoriesUrl ? `<a class="au-btn" href="${editCategoriesUrl}">Edit Categories</a>` : ''}
         <button class="warning" id="reset-all-button" type="button">Reset All Teams</button>
         ${role === 'admin' ? `<a class="au-btn" href="${adminUrl}">Manage Users</a>` : ''}
         <a class="au-btn" href="${scoreboardsUrl}">Scoreboards</a>
