@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines-categories-test.php
- * Revision : 1.2.0
+ * Revision : 1.3.0
  * Description : Verifies the Frontlines categories lib helpers: read/write with locking,
  *               findCategoryIndex, countCategoryAwards (computed from audit log), and
  *               the edit-categories.php page shell + editor JS surface.
@@ -12,6 +12,7 @@
  * 1.0.0 initial release
  * 1.1.0 Cover edit-categories.php auth shell and editor JS action endpoints
  * 1.2.0 Cover enter-scores-category.php shell + scorer JS award/cap flow
+ * 1.3.0 Cover Phase 4 cross-page navigation: data attrs on Frontlines pages and link rendering in shared JS
  */
 
 function assertTrue(bool $condition, string $message): void
@@ -164,6 +165,36 @@ assertTrue(strpos($scorerJsSrc, 'action=scores') !== false,          'scorer JS 
 assertTrue(strpos($scorerJsSrc, 'action=audit') !== false,           'scorer JS fetches audit for cap-counting');
 assertTrue(strpos($scorerJsSrc, 'action=award-category') !== false,  'scorer JS posts award-category');
 assertTrue(strpos($scorerJsSrc, 'maxAwardsPerTeam') !== false,       'scorer JS respects maxAwardsPerTeam for client-side disable');
+
+// ---- Phase 4: cross-page navigation wiring ----
+$adminPagePath = $root . '/frontlines/enter-scores.php';
+$quickPagePath = $root . '/frontlines/enter-scores-quick.php';
+$adminPageSrc  = (string) file_get_contents($adminPagePath);
+$quickPageSrc  = (string) file_get_contents($quickPagePath);
+assertTrue(strpos($adminPageSrc, 'data-category-entry-url') !== false, 'frontlines enter-scores.php exposes data-category-entry-url');
+assertTrue(strpos($adminPageSrc, 'data-edit-categories-url') !== false, 'frontlines enter-scores.php exposes data-edit-categories-url (gated by admin role)');
+assertTrue(strpos($quickPageSrc, 'data-category-entry-url') !== false, 'frontlines enter-scores-quick.php exposes data-category-entry-url');
+assertTrue(strpos($quickPageSrc, 'data-edit-categories-url') !== false, 'frontlines enter-scores-quick.php exposes data-edit-categories-url (gated by admin role)');
+
+$appJsPath   = $root . '/public/app.js';
+$quickJsPath = $root . '/public/quick-entry.js';
+$appJsSrc    = (string) file_get_contents($appJsPath);
+$quickJsSrc  = (string) file_get_contents($quickJsPath);
+assertTrue(strpos($appJsSrc, 'categoryEntryUrl')   !== false, 'app.js reads categoryEntryUrl');
+assertTrue(strpos($appJsSrc, 'editCategoriesUrl')  !== false, 'app.js reads editCategoriesUrl');
+assertTrue(strpos($appJsSrc, 'Enter Categories')   !== false, 'app.js renders Enter Categories link label');
+assertTrue(strpos($appJsSrc, 'Edit Categories')    !== false, 'app.js renders Edit Categories link label');
+assertTrue(strpos($quickJsSrc, 'categoryEntryUrl')  !== false, 'quick-entry.js reads categoryEntryUrl');
+assertTrue(strpos($quickJsSrc, 'editCategoriesUrl') !== false, 'quick-entry.js reads editCategoriesUrl');
+assertTrue(strpos($quickJsSrc, 'Enter Categories')  !== false, 'quick-entry.js renders Enter Categories link label');
+assertTrue(strpos($quickJsSrc, 'Edit Categories')   !== false, 'quick-entry.js renders Edit Categories link label');
+
+$teamsSrc      = (string) file_get_contents($root . '/frontlines/teams.php');
+$editRosterSrc = (string) file_get_contents($root . '/frontlines/edit-roster.php');
+assertTrue(strpos($teamsSrc, './enter-scores-category.php') !== false, 'teams.php links to Enter Categories');
+assertTrue(strpos($teamsSrc, './edit-categories.php')       !== false, 'teams.php links to Edit Categories');
+assertTrue(strpos($editRosterSrc, './enter-scores-category.php') !== false, 'edit-roster.php links to Enter Categories');
+assertTrue(strpos($editRosterSrc, './edit-categories.php')       !== false, 'edit-roster.php links to Edit Categories');
 
 // Cleanup.
 foreach (glob($tempDir . '/*') as $f) { unlink($f); }

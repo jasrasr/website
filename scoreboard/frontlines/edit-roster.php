@@ -1,14 +1,15 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/edit-roster.php
- * Revision : 1.0.1
+ * Revision : 1.1.0
  * Description : Authenticated editor for Frontlines team leaders, members, gender, and grade.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-09
- * Modified Date : 2026-06-09
+ * Modified Date : 2026-06-17
  * Changelog :
  * 1.0.0 Initial roster editor
  * 1.0.1 Changed team sponsor label to plural wording
+ * 1.1.0 Added header links to Enter Categories and Edit Categories pages
  */
 
 require __DIR__ . '/../auth.php';
@@ -85,6 +86,8 @@ $roster = readFrontlinesRosterData();
           <a class="au-btn" href="./teams.php">Public Roster</a>
           <a class="au-btn" href="./team-roster.csv.php">CSV</a>
           <a class="au-btn" href="./enter-scores.php">Score Entry</a>
+          <a class="au-btn" href="./enter-scores-category.php">Enter Categories</a>
+          <a class="au-btn" href="./edit-categories.php">Edit Categories</a>
         </div>
       </header>
 

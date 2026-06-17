@@ -1,5 +1,5 @@
 // Filename: quick-entry.js
-// Revision : 1.13.0
+// Revision : 1.14.0
 // Description : Compact score-entry behavior for scoreboard quick entry pages.
 // Author : Jason Lamb (with help from Codex CLI)
 // Created Date : 2026-05-26
@@ -21,8 +21,9 @@
 // 1.12.1 Expanded manual-note helper text to mention Apply / submit / Enter to apply scores
 // 1.12.2 Append trailing period to manual-note helper text
 // 1.13.0 Quick score buttons (+1/+10/+100/+1000) flip to -1/-10/-100/-1000 (red) when Subtract Score mode is active, and the Add/Subtract toggle now sits above the score grid so the relationship is obvious
+// 1.14.0 Render Enter Categories and Edit Categories footer links when the corresponding URL data attributes are present (Frontlines-only categories feature)
 
-const QUICK_ENTRY_REVISION = '1.13.0';
+const QUICK_ENTRY_REVISION = '1.14.0';
 const quickEntryValues = [1, 10, 100, 1000];
 const quickEntryPollIntervalMs = 10000;
 
@@ -305,6 +306,8 @@ function renderQuickEntry() {
   const scoreboardsUrl = document.body.dataset.scoreboardsUrl || './scoreboards.php';
   const rosterUrl = document.body.dataset.rosterUrl || '';
   const editRosterUrl = document.body.dataset.editRosterUrl || '';
+  const categoryEntryUrl = document.body.dataset.categoryEntryUrl || '';
+  const editCategoriesUrl = document.body.dataset.editCategoriesUrl || '';
   const username = document.body.dataset.username || '';
 
   if (!app || !quickData) {
@@ -467,6 +470,13 @@ function renderQuickEntry() {
     text: 'View Scoreboard',
     attributes: { href: './index.php', target: '_blank', rel: 'noopener' }
   }));
+  if (categoryEntryUrl) {
+    links.appendChild(makeElement('a', {
+      className: 'au-btn',
+      text: 'Enter Categories',
+      attributes: { href: categoryEntryUrl }
+    }));
+  }
   if (rosterUrl) {
     links.appendChild(makeElement('a', {
       className: 'au-btn',
@@ -479,6 +489,13 @@ function renderQuickEntry() {
       className: 'au-btn',
       text: 'Edit Roster',
       attributes: { href: editRosterUrl }
+    }));
+  }
+  if (editCategoriesUrl) {
+    links.appendChild(makeElement('a', {
+      className: 'au-btn',
+      text: 'Edit Categories',
+      attributes: { href: editCategoriesUrl }
     }));
   }
   links.appendChild(makeElement('a', {
