@@ -8,6 +8,8 @@ Current project version: **v1.5.0**
 - Replaced the typed "Custom +/- amount" / "Manual +/- amount" field with an **Add Score / Subtract Score** mode toggle row above a digits-only amount input. Pick the green **+ Add Score** (default) or red **− Subtract Score** button, then enter an amount. The input live-previews the negative sign (e.g. `-100`) whenever Subtract mode is active, so iOS users no longer need to type a minus sign that isn't on the iOS numeric keypad.
 - The previous fix that switched the custom-amount input to `type=text inputmode=numeric pattern=-?[0-9]*` so Android keypads expose a minus key is still in place; the toggle simply makes subtracting work on every mobile platform without relying on the keypad.
 - Quick entry helper text under the manual form now reads: "Pick Add or Subtract, then enter an amount. Click 'Apply' or submit or press enter."
+- Quick entry's **+1 / +10 / +100 / +1000** buttons now flip to **-1 / -10 / -100 / -1000** (and turn red) the moment **− Subtract Score** is selected, so the quick-tap buttons match the chosen mode without typing.
+- Quick entry's Add / Subtract toggle now sits **above** the quick-score grid (was previously between the grid and the amount input) so it's visually obvious that the toggle controls the score buttons below it.
 
 ### Tests / Mockups
 - Added `tests/negative-scoring-mockup.html`, a standalone interactive mockup of three negative-scoring UI options (side-by-side mode toggle, single sign-flip toggle, and paired Add/Subtract submit buttons) for comparing layouts on phones. Kept in the repo for future-reference.

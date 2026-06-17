@@ -1,6 +1,6 @@
 /*
  * Filename: quick-entry.css
- * Revision : 1.5.0
+ * Revision : 1.6.0
  * Description : Compact score-entry styles for CVC Youth Scoreboard quick entry page.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-05-26
@@ -12,6 +12,7 @@
  * 1.3.0 Anchor rank badge to team button corner and inline rank with selected team name
  * 1.4.0 Added quick-status-block and quick-revision styles for revision display under last-updated
  * 1.5.0 Stack manual form as Add/Subtract Score mode row above amount input row
+ * 1.6.0 Move mode row out of manual form so it sits above the quick score grid; add bottom margin to space it from the grid
  */
 
 .quick-entry-body {
@@ -185,6 +186,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .quick-manual-mode-row .quick-manual-mode-button {

@@ -1,5 +1,5 @@
 // Filename: quick-entry.js
-// Revision : 1.12.2
+// Revision : 1.13.0
 // Description : Compact score-entry behavior for scoreboard quick entry pages.
 // Author : Jason Lamb (with help from Codex CLI)
 // Created Date : 2026-05-26
@@ -20,8 +20,9 @@
 // 1.12.0 Add green "+ Add Score" / red "− Subtract Score" toggle above manual amount input; input shows live -N when Subtract mode is active so iOS users can subtract without typing a minus sign
 // 1.12.1 Expanded manual-note helper text to mention Apply / submit / Enter to apply scores
 // 1.12.2 Append trailing period to manual-note helper text
+// 1.13.0 Quick score buttons (+1/+10/+100/+1000) flip to -1/-10/-100/-1000 (red) when Subtract Score mode is active, and the Add/Subtract toggle now sits above the score grid so the relationship is obvious
 
-const QUICK_ENTRY_REVISION = '1.12.2';
+const QUICK_ENTRY_REVISION = '1.13.0';
 const quickEntryValues = [1, 10, 100, 1000];
 const quickEntryPollIntervalMs = 10000;
 
@@ -267,20 +268,33 @@ function renderTeamButton(team, selectedTeam, rank) {
 }
 
 function renderScoreButton(value, selectedTeam) {
+  const magnitude = Math.abs(value);
+  const signed = manualScoreMode === 'remove' ? -magnitude : magnitude;
   const button = makeElement('button', {
-    className: value > 0 ? 'positive' : 'negative',
-    text: value > 0 ? `+${value}` : String(value),
+    className: signed > 0 ? 'positive' : 'negative',
+    text: signed > 0 ? `+${signed}` : String(signed),
     attributes: {
       type: 'button'
     },
     dataset: {
       action: 'adjust-score',
       teamId: selectedTeam.id,
-      amount: String(value)
+      amount: String(signed)
     }
   });
 
   return button;
+}
+
+function applyModeToScoreButtons(mode) {
+  document.querySelectorAll('.quick-score-grid button[data-action="adjust-score"]').forEach((b) => {
+    const magnitude = Math.abs(Number(b.dataset.amount) || 0);
+    const signed = mode === 'remove' ? -magnitude : magnitude;
+    b.dataset.amount = String(signed);
+    b.textContent = signed > 0 ? `+${signed}` : String(signed);
+    b.classList.toggle('positive', signed > 0);
+    b.classList.toggle('negative', signed < 0);
+  });
 }
 
 function renderQuickEntry() {
@@ -366,13 +380,6 @@ function renderQuickEntry() {
       text: String(selectedTeam.score)
     }));
 
-    const scoreGrid = makeElement('div', { className: 'quick-score-grid' });
-    quickEntryValues.forEach((value) => scoreGrid.appendChild(renderScoreButton(value, selectedTeam)));
-
-    const manualForm = makeElement('form', {
-      className: 'quick-manual-form',
-      dataset: { action: 'manual-score', teamId: selectedTeam.id }
-    });
     const manualModeRow = makeElement('div', { className: 'quick-manual-mode-row' });
     const addModeButton = makeElement('button', {
       className: `positive quick-manual-mode-button${manualScoreMode === 'add' ? ' is-active' : ''}`,
@@ -388,6 +395,13 @@ function renderQuickEntry() {
     subtractModeButton.innerHTML = '&minus; Subtract Score';
     manualModeRow.append(addModeButton, subtractModeButton);
 
+    const scoreGrid = makeElement('div', { className: 'quick-score-grid' });
+    quickEntryValues.forEach((value) => scoreGrid.appendChild(renderScoreButton(value, selectedTeam)));
+
+    const manualForm = makeElement('form', {
+      className: 'quick-manual-form',
+      dataset: { action: 'manual-score', teamId: selectedTeam.id }
+    });
     const manualInputRow = makeElement('div', { className: 'quick-manual-input-row' });
     const manualInput = makeElement('input', {
       attributes: {
@@ -407,7 +421,7 @@ function renderQuickEntry() {
     });
     manualInputRow.append(manualInput, manualApply);
 
-    manualForm.append(manualModeRow, manualInputRow);
+    manualForm.append(manualInputRow);
 
     const manualNote = makeElement('p', {
       className: 'quick-manual-note',
@@ -421,7 +435,7 @@ function renderQuickEntry() {
       dataset: { action: 'reset-selected', teamId: selectedTeam.id }
     });
 
-    actionPanel.append(selectedHeader, scoreGrid, manualForm, manualNote, resetButton);
+    actionPanel.append(selectedHeader, manualModeRow, scoreGrid, manualForm, manualNote, resetButton);
   }
 
   const statusRow = makeElement('div', { className: 'quick-status-row' });
@@ -543,6 +557,7 @@ async function handleQuickClick(event) {
       document.querySelectorAll('.quick-manual-mode-button').forEach((b) => {
         b.classList.toggle('is-active', b.dataset.mode === newMode);
       });
+      applyModeToScoreButtons(newMode);
       const manualInputEl = document.querySelector('form[data-action="manual-score"] input[name="manualAmount"]');
       syncManualInputSign(manualInputEl, newMode);
       if (manualInputEl) manualInputEl.focus();
