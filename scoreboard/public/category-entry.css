@@ -1,0 +1,74 @@
+/*
+ * Filename: category-entry.css
+ * Revision : 1.0.0
+ * Description : Styles for the Frontlines goal category entry page (scorer + admin).
+ *               Builds on quick-entry.css patterns (team picker, header, status row);
+ *               this file only adds the category button grid styles.
+ * Author : Jason Lamb (with help from Claude Code)
+ * Created Date : 2026-06-17
+ * Modified Date : 2026-06-17
+ * Changelog :
+ * 1.0.0 initial release
+ */
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 540px) {
+  .category-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 820px) {
+  .category-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.category-button {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0.2rem;
+  min-height: 78px;
+  padding: 0.6rem 0.55rem;
+  text-align: center;
+  line-height: 1.15;
+}
+
+.category-button-name {
+  font-weight: 700;
+  font-size: clamp(0.85rem, 2.6vw, 1rem);
+}
+
+.category-button-points {
+  font-weight: 800;
+  font-size: clamp(0.95rem, 3vw, 1.2rem);
+  letter-spacing: 0.02em;
+}
+
+.category-button-cap {
+  font-weight: 500;
+  font-size: 0.7rem;
+  opacity: 0.85;
+}
+
+.category-button.is-disabled,
+.category-button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+}
+
+.category-button[disabled]:hover,
+.category-button[disabled]:focus-visible {
+  transform: none;
+  background: inherit;
+  border-color: inherit;
+}

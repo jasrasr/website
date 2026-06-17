@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines-categories-test.php
- * Revision : 1.1.0
+ * Revision : 1.2.0
  * Description : Verifies the Frontlines categories lib helpers: read/write with locking,
  *               findCategoryIndex, countCategoryAwards (computed from audit log), and
  *               the edit-categories.php page shell + editor JS surface.
@@ -11,6 +11,7 @@
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Cover edit-categories.php auth shell and editor JS action endpoints
+ * 1.2.0 Cover enter-scores-category.php shell + scorer JS award/cap flow
  */
 
 function assertTrue(bool $condition, string $message): void
@@ -143,6 +144,26 @@ assertTrue(strpos($editJsSrc, 'action=list-categories') !== false, 'editor JS ca
 assertTrue(strpos($editJsSrc, 'action=add-category') !== false,    'editor JS calls add-category');
 assertTrue(strpos($editJsSrc, 'action=update-category') !== false, 'editor JS calls update-category');
 assertTrue(strpos($editJsSrc, 'action=remove-category') !== false, 'editor JS calls remove-category');
+
+// ---- enter-scores-category.php shell + JS exist and wire up the award flow ----
+$scorerPagePath = $root . '/frontlines/enter-scores-category.php';
+$scorerJsPath   = $root . '/public/category-entry.js';
+$scorerCssPath  = $root . '/public/category-entry.css';
+assertTrue(is_file($scorerPagePath), 'enter-scores-category.php exists');
+assertTrue(is_file($scorerJsPath),   'public/category-entry.js exists');
+assertTrue(is_file($scorerCssPath),  'public/category-entry.css exists');
+
+$scorerPageSrc = (string) file_get_contents($scorerPagePath);
+assertTrue(strpos($scorerPageSrc, "requireAuth('frontlines'") !== false, 'enter-scores-category.php requires Frontlines auth');
+assertTrue(strpos($scorerPageSrc, 'category-entry.js') !== false, 'enter-scores-category.php loads the scorer JS');
+assertTrue(strpos($scorerPageSrc, 'data-edit-categories-url') !== false, 'enter-scores-category.php exposes edit-categories-url (gated by admin role)');
+
+$scorerJsSrc = (string) file_get_contents($scorerJsPath);
+assertTrue(strpos($scorerJsSrc, 'action=list-categories') !== false, 'scorer JS fetches list-categories');
+assertTrue(strpos($scorerJsSrc, 'action=scores') !== false,          'scorer JS fetches scores');
+assertTrue(strpos($scorerJsSrc, 'action=audit') !== false,           'scorer JS fetches audit for cap-counting');
+assertTrue(strpos($scorerJsSrc, 'action=award-category') !== false,  'scorer JS posts award-category');
+assertTrue(strpos($scorerJsSrc, 'maxAwardsPerTeam') !== false,       'scorer JS respects maxAwardsPerTeam for client-side disable');
 
 // Cleanup.
 foreach (glob($tempDir . '/*') as $f) { unlink($f); }
