@@ -1,5 +1,5 @@
 // Filename: quick-entry.js
-// Revision : 1.12.0
+// Revision : 1.12.1
 // Description : Compact score-entry behavior for scoreboard quick entry pages.
 // Author : Jason Lamb (with help from Codex CLI)
 // Created Date : 2026-05-26
@@ -18,8 +18,9 @@
 // 1.10.0 Rename default fallback title to Live Scoreboard
 // 1.11.0 Manual amount input now accepts a minus sign on mobile (text input with numeric inputmode and signed pattern)
 // 1.12.0 Add green "+ Add Score" / red "− Subtract Score" toggle above manual amount input; input shows live -N when Subtract mode is active so iOS users can subtract without typing a minus sign
+// 1.12.1 Expanded manual-note helper text to mention Apply / submit / Enter to apply scores
 
-const QUICK_ENTRY_REVISION = '1.12.0';
+const QUICK_ENTRY_REVISION = '1.12.1';
 const quickEntryValues = [1, 10, 100, 1000];
 const quickEntryPollIntervalMs = 10000;
 
@@ -409,7 +410,7 @@ function renderQuickEntry() {
 
     const manualNote = makeElement('p', {
       className: 'quick-manual-note',
-      text: 'Pick Add or Subtract, then enter an amount.'
+      text: "Pick Add or Subtract, then enter an amount. Click 'Apply' or submit or press enter"
     });
 
     const resetButton = makeElement('button', {
