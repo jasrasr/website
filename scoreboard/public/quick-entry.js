@@ -1,5 +1,5 @@
 // Filename: quick-entry.js
-// Revision : 1.11.0
+// Revision : 1.12.0
 // Description : Compact score-entry behavior for scoreboard quick entry pages.
 // Author : Jason Lamb (with help from Codex CLI)
 // Created Date : 2026-05-26
@@ -17,13 +17,21 @@
 // 1.9.0 Rename Viewer link to View Scoreboard; do not auto-select a team on page load
 // 1.10.0 Rename default fallback title to Live Scoreboard
 // 1.11.0 Manual amount input now accepts a minus sign on mobile (text input with numeric inputmode and signed pattern)
+// 1.12.0 Add green "+ Add Score" / red "− Subtract Score" toggle above manual amount input; input shows live -N when Subtract mode is active so iOS users can subtract without typing a minus sign
 
-const QUICK_ENTRY_REVISION = '1.11.0';
+const QUICK_ENTRY_REVISION = '1.12.0';
 const quickEntryValues = [1, 10, 100, 1000];
 const quickEntryPollIntervalMs = 10000;
 
 let quickData = null;
 let selectedTeamId = null;
+let manualScoreMode = 'add';
+
+function syncManualInputSign(input, mode) {
+  if (!input) return;
+  const digits = (input.value || '').replace(/[^0-9]/g, '');
+  input.value = digits === '' ? '' : (mode === 'remove' ? '-' + digits : digits);
+}
 let quickActivityLogOpen = false;
 
 function formatQuickUpdatedAt(updatedAt) {
@@ -363,24 +371,45 @@ function renderQuickEntry() {
       className: 'quick-manual-form',
       dataset: { action: 'manual-score', teamId: selectedTeam.id }
     });
-    manualForm.appendChild(makeElement('input', {
+    const manualModeRow = makeElement('div', { className: 'quick-manual-mode-row' });
+    const addModeButton = makeElement('button', {
+      className: `positive quick-manual-mode-button${manualScoreMode === 'add' ? ' is-active' : ''}`,
+      text: '+ Add Score',
+      attributes: { type: 'button' },
+      dataset: { action: 'set-manual-mode', mode: 'add' }
+    });
+    const subtractModeButton = makeElement('button', {
+      className: `negative quick-manual-mode-button${manualScoreMode === 'remove' ? ' is-active' : ''}`,
+      attributes: { type: 'button' },
+      dataset: { action: 'set-manual-mode', mode: 'remove' }
+    });
+    subtractModeButton.innerHTML = '&minus; Subtract Score';
+    manualModeRow.append(addModeButton, subtractModeButton);
+
+    const manualInputRow = makeElement('div', { className: 'quick-manual-input-row' });
+    const manualInput = makeElement('input', {
       attributes: {
         name: 'manualAmount',
         type: 'text',
         inputmode: 'numeric',
         pattern: '-?[0-9]*',
-        placeholder: 'Manual +/- amount',
+        placeholder: 'Amount',
         'aria-label': `Manual score change for ${selectedTeam.name}`
       }
-    }));
-    manualForm.appendChild(makeElement('button', {
+    });
+    syncManualInputSign(manualInput, manualScoreMode);
+    const manualApply = makeElement('button', {
       className: 'secondary',
       text: 'Apply',
       attributes: { type: 'submit' }
-    }));
+    });
+    manualInputRow.append(manualInput, manualApply);
+
+    manualForm.append(manualModeRow, manualInputRow);
+
     const manualNote = makeElement('p', {
       className: 'quick-manual-note',
-      text: 'Enter -1, -10, or another negative number for minus scoring.'
+      text: 'Pick Add or Subtract, then enter an amount.'
     });
 
     const resetButton = makeElement('button', {
@@ -506,6 +535,18 @@ async function handleQuickClick(event) {
       return;
     }
 
+    if (action === 'set-manual-mode') {
+      const newMode = actionElement.dataset.mode === 'remove' ? 'remove' : 'add';
+      manualScoreMode = newMode;
+      document.querySelectorAll('.quick-manual-mode-button').forEach((b) => {
+        b.classList.toggle('is-active', b.dataset.mode === newMode);
+      });
+      const manualInputEl = document.querySelector('form[data-action="manual-score"] input[name="manualAmount"]');
+      syncManualInputSign(manualInputEl, newMode);
+      if (manualInputEl) manualInputEl.focus();
+      return;
+    }
+
     if (action === 'adjust-score') {
       await applyScoreChange(actionElement.dataset.teamId, Number(actionElement.dataset.amount));
       return;
@@ -536,12 +577,16 @@ async function handleQuickSubmit(event) {
   event.preventDefault();
 
   const formData = new FormData(form);
-  const amount = Number(formData.get('manualAmount'));
+  const rawAmount = String(formData.get('manualAmount') || '');
+  const digits = rawAmount.replace(/[^0-9]/g, '');
+  const magnitude = digits === '' ? 0 : parseInt(digits, 10);
 
-  if (!Number.isFinite(amount) || amount === 0) {
-    setQuickStatus('Enter a positive or negative number before clicking Apply.');
+  if (!Number.isFinite(magnitude) || magnitude === 0) {
+    setQuickStatus('Enter a number greater than 0 before clicking Apply.');
     return;
   }
+
+  const amount = manualScoreMode === 'remove' ? -magnitude : magnitude;
 
   try {
     await applyScoreChange(form.dataset.teamId, amount);
@@ -556,6 +601,11 @@ async function initQuickEntry() {
 
   document.addEventListener('click', handleQuickClick);
   document.addEventListener('submit', handleQuickSubmit);
+  document.addEventListener('input', (event) => {
+    const input = event.target.closest('form[data-action="manual-score"] input[name="manualAmount"]');
+    if (!input) return;
+    syncManualInputSign(input, manualScoreMode);
+  });
 
   setInterval(async () => {
     const activeTag = document.activeElement?.tagName;

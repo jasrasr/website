@@ -1,11 +1,11 @@
 /*
  * Filename: styles.css
- * Revision : 1.9.2
+ * Revision : 1.10.0
  * Description : Dark-themed responsive styles for CVC Scoreboard.
  *               Shared across all scoreboard instances (root, collide, youth, frontlines).
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-03-24
- * Modified Date : 2026-06-13
+ * Modified Date : 2026-06-17
  * Changelog :
  * 1.0.0 Initial release
  * 1.1.0 Changed team-title to column layout so hint text renders below team name
@@ -22,6 +22,7 @@
  * 1.9.0 Added Frontlines roster page styles
  * 1.9.1 Added Frontlines roster editor styles
  * 1.9.2 Added labeled Add Team form layout and helper text styling
+ * 1.10.0 Added custom-controls stacked layout with Add/Subtract Score mode toggle row
  */
 
 :root {
@@ -232,6 +233,51 @@ body.viewer-body {
 }
 
 .custom-controls input {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.custom-controls-stacked {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.custom-mode-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.custom-mode-row .custom-mode-button {
+  min-height: 44px;
+  padding: 0.55rem 0.7rem;
+}
+
+.custom-mode-button:not(.is-active) {
+  background: rgba(148, 163, 184, 0.16);
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.custom-mode-button.is-active.positive {
+  outline: 2px solid var(--positive);
+  outline-offset: 1px;
+}
+
+.custom-mode-button.is-active.negative {
+  outline: 2px solid var(--negative);
+  outline-offset: 1px;
+}
+
+.custom-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.custom-input-row input {
   flex: 1 1 0;
   min-width: 0;
 }

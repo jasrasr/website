@@ -1,6 +1,15 @@
 # Changelog
 
-Current project version: **v1.4.0**
+Current project version: **v1.5.0**
+
+## v1.5.0 - 2026-06-17
+
+### Full Admin (`enter-scores.php`) and Quick Entry (`enter-scores-quick.php`)
+- Replaced the typed "Custom +/- amount" / "Manual +/- amount" field with an **Add Score / Subtract Score** mode toggle row above a digits-only amount input. Pick the green **+ Add Score** (default) or red **− Subtract Score** button, then enter an amount. The input live-previews the negative sign (e.g. `-100`) whenever Subtract mode is active, so iOS users no longer need to type a minus sign that isn't on the iOS numeric keypad.
+- The previous fix that switched the custom-amount input to `type=text inputmode=numeric pattern=-?[0-9]*` so Android keypads expose a minus key is still in place; the toggle simply makes subtracting work on every mobile platform without relying on the keypad.
+
+### Tests / Mockups
+- Added `tests/negative-scoring-mockup.html`, a standalone interactive mockup of three negative-scoring UI options (side-by-side mode toggle, single sign-flip toggle, and paired Add/Subtract submit buttons) for comparing layouts on phones. Kept in the repo for future-reference.
 
 ## v1.4.0 - 2026-06-13
 

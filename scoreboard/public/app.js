@@ -1,5 +1,5 @@
 // Filename: app.js
-// Revision : 1.25.0
+// Revision : 1.26.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
@@ -33,12 +33,24 @@
 // 1.23.0 Rename default fallback title to Live Scoreboard
 // 1.24.0 Add visible labels and Enter-submit helper text to the Add Team form
 // 1.25.0 Custom amount input now accepts a minus sign on mobile (text input with numeric inputmode and signed pattern)
+// 1.26.0 Add green "+ Add Score" / red "− Subtract Score" toggle above custom-amount input; input shows live -N when Subtract mode is active so iOS users can subtract without typing a minus sign
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
 const adminPollIntervalMs = 10000;
 let currentData = null;
 let activityLogOpen = false;
+const customScoreModes = new Map();
+
+function getCustomMode(teamId) {
+  return customScoreModes.get(teamId) === 'remove' ? 'remove' : 'add';
+}
+
+function syncSignedInput(input, mode) {
+  if (!input) return;
+  const digits = (input.value || '').replace(/[^0-9]/g, '');
+  input.value = digits === '' ? '' : (mode === 'remove' ? '-' + digits : digits);
+}
 
 async function fetchScores() {
   const response = await fetch('api.php?action=scores');
@@ -148,6 +160,9 @@ function createQuickButtons(teamId) {
 }
 
 function createAdminCard(team, rank) {
+  const mode = getCustomMode(team.id);
+  const addActive = mode === 'add' ? ' is-active' : '';
+  const removeActive = mode === 'remove' ? ' is-active' : '';
   return `
     <section class="team-card" style="--team-color: ${team.color};">
       ${rankBadgeHtml(rank)}
@@ -161,10 +176,15 @@ function createAdminCard(team, rank) {
       <div class="button-grid">
         ${createQuickButtons(team.id)}
       </div>
-      <div class="updated-at score-note">Use custom amount for negative scoring.</div>
-      <form class="custom-controls" data-action="custom-form" data-team-id="${team.id}">
-        <input name="customAmount" type="text" inputmode="numeric" pattern="-?[0-9]*" placeholder="Custom +/- amount" aria-label="Custom amount for ${team.name}" />
-        <button class="secondary" type="submit">Apply</button>
+      <form class="custom-controls custom-controls-stacked" data-action="custom-form" data-team-id="${team.id}">
+        <div class="custom-mode-row">
+          <button type="button" class="positive custom-mode-button${addActive}" data-action="set-custom-mode" data-team-id="${team.id}" data-mode="add">+ Add Score</button>
+          <button type="button" class="negative custom-mode-button${removeActive}" data-action="set-custom-mode" data-team-id="${team.id}" data-mode="remove">&minus; Subtract Score</button>
+        </div>
+        <div class="custom-input-row">
+          <input name="customAmount" type="text" inputmode="numeric" pattern="-?[0-9]*" placeholder="Amount" aria-label="Custom amount for ${team.name}" />
+          <button class="secondary" type="submit">Apply</button>
+        </div>
       </form>
       <form class="custom-controls" data-action="rename-form" data-team-id="${team.id}">
         <input name="teamName" type="text" value="${team.name}" aria-label="Rename ${team.name}" />
@@ -383,6 +403,21 @@ async function handleAdminAction(event) {
       const teamId = actionButton.dataset.teamId;
       const action = actionButton.dataset.action;
 
+      if (action === 'set-custom-mode') {
+        const newMode = actionButton.dataset.mode === 'remove' ? 'remove' : 'add';
+        customScoreModes.set(teamId, newMode);
+        const modeForm = actionButton.closest('form[data-action="custom-form"]');
+        if (modeForm) {
+          modeForm.querySelectorAll('.custom-mode-button').forEach((b) => {
+            b.classList.toggle('is-active', b.dataset.mode === newMode);
+          });
+          const modeInput = modeForm.querySelector('input[name="customAmount"]');
+          syncSignedInput(modeInput, newMode);
+          if (modeInput) modeInput.focus();
+        }
+        return;
+      }
+
       if (action === 'adjust') {
         await postJson(`api.php?action=update&team=${teamId}`, {
           amount: Number(actionButton.dataset.amount)
@@ -470,15 +505,19 @@ async function handleAdminAction(event) {
         return;
       }
 
-      const amount = Number(formData.get('customAmount'));
-      if (!Number.isFinite(amount) || amount === 0) {
-        setStatus('Enter a positive or negative number before clicking Apply.');
+      const rawAmount = String(formData.get('customAmount') || '');
+      const digits = rawAmount.replace(/[^0-9]/g, '');
+      const magnitude = digits === '' ? 0 : parseInt(digits, 10);
+      if (!Number.isFinite(magnitude) || magnitude === 0) {
+        setStatus('Enter a number greater than 0 before clicking Apply.');
         return;
       }
+      const mode = getCustomMode(teamId);
+      const amount = mode === 'remove' ? -magnitude : magnitude;
 
       await postJson(`api.php?action=update&team=${teamId}`, { amount });
       renderAdmin(currentData);
-      setStatus(`Custom score saved at ${formatUpdatedAt(currentData.updatedAt)}`);
+      setStatus(`${mode === 'remove' ? 'Subtracted' : 'Added'} ${magnitude} at ${formatUpdatedAt(currentData.updatedAt)}`);
     }
   } catch (error) {
     setStatus(error.message);
@@ -510,6 +549,13 @@ async function init() {
   if (pageType === 'admin') {
     document.addEventListener('click', handleAdminAction);
     document.addEventListener('submit', handleAdminAction);
+    document.addEventListener('input', (event) => {
+      const input = event.target.closest('input[name="customAmount"]');
+      if (!input) return;
+      const form = input.closest('form[data-action="custom-form"]');
+      if (!form) return;
+      syncSignedInput(input, getCustomMode(form.dataset.teamId));
+    });
   } else {
     document.addEventListener('click', handleViewerAction);
     document.addEventListener('keydown', handleViewerAction);
