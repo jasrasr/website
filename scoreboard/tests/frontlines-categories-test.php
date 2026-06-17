@@ -1,14 +1,16 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines-categories-test.php
- * Revision : 1.0.0
+ * Revision : 1.1.0
  * Description : Verifies the Frontlines categories lib helpers: read/write with locking,
- *               findCategoryIndex, and countCategoryAwards (computed from audit log).
+ *               findCategoryIndex, countCategoryAwards (computed from audit log), and
+ *               the edit-categories.php page shell + editor JS surface.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-06-17
  * Modified Date : 2026-06-17
  * Changelog :
  * 1.0.0 initial release
+ * 1.1.0 Cover edit-categories.php auth shell and editor JS action endpoints
  */
 
 function assertTrue(bool $condition, string $message): void
@@ -121,6 +123,26 @@ foreach ($sample['categories'] as $cat) {
     }
     assertTrue($cat['points'] !== 0 && is_int($cat['points']), 'sample category points is a non-zero int');
 }
+
+// ---- edit-categories.php shell + JS + CSS exist and load expected references ----
+$root = dirname(__DIR__);
+$editPagePath = $root . '/frontlines/edit-categories.php';
+$editJsPath   = $root . '/public/edit-categories.js';
+$editCssPath  = $root . '/public/edit-categories.css';
+assertTrue(is_file($editPagePath), 'edit-categories.php exists');
+assertTrue(is_file($editJsPath),   'public/edit-categories.js exists');
+assertTrue(is_file($editCssPath),  'public/edit-categories.css exists');
+
+$editPageSrc = (string) file_get_contents($editPagePath);
+assertTrue(strpos($editPageSrc, "requireAuth('frontlines'") !== false, 'edit-categories.php requires Frontlines auth');
+assertTrue(strpos($editPageSrc, "'role'") !== false && strpos($editPageSrc, "'admin'") !== false, 'edit-categories.php enforces admin role');
+assertTrue(strpos($editPageSrc, 'edit-categories.js') !== false, 'edit-categories.php loads the editor JS');
+
+$editJsSrc = (string) file_get_contents($editJsPath);
+assertTrue(strpos($editJsSrc, 'action=list-categories') !== false, 'editor JS calls list-categories');
+assertTrue(strpos($editJsSrc, 'action=add-category') !== false,    'editor JS calls add-category');
+assertTrue(strpos($editJsSrc, 'action=update-category') !== false, 'editor JS calls update-category');
+assertTrue(strpos($editJsSrc, 'action=remove-category') !== false, 'editor JS calls remove-category');
 
 // Cleanup.
 foreach (glob($tempDir . '/*') as $f) { unlink($f); }
