@@ -1,6 +1,24 @@
 # Changelog
 
-Current project version: **v1.6.1**
+Current project version: **v1.7.0**
+
+## v1.7.0 - 2026-06-17
+
+### User management: disable/enable (`admin-users.php` v1.3.0, `auth.php` v1.10.0)
+
+Added a soft-disable toggle on user accounts so you can park a user (e.g., an emergency admin) without deleting their history. Useful as a self-recovery lifeline if you ever lock yourself out of your primary admin account.
+
+- New `disabled: bool` field on user records (default `false`). `makeUser()` sets it; existing users without the field are treated as enabled.
+- `attemptLogin()` rejects disabled accounts the same way it rejects wrong credentials — no information leak about which usernames exist.
+- New **Status** column on `admin-users.php` shows Active / Disabled per user.
+- New **Disable** (warning button) / **Enable** (positive button) toggle per row with confirm dialog.
+- **Guardrails:**
+  - You cannot disable your own account (avoids accidental self-lockout).
+  - You cannot disable the last active admin (would leave the system without any working admin).
+- Disabled rows render dimmed in the table for at-a-glance scanning.
+
+### Styles (`public/styles.css` v1.11.0)
+- Added `.user-status` active/disabled pill styles and `.row-disabled` dimming for the admin user list.
 
 ## v1.6.1 - 2026-06-17
 

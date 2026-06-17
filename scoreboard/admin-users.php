@@ -1,17 +1,20 @@
 <?php declare(strict_types=1);
 /**
  * Filename: admin-users.php
- * Revision : 1.2.0
+ * Revision : 1.3.0
  * Description : Admin-only page for managing scoreboard users and viewing audit logs.
- *               Supports add, edit (username/role/scoreboards), reset password, and delete.
+ *               Supports add, edit (username/role/scoreboards), reset password, delete,
+ *               and soft-disable/enable (the disabled flag blocks login without losing the user).
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-13
- * Modified Date : 2026-06-13
+ * Modified Date : 2026-06-17
  * Changelog :
  * 1.0.0 Initial release
  * 1.1.0 Fix Edit button (refactor inline onclick to data-attribute handler);
  *       allow editing username; track and display modified_at
  * 1.2.0 Force password changes after user creation/reset; label root as Default
+ * 1.3.0 Added Status column and Disable/Enable toggle per user. Prevents self-disable and
+ *       last-active-admin disable. Disabled rows render dimmed; disabled accounts cannot log in.
  */
 
 require __DIR__ . '/auth.php';
@@ -128,6 +131,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    if ($action === 'toggle-disabled') {
+        $userId = $_POST['user_id'] ?? '';
+        if ($userId === $currentUser['id']) {
+            $error = 'You cannot disable your own account.';
+        } else {
+            $target = null;
+            foreach ($users as $u) {
+                if ($u['id'] === $userId) { $target = $u; break; }
+            }
+            if ($target === null) {
+                $error = 'User not found.';
+            } else {
+                $willDisable = empty($target['disabled']);
+                if ($willDisable && ($target['role'] ?? '') === 'admin') {
+                    $activeAdmins = 0;
+                    foreach ($users as $u) {
+                        if (($u['role'] ?? '') === 'admin' && empty($u['disabled'])) {
+                            $activeAdmins++;
+                        }
+                    }
+                    if ($activeAdmins <= 1) {
+                        $error = 'Cannot disable the last active admin. Promote another user to admin first.';
+                    }
+                }
+                if ($error === '') {
+                    foreach ($users as &$user) {
+                        if ($user['id'] === $userId) {
+                            $user['disabled']    = $willDisable;
+                            $user['modified_at'] = gmdate('c');
+                            $message = "User '{$user['username']}' " . ($willDisable ? 'disabled' : 'enabled') . '.';
+                            break;
+                        }
+                    }
+                    unset($user);
+                    saveUsers($users);
+                }
+            }
+        }
+    }
+
     // Reload after save
     $users = loadUsers();
 }
@@ -202,15 +245,23 @@ function userScoreboardLabels(array $user): string
           <table class="au-table">
             <thead>
               <tr>
-                <th>Username</th><th>Role</th><th>Scoreboards</th><th>Created</th><th>Modified</th><th>Actions</th>
+                <th>Username</th><th>Status</th><th>Role</th><th>Scoreboards</th><th>Created</th><th>Modified</th><th>Actions</th>
               </tr>
             </thead>
             <tbody>
               <?php foreach ($users as $u): ?>
-              <tr>
+              <?php $isDisabled = !empty($u['disabled']); ?>
+              <tr<?= $isDisabled ? ' class="row-disabled"' : '' ?>>
                 <td>
                   <?= htmlspecialchars($u['username']) ?>
                   <?= $u['id'] === $currentUser['id'] ? ' <em style="opacity:.5">(you)</em>' : '' ?>
+                </td>
+                <td>
+                  <?php if ($isDisabled): ?>
+                    <span class="user-status user-status-disabled">Disabled</span>
+                  <?php else: ?>
+                    <span class="user-status user-status-active">Active</span>
+                  <?php endif; ?>
                 </td>
                 <td><?= htmlspecialchars($u['role']) ?></td>
                 <td><?= htmlspecialchars(userScoreboardLabels($u)) ?></td>
@@ -232,6 +283,12 @@ function userScoreboardLabels(array $user): string
                     data-username="<?= htmlspecialchars($u['username'], ENT_QUOTES) ?>"
                   >Reset PW</button>
                   <?php if ($u['id'] !== $currentUser['id']): ?>
+                    <?php $confirmVerb = $isDisabled ? 'Enable' : 'Disable'; ?>
+                  <form method="POST" style="display:inline" onsubmit="return confirm('<?= $confirmVerb ?> <?= htmlspecialchars($u['username'], ENT_QUOTES) ?>?')">
+                    <input type="hidden" name="action" value="toggle-disabled" />
+                    <input type="hidden" name="user_id" value="<?= htmlspecialchars($u['id']) ?>" />
+                    <button class="<?= $isDisabled ? 'positive' : 'warning' ?>" type="submit"><?= $confirmVerb ?></button>
+                  </form>
                   <form method="POST" style="display:inline" onsubmit="return confirm('Delete <?= htmlspecialchars($u['username'], ENT_QUOTES) ?>?')">
                     <input type="hidden" name="action" value="delete-user" />
                     <input type="hidden" name="user_id" value="<?= htmlspecialchars($u['id']) ?>" />

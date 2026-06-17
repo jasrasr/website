@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: auth.php
- * Revision : 1.9.0
+ * Revision : 1.10.0
  * Description : Shared authentication library for CVC Scoreboard.
  *               Handles sessions, user management, login/logout, and audit logging.
  *               Users stored in data/users.json with bcrypt-hashed passwords.
@@ -20,6 +20,7 @@
  * 1.7.0 Force first-run/reset password changes and remove used first-run credentials
  * 1.8.0 Create two first-run users (admin/scorer) with temporary password password
  * 1.9.0 Extend session retention: 7-day idle (session.gc_maxlifetime), 30-day cookie lifetime; mark HttpOnly + SameSite=Lax + Secure on HTTPS
+ * 1.10.0 Added soft-disable on users: makeUser includes disabled:false; attemptLogin rejects disabled accounts (returns null, same as invalid credentials)
  */
 
 const USERS_FILE     = __DIR__ . '/data/users.json';
@@ -272,6 +273,7 @@ function makeUser(string $username, string $password, string $role, array $score
         'role'          => $role,
         'scoreboards'   => $scoreboards,
         'must_change_password' => $mustChangePassword,
+        'disabled'      => false,
         'created_at'    => $now,
         'modified_at'   => $now,
     ];
@@ -312,6 +314,11 @@ function attemptLogin(string $username, string $password): ?array
     foreach (loadUsers() as $user) {
         if (($user['username'] ?? '') === $username &&
             password_verify($password, $user['password_hash'] ?? '')) {
+            if (!empty($user['disabled'])) {
+                // Treat a disabled account as if the credentials are invalid.
+                // An admin can re-enable it from admin-users.php.
+                return null;
+            }
             $session = $user;
             unset($session['password_hash']);
             return $session;

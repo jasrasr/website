@@ -1,6 +1,6 @@
 /*
  * Filename: styles.css
- * Revision : 1.10.1
+ * Revision : 1.11.0
  * Description : Dark-themed responsive styles for CVC Scoreboard.
  *               Shared across all scoreboard instances (root, collide, youth, frontlines).
  * Author : Jason Lamb (with help from Claude Code)
@@ -24,6 +24,7 @@
  * 1.9.2 Added labeled Add Team form layout and helper text styling
  * 1.10.0 Added custom-controls stacked layout with Add/Subtract Score mode toggle row
  * 1.10.1 Removed dead .custom-controls-stacked rule; mode-row is now a direct child of .team-card
+ * 1.11.0 Added .user-status active/disabled pill and .row-disabled dim styling for admin-users.php
  */
 
 :root {
@@ -541,6 +542,29 @@ input {
   min-height: 36px;
   padding: 0.3rem 0.65rem;
   font-size: 0.82rem;
+}
+
+.user-status {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.user-status-active {
+  background: color-mix(in srgb, var(--positive) 30%, rgba(15, 23, 42, 0.6));
+  color: #d1fae5;
+}
+
+.user-status-disabled {
+  background: rgba(148, 163, 184, 0.22);
+  color: var(--text-muted);
+}
+
+.au-table tbody tr.row-disabled {
+  opacity: 0.6;
 }
 
 /* -- Team roster page ------------------------------------------------------ */
