@@ -1,6 +1,22 @@
 # Changelog
 
-Current project version: **v1.9.4**
+Current project version: **v1.10.0**
+
+## v1.10.0 - 2026-06-18
+
+### Tie-breaker, Reset All confirm, and pre-reset backup
+
+**Tie-breaker by recency.** Sorting tied teams now keeps the team that reached the score *first* ranked higher. The team that arrived at the same total *most recently* sorts below.
+
+- Each team now stores a `score_changed_at` ISO-8601 timestamp updated by every score-changing action: `update` (adjust), `reset-team`, `reset-all`, `add-team`, and (Frontlines) `award-category`.
+- All four instance APIs touch this field — root `api.php` v1.5.0, youth `api.php` v1.3.0, collide `api.php` v1.3.0, frontlines `api.php` v1.4.0.
+- Viewer/admin sort (`public/app.js` v1.33.0 → `sortTeamsByScore`): when scores tie, compare `score_changed_at` ascending (older first), then fall back to alphabetical name for the rare case where timestamps also tie (e.g., right after a Reset All when every team was zeroed at the same instant).
+- **Migration:** existing teams without `score_changed_at` are treated as "ancient" — they keep their current position until their score next changes, at which point they pick up a real timestamp.
+
+### Reset All Teams: two-step confirm + automatic backup
+
+- The **Reset All Teams** button on the full admin now requires a two-step confirm before firing. First prompt explains the impact; second is a final "are you sure?" gate.
+- Before zeroing scores, each instance API now writes the current `scores.json` to `data/scores.previous.json` (one slot, overwritten on each Reset All). To recover from a mistaken Reset All, an operator can SFTP/file-manager copy `scores.previous.json` over `scores.json` on the server. The snapshot file is gitignored and protected by the existing `data/.htaccess` (no direct web read).
 
 ## v1.9.4 - 2026-06-18
 

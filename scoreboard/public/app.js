@@ -1,5 +1,5 @@
 // Filename: app.js
-// Revision : 1.32.0
+// Revision : 1.33.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
@@ -41,6 +41,7 @@
 // 1.30.1 Tie-aware boundary: if teams beyond the halfway mark are tied with the lowest visible score, include them too (so the bottom of a tie group is never split). Hidden-count note is only shown when teams are actually hidden.
 // 1.31.0 Added Reset Score to Zero confirm dialog with current score in the prompt; strengthened Remove Team to a two-step confirm with PERMANENTLY DELETE wording. Viewer hidden-count note clarified to "Showing X of Y teams — top half by score".
 // 1.32.0 renderAdmin and renderViewer now preserve window.scrollY across re-renders, so the 10s admin poll and 2s viewer poll no longer scroll the user back to the top (noticeable on mobile while reading the Recent Activity panel). Update mechanism (poll interval, data refresh) is unchanged.
+// 1.33.0 sortTeamsByScore tiebreaker now uses team.score_changed_at (older = ranked higher) before falling back to alphabetical. Added two-step confirm on Reset All Teams.
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -118,6 +119,18 @@ function sortTeamsByScore(teams) {
       return scoreDifference;
     }
 
+    // First tiebreaker: team that reached this score earlier ranks higher
+    // (older score_changed_at first). Missing timestamp sorts above any real
+    // timestamp, so existing teams without the field stay where they are
+    // until their score next changes.
+    const aTimestamp = String(a.score_changed_at || '');
+    const bTimestamp = String(b.score_changed_at || '');
+    if (aTimestamp !== bTimestamp) {
+      return aTimestamp.localeCompare(bTimestamp);
+    }
+
+    // Final fallback: alphabetical (e.g., after a Reset All applied at the
+    // same instant to every team).
     return String(a.name || '').localeCompare(String(b.name || ''), undefined, {
       sensitivity: 'base',
       numeric: true
@@ -513,6 +526,12 @@ async function handleAdminAction(event) {
     }
 
     if (event.target.id === 'reset-all-button') {
+      if (!window.confirm('RESET EVERY TEAM\'s score to 0?\n\nThis affects all teams on this scoreboard. The current scores are backed up to data/scores.previous.json on the server so a mistaken reset can be recovered.')) {
+        return;
+      }
+      if (!window.confirm('Are you absolutely sure? This reset cannot be undone from the UI.')) {
+        return;
+      }
       await postJson('api.php?action=reset-all');
       renderAdmin(currentData);
       setStatus(`All teams reset at ${formatUpdatedAt(currentData.updatedAt)}`);

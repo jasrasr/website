@@ -1,19 +1,20 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/api.php
- * Revision : 1.3.0
+ * Revision : 1.4.0
  * Description : REST API endpoint for CVC Frontlines Scoreboard score management.
  *               Handles reading, updating, resetting, and renaming teams and title,
  *               plus goal/category definitions and one-tap goal awards.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-09
- * Modified Date : 2026-06-17
+ * Modified Date : 2026-06-18
  * Changelog :
  * 1.0.0 Initial release for Frontlines scoreboard instance
  * 1.1.0 Allow negative scores (removed max(0) floor)
  * 1.2.0 Added session authentication and audit logging per action
  * 1.3.0 Added category actions: list-categories, add-category, update-category,
  *       remove-category, award-category (Frontlines-only goal scoring)
+ * 1.4.0 Stamp score_changed_at on every score change (adjust/reset/add-team/award-category) for tiebreaker; Reset All snapshots data/scores.previous.json before clearing for recovery
  */
 
 require __DIR__ . '/scoreboard_lib.php';
@@ -64,6 +65,7 @@ try {
                 throw new InvalidArgumentException('Team not found.');
             }
             $data['teams'][$teamIndex]['score'] = (int) ($data['teams'][$teamIndex]['score'] ?? 0) + (int) $amount;
+            $data['teams'][$teamIndex]['score_changed_at'] = gmdate('c');
             return $data;
         });
 
@@ -95,6 +97,7 @@ try {
                 throw new InvalidArgumentException('Team not found.');
             }
             $data['teams'][$teamIndex]['score'] = 0;
+            $data['teams'][$teamIndex]['score_changed_at'] = gmdate('c');
             return $data;
         });
 
@@ -169,8 +172,16 @@ try {
 
     if ($action === 'reset-all') {
         $saved = writeScoreboardData(function (array $data): array {
+            $snapshotPath = __DIR__ . '/data/scores.previous.json';
+            @file_put_contents(
+                $snapshotPath,
+                json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL,
+                LOCK_EX
+            );
+            $now = gmdate('c');
             foreach ($data['teams'] as &$team) {
                 $team['score'] = 0;
+                $team['score_changed_at'] = $now;
             }
             unset($team);
             return $data;
@@ -207,6 +218,7 @@ try {
                 'name'  => $name,
                 'color' => $color,
                 'score' => 0,
+                'score_changed_at' => gmdate('c'),
             ];
             return $data;
         });
@@ -429,6 +441,7 @@ try {
                 throw new InvalidArgumentException('Team not found.');
             }
             $data['teams'][$teamIndex]['score'] = (int) ($data['teams'][$teamIndex]['score'] ?? 0) + $pointsDelta;
+            $data['teams'][$teamIndex]['score_changed_at'] = gmdate('c');
             return $data;
         });
 

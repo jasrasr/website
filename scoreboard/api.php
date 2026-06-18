@@ -1,18 +1,19 @@
 <?php declare(strict_types=1);
 /**
  * Filename: api.php
- * Revision : 1.4.0
- * Description : REST API endpoint for CVC Youth Scoreboard score management.
+ * Revision : 1.5.0
+ * Description : REST API endpoint for the default Live Scoreboard score management.
  *               Handles reading, updating, resetting, and renaming teams and title.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-09
- * Modified Date : 2026-04-13
+ * Modified Date : 2026-06-18
  * Changelog :
  * 1.0.0 Initial PHP release, converted from Node.js/Express
  * 1.1.0 Fixed query parameter routing to match relative URL fetch calls
  * 1.2.0 Added rename-team and rename-title actions
  * 1.3.0 Allow negative scores (removed max(0) floor)
  * 1.4.0 Added session authentication and audit logging per action
+ * 1.5.0 Stamp score_changed_at on every score change (used as a tiebreaker on the viewer/admin sort: older = ranked higher). Reset All now writes a snapshot to data/scores.previous.json before clearing scores so an accidental press can be recovered.
  */
 
 require __DIR__ . '/scoreboard_lib.php';
@@ -60,6 +61,7 @@ try {
                 throw new InvalidArgumentException('Team not found.');
             }
             $data['teams'][$teamIndex]['score'] = (int) ($data['teams'][$teamIndex]['score'] ?? 0) + (int) $amount;
+            $data['teams'][$teamIndex]['score_changed_at'] = gmdate('c');
             return $data;
         });
 
@@ -95,6 +97,7 @@ try {
                 throw new InvalidArgumentException('Team not found.');
             }
             $data['teams'][$teamIndex]['score'] = 0;
+            $data['teams'][$teamIndex]['score_changed_at'] = gmdate('c');
             return $data;
         });
 
@@ -178,8 +181,18 @@ try {
 
     if ($action === 'reset-all') {
         $saved = writeScoreboardData(function (array $data): array {
+            // Snapshot the current state to data/scores.previous.json so a Reset All
+            // can be recovered by copying that file over data/scores.json.
+            $snapshotPath = __DIR__ . '/data/scores.previous.json';
+            @file_put_contents(
+                $snapshotPath,
+                json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL,
+                LOCK_EX
+            );
+            $now = gmdate('c');
             foreach ($data['teams'] as &$team) {
                 $team['score'] = 0;
+                $team['score_changed_at'] = $now;
             }
             unset($team);
             return $data;
@@ -219,6 +232,7 @@ try {
                 'name'  => $name,
                 'color' => $color,
                 'score' => 0,
+                'score_changed_at' => gmdate('c'),
             ];
             return $data;
         });
