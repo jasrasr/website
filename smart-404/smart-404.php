@@ -1,11 +1,11 @@
 <?php
 /*
 Filename: smart-404.php
-Revision: 1.2.0
+Revision: 1.2.1
 Description: Logs missing jasr.me URLs, checks malicious patterns and manual mappings, suggests close /github/ matches, and displays styled 404 pages.
 Author: Jason Lamb (with help from Codex CLI)
 Created Date: 2026-05-18
-Modified Date: 2026-05-27
+Modified Date: 2026-06-18
 Changelog:
 1.0.0 initial release with logging, manual mappings, and fuzzy /github matching
 1.0.1 log YOURLS ?missing= keywords as the requested path
@@ -14,6 +14,7 @@ Changelog:
 1.1.2 update GitHub browse button label
 1.1.3 add a retry link for the requested missing URL
 1.2.0 add malicious pattern routing to a separate logged 404 page
+1.2.1 prevent hidden /github/. paths from fuzzy redirects
 */
 
 declare(strict_types=1);
@@ -40,6 +41,11 @@ function smart_404_escape(string $value): string
 function smart_404_safe_redirect(string $target): bool
 {
     if ($target === '' || substr($target, 0, 2) === '//') {
+        return false;
+    }
+
+    $targetPath = parse_url($target, PHP_URL_PATH) ?: '';
+    if (preg_match('#^/github/(?:\.|[^/]*/\.)#', $targetPath)) {
         return false;
     }
 
@@ -185,7 +191,7 @@ function smart_404_find_github_match(string $requestedPath): ?string
     $needle = strtolower($firstSegment);
 
     foreach ($items as $item) {
-        if ($item === '.' || $item === '..') {
+        if ($item === '.' || $item === '..' || str_starts_with($item, '.')) {
             continue;
         }
 

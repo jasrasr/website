@@ -5,6 +5,7 @@ RewriteBase /
 
 # Try /github/<request> before YOURLS handles unknown shortlinks.
 RewriteCond %{REQUEST_URI} !^/github/
+RewriteCond %{REQUEST_URI} !^/\.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{DOCUMENT_ROOT}/github%{REQUEST_URI} -f [OR]
