@@ -45,7 +45,7 @@ function smart_404_safe_redirect(string $target): bool
     }
 
     $targetPath = parse_url($target, PHP_URL_PATH) ?: '';
-    if (preg_match('#^/github/(?:\.|[^/]*/\.)#', $targetPath)) {
+    if (preg_match('#^/github/(?:.*/)?\.#', $targetPath)) {
         return false;
     }
 
