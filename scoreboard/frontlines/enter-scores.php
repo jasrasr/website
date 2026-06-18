@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/enter-scores.php
- * Revision : 1.5.0
+ * Revision : 1.6.0
  * Description : Admin score entry page for CVC Frontlines Scoreboard.
  *               Allows authorized users to update, reset, and rename team scores and title.
  * Author : Jason Lamb (with help from Claude Code)
@@ -14,6 +14,7 @@
  * 1.3.0 Added changelog and all-scoreboards navigation URLs
  * 1.4.0 Added roster navigation URLs
  * 1.5.0 Added category navigation URLs (Enter Categories for all; Edit Categories for admin)
+ * 1.6.0 Server-rendered page-header block so View Source shows page identity and signed-in user
  */
 
 require __DIR__ . '/../auth.php';
@@ -42,7 +43,16 @@ $isAdmin = ($user['role'] ?? '') === 'admin';
     data-category-entry-url="./enter-scores-category.php"
     data-edit-categories-url="<?= $isAdmin ? './edit-categories.php' : '' ?>"
   >
-    <div id="app"></div>
+    <div id="app">
+      <header class="page-header">
+        <div>
+          <p>Admin</p>
+          <h1>CVC Frontlines Scoreboard — Score Entry</h1>
+          <p class="updated-at">Signed in as <?= htmlspecialchars($user['username']) ?> (<?= htmlspecialchars($user['role']) ?>)</p>
+        </div>
+      </header>
+      <p class="status-text">Loading score entry...</p>
+    </div>
     <script src="../public/app.js?v=<?= filemtime(__DIR__ . '/../public/app.js') ?>" defer></script>
   </body>
 </html>

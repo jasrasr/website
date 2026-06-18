@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/enter-scores-category.php
- * Revision : 1.0.0
+ * Revision : 1.1.0
  * Description : Scorer + admin page for awarding pre-defined goal categories to Frontlines teams.
  *               One-tap awarding using the same Frontlines API. Frontlines-only feature.
  * Author : Jason Lamb (with help from Claude Code)
@@ -9,6 +9,7 @@
  * Modified Date : 2026-06-17
  * Changelog :
  * 1.0.0 initial release
+ * 1.1.0 Server-rendered quick-header block so View Source shows page identity and signed-in user
  */
 
 require __DIR__ . '/../auth.php';
@@ -40,6 +41,12 @@ $isAdmin = ($user['role'] ?? '') === 'admin';
     data-edit-categories-url="<?= $isAdmin ? './edit-categories.php' : '' ?>"
   >
     <div id="category-entry-app" class="quick-entry-shell">
+      <header class="quick-header">
+        <div class="quick-title">
+          <h1>CVC Frontlines Scoreboard — Category Entry</h1>
+          <p class="updated-at">Goal entry — <?= htmlspecialchars($user['username']) ?> (<?= htmlspecialchars($user['role']) ?>)</p>
+        </div>
+      </header>
       <p class="status-text">Loading goal entry...</p>
     </div>
     <script src="../public/category-entry.js?v=<?= filemtime(__DIR__ . '/../public/category-entry.js') ?>" defer></script>

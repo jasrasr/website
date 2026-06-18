@@ -1,17 +1,18 @@
 <?php declare(strict_types=1);
 /**
  * Filename: youth/enter-scores.php
- * Revision : 1.3.0
+ * Revision : 1.4.0
  * Description : Admin score entry page for CVC Youth Scoreboard.
  *               Allows authorized users to update, reset, and rename team scores and title.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-09
- * Modified Date : 2026-06-02
+ * Modified Date : 2026-06-17
  * Changelog :
  * 1.0.0 Initial release for Youth scoreboard instance
  * 1.1.0 Added session authentication; passes username/role/urls to JS via data attrs
  * 1.2.0 Added change-password URL for signed-in users
  * 1.3.0 Added changelog and all-scoreboards navigation URLs
+ * 1.4.0 Server-rendered page-header block so View Source shows page identity and signed-in user
  */
 
 require __DIR__ . '/../auth.php';
@@ -35,7 +36,16 @@ $user = requireAuth('youth', '../login.php');
     data-changelog-url="../changelog.php"
     data-scoreboards-url="../scoreboards.php"
   >
-    <div id="app"></div>
+    <div id="app">
+      <header class="page-header">
+        <div>
+          <p>Admin</p>
+          <h1>CVC Youth Scoreboard — Score Entry</h1>
+          <p class="updated-at">Signed in as <?= htmlspecialchars($user['username']) ?> (<?= htmlspecialchars($user['role']) ?>)</p>
+        </div>
+      </header>
+      <p class="status-text">Loading score entry...</p>
+    </div>
     <script src="../public/app.js?v=<?= filemtime(__DIR__ . '/../public/app.js') ?>" defer></script>
   </body>
 </html>

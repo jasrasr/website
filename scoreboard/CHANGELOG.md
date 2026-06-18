@@ -1,6 +1,19 @@
 # Changelog
 
-Current project version: **v1.7.0**
+Current project version: **v1.8.0**
+
+## v1.8.0 - 2026-06-17
+
+### Server-rendered page headers (admin + entry pages)
+
+Each admin/entry page's HTML shell now ships with a real `<header>` block server-rendered in PHP, instead of an empty `<div id="app">` that JavaScript fills in. Result: **View Source** (Ctrl+U) now shows the page's identity and signed-in user, instead of just `<title>` and a Loading… message. The live page is unchanged — JS still replaces the static header with the dynamic version on first render.
+
+**Pages updated (10 PHP shells, all instances):**
+- `enter-scores.php` × 4 (root v1.5.0, youth v1.4.0, collide v1.4.0, frontlines v1.6.0)
+- `enter-scores-quick.php` × 4 (root v1.4.0, youth v1.3.0, collide v1.3.0, frontlines v1.5.0)
+- Frontlines categories pages: `enter-scores-category.php` v1.1.0, `edit-categories.php` v1.1.0
+
+Each header includes the scoreboard name, "Score Entry" / "Quick Entry" / "Category Entry" / "Edit Categories" suffix, and the signed-in username + role.
 
 ## v1.7.0 - 2026-06-17
 

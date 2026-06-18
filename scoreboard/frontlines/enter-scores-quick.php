@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/enter-scores-quick.php
- * Revision : 1.4.0
+ * Revision : 1.5.0
  * Description : Compact test score entry page for CVC Frontlines Scoreboard.
  *               Provides fast team selection and quick/manual score updates.
  * Author : Jason Lamb (with help from Codex CLI)
@@ -13,6 +13,7 @@
  * 1.2.0 Added scoreboards-url data attribute for footer Scoreboards link
  * 1.3.0 Added roster navigation URLs
  * 1.4.0 Added category navigation URLs (Enter Categories for all; Edit Categories for admin)
+ * 1.5.0 Server-rendered quick-header block so View Source shows page identity and signed-in user
  */
 
 require __DIR__ . '/../auth.php';
@@ -41,6 +42,12 @@ $isAdmin = ($user['role'] ?? '') === 'admin';
     data-edit-categories-url="<?= $isAdmin ? './edit-categories.php' : '' ?>"
   >
     <div id="quick-entry-app" class="quick-entry-shell">
+      <header class="quick-header">
+        <div class="quick-title">
+          <h1>CVC Frontlines Scoreboard — Quick Entry</h1>
+          <p class="updated-at">Quick entry — <?= htmlspecialchars($user['username']) ?> (<?= htmlspecialchars($user['role']) ?>)</p>
+        </div>
+      </header>
       <p class="status-text">Loading quick score entry...</p>
     </div>
     <script src="../public/quick-entry.js?v=<?= filemtime(__DIR__ . '/../public/quick-entry.js') ?>" defer></script>

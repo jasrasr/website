@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/edit-categories.php
- * Revision : 1.0.0
+ * Revision : 1.1.0
  * Description : Admin-only editor for Frontlines goal categories (name, points, max awards, active flag).
  *               Reads/writes via the REST API endpoints in frontlines/api.php.
  * Author : Jason Lamb (with help from Claude Code)
@@ -9,6 +9,7 @@
  * Modified Date : 2026-06-17
  * Changelog :
  * 1.0.0 initial release
+ * 1.1.0 Server-rendered page-header block so View Source shows page identity and signed-in user
  */
 
 require __DIR__ . '/../auth.php';
@@ -49,6 +50,13 @@ if (($user['role'] ?? '') !== 'admin') {
     data-edit-roster-url="./edit-roster.php"
   >
     <div id="edit-categories-app" class="page-shell">
+      <header class="page-header">
+        <div>
+          <p>Admin</p>
+          <h1>CVC Frontlines Scoreboard — Edit Categories</h1>
+          <p class="updated-at">Signed in as <?= htmlspecialchars($user['username']) ?> (<?= htmlspecialchars($user['role']) ?>)</p>
+        </div>
+      </header>
       <p class="status-text">Loading categories editor...</p>
     </div>
     <script src="../public/edit-categories.js?v=<?= filemtime(__DIR__ . '/../public/edit-categories.js') ?>" defer></script>
