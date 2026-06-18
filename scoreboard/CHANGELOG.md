@@ -1,6 +1,12 @@
 # Changelog
 
-Current project version: **v1.9.3**
+Current project version: **v1.9.4**
+
+## v1.9.4 - 2026-06-18
+
+### Preserve scroll position across re-renders (`public/app.js` v1.32.0)
+- The admin page poll (10s) and viewer page poll (2s) used to scroll the user back to the top of the page on each refresh, because `app.innerHTML = ...` rebuilds the DOM. This was particularly noticeable on mobile while reading the Recent Activity panel: it kept yanking you to the top.
+- `renderAdmin` and `renderViewer` now record `window.scrollY` before the rebuild and restore it immediately after. Update mechanism (poll interval, data refresh, last-updated timestamp, audit log refresh) is unchanged.
 
 ## v1.9.3 - 2026-06-18
 

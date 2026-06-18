@@ -1,5 +1,5 @@
 // Filename: app.js
-// Revision : 1.31.0
+// Revision : 1.32.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
@@ -40,6 +40,7 @@
 // 1.30.0 Replaced hide-bottom-scores with hide-bottom-teams: viewer slices the team list to top ceil(n/2) when opt-in is on, and the grid recalculates cols/rows from the visible count so the remaining cards fill the screen
 // 1.30.1 Tie-aware boundary: if teams beyond the halfway mark are tied with the lowest visible score, include them too (so the bottom of a tie group is never split). Hidden-count note is only shown when teams are actually hidden.
 // 1.31.0 Added Reset Score to Zero confirm dialog with current score in the prompt; strengthened Remove Team to a two-step confirm with PERMANENTLY DELETE wording. Viewer hidden-count note clarified to "Showing X of Y teams — top half by score".
+// 1.32.0 renderAdmin and renderViewer now preserve window.scrollY across re-renders, so the 10s admin poll and 2s viewer poll no longer scroll the user back to the top (noticeable on mobile while reading the Recent Activity panel). Update mechanism (poll interval, data refresh) is unchanged.
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -240,6 +241,7 @@ function renderSharedHeader(data, pageType) {
 
 async function renderAdmin(data) {
   const app = document.querySelector('#app');
+  const previousScrollY = window.scrollY || window.pageYOffset || 0;
   const role       = document.body.dataset.role || '';
   const logoutUrl  = document.body.dataset.logoutUrl || './logout.php';
   const adminUrl   = document.body.dataset.adminUrl || './admin-users.php';
@@ -308,6 +310,12 @@ async function renderAdmin(data) {
       </section>
     </div>
   `;
+  if (previousScrollY > 0) {
+    // Restore scroll position so the 10s admin poll does not yank the user
+    // back to the top of the page (especially noticeable on mobile while
+    // reading the Recent Activity panel).
+    window.scrollTo(0, previousScrollY);
+  }
   await syncActivityLog();
 }
 
@@ -367,6 +375,7 @@ async function loadActivityLog() {
 
 function renderViewer(data) {
   const app = document.querySelector('#app');
+  const previousScrollY = window.scrollY || window.pageYOffset || 0;
   const rosterUrl = document.body.dataset.rosterUrl || '';
   const hideBottomTeams = document.body.dataset.hideBottomTeams === 'true';
   const ranks = computeRanks(data.teams);
@@ -403,6 +412,9 @@ function renderViewer(data) {
       </main>
     </div>
   `;
+  if (previousScrollY > 0) {
+    window.scrollTo(0, previousScrollY);
+  }
 }
 
 function setStatus(message) {
