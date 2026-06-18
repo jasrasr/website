@@ -1,2 +1,2 @@
 RewriteEngine On
-RewriteRule ^.*$ https://jasr.me/github/scoreboard [R=301,L,NE]
+RewriteRule ^.*$ index.php [L]
