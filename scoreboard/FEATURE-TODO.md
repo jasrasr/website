@@ -1,0 +1,1 @@
+- remove bottom half scoring teams from public scoreboard on frontlines scoreboard. Suggestion from rene for moral. 
