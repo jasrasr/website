@@ -33,7 +33,7 @@ assertContains($appJs, 'sortTeamsByScore', 'Viewer cards should use a named scor
 assertContains($appJs, 'sortTeamsByName(data.teams).map((team) => createAdminCard', 'Admin rendering should order team cards A-Z.');
 assertContains($appJs, 'sortTeamsByScore(data.teams)', 'Viewer rendering should sort teams by score.');
 assertContains($appJs, 'createViewerCard', 'Viewer rendering should call createViewerCard per team.');
-assertContains($appJs, 'hideBottomScores', 'Viewer rendering should support the hide-bottom-scores opt-in.');
+assertContains($appJs, 'hideBottomTeams', 'Viewer rendering should support the hide-bottom-teams opt-in.');
 assertContains($appJs, 'const quickValues = [1, 10, 100, 1000];', 'Full admin quick buttons should be +1, +10, +100, +1000.');
 assertContains($appJs, '+ Add Score', 'Full admin should render the + Add Score mode toggle.');
 assertContains($appJs, 'Subtract Score', 'Full admin should render the Subtract Score mode toggle.');

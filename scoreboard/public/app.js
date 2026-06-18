@@ -1,5 +1,5 @@
 // Filename: app.js
-// Revision : 1.29.0
+// Revision : 1.30.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
@@ -37,6 +37,7 @@
 // 1.27.0 Move per-card mode toggle above the +1/+10/+100/+1000 quick buttons and flip those buttons to red -1/-10/-100/-1000 when Subtract mode is active (matches quick-entry behavior)
 // 1.28.0 Render Enter Categories and Edit Categories footer links when the corresponding URL data attributes are present (Frontlines-only categories feature)
 // 1.29.0 Viewer page can hide scores (and rank badges) for the bottom half of teams when body has data-hide-bottom-scores="true" (Frontlines opt-in to protect losing-team morale)
+// 1.30.0 Replaced hide-bottom-scores with hide-bottom-teams: viewer slices the team list to top ceil(n/2) when opt-in is on, and the grid recalculates cols/rows from the visible count so the remaining cards fill the screen
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -206,20 +207,15 @@ function createAdminCard(team, rank) {
   `;
 }
 
-function createViewerCard(team, rank, hideScore = false) {
-  const rankBadge = hideScore ? '' : rankBadgeHtml(rank);
-  const scoreDisplay = hideScore
-    ? '<div class="score-value viewer-score-hidden" aria-label="Score hidden">&mdash;</div>'
-    : `<div class="score-value" ${scoreFontStyle(team.score)}>${team.score}</div>`;
-  const cardClass = hideScore ? 'team-card viewer-card viewer-card-hidden' : 'team-card viewer-card';
+function createViewerCard(team, rank) {
   return `
-    <section class="${cardClass}" style="--team-color: ${team.color};">
-      ${rankBadge}
+    <section class="team-card viewer-card" style="--team-color: ${team.color};">
+      ${rankBadgeHtml(rank)}
       <div class="team-title">
         <div class="team-name">${team.name}</div>
       </div>
       <div class="score-box">
-        ${scoreDisplay}
+        <div class="score-value" ${scoreFontStyle(team.score)}>${team.score}</div>
       </div>
     </section>
   `;
@@ -370,10 +366,17 @@ async function loadActivityLog() {
 function renderViewer(data) {
   const app = document.querySelector('#app');
   const rosterUrl = document.body.dataset.rosterUrl || '';
-  const teamCount = data.teams.length;
-  const cols = teamCount <= 4 ? 2 : teamCount <= 6 ? 3 : 4;
-  const rows = Math.ceil(teamCount / cols);
+  const hideBottomTeams = document.body.dataset.hideBottomTeams === 'true';
+  const ranks = computeRanks(data.teams);
+  const sorted = sortTeamsByScore(data.teams);
+  const visibleTeams = hideBottomTeams ? sorted.slice(0, Math.ceil(sorted.length / 2)) : sorted;
+  const visibleCount = visibleTeams.length;
+  const cols = visibleCount <= 4 ? 2 : visibleCount <= 6 ? 3 : 4;
+  const rows = Math.ceil(visibleCount / cols);
   const gridStyle = `--viewer-cols: ${cols}; --viewer-rows: ${rows};`;
+  const hiddenNote = hideBottomTeams
+    ? `<div class="updated-at">Showing top ${visibleCount} of ${sorted.length} teams</div>`
+    : '';
 
   app.innerHTML = `
     <div class="viewer-page">
@@ -382,20 +385,12 @@ function renderViewer(data) {
         <div class="header-actions">
           <div class="updated-at">Auto-refresh every ${viewerPollIntervalMs / 1000} seconds</div>
           <div class="updated-at">Teams sorted by score (1st, 2nd, 3rd...)</div>
+          ${hiddenNote}
           ${rosterUrl ? `<a class="au-btn" href="${rosterUrl}">Roster</a>` : ''}
         </div>
       </header>
       <main class="viewer-grid" style="${gridStyle}">
-        ${(() => {
-          const ranks = computeRanks(data.teams);
-          const sorted = sortTeamsByScore(data.teams);
-          const hideBottomScores = document.body.dataset.hideBottomScores === 'true';
-          const visibleCount = hideBottomScores ? Math.ceil(sorted.length / 2) : sorted.length;
-          return sorted.map((team, index) => {
-            const hide = hideBottomScores && index >= visibleCount;
-            return createViewerCard(team, ranks.get(team.id), hide);
-          }).join('');
-        })()}
+        ${visibleTeams.map((team) => createViewerCard(team, ranks.get(team.id))).join('')}
       </main>
     </div>
   `;

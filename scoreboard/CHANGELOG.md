@@ -1,6 +1,18 @@
 # Changelog
 
-Current project version: **v1.9.0**
+Current project version: **v1.9.1**
+
+## v1.9.1 - 2026-06-18
+
+### Frontlines public viewer: hide bottom teams entirely (replaces hide-scores)
+
+Same morale-protection goal as v1.9.0, different execution. v1.9.0 left the bottom teams on screen with names visible and a `—` placeholder where the score would be. v1.9.1 omits the bottom half from rendering altogether so the visible cards expand to fill the viewport instead of competing for space with muted placeholders.
+
+- `frontlines/index.php` v1.3.0: opt-in attribute renamed `data-hide-bottom-scores` → `data-hide-bottom-teams`. Server-rendered header copy now reads "Only top-half teams are shown."
+- `public/app.js` v1.30.0: `renderViewer` slices the sorted team list to `ceil(n/2)` when the opt-in is on, recomputes the `--viewer-cols` / `--viewer-rows` custom properties from the visible count, and only renders the visible cards. Existing CSS grid expands the cards to fill via `minmax(0, 1fr)` rows. Header shows a small "Showing top X of Y teams" note when the mode is active.
+- `public/styles.css` v1.12.1: removed `.viewer-card-hidden` and `.viewer-score-hidden` (no muted cards remain on screen).
+- `createViewerCard` reverted to its simple two-arg signature.
+- README updated to describe the new behavior.
 
 ## v1.9.0 - 2026-06-18
 
