@@ -1,1 +1,2 @@
 - remove bottom half scoring teams from public scoreboard on frontlines scoreboard. Suggestion from rene for moral. 
+- update readme.me with latest updates for category scoring
