@@ -55,6 +55,31 @@ All instances share a single set of frontend files in `public/`:
 - `requireAdmin($loginUrl)` — page requires `role === 'admin'`; used by `admin-users.php`.
 - First-run and admin-reset passwords require the user to set a new password before using the scoreboards.
 
+## Backup & Recovery
+
+The app keeps a few automatic snapshots so destructive actions can be recovered without reaching for hosting backups.
+
+| Action | What's saved | Where | How to restore |
+|---|---|---|---|
+| **Reset All Teams** | Full `scores.json` (teams + scores + title) right before clearing | `<instance>/data/scores.previous.json` (single slot, overwritten on each Reset All) | Click **Undo Reset All** in the admin footer (appears only when a snapshot exists). Falls back to copying `scores.previous.json` over `scores.json` via the file manager. |
+| **Reset Score to Zero** (single team) | The team's record right before zeroing | `<instance>/data/scores.previous-single.json` (single slot) | Copy the team's snapshot back via file manager; no in-UI undo for single-team resets yet. |
+| **Remove Team** | The deleted team's full record + who/when | `<instance>/data/removed-teams.json` (rolling log, last 100 removals) | Re-add the team via the Add Team form, then look up its prior score from this log. (No one-click restore yet.) |
+| **Any change to `users.json`** | `users.json` right before the write | `data/users.previous.json` (single slot, overwritten on each save) | Copy `users.previous.json` over `users.json` to undo the last user-management change. |
+| **Daily scheduled snapshot** (opt-in) | Full `scores.json` for every instance | `<instance>/data/snapshots/YYYY-MM-DD-HH.json` (last 30 files per instance) | Copy the desired dated snapshot back over `scores.json`. |
+| **Audit log** | Per-action history (timestamp, user, action, delta, new score) | `<instance>/data/audit.json` (last 1000 entries) | Read directly; not a true backup but useful for replay. |
+
+All backup files live under `data/` and inherit the existing `.htaccess` protection that blocks direct web access.
+
+**Setting up daily snapshots:**
+
+The repo includes a CLI helper at `scoreboard/tools/take-scores-snapshot.php`. Wire it up via your hosting's scheduler / cron to take a dated copy of every instance's `scores.json`:
+
+```
+0 3 * * * cd /home/<youruser>/public_html/github/scoreboard && /usr/bin/php tools/take-scores-snapshot.php >> data/snapshot.log 2>&1
+```
+
+That runs daily at 03:00 UTC. Snapshots go to `<instance>/data/snapshots/<YYYY-MM-DD-HH>.json`; the script keeps the last 30 files per instance and prunes older ones. The script refuses HTTP requests (CLI only).
+
 ## Runtime Samples
 
 Live runtime files are ignored by Git, but public-safe samples are committed so the app can be duplicated cleanly:

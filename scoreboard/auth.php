@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: auth.php
- * Revision : 1.10.0
+ * Revision : 1.11.0
  * Description : Shared authentication library for CVC Scoreboard.
  *               Handles sessions, user management, login/logout, and audit logging.
  *               Users stored in data/users.json with bcrypt-hashed passwords.
@@ -21,6 +21,7 @@
  * 1.8.0 Create two first-run users (admin/scorer) with temporary password password
  * 1.9.0 Extend session retention: 7-day idle (session.gc_maxlifetime), 30-day cookie lifetime; mark HttpOnly + SameSite=Lax + Secure on HTTPS
  * 1.10.0 Added soft-disable on users: makeUser includes disabled:false; attemptLogin rejects disabled accounts (returns null, same as invalid credentials)
+ * 1.11.0 saveUsers() now snapshots data/users.json to data/users.previous.json before every write, so a destructive change can be recovered by copying that file back. Single slot, overwritten on each save.
  */
 
 const USERS_FILE     = __DIR__ . '/data/users.json';
@@ -213,6 +214,12 @@ function saveUsers(array $users): void
     $dir = dirname(USERS_FILE);
     if (!is_dir($dir)) {
         mkdir($dir, 0775, true);
+    }
+    // Snapshot the current users file before any change so that a destructive
+    // edit (delete-user, accidental wipe, etc.) can be recovered by copying
+    // data/users.previous.json over data/users.json on the server.
+    if (is_file(USERS_FILE)) {
+        @copy(USERS_FILE, $dir . '/users.previous.json');
     }
     file_put_contents(
         USERS_FILE,

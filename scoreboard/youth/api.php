@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: youth/api.php
- * Revision : 1.3.0
+ * Revision : 1.4.0
  * Description : REST API endpoint for CVC Youth Scoreboard score management.
  *               Handles reading, updating, resetting, and renaming teams and title.
  * Author : Jason Lamb (with help from Claude Code)
@@ -12,6 +12,7 @@
  * 1.1.0 Allow negative scores (removed max(0) floor)
  * 1.2.0 Added session authentication and audit logging per action
  * 1.3.0 Stamp score_changed_at on every score change (tiebreaker source); Reset All snapshots data/scores.previous.json before clearing for recovery
+ * 1.4.0 reset-team snapshots data/scores.previous-single.json. remove-team appends to data/removed-teams.json. New restore-previous-scores action (admin-only). scores GET adds hasPreviousSnapshot flag.
  */
 
 require __DIR__ . '/scoreboard_lib.php';
@@ -25,7 +26,9 @@ $teamId = $_GET['team'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 if ($method === 'GET' && $action === 'scores') {
-    jsonResponse(readScoreboardData());
+    $data = readScoreboardData();
+    $data['hasPreviousSnapshot'] = is_file(__DIR__ . '/data/scores.previous.json');
+    jsonResponse($data);
 }
 
 $currentUser = requireAuthJson($scoreboardId);
@@ -88,6 +91,15 @@ try {
             if ($teamIndex === null) {
                 throw new InvalidArgumentException('Team not found.');
             }
+            @file_put_contents(
+                __DIR__ . '/data/scores.previous-single.json',
+                json_encode([
+                    'snapshot_at' => gmdate('c'),
+                    'action'      => 'reset-team',
+                    'team'        => $data['teams'][$teamIndex],
+                ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL,
+                LOCK_EX
+            );
             $data['teams'][$teamIndex]['score'] = 0;
             $data['teams'][$teamIndex]['score_changed_at'] = gmdate('c');
             return $data;
@@ -235,12 +247,30 @@ try {
 
     if ($action === 'remove-team') {
         $removedName = '';
-        $saved = writeScoreboardData(function (array $data) use ($teamId, &$removedName): array {
+        $saved = writeScoreboardData(function (array $data) use ($teamId, $currentUser, &$removedName): array {
             $teamIndex = findTeamIndex($data, $teamId);
             if ($teamIndex === null) {
                 throw new InvalidArgumentException('Team not found.');
             }
-            $removedName = (string) ($data['teams'][$teamIndex]['name'] ?? '');
+            $removedTeam = $data['teams'][$teamIndex];
+            $removedName = (string) ($removedTeam['name'] ?? '');
+            $removedPath = __DIR__ . '/data/removed-teams.json';
+            $existing = [];
+            if (is_file($removedPath)) {
+                $existingData = json_decode(file_get_contents($removedPath) ?: '', true);
+                if (is_array($existingData)) $existing = $existingData;
+            }
+            array_unshift($existing, [
+                'removed_at' => gmdate('c'),
+                'removed_by' => $currentUser['username'],
+                'team'       => $removedTeam,
+            ]);
+            $existing = array_slice($existing, 0, 100);
+            @file_put_contents(
+                $removedPath,
+                json_encode($existing, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL,
+                LOCK_EX
+            );
             array_splice($data['teams'], $teamIndex, 1);
             return $data;
         });
@@ -253,6 +283,38 @@ try {
             'team_name'  => $removedName,
             'amount'     => null,
             'new_score'  => null,
+            'ip'         => clientIp(),
+            'user_agent' => clientUserAgent(),
+        ]);
+
+        jsonResponse($saved);
+    }
+
+    if ($action === 'restore-previous-scores') {
+        if (($currentUser['role'] ?? '') !== 'admin') {
+            jsonResponse(['error' => 'Admin access required.'], 403);
+        }
+        $snapshotPath = __DIR__ . '/data/scores.previous.json';
+        if (!is_file($snapshotPath)) {
+            jsonResponse(['error' => 'No Reset All snapshot available to restore.'], 404);
+        }
+        $snapshotRaw = file_get_contents($snapshotPath) ?: '';
+        $snapshot = json_decode($snapshotRaw, true);
+        if (!is_array($snapshot) || !isset($snapshot['teams'])) {
+            jsonResponse(['error' => 'Snapshot file is not valid JSON.'], 500);
+        }
+
+        $saved = writeScoreboardData(function (array $data) use ($snapshot): array {
+            $data['teams'] = $snapshot['teams'];
+            if (isset($snapshot['title'])) $data['title'] = $snapshot['title'];
+            return $data;
+        });
+
+        logAudit($auditFile, [
+            'timestamp'  => gmdate('c'),
+            'username'   => $currentUser['username'],
+            'action'     => 'restore-previous-scores',
+            'team_id'    => null, 'team_name' => null, 'amount' => null, 'new_score' => null,
             'ip'         => clientIp(),
             'user_agent' => clientUserAgent(),
         ]);

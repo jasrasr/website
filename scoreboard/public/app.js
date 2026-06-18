@@ -1,5 +1,5 @@
 // Filename: app.js
-// Revision : 1.33.0
+// Revision : 1.34.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
@@ -42,6 +42,7 @@
 // 1.31.0 Added Reset Score to Zero confirm dialog with current score in the prompt; strengthened Remove Team to a two-step confirm with PERMANENTLY DELETE wording. Viewer hidden-count note clarified to "Showing X of Y teams — top half by score".
 // 1.32.0 renderAdmin and renderViewer now preserve window.scrollY across re-renders, so the 10s admin poll and 2s viewer poll no longer scroll the user back to the top (noticeable on mobile while reading the Recent Activity panel). Update mechanism (poll interval, data refresh) is unchanged.
 // 1.33.0 sortTeamsByScore tiebreaker now uses team.score_changed_at (older = ranked higher) before falling back to alphabetical. Added two-step confirm on Reset All Teams.
+// 1.34.0 Added in-UI "Undo Reset All" button (admin only). Renders in the admin footer next to Reset All Teams whenever data.hasPreviousSnapshot is true. Clicking it POSTs restore-previous-scores which writes data/scores.previous.json back to data/scores.json. Confirm dialog before firing.
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -315,6 +316,7 @@ async function renderAdmin(data) {
         ${editRosterUrl ? `<a class="au-btn" href="${editRosterUrl}">Edit Roster</a>` : ''}
         ${editCategoriesUrl ? `<a class="au-btn" href="${editCategoriesUrl}">Edit Categories</a>` : ''}
         <button class="warning" id="reset-all-button" type="button">Reset All Teams</button>
+        ${role === 'admin' && data.hasPreviousSnapshot ? `<button class="positive" id="undo-reset-all-button" type="button">Undo Reset All</button>` : ''}
         ${role === 'admin' ? `<a class="au-btn" href="${adminUrl}">Manage Users</a>` : ''}
         <a class="au-btn" href="${scoreboardsUrl}">Scoreboards</a>
         <a class="au-btn" href="${changelogUrl}">Changelog</a>
@@ -526,15 +528,25 @@ async function handleAdminAction(event) {
     }
 
     if (event.target.id === 'reset-all-button') {
-      if (!window.confirm('RESET EVERY TEAM\'s score to 0?\n\nThis affects all teams on this scoreboard. The current scores are backed up to data/scores.previous.json on the server so a mistaken reset can be recovered.')) {
+      if (!window.confirm('RESET EVERY TEAM\'s score to 0?\n\nThis affects all teams on this scoreboard. A snapshot is saved server-side so an Undo Reset All button will appear right after.')) {
         return;
       }
-      if (!window.confirm('Are you absolutely sure? This reset cannot be undone from the UI.')) {
+      if (!window.confirm('Are you absolutely sure?')) {
         return;
       }
       await postJson('api.php?action=reset-all');
       renderAdmin(currentData);
-      setStatus(`All teams reset at ${formatUpdatedAt(currentData.updatedAt)}`);
+      setStatus(`All teams reset at ${formatUpdatedAt(currentData.updatedAt)}. Undo Reset All is available in the footer.`);
+      return;
+    }
+
+    if (event.target.id === 'undo-reset-all-button') {
+      if (!window.confirm('Restore the scores that were in place before the last Reset All?')) {
+        return;
+      }
+      await postJson('api.php?action=restore-previous-scores');
+      renderAdmin(currentData);
+      setStatus(`Scores restored from snapshot at ${formatUpdatedAt(currentData.updatedAt)}`);
       return;
     }
 

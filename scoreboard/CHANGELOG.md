@@ -1,6 +1,39 @@
 # Changelog
 
-Current project version: **v1.10.0**
+Current project version: **v1.11.0**
+
+## v1.11.0 - 2026-06-18
+
+### Backup & Recovery improvements across the app
+
+Closes several gaps where a destructive action would leave no recovery path.
+
+**New snapshots written automatically:**
+- `auth.php` v1.11.0: every `saveUsers()` first copies the current `data/users.json` to `data/users.previous.json`. Triggers on add/edit/disable/delete/password reset across `admin-users.php` and `change-password.php`. Single slot.
+- Per instance API (root `api.php` v1.6.0, youth v1.4.0, collide v1.4.0, frontlines v1.5.0):
+  - **reset-team** now writes the pre-reset team record to `data/scores.previous-single.json` before zeroing. Single slot.
+  - **remove-team** now prepends the deleted team's full record (plus removed_at / removed_by) to `data/removed-teams.json`. Rolling log capped at 100.
+
+**Restore endpoint + Undo Reset All button:**
+- New API action `restore-previous-scores` (admin only) on every instance. Reads `data/scores.previous.json`, validates it, and writes it back to `data/scores.json`. Audit-logged.
+- `scores` GET response now includes `hasPreviousSnapshot` flag.
+- `public/app.js` v1.34.0: admin footer renders an **Undo Reset All** button (green) whenever `hasPreviousSnapshot` is true. One confirm, then POSTs the restore action. Falls back gracefully when the snapshot is missing or invalid (server returns 404 / 500 with a clear message).
+
+**Daily scheduled snapshot tool:**
+- New `scoreboard/tools/take-scores-snapshot.php` CLI helper. Copies every instance's `scores.json` to `data/snapshots/YYYY-MM-DD-HH.json` and prunes to the last 30 files per instance. Refuses HTTP requests (CLI only). Documented in README with a sample cron entry.
+
+**Documentation:**
+- README has a new **Backup & Recovery** section laying out what's saved, where, and how to restore each one.
+
+### Recovery procedures (cheat sheet)
+
+| If this happens | Do this |
+|---|---|
+| Reset All Teams was a mistake | Click **Undo Reset All** in admin footer |
+| Single team's score wrongly reset | File-manager: copy `<instance>/data/scores.previous-single.json` value back into the team |
+| Removed a team by accident | File-manager: read `<instance>/data/removed-teams.json` (top entry), then Add Team with the same name/color and adjust the score |
+| `users.json` wiped or wrong | File-manager: copy `data/users.previous.json` over `data/users.json` |
+| Need a point-in-time score from days ago | File-manager: pick the right `data/snapshots/YYYY-MM-DD-HH.json` and copy over `data/scores.json` (requires the cron snapshot tool wired up) |
 
 ## v1.10.0 - 2026-06-18
 
