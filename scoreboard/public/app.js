@@ -1,5 +1,5 @@
 // Filename: app.js
-// Revision : 1.30.0
+// Revision : 1.30.1
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
@@ -38,6 +38,7 @@
 // 1.28.0 Render Enter Categories and Edit Categories footer links when the corresponding URL data attributes are present (Frontlines-only categories feature)
 // 1.29.0 Viewer page can hide scores (and rank badges) for the bottom half of teams when body has data-hide-bottom-scores="true" (Frontlines opt-in to protect losing-team morale)
 // 1.30.0 Replaced hide-bottom-scores with hide-bottom-teams: viewer slices the team list to top ceil(n/2) when opt-in is on, and the grid recalculates cols/rows from the visible count so the remaining cards fill the screen
+// 1.30.1 Tie-aware boundary: if teams beyond the halfway mark are tied with the lowest visible score, include them too (so the bottom of a tie group is never split). Hidden-count note is only shown when teams are actually hidden.
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -369,12 +370,19 @@ function renderViewer(data) {
   const hideBottomTeams = document.body.dataset.hideBottomTeams === 'true';
   const ranks = computeRanks(data.teams);
   const sorted = sortTeamsByScore(data.teams);
-  const visibleTeams = hideBottomTeams ? sorted.slice(0, Math.ceil(sorted.length / 2)) : sorted;
+  let visibleTeams = sorted;
+  if (hideBottomTeams && sorted.length > 0) {
+    // Take the top ceil(n/2) teams, then extend the cut to include any teams
+    // tied with the lowest visible score so we never split a tie group.
+    const halfwayIdx = Math.ceil(sorted.length / 2) - 1;
+    const cutoffScore = Number(sorted[halfwayIdx]?.score ?? 0);
+    visibleTeams = sorted.filter((t) => Number(t.score ?? 0) >= cutoffScore);
+  }
   const visibleCount = visibleTeams.length;
   const cols = visibleCount <= 4 ? 2 : visibleCount <= 6 ? 3 : 4;
   const rows = Math.ceil(visibleCount / cols);
   const gridStyle = `--viewer-cols: ${cols}; --viewer-rows: ${rows};`;
-  const hiddenNote = hideBottomTeams
+  const hiddenNote = (hideBottomTeams && visibleCount < sorted.length)
     ? `<div class="updated-at">Showing top ${visibleCount} of ${sorted.length} teams</div>`
     : '';
 

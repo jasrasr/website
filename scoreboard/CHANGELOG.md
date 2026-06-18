@@ -1,6 +1,12 @@
 # Changelog
 
-Current project version: **v1.9.1**
+Current project version: **v1.9.2**
+
+## v1.9.2 - 2026-06-18
+
+### Frontlines public viewer: tie-aware bottom-half cut (`public/app.js` v1.30.1)
+- The hide-bottom-teams logic now keeps tied teams together. After picking the top `ceil(n/2)` cards, the cut extends to include any team whose score equals the lowest visible score. So a 6th/7th tie shows both; the all-tied-at-zero starting state (e.g., right after a Reset All) shows every team. No tie group is ever split across the boundary.
+- The "Showing top X of Y teams" header note is suppressed when nothing is actually hidden (e.g., when ties bring the visible count up to the total).
 
 ## v1.9.1 - 2026-06-18
 
