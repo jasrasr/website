@@ -1,5 +1,5 @@
 // Filename: app.js
-// Revision : 1.30.1
+// Revision : 1.31.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
@@ -39,6 +39,7 @@
 // 1.29.0 Viewer page can hide scores (and rank badges) for the bottom half of teams when body has data-hide-bottom-scores="true" (Frontlines opt-in to protect losing-team morale)
 // 1.30.0 Replaced hide-bottom-scores with hide-bottom-teams: viewer slices the team list to top ceil(n/2) when opt-in is on, and the grid recalculates cols/rows from the visible count so the remaining cards fill the screen
 // 1.30.1 Tie-aware boundary: if teams beyond the halfway mark are tied with the lowest visible score, include them too (so the bottom of a tie group is never split). Hidden-count note is only shown when teams are actually hidden.
+// 1.31.0 Added Reset Score to Zero confirm dialog with current score in the prompt; strengthened Remove Team to a two-step confirm with PERMANENTLY DELETE wording. Viewer hidden-count note clarified to "Showing X of Y teams — top half by score".
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -383,7 +384,7 @@ function renderViewer(data) {
   const rows = Math.ceil(visibleCount / cols);
   const gridStyle = `--viewer-cols: ${cols}; --viewer-rows: ${rows};`;
   const hiddenNote = (hideBottomTeams && visibleCount < sorted.length)
-    ? `<div class="updated-at">Showing top ${visibleCount} of ${sorted.length} teams</div>`
+    ? `<div class="updated-at">Showing ${visibleCount} of ${sorted.length} teams — top half by score</div>`
     : '';
 
   app.innerHTML = `
@@ -459,13 +460,22 @@ async function handleAdminAction(event) {
       }
 
       if (action === 'reset-team') {
+        const resetTeam = currentData?.teams?.find((t) => t.id === teamId);
+        const resetTeamName = resetTeam?.name || 'this team';
+        const resetTeamScore = resetTeam?.score ?? 0;
+        if (!window.confirm(`Reset ${resetTeamName} score from ${resetTeamScore} to 0?`)) {
+          return;
+        }
         await postJson(`api.php?action=reset-team&team=${teamId}`);
       }
 
       if (action === 'remove-team') {
         const team = currentData?.teams?.find((t) => t.id === teamId);
         const teamName = team?.name || 'this team';
-        if (!window.confirm(`Remove ${teamName}? This deletes the team and all of its score data.`)) {
+        if (!window.confirm(`PERMANENTLY DELETE the "${teamName}" team and ALL of its score data?\n\nThis cannot be undone.`)) {
+          return;
+        }
+        if (!window.confirm(`Are you absolutely sure you want to delete "${teamName}"?`)) {
           return;
         }
         await postJson(`api.php?action=remove-team&team=${teamId}`);

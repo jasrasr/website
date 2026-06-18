@@ -1,6 +1,13 @@
 # Changelog
 
-Current project version: **v1.9.2**
+Current project version: **v1.9.3**
+
+## v1.9.3 - 2026-06-18
+
+### Full Admin (`enter-scores.php`) confirmations and viewer note clarity (`public/app.js` v1.31.0)
+- **Reset Score to Zero** now prompts a confirm with the team name and current score before clearing it ("Reset Red score from 250 to 0?"). Previously zeroed the score immediately with no warning.
+- **Remove Team** now requires a **two-step** confirm. The first prompt uses emphatic "PERMANENTLY DELETE the team and ALL of its score data — this cannot be undone." wording; the second is a final "Are you absolutely sure?" gate. Helps prevent accidental taps from wiping a team.
+- Viewer hide-bottom-teams note now reads "Showing X of Y teams — top half by score" so the reason is obvious at a glance.
 
 ## v1.9.2 - 2026-06-18
 
