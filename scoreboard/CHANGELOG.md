@@ -1,6 +1,18 @@
 # Changelog
 
-Current project version: **v1.8.0**
+Current project version: **v1.9.0**
+
+## v1.9.0 - 2026-06-18
+
+### Frontlines public viewer: hide-bottom-half scores
+
+The Frontlines public scoreboard now hides scores for the bottom half of teams while keeping team names and colors visible. Helps protect morale for teams trailing in the standings during a live event.
+
+- `frontlines/index.php` v1.2.0: opts in via `data-hide-bottom-scores="true"` on body. Also gains a server-rendered viewer header (View Source now shows the page name).
+- `public/app.js` v1.29.0: `renderViewer` reads `data-hide-bottom-scores`; when on, the bottom `floor(n/2)` teams render with a `—` placeholder instead of their score, and their rank badge is suppressed. Top `ceil(n/2)` teams render normally.
+- `public/styles.css` v1.12.0: new `.viewer-card-hidden` (light dim) and `.viewer-score-hidden` (muted dash) styles.
+- Opt-in is per-instance via the data attribute. Root, Youth, and Collide viewers are unchanged.
+- README documents the categories pages and the new viewer behavior.
 
 ## v1.8.0 - 2026-06-17
 

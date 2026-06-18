@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: github-issues-layout-test.php
- * Revision : 1.3.0
+ * Revision : 1.4.0
  * Description : Static verification for GitHub issue driven scoreboard layout updates.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-03
@@ -11,6 +11,7 @@
  * 1.1.0 Updated sort assertions for rank-aware card rendering callbacks
  * 1.2.0 Verify Add Team form labels and Enter-submit helper text
  * 1.3.0 Replaced stale "negative scoring" note assertion with Add/Subtract Score toggle assertions
+ * 1.4.0 Replaced pinned viewer-rendering one-liner with looser assertions that also cover the new hideBottomScores branch
  */
 
 function assertContains(string $haystack, string $needle, string $message): void
@@ -30,7 +31,9 @@ $quickCss = file_get_contents($root . '/public/quick-entry.css') ?: '';
 assertContains($appJs, 'sortTeamsByName', 'Admin cards should use a named A-Z team sort helper.');
 assertContains($appJs, 'sortTeamsByScore', 'Viewer cards should use a named score-order helper.');
 assertContains($appJs, 'sortTeamsByName(data.teams).map((team) => createAdminCard', 'Admin rendering should order team cards A-Z.');
-assertContains($appJs, 'sortTeamsByScore(data.teams).map((team) => createViewerCard', 'Viewer rendering should order teams by score.');
+assertContains($appJs, 'sortTeamsByScore(data.teams)', 'Viewer rendering should sort teams by score.');
+assertContains($appJs, 'createViewerCard', 'Viewer rendering should call createViewerCard per team.');
+assertContains($appJs, 'hideBottomScores', 'Viewer rendering should support the hide-bottom-scores opt-in.');
 assertContains($appJs, 'const quickValues = [1, 10, 100, 1000];', 'Full admin quick buttons should be +1, +10, +100, +1000.');
 assertContains($appJs, '+ Add Score', 'Full admin should render the + Add Score mode toggle.');
 assertContains($appJs, 'Subtract Score', 'Full admin should render the Subtract Score mode toggle.');

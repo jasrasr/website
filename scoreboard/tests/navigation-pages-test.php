@@ -49,8 +49,8 @@ $scoreboardsPage = file_get_contents($scoreboardsPagePath) ?: '';
 $appJs = file_get_contents($appJsPath) ?: '';
 $adminShell = file_get_contents($adminShellPath) ?: '';
 
-assertContains($changelog, 'Current project version: **v1.8.0**', 'CHANGELOG.md should state the current project version.');
-assertContains($changelog, '## v1.8.0 - 2026-06-17', 'CHANGELOG.md latest entry should include project version and date.');
+assertContains($changelog, 'Current project version: **v1.9.0**', 'CHANGELOG.md should state the current project version.');
+assertContains($changelog, '## v1.9.0 - 2026-06-18', 'CHANGELOG.md latest entry should include project version and date.');
 assertContains($changelog, '## v1.0.0 - 2026-06-02', 'CHANGELOG.md initial entry should include project version and date.');
 assertContains($changelogPage, "requireSignedIn('./login.php')", 'changelog.php should require a signed-in user.');
 assertContains($changelogPage, "CHANGELOG.md", 'changelog.php should render CHANGELOG.md instead of duplicating changelog content.');

@@ -21,6 +21,16 @@ Each instance has:
 - `data/audit.json` — audit log for score changes, resets, renames, and title updates
 - `data/*.sample.json` — public-safe templates for duplicating runtime files
 
+### Frontlines-only extras
+
+Frontlines has two additional pages (admin and scorer) plus a viewer behavior tweak:
+
+- `frontlines/enter-scores-category.php` — scorer + admin page for one-tap awarding of pre-defined goal categories (e.g., "Clean Table +10", "Happy Birthday -1"). Buttons are color-coded by sign and visually disable when a team has hit the category's `maxAwardsPerTeam` cap. The cap is server-enforced by counting prior `award-category` audit entries — clients that miscount get a 409 from the API.
+- `frontlines/edit-categories.php` — admin-only page (Frontlines admin role required) for managing the category list: name, point value (signed integer), max awards per team (positive int or unlimited), and active flag.
+- `frontlines/data/categories.json` — live runtime file with the category definitions (git-tracked by default for now; if you'd rather treat in-app edits as the source of truth, see `frontlines/data/categories.sample.json` and remove the `.gitignore` exception).
+- `frontlines/index.php` — public viewer opts in to **hide-bottom-half scores** via `data-hide-bottom-scores="true"` on the body. Teams are still listed in their sorted-by-score order, but the bottom half renders with team names visible and scores replaced with `—` (and the rank badge is suppressed). Helps protect morale for teams trailing in the standings. The opt-in is per-instance — root, Youth, and Collide viewers are unaffected.
+- `frontlines/teams.php` — public roster page; `frontlines/edit-roster.php` is the admin-only editor.
+
 ## Shared Assets
 
 All instances share a single set of frontend files in `public/`:
@@ -97,7 +107,7 @@ For API behavior changes, check all four API files unless the request is only fo
 - Viewer page automatically refreshes every 2 seconds.
 - Admin page polls every 10 seconds; skips re-render when an input is focused.
 - Dynamic viewer grid columns that adapt to the number of teams.
-- Viewer page orders teams from highest score to lowest score; viewer header shows a "Teams sorted by score (1st, 2nd, 3rd...)" note.
+- Viewer page orders teams from highest score to lowest score; viewer header shows a "Teams sorted by score (1st, 2nd, 3rd...)" note. The Frontlines viewer additionally hides the score (and rank badge) for the bottom half of teams while keeping team names visible — see "Frontlines-only extras" above.
 - Admin and quick-entry pages order teams alphabetically A-Z by team name and show a "Teams are sorted A-Z by name." note.
 - Place-rank badges (`1st`, `2nd`, `3rd`, ...) appear on every team card on the viewer, admin, and quick-entry pages; top 3 use gold/silver/bronze styling and ties share rank.
 - Quick-entry page shows the running script revision (`v1.x.x`) directly under "Last updated" so it is obvious which version is loaded.
@@ -107,11 +117,12 @@ For API behavior changes, check all four API files unless the request is only fo
 
 ## User Management
 
-`admin-users.php` (admin-only) lists every user with **Username**, **Role**, **Scoreboards**, **Created**, **Modified**, and per-row Edit / Reset PW / Delete actions.
+`admin-users.php` (admin-only) lists every user with **Username**, **Status**, **Role**, **Scoreboards**, **Created**, **Modified**, and per-row Edit / Reset PW / **Disable** / Delete actions.
 
 - **Edit** opens a modal where admins can change the username, role, and per-scoreboard access. Renaming yourself also updates the active session so subsequent requests use the new name.
 - **`modified_at`** is tracked on user creation, edit, and password reset; the Modified column shows the date of the last change. Pre-existing users without a `modified_at` value show blank until their first edit.
 - **Created/reset passwords** are treated as temporary. The user must change the password on next sign-in before continuing.
+- **Disable / Enable** soft-disables a user without deleting them. Disabled users cannot log in (`attemptLogin` rejects them identically to wrong credentials, no enumeration leak). Disabled rows render dimmed in the table. Guardrails: you cannot disable your own account, and the system blocks disabling the last active admin. Use this as an emergency-admin lifeline — create a backup admin account, set a known password, then disable it until you ever need it.
 - **Frontlines Roster** access: the roster pages (`teams.php`, `edit-roster.php`) gate `Edit Roster` to admins; viewers and scorers see the public roster only.
 
 ## Access Control
