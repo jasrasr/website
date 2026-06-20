@@ -1,8 +1,9 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/teams.php
- * Revision : 1.8.0
- * Description : Public Frontlines team roster page with leaders, members, and sponsors.
+ * Revision : 1.9.0
+ * Description : Public Frontlines team roster page with leaders, members, sponsors,
+ *               and client-side roster search.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-09
  * Modified Date : 2026-06-20
@@ -20,6 +21,7 @@
  * 1.6.0 Added admin header links to Enter Categories and Edit Categories pages
  * 1.7.0 Moved roster navigation and admin links below all team cards
  * 1.8.0 Renamed the Enter Categories link to Add Category Score
+ * 1.9.0 Added roster search by team, leader, member, gender/grade, or sponsor
  */
 
 require __DIR__ . '/../auth.php';
@@ -32,6 +34,7 @@ $scoreboard = readScoreboardData();
 $roster = readFrontlinesRosterData();
 $teams = $scoreboard['teams'] ?? scoreboardDefaultData()['teams'];
 shuffle($teams);
+$teamCount = count($teams);
 
 $rosterUpdatedAt = (string) ($roster['updatedAt'] ?? '');
 $rosterUpdatedDisplay = '';
@@ -54,6 +57,7 @@ function h(string $value): string
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CVC Frontlines Teams</title>
     <link rel="stylesheet" href="../public/styles.css?v=<?= filemtime(__DIR__ . '/../public/styles.css') ?>" />
+    <link rel="stylesheet" href="./roster-search.css?v=<?= filemtime(__DIR__ . '/roster-search.css') ?>" />
   </head>
   <body>
     <div class="page-shell roster-shell">
@@ -71,7 +75,28 @@ function h(string $value): string
         </div>
       </header>
 
-      <main class="roster-grid">
+      <section class="roster-search" role="search" aria-label="Search roster">
+        <label for="roster-search-input">Search roster</label>
+        <div class="roster-search-row">
+          <input
+            id="roster-search-input"
+            type="search"
+            placeholder="Search team, leader, member, grade, or sponsor"
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+            enterkeyhint="search"
+            aria-controls="roster-grid"
+            aria-describedby="roster-search-status"
+          />
+          <button id="roster-search-clear" class="secondary roster-search-clear" type="button" hidden>Clear</button>
+        </div>
+        <p id="roster-search-status" class="roster-search-status" aria-live="polite">
+          Showing all <?= $teamCount ?> <?= $teamCount === 1 ? 'team' : 'teams' ?>.
+        </p>
+      </section>
+
+      <main id="roster-grid" class="roster-grid">
         <?php foreach ($teams as $team): ?>
           <?php
             $teamId = (string) ($team['id'] ?? '');
@@ -125,6 +150,10 @@ function h(string $value): string
             <?php endif; ?>
           </section>
         <?php endforeach; ?>
+
+        <p id="roster-search-empty" class="roster-search-empty" hidden>
+          No roster matches were found. Try a team name, person, grade, or sponsor.
+        </p>
       </main>
 
       <nav class="admin-footer-actions" aria-label="Roster links">
@@ -138,5 +167,6 @@ function h(string $value): string
         <?php endif; ?>
       </nav>
     </div>
+    <script src="./roster-search.js?v=<?= filemtime(__DIR__ . '/roster-search.js') ?>" defer></script>
   </body>
 </html>
