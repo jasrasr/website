@@ -5,6 +5,8 @@
 // Author : Jason Lamb (with help from ChatGPT)
 // Created Date : 2026-06-20
 // Modified Date : 2026-06-20
+// Changelog :
+// 1.0.0 Rename category-score links and inject top shortcuts on full and quick entry pages
 
 (() => {
   'use strict';
