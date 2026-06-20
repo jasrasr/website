@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/teams.php
- * Revision : 1.7.0
+ * Revision : 1.8.0
  * Description : Public Frontlines team roster page with leaders, members, and sponsors.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-09
@@ -19,6 +19,7 @@
  * 1.5.1 Combine roster header copy into one paragraph, italicize random-order note
  * 1.6.0 Added admin header links to Enter Categories and Edit Categories pages
  * 1.7.0 Moved roster navigation and admin links below all team cards
+ * 1.8.0 Renamed the Enter Categories link to Add Category Score
  */
 
 require __DIR__ . '/../auth.php';
@@ -132,7 +133,7 @@ function h(string $value): string
           <a class="au-btn" href="./team-roster.csv.php">CSV</a>
           <a class="au-btn" href="./edit-roster.php">Edit Roster</a>
           <a class="au-btn" href="./enter-scores.php">Score Entry</a>
-          <a class="au-btn" href="./enter-scores-category.php">Enter Categories</a>
+          <a class="au-btn" href="./enter-scores-category.php">Add Category Score</a>
           <a class="au-btn" href="./edit-categories.php">Edit Categories</a>
         <?php endif; ?>
       </nav>
