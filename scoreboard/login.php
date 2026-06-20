@@ -1,51 +1,110 @@
 <?php declare(strict_types=1);
 /**
  * Filename: login.php
- * Revision : 1.1.0
- * Description : Login page for CVC Scoreboard admin. Handles session creation.
+ * Revision : 1.2.0
+ * Description : Login page for CVC Scoreboard admin. Handles session creation
+ *               and returns users to the scoreboard page they originally requested.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-13
- * Modified Date : 2026-06-13
+ * Modified Date : 2026-06-20
  * Changelog :
  * 1.0.0 Initial release
  * 1.1.0 Redirect forced-reset users directly to change-password.php
+ * 1.2.0 Preserve and validate the requested scoreboard destination through normal login,
+ *       existing-session login, and forced password changes
  */
 
 require __DIR__ . '/auth.php';
+
+function loginAppBasePath(): string
+{
+    $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? '/login.php'));
+    $basePath = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+    return $basePath === '.' ? '' : $basePath;
+}
+
+function safeLoginRedirect(string $candidate): string
+{
+    $default = './enter-scores.php';
+    $candidate = trim($candidate);
+
+    if ($candidate === '' || preg_match('/[\r\n]/', $candidate) === 1 || str_contains($candidate, '\\')) {
+        return $default;
+    }
+
+    $parts = parse_url($candidate);
+    if ($parts === false || isset($parts['scheme']) || isset($parts['host']) || isset($parts['user'])) {
+        return $default;
+    }
+
+    $path = (string) ($parts['path'] ?? '');
+    if ($path === '' || str_starts_with($path, '//') || preg_match('~(^|/)\.\.(/|$)~', $path) === 1) {
+        return $default;
+    }
+
+    if (str_starts_with($path, '/')) {
+        $basePath = loginAppBasePath();
+        if ($basePath !== '' && $path !== $basePath && !str_starts_with($path, $basePath . '/')) {
+            return $default;
+        }
+    }
+
+    return $candidate;
+}
+
+function loginPasswordReturnPath(string $redirect): string
+{
+    $path = (string) (parse_url($redirect, PHP_URL_PATH) ?? '');
+    $basePath = loginAppBasePath();
+
+    if ($basePath !== '' && str_starts_with($path, $basePath . '/')) {
+        $path = substr($path, strlen($basePath) + 1);
+    } else {
+        $path = ltrim($path, '/');
+    }
+
+    if (str_starts_with($path, './')) {
+        $path = substr($path, 2);
+    }
+
+    return $path !== '' ? $path : 'enter-scores.php';
+}
+
 authStart();
+$redirect = safeLoginRedirect((string) ($_GET['redirect'] ?? './enter-scores.php'));
 $signedInUser = authUser();
 
 if ($signedInUser !== null) {
     if (authPasswordChangeRequired($signedInUser)) {
-        header('Location: ./change-password.php?force=1&return=scoreboards.php');
+        $returnTo = rawurlencode(loginPasswordReturnPath($redirect));
+        header("Location: ./change-password.php?force=1&return={$returnTo}");
         exit;
     }
 
-    header('Location: ./enter-scores.php');
+    header('Location: ' . $redirect);
     exit;
 }
 
-$error    = '';
-$redirect = htmlspecialchars($_GET['redirect'] ?? './enter-scores.php', ENT_QUOTES, 'UTF-8');
+$error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username     = trim($_POST['username'] ?? '');
-    $password     = $_POST['password'] ?? '';
-    $postRedirect = $_POST['redirect'] ?? './enter-scores.php';
+    $username = trim((string) ($_POST['username'] ?? ''));
+    $password = (string) ($_POST['password'] ?? '');
+    $redirect = safeLoginRedirect((string) ($_POST['redirect'] ?? './enter-scores.php'));
 
     $user = attemptLogin($username, $password);
     if ($user !== null) {
         $_SESSION[AUTH_SESSION] = $user;
         if (authPasswordChangeRequired($user)) {
-            header('Location: ./change-password.php?force=1&return=scoreboards.php');
+            $returnTo = rawurlencode(loginPasswordReturnPath($redirect));
+            header("Location: ./change-password.php?force=1&return={$returnTo}");
             exit;
         }
-        header('Location: ' . $postRedirect);
+        header('Location: ' . $redirect);
         exit;
     }
 
-    $error    = 'Invalid username or password.';
-    $redirect = htmlspecialchars($postRedirect, ENT_QUOTES, 'UTF-8');
+    $error = 'Invalid username or password.';
 }
 ?>
 <!DOCTYPE html>
@@ -62,10 +121,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h1>CVC Scoreboard</h1>
         <p class="login-subtitle">Sign in to manage scores</p>
         <?php if ($error !== ''): ?>
-          <p class="login-error"><?= htmlspecialchars($error) ?></p>
+          <p class="login-error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
         <?php endif; ?>
         <form method="POST" action="./login.php" class="login-form">
-          <input type="hidden" name="redirect" value="<?= $redirect ?>" />
+          <input type="hidden" name="redirect" value="<?= htmlspecialchars($redirect, ENT_QUOTES, 'UTF-8') ?>" />
           <div class="login-field">
             <label for="username">Username</label>
             <input
