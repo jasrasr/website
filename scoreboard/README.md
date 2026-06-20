@@ -1,175 +1,184 @@
 # CVC Youth Scoreboard
 
-A PHP scoreboard app for tracking team scores across multiple ministry instances, each with their own teams, data, and admin page.
+A PHP scoreboard application for tracking team scores across multiple ministry instances, each with its own teams, runtime data, viewer, and score-entry pages.
+
+Current project version: **v1.13.0**
+
+## Versioning
+
+The project version is maintained in `CHANGELOG.md`. Individual PHP, JavaScript, and CSS files use independent `Revision` values in their file headers. A file revision only changes when that specific file changes, so it will not normally match the overall project version.
 
 ## Instances
 
 | Instance | Path | Teams |
-|----------|------|-------|
+|---|---|---|
 | Default | `/` | Team 1–Team 6 |
 | Collide | `/collide/` | 6th–8th Boys/Girls (6 teams) |
 | Youth | `/youth/` | 6th–12th Grade + Grads (8 teams) |
 | Frontlines | `/frontlines/` | Red, Maroon, Orange, Yellow, Light Green, Dark Green, Light Blue, Royal Blue, Navy, Pink, Purple, Smoke (12 teams) |
 
-Each instance has:
-- `index.php` — read-only viewer for spectators (auto-refreshes every 2 seconds)
-- `enter-scores.php` — scorekeeper admin page to update scores
-- `enter-scores-quick.php` — compact scorekeeper page for faster score entry
-- `api.php` — REST API for score operations
-- `scoreboard_lib.php` — instance-specific team definitions and data helpers
-- `data/scores.json` — persisted scores (auto-created on first load)
-- `data/audit.json` — audit log for score changes, resets, renames, and title updates
-- `data/*.sample.json` — public-safe templates for duplicating runtime files
+Each instance includes:
 
-### Frontlines-only extras
+- `index.php` — read-only viewer for spectators; refreshes automatically.
+- `enter-scores.php` — full score-entry and administration page.
+- `enter-scores-quick.php` — compact score-entry page.
+- `api.php` — instance-specific score API.
+- `scoreboard_lib.php` — team defaults and JSON data helpers.
+- `data/scores.json` — live scores, created only when missing.
+- `data/audit.json` — score and administration audit history.
+- `data/*.sample.json` — committed public-safe templates.
 
-Frontlines has two additional pages (admin and scorer) plus a viewer behavior tweak:
+## Frontlines-only features
 
-- `frontlines/enter-scores-category.php` — scorer + admin page for one-tap awarding of pre-defined goal categories (e.g., "Clean Table +10", "Happy Birthday -1"). Buttons are color-coded by sign and visually disable when a team has hit the category's `maxAwardsPerTeam` cap. The cap is server-enforced by counting prior `award-category` audit entries — clients that miscount get a 409 from the API.
-- `frontlines/edit-categories.php` — admin-only page (Frontlines admin role required) for managing the category list: name, point value (signed integer), max awards per team (positive int or unlimited), and active flag.
-- `frontlines/data/categories.json` — live runtime file with the category definitions (git-tracked by default for now; if you'd rather treat in-app edits as the source of truth, see `frontlines/data/categories.sample.json` and remove the `.gitignore` exception).
-- `frontlines/index.php` — public viewer opts in to **hide-bottom-half teams** via `data-hide-bottom-teams="true"` on the body. After sorting by score, only the top `ceil(n/2)` teams are rendered; the bottom half is omitted entirely. The cut is **tie-aware** — any team tied with the lowest visible score is also included, so a tie group is never split. As a corollary, if every team is tied (e.g., right after a Reset All when all scores are 0), every team is shown. The grid recomputes its column/row count from the visible team count so the remaining cards expand to fill the viewport. Helps protect morale for teams trailing in the standings. The opt-in is per-instance — root, Youth, and Collide viewers are unaffected.
-- `frontlines/teams.php` — public roster page; `frontlines/edit-roster.php` is the admin-only editor.
+### Category scoring
 
-## Shared Assets
+- `frontlines/enter-scores-category.php` lets scorers and admins award predefined point categories with one tap.
+- `frontlines/edit-categories.php` lets Frontlines admins manage category names, point values, award limits, and active status.
+- User-facing navigation calls the scoring page **Add Category Score**.
+- **Add Category Score** appears near the top of both Frontlines full entry and quick entry, as well as in the relevant footer/navigation areas.
 
-All instances share a single set of frontend files in `public/`:
+### Searchable roster
 
-- `public/styles.css` — all viewer/admin styling; changes here apply to every instance
-- `public/app.js` — viewer/admin frontend logic; changes here apply to every instance
-- `public/quick-entry.css` — quick-entry styling; changes here apply to every instance
-- `public/quick-entry.js` — quick-entry frontend logic; changes here apply to every instance
+- `frontlines/teams.php` is the public roster.
+- `frontlines/edit-roster.php` is the admin-only roster editor.
+- The roster search filters immediately by team name, leader, member, gender/grade suffix, or sponsor.
+- Multiple search words use AND matching. For example, `Alex 12` only shows cards containing both terms.
+- Search runs entirely in the browser and does not modify the roster JSON.
+- The roster navigation links are located below all team cards.
 
-## Admin Navigation
+### Viewer behavior
 
-- `changelog.php` — web view of `CHANGELOG.md`; accessible to any signed-in user. Update `CHANGELOG.md` only when adding entries.
-- `scoreboards.php` — navigation page listing Viewer, Full Admin, and Quick Entry links for the scoreboard instances the signed-in user can access. Admins see all four; scorers see only the instances assigned in `data/users.json`.
-- The Full Admin page (`enter-scores.php`) footer shows `Changelog` and `Scoreboards` to every signed-in user; `Manage Users` is admin-only.
-- The Quick Entry page (`enter-scores-quick.php`) footer shows `Scoreboards` so scorers can jump between their accessible instances without going through Full Admin first.
+The Frontlines viewer opts in to `data-hide-bottom-teams="true"`. After sorting by score, it shows the top half of teams while keeping tied teams together. If all teams are tied, all teams remain visible. Other scoreboard instances are unaffected.
 
-### Access helpers in `auth.php`
+## Authentication and navigation
 
-- `requireAuth($scoreboardId, $loginUrl)` — page must be signed in AND have access to that scoreboard.
-- `requireAuthJson($scoreboardId)` — API equivalent; returns JSON 401/403 instead of redirecting.
-- `requireSignedIn($loginUrl)` — page only needs an authenticated session; used by `changelog.php` and `scoreboards.php`.
-- `requireAdmin($loginUrl)` — page requires `role === 'admin'`; used by `admin-users.php`.
-- First-run and admin-reset passwords require the user to set a new password before using the scoreboards.
+- `requireAuth($scoreboardId, $loginUrl)` requires a signed-in user with access to the requested scoreboard.
+- `requireAuthJson($scoreboardId)` is the JSON/API equivalent.
+- `requireSignedIn($loginUrl)` allows any authenticated user.
+- `requireAdmin($loginUrl)` requires the `admin` role.
+- Login preserves the requested scoreboard destination. A login started from Frontlines returns to the Frontlines page instead of falling back to the Default scoreboard.
+- First-run and administrator-reset passwords require a password change before scoreboard access.
+- The forced password-change page includes **Cancel and return to login**. Canceling signs the temporary session out first so the user does not loop back to the same page.
+- `scoreboards.php` lists only the scoreboard instances the signed-in user may access.
+- `changelog.php` displays `CHANGELOG.md` to signed-in users.
 
-## Backup & Recovery
+## Runtime data and deployment safety
 
-The app keeps a few automatic snapshots so destructive actions can be recovered without reaching for hosting backups.
+Live runtime files are ignored by Git. Committed sample files are deployed, while an existing live file is left unchanged.
 
-| Action | What's saved | Where | How to restore |
-|---|---|---|---|
-| **Reset All Teams** | Full `scores.json` (teams + scores + title) right before clearing | `<instance>/data/scores.previous.json` (single slot, overwritten on each Reset All) | Click **Undo Reset All** in the admin footer (appears only when a snapshot exists). Falls back to copying `scores.previous.json` over `scores.json` via the file manager. |
-| **Reset Score to Zero** (single team) | The team's record right before zeroing | `<instance>/data/scores.previous-single.json` (single slot) | Copy the team's snapshot back via file manager; no in-UI undo for single-team resets yet. |
-| **Remove Team** | The deleted team's full record + who/when | `<instance>/data/removed-teams.json` (rolling log, last 100 removals) | Re-add the team via the Add Team form, then look up its prior score from this log. (No one-click restore yet.) |
-| **Any change to `users.json`** | `users.json` right before the write | `data/users.previous.json` (single slot, overwritten on each save) | Copy `users.previous.json` over `users.json` to undo the last user-management change. |
-| **Daily scheduled snapshot** (opt-in) | Full `scores.json` for every instance | `<instance>/data/snapshots/YYYY-MM-DD-HH.json` (last 30 files per instance) | Copy the desired dated snapshot back over `scores.json`. |
-| **Audit log** | Per-action history (timestamp, user, action, delta, new score) | `<instance>/data/audit.json` (last 1000 entries) | Read directly; not a true backup but useful for replay. |
+Important authentication files:
 
-All backup files live under `data/` and inherit the existing `.htaccess` protection that blocks direct web access.
+- `data/users-seed.sample.json` — first-run usernames, roles, and scoreboard access.
+- `data/users.sample.json` — example of the persisted live users schema.
+- `data/users.json` — live user database; never commit it.
+- `data/users.previous.json` — one-slot backup created before user database changes.
+- `data/first-run-credentials.txt` — temporary first-run credentials; never commit it.
 
-**Setting up daily snapshots:**
+`auth.php` creates `data/users.json` from `users-seed.sample.json` only when `users.json` does not already exist. Existing credentials are therefore not intentionally replaced during normal initialization. The temporary `admin` and `scorer` password is `password`; both accounts must change it before continuing.
 
-The repo includes a CLI helper at `scoreboard/tools/take-scores-snapshot.php`. Wire it up via your hosting's scheduler / cron to take a dated copy of every instance's `scores.json`:
+Other live files that must remain uncommitted include:
 
-```
+- `<instance>/data/scores.json`
+- `<instance>/data/audit.json`
+- `<instance>/data/categories.json` where applicable
+- Snapshot and previous-state files under each `data/` directory
+
+The committed `.htaccess` files block direct web access to runtime data on Apache-compatible hosting.
+
+## Backup and recovery
+
+| Action | Backup | Recovery |
+|---|---|---|
+| Reset All Teams | `<instance>/data/scores.previous.json` | Click **Undo Reset All**, or restore the file manually. |
+| Reset one team | `<instance>/data/scores.previous-single.json` | Restore the saved team record manually. |
+| Remove Team | `<instance>/data/removed-teams.json` | Re-add the team and recover the previous value from the log. |
+| Change users | `data/users.previous.json` | Copy it over `data/users.json`. |
+| Scheduled snapshot | `<instance>/data/snapshots/YYYY-MM-DD-HH.json` | Restore the selected snapshot over `scores.json`. |
+
+The optional snapshot command is:
+
+```cron
 0 3 * * * cd /home/<youruser>/public_html/github/scoreboard && /usr/bin/php tools/take-scores-snapshot.php >> data/snapshot.log 2>&1
 ```
 
-That runs daily at 03:00 UTC. Snapshots go to `<instance>/data/snapshots/<YYYY-MM-DD-HH>.json`; the script keeps the last 30 files per instance and prunes older ones. The script refuses HTTP requests (CLI only).
+## Shared assets
 
-## Runtime Samples
+All instances share frontend files under `public/`:
 
-Live runtime files are ignored by Git, but public-safe samples are committed so the app can be duplicated cleanly:
+- `public/styles.css` — viewer, admin, roster, and shared responsive styling.
+- `public/app.js` — viewer and full-admin behavior.
+- `public/quick-entry.css` — compact entry styling.
+- `public/quick-entry.js` — compact entry behavior.
 
-- `data/scores.sample.json`
-- `data/users.sample.json`
-- `data/audit.sample.json`
-- `<instance>/data/scores.sample.json`
-- `<instance>/data/audit.sample.json`
-- `first-run-credentials.txt.sample`
+Frontlines-specific browser helpers live inside `frontlines/`, including:
 
-Do not commit live `scores.json`, `users.json`, `audit.json`, or `first-run-credentials.txt` files. The app creates missing live files on first use. If `data/users.json` is missing, first use creates two temporary users: `admin` and `scorer`, both with password `password`. Both users must set a new password before they can continue.
+- `category-navigation.js`
+- `roster-search.js`
+- `roster-search.css`
 
-## Where to Make Changes
+## Core features
 
-Use this split when deciding whether an update is global or tied to one scoreboard:
+- Positive and negative score adjustments.
+- Add/Subtract mode for mobile-friendly scoring.
+- Quick score buttons for `1`, `10`, `100`, and `1000` points.
+- Per-team reset and Reset All with confirmation and recovery support.
+- Add, rename, and remove teams.
+- Rename scoreboard titles.
+- File locking for concurrent scorekeepers.
+- Audit logging for score and administration actions.
+- Viewer ranking with tie handling and score-change-time tie-breaking.
+- Gold, silver, and bronze styling for the top three ranks.
+- Responsive phone, tablet, widescreen, portrait, and landscape layouts.
+- Scroll-position preservation during automatic refreshes.
+- Full Admin and Quick Entry navigation between viewer, scoreboards, roster, categories, password change, and sign-out pages.
 
-| Change needed | Edit location | Scope |
-|---------------|---------------|-------|
-| Viewer/admin layout, responsive behavior, colors, spacing, score sizing | `public/styles.css` | Global |
-| Viewer/admin browser behavior, polling, button handling, audit table display | `public/app.js` | Global |
-| Quick-entry browser behavior and layout | `public/quick-entry.js`, `public/quick-entry.css` | Global |
-| Quick-entry page shell or links for one scoreboard | `<instance>/enter-scores-quick.php` | Instance-specific |
-| Score operations, audit logging payloads, API auth behavior | `<instance>/api.php` | Instance-specific |
-| Team list, default title, team colors, data file helper behavior | `<instance>/scoreboard_lib.php` | Instance-specific |
-| Project changelog content | `CHANGELOG.md` | Global |
-| Web changelog display | `changelog.php` | Global |
-| Admin-only scoreboard navigation | `scoreboards.php` | Global |
-| Current live scores or renamed team display names | `<instance>/data/scores.json` | Instance-specific runtime data |
-| Audit history | `<instance>/data/audit.json` | Instance-specific runtime data |
+## Where to make changes
 
-For API behavior changes, check all four API files unless the request is only for one scoreboard:
+| Change | Location | Scope |
+|---|---|---|
+| Viewer/admin layout and shared styles | `public/styles.css` | Global |
+| Viewer/full-admin behavior | `public/app.js` | Global |
+| Quick-entry behavior and layout | `public/quick-entry.js`, `public/quick-entry.css` | Global |
+| Instance page shell and links | `<instance>/*.php` | Instance-specific |
+| Score API behavior | `<instance>/api.php` | Instance-specific |
+| Team defaults and data helpers | `<instance>/scoreboard_lib.php` | Instance-specific |
+| Frontlines roster search | `frontlines/teams.php`, `frontlines/roster-search.js`, `frontlines/roster-search.css` | Frontlines only |
+| Frontlines category navigation | `frontlines/category-navigation.js` | Frontlines only |
+| Project release history | `CHANGELOG.md` | Global |
+| Live scores and users | `data/*.json` and `<instance>/data/*.json` | Runtime only; do not commit |
+
+For global API changes, review all four APIs:
 
 - `api.php`
 - `collide/api.php`
 - `youth/api.php`
 - `frontlines/api.php`
 
-## Features
+## Testing
 
-- Quick buttons use `+1`, `+10`, `+100`, and `+1000`; use the custom/manual amount box for negative scoring.
-- Custom positive or negative score entry for each team.
-- Reset a single team's score to zero (per-card on full admin, and for the selected team on quick entry) or reset all teams at once.
-- Rename teams and update the scoreboard title from the admin page. Apply/Rename buttons sit inline with their text inputs on the full admin.
-- **Add and remove teams** from the full admin page. Each card has a Remove Team button (with confirm). The Add Team form between the team grid and activity log has labeled name/color fields and can be submitted with the Add Team button or Enter; the server generates a unique `team-{random}` id.
-- Scores saved to `data/scores.json` after each change.
-- Audit log records score changes, team resets, board resets, team add/remove, team renames, and title updates. The audit log is visible both on the full admin page and on quick entry (collapsible "Show Recent Activity" section).
-- Quick entry no longer auto-selects a team on load — a placeholder prompts the user to pick a team first, preventing accidental score changes after refresh.
-- Top-banner shortcuts on the full admin (`View Scoreboard`, `Quick Score`) jump between viewer, quick entry, and full admin without scrolling to the footer.
-- Viewer page automatically refreshes every 2 seconds.
-- Admin page polls every 10 seconds; skips re-render when an input is focused.
-- Dynamic viewer grid columns that adapt to the number of teams.
-- Viewer page orders teams from highest score to lowest score; viewer header shows a "Teams sorted by score (1st, 2nd, 3rd...)" note. The Frontlines viewer additionally renders only the top half of teams and lets the cards grow to fill the screen — see "Frontlines-only extras" above.
-- Admin and quick-entry pages order teams alphabetically A-Z by team name and show a "Teams are sorted A-Z by name." note.
-- Place-rank badges (`1st`, `2nd`, `3rd`, ...) appear on every team card on the viewer, admin, and quick-entry pages; top 3 use gold/silver/bronze styling and ties share rank.
-- Quick-entry page shows the running script revision (`v1.x.x`) directly under "Last updated" so it is obvious which version is loaded.
-- Score font scales with viewport size and shrinks for larger numbers.
-- Responsive layout for large screens, tablets, and phones including Safari mobile portrait and landscape.
-- Multiple scorekeepers supported via file locking.
+Static PHP tests are under `scoreboard/tests/`. Relevant recent tests include:
 
-## User Management
+- `frontlines-categories-test.php`
+- `frontlines-roster-search-test.php`
+- `navigation-pages-test.php`
+- `runtime-samples-test.php`
+- `change-password-test.php`
 
-`admin-users.php` (admin-only) lists every user with **Username**, **Status**, **Role**, **Scoreboards**, **Created**, **Modified**, and per-row Edit / Reset PW / **Disable** / Delete actions.
+Example from the `scoreboard` directory:
 
-- **Edit** opens a modal where admins can change the username, role, and per-scoreboard access. Renaming yourself also updates the active session so subsequent requests use the new name.
-- **`modified_at`** is tracked on user creation, edit, and password reset; the Modified column shows the date of the last change. Pre-existing users without a `modified_at` value show blank until their first edit.
-- **Created/reset passwords** are treated as temporary. The user must change the password on next sign-in before continuing.
-- **Disable / Enable** soft-disables a user without deleting them. Disabled users cannot log in (`attemptLogin` rejects them identically to wrong credentials, no enumeration leak). Disabled rows render dimmed in the table. Guardrails: you cannot disable your own account, and the system blocks disabling the last active admin. Use this as an emergency-admin lifeline — create a backup admin account, set a known password, then disable it until you ever need it.
-- **Frontlines Roster** access: the roster pages (`teams.php`, `edit-roster.php`) gate `Edit Roster` to admins; viewers and scorers see the public roster only.
+```powershell
+php .\tests\frontlines-roster-search-test.php
+php .\tests\navigation-pages-test.php
+```
 
-## Access Control
+## Production URL
 
-- Signed-in users who hit a scoreboard they don't have access to (e.g., `/youth/enter-scores.php` for a scorer without Youth) are redirected to `scoreboards.php?denied=<id>` instead of seeing a 403 error page. The Scoreboards page reads the param and shows a banner explaining which scoreboard was off-limits.
-- Public GETs on each instance's `api.php?action=scores` remain open (so the viewer doesn't need a login). All write actions and the audit endpoint require `requireAuthJson()`.
+Hostinger deploys the repository under `/github`:
 
-## Public URLs
+- `https://jasr.me/github/scoreboard/`
 
-Hostinger deploys this repository under `/github`, and this project folder is named `scoreboard`.
+Make sure all runtime `data/` directories are writable by PHP. Git deployments should update committed code and sample files without replacing existing ignored live JSON files.
 
-- `https://jasr.me/github/scoreboard/` — production scoreboard after `main` deploys
-- `https://jasr.me/github-test/scoreboard/` — staging scoreboard from the `change-scoreboard-url` branch
+## Frontlines roster pending item
 
-The production scoreboard is not open to the public.
-
-## Deploying
-
-Upload the `scoreboard` project folder to your host. Make sure each instance's `data/` folder is writable by PHP so scores can be saved. The `data/scores.json` file is created automatically on first load.
-
-The committed `data/.htaccess` files block direct public web access to runtime data folders on Apache-compatible hosts. If your host does not honor `.htaccess`, move runtime data outside the web root or add equivalent server rules. First-run users are written to `data/first-run-credentials.txt`; both use the temporary password `password`, must change it before continuing, and each used line is removed after that user changes their password. Delete the file after all first-run credentials are used.
-
-## Frontlines Roster — Pending
-
-- **Andrew Johnson** — listed in 2026 Frontlines cabin PDF (HS Boys / Cedar House, M/HS) but not yet assigned to a team color. Add to `frontlines/team_roster.php` and `frontlines/team-roster-defaults.csv` once a team is chosen.
+- **Andrew Johnson** — listed in the 2026 Frontlines cabin PDF but not yet assigned to a team color. Add him to the roster defaults after a team is selected.
