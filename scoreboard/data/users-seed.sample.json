@@ -1,0 +1,14 @@
+{
+  "users": [
+    {
+      "username": "admin",
+      "role": "admin",
+      "scoreboards": ["root", "youth", "collide", "frontlines"]
+    },
+    {
+      "username": "scorer",
+      "role": "scorer",
+      "scoreboards": ["root", "youth", "collide", "frontlines"]
+    }
+  ]
+}
