@@ -1,14 +1,14 @@
 <?php declare(strict_types=1);
 /**
  * Filename: auth.php
- * Revision : 1.11.0
+ * Revision : 1.12.0
  * Description : Shared authentication library for CVC Scoreboard.
  *               Handles sessions, user management, login/logout, and audit logging.
  *               Users stored in data/users.json with bcrypt-hashed passwords.
- *               Default users auto-created on first load.
+ *               First-run users are created from data/users-seed.sample.json only when users.json is absent.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-13
- * Modified Date : 2026-06-13
+ * Modified Date : 2026-06-20
  * Changelog :
  * 1.0.0 Initial release; per-user auth, roles, scoreboard access, audit logging
  * 1.1.0 Replaced hardcoded temp passwords with random generation; writes first-run-credentials.txt
@@ -22,9 +22,11 @@
  * 1.9.0 Extend session retention: 7-day idle (session.gc_maxlifetime), 30-day cookie lifetime; mark HttpOnly + SameSite=Lax + Secure on HTTPS
  * 1.10.0 Added soft-disable on users: makeUser includes disabled:false; attemptLogin rejects disabled accounts (returns null, same as invalid credentials)
  * 1.11.0 saveUsers() now snapshots data/users.json to data/users.previous.json before every write, so a destructive change can be recovered by copying that file back. Single slot, overwritten on each save.
+ * 1.12.0 Preserve an existing users.json during deployments; seed a missing file from users-seed.sample.json using an atomic create so concurrent requests cannot overwrite it.
  */
 
 const USERS_FILE     = __DIR__ . '/data/users.json';
+const USERS_SAMPLE_FILE = __DIR__ . '/data/users-seed.sample.json';
 const FIRST_RUN_CREDENTIALS_FILE = __DIR__ . '/data/first-run-credentials.txt';
 const AUTH_SESSION   = 'cvc_user';
 const ALL_SCOREBOARDS = ['root', 'youth', 'collide', 'frontlines'];
@@ -34,13 +36,12 @@ const DEFAULT_FIRST_RUN_PASSWORD = 'password';
 // Session
 // ---------------------------------------------------------------------------
 
-const AUTH_SESSION_IDLE_SECONDS   = 7 * 24 * 60 * 60;   // 7 days of idle before the session can be GC'd
-const AUTH_SESSION_COOKIE_SECONDS = 30 * 24 * 60 * 60;  // 30 days the cookie itself lives in the browser
+const AUTH_SESSION_IDLE_SECONDS   = 7 * 24 * 60 * 60;
+const AUTH_SESSION_COOKIE_SECONDS = 30 * 24 * 60 * 60;
 
 function authStart(): void
 {
     if (session_status() === PHP_SESSION_NONE) {
-        // Keep server-side session files around longer so idle sessions survive.
         ini_set('session.gc_maxlifetime', (string) AUTH_SESSION_IDLE_SECONDS);
         session_set_cookie_params([
             'lifetime' => AUTH_SESSION_COOKIE_SECONDS,
@@ -85,9 +86,6 @@ function authRedirectIfPasswordChangeRequired(array $user, string $loginUrl): vo
 // Access guards
 // ---------------------------------------------------------------------------
 
-/**
- * For page requests: redirects to login if not authenticated or not allowed.
- */
 function requireAuth(string $scoreboardId, string $loginUrl): array
 {
     authStart();
@@ -111,9 +109,6 @@ function requireAuth(string $scoreboardId, string $loginUrl): array
     return $user;
 }
 
-/**
- * For API requests: returns JSON error instead of redirecting.
- */
 function requireAuthJson(string $scoreboardId): array
 {
     authStart();
@@ -143,9 +138,6 @@ function requireAuthJson(string $scoreboardId): array
     return $user;
 }
 
-/**
- * For pages open to any signed-in user (no scoreboard or role gate).
- */
 function requireSignedIn(string $loginUrl): array
 {
     authStart();
@@ -162,9 +154,6 @@ function requireSignedIn(string $loginUrl): array
     return $user;
 }
 
-/**
- * For admin-only pages: requires role === 'admin'.
- */
 function requireAdmin(string $loginUrl): array
 {
     authStart();
@@ -215,9 +204,6 @@ function saveUsers(array $users): void
     if (!is_dir($dir)) {
         mkdir($dir, 0775, true);
     }
-    // Snapshot the current users file before any change so that a destructive
-    // edit (delete-user, accidental wipe, etc.) can be recovered by copying
-    // data/users.previous.json over data/users.json on the server.
     if (is_file(USERS_FILE)) {
         @copy(USERS_FILE, $dir . '/users.previous.json');
     }
@@ -228,46 +214,115 @@ function saveUsers(array $users): void
     );
 }
 
+function firstRunUserDefinitions(): array
+{
+    $fallback = [
+        ['username' => 'admin', 'role' => 'admin', 'scoreboards' => ALL_SCOREBOARDS],
+        ['username' => 'scorer', 'role' => 'scorer', 'scoreboards' => ALL_SCOREBOARDS],
+    ];
+
+    if (!is_file(USERS_SAMPLE_FILE)) {
+        return $fallback;
+    }
+
+    $sample = json_decode(file_get_contents(USERS_SAMPLE_FILE) ?: '', true);
+    $definitions = $sample['users'] ?? null;
+    if (!is_array($definitions)) {
+        return $fallback;
+    }
+
+    $valid = [];
+    foreach ($definitions as $definition) {
+        if (!is_array($definition)) {
+            continue;
+        }
+
+        $username = trim((string) ($definition['username'] ?? ''));
+        $role = (string) ($definition['role'] ?? '');
+        $requestedScoreboards = is_array($definition['scoreboards'] ?? null)
+            ? $definition['scoreboards']
+            : [];
+        $scoreboards = array_values(array_intersect(ALL_SCOREBOARDS, $requestedScoreboards));
+
+        if ($username === '' || !in_array($role, ['admin', 'scorer'], true) || $scoreboards === []) {
+            continue;
+        }
+
+        $valid[] = [
+            'username' => $username,
+            'role' => $role,
+            'scoreboards' => $scoreboards,
+        ];
+    }
+
+    return $valid !== [] ? $valid : $fallback;
+}
+
 function ensureUsersFile(): void
 {
+    if (is_file(USERS_FILE)) {
+        return;
+    }
+
     $dir = dirname(USERS_FILE);
     if (!is_dir($dir)) {
         mkdir($dir, 0775, true);
     }
 
-    if (!is_file(USERS_FILE)) {
-        $names = [
-            ['admin',  'admin',  ALL_SCOREBOARDS],
-            ['scorer', 'scorer', ALL_SCOREBOARDS],
-        ];
+    $credentials = [];
+    $users       = [];
+    foreach (firstRunUserDefinitions() as $definition) {
+        $username = $definition['username'];
+        $role = $definition['role'];
+        $scoreboards = $definition['scoreboards'];
+        $users[] = makeUser($username, DEFAULT_FIRST_RUN_PASSWORD, $role, $scoreboards, true);
+        $credentials[] = "{$username}: " . DEFAULT_FIRST_RUN_PASSWORD;
+    }
 
-        $credentials = [];
-        $users       = [];
-        foreach ($names as [$username, $role, $scoreboards]) {
-            $password      = DEFAULT_FIRST_RUN_PASSWORD;
-            $users[]       = makeUser($username, $password, $role, $scoreboards, true);
-            $credentials[] = "{$username}: {$password}";
+    $payload = json_encode(
+        ['users' => $users],
+        JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
+    ) . PHP_EOL;
+
+    $handle = @fopen(USERS_FILE, 'x');
+    if ($handle === false) {
+        if (is_file(USERS_FILE)) {
+            return;
+        }
+        throw new RuntimeException('Unable to create the scoreboard users file.');
+    }
+
+    $created = false;
+    try {
+        if (!flock($handle, LOCK_EX)) {
+            throw new RuntimeException('Unable to lock the scoreboard users file.');
         }
 
-        file_put_contents(
-            USERS_FILE,
-            json_encode(['users' => $users], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL,
-            LOCK_EX
-        );
+        $written = fwrite($handle, $payload);
+        if ($written === false || $written !== strlen($payload)) {
+            throw new RuntimeException('Unable to write the scoreboard users file.');
+        }
 
-        // Write first-run credentials file so installers know the temporary login.
-        $credFile = dirname(USERS_FILE) . '/first-run-credentials.txt';
-        file_put_contents(
-            $credFile,
-            "CVC Scoreboard — First-Run Credentials\n"
-            . "Generated: " . gmdate('c') . "\n"
-            . "Temporary password for first sign-in: " . DEFAULT_FIRST_RUN_PASSWORD . "\n"
-            . "Users must change this password before continuing.\n"
-            . "Each line is removed automatically after that user changes their password.\n\n"
-            . implode("\n", $credentials) . "\n",
-            LOCK_EX
-        );
+        fflush($handle);
+        $created = true;
+    } finally {
+        flock($handle, LOCK_UN);
+        fclose($handle);
+        if (!$created) {
+            @unlink(USERS_FILE);
+        }
     }
+
+    file_put_contents(
+        FIRST_RUN_CREDENTIALS_FILE,
+        "CVC Scoreboard — First-Run Credentials\n"
+        . "Generated: " . gmdate('c') . "\n"
+        . "Temporary password for first sign-in: " . DEFAULT_FIRST_RUN_PASSWORD . "\n"
+        . "Users must change this password before continuing.\n"
+        . "Each line is removed automatically after that user changes their password.\n\n"
+        . implode("\n", $credentials) . "\n",
+        LOCK_EX
+    );
 }
 
 function makeUser(string $username, string $password, string $role, array $scoreboards, bool $mustChangePassword = false): array
@@ -322,8 +377,6 @@ function attemptLogin(string $username, string $password): ?array
         if (($user['username'] ?? '') === $username &&
             password_verify($password, $user['password_hash'] ?? '')) {
             if (!empty($user['disabled'])) {
-                // Treat a disabled account as if the credentials are invalid.
-                // An admin can re-enable it from admin-users.php.
                 return null;
             }
             $session = $user;
