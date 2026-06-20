@@ -1,0 +1,89 @@
+/*
+ * Filename: frontlines/roster-search.css
+ * Revision : 1.0.0
+ * Description : Search controls and empty-state styling for the Frontlines roster.
+ * Author : Jason Lamb (with help from ChatGPT)
+ * Created Date : 2026-06-20
+ * Modified Date : 2026-06-20
+ * Changelog :
+ * 1.0.0 Initial responsive roster search styles
+ */
+
+.roster-search {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0 0 1rem;
+  padding: 1rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.82);
+  box-shadow: var(--shadow);
+}
+
+.roster-search label {
+  color: var(--text-main);
+  font-weight: 800;
+}
+
+.roster-search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.6rem;
+}
+
+.roster-search input[type="search"] {
+  width: 100%;
+  min-height: 46px;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.95);
+  color: var(--text-main);
+  font: inherit;
+}
+
+.roster-search input[type="search"]::placeholder {
+  color: var(--text-muted);
+}
+
+.roster-search input[type="search"]:focus {
+  outline: 3px solid rgba(59, 130, 246, 0.38);
+  outline-offset: 1px;
+  border-color: #60a5fa;
+}
+
+.roster-search-clear {
+  min-width: 90px;
+}
+
+.roster-search-status {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.roster-search-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 1rem;
+  border: 1px dashed var(--panel-border);
+  border-radius: 10px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.roster-card[hidden],
+.roster-search-empty[hidden],
+.roster-search-clear[hidden] {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .roster-search-row {
+    grid-template-columns: 1fr;
+  }
+
+  .roster-search-clear {
+    width: 100%;
+  }
+}
