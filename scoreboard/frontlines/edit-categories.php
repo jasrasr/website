@@ -1,15 +1,16 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/edit-categories.php
- * Revision : 1.1.0
+ * Revision : 1.2.0
  * Description : Admin-only editor for Frontlines goal categories (name, points, max awards, active flag).
  *               Reads/writes via the REST API endpoints in frontlines/api.php.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-06-17
- * Modified Date : 2026-06-17
+ * Modified Date : 2026-06-20
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Server-rendered page-header block so View Source shows page identity and signed-in user
+ * 1.2.0 Normalize the category scoring navigation label to Add Category Score
  */
 
 require __DIR__ . '/../auth.php';
@@ -60,5 +61,6 @@ if (($user['role'] ?? '') !== 'admin') {
       <p class="status-text">Loading categories editor...</p>
     </div>
     <script src="../public/edit-categories.js?v=<?= filemtime(__DIR__ . '/../public/edit-categories.js') ?>" defer></script>
+    <script src="./category-navigation.js?v=<?= filemtime(__DIR__ . '/category-navigation.js') ?>" defer></script>
   </body>
 </html>
