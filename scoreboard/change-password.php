@@ -1,14 +1,15 @@
 <?php declare(strict_types=1);
 /**
  * Filename: change-password.php
- * Revision : 1.1.0
+ * Revision : 1.2.0
  * Description : Signed-in user page for updating their own CVC Scoreboard password.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-05-28
- * Modified Date : 2026-06-13
+ * Modified Date : 2026-06-20
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Support forced password changes for first-run and reset credentials
+ * 1.2.0 Add a cancel action on forced password changes that signs out and returns to login
  */
 
 require __DIR__ . '/auth.php';
@@ -126,11 +127,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
           <button type="submit" class="login-button">Update Password</button>
         </form>
-        <?php if (!$forceChange): ?>
-          <p class="status-text" style="margin-top:1rem">
+        <p class="status-text" style="margin-top:1rem">
+          <?php if ($forceChange): ?>
+            <a class="au-btn" href="./logout.php">Cancel and return to login</a>
+          <?php else: ?>
             <a class="au-btn" href="<?= htmlspecialchars($returnTo, ENT_QUOTES, 'UTF-8') ?>">Back to Scoreboard</a>
-          </p>
-        <?php endif; ?>
+          <?php endif; ?>
+        </p>
       </div>
     </div>
   </body>
