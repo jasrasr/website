@@ -1,12 +1,13 @@
 // Filename: frontlines/roster-search.js
-// Revision : 1.0.0
+// Revision : 1.1.0
 // Description : Filters Frontlines roster team cards by team, leader, member,
 //               gender/grade suffix, or sponsor without changing roster data.
 // Author : Jason Lamb (with help from ChatGPT)
 // Created Date : 2026-06-20
-// Modified Date : 2026-06-20
+// Modified Date : 2026-06-21
 // Changelog :
 // 1.0.0 Initial roster search with result count, clear action, and empty state
+// 1.1.0 Show only matching people/sponsor rows inside matching team cards
 
 (() => {
   'use strict';
@@ -21,9 +22,22 @@
     return;
   }
 
+  function normalizedText(element) {
+    return element.textContent.replace(/\s+/g, ' ').trim().toLocaleLowerCase();
+  }
+
+  function matchesTokens(text, tokens) {
+    return tokens.length === 0 || tokens.every((token) => text.includes(token));
+  }
+
   const searchableCards = cards.map((card) => ({
     card,
-    text: card.textContent.replace(/\s+/g, ' ').trim().toLocaleLowerCase()
+    text: normalizedText(card),
+    items: Array.from(card.querySelectorAll('[data-roster-search-item]')).map((item) => ({
+      item,
+      text: normalizedText(item)
+    })),
+    sections: Array.from(card.querySelectorAll('[data-roster-search-section]'))
   }));
 
   function pluralize(count, singular, plural = `${singular}s`) {
@@ -35,9 +49,22 @@
     const tokens = rawQuery.toLocaleLowerCase().split(/\s+/).filter(Boolean);
     let visibleCount = 0;
 
-    searchableCards.forEach(({ card, text }) => {
-      const matches = tokens.length === 0 || tokens.every((token) => text.includes(token));
+    searchableCards.forEach(({ card, text, items, sections }) => {
+      const matches = matchesTokens(text, tokens);
       card.hidden = !matches;
+      card.dataset.rosterSearchMatchOnly = rawQuery === '' ? 'false' : 'true';
+
+      items.forEach(({ item, text: itemText }) => {
+        const itemMatches = rawQuery === '' || matchesTokens(itemText, tokens);
+        item.hidden = !itemMatches;
+      });
+
+      sections.forEach((section) => {
+        const visibleItems = Array.from(section.querySelectorAll('[data-roster-search-item]'))
+          .filter((item) => !item.hidden);
+        section.dataset.rosterSearchSectionEmpty = visibleItems.length === 0 ? 'true' : 'false';
+      });
+
       if (matches) visibleCount += 1;
     });
 

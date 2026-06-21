@@ -1,6 +1,33 @@
 # Changelog
 
-Current project version: **v1.13.0**
+Current project version: **v1.14.0**
+
+## v1.14.0 - 2026-06-21
+
+### Frontlines roster search match display
+
+- Roster search still matches by team name, leader, member, gender/grade suffix, or sponsor.
+- When a search is active, matching team cards now show only the matching leader/member/sponsor rows instead of the full roster.
+- Empty Leaders/Members sections are hidden while a search is active.
+- Clearing the search restores each matching team's full roster display.
+
+### Login and password-change return flow
+
+- Shared auth redirects now normalize the current page into a scoreboard-relative return path.
+- Forced password changes preserve the requested scoreboard-specific page, including Frontlines nested pages, instead of returning to the scoreboard picker or Default entry page.
+- Password-change return validation now allows Frontlines roster and category pages.
+
+### Revision verification
+
+| File | Revision | Verified purpose |
+|---|---:|---|
+| `auth.php` | 1.13.0 | Current-page login/password-change return helpers |
+| `change-password.php` | 1.3.0 | Scoreboard-specific password-change returns |
+| `frontlines/teams.php` | 1.10.0 | Searchable roster row markers |
+| `frontlines/roster-search.js` | 1.1.0 | Match-only roster card display |
+| `frontlines/roster-search.css` | 1.1.0 | Hide nonmatching rows and empty sections |
+| `tests/frontlines-roster-search-test.php` | 1.1.0 | Row-level search static verification |
+| `tests/navigation-pages-test.php` | 1.7.0 | Auth return-flow static verification |
 
 ## v1.13.0 - 2026-06-20
 

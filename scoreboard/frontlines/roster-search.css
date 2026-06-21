@@ -1,12 +1,13 @@
 /*
  * Filename: frontlines/roster-search.css
- * Revision : 1.0.0
+ * Revision : 1.1.0
  * Description : Search controls and empty-state styling for the Frontlines roster.
  * Author : Jason Lamb (with help from ChatGPT)
  * Created Date : 2026-06-20
- * Modified Date : 2026-06-20
+ * Modified Date : 2026-06-21
  * Changelog :
  * 1.0.0 Initial responsive roster search styles
+ * 1.1.0 Hide nonmatching roster rows and empty sections during active searches
  */
 
 .roster-search {
@@ -74,7 +75,9 @@
 
 .roster-card[hidden],
 .roster-search-empty[hidden],
-.roster-search-clear[hidden] {
+.roster-search-clear[hidden],
+[data-roster-search-item][hidden],
+.roster-card[data-roster-search-match-only="true"] [data-roster-search-section][data-roster-search-section-empty="true"] {
   display: none;
 }
 

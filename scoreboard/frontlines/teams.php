@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/teams.php
- * Revision : 1.9.0
+ * Revision : 1.10.0
  * Description : Public Frontlines team roster page with leaders, members, sponsors,
  *               and client-side roster search.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-09
- * Modified Date : 2026-06-20
+ * Modified Date : 2026-06-21
  * Changelog :
  * 1.0.0 Initial Frontlines-only team roster page
  * 1.1.0 Load editable roster data and link CSV export
@@ -22,6 +22,7 @@
  * 1.7.0 Moved roster navigation and admin links below all team cards
  * 1.8.0 Renamed the Enter Categories link to Add Category Score
  * 1.9.0 Added roster search by team, leader, member, gender/grade, or sponsor
+ * 1.10.0 Roster search now shows only matching people/sponsor rows inside matching teams
  */
 
 require __DIR__ . '/../auth.php';
@@ -114,16 +115,16 @@ function h(string $value): string
               <h2><?= h($teamName) ?> Team</h2>
             </div>
 
-            <div class="roster-section">
+            <div class="roster-section" data-roster-search-section>
               <h3>Team Leaders</h3>
               <ul class="roster-list roster-leaders">
                 <?php foreach ($teamRoster['leaders'] as $leader): ?>
-                  <li><?= h((string) ($leader['name'] ?? '')) ?></li>
+                  <li data-roster-search-item><?= h((string) ($leader['name'] ?? '')) ?></li>
                 <?php endforeach; ?>
               </ul>
             </div>
 
-            <div class="roster-section roster-members">
+            <div class="roster-section roster-members" data-roster-search-section>
               <h3>Team Members</h3>
               <ul class="roster-list">
                 <?php foreach ($teamRoster['members'] as $member): ?>
@@ -140,13 +141,13 @@ function h(string $value): string
                         $memberSuffix = ' - ' . $memberGrade;
                     }
                   ?>
-                  <li><?= h($memberName . $memberSuffix) ?></li>
+                  <li data-roster-search-item><?= h($memberName . $memberSuffix) ?></li>
                 <?php endforeach; ?>
               </ul>
             </div>
 
             <?php if (($teamRoster['sponsor'] ?? '') !== ''): ?>
-              <p class="roster-sponsor">Team Sponsor: <?= h((string) $teamRoster['sponsor']) ?></p>
+              <p class="roster-sponsor" data-roster-search-item>Team Sponsor: <?= h((string) $teamRoster['sponsor']) ?></p>
             <?php endif; ?>
           </section>
         <?php endforeach; ?>

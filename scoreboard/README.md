@@ -2,7 +2,7 @@
 
 A PHP scoreboard application for tracking team scores across multiple ministry instances, each with its own teams, runtime data, viewer, and score-entry pages.
 
-Current project version: **v1.13.0**
+Current project version: **v1.14.0**
 
 ## Versioning
 
@@ -43,6 +43,7 @@ Each instance includes:
 - `frontlines/edit-roster.php` is the admin-only roster editor.
 - The roster search filters immediately by team name, leader, member, gender/grade suffix, or sponsor.
 - Multiple search words use AND matching. For example, `Alex 12` only shows cards containing both terms.
+- While a search is active, matching team cards show only the matching leader/member/sponsor rows. Clearing search restores the full roster.
 - Search runs entirely in the browser and does not modify the roster JSON.
 - The roster navigation links are located below all team cards.
 
@@ -56,7 +57,7 @@ The Frontlines viewer opts in to `data-hide-bottom-teams="true"`. After sorting 
 - `requireAuthJson($scoreboardId)` is the JSON/API equivalent.
 - `requireSignedIn($loginUrl)` allows any authenticated user.
 - `requireAdmin($loginUrl)` requires the `admin` role.
-- Login preserves the requested scoreboard destination. A login started from Frontlines returns to the Frontlines page instead of falling back to the Default scoreboard.
+- Login preserves the requested scoreboard destination. A login or forced password-change flow started from Frontlines returns to the requested Frontlines page instead of falling back to the Default scoreboard.
 - First-run and administrator-reset passwords require a password change before scoreboard access.
 - The forced password-change page includes **Cancel and return to login**. Canceling signs the temporary session out first so the user does not loop back to the same page.
 - `scoreboards.php` lists only the scoreboard instances the signed-in user may access.

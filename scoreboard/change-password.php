@@ -1,15 +1,16 @@
 <?php declare(strict_types=1);
 /**
  * Filename: change-password.php
- * Revision : 1.2.0
+ * Revision : 1.3.0
  * Description : Signed-in user page for updating their own CVC Scoreboard password.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-05-28
- * Modified Date : 2026-06-20
+ * Modified Date : 2026-06-21
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Support forced password changes for first-run and reset credentials
  * 1.2.0 Add a cancel action on forced password changes that signs out and returns to login
+ * 1.3.0 Allow forced password changes to return to scoreboard-specific pages
  */
 
 require __DIR__ . '/auth.php';
@@ -37,6 +38,10 @@ $safeReturnPaths = [
     'youth/enter-scores-quick.php',
     'collide/enter-scores-quick.php',
     'frontlines/enter-scores-quick.php',
+    'frontlines/enter-scores-category.php',
+    'frontlines/edit-categories.php',
+    'frontlines/edit-roster.php',
+    'frontlines/teams.php',
 ];
 
 $returnTo = $_GET['return'] ?? './enter-scores.php';
