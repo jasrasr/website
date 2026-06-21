@@ -1,11 +1,11 @@
 // Filename: app.js
-// Revision : 1.34.0
+// Revision : 1.35.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
 // Author : Jason Lamb (with help from Claude Code)
 // Created Date : 2026-03-24
-// Modified Date : 2026-06-17
+// Modified Date : 2026-06-21
 // Changelog :
 // 1.0.0 Initial PHP release, converted from Node.js/Express
 // 1.1.0 Fixed API URL paths to use relative query params instead of REST-style paths
@@ -43,6 +43,7 @@
 // 1.32.0 renderAdmin and renderViewer now preserve window.scrollY across re-renders, so the 10s admin poll and 2s viewer poll no longer scroll the user back to the top (noticeable on mobile while reading the Recent Activity panel). Update mechanism (poll interval, data refresh) is unchanged.
 // 1.33.0 sortTeamsByScore tiebreaker now uses team.score_changed_at (older = ranked higher) before falling back to alphabetical. Added two-step confirm on Reset All Teams.
 // 1.34.0 Added in-UI "Undo Reset All" button (admin only). Renders in the admin footer next to Reset All Teams whenever data.hasPreviousSnapshot is true. Clicking it POSTs restore-previous-scores which writes data/scores.previous.json back to data/scores.json. Confirm dialog before firing.
+// 1.35.0 Added optional data-viewer-team-limit support so Frontlines can show only the top 3 public scoreboard teams.
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -393,10 +394,13 @@ function renderViewer(data) {
   const previousScrollY = window.scrollY || window.pageYOffset || 0;
   const rosterUrl = document.body.dataset.rosterUrl || '';
   const hideBottomTeams = document.body.dataset.hideBottomTeams === 'true';
+  const viewerTeamLimit = Number.parseInt(document.body.dataset.viewerTeamLimit || '', 10);
   const ranks = computeRanks(data.teams);
   const sorted = sortTeamsByScore(data.teams);
   let visibleTeams = sorted;
-  if (hideBottomTeams && sorted.length > 0) {
+  if (Number.isInteger(viewerTeamLimit) && viewerTeamLimit > 0) {
+    visibleTeams = sorted.slice(0, viewerTeamLimit);
+  } else if (hideBottomTeams && sorted.length > 0) {
     // Take the top ceil(n/2) teams, then extend the cut to include any teams
     // tied with the lowest visible score so we never split a tie group.
     const halfwayIdx = Math.ceil(sorted.length / 2) - 1;
@@ -407,8 +411,9 @@ function renderViewer(data) {
   const cols = visibleCount <= 4 ? 2 : visibleCount <= 6 ? 3 : 4;
   const rows = Math.ceil(visibleCount / cols);
   const gridStyle = `--viewer-cols: ${cols}; --viewer-rows: ${rows};`;
-  const hiddenNote = (hideBottomTeams && visibleCount < sorted.length)
-    ? `<div class="updated-at">Showing ${visibleCount} of ${sorted.length} teams — top half by score</div>`
+  const hiddenNoteDescription = viewerTeamLimit === 3 ? 'top 3 by score' : (Number.isInteger(viewerTeamLimit) && viewerTeamLimit > 0 ? `top ${viewerTeamLimit} by score` : 'top half by score');
+  const hiddenNote = (visibleCount < sorted.length)
+    ? `<div class="updated-at">Showing ${visibleCount} of ${sorted.length} teams — ${hiddenNoteDescription}</div>`
     : '';
 
   app.innerHTML = `

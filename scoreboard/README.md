@@ -2,7 +2,7 @@
 
 A PHP scoreboard application for tracking team scores across multiple ministry instances, each with its own teams, runtime data, viewer, and score-entry pages.
 
-Current project version: **v1.16.0**
+Current project version: **v1.17.0**
 
 ## Versioning
 
@@ -51,7 +51,7 @@ Each instance includes:
 
 ### Viewer behavior
 
-The Frontlines viewer opts in to `data-hide-bottom-teams="true"`. After sorting by score, it shows the top half of teams while keeping tied teams together. If all teams are tied, all teams remain visible. Other scoreboard instances are unaffected.
+The Frontlines viewer opts in to `data-viewer-team-limit="3"`. After sorting by score, it shows only the top 3 scoring teams. Other scoreboard instances are unaffected.
 
 ## Authentication and navigation
 

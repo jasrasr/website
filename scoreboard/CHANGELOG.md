@@ -1,6 +1,22 @@
 # Changelog
 
-Current project version: **v1.16.0**
+Current project version: **v1.17.0**
+
+## v1.17.0 - 2026-06-21
+
+### Frontlines public scoreboard top 3
+
+- Frontlines public scoreboard now shows only the top 3 scoring teams.
+- The shared viewer supports an optional `data-viewer-team-limit` value, so other scoreboards continue showing all teams unless they opt in.
+- The public Frontlines header and hidden-count note now describe the display as top 3 by score.
+
+### Revision verification
+
+| File | Revision | Verified purpose |
+|---|---:|---|
+| `frontlines/index.php` | 1.4.0 | Frontlines top-three public viewer opt-in |
+| `public/app.js` | 1.35.0 | Shared viewer team limit support |
+| `tests/navigation-pages-test.php` | 1.10.0 | Frontlines top-three viewer verification |
 
 ## v1.16.0 - 2026-06-21
 

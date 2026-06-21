@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: navigation-pages-test.php
- * Revision : 1.9.0
+ * Revision : 1.10.0
  * Description : Lightweight static verification for scoreboard navigation,
  *               documentation versions, and recent file revision headers.
  * Author : Jason Lamb (with help from Codex CLI)
@@ -19,6 +19,7 @@
  * 1.7.0 Verify auth preserves the current scoreboard page through password changes
  * 1.8.0 Pin project documentation to v1.15.0 ranked categories release
  * 1.9.0 Pin project documentation to v1.16.0 custom category ordering release
+ * 1.10.0 Verify the Frontlines public viewer is limited to the top 3 scoring teams
  */
 
 function assertContains(string $haystack, string $needle, string $message): void
@@ -46,6 +47,7 @@ $scoreboardsPagePath = $root . '/scoreboards.php';
 $appJsPath = $root . '/public/app.js';
 $adminShellPath = $root . '/enter-scores.php';
 $authPath = $root . '/auth.php';
+$frontlinesViewerPath = $root . '/frontlines/index.php';
 
 assertFileExistsLocal($changelogPath, 'CHANGELOG.md should exist as the single changelog content source.');
 assertFileExistsLocal($readmePath, 'README.md should exist.');
@@ -59,15 +61,17 @@ $scoreboardsPage = file_get_contents($scoreboardsPagePath) ?: '';
 $appJs = file_get_contents($appJsPath) ?: '';
 $adminShell = file_get_contents($adminShellPath) ?: '';
 $auth = file_get_contents($authPath) ?: '';
+$frontlinesViewer = file_get_contents($frontlinesViewerPath) ?: '';
 
-assertContains($changelog, 'Current project version: **v1.16.0**', 'CHANGELOG.md should state the current project version.');
+assertContains($changelog, 'Current project version: **v1.17.0**', 'CHANGELOG.md should state the current project version.');
+assertContains($changelog, '## v1.17.0 - 2026-06-21', 'CHANGELOG.md should document the Frontlines top-three viewer release.');
 assertContains($changelog, '## v1.16.0 - 2026-06-21', 'CHANGELOG.md should document the custom category ordering release.');
 assertContains($changelog, '## v1.15.0 - 2026-06-21', 'CHANGELOG.md should document the ranked categories release.');
 assertContains($changelog, '## v1.14.0 - 2026-06-21', 'CHANGELOG.md should document the row-level roster search and return-flow release.');
 assertContains($changelog, '## v1.13.0 - 2026-06-20', 'CHANGELOG.md should document the roster-search release.');
 assertContains($changelog, '## v1.12.0 - 2026-06-20', 'CHANGELOG.md should document the login/navigation release.');
 assertContains($changelog, '## v1.0.0 - 2026-06-02', 'CHANGELOG.md initial entry should remain present.');
-assertContains($readme, 'Current project version: **v1.16.0**', 'README.md should match the changelog project version.');
+assertContains($readme, 'Current project version: **v1.17.0**', 'README.md should match the changelog project version.');
 assertContains($readme, '## Versioning', 'README.md should explain project versus per-file revisions.');
 assertContains($readme, 'users-seed.sample.json', 'README.md should document first-run user seeding.');
 assertContains($readme, 'Searchable roster', 'README.md should document Frontlines roster search.');
@@ -87,6 +91,10 @@ assertContains($appJs, 'dataset.scoreboardsUrl', 'Shared admin app should read t
 assertContains($appJs, 'role === \'admin\'', 'Manage Users link should be rendered only for admin users.');
 assertContains($appJs, '>Changelog<', 'Admin footer should link to the changelog page.');
 assertContains($appJs, '>Scoreboards<', 'Admin footer should link to the scoreboards navigation page.');
+assertContains($frontlinesViewer, 'data-viewer-team-limit="3"', 'Frontlines public viewer should limit the public display to three teams.');
+assertContains($frontlinesViewer, 'Only top 3 teams are shown.', 'Frontlines public viewer shell should describe the top-three display.');
+assertContains($appJs, 'viewerTeamLimit', 'Shared viewer JS should read the optional viewer team limit.');
+assertContains($appJs, 'top 3 by score', 'Shared viewer JS should describe the Frontlines public display as top 3 by score.');
 
 assertContains($auth, 'authCurrentReturnPath(string $loginUrl)', 'Auth should normalize the current request into a safe return path.');
 assertContains($auth, 'return=\' . rawurlencode(authCurrentReturnPath($loginUrl))', 'Forced password changes should return to the current scoreboard page.');
@@ -96,12 +104,14 @@ $revisionFiles = [
     'auth.php' => 'Revision : 1.13.0',
     'login.php' => 'Revision : 1.2.0',
     'change-password.php' => 'Revision : 1.3.0',
+    'frontlines/index.php' => 'Revision : 1.4.0',
     'frontlines/enter-scores.php' => 'Revision : 1.7.0',
     'frontlines/enter-scores-quick.php' => 'Revision : 1.6.0',
     'frontlines/teams.php' => 'Revision : 1.10.0',
     'frontlines/category-navigation.js' => 'Revision : 1.0.0',
     'frontlines/roster-search.js' => 'Revision : 1.1.0',
     'frontlines/roster-search.css' => 'Revision : 1.1.0',
+    'tests/navigation-pages-test.php' => 'Revision : 1.10.0',
 ];
 
 foreach ($revisionFiles as $relativePath => $expectedRevision) {
