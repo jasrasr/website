@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/teams.php
- * Revision : 1.10.0
+ * Revision : 1.10.1
  * Description : Public Frontlines team roster page with leaders, members, sponsors,
  *               and client-side roster search.
  * Author : Jason Lamb (with help from Codex CLI)
@@ -23,6 +23,7 @@
  * 1.8.0 Renamed the Enter Categories link to Add Category Score
  * 1.9.0 Added roster search by team, leader, member, gender/grade, or sponsor
  * 1.10.0 Roster search now shows only matching people/sponsor rows inside matching teams
+ * 1.10.1 Load the shared light/dark theme toggle
  */
 
 require __DIR__ . '/../auth.php';
@@ -169,5 +170,6 @@ function h(string $value): string
       </nav>
     </div>
     <script src="./roster-search.js?v=<?= filemtime(__DIR__ . '/roster-search.js') ?>" defer></script>
+    <script src="../public/theme-toggle.js?v=<?= filemtime(__DIR__ . '/../public/theme-toggle.js') ?>" defer></script>
   </body>
 </html>

@@ -1,6 +1,6 @@
 /*
  * Filename: frontlines/roster-search.css
- * Revision : 1.1.0
+ * Revision : 1.2.0
  * Description : Search controls and empty-state styling for the Frontlines roster.
  * Author : Jason Lamb (with help from ChatGPT)
  * Created Date : 2026-06-20
@@ -8,6 +8,7 @@
  * Changelog :
  * 1.0.0 Initial responsive roster search styles
  * 1.1.0 Hide nonmatching roster rows and empty sections during active searches
+ * 1.2.0 Use shared theme variables for the search panel and input
  */
 
 .roster-search {
@@ -17,7 +18,7 @@
   padding: 1rem;
   border: 1px solid var(--panel-border);
   border-radius: 12px;
-  background: rgba(15, 23, 42, 0.82);
+  background: var(--panel-bg);
   box-shadow: var(--shadow);
 }
 
@@ -38,7 +39,7 @@
   padding: 0.7rem 0.85rem;
   border: 1px solid var(--panel-border);
   border-radius: 8px;
-  background: rgba(15, 23, 42, 0.95);
+  background: var(--page-bg);
   color: var(--text-main);
   font: inherit;
 }

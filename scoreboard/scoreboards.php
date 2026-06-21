@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 /**
  * Filename: scoreboards.php
- * Revision : 1.5.0
+ * Revision : 1.5.1
  * Description : Navigation page for all CVC Scoreboard instances the signed-in user can access.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-02
- * Modified Date : 2026-06-13
+ * Modified Date : 2026-06-21
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Opened to any signed-in user; filters listed instances by user's scoreboard access
@@ -13,6 +13,7 @@
  * 1.3.0 Added Frontlines team roster link
  * 1.4.0 Show notice when redirected here after attempting an off-limits scoreboard
  * 1.5.0 Rename Root scoreboard label to Default
+ * 1.5.1 Load the shared light/dark theme toggle
  */
 
 require __DIR__ . '/auth.php';
@@ -123,5 +124,6 @@ if (isset($_GET['denied'])) {
         <a class="au-btn" href="./logout.php">Sign Out</a>
       </section>
     </div>
+    <script src="./public/theme-toggle.js?v=<?= filemtime(__DIR__ . '/public/theme-toggle.js') ?>" defer></script>
   </body>
 </html>

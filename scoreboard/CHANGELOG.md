@@ -1,6 +1,26 @@
 # Changelog
 
-Current project version: **v1.17.0**
+Current project version: **v1.18.0**
+
+## v1.18.0 - 2026-06-21
+
+### Scoreboard light mode
+
+- Added a shared light/dark theme toggle to scoreboard viewer, login, navigation, admin, quick-entry, roster, and category-entry pages.
+- Dark mode remains the default when no browser preference has been saved.
+- Theme choice is saved in browser storage as `cvc-scoreboard-theme`.
+- Added light-theme variables and adjusted quick-entry, category-entry, and roster-search surfaces to follow the shared theme.
+
+### Revision verification
+
+| File | Revision | Verified purpose |
+|---|---:|---|
+| `public/theme-toggle.js` | 1.0.0 | Persisted theme toggle |
+| `public/styles.css` | 1.13.0 | Shared light theme and toggle styles |
+| `public/quick-entry.css` | 1.7.0 | Quick-entry theme surfaces |
+| `public/category-entry.css` | 1.2.0 | Category-entry theme surfaces |
+| `frontlines/roster-search.css` | 1.2.0 | Roster search theme surfaces |
+| `tests/navigation-pages-test.php` | 1.11.0 | Theme toggle wiring verification |
 
 ## v1.17.0 - 2026-06-21
 

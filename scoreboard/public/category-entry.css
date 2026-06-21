@@ -1,6 +1,6 @@
 /*
  * Filename: category-entry.css
- * Revision : 1.1.0
+ * Revision : 1.2.0
  * Description : Styles for the Frontlines goal category entry page (scorer + admin).
  *               Builds on quick-entry.css patterns (team picker, header, status row);
  *               this file only adds the category button grid styles.
@@ -10,6 +10,7 @@
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Add ranked category value grid styles
+ * 1.2.0 Use shared panel background so ranked category blocks follow the theme toggle
  */
 
 .category-grid {
@@ -79,7 +80,7 @@
   padding: 0.75rem;
   border: 1px solid var(--panel-border);
   border-radius: 10px;
-  background: rgba(15, 23, 42, 0.62);
+  background: var(--panel-bg);
 }
 
 .category-ranked-title {

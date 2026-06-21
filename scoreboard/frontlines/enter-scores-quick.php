@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/enter-scores-quick.php
- * Revision : 1.6.0
+ * Revision : 1.6.1
  * Description : Compact test score entry page for CVC Frontlines Scoreboard.
  *               Provides fast team selection and quick/manual score updates.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-05-26
- * Modified Date : 2026-06-20
+ * Modified Date : 2026-06-21
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Added change-password URL for signed-in users
@@ -15,6 +15,7 @@
  * 1.4.0 Added category navigation URLs (Enter Categories for all; Edit Categories for admin)
  * 1.5.0 Server-rendered quick-header block so View Source shows page identity and signed-in user
  * 1.6.0 Add an Add Category Score shortcut near the top and normalize category-link wording
+ * 1.6.1 Load the shared light/dark theme toggle
  */
 
 require __DIR__ . '/../auth.php';
@@ -56,5 +57,6 @@ $isAdmin = ($user['role'] ?? '') === 'admin';
     </div>
     <script src="../public/quick-entry.js?v=<?= filemtime(__DIR__ . '/../public/quick-entry.js') ?>" defer></script>
     <script src="./category-navigation.js?v=<?= filemtime(__DIR__ . '/category-navigation.js') ?>" defer></script>
+    <script src="../public/theme-toggle.js?v=<?= filemtime(__DIR__ . '/../public/theme-toggle.js') ?>" defer></script>
   </body>
 </html>

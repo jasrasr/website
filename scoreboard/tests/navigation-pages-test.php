@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: navigation-pages-test.php
- * Revision : 1.10.0
+ * Revision : 1.11.0
  * Description : Lightweight static verification for scoreboard navigation,
  *               documentation versions, and recent file revision headers.
  * Author : Jason Lamb (with help from Codex CLI)
@@ -20,6 +20,7 @@
  * 1.8.0 Pin project documentation to v1.15.0 ranked categories release
  * 1.9.0 Pin project documentation to v1.16.0 custom category ordering release
  * 1.10.0 Verify the Frontlines public viewer is limited to the top 3 scoring teams
+ * 1.11.0 Verify the shared light/dark theme toggle is available while dark remains default
  */
 
 function assertContains(string $haystack, string $needle, string $message): void
@@ -45,6 +46,8 @@ $readmePath = $root . '/README.md';
 $changelogPagePath = $root . '/changelog.php';
 $scoreboardsPagePath = $root . '/scoreboards.php';
 $appJsPath = $root . '/public/app.js';
+$stylesPath = $root . '/public/styles.css';
+$themeTogglePath = $root . '/public/theme-toggle.js';
 $adminShellPath = $root . '/enter-scores.php';
 $authPath = $root . '/auth.php';
 $frontlinesViewerPath = $root . '/frontlines/index.php';
@@ -53,17 +56,21 @@ assertFileExistsLocal($changelogPath, 'CHANGELOG.md should exist as the single c
 assertFileExistsLocal($readmePath, 'README.md should exist.');
 assertFileExistsLocal($changelogPagePath, 'changelog.php should exist as the web changelog viewer.');
 assertFileExistsLocal($scoreboardsPagePath, 'scoreboards.php should exist as the signed-in scoreboard navigation page.');
+assertFileExistsLocal($themeTogglePath, 'theme-toggle.js should exist as the shared theme preference control.');
 
 $changelog = file_get_contents($changelogPath) ?: '';
 $readme = file_get_contents($readmePath) ?: '';
 $changelogPage = file_get_contents($changelogPagePath) ?: '';
 $scoreboardsPage = file_get_contents($scoreboardsPagePath) ?: '';
 $appJs = file_get_contents($appJsPath) ?: '';
+$styles = file_get_contents($stylesPath) ?: '';
+$themeToggle = file_get_contents($themeTogglePath) ?: '';
 $adminShell = file_get_contents($adminShellPath) ?: '';
 $auth = file_get_contents($authPath) ?: '';
 $frontlinesViewer = file_get_contents($frontlinesViewerPath) ?: '';
 
-assertContains($changelog, 'Current project version: **v1.17.0**', 'CHANGELOG.md should state the current project version.');
+assertContains($changelog, 'Current project version: **v1.18.0**', 'CHANGELOG.md should state the current project version.');
+assertContains($changelog, '## v1.18.0 - 2026-06-21', 'CHANGELOG.md should document the light mode toggle release.');
 assertContains($changelog, '## v1.17.0 - 2026-06-21', 'CHANGELOG.md should document the Frontlines top-three viewer release.');
 assertContains($changelog, '## v1.16.0 - 2026-06-21', 'CHANGELOG.md should document the custom category ordering release.');
 assertContains($changelog, '## v1.15.0 - 2026-06-21', 'CHANGELOG.md should document the ranked categories release.');
@@ -71,7 +78,7 @@ assertContains($changelog, '## v1.14.0 - 2026-06-21', 'CHANGELOG.md should docum
 assertContains($changelog, '## v1.13.0 - 2026-06-20', 'CHANGELOG.md should document the roster-search release.');
 assertContains($changelog, '## v1.12.0 - 2026-06-20', 'CHANGELOG.md should document the login/navigation release.');
 assertContains($changelog, '## v1.0.0 - 2026-06-02', 'CHANGELOG.md initial entry should remain present.');
-assertContains($readme, 'Current project version: **v1.17.0**', 'README.md should match the changelog project version.');
+assertContains($readme, 'Current project version: **v1.18.0**', 'README.md should match the changelog project version.');
 assertContains($readme, '## Versioning', 'README.md should explain project versus per-file revisions.');
 assertContains($readme, 'users-seed.sample.json', 'README.md should document first-run user seeding.');
 assertContains($readme, 'Searchable roster', 'README.md should document Frontlines roster search.');
@@ -95,6 +102,31 @@ assertContains($frontlinesViewer, 'data-viewer-team-limit="3"', 'Frontlines publ
 assertContains($frontlinesViewer, 'Only top 3 teams are shown.', 'Frontlines public viewer shell should describe the top-three display.');
 assertContains($appJs, 'viewerTeamLimit', 'Shared viewer JS should read the optional viewer team limit.');
 assertContains($appJs, 'top 3 by score', 'Shared viewer JS should describe the Frontlines public display as top 3 by score.');
+assertContains($styles, 'color-scheme: dark', 'Dark mode should remain the default theme.');
+assertContains($styles, ':root[data-theme="light"]', 'Shared styles should define a light theme override.');
+assertContains($styles, '.theme-toggle', 'Shared styles should style the theme toggle button.');
+assertContains($themeToggle, 'cvc-scoreboard-theme', 'Theme toggle should persist the chosen theme in browser storage.');
+assertContains($themeToggle, 'data-theme', 'Theme toggle should apply the selected theme to the document root.');
+
+$themePages = [
+    'index.php',
+    'login.php',
+    'scoreboards.php',
+    'enter-scores.php',
+    'enter-scores-quick.php',
+    'frontlines/index.php',
+    'frontlines/enter-scores.php',
+    'frontlines/enter-scores-quick.php',
+    'frontlines/enter-scores-category.php',
+    'frontlines/teams.php',
+    'collide/index.php',
+    'youth/index.php',
+];
+
+foreach ($themePages as $relativePath) {
+    $source = file_get_contents($root . '/' . $relativePath) ?: '';
+    assertContains($source, 'theme-toggle.js', "{$relativePath} should load the shared theme toggle.");
+}
 
 assertContains($auth, 'authCurrentReturnPath(string $loginUrl)', 'Auth should normalize the current request into a safe return path.');
 assertContains($auth, 'return=\' . rawurlencode(authCurrentReturnPath($loginUrl))', 'Forced password changes should return to the current scoreboard page.');
@@ -102,16 +134,20 @@ assertContains($auth, 'function authLoginRedirect', 'Unauthenticated page redire
 
 $revisionFiles = [
     'auth.php' => 'Revision : 1.13.0',
-    'login.php' => 'Revision : 1.2.0',
+    'login.php' => 'Revision : 1.2.1',
     'change-password.php' => 'Revision : 1.3.0',
-    'frontlines/index.php' => 'Revision : 1.4.0',
-    'frontlines/enter-scores.php' => 'Revision : 1.7.0',
-    'frontlines/enter-scores-quick.php' => 'Revision : 1.6.0',
-    'frontlines/teams.php' => 'Revision : 1.10.0',
+    'frontlines/index.php' => 'Revision : 1.4.1',
+    'frontlines/enter-scores.php' => 'Revision : 1.7.1',
+    'frontlines/enter-scores-quick.php' => 'Revision : 1.6.1',
+    'frontlines/teams.php' => 'Revision : 1.10.1',
     'frontlines/category-navigation.js' => 'Revision : 1.0.0',
     'frontlines/roster-search.js' => 'Revision : 1.1.0',
-    'frontlines/roster-search.css' => 'Revision : 1.1.0',
-    'tests/navigation-pages-test.php' => 'Revision : 1.10.0',
+    'frontlines/roster-search.css' => 'Revision : 1.2.0',
+    'public/styles.css' => 'Revision : 1.13.0',
+    'public/quick-entry.css' => 'Revision : 1.7.0',
+    'public/category-entry.css' => 'Revision : 1.2.0',
+    'public/theme-toggle.js' => 'Revision : 1.0.0',
+    'tests/navigation-pages-test.php' => 'Revision : 1.11.0',
 ];
 
 foreach ($revisionFiles as $relativePath => $expectedRevision) {

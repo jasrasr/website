@@ -1,17 +1,18 @@
 <?php declare(strict_types=1);
 /**
  * Filename: login.php
- * Revision : 1.2.0
+ * Revision : 1.2.1
  * Description : Login page for CVC Scoreboard admin. Handles session creation
  *               and returns users to the scoreboard page they originally requested.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-13
- * Modified Date : 2026-06-20
+ * Modified Date : 2026-06-21
  * Changelog :
  * 1.0.0 Initial release
  * 1.1.0 Redirect forced-reset users directly to change-password.php
  * 1.2.0 Preserve and validate the requested scoreboard destination through normal login,
  *       existing-session login, and forced password changes
+ * 1.2.1 Load the shared light/dark theme toggle
  */
 
 require __DIR__ . '/auth.php';
@@ -151,5 +152,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </form>
       </div>
     </div>
+    <script src="./public/theme-toggle.js?v=<?= filemtime(__DIR__ . '/public/theme-toggle.js') ?>" defer></script>
   </body>
 </html>

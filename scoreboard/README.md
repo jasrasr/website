@@ -2,7 +2,7 @@
 
 A PHP scoreboard application for tracking team scores across multiple ministry instances, each with its own teams, runtime data, viewer, and score-entry pages.
 
-Current project version: **v1.17.0**
+Current project version: **v1.18.0**
 
 ## Versioning
 
@@ -110,6 +110,7 @@ All instances share frontend files under `public/`:
 
 - `public/styles.css` — viewer, admin, roster, and shared responsive styling.
 - `public/app.js` — viewer and full-admin behavior.
+- `public/theme-toggle.js` — persisted light/dark mode control; dark mode is the default.
 - `public/quick-entry.css` — compact entry styling.
 - `public/quick-entry.js` — compact entry behavior.
 

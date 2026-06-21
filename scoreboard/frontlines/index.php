@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/index.php
- * Revision : 1.4.0
+ * Revision : 1.4.1
  * Description : Public viewer page for CVC Frontlines Scoreboard.
  *               Displays live scores, auto-refreshes every 2 seconds.
  *               Only the top 3 teams (by score) are rendered;
@@ -16,6 +16,7 @@
  * 1.2.0 Opt in to scores-hidden mode for the bottom half; server-rendered viewer header for View Source
  * 1.3.0 Switched from hide-scores to hide-teams; bottom half is now omitted entirely so the visible cards fill the viewport
  * 1.4.0 Limit the Frontlines public viewer to the top 3 scoring teams
+ * 1.4.1 Load the shared light/dark theme toggle
  */
 ?>
 <!DOCTYPE html>
@@ -42,5 +43,6 @@
       <p class="status-text">Loading scoreboard...</p>
     </div>
     <script src="../public/app.js?v=<?= filemtime(__DIR__ . '/../public/app.js') ?>" defer></script>
+    <script src="../public/theme-toggle.js?v=<?= filemtime(__DIR__ . '/../public/theme-toggle.js') ?>" defer></script>
   </body>
 </html>
