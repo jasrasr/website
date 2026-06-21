@@ -1,13 +1,13 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/api.php
- * Revision : 1.5.0
+ * Revision : 1.6.0
  * Description : REST API endpoint for CVC Frontlines Scoreboard score management.
  *               Handles reading, updating, resetting, and renaming teams and title,
  *               plus goal/category definitions and one-tap goal awards.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-09
- * Modified Date : 2026-06-18
+ * Modified Date : 2026-06-21
  * Changelog :
  * 1.0.0 Initial release for Frontlines scoreboard instance
  * 1.1.0 Allow negative scores (removed max(0) floor)
@@ -16,6 +16,7 @@
  *       remove-category, award-category (Frontlines-only goal scoring)
  * 1.4.0 Stamp score_changed_at on every score change (adjust/reset/add-team/award-category) for tiebreaker; Reset All snapshots data/scores.previous.json before clearing for recovery
  * 1.5.0 reset-team snapshots data/scores.previous-single.json. remove-team appends to data/removed-teams.json. New restore-previous-scores action (admin-only). scores GET adds hasPreviousSnapshot flag.
+ * 1.6.0 Add ranked categories with explicit 12000-to-1000 award values.
  */
 
 require __DIR__ . '/scoreboard_lib.php';
@@ -23,6 +24,22 @@ require __DIR__ . '/../auth.php';
 
 $scoreboardId = 'frontlines';
 $auditFile    = __DIR__ . '/data/audit.json';
+const RANKED_CATEGORY_POINTS = [12000, 11000, 10000, 9000, 8000, 7000, 6000, 5000, 4000, 3000, 2000, 1000];
+
+function normalizeCategoryScoringMode($value): string
+{
+    return $value === 'ranked' ? 'ranked' : 'fixed';
+}
+
+function rankedCategoryAwardPoints($value): ?int
+{
+    if (!is_numeric($value)) {
+        return null;
+    }
+
+    $points = (int) $value;
+    return in_array($points, RANKED_CATEGORY_POINTS, true) ? $points : null;
+}
 
 $action = $_GET['action'] ?? 'scores';
 $teamId = $_GET['team'] ?? '';
@@ -46,7 +63,7 @@ try {
         $entries = [];
         if (is_file($auditFile)) {
             $data    = json_decode(file_get_contents($auditFile) ?: '', true);
-            $entries = is_array($data) ? array_slice($data, 0, 50) : [];
+            $entries = is_array($data) ? array_slice($data, 0, 1000) : [];
         }
         jsonResponse(['entries' => $entries]);
     }
@@ -303,11 +320,15 @@ try {
         $name    = trim((string) ($payload['name'] ?? ''));
         $points  = $payload['points'] ?? null;
         $maxRaw  = $payload['maxAwardsPerTeam'] ?? null;
+        $scoringMode = normalizeCategoryScoringMode($payload['scoringMode'] ?? 'fixed');
         if ($name === '') {
             jsonResponse(['error' => 'Category name cannot be empty.'], 400);
         }
-        if (!is_numeric($points) || (int) $points === 0) {
+        if ($scoringMode === 'fixed' && (!is_numeric($points) || (int) $points === 0)) {
             jsonResponse(['error' => 'Points must be a non-zero number.'], 400);
+        }
+        if ($scoringMode === 'ranked') {
+            $points = 0;
         }
         $max = null;
         if ($maxRaw !== null && $maxRaw !== '' && $maxRaw !== 'unlimited') {
@@ -320,11 +341,12 @@ try {
         $newId = 'cat-' . bin2hex(random_bytes(4));
         $now   = gmdate('c');
 
-        $saved = writeCategoriesData(function (array $data) use ($newId, $name, $points, $max, $now): array {
+        $saved = writeCategoriesData(function (array $data) use ($newId, $name, $points, $max, $now, $scoringMode): array {
             $data['categories'][] = [
                 'id'               => $newId,
                 'name'             => $name,
                 'points'           => (int) $points,
+                'scoringMode'      => $scoringMode,
                 'maxAwardsPerTeam' => $max,
                 'active'           => true,
                 'created_at'       => $now,
@@ -359,13 +381,17 @@ try {
 
         $name   = isset($payload['name']) ? trim((string) $payload['name']) : null;
         $points = $payload['points'] ?? null;
+        $scoringMode = array_key_exists('scoringMode', $payload) ? normalizeCategoryScoringMode($payload['scoringMode']) : null;
         $maxRaw = array_key_exists('maxAwardsPerTeam', $payload) ? $payload['maxAwardsPerTeam'] : '__unset__';
         $active = array_key_exists('active', $payload) ? (bool) $payload['active'] : null;
 
         if ($name !== null && $name === '') {
             jsonResponse(['error' => 'Category name cannot be empty.'], 400);
         }
-        if ($points !== null && (!is_numeric($points) || (int) $points === 0)) {
+        if ($scoringMode === 'ranked') {
+            $points = 0;
+        }
+        if ($points !== null && $scoringMode !== 'ranked' && (!is_numeric($points) || (int) $points === 0)) {
             jsonResponse(['error' => 'Points must be a non-zero number.'], 400);
         }
 
@@ -380,13 +406,14 @@ try {
             }
         }
 
-        $saved = writeCategoriesData(function (array $data) use ($categoryId, $name, $points, $maxRaw, $maxValue, $active): array {
+        $saved = writeCategoriesData(function (array $data) use ($categoryId, $name, $points, $scoringMode, $maxRaw, $maxValue, $active): array {
             $idx = findCategoryIndex($data, $categoryId);
             if ($idx === null) {
                 throw new InvalidArgumentException('Category not found.');
             }
             if ($name !== null)   { $data['categories'][$idx]['name']   = $name; }
             if ($points !== null) { $data['categories'][$idx]['points'] = (int) $points; }
+            if ($scoringMode !== null) { $data['categories'][$idx]['scoringMode'] = $scoringMode; }
             if ($maxRaw !== '__unset__') { $data['categories'][$idx]['maxAwardsPerTeam'] = $maxValue; }
             if ($active !== null) { $data['categories'][$idx]['active'] = $active; }
             $data['categories'][$idx]['modified_at'] = gmdate('c');
@@ -454,15 +481,28 @@ try {
             jsonResponse(['error' => 'Category is not active.'], 400);
         }
 
+        $scoringMode = normalizeCategoryScoringMode($category['scoringMode'] ?? 'fixed');
+        $existing = countCategoryAwards($auditFile, $teamId, $categoryId);
+
+        if ($scoringMode === 'ranked' && $existing > 0) {
+            jsonResponse(['error' => 'Team already has an award for this ranked category.'], 409);
+        }
+
         $cap = $category['maxAwardsPerTeam'] ?? null;
         if ($cap !== null) {
-            $existing = countCategoryAwards($auditFile, $teamId, $categoryId);
             if ($existing >= (int) $cap) {
                 jsonResponse(['error' => 'This team has already reached the award cap for this category.'], 409);
             }
         }
 
-        $pointsDelta = (int) ($category['points'] ?? 0);
+        if ($scoringMode === 'ranked') {
+            $pointsDelta = rankedCategoryAwardPoints($_GET['awardPoints'] ?? null);
+            if ($pointsDelta === null) {
+                jsonResponse(['error' => 'Ranked category award points must be one of 12000, 11000, 10000, 9000, 8000, 7000, 6000, 5000, 4000, 3000, 2000, or 1000.'], 400);
+            }
+        } else {
+            $pointsDelta = (int) ($category['points'] ?? 0);
+        }
         $categoryName = (string) ($category['name'] ?? '');
 
         $saved = writeScoreboardData(function (array $data) use ($teamId, $pointsDelta): array {

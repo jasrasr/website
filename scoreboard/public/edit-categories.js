@@ -1,15 +1,16 @@
 // Filename: edit-categories.js
-// Revision : 1.0.0
+// Revision : 1.1.0
 // Description : Admin-only editor for Frontlines goal categories. Lists categories,
 //               supports add/edit/remove via the REST API, and toggles per-category
 //               active flag. Frontlines-only feature; loaded from edit-categories.php.
 // Author : Jason Lamb (with help from Claude Code)
 // Created Date : 2026-06-17
-// Modified Date : 2026-06-17
+// Modified Date : 2026-06-21
 // Changelog :
 // 1.0.0 initial release
+// 1.1.0 Add ranked category mode for 12000-to-1000 award values
 
-const EDIT_CATEGORIES_REVISION = '1.0.0';
+const EDIT_CATEGORIES_REVISION = '1.1.0';
 
 let categoriesState = null;
 let statusMessage = '';
@@ -79,6 +80,12 @@ function renderRow(category) {
     attributes: { name: 'points', type: 'number', step: '1', value: String(category.points ?? 0) }
   }));
 
+  const modeLabel = el('label', { className: 'category-field category-field-active category-field-ranked' });
+  const rankedCheckbox = el('input', { attributes: { name: 'scoringMode', type: 'checkbox', value: 'ranked' } });
+  rankedCheckbox.checked = category.scoringMode === 'ranked';
+  modeLabel.append(rankedCheckbox);
+  modeLabel.append(el('span', { text: 'Ranked category (12000 to 1000)' }));
+
   const maxLabel = el('label', { className: 'category-field' });
   maxLabel.append(el('span', { text: 'Max awards per team (blank = unlimited)' }));
   maxLabel.append(el('input', {
@@ -97,7 +104,7 @@ function renderRow(category) {
   activeLabel.append(activeCheckbox);
   activeLabel.append(el('span', { text: 'Active (visible to scorers)' }));
 
-  grid.append(nameLabel, pointsLabel, maxLabel, activeLabel);
+  grid.append(nameLabel, pointsLabel, maxLabel, modeLabel, activeLabel);
 
   const actions = el('div', { className: 'category-row-actions' });
   const saveButton = el('button', {
@@ -136,13 +143,17 @@ function renderAddForm() {
 
   const pointsLabel = el('label', { className: 'category-field' });
   pointsLabel.append(el('span', { text: 'Points (use negative for penalty)' }));
-  pointsLabel.append(el('input', { attributes: { name: 'points', type: 'number', step: '1', required: 'required', placeholder: '100' } }));
+  pointsLabel.append(el('input', { attributes: { name: 'points', type: 'number', step: '1', placeholder: '100' } }));
+
+  const modeLabel = el('label', { className: 'category-field category-field-active category-field-ranked' });
+  modeLabel.append(el('input', { attributes: { name: 'scoringMode', type: 'checkbox', value: 'ranked' } }));
+  modeLabel.append(el('span', { text: 'Ranked category (12000 to 1000)' }));
 
   const maxLabel = el('label', { className: 'category-field' });
   maxLabel.append(el('span', { text: 'Max awards per team (blank = unlimited)' }));
   maxLabel.append(el('input', { attributes: { name: 'maxAwardsPerTeam', type: 'number', min: '1', step: '1', placeholder: 'unlimited' } }));
 
-  grid.append(nameLabel, pointsLabel, maxLabel);
+  grid.append(nameLabel, pointsLabel, maxLabel, modeLabel);
 
   const submit = el('button', {
     className: 'positive',
@@ -225,19 +236,22 @@ function readRowPayload(row) {
   const pointsInput = row.querySelector('input[name="points"]');
   const maxInput = row.querySelector('input[name="maxAwardsPerTeam"]');
   const activeInput = row.querySelector('input[name="active"]');
+  const rankedInput = row.querySelector('input[name="scoringMode"]');
 
   const name = (nameInput?.value || '').trim();
   const pointsRaw = pointsInput?.value || '';
   const maxRaw = maxInput?.value || '';
   const active = activeInput ? activeInput.checked : true;
+  const scoringMode = rankedInput?.checked ? 'ranked' : 'fixed';
 
   if (name === '') throw new Error('Category name cannot be empty.');
-  if (pointsRaw === '' || Number.isNaN(Number(pointsRaw)) || Number(pointsRaw) === 0) {
+  if (scoringMode === 'fixed' && (pointsRaw === '' || Number.isNaN(Number(pointsRaw)) || Number(pointsRaw) === 0)) {
     throw new Error('Points must be a non-zero number.');
   }
   return {
     name,
-    points: parseInt(pointsRaw, 10),
+    points: scoringMode === 'ranked' ? 0 : parseInt(pointsRaw, 10),
+    scoringMode,
     maxAwardsPerTeam: maxRaw === '' ? 'unlimited' : parseInt(maxRaw, 10),
     active
   };
@@ -287,15 +301,17 @@ async function handleSubmit(event) {
     const name = String(formData.get('name') || '').trim();
     const pointsRaw = String(formData.get('points') || '').trim();
     const maxRaw = String(formData.get('maxAwardsPerTeam') || '').trim();
+    const scoringMode = formData.get('scoringMode') === 'ranked' ? 'ranked' : 'fixed';
 
     if (name === '') throw new Error('Category name cannot be empty.');
-    if (pointsRaw === '' || Number.isNaN(Number(pointsRaw)) || Number(pointsRaw) === 0) {
+    if (scoringMode === 'fixed' && (pointsRaw === '' || Number.isNaN(Number(pointsRaw)) || Number(pointsRaw) === 0)) {
       throw new Error('Points must be a non-zero number.');
     }
 
     const payload = {
       name,
-      points: parseInt(pointsRaw, 10),
+      points: scoringMode === 'ranked' ? 0 : parseInt(pointsRaw, 10),
+      scoringMode,
       maxAwardsPerTeam: maxRaw === '' ? 'unlimited' : parseInt(maxRaw, 10)
     };
 

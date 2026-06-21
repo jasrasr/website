@@ -1,18 +1,19 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines-categories-test.php
- * Revision : 1.3.0
+ * Revision : 1.4.0
  * Description : Verifies the Frontlines categories lib helpers: read/write with locking,
  *               findCategoryIndex, countCategoryAwards (computed from audit log), and
  *               the edit-categories.php page shell + editor JS surface.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-06-17
- * Modified Date : 2026-06-17
+ * Modified Date : 2026-06-21
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Cover edit-categories.php auth shell and editor JS action endpoints
  * 1.2.0 Cover enter-scores-category.php shell + scorer JS award/cap flow
  * 1.3.0 Cover Phase 4 cross-page navigation: data attrs on Frontlines pages and link rendering in shared JS
+ * 1.4.0 Cover ranked categories with manual 12000-to-1000 award values
  */
 
 function assertTrue(bool $condition, string $message): void
@@ -129,13 +130,18 @@ foreach ($sample['categories'] as $cat) {
 // ---- edit-categories.php shell + JS + CSS exist and load expected references ----
 $root = dirname(__DIR__);
 $editPagePath = $root . '/frontlines/edit-categories.php';
+$apiPath      = $root . '/frontlines/api.php';
 $editJsPath   = $root . '/public/edit-categories.js';
 $editCssPath  = $root . '/public/edit-categories.css';
+$categoryCssPath = $root . '/public/category-entry.css';
 assertTrue(is_file($editPagePath), 'edit-categories.php exists');
+assertTrue(is_file($apiPath),      'frontlines/api.php exists');
 assertTrue(is_file($editJsPath),   'public/edit-categories.js exists');
 assertTrue(is_file($editCssPath),  'public/edit-categories.css exists');
+assertTrue(is_file($categoryCssPath), 'public/category-entry.css exists');
 
 $editPageSrc = (string) file_get_contents($editPagePath);
+$apiSrc = (string) file_get_contents($apiPath);
 assertTrue(strpos($editPageSrc, "requireAuth('frontlines'") !== false, 'edit-categories.php requires Frontlines auth');
 assertTrue(strpos($editPageSrc, "'role'") !== false && strpos($editPageSrc, "'admin'") !== false, 'edit-categories.php enforces admin role');
 assertTrue(strpos($editPageSrc, 'edit-categories.js') !== false, 'edit-categories.php loads the editor JS');
@@ -145,6 +151,11 @@ assertTrue(strpos($editJsSrc, 'action=list-categories') !== false, 'editor JS ca
 assertTrue(strpos($editJsSrc, 'action=add-category') !== false,    'editor JS calls add-category');
 assertTrue(strpos($editJsSrc, 'action=update-category') !== false, 'editor JS calls update-category');
 assertTrue(strpos($editJsSrc, 'action=remove-category') !== false, 'editor JS calls remove-category');
+assertTrue(strpos($editJsSrc, 'scoringMode') !== false, 'editor JS should manage category scoring mode.');
+assertTrue(strpos($editJsSrc, 'ranked') !== false, 'editor JS should expose ranked category mode.');
+assertTrue(strpos($apiSrc, 'RANKED_CATEGORY_POINTS') !== false, 'API should define ranked category point values.');
+assertTrue(strpos($apiSrc, 'awardPoints') !== false, 'API should accept explicit ranked award points.');
+assertTrue(strpos($apiSrc, 'Team already has an award for this ranked category.') !== false, 'API should block duplicate ranked category awards per team.');
 
 // ---- enter-scores-category.php shell + JS exist and wire up the award flow ----
 $scorerPagePath = $root . '/frontlines/enter-scores-category.php';
@@ -165,6 +176,12 @@ assertTrue(strpos($scorerJsSrc, 'action=scores') !== false,          'scorer JS 
 assertTrue(strpos($scorerJsSrc, 'action=audit') !== false,           'scorer JS fetches audit for cap-counting');
 assertTrue(strpos($scorerJsSrc, 'action=award-category') !== false,  'scorer JS posts award-category');
 assertTrue(strpos($scorerJsSrc, 'maxAwardsPerTeam') !== false,       'scorer JS respects maxAwardsPerTeam for client-side disable');
+assertTrue(strpos($scorerJsSrc, 'RANKED_CATEGORY_POINTS') !== false, 'scorer JS should render the 12000-to-1000 ranked point ladder.');
+assertTrue(strpos($scorerJsSrc, 'awardPoints=') !== false, 'scorer JS should submit explicit ranked award points.');
+assertTrue(strpos($scorerJsSrc, 'category-ranked-value-grid') !== false, 'scorer JS should render ranked value buttons.');
+
+$categoryCssSrc = (string) file_get_contents($categoryCssPath);
+assertTrue(strpos($categoryCssSrc, '.category-ranked-value-grid') !== false, 'category-entry.css should style ranked value grids.');
 
 // ---- Phase 4: cross-page navigation wiring ----
 $adminPagePath = $root . '/frontlines/enter-scores.php';

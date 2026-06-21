@@ -1,17 +1,19 @@
 // Filename: category-entry.js
-// Revision : 1.0.0
+// Revision : 1.1.0
 // Description : Scorer + admin UI for awarding Frontlines goal categories. Pick a team,
 //               then one-tap a goal button. Server enforces maxAwardsPerTeam; client
 //               visually disables buttons whose cap is reached using audit-log counts.
 // Author : Jason Lamb (with help from Claude Code)
 // Created Date : 2026-06-17
-// Modified Date : 2026-06-17
+// Modified Date : 2026-06-21
 // Changelog :
 // 1.0.0 initial release
+// 1.1.0 Add ranked categories with manual 12000-to-1000 award values
 
-const CATEGORY_ENTRY_REVISION = '1.0.0';
+const CATEGORY_ENTRY_REVISION = '1.1.0';
+const RANKED_CATEGORY_POINTS = [12000, 11000, 10000, 9000, 8000, 7000, 6000, 5000, 4000, 3000, 2000, 1000];
 const categoryPollIntervalMs = 10000;
-const auditLookbackLimit = 50;
+const auditLookbackLimit = 1000;
 
 let scoresData = null;
 let categoriesData = null;
@@ -117,6 +119,10 @@ function countAwards(teamId, categoryId) {
   return count;
 }
 
+function isRankedCategory(category) {
+  return category?.scoringMode === 'ranked';
+}
+
 function setStatus(message) {
   statusMessage = message;
   const status = document.querySelector('#category-status');
@@ -163,6 +169,10 @@ function renderTeamButton(team, ranks) {
 }
 
 function renderCategoryButton(category, selectedTeam) {
+  if (isRankedCategory(category)) {
+    return renderRankedCategory(category, selectedTeam);
+  }
+
   const points = Number(category.points || 0);
   const sign = points > 0 ? '+' : '';
   const isPositive = points > 0;
@@ -198,6 +208,45 @@ function renderCategoryButton(category, selectedTeam) {
   }
 
   return button;
+}
+
+function renderRankedCategory(category, selectedTeam) {
+  const awarded = countAwards(selectedTeam.id, category.id);
+  if (awarded > 0) {
+    return null;
+  }
+
+  const inactive = !category.active;
+  const wrapper = el('section', {
+    className: `category-ranked ${inactive ? ' is-disabled' : ''}`
+  });
+  wrapper.append(el('h3', { className: 'category-ranked-title', text: category.name }));
+  if (inactive) {
+    wrapper.append(el('p', { className: 'category-button-cap', text: 'Inactive' }));
+  }
+
+  const grid = el('div', { className: 'category-ranked-value-grid' });
+  RANKED_CATEGORY_POINTS.forEach((points) => {
+    const button = el('button', {
+      className: 'category-button positive category-ranked-value',
+      attributes: { type: 'button' },
+      dataset: {
+        action: 'award-category',
+        categoryId: category.id,
+        teamId: selectedTeam.id,
+        awardPoints: String(points)
+      }
+    });
+    if (inactive) {
+      button.setAttribute('disabled', 'disabled');
+      button.setAttribute('aria-disabled', 'true');
+    }
+    button.append(el('span', { className: 'category-button-name', text: category.name }));
+    button.append(el('span', { className: 'category-button-points', text: `+${points}` }));
+    grid.append(button);
+  });
+  wrapper.append(grid);
+  return wrapper;
 }
 
 function renderHeader() {
@@ -266,7 +315,10 @@ function renderActionPanel(ranks) {
   }
 
   const grid = el('div', { className: 'category-grid' });
-  categories.forEach((cat) => grid.append(renderCategoryButton(cat, selectedTeam)));
+  categories.forEach((cat) => {
+    const button = renderCategoryButton(cat, selectedTeam);
+    if (button) grid.append(button);
+  });
   panel.append(grid);
 
   return panel;
@@ -423,9 +475,11 @@ async function handleClick(event) {
       if (actionEl.hasAttribute('disabled')) return;
       const teamId = actionEl.dataset.teamId;
       const categoryId = actionEl.dataset.categoryId;
+      const awardPoints = actionEl.dataset.awardPoints || '';
       actionEl.setAttribute('disabled', 'disabled');
       try {
-        const saved = await postAction(`action=award-category&team=${encodeURIComponent(teamId)}&category=${encodeURIComponent(categoryId)}`);
+        const awardQuery = awardPoints === '' ? '' : `&awardPoints=${encodeURIComponent(awardPoints)}`;
+        const saved = await postAction(`action=award-category&team=${encodeURIComponent(teamId)}&category=${encodeURIComponent(categoryId)}${awardQuery}`);
         scoresData = saved;
         // Re-fetch audit so cap counts stay accurate.
         try {
@@ -434,7 +488,7 @@ async function handleClick(event) {
         } catch { /* non-fatal */ }
         const team = (saved.teams || []).find((t) => t.id === teamId);
         const cat = (categoriesData?.categories || []).find((c) => c.id === categoryId);
-        const pts = Number(cat?.points || 0);
+        const pts = awardPoints === '' ? Number(cat?.points || 0) : Number(awardPoints);
         const sign = pts > 0 ? '+' : '';
         setStatus(`${team?.name}: ${cat?.name} ${sign}${pts} saved. New score ${team?.score}.`);
         render();

@@ -1,12 +1,13 @@
 /*
  * Filename: edit-categories.css
- * Revision : 1.0.0
+ * Revision : 1.1.0
  * Description : Styles for the Frontlines goal categories admin editor.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-06-17
- * Modified Date : 2026-06-17
+ * Modified Date : 2026-06-21
  * Changelog :
  * 1.0.0 initial release
+ * 1.1.0 Add ranked category mode field layout
  */
 
 .edit-categories-body {
@@ -44,7 +45,7 @@
 
 .category-row-grid {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  grid-template-columns: 1.5fr 0.9fr 0.9fr 1.1fr 1fr;
   gap: 0.6rem;
   align-items: end;
 }

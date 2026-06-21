@@ -1,6 +1,27 @@
 # Changelog
 
-Current project version: **v1.14.0**
+Current project version: **v1.15.0**
+
+## v1.15.0 - 2026-06-21
+
+### Frontlines ranked categories
+
+- Added ranked category mode for Frontlines goal categories.
+- Ranked categories use manual award values: `12000`, `11000`, `10000`, `9000`, `8000`, `7000`, `6000`, `5000`, `4000`, `3000`, `2000`, and `1000`.
+- Scorers can award ranked values in any order; the value is chosen at scoring time.
+- After a team receives a ranked category, that category is hidden for that team.
+- The API validates ranked award values and blocks duplicate ranked awards for the same team/category.
+
+### Revision verification
+
+| File | Revision | Verified purpose |
+|---|---:|---|
+| `frontlines/api.php` | 1.6.0 | Ranked category validation and awards |
+| `public/category-entry.js` | 1.1.0 | Ranked value selection and hide-after-award behavior |
+| `public/category-entry.css` | 1.1.0 | Ranked value grid styles |
+| `public/edit-categories.js` | 1.1.0 | Ranked category admin option |
+| `public/edit-categories.css` | 1.1.0 | Ranked category editor layout |
+| `tests/frontlines-categories-test.php` | 1.4.0 | Ranked category static verification |
 
 ## v1.14.0 - 2026-06-21
 
