@@ -1,6 +1,13 @@
 # Changelog
 
-Current project version: **v1.18.0**
+Current project version: **v1.18.1**
+
+## v1.18.1 - 2026-06-21
+
+### Documentation
+
+- Added a dedicated README Appearance section for the dark-default light/dark mode toggle.
+- Documented the saved browser preference key, `cvc-scoreboard-theme`, and how to return to default dark mode.
 
 ## v1.18.0 - 2026-06-21
 

@@ -2,7 +2,7 @@
 
 A PHP scoreboard application for tracking team scores across multiple ministry instances, each with its own teams, runtime data, viewer, and score-entry pages.
 
-Current project version: **v1.18.0**
+Current project version: **v1.18.1**
 
 ## Versioning
 
@@ -52,6 +52,13 @@ Each instance includes:
 ### Viewer behavior
 
 The Frontlines viewer opts in to `data-viewer-team-limit="3"`. After sorting by score, it shows only the top 3 scoring teams. Other scoreboard instances are unaffected.
+
+## Appearance
+
+- Dark mode is the default theme for all scoreboard pages.
+- The shared **Light mode** / **Dark mode** button is loaded on the main viewer, login, scoreboard picker, score-entry, quick-entry, Frontlines roster, and Frontlines category-entry pages.
+- The browser saves the selected theme in local storage as `cvc-scoreboard-theme`.
+- Clearing that browser storage key returns the scoreboard to the default dark mode.
 
 ## Authentication and navigation
 
