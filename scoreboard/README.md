@@ -2,7 +2,7 @@
 
 A PHP scoreboard application for tracking team scores across multiple ministry instances, each with its own teams, runtime data, viewer, and score-entry pages.
 
-Current project version: **v1.15.0**
+Current project version: **v1.16.0**
 
 ## Versioning
 
@@ -37,6 +37,7 @@ Each instance includes:
 - User-facing navigation calls the scoring page **Add Category Score**.
 - **Add Category Score** appears near the top of both Frontlines full entry and quick entry, as well as in the relevant footer/navigation areas.
 - Ranked categories can be awarded in any order using fixed values from `12000` down to `1000`; after a team receives a ranked category, that category is hidden for that team.
+- Category display order is controlled by the **Order** field in Edit Categories. Lower numbers appear first; ties sort by category name.
 
 ### Searchable roster
 

@@ -1,5 +1,5 @@
 // Filename: edit-categories.js
-// Revision : 1.1.0
+// Revision : 1.2.0
 // Description : Admin-only editor for Frontlines goal categories. Lists categories,
 //               supports add/edit/remove via the REST API, and toggles per-category
 //               active flag. Frontlines-only feature; loaded from edit-categories.php.
@@ -9,8 +9,9 @@
 // Changelog :
 // 1.0.0 initial release
 // 1.1.0 Add ranked category mode for 12000-to-1000 award values
+// 1.2.0 Add custom sort order field and sorting
 
-const EDIT_CATEGORIES_REVISION = '1.1.0';
+const EDIT_CATEGORIES_REVISION = '1.2.0';
 
 let categoriesState = null;
 let statusMessage = '';
@@ -62,6 +63,15 @@ function setStatus(message) {
   if (status) status.textContent = message;
 }
 
+function sortCategories(categories) {
+  return categories.slice().sort((a, b) => {
+    const orderA = Number.isFinite(Number(a.sortOrder)) ? Number(a.sortOrder) : Number.MAX_SAFE_INTEGER;
+    const orderB = Number.isFinite(Number(b.sortOrder)) ? Number(b.sortOrder) : Number.MAX_SAFE_INTEGER;
+    if (orderA !== orderB) return orderA - orderB;
+    return String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' });
+  });
+}
+
 function renderRow(category) {
   const row = el('section', {
     className: 'category-row',
@@ -73,6 +83,12 @@ function renderRow(category) {
   const nameLabel = el('label', { className: 'category-field' });
   nameLabel.append(el('span', { text: 'Name' }));
   nameLabel.append(el('input', { attributes: { name: 'name', type: 'text', value: category.name || '' } }));
+
+  const orderLabel = el('label', { className: 'category-field' });
+  orderLabel.append(el('span', { text: 'Order' }));
+  orderLabel.append(el('input', {
+    attributes: { name: 'sortOrder', type: 'number', min: '1', step: '1', value: String(category.sortOrder ?? '') }
+  }));
 
   const pointsLabel = el('label', { className: 'category-field' });
   pointsLabel.append(el('span', { text: 'Points (use negative for penalty)' }));
@@ -104,7 +120,7 @@ function renderRow(category) {
   activeLabel.append(activeCheckbox);
   activeLabel.append(el('span', { text: 'Active (visible to scorers)' }));
 
-  grid.append(nameLabel, pointsLabel, maxLabel, modeLabel, activeLabel);
+  grid.append(nameLabel, orderLabel, pointsLabel, maxLabel, modeLabel, activeLabel);
 
   const actions = el('div', { className: 'category-row-actions' });
   const saveButton = el('button', {
@@ -141,6 +157,10 @@ function renderAddForm() {
   nameLabel.append(el('span', { text: 'Name' }));
   nameLabel.append(el('input', { attributes: { name: 'name', type: 'text', required: 'required', placeholder: 'Water Challenge' } }));
 
+  const orderLabel = el('label', { className: 'category-field' });
+  orderLabel.append(el('span', { text: 'Order' }));
+  orderLabel.append(el('input', { attributes: { name: 'sortOrder', type: 'number', min: '1', step: '1', placeholder: 'next' } }));
+
   const pointsLabel = el('label', { className: 'category-field' });
   pointsLabel.append(el('span', { text: 'Points (use negative for penalty)' }));
   pointsLabel.append(el('input', { attributes: { name: 'points', type: 'number', step: '1', placeholder: '100' } }));
@@ -153,7 +173,7 @@ function renderAddForm() {
   maxLabel.append(el('span', { text: 'Max awards per team (blank = unlimited)' }));
   maxLabel.append(el('input', { attributes: { name: 'maxAwardsPerTeam', type: 'number', min: '1', step: '1', placeholder: 'unlimited' } }));
 
-  grid.append(nameLabel, pointsLabel, maxLabel, modeLabel);
+  grid.append(nameLabel, orderLabel, pointsLabel, maxLabel, modeLabel);
 
   const submit = el('button', {
     className: 'positive',
@@ -214,7 +234,7 @@ function render() {
   list.append(el('h2', { className: 'au-heading', text: 'Existing categories' }));
 
   const categories = (categoriesState && Array.isArray(categoriesState.categories))
-    ? categoriesState.categories.slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+    ? sortCategories(categoriesState.categories)
     : [];
 
   if (categories.length === 0) {
@@ -234,12 +254,14 @@ function render() {
 function readRowPayload(row) {
   const nameInput = row.querySelector('input[name="name"]');
   const pointsInput = row.querySelector('input[name="points"]');
+  const sortOrderInput = row.querySelector('input[name="sortOrder"]');
   const maxInput = row.querySelector('input[name="maxAwardsPerTeam"]');
   const activeInput = row.querySelector('input[name="active"]');
   const rankedInput = row.querySelector('input[name="scoringMode"]');
 
   const name = (nameInput?.value || '').trim();
   const pointsRaw = pointsInput?.value || '';
+  const sortOrderRaw = sortOrderInput?.value || '';
   const maxRaw = maxInput?.value || '';
   const active = activeInput ? activeInput.checked : true;
   const scoringMode = rankedInput?.checked ? 'ranked' : 'fixed';
@@ -248,9 +270,13 @@ function readRowPayload(row) {
   if (scoringMode === 'fixed' && (pointsRaw === '' || Number.isNaN(Number(pointsRaw)) || Number(pointsRaw) === 0)) {
     throw new Error('Points must be a non-zero number.');
   }
+  if (sortOrderRaw !== '' && (Number.isNaN(Number(sortOrderRaw)) || Number(sortOrderRaw) < 1)) {
+    throw new Error('Order must be a positive number.');
+  }
   return {
     name,
     points: scoringMode === 'ranked' ? 0 : parseInt(pointsRaw, 10),
+    sortOrder: sortOrderRaw === '' ? null : parseInt(sortOrderRaw, 10),
     scoringMode,
     maxAwardsPerTeam: maxRaw === '' ? 'unlimited' : parseInt(maxRaw, 10),
     active
@@ -300,6 +326,7 @@ async function handleSubmit(event) {
     const formData = new FormData(form);
     const name = String(formData.get('name') || '').trim();
     const pointsRaw = String(formData.get('points') || '').trim();
+    const sortOrderRaw = String(formData.get('sortOrder') || '').trim();
     const maxRaw = String(formData.get('maxAwardsPerTeam') || '').trim();
     const scoringMode = formData.get('scoringMode') === 'ranked' ? 'ranked' : 'fixed';
 
@@ -307,10 +334,14 @@ async function handleSubmit(event) {
     if (scoringMode === 'fixed' && (pointsRaw === '' || Number.isNaN(Number(pointsRaw)) || Number(pointsRaw) === 0)) {
       throw new Error('Points must be a non-zero number.');
     }
+    if (sortOrderRaw !== '' && (Number.isNaN(Number(sortOrderRaw)) || Number(sortOrderRaw) < 1)) {
+      throw new Error('Order must be a positive number.');
+    }
 
     const payload = {
       name,
       points: scoringMode === 'ranked' ? 0 : parseInt(pointsRaw, 10),
+      sortOrder: sortOrderRaw === '' ? null : parseInt(sortOrderRaw, 10),
       scoringMode,
       maxAwardsPerTeam: maxRaw === '' ? 'unlimited' : parseInt(maxRaw, 10)
     };

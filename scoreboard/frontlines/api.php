@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/api.php
- * Revision : 1.6.0
+ * Revision : 1.7.0
  * Description : REST API endpoint for CVC Frontlines Scoreboard score management.
  *               Handles reading, updating, resetting, and renaming teams and title,
  *               plus goal/category definitions and one-tap goal awards.
@@ -17,6 +17,7 @@
  * 1.4.0 Stamp score_changed_at on every score change (adjust/reset/add-team/award-category) for tiebreaker; Reset All snapshots data/scores.previous.json before clearing for recovery
  * 1.5.0 reset-team snapshots data/scores.previous-single.json. remove-team appends to data/removed-teams.json. New restore-previous-scores action (admin-only). scores GET adds hasPreviousSnapshot flag.
  * 1.6.0 Add ranked categories with explicit 12000-to-1000 award values.
+ * 1.7.0 Add custom category sortOrder support.
  */
 
 require __DIR__ . '/scoreboard_lib.php';
@@ -39,6 +40,16 @@ function rankedCategoryAwardPoints($value): ?int
 
     $points = (int) $value;
     return in_array($points, RANKED_CATEGORY_POINTS, true) ? $points : null;
+}
+
+function nextCategorySortOrder(array $categories): int
+{
+    $max = 0;
+    foreach ($categories as $index => $category) {
+        $order = is_numeric($category['sortOrder'] ?? null) ? (int) $category['sortOrder'] : ($index + 1);
+        $max = max($max, $order);
+    }
+    return $max + 1;
 }
 
 $action = $_GET['action'] ?? 'scores';
@@ -321,6 +332,7 @@ try {
         $points  = $payload['points'] ?? null;
         $maxRaw  = $payload['maxAwardsPerTeam'] ?? null;
         $scoringMode = normalizeCategoryScoringMode($payload['scoringMode'] ?? 'fixed');
+        $sortOrder = is_numeric($payload['sortOrder'] ?? null) ? max(1, (int) $payload['sortOrder']) : null;
         if ($name === '') {
             jsonResponse(['error' => 'Category name cannot be empty.'], 400);
         }
@@ -341,12 +353,13 @@ try {
         $newId = 'cat-' . bin2hex(random_bytes(4));
         $now   = gmdate('c');
 
-        $saved = writeCategoriesData(function (array $data) use ($newId, $name, $points, $max, $now, $scoringMode): array {
+        $saved = writeCategoriesData(function (array $data) use ($newId, $name, $points, $max, $now, $scoringMode, $sortOrder): array {
             $data['categories'][] = [
                 'id'               => $newId,
                 'name'             => $name,
                 'points'           => (int) $points,
                 'scoringMode'      => $scoringMode,
+                'sortOrder'        => $sortOrder ?? nextCategorySortOrder($data['categories'] ?? []),
                 'maxAwardsPerTeam' => $max,
                 'active'           => true,
                 'created_at'       => $now,
@@ -382,6 +395,7 @@ try {
         $name   = isset($payload['name']) ? trim((string) $payload['name']) : null;
         $points = $payload['points'] ?? null;
         $scoringMode = array_key_exists('scoringMode', $payload) ? normalizeCategoryScoringMode($payload['scoringMode']) : null;
+        $sortOrder = array_key_exists('sortOrder', $payload) ? $payload['sortOrder'] : null;
         $maxRaw = array_key_exists('maxAwardsPerTeam', $payload) ? $payload['maxAwardsPerTeam'] : '__unset__';
         $active = array_key_exists('active', $payload) ? (bool) $payload['active'] : null;
 
@@ -393,6 +407,9 @@ try {
         }
         if ($points !== null && $scoringMode !== 'ranked' && (!is_numeric($points) || (int) $points === 0)) {
             jsonResponse(['error' => 'Points must be a non-zero number.'], 400);
+        }
+        if ($sortOrder !== null && (!is_numeric($sortOrder) || (int) $sortOrder < 1)) {
+            jsonResponse(['error' => 'Sort order must be a positive integer.'], 400);
         }
 
         $maxValue = null;
@@ -406,7 +423,7 @@ try {
             }
         }
 
-        $saved = writeCategoriesData(function (array $data) use ($categoryId, $name, $points, $scoringMode, $maxRaw, $maxValue, $active): array {
+        $saved = writeCategoriesData(function (array $data) use ($categoryId, $name, $points, $scoringMode, $sortOrder, $maxRaw, $maxValue, $active): array {
             $idx = findCategoryIndex($data, $categoryId);
             if ($idx === null) {
                 throw new InvalidArgumentException('Category not found.');
@@ -414,6 +431,7 @@ try {
             if ($name !== null)   { $data['categories'][$idx]['name']   = $name; }
             if ($points !== null) { $data['categories'][$idx]['points'] = (int) $points; }
             if ($scoringMode !== null) { $data['categories'][$idx]['scoringMode'] = $scoringMode; }
+            if ($sortOrder !== null) { $data['categories'][$idx]['sortOrder'] = (int) $sortOrder; }
             if ($maxRaw !== '__unset__') { $data['categories'][$idx]['maxAwardsPerTeam'] = $maxValue; }
             if ($active !== null) { $data['categories'][$idx]['active'] = $active; }
             $data['categories'][$idx]['modified_at'] = gmdate('c');

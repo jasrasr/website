@@ -1,5 +1,5 @@
 // Filename: category-entry.js
-// Revision : 1.1.0
+// Revision : 1.2.0
 // Description : Scorer + admin UI for awarding Frontlines goal categories. Pick a team,
 //               then one-tap a goal button. Server enforces maxAwardsPerTeam; client
 //               visually disables buttons whose cap is reached using audit-log counts.
@@ -9,8 +9,9 @@
 // Changelog :
 // 1.0.0 initial release
 // 1.1.0 Add ranked categories with manual 12000-to-1000 award values
+// 1.2.0 Sort categories by custom sortOrder before name
 
-const CATEGORY_ENTRY_REVISION = '1.1.0';
+const CATEGORY_ENTRY_REVISION = '1.2.0';
 const RANKED_CATEGORY_POINTS = [12000, 11000, 10000, 9000, 8000, 7000, 6000, 5000, 4000, 3000, 2000, 1000];
 const categoryPollIntervalMs = 10000;
 const auditLookbackLimit = 1000;
@@ -121,6 +122,15 @@ function countAwards(teamId, categoryId) {
 
 function isRankedCategory(category) {
   return category?.scoringMode === 'ranked';
+}
+
+function sortCategories(categories) {
+  return [...categories].sort((a, b) => {
+    const orderA = Number.isFinite(Number(a.sortOrder)) ? Number(a.sortOrder) : Number.MAX_SAFE_INTEGER;
+    const orderB = Number.isFinite(Number(b.sortOrder)) ? Number(b.sortOrder) : Number.MAX_SAFE_INTEGER;
+    if (orderA !== orderB) return orderA - orderB;
+    return String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' });
+  });
 }
 
 function setStatus(message) {
@@ -306,7 +316,7 @@ function renderActionPanel(ranks) {
   panel.append(el('p', { className: 'sort-note', text: 'Goals are sorted A-Z. Tap a button to award.' }));
 
   const categories = Array.isArray(categoriesData?.categories)
-    ? [...categoriesData.categories].sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')))
+    ? sortCategories(categoriesData.categories)
     : [];
 
   if (categories.length === 0) {

@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: navigation-pages-test.php
- * Revision : 1.8.0
+ * Revision : 1.9.0
  * Description : Lightweight static verification for scoreboard navigation,
  *               documentation versions, and recent file revision headers.
  * Author : Jason Lamb (with help from Codex CLI)
@@ -18,6 +18,7 @@
  *       and roster-search file revisions
  * 1.7.0 Verify auth preserves the current scoreboard page through password changes
  * 1.8.0 Pin project documentation to v1.15.0 ranked categories release
+ * 1.9.0 Pin project documentation to v1.16.0 custom category ordering release
  */
 
 function assertContains(string $haystack, string $needle, string $message): void
@@ -59,13 +60,14 @@ $appJs = file_get_contents($appJsPath) ?: '';
 $adminShell = file_get_contents($adminShellPath) ?: '';
 $auth = file_get_contents($authPath) ?: '';
 
-assertContains($changelog, 'Current project version: **v1.15.0**', 'CHANGELOG.md should state the current project version.');
+assertContains($changelog, 'Current project version: **v1.16.0**', 'CHANGELOG.md should state the current project version.');
+assertContains($changelog, '## v1.16.0 - 2026-06-21', 'CHANGELOG.md should document the custom category ordering release.');
 assertContains($changelog, '## v1.15.0 - 2026-06-21', 'CHANGELOG.md should document the ranked categories release.');
 assertContains($changelog, '## v1.14.0 - 2026-06-21', 'CHANGELOG.md should document the row-level roster search and return-flow release.');
 assertContains($changelog, '## v1.13.0 - 2026-06-20', 'CHANGELOG.md should document the roster-search release.');
 assertContains($changelog, '## v1.12.0 - 2026-06-20', 'CHANGELOG.md should document the login/navigation release.');
 assertContains($changelog, '## v1.0.0 - 2026-06-02', 'CHANGELOG.md initial entry should remain present.');
-assertContains($readme, 'Current project version: **v1.15.0**', 'README.md should match the changelog project version.');
+assertContains($readme, 'Current project version: **v1.16.0**', 'README.md should match the changelog project version.');
 assertContains($readme, '## Versioning', 'README.md should explain project versus per-file revisions.');
 assertContains($readme, 'users-seed.sample.json', 'README.md should document first-run user seeding.');
 assertContains($readme, 'Searchable roster', 'README.md should document Frontlines roster search.');

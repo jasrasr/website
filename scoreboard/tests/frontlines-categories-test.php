@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines-categories-test.php
- * Revision : 1.4.0
+ * Revision : 1.5.0
  * Description : Verifies the Frontlines categories lib helpers: read/write with locking,
  *               findCategoryIndex, countCategoryAwards (computed from audit log), and
  *               the edit-categories.php page shell + editor JS surface.
@@ -14,6 +14,7 @@
  * 1.2.0 Cover enter-scores-category.php shell + scorer JS award/cap flow
  * 1.3.0 Cover Phase 4 cross-page navigation: data attrs on Frontlines pages and link rendering in shared JS
  * 1.4.0 Cover ranked categories with manual 12000-to-1000 award values
+ * 1.5.0 Cover custom category sortOrder in editor and scorer views
  */
 
 function assertTrue(bool $condition, string $message): void
@@ -153,9 +154,12 @@ assertTrue(strpos($editJsSrc, 'action=update-category') !== false, 'editor JS ca
 assertTrue(strpos($editJsSrc, 'action=remove-category') !== false, 'editor JS calls remove-category');
 assertTrue(strpos($editJsSrc, 'scoringMode') !== false, 'editor JS should manage category scoring mode.');
 assertTrue(strpos($editJsSrc, 'ranked') !== false, 'editor JS should expose ranked category mode.');
+assertTrue(strpos($editJsSrc, 'sortOrder') !== false, 'editor JS should manage custom category sort order.');
+assertTrue(strpos($editJsSrc, 'sortCategories') !== false, 'editor JS should sort categories by custom order.');
 assertTrue(strpos($apiSrc, 'RANKED_CATEGORY_POINTS') !== false, 'API should define ranked category point values.');
 assertTrue(strpos($apiSrc, 'awardPoints') !== false, 'API should accept explicit ranked award points.');
 assertTrue(strpos($apiSrc, 'Team already has an award for this ranked category.') !== false, 'API should block duplicate ranked category awards per team.');
+assertTrue(strpos($apiSrc, 'nextCategorySortOrder') !== false, 'API should assign sortOrder to new categories.');
 
 // ---- enter-scores-category.php shell + JS exist and wire up the award flow ----
 $scorerPagePath = $root . '/frontlines/enter-scores-category.php';
@@ -179,6 +183,7 @@ assertTrue(strpos($scorerJsSrc, 'maxAwardsPerTeam') !== false,       'scorer JS 
 assertTrue(strpos($scorerJsSrc, 'RANKED_CATEGORY_POINTS') !== false, 'scorer JS should render the 12000-to-1000 ranked point ladder.');
 assertTrue(strpos($scorerJsSrc, 'awardPoints=') !== false, 'scorer JS should submit explicit ranked award points.');
 assertTrue(strpos($scorerJsSrc, 'category-ranked-value-grid') !== false, 'scorer JS should render ranked value buttons.');
+assertTrue(strpos($scorerJsSrc, 'sortCategories') !== false, 'scorer JS should sort categories by custom order.');
 
 $categoryCssSrc = (string) file_get_contents($categoryCssPath);
 assertTrue(strpos($categoryCssSrc, '.category-ranked-value-grid') !== false, 'category-entry.css should style ranked value grids.');

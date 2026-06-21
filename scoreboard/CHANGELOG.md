@@ -1,6 +1,27 @@
 # Changelog
 
-Current project version: **v1.15.0**
+Current project version: **v1.16.0**
+
+## v1.16.0 - 2026-06-21
+
+### Frontlines custom category ordering
+
+- Added `sortOrder` support for Frontlines categories.
+- The Add Category Score page now sorts categories by `sortOrder`, then name.
+- Edit Categories now exposes an **Order** field so categories can be rearranged without renaming them.
+- New categories automatically receive the next available order unless an order is entered.
+- The current downloaded `categories.json` order is preserved with initial `sortOrder` values.
+
+### Revision verification
+
+| File | Revision | Verified purpose |
+|---|---:|---|
+| `frontlines/api.php` | 1.7.0 | Category sortOrder persistence |
+| `public/category-entry.js` | 1.2.0 | Scorer category sortOrder display |
+| `public/edit-categories.js` | 1.2.0 | Category order editor field |
+| `public/edit-categories.css` | 1.2.0 | Category order field layout |
+| `tests/frontlines-categories-test.php` | 1.5.0 | Custom category ordering verification |
+| `frontlines/data/categories.json` | data | Downloaded category data with initial sortOrder values |
 
 ## v1.15.0 - 2026-06-21
 
