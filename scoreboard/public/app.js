@@ -1,5 +1,5 @@
 // Filename: app.js
-// Revision : 1.35.0
+// Revision : 1.36.0
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
@@ -44,6 +44,7 @@
 // 1.33.0 sortTeamsByScore tiebreaker now uses team.score_changed_at (older = ranked higher) before falling back to alphabetical. Added two-step confirm on Reset All Teams.
 // 1.34.0 Added in-UI "Undo Reset All" button (admin only). Renders in the admin footer next to Reset All Teams whenever data.hasPreviousSnapshot is true. Clicking it POSTs restore-previous-scores which writes data/scores.previous.json back to data/scores.json. Confirm dialog before firing.
 // 1.35.0 Added optional data-viewer-team-limit support so Frontlines can show only the top 3 public scoreboard teams.
+// 1.36.0 Viewer team limits now include teams tied at the cutoff score; three visible teams use a full-width 3x1 grid.
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -171,6 +172,24 @@ function computeRanks(teams) {
 function rankBadgeHtml(rank) {
   const medalClass = rank === 1 ? 'rank-gold' : rank === 2 ? 'rank-silver' : rank === 3 ? 'rank-bronze' : 'rank-plain';
   return `<div class="rank-badge ${medalClass}" aria-label="Rank ${ordinalSuffix(rank)}">${ordinalSuffix(rank)}</div>`;
+}
+
+function limitTeamsByScoreWithTies(sortedTeams, limit) {
+  if (!Number.isInteger(limit) || limit <= 0 || sortedTeams.length <= limit) {
+    return sortedTeams;
+  }
+
+  const cutoffScore = Number(sortedTeams[limit - 1]?.score ?? 0);
+  return sortedTeams.filter((team) => Number(team.score ?? 0) >= cutoffScore);
+}
+
+function viewerGridColumnCount(visibleCount) {
+  if (visibleCount <= 1) return 1;
+  if (visibleCount === 2) return 2;
+  if (visibleCount === 3) return 3;
+  if (visibleCount === 4) return 2;
+  if (visibleCount <= 6) return 3;
+  return 4;
 }
 
 function createQuickButtons(teamId, mode) {
@@ -399,7 +418,7 @@ function renderViewer(data) {
   const sorted = sortTeamsByScore(data.teams);
   let visibleTeams = sorted;
   if (Number.isInteger(viewerTeamLimit) && viewerTeamLimit > 0) {
-    visibleTeams = sorted.slice(0, viewerTeamLimit);
+    visibleTeams = limitTeamsByScoreWithTies(sorted, viewerTeamLimit);
   } else if (hideBottomTeams && sorted.length > 0) {
     // Take the top ceil(n/2) teams, then extend the cut to include any teams
     // tied with the lowest visible score so we never split a tie group.
@@ -408,7 +427,7 @@ function renderViewer(data) {
     visibleTeams = sorted.filter((t) => Number(t.score ?? 0) >= cutoffScore);
   }
   const visibleCount = visibleTeams.length;
-  const cols = visibleCount <= 4 ? 2 : visibleCount <= 6 ? 3 : 4;
+  const cols = viewerGridColumnCount(visibleCount);
   const rows = Math.ceil(visibleCount / cols);
   const gridStyle = `--viewer-cols: ${cols}; --viewer-rows: ${rows};`;
   const hiddenNoteDescription = viewerTeamLimit === 3 ? 'top 3 by score' : (Number.isInteger(viewerTeamLimit) && viewerTeamLimit > 0 ? `top ${viewerTeamLimit} by score` : 'top half by score');

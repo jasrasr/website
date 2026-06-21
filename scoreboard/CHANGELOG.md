@@ -1,6 +1,21 @@
 # Changelog
 
-Current project version: **v1.18.1**
+Current project version: **v1.19.0**
+
+## v1.19.0 - 2026-06-21
+
+### Frontlines top-three tie handling
+
+- Frontlines public scoreboard still targets the top 3 scoring teams, but now includes any additional teams tied with the third-place score.
+- If all Frontlines teams are tied at `0`, all teams remain visible instead of showing only three.
+- Three visible teams now render as a full-width 3x1 viewer grid; twelve tied teams render as a 4x3 grid so the cards fill the screen cleanly.
+
+### Revision verification
+
+| File | Revision | Verified purpose |
+|---|---:|---|
+| `public/app.js` | 1.36.0 | Tie-aware viewer limit and grid column calculation |
+| `tests/viewer-team-limit-test.js` | 1.0.0 | Top-three-with-ties behavior coverage |
 
 ## v1.18.1 - 2026-06-21
 
