@@ -1,11 +1,11 @@
 /*
  * Filename: styles.css
- * Revision : 1.13.0
+ * Revision : 1.13.1
  * Description : Dark-themed responsive styles for CVC Scoreboard.
  *               Shared across all scoreboard instances (root, collide, youth, frontlines).
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-03-24
- * Modified Date : 2026-06-21
+ * Modified Date : 2026-06-22
  * Changelog :
  * 1.0.0 Initial release
  * 1.1.0 Changed team-title to column layout so hint text renders below team name
@@ -28,6 +28,7 @@
  * 1.12.0 Added .viewer-card-hidden + .viewer-score-hidden for the Frontlines bottom-half scores-hidden mode
  * 1.12.1 Removed those rules; Frontlines viewer now hides bottom teams entirely (no muted cards remain on screen)
  * 1.13.0 Added persisted light theme variables and theme toggle styles while keeping dark as default
+ * 1.13.1 Keep full-admin custom amount Apply button inside team cards
  */
 
 :root {
@@ -324,14 +325,21 @@ body.viewer-body {
 }
 
 .custom-input-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
   gap: 0.5rem;
   align-items: stretch;
+  width: 100%;
 }
 
 .custom-input-row input {
-  flex: 1 1 0;
+  width: 100%;
   min-width: 0;
+}
+
+.custom-input-row button {
+  min-width: clamp(5.25rem, 22%, 6.5rem);
+  white-space: nowrap;
 }
 
 .button-grid {

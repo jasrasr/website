@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: navigation-pages-test.php
- * Revision : 1.12.0
+ * Revision : 1.12.1
  * Description : Lightweight static verification for scoreboard navigation,
  *               documentation versions, and recent file revision headers.
  * Author : Jason Lamb (with help from Codex CLI)
@@ -23,6 +23,7 @@
  * 1.11.0 Verify the shared light/dark theme toggle is available while dark remains default
  * 1.11.1 Pin project documentation to v1.18.1 docs refresh
  * 1.12.0 Pin project documentation to v1.19.0 Frontlines top-three tie handling
+ * 1.12.1 Pin project documentation to v1.19.1 Apply button layout fix
  */
 
 function assertContains(string $haystack, string $needle, string $message): void
@@ -71,7 +72,8 @@ $adminShell = file_get_contents($adminShellPath) ?: '';
 $auth = file_get_contents($authPath) ?: '';
 $frontlinesViewer = file_get_contents($frontlinesViewerPath) ?: '';
 
-assertContains($changelog, 'Current project version: **v1.19.0**', 'CHANGELOG.md should state the current project version.');
+assertContains($changelog, 'Current project version: **v1.19.1**', 'CHANGELOG.md should state the current project version.');
+assertContains($changelog, '## v1.19.1 - 2026-06-22', 'CHANGELOG.md should document the Apply button layout fix.');
 assertContains($changelog, '## v1.19.0 - 2026-06-21', 'CHANGELOG.md should document the Frontlines top-three tie handling release.');
 assertContains($changelog, '## v1.18.1 - 2026-06-21', 'CHANGELOG.md should document the documentation refresh.');
 assertContains($changelog, '## v1.18.0 - 2026-06-21', 'CHANGELOG.md should document the light mode toggle release.');
@@ -82,7 +84,7 @@ assertContains($changelog, '## v1.14.0 - 2026-06-21', 'CHANGELOG.md should docum
 assertContains($changelog, '## v1.13.0 - 2026-06-20', 'CHANGELOG.md should document the roster-search release.');
 assertContains($changelog, '## v1.12.0 - 2026-06-20', 'CHANGELOG.md should document the login/navigation release.');
 assertContains($changelog, '## v1.0.0 - 2026-06-02', 'CHANGELOG.md initial entry should remain present.');
-assertContains($readme, 'Current project version: **v1.19.0**', 'README.md should match the changelog project version.');
+assertContains($readme, 'Current project version: **v1.19.1**', 'README.md should match the changelog project version.');
 assertContains($readme, '## Versioning', 'README.md should explain project versus per-file revisions.');
 assertContains($readme, 'users-seed.sample.json', 'README.md should document first-run user seeding.');
 assertContains($readme, 'Searchable roster', 'README.md should document Frontlines roster search.');
@@ -152,13 +154,14 @@ $revisionFiles = [
     'frontlines/category-navigation.js' => 'Revision : 1.0.0',
     'frontlines/roster-search.js' => 'Revision : 1.1.0',
     'frontlines/roster-search.css' => 'Revision : 1.2.0',
-    'public/styles.css' => 'Revision : 1.13.0',
+    'public/styles.css' => 'Revision : 1.13.1',
     'public/quick-entry.css' => 'Revision : 1.7.0',
     'public/category-entry.css' => 'Revision : 1.2.0',
     'public/theme-toggle.js' => 'Revision : 1.0.0',
     'public/app.js' => 'Revision : 1.36.0',
     'tests/viewer-team-limit-test.js' => 'Revision : 1.0.0',
-    'tests/navigation-pages-test.php' => 'Revision : 1.12.0',
+    'tests/navigation-pages-test.php' => 'Revision : 1.12.1',
+    'tests/github-issues-layout-test.php' => 'Revision : 1.5.0',
 ];
 
 foreach ($revisionFiles as $relativePath => $expectedRevision) {

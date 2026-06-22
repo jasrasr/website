@@ -1,6 +1,19 @@
 # Changelog
 
-Current project version: **v1.19.0**
+Current project version: **v1.19.1**
+
+## v1.19.1 - 2026-06-22
+
+### Full-admin score controls
+
+- Fixed the full-admin custom amount row so the **Apply** button stays inside each team card instead of being pushed off the right edge.
+
+### Revision verification
+
+| File | Revision | Verified purpose |
+|---|---:|---|
+| `public/styles.css` | 1.13.1 | Custom amount row grid sizing |
+| `tests/github-issues-layout-test.php` | 1.5.0 | Apply button layout verification |
 
 ## v1.19.0 - 2026-06-21
 

@@ -1,17 +1,18 @@
 <?php declare(strict_types=1);
 /**
  * Filename: github-issues-layout-test.php
- * Revision : 1.4.0
+ * Revision : 1.5.0
  * Description : Static verification for GitHub issue driven scoreboard layout updates.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-03
- * Modified Date : 2026-06-17
+ * Modified Date : 2026-06-22
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Updated sort assertions for rank-aware card rendering callbacks
  * 1.2.0 Verify Add Team form labels and Enter-submit helper text
  * 1.3.0 Replaced stale "negative scoring" note assertion with Add/Subtract Score toggle assertions
  * 1.4.0 Replaced pinned viewer-rendering one-liner with looser assertions that also cover the new hideBottomScores branch
+ * 1.5.0 Verify full-admin custom amount row keeps Apply inside the team card
  */
 
 function assertContains(string $haystack, string $needle, string $message): void
@@ -53,6 +54,8 @@ assertContains($styles, 'repeat(3, minmax(0, 1fr))', 'Viewer mobile landscape la
 assertContains($styles, 'body.viewer-body', 'Viewer landscape rule should release viewport-height constraints.');
 assertContains($styles, 'flex: none;', 'Viewer landscape grid should use normal document flow instead of squeezing rows.');
 assertContains($styles, '.add-team-form', 'Shared styles should include the labeled Add Team form layout.');
+assertContains($styles, 'grid-template-columns: minmax(0, 1fr) max-content;', 'Full-admin custom amount row should reserve space for Apply inside the card.');
+assertContains($styles, '.custom-input-row button', 'Full-admin custom amount Apply button should have a bounded column.');
 
 assertContains($quickCss, '.quick-team-score', 'Quick-entry team score style should be present.');
 assertContains($quickCss, '.quick-manual-note', 'Quick-entry negative scoring note style should be present.');
