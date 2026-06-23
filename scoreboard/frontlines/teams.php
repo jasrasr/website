@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/teams.php
- * Revision : 1.10.1
+ * Revision : 1.11.0
  * Description : Public Frontlines team roster page with leaders, members, sponsors,
- *               and client-side roster search.
+ *               client-side roster search, and signed-in rankings navigation.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-09
- * Modified Date : 2026-06-21
+ * Modified Date : 2026-06-23
  * Changelog :
  * 1.0.0 Initial Frontlines-only team roster page
  * 1.1.0 Load editable roster data and link CSV export
@@ -24,6 +24,7 @@
  * 1.9.0 Added roster search by team, leader, member, gender/grade, or sponsor
  * 1.10.0 Roster search now shows only matching people/sponsor rows inside matching teams
  * 1.10.1 Load the shared light/dark theme toggle
+ * 1.11.0 Show Full Rankings link to signed-in Frontlines admins/scorers
  */
 
 require __DIR__ . '/../auth.php';
@@ -32,6 +33,7 @@ require __DIR__ . '/team_roster.php';
 
 $currentUser = authUser();
 $isAdmin = ($currentUser['role'] ?? '') === 'admin';
+$hasFrontlinesAccess = $currentUser !== null && in_array('frontlines', $currentUser['scoreboards'] ?? [], true);
 $scoreboard = readScoreboardData();
 $roster = readFrontlinesRosterData();
 $teams = $scoreboard['teams'] ?? scoreboardDefaultData()['teams'];
@@ -160,6 +162,9 @@ function h(string $value): string
 
       <nav class="admin-footer-actions" aria-label="Roster links">
         <a class="au-btn" href="./index.php">Scoreboard</a>
+        <?php if ($hasFrontlinesAccess): ?>
+          <a class="au-btn" href="./rankings.php">Full Rankings</a>
+        <?php endif; ?>
         <?php if ($isAdmin): ?>
           <a class="au-btn" href="./team-roster.csv.php">CSV</a>
           <a class="au-btn" href="./edit-roster.php">Edit Roster</a>
