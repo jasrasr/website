@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Old Phone Tone Number Pad</title>
+
+  <style>
+    :root {
+      --bg: #111827;
+      --panel: #1f2937;
+      --button: #374151;
+      --button-active: #6b7280;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --accent: #22c55e;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #243044, var(--bg));
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+    }
+
+    .phone {
+      width: min(92vw, 380px);
+      padding: 24px;
+      border-radius: 28px;
+      background: linear-gradient(180deg, #273244, var(--panel));
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .display {
+      min-height: 60px;
+      margin-bottom: 22px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 1.8rem;
+      letter-spacing: 0.12em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      overflow-wrap: anywhere;
+    }
+
+    .hint {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 18px;
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    button.key {
+      aspect-ratio: 1 / 1;
+      border: none;
+      border-radius: 50%;
+      background: var(--button);
+      color: var(--text);
+      font-size: clamp(2rem, 8vw, 3rem);
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow:
+        inset 0 -6px 0 rgba(0, 0, 0, 0.25),
+        0 8px 18px rgba(0, 0, 0, 0.3);
+      transition: transform 0.05s ease, background 0.08s ease;
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    button.key:active,
+    button.key.pressed {
+      transform: translateY(4px);
+      background: var(--button-active);
+      box-shadow:
+        inset 0 -2px 0 rgba(0, 0, 0, 0.25),
+        0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .controls button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      background: #111827;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    .controls button:hover {
+      background: #030712;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="phone" aria-label="Old phone tone keypad">
+    <div id="display" class="display">---</div>
+    <div class="hint">Click, tap, or press 0–9, *, or #</div>
+
+    <section class="keypad">
+      <button class="key" data-digit="1">1</button>
+      <button class="key" data-digit="2">2</button>
+      <button class="key" data-digit="3">3</button>
+
+      <button class="key" data-digit="4">4</button>
+      <button class="key" data-digit="5">5</button>
+      <button class="key" data-digit="6">6</button>
+
+      <button class="key" data-digit="7">7</button>
+      <button class="key" data-digit="8">8</button>
+      <button class="key" data-digit="9">9</button>
+
+      <button class="key" data-digit="*">*</button>
+      <button class="key" data-digit="0">0</button>
+      <button class="key" data-digit="#">#</button>
+    </section>
+
+    <div class="controls">
+      <button id="backspace">Backspace</button>
+      <button id="clear">Clear</button>
+    </div>
+  </main>
+
+  <script>
+    const display = document.getElementById("display");
+    const buttons = document.querySelectorAll(".key");
+    const clearButton = document.getElementById("clear");
+    const backspaceButton = document.getElementById("backspace");
+
+    let enteredNumber = "";
+    let audioContext;
+    let activeOscillators = [];
+    const activeKeys = new Set();
+
+    const dtmf = {
+      "1": [697, 1209],
+      "2": [697, 1336],
+      "3": [697, 1477],
+
+      "4": [770, 1209],
+      "5": [770, 1336],
+      "6": [770, 1477],
+
+      "7": [852, 1209],
+      "8": [852, 1336],
+      "9": [852, 1477],
+
+      "*": [941, 1209],
+      "0": [941, 1336],
+      "#": [941, 1477]
+    };
+
+    function getAudioContext() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      if (audioContext.state === "suspended") {
+        audioContext.resume();
+      }
+
+      return audioContext;
+    }
+
+    function updateDisplay() {
+      display.textContent = enteredNumber || "---";
+    }
+
+    function getButton(digit) {
+      return document.querySelector(`[data-digit="${CSS.escape(digit)}"]`);
+    }
+
+    function startTone(digit) {
+      stopTone();
+
+      const frequencies = dtmf[digit];
+      if (!frequencies) return;
+
+      const ctx = getAudioContext();
+
+      const gainNode = ctx.createGain();
+      gainNode.gain.setValueAtTime(0.16, ctx.currentTime);
+      gainNode.connect(ctx.destination);
+
+      activeOscillators = frequencies.map(freq => {
+        const oscillator = ctx.createOscillator();
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(freq, ctx.currentTime);
+        oscillator.connect(gainNode);
+        oscillator.start();
+        return oscillator;
+      });
+    }
+
+    function stopTone() {
+      activeOscillators.forEach(oscillator => {
+        try {
+          oscillator.stop();
+          oscillator.disconnect();
+        } catch {
+          // Already stopped.
+        }
+      });
+
+      activeOscillators = [];
+    }
+
+    function pressDigit(digit) {
+      if (!dtmf[digit]) return;
+
+      enteredNumber += digit;
+      updateDisplay();
+      startTone(digit);
+
+      const button = getButton(digit);
+      if (button) {
+        button.classList.add("pressed");
+      }
+    }
+
+    function releaseDigit(digit) {
+      stopTone();
+
+      const button = getButton(digit);
+      if (button) {
+        button.classList.remove("pressed");
+      }
+    }
+
+    function normalizeKeyboardKey(event) {
+      if (event.key >= "0" && event.key <= "9") {
+        return event.key;
+      }
+
+      if (event.key === "*") {
+        return "*";
+      }
+
+      if (event.key === "#") {
+        return "#";
+      }
+
+      return null;
+    }
+
+    buttons.forEach(button => {
+      const digit = button.dataset.digit;
+
+      button.addEventListener("pointerdown", event => {
+        event.preventDefault();
+        pressDigit(digit);
+      });
+
+      button.addEventListener("pointerup", () => releaseDigit(digit));
+      button.addEventListener("pointerleave", () => releaseDigit(digit));
+      button.addEventListener("pointercancel", () => releaseDigit(digit));
+    });
+
+    document.addEventListener("keydown", event => {
+      const digit = normalizeKeyboardKey(event);
+
+      if (digit && !activeKeys.has(digit)) {
+        activeKeys.add(digit);
+        pressDigit(digit);
+        return;
+      }
+
+      if (event.key === "Backspace") {
+        enteredNumber = enteredNumber.slice(0, -1);
+        updateDisplay();
+      }
+
+      if (event.key === "Escape") {
+        enteredNumber = "";
+        updateDisplay();
+      }
+    });
+
+    document.addEventListener("keyup", event => {
+      const digit = normalizeKeyboardKey(event);
+
+      if (digit) {
+        activeKeys.delete(digit);
+        releaseDigit(digit);
+      }
+    });
+
+    clearButton.addEventListener("click", () => {
+      enteredNumber = "";
+      updateDisplay();
+    });
+
+    backspaceButton.addEventListener("click", () => {
+      enteredNumber = enteredNumber.slice(0, -1);
+      updateDisplay();
+    });
+  </script>
+</body>
+</html>
