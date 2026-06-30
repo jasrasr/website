@@ -1,5 +1,15 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.4.0 - 2026-06-30
+
+- Moved `Log Snapshot` and `Export CSV` from the top control area to the bottom Trip Log section.
+- Moved live dynamic trip data higher on the page, directly after the trip setup controls.
+- Added a compass heading card with a visual needle, degree value, and cardinal/intercardinal direction such as `N`, `NE`, `SSW`, or `W`.
+- Added fallback heading calculation from GPS movement when native device heading is unavailable.
+- Added `Trip Progress`, `Stopped Time`, and `Current Pace` metrics.
+- Added heading to the Trip Log table and CSV export.
+- Added a short on-page note listing useful future calculations.
+
 ## Rev 1.3.0 - 2026-06-30
 
 - Converted the app from static `index.html` to PHP-driven `index.php`.
