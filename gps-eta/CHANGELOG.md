@@ -1,5 +1,15 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.5.0 - 2026-06-30
+
+- Added server-side per-device history logging using a browser-generated local device ID.
+- Added automatic retention pruning so history older than 365 days is removed on history read/write.
+- Added a front-end Device History section showing retained history for the current browser/device.
+- Added a `Delete My History` button so the current browser/device can delete its saved server history.
+- Added PHP JSON API actions for logging, reading, and deleting device history.
+- Added protected `gps-eta/data/.htaccess` rules to block direct browser access to raw history files.
+- Incremented the visible app revision from `1.4.0` to `1.5.0`.
+
 ## Rev 1.4.0 - 2026-06-30
 
 - Moved `Log Snapshot` and `Export CSV` from the top control area to the bottom Trip Log section.
