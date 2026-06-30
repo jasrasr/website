@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GPS Speed + ETA Tracker</title>
+  <style>
+    :root {
+      --bg: #101114;
+      --card: #1b1d22;
+      --card2: #242730;
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+      --border: #3f3f46;
+      --accent: #60a5fa;
+      --bad: #f87171;
+      --good: #34d399;
+      --warn: #fbbf24;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0, var(--bg) 45%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      margin: 12px 0 4px;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin: 0 0 18px;
+      line-height: 1.45;
+    }
+
+    .card {
+      background: rgba(27, 29, 34, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(10px);
+    }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+    }
+
+    input, select, button {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      font-size: 1rem;
+    }
+
+    input, select {
+      background: var(--card2);
+      color: var(--text);
+    }
+
+    button {
+      border: 0;
+      color: #06121f;
+      background: var(--accent);
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button.secondary {
+      background: #d4d4d8;
+    }
+
+    button.danger {
+      background: var(--bad);
+      color: #210404;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .metric {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      min-height: 96px;
+    }
+
+    .metric.full {
+      grid-column: 1 / -1;
+    }
+
+    .metric-title {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-size: clamp(1.6rem, 7vw, 3rem);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.05em;
+    }
+
+    .metric-unit {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-top: 5px;
+    }
+
+    .status {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      line-height: 1.4;
+      min-height: 28px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--warn);
+      flex: 0 0 auto;
+    }
+
+    .dot.good {
+      background: var(--good);
+    }
+
+    .dot.bad {
+      background: var(--bad);
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.45;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 130px;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 560px) {
+      body {
+        padding: 12px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>GPS Speed + ETA Tracker</h1>
+    <p class="subtitle">
+      Enter total or remaining distance, start GPS tracking, and this page estimates arrival time from your current speed.
+    </p>
+
+    <section class="card">
+      <div class="row">
+        <div>
+          <label for="distance">Distance remaining</label>
+          <input id="distance" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Example: 12.5" />
+        </div>
+        <div>
+          <label for="unit">Unit</label>
+          <select id="unit">
+            <option value="miles">Miles</option>
+            <option value="km">Kilometers</option>
+          </select>
+        </div>
+      </div>
+
+      <button id="startBtn">Start GPS Tracking</button>
+      <button id="stopBtn" class="danger" disabled>Stop Tracking</button>
+
+      <p class="small">
+        This requires HTTPS or localhost, plus location permission. It works best outside with a clear GPS signal.
+      </p>
+    </section>
+
+    <section class="card">
+      <div class="status">
+        <span id="statusDot" class="dot"></span>
+        <span id="statusText">Not tracking yet.</span>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="metric">
+        <div class="metric-title">Current Speed</div>
+        <div id="speedValue" class="metric-value">--</div>
+        <div id="speedUnit" class="metric-unit">mph</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-title">GPS Accuracy</div>
+        <div id="accuracyValue" class="metric-value">--</div>
+        <div id="accuracyUnit" class="metric-unit">feet</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-title">Estimated Time Remaining</div>
+        <div id="etaDuration" class="metric-value">--</div>
+        <div class="metric-unit">based on current speed</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-title">Estimated Arrival Time</div>
+        <div id="arrivalTime" class="metric-value">--</div>
+        <div class="metric-unit">local device time</div>
+      </div>
+
+      <div class="metric full">
+        <div class="metric-title">Last Location</div>
+        <div id="locationValue" style="font-size:1.05rem; overflow-wrap:anywhere;">--</div>
+        <div id="timestampValue" class="metric-unit">--</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <p class="small">
+        Notes: Phone GPS speed can be jumpy, especially while walking slowly or indoors.
+        This app smooths speed readings over the last few samples so the ETA does not bounce around like a squirrel on espresso.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    const els = {
+      distance: document.getElementById("distance"),
+      unit: document.getElementById("unit"),
+      startBtn: document.getElementById("startBtn"),
+      stopBtn: document.getElementById("stopBtn"),
+      statusDot: document.getElementById("statusDot"),
+      statusText: document.getElementById("statusText"),
+      speedValue: document.getElementById("speedValue"),
+      speedUnit: document.getElementById("speedUnit"),
+      accuracyValue: document.getElementById("accuracyValue"),
+      accuracyUnit: document.getElementById("accuracyUnit"),
+      etaDuration: document.getElementById("etaDuration"),
+      arrivalTime: document.getElementById("arrivalTime"),
+      locationValue: document.getElementById("locationValue"),
+      timestampValue: document.getElementById("timestampValue")
+    };
+
+    let watchId = null;
+    let lastPosition = null;
+    let speedSamplesMps = [];
+
+    const MAX_SAMPLES = 5;
+    const MIN_REASONABLE_SPEED_MPS = 0.4; // about 0.9 mph
+    const MPS_TO_MPH = 2.2369362921;
+    const MPS_TO_KPH = 3.6;
+    const METERS_PER_MILE = 1609.344;
+
+    function setStatus(message, type = "warn") {
+      els.statusText.textContent = message;
+      els.statusDot.className = "dot" + (type === "good" ? " good" : type === "bad" ? " bad" : "");
+    }
+
+    function toRadians(degrees) {
+      return degrees * Math.PI / 180;
+    }
+
+    function haversineMeters(lat1, lon1, lat2, lon2) {
+      const earthRadiusMeters = 6371000;
+      const dLat = toRadians(lat2 - lat1);
+      const dLon = toRadians(lon2 - lon1);
+      const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRadians(lat1)) *
+        Math.cos(toRadians(lat2)) *
+        Math.sin(dLon / 2) ** 2;
+
+      return 2 * earthRadiusMeters * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function addSpeedSample(mps) {
+      if (!Number.isFinite(mps) || mps < 0) return;
+
+      // Throw away obviously wild GPS spikes.
+      // 90 m/s is about 201 mph. Fine for planes, silly for this tool.
+      if (mps > 90) return;
+
+      speedSamplesMps.push(mps);
+      if (speedSamplesMps.length > MAX_SAMPLES) {
+        speedSamplesMps.shift();
+      }
+    }
+
+    function averageSpeedMps() {
+      if (!speedSamplesMps.length) return 0;
+      return speedSamplesMps.reduce((sum, n) => sum + n, 0) / speedSamplesMps.length;
+    }
+
+    function formatDuration(seconds) {
+      if (!Number.isFinite(seconds) || seconds < 0) return "--";
+
+      const totalMinutes = Math.round(seconds / 60);
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+
+      if (hours <= 0) return `${minutes} min`;
+      if (minutes === 0) return `${hours} hr`;
+      return `${hours} hr ${minutes} min`;
+    }
+
+    function updateEta(speedMps) {
+      const distance = Number.parseFloat(els.distance.value);
+
+      if (!Number.isFinite(distance) || distance <= 0) {
+        els.etaDuration.textContent = "--";
+        els.arrivalTime.textContent = "--";
+        return;
+      }
+
+      if (!Number.isFinite(speedMps) || speedMps < MIN_REASONABLE_SPEED_MPS) {
+        els.etaDuration.textContent = "--";
+        els.arrivalTime.textContent = "--";
+        return;
+      }
+
+      const distanceMeters =
+        els.unit.value === "miles"
+          ? distance * METERS_PER_MILE
+          : distance * 1000;
+
+      const secondsRemaining = distanceMeters / speedMps;
+      const arrival = new Date(Date.now() + secondsRemaining * 1000);
+
+      els.etaDuration.textContent = formatDuration(secondsRemaining);
+      els.arrivalTime.textContent = arrival.toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit"
+      });
+    }
+
+    function updateSpeedDisplay(speedMps) {
+      const unit = els.unit.value === "miles" ? "mph" : "km/h";
+      const converted = els.unit.value === "miles"
+        ? speedMps * MPS_TO_MPH
+        : speedMps * MPS_TO_KPH;
+
+      els.speedUnit.textContent = unit;
+
+      if (!Number.isFinite(converted) || converted < 0.1) {
+        els.speedValue.textContent = "--";
+      } else {
+        els.speedValue.textContent = converted.toFixed(1);
+      }
+    }
+
+    function handlePosition(position) {
+      const { latitude, longitude, accuracy, speed } = position.coords;
+      const timestamp = position.timestamp;
+
+      let calculatedSpeedMps = null;
+
+      // Browser/device-provided speed is meters per second when available.
+      if (Number.isFinite(speed) && speed >= 0) {
+        calculatedSpeedMps = speed;
+      } else if (lastPosition) {
+        const seconds = (timestamp - lastPosition.timestamp) / 1000;
+        const meters = haversineMeters(
+          lastPosition.latitude,
+          lastPosition.longitude,
+          latitude,
+          longitude
+        );
+
+        if (seconds > 0) {
+          calculatedSpeedMps = meters / seconds;
+        }
+      }
+
+      if (Number.isFinite(calculatedSpeedMps)) {
+        addSpeedSample(calculatedSpeedMps);
+      }
+
+      const smoothedSpeed = averageSpeedMps();
+
+      updateSpeedDisplay(smoothedSpeed);
+      updateEta(smoothedSpeed);
+
+      const accuracyFeet = accuracy * 3.28084;
+      els.accuracyValue.textContent = Number.isFinite(accuracyFeet)
+        ? Math.round(accuracyFeet).toString()
+        : "--";
+
+      els.locationValue.textContent =
+        `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+
+      els.timestampValue.textContent =
+        `Updated ${new Date(timestamp).toLocaleTimeString([], {
+          hour: "numeric",
+          minute: "2-digit",
+          second: "2-digit"
+        })}`;
+
+      lastPosition = { latitude, longitude, timestamp };
+
+      setStatus("Tracking GPS location.", "good");
+    }
+
+    function handleError(error) {
+      let message = "Location error.";
+
+      if (error.code === error.PERMISSION_DENIED) {
+        message = "Location permission was denied.";
+      } else if (error.code === error.POSITION_UNAVAILABLE) {
+        message = "Location is unavailable. Try going outside or checking location services.";
+      } else if (error.code === error.TIMEOUT) {
+        message = "GPS request timed out. Trying again may help.";
+      }
+
+      setStatus(message, "bad");
+    }
+
+    function startTracking() {
+      if (!("geolocation" in navigator)) {
+        setStatus("This browser does not support GPS location.", "bad");
+        return;
+      }
+
+      speedSamplesMps = [];
+      lastPosition = null;
+
+      watchId = navigator.geolocation.watchPosition(
+        handlePosition,
+        handleError,
+        {
+          enableHighAccuracy: true,
+          maximumAge: 1000,
+          timeout: 15000
+        }
+      );
+
+      els.startBtn.disabled = true;
+      els.stopBtn.disabled = false;
+      setStatus("Requesting GPS permission...", "warn");
+    }
+
+    function stopTracking() {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+
+      els.startBtn.disabled = false;
+      els.stopBtn.disabled = true;
+      setStatus("Tracking stopped.", "warn");
+    }
+
+    els.startBtn.addEventListener("click", startTracking);
+    els.stopBtn.addEventListener("click", stopTracking);
+
+    els.distance.addEventListener("input", () => updateEta(averageSpeedMps()));
+    els.unit.addEventListener("change", () => {
+      updateSpeedDisplay(averageSpeedMps());
+      updateEta(averageSpeedMps());
+      els.accuracyUnit.textContent = "feet";
+    });
+  </script>
+</body>
+</html>
