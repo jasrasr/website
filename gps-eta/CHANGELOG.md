@@ -1,5 +1,14 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.3.0 - 2026-06-30
+
+- Converted the app from static `index.html` to PHP-driven `index.php`.
+- Made `CHANGELOG.md` the source of truth for the visible changelog rendered on the page.
+- Added a small built-in Markdown renderer for headings, bullets, inline code, and bold text.
+- Added `.htaccess` with `DirectoryIndex index.php index.html` so `/gps-eta/` prefers the PHP page.
+- Removed the old static `index.html` entrypoint to avoid stale duplicate content.
+- Incremented the visible app revision from `1.2.1` to `1.3.0`.
+
 ## Rev 1.2.1 - 2026-06-30
 
 - Added a proper project/header block to `index.html`.
