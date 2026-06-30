@@ -1,0 +1,3 @@
+# GPS Speed + ETA Tracker
+# Prefer the PHP entrypoint so CHANGELOG.md can be rendered dynamically.
+DirectoryIndex index.php index.html
