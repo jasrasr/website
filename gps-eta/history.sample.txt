@@ -1,0 +1,8 @@
+Sample server history structure
+
+{
+  "deviceHash": "example-device-hash",
+  "createdAt": "2026-06-30T00:00:00+00:00",
+  "updatedAt": "2026-06-30T00:01:00+00:00",
+  "entries": []
+}
