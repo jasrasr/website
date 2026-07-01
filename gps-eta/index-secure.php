@@ -2,11 +2,11 @@
 /*
 Project: GPS Speed + ETA Tracker
 File: gps-eta/index-secure.php
-Revision: 1.8.2
+Revision: 1.8.3
 Author: Jason Lamb
 Created: 2026-06-30
 Modified: 2026-06-30
-Description: Wrapper entrypoint that loads index.php and injects client-side table rendering, trip-session, GPS signal, PHP trip-store helpers, and mobile layout refinements.
+Description: Wrapper entrypoint that loads index.php and injects client-side table rendering, trip-session, GPS signal, PHP trip-store helpers, mobile layout refinements, and cleaned future-feature note wording.
 */
 
 ob_start();
@@ -16,7 +16,13 @@ $html = ob_get_clean();
 if (is_string($html)) {
     $html = str_replace(
         'Rev 1.5.0 &bull; Updated 2026-06-30 &bull; Per-Device History + 365-Day Retention',
-        'Rev 1.8.2 &bull; Updated 2026-06-30 &bull; Combined GPS Signal Row',
+        'Rev 1.8.3 &bull; Updated 2026-06-30 &bull; Updated Feature Roadmap Note',
+        $html
+    );
+
+    $html = str_replace(
+        '<section class="card"><p class="small"><strong>Other useful calculations to consider next:</strong> estimated route error/correction factor, average moving speed, trip start time, pause count, last GPS update age, and distance per GPS ping. The only big missing piece is true road-route distance/traffic, which needs a maps/directions API.</p></section>',
+        '<section class="card"><p class="small"><strong>Useful non-map features still available:</strong> manual route correction factor, pause count, distance per GPS ping, live moving-average speed, and background resume recovery. GPS update age and trip/session start time are already included. True road-route distance and traffic-aware ETA require a maps/directions API.</p></section>',
         $html
     );
 }
