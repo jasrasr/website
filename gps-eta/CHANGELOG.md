@@ -1,5 +1,13 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.8.3 - 2026-06-30
+
+- Updated the on-page future-feature note so it no longer lists already-added items as future work.
+- Clarified that GPS update age and trip/session start time are already included.
+- Clarified that manual route correction factor, pause count, distance per GPS ping, live moving-average speed, and background resume recovery remain useful non-map improvements.
+- Clarified that only true road-route distance and traffic-aware ETA require a maps/directions API.
+- Preserved existing runtime history data; no history reset or migration is required.
+
 ## Rev 1.8.2 - 2026-06-30
 
 - Combined GPS Accuracy, GPS Quality, and GPS Update Age into one compact `GPS Signal` row/card.
