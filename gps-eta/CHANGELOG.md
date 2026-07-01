@@ -1,5 +1,14 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.8.5 - 2026-06-30
+
+- Added `map-loader.js` and `live-map.js` for a visual live location map.
+- Added a current-location marker, GPS accuracy circle, and breadcrumb trail from browser GPS coordinates.
+- The map visually refreshes about every 10 seconds while GPS updates continue as provided by the browser.
+- Uses Leaflet with OpenStreetMap map tiles; no directions/routing API key is required.
+- Does not add road-route distance, turn-by-turn routing, or traffic-aware ETA.
+- Preserved existing runtime history data; no history reset or migration is required.
+
 ## Rev 1.8.4 - 2026-06-30
 
 - Added `metric-combiner.js`.
