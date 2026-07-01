@@ -1,6 +1,6 @@
 # GPS Speed + ETA Tracker
 
-Mobile-friendly GPS speed, ETA, compass heading, trip logging, and per-device history tracker for `jasr.me`.
+Mobile-friendly GPS speed, ETA, compass heading, trip logging, trip sessions, and per-device history tracker for `jasr.me`.
 
 This project is stored in GitHub as source, then synced to Jason's web host where PHP is processed. It is intended to run from the hosted site, not from GitHub Pages.
 
@@ -22,6 +22,7 @@ gps-eta/
 ├─ index-secure.php
 ├─ index.php
 ├─ ui-render.js
+├─ trip-sessions.js
 ├─ CHANGELOG.md
 ├─ README.md
 ├─ history.sample.txt
@@ -45,6 +46,8 @@ gps-eta/data/device-history/
 - Compass heading with degrees and cardinal/intercardinal direction.
 - Trip progress, moving time, stopped time, average speed, max speed, and pace.
 - Manual and automatic trip log snapshots.
+- End Trip button.
+- Trip Sessions view grouped from existing saved snapshots.
 - CSV export.
 - Per-device server history using a browser-generated local device ID.
 - 365-day automatic server-side history retention.
@@ -53,7 +56,16 @@ gps-eta/data/device-history/
 
 ## Entry point
 
-`/gps-eta/` loads `index-secure.php` first by `.htaccess`. The wrapper loads `index.php` and appends `ui-render.js` so Trip Log and Device History values are rendered as text nodes.
+`/gps-eta/` loads `index-secure.php` first by `.htaccess`. The wrapper loads `index.php`, appends `ui-render.js`, and appends `trip-sessions.js`.
+
+## Trip sessions
+
+Trip Sessions are derived from existing history snapshots. This avoids changing the server-side history file format.
+
+- A `start` snapshot begins a trip.
+- An `end` snapshot closes a trip.
+- `auto`, `manual`, and `pause` snapshots remain inside the active trip.
+- Existing runtime history does not need to be reset or migrated.
 
 ## Device history behavior
 
@@ -84,6 +96,7 @@ Entries older than 365 days are automatically removed. The app also caps retaine
 - Numeric fields are accepted only when numeric.
 - `CHANGELOG.md` rendering escapes HTML before rendering limited Markdown.
 - `ui-render.js` renders Trip Log and Device History cells with `textContent`.
+- `trip-sessions.js` renders Trip Sessions cells with `textContent`.
 - `data/.htaccess` blocks direct browser access to raw saved history files.
 
 ## Development rules
