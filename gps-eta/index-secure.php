@@ -6,14 +6,14 @@ Revision: 1.5.1
 Author: Jason Lamb
 Created: 2026-06-30
 Modified: 2026-06-30
-Description: Wrapper entrypoint that loads index.php and injects client-side safe rendering overrides for history and log table output.
+Description: Wrapper entrypoint that loads index.php and injects client-side table rendering helpers for history and log output.
 */
 
 ob_start();
 require __DIR__ . '/index.php';
 $html = ob_get_clean();
 
-$scriptTag = '<script src="safe-render.js?v=1.5.1"></script>';
+$scriptTag = '<script src="ui-render.js?v=1.5.1"></script>';
 
 if (is_string($html) && strpos($html, '</body>') !== false) {
     echo str_replace('</body>', $scriptTag . '</body>', $html);
