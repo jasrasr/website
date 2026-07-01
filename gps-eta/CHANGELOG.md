@@ -1,5 +1,13 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.8.4 - 2026-06-30
+
+- Added `metric-combiner.js`.
+- Combined Current Speed, Average Speed, and Max Speed into one compact `Speed Summary` row/card.
+- Combined Elapsed Tracking Time, Moving Time, and Stopped Time into one compact `Time Summary` row/card.
+- Hid the older standalone speed and time cards to reduce vertical scrolling on mobile.
+- Preserved existing runtime history data; no history reset or migration is required.
+
 ## Rev 1.8.3 - 2026-06-30
 
 - Updated the on-page future-feature note so it no longer lists already-added items as future work.
