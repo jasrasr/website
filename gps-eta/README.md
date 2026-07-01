@@ -1,6 +1,6 @@
 # GPS Speed + ETA Tracker
 
-Mobile-friendly GPS speed, ETA, compass heading, trip logging, trip sessions, and per-device history tracker for `jasr.me`.
+Mobile-friendly GPS speed, ETA, compass heading, trip logging, trip sessions, GPS quality estimate, and per-device history tracker for `jasr.me`.
 
 This project is stored in GitHub as source, then synced to Jason's web host where PHP is processed. It is intended to run from the hosted site, not from GitHub Pages.
 
@@ -23,6 +23,7 @@ gps-eta/
 ├─ index.php
 ├─ ui-render.js
 ├─ trip-sessions.js
+├─ gps-quality.js
 ├─ CHANGELOG.md
 ├─ README.md
 ├─ history.sample.txt
@@ -44,6 +45,9 @@ gps-eta/data/device-history/
 - ETA based on entered distance and current speed.
 - Automatic distance remaining countdown using GPS breadcrumb distance.
 - Compass heading with degrees and cardinal/intercardinal direction.
+- GPS quality estimate based on accuracy and update age.
+- GPS update age display.
+- Speed and heading source labels.
 - Trip progress, moving time, stopped time, average speed, max speed, and pace.
 - Manual and automatic trip log snapshots.
 - End Trip button.
@@ -56,7 +60,16 @@ gps-eta/data/device-history/
 
 ## Entry point
 
-`/gps-eta/` loads `index-secure.php` first by `.htaccess`. The wrapper loads `index.php`, appends `ui-render.js`, and appends `trip-sessions.js`.
+`/gps-eta/` loads `index-secure.php` first by `.htaccess`. The wrapper loads `index.php`, appends `ui-render.js`, appends `trip-sessions.js`, and appends `gps-quality.js`.
+
+## GPS quality
+
+A normal browser page cannot read satellite count, satellite IDs, or raw signal data. GPS quality is estimated from browser-exposed values:
+
+- horizontal accuracy
+- last GPS update age
+- whether native speed is available
+- whether native heading is available
 
 ## Trip sessions
 
@@ -97,15 +110,17 @@ Entries older than 365 days are automatically removed. The app also caps retaine
 - `CHANGELOG.md` rendering escapes HTML before rendering limited Markdown.
 - `ui-render.js` renders Trip Log and Device History cells with `textContent`.
 - `trip-sessions.js` renders Trip Sessions cells with `textContent`.
+- `gps-quality.js` only reads browser GPS fields and does not write history.
 - `data/.htaccess` blocks direct browser access to raw saved history files.
 
 ## Development rules
 
 - Keep `CHANGELOG.md` as the source of truth for visible changelog content.
 - Increment the revision number when functionality changes.
-- Do not change the history schema for cosmetic-only updates.
-- Do not reset or overwrite existing runtime history unless a functional change requires it.
-- If a feature change affects history format, document the compatibility behavior in `CHANGELOG.md`.
+- Add new features and functions when useful; do not avoid feature work only because history exists.
+- Preserve existing runtime history by default.
+- Do not reset or wipe runtime history unless a feature/function requires a breaking history reload.
+- If a feature change affects history format, document whether migration or wipe is required in `CHANGELOG.md`.
 - Keep sample files updated when the history format changes.
 
 ## History sample
