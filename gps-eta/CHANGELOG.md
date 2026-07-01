@@ -6,6 +6,7 @@
 - Clarified that GPS update age and trip/session start time are already included.
 - Clarified that manual route correction factor, pause count, distance per GPS ping, live moving-average speed, and background resume recovery remain useful non-map improvements.
 - Clarified that only true road-route distance and traffic-aware ETA require a maps/directions API.
+- Hardened `.htaccess` so `/gps-eta/` prefers only `index-secure.php`, direct `index.php` requests are routed to the wrapper, and page caching is reduced.
 - Preserved existing runtime history data; no history reset or migration is required.
 
 ## Rev 1.8.2 - 2026-06-30
