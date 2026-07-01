@@ -1,5 +1,15 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.8.10 - 2026-06-30
+
+- Made the selected dashboard mode explicit.
+- Added a `Current View` label above the Simple/Detailed buttons.
+- Active dashboard button now includes a checkmark and `Active` text.
+- Active dashboard button now uses stronger green highlighting; inactive dashboard button is visually muted.
+- Updated `dashboard-mode.js` cache version to Rev `1.8.10`.
+- No maps/directions API key is required.
+- Preserved existing runtime history data; no history reset or migration is required.
+
 ## Rev 1.8.9 - 2026-06-30
 
 - Added `dashboard-mode.js` with Simple Dashboard and Detailed Dashboard profiles.
