@@ -1,5 +1,14 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.8.14 - 2026-06-30
+
+- Moved the `Show Changelog` button above the collapsed-note text so it is not hidden behind the sticky toolbar.
+- Added extra bottom spacing to the collapsed changelog card so the button remains reachable on mobile.
+- Increased sticky-toolbar bottom padding and forced the page background to stay dark across the full mobile viewport.
+- Updated `drive-mode.js` and `changelog-toggle.js` cache versions to Rev `1.8.14`.
+- No maps/directions API key is required.
+- Preserved existing runtime history data; no history reset or migration is required.
+
 ## Rev 1.8.13 - 2026-06-30
 
 - Added `changelog-toggle.js` to collapse the changelog section by default.
