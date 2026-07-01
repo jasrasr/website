@@ -1,5 +1,14 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.8.13 - 2026-06-30
+
+- Added `changelog-toggle.js` to collapse the changelog section by default.
+- Changelog now shows a compact `Changelog` card with a `Show Changelog` button.
+- Expanding the card reveals the full rendered `CHANGELOG.md` content and changes the button to `Hide Changelog`.
+- Updated `index-secure.php` to load `changelog-toggle.js?v=1.8.13`.
+- No maps/directions API key is required.
+- Preserved existing runtime history data; no history reset or migration is required.
+
 ## Rev 1.8.12 - 2026-06-30
 
 - Added `control-state.js` to keep the main trip-control button label aligned with actual tracking state.
