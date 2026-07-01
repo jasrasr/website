@@ -1,5 +1,12 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.5.1 - 2026-06-30
+
+- Added a wrapper entrypoint, `index-secure.php`, which loads `index.php` and appends `ui-render.js`.
+- Added `ui-render.js` to render Trip Log and Device History rows using DOM text nodes instead of raw HTML strings.
+- Updated `.htaccess` so `/gps-eta/` prefers `index-secure.php` before `index.php`.
+- Preserved the existing server history format; no history reset or migration is required.
+
 ## Rev 1.5.0 - 2026-06-30
 
 - Added server-side per-device history logging using a browser-generated local device ID.
