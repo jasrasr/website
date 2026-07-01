@@ -19,7 +19,9 @@ https://jasr.me/github/gps-eta/
 
 ```text
 gps-eta/
+├─ index-secure.php
 ├─ index.php
+├─ ui-render.js
 ├─ CHANGELOG.md
 ├─ README.md
 ├─ history.sample.txt
@@ -49,6 +51,10 @@ gps-eta/data/device-history/
 - Front-end delete option for the current device history.
 - Changelog rendered dynamically from `CHANGELOG.md`.
 
+## Entry point
+
+`/gps-eta/` loads `index-secure.php` first by `.htaccess`. The wrapper loads `index.php` and appends `ui-render.js` so Trip Log and Device History values are rendered as text nodes.
+
 ## Device history behavior
 
 The app creates a local browser device ID and stores it in `localStorage`. That ID is sent to the PHP endpoint when saving, reading, or deleting history. PHP hashes the device ID before using it as a filename.
@@ -77,6 +83,7 @@ Entries older than 365 days are automatically removed. The app also caps retaine
 - History entry strings are length-limited before being saved.
 - Numeric fields are accepted only when numeric.
 - `CHANGELOG.md` rendering escapes HTML before rendering limited Markdown.
+- `ui-render.js` renders Trip Log and Device History cells with `textContent`.
 - `data/.htaccess` blocks direct browser access to raw saved history files.
 
 ## Development rules
