@@ -1,5 +1,8 @@
 # Website Stuff
-This is where I will dump HTML/CSS/JS scripts. I started my own website back in 2004 and have created a ton of code. It is all somewhere on my website. I currently use hostinger but have used GoDaddy (billable through LuckyRegister) and Powweb before that. I currently maintain several domains but really only publish on [https://jasonlamb.me](https://jasonlamb.me). I like to use [https://jasr.me](https://jasr.me) for three things right now.
+This is where I will dump HTML/CSS/JS/PHP scripts. I started my own website back in 2004 and have created a ton of code. It is all somewhere on my website. I currently use Hostinger but have used GoDaddy (billable through LuckyRegister) and Powweb before that. I currently maintain several domains but really only publish on [https://jasonlamb.me](https://jasonlamb.me). I like to use [https://jasr.me](https://jasr.me) for several things right now.
+
+Important hosting note: this repo is used as source storage and syncs to my web host. PHP projects in this repo are intended to run from my hosted website, not from GitHub Pages.
+
 - link shortener and tracker [jasr.me](https://jasr.me)
    - Fork of [github.com/YOURLS/YOURLS](https://github.com/YOURLS/YOURLS)
 - secure text sender [jasr.me/secure](https://jasr.me/secure)
@@ -10,3 +13,5 @@ This is where I will dump HTML/CSS/JS scripts. I started my own website back in 
    - Created with the help from ChatGPT
 - Time Clock Kiosk Display [jasr.me/time-clock](https://jasr.me/time-clock)
    - Full-screen clock, weather, and scrolling alerts — runs on Raspberry Pi CM4 kiosk
+- Trip ETA Tracker [jasr.me/github/gps-eta](https://jasr.me/github/gps-eta/)
+   - PHP speed, ETA, compass heading, trip log, server history, and 365-day retention
