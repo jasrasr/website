@@ -1,5 +1,16 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.8.9 - 2026-06-30
+
+- Added `dashboard-mode.js` with Simple Dashboard and Detailed Dashboard profiles.
+- Simple Dashboard shows only selected widgets; Detailed Dashboard restores the full app view.
+- Added a `Customize Simple` panel with saved per-device widget checkboxes.
+- Default Simple Dashboard widgets are Speed Summary, Time Summary, Remaining Distance, ETA, Adjusted ETA, GPS Signal, and Live Map.
+- Optional Simple Dashboard widgets include Compass Heading, Trip Progress, Raw GPS Data, No-API Trip Tools, Trip Log, Device History, PHP Stored Trips, and Changelog.
+- Dashboard mode and widget choices are stored locally on the device.
+- No maps/directions API key is required.
+- Preserved existing runtime history data; no history reset or migration is required.
+
 ## Rev 1.8.8 - 2026-06-30
 
 - Added `drive-mode.js` with a sticky bottom driving bar.
