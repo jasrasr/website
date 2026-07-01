@@ -1,5 +1,16 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.8.8 - 2026-06-30
+
+- Added `drive-mode.js` with a sticky bottom driving bar.
+- Sticky bar mirrors Speed, Remaining Distance, ETA, Adjusted ETA, and GPS Signal so key data stays visible while scrolling.
+- Added a Drive Mode toggle that hides low-priority sections such as changelog/history/tool sections while preserving live trip cards.
+- Added map control buttons for Recenter Map, Map Size, and Clear Trail.
+- Updated `live-map.js` to expose safe map controls for recentering, clearing breadcrumb trail, follow mode, refresh interval, and map resize.
+- Updated `map-loader.js` to load the Rev `1.8.8` live map helper.
+- No maps/directions API key is required.
+- Preserved existing runtime history data; no history reset or migration is required.
+
 ## Rev 1.8.7 - 2026-06-30
 
 - Replaced the manual route correction multiplier with a minute-based ETA offset.
