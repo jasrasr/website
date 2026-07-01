@@ -1,5 +1,11 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.8.2 - 2026-06-30
+
+- Combined GPS Accuracy, GPS Quality, and GPS Update Age into one compact `GPS Signal` row/card.
+- Hid the older standalone GPS Accuracy card to reduce vertical scrolling on mobile.
+- Kept GPS signal rendering client-side only; no history schema change, reset, or migration is required.
+
 ## Rev 1.8.1 - 2026-06-30
 
 - Tightened the mobile setup card by keeping the starting distance input and unit selector on the same row.
