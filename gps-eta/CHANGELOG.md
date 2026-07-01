@@ -1,5 +1,13 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.6.0 - 2026-06-30
+
+- Added `trip-sessions.js` to group existing saved snapshots into trip sessions without changing the server history schema.
+- Added an `End Trip` button that logs an `end` snapshot and builds a trip summary.
+- Added a Trip Sessions section showing recent grouped trips with start time, end time, status, starting distance, tracked distance, remaining distance, elapsed time, max speed, and snapshot count.
+- Updated `index-secure.php` to load the trip-session helper and display Rev `1.6.0` from the wrapper.
+- Preserved existing runtime history data; no history reset or migration is required.
+
 ## Rev 1.5.1 - 2026-06-30
 
 - Added a wrapper entrypoint, `index-secure.php`, which loads `index.php` and appends `ui-render.js`.
