@@ -1,5 +1,14 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.7.0 - 2026-06-30
+
+- Added `gps-quality.js` to show GPS quality from browser-exposed accuracy and update timing.
+- Added a GPS Quality card with labels such as `Excellent`, `Good`, `Usable`, `Weak`, `Poor`, `Stale`, or `Unknown`.
+- Added a GPS Update Age card to show how fresh the latest browser GPS update is.
+- Added speed and heading source labels showing whether the browser supplied native values or the app calculated them from movement.
+- Updated `index-secure.php` to load the GPS quality helper and display Rev `1.7.0` from the wrapper.
+- Preserved existing runtime history data; no history reset or migration is required.
+
 ## Rev 1.6.0 - 2026-06-30
 
 - Added `trip-sessions.js` to group existing saved snapshots into trip sessions without changing the server history schema.
