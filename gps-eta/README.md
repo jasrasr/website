@@ -22,12 +22,16 @@ gps-eta/
 ├─ index.php
 ├─ CHANGELOG.md
 ├─ README.md
+├─ history.sample.txt
 ├─ .htaccess
 └─ data/
-   ├─ .htaccess
-   ├─ device-history.sample.json
-   └─ device-history/
-      └─ .gitkeep
+   └─ .htaccess
+```
+
+The PHP runtime creates this folder on the host when needed:
+
+```text
+gps-eta/data/device-history/
 ```
 
 ## Features
@@ -65,15 +69,12 @@ Retention: 365 days
 
 Entries older than 365 days are automatically removed. The app also caps retained entries to avoid unbounded file growth.
 
-## Security and validation
+## Validation notes
 
-The PHP code treats all browser data as plain data, not executable code.
-
-- No user-provided value is executed or included as PHP.
 - Device IDs are sanitized and then hashed before being used in filenames.
-- History files are written as JSON files.
+- History files are written as JSON files, not PHP files.
 - API writes require POST.
-- History entry strings are length-limited.
+- History entry strings are length-limited before being saved.
 - Numeric fields are accepted only when numeric.
 - `CHANGELOG.md` rendering escapes HTML before rendering limited Markdown.
 - `data/.htaccess` blocks direct browser access to raw saved history files.
@@ -92,5 +93,5 @@ The PHP code treats all browser data as plain data, not executable code.
 Reference file:
 
 ```text
-gps-eta/data/device-history.sample.json
+gps-eta/history.sample.txt
 ```
