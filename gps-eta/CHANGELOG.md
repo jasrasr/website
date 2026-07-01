@@ -1,5 +1,16 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.8.11 - 2026-06-30
+
+- Made sticky toolbar button states explicit.
+- `Drive Mode` now shows `✓ Drive Mode On` when active and `Drive Mode Off` when inactive.
+- `Map Size` now shows `✓ Large Map On` when active and `Map Normal` when inactive.
+- Active toolbar buttons now use stronger green highlighting; inactive toolbar buttons are visually muted.
+- Large-map state is saved locally on the device.
+- Updated `drive-mode.js` cache version to Rev `1.8.11`.
+- No maps/directions API key is required.
+- Preserved existing runtime history data; no history reset or migration is required.
+
 ## Rev 1.8.10 - 2026-06-30
 
 - Made the selected dashboard mode explicit.
