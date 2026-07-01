@@ -1,5 +1,15 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.8.7 - 2026-06-30
+
+- Replaced the manual route correction multiplier with a minute-based ETA offset.
+- Added an `Adjusted ETA` card directly beside/near the current ETA area so the adjusted arrival time is visible without scrolling down to the no-API tools section.
+- Added quick offset buttons for `-5`, `-1`, `+1`, and `+5` minutes.
+- Preserved the original app ETA and shows the adjusted ETA separately.
+- Kept the ETA drift, GPS reconnect, GPS jump filter, pause count, and GPX/KML export features.
+- No maps/directions API key is required.
+- Preserved existing runtime history data; no history reset or migration is required.
+
 ## Rev 1.8.6 - 2026-06-30
 
 - Added `no-api-enhancements.js` for additional features that do not require a maps/directions API key.
@@ -120,7 +130,6 @@
 - Added JavaScript script metadata header inside the page script block.
 - Incremented the visible page revision from `1.2.0` to `1.2.1`.
 - Added an in-page changelog section so the current revision and recent changes are visible from the front end.
-- Added this `CHANGELOG.md` file for repo history.
 
 ## Rev 1.2.0 - 2026-06-30
 
