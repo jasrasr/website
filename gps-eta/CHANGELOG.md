@@ -1,5 +1,11 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.8.1 - 2026-06-30
+
+- Tightened the mobile setup card by keeping the starting distance input and unit selector on the same row.
+- Moved the unit selector, such as `Miles`, up to the right of the distance entry box on narrow screens.
+- Preserved existing runtime history data; no history reset or migration is required.
+
 ## Rev 1.8.0 - 2026-06-30
 
 - Added `trip-store.php`, a real PHP-backed trip-session storage schema separate from the existing snapshot history store.
