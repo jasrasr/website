@@ -1,5 +1,16 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.8.12 - 2026-06-30
+
+- Added `control-state.js` to keep the main trip-control button label aligned with actual tracking state.
+- When GPS tracking is active, the main button now shows `Tracking Active` instead of stale `Resume Tracking` text.
+- When the trip is paused, the main button shows `Resume Tracking`.
+- When no trip is active, the main button shows `Start Trip Tracking`.
+- Pause button text and enabled state are also synced with the current tracking state.
+- Updated `index-secure.php` to load `control-state.js?v=1.8.12`.
+- No maps/directions API key is required.
+- Preserved existing runtime history data; no history reset or migration is required.
+
 ## Rev 1.8.11 - 2026-06-30
 
 - Made sticky toolbar button states explicit.
@@ -47,7 +58,7 @@
 
 - Replaced the manual route correction multiplier with a minute-based ETA offset.
 - Added an `Adjusted ETA` card directly beside/near the current ETA area so the adjusted arrival time is visible without scrolling down to the no-API tools section.
-- Added quick offset buttons for `-5`, `-1`, `+1`, and `+5` minutes.
+- Added quick offset buttons for `-5`, `-1`, and `+1`, and `+5` minutes.
 - Preserved the original app ETA and shows the adjusted ETA separately.
 - Kept the ETA drift, GPS reconnect, GPS jump filter, pause count, and GPX/KML export features.
 - No maps/directions API key is required.
@@ -189,5 +200,5 @@
 ## Rev 1.0.0 - 2026-06-30
 
 - Initial single-page GPS speed and ETA tracker.
-- Added current speed, GPS accuracy, ETA duration, estimated arrival time, and last location display.
+- Added current speed, GPS accuracy, ETA duration, estimated arrival time display, and last location display.
 - Added support for miles and kilometers.
