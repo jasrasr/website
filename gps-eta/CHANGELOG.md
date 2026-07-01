@@ -1,5 +1,15 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.8.0 - 2026-06-30
+
+- Added `trip-store.php`, a real PHP-backed trip-session storage schema separate from the existing snapshot history store.
+- Added `session-store.js` to dual-write trip snapshots and end-trip summaries into the PHP trip store.
+- Added a PHP Stored Trips section to show trips saved in the new trip-session schema.
+- New trip-session data is stored under `gps-eta/data/trip-sessions/` on the web host.
+- Existing snapshot history under `gps-eta/data/device-history/` is preserved and not wiped.
+- No history reset or migration is required; this is additive storage going forward.
+- Updated `index-secure.php` to load Rev `1.8.0` helper files.
+
 ## Rev 1.7.0 - 2026-06-30
 
 - Added `gps-quality.js` to show GPS quality from browser-exposed accuracy and update timing.
