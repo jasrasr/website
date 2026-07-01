@@ -1,3 +1,14 @@
 # GPS Speed + ETA Tracker
-# Prefer wrapper entrypoint so PHP can render CHANGELOG.md and append client table render helpers.
-DirectoryIndex index-secure.php index.php index.html
+# Force the wrapper entrypoint so the visible revision and injected helper scripts stay current.
+DirectoryIndex index-secure.php
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^index\.php$ index-secure.php [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
+</IfModule>
