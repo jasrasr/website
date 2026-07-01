@@ -1,0 +1,36 @@
+/* GPS ETA Dashboard Profiles - Rev 1.8.9 */
+(function(){
+var MODE='gpsEtaDashboardModeV1',PICKS='gpsEtaSimpleDashboardWidgetsV1';
+var defaults=['speed','time','remaining','eta','adjusted','gps','map'];
+var widgets=[
+{key:'speed',label:'Speed Summary',ids:['speedSummaryCard','speedValue','avgSpeedValue','maxSpeedValue']},
+{key:'time',label:'Time Summary',ids:['timeSummaryCard','elapsedValue','movingValue','stoppedValue']},
+{key:'remaining',label:'Remaining Distance',ids:['remainingValue']},
+{key:'eta',label:'ETA',ids:['etaDuration','arrivalTime']},
+{key:'adjusted',label:'Adjusted ETA',ids:['adjustedEtaCard','adjEtaValue','etaMinuteOffsetInput']},
+{key:'gps',label:'GPS Signal',ids:['gpsSignalCard','gpsQualityValue','accuracyValue']},
+{key:'map',label:'Live Map',ids:['liveMapCard','liveMap']},
+{key:'compass',label:'Compass Heading',ids:['headingValue','compassNeedle']},
+{key:'progress',label:'Trip Progress',ids:['progressValue','trackedValue','paceValue']},
+{key:'raw',label:'Raw GPS Data',ids:['rawGpsValue']},
+{key:'tools',label:'No-API Trip Tools',ids:['noApiEnhanceCard','reconnectGpsBtn']},
+{key:'log',label:'Trip Log',text:'trip log'},
+{key:'history',label:'Device History',text:'device history'},
+{key:'stored',label:'PHP Stored Trips',text:'php stored trips'},
+{key:'changelog',label:'Changelog',text:'changelog'}
+];
+function id(x){return document.getElementById(x);}function div(c,t){var e=document.createElement('div');if(c)e.className=c;if(t!==undefined)e.textContent=t;return e;}
+function loadPicks(){try{var a=JSON.parse(localStorage.getItem(PICKS)||'null');return Array.isArray(a)?a:defaults.slice();}catch(e){return defaults.slice();}}
+function savePicks(a){localStorage.setItem(PICKS,JSON.stringify(a));}
+function mode(){return localStorage.getItem(MODE)||'detailed';}
+function setMode(m){localStorage.setItem(MODE,m);document.body.classList.toggle('gps-simple-dashboard',m==='simple');apply();syncButtons();}
+function cardFromId(x){var e=id(x);return e?e.closest('.metric,.card,section.card'):null;}
+function findCards(w){var found=[];(w.ids||[]).forEach(function(x){var c=cardFromId(x);if(c&&found.indexOf(c)<0)found.push(c);});if(!found.length&&w.text){document.querySelectorAll('section.card,.card,.metric').forEach(function(c){var t=(c.textContent||'').slice(0,220).toLowerCase();if(t.indexOf(w.text)>=0&&found.indexOf(c)<0)found.push(c);});}return found;}
+function keep(c){if(!c)return false;return c.id==='dashboardModeCard'||c.id==='gpsDriveBar'||c.closest&&c.closest('#dashboardModeCard');}
+function apply(){var simple=mode()==='simple',pick=loadPicks();document.querySelectorAll('[data-dashboard-hidden="1"]').forEach(function(c){c.style.display='';c.removeAttribute('data-dashboard-hidden');});if(!simple)return;widgets.forEach(function(w){var show=pick.indexOf(w.key)>=0;findCards(w).forEach(function(c){if(keep(c))return;if(!show){c.style.display='none';c.setAttribute('data-dashboard-hidden','1');}});});}
+function makeStyle(){if(id('dashboardModeStyle'))return;var s=document.createElement('style');s.id='dashboardModeStyle';s.textContent='.dashboard-mode-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}.dashboard-widget-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}.dashboard-widget-grid label{display:flex;gap:8px;align-items:center;border:1px solid var(--border);border-radius:12px;padding:9px 10px;background:rgba(255,255,255,.03)}.dashboard-widget-grid input{width:auto;min-height:auto}.dashboard-mode-active{outline:2px solid rgba(96,165,250,.9)}@media(max-width:560px){.dashboard-mode-row{grid-template-columns:1fr}.dashboard-widget-grid{grid-template-columns:1fr}}';document.head.appendChild(s);}
+function make(){if(id('dashboardModeCard'))return;makeStyle();var first=document.querySelector('section.card');var card=document.createElement('section');card.className='card';card.id='dashboardModeCard';card.appendChild(div('metric-title','Dashboard View'));var note=div('small','Simple shows only selected widgets. Detailed shows the full app.');card.appendChild(note);var row=document.createElement('div');row.className='dashboard-mode-row';var simple=document.createElement('button');simple.type='button';simple.id='simpleDashboardBtn';simple.textContent='Simple Dashboard';simple.addEventListener('click',function(){setMode('simple');});var detailed=document.createElement('button');detailed.type='button';detailed.id='detailedDashboardBtn';detailed.className='secondary';detailed.textContent='Detailed Dashboard';detailed.addEventListener('click',function(){setMode('detailed');});var custom=document.createElement('button');custom.type='button';custom.id='customDashboardBtn';custom.className='secondary';custom.textContent='Customize Simple';custom.addEventListener('click',function(){var p=id('dashboardPicker');if(p)p.hidden=!p.hidden;});row.appendChild(simple);row.appendChild(detailed);row.appendChild(custom);card.appendChild(row);var picker=document.createElement('div');picker.id='dashboardPicker';picker.hidden=true;picker.appendChild(div('small','Choose what appears in Simple Dashboard on this device.'));var grid=document.createElement('div');grid.className='dashboard-widget-grid';widgets.forEach(function(w){var lab=document.createElement('label');var cb=document.createElement('input');cb.type='checkbox';cb.value=w.key;cb.addEventListener('change',function(){var picks=loadPicks();if(cb.checked&&picks.indexOf(w.key)<0)picks.push(w.key);if(!cb.checked)picks=picks.filter(function(x){return x!==w.key;});savePicks(picks);apply();});lab.appendChild(cb);lab.appendChild(document.createTextNode(w.label));grid.appendChild(lab);});picker.appendChild(grid);var reset=document.createElement('button');reset.type='button';reset.className='secondary';reset.textContent='Reset Simple Defaults';reset.style.marginTop='10px';reset.addEventListener('click',function(){savePicks(defaults.slice());syncChecks();apply();});picker.appendChild(reset);card.appendChild(picker);if(first&&first.parentNode)first.parentNode.insertBefore(card,first.nextSibling);else document.body.insertBefore(card,document.body.firstChild);syncChecks();syncButtons();apply();}
+function syncChecks(){var picks=loadPicks();document.querySelectorAll('#dashboardPicker input[type="checkbox"]').forEach(function(cb){cb.checked=picks.indexOf(cb.value)>=0;});}
+function syncButtons(){var m=mode(),s=id('simpleDashboardBtn'),d=id('detailedDashboardBtn');if(s)s.classList.toggle('dashboard-mode-active',m==='simple');if(d)d.classList.toggle('dashboard-mode-active',m==='detailed');}
+make();setInterval(apply,1200);window.addEventListener('storage',function(e){if(e.key===MODE||e.key===PICKS){syncChecks();syncButtons();apply();}});
+})();
