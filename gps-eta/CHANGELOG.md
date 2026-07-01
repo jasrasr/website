@@ -1,5 +1,18 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.8.6 - 2026-06-30
+
+- Added `no-api-enhancements.js` for additional features that do not require a maps/directions API key.
+- Added background resume recovery using page focus, visibility, and page show events to reconnect GPS without resetting the trip.
+- Added a `Reconnect GPS` button.
+- Added GPS jump filtering to reject likely bad GPS spikes while preserving trip stats.
+- Added a manual route correction factor that can adjust ETA calculations without a routing provider.
+- Added an ETA drift indicator comparing the current ETA against the first valid ETA in the current trip.
+- Added pause counting, rejected-jump count, and last GPS step display.
+- Added GPX and KML trip export from logged GPS points.
+- Updated the on-page future-feature note to list these items as already included.
+- Preserved existing runtime history data; no history reset or migration is required.
+
 ## Rev 1.8.5 - 2026-06-30
 
 - Added `map-loader.js` and `live-map.js` for a visual live location map.
