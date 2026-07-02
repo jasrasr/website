@@ -5,7 +5,7 @@ Description: Setup, usage, credentials, deployment, and architecture notes for t
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-02
-Revision: 1.4.2
+Revision: 1.4.3
 -->
 
 # TV Binge Board
@@ -35,22 +35,24 @@ Change these immediately after upload if the site is public.
 | Admin | `admin` | `admin123` | Manage other accounts. Does not track personal shows. |
 | User | `testuser` | `testuser123` | Initial test user with sample library data. |
 
-## Features included through rev 1.4.2
+## Features included through rev 1.4.3
 
 - Project renamed to TV Binge Board with `tv-binge-board` as the folder/URL slug.
 - JSON file storage with file locking and atomic writes.
 - User registration and sign-in.
+- Guest-facing Create account entry point.
 - Login failure rate limiting.
 - User password change page.
 - Seeded admin account.
 - Seeded test user account.
-- Admin account can manage other users' lists.
+- Admin account can create users and manage other users' lists.
 - Admin account is blocked from tracking its own shows/movies.
 - Admin reset-password action.
 - Admin disable/enable user action.
 - Site setting to enable/disable public registration.
 - Admin activity log.
 - Mobile-first UI.
+- Logout link in the signed-in bottom navigation.
 - Watchlist and status management.
 - Ratings and notes.
 - Last watched season/episode field for TV shows.
@@ -62,6 +64,7 @@ Change these immediately after upload if the site is public.
 - User-to-user connection requests.
 - User avatar URL support.
 - TMDB search endpoint with cache support.
+- Live TMDB suggestions while typing in Search.
 - TMDB poster/detail refresh action.
 - Local TMDB poster cache for linked movies and TV shows.
 - Local season poster and episode still cache for TV shows.
@@ -208,7 +211,7 @@ Recommended next hardening steps:
 
 ## Deployment notes for GitHub
 
-Do not commit real user data or secrets from a live site. For a public repo, keep seed/demo data only.
+Do not commit real user data or secrets from a live site. Runtime JSON data is intentionally ignored and should stay on the server between deploys.
 
 Suggested `.gitignore` additions for a live deployment branch:
 
@@ -233,7 +236,7 @@ data/**/*.tmp.*
 
 ## Revision
 
-Current revision: `1.4.2`
+Current revision: `1.4.3`
 
 
 ## Artwork cache cleanup

@@ -5,10 +5,19 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-02
-Revision: 1.4.2
+Revision: 1.4.3
 -->
 
 # Changelog
+
+## rev 1.4.3 - 2026-07-02
+
+- Added guest-facing registration entry points and admin-created user accounts.
+- Added a signed-in logout link to the bottom navigation.
+- Added live TMDB search suggestions while typing on the Search page.
+- Bumped the visible app revision and service worker cache to refresh browser assets.
+- Added versioned CSS/JS asset URLs so browsers load current frontend code after deploys.
+- Stopped tracking runtime JSON account, settings, activity, login, profile, library, and connection data so deploys do not overwrite live users.
 
 
 ## rev 1.4.2 - 2026-07-02

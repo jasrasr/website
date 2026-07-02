@@ -14,17 +14,17 @@ Thumbs.db
 
 data/backups/*.zip
 
-# Uncomment for live/private deployments after initial testing.
-# data/accounts.json
-# data/settings.json
-# data/activity-log.json
-# data/login-attempts.json
-# data/users/*/library.json
-# data/users/*/profile.json
-# data/users/*/connections.json
-# data/users/*/imports/*
-# data/users/*/uploads/*
-# data/cache/tmdb/*.json
+# Runtime JSON data belongs on the server and must not be overwritten by source deploys.
+data/accounts.json
+data/settings.json
+data/activity-log.json
+data/login-attempts.json
+data/users/*/library.json
+data/users/*/profile.json
+data/users/*/connections.json
+data/users/*/imports/*
+data/users/*/uploads/*
+data/cache/tmdb/*.json
 
 # Runtime local artwork cache. Keep folders/placeholders, not downloaded images.
 public-cache/posters/*

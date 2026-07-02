@@ -56,7 +56,7 @@ function app_page_header(string $title): void
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#111827">
     <title><?= e($title) ?> - <?= e(APP_NAME) ?></title>
-    <link rel="stylesheet" href="<?= e(app_href('assets/css/app.css')) ?>">
+    <link rel="stylesheet" href="<?= e(app_href('assets/css/app.css?v=' . rawurlencode(APP_VERSION))) ?>">
     <link rel="manifest" href="<?= e(app_href('manifest.webmanifest')) ?>">
     <link rel="apple-touch-icon" href="<?= e(app_href('assets/icons/icon-192.png')) ?>">
 </head>
@@ -104,7 +104,7 @@ function app_page_footer(): void
     <p>Metadata may use TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
     <p><a href="<?= e(app_href('changelog.php')) ?>">Changelog</a> · <a href="<?= e(app_href('README.md')) ?>">README</a> · <a href="<?= e(app_href('TASKS.md')) ?>">Task list</a></p>
 </footer>
-<script src="<?= e(app_href('assets/js/app.js')) ?>"></script>
+<script src="<?= e(app_href('assets/js/app.js?v=' . rawurlencode(APP_VERSION))) ?>"></script>
 </body>
 </html><?php
 }
@@ -673,4 +673,3 @@ function app_simple_markdown(string $markdown): string
     if ($inList) { $html .= '</ul>'; }
     return $html;
 }
-
