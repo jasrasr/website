@@ -22,6 +22,7 @@ $item = $library['items'][$index];
 $editable = app_is_admin($user) || $targetUsername === $user['username'];
 $watched = app_watched_episode_keys($item);
 $percent = app_episode_percent($item);
+$requestedSeason = max(0, (int)($_GET['season'] ?? 1));
 $tmdbUrl = app_tmdb_public_url_for_item($item);
 
 $seasonSummaries = [];
@@ -105,8 +106,34 @@ app_page_header((string)($item['title'] ?? 'Item'));
                 }
             }
         ?>
-        <details class="season-block" <?= $seasonNumber === 1 ? 'open' : '' ?>>
+        <details class="season-block" id="season-<?= e((string)$seasonNumber) ?>" <?= $seasonNumber === $requestedSeason ? 'open' : '' ?>>
             <summary><?= e($seasonName) ?> <span class="muted">(<?= e((string)count($episodes)) ?> episodes)</span></summary>
+            <?php
+                $seasonRedirect = ($_SERVER['REQUEST_URI'] ?? ('item.php?uid=' . $uid . ($targetUsername !== '' ? '&u=' . rawurlencode($targetUsername) : '')))
+                    . (str_contains((string)($_SERVER['REQUEST_URI'] ?? ''), '?') ? '&' : '?')
+                    . 'season=' . $seasonNumber
+                    . '#season-' . $seasonNumber;
+            ?>
+            <div class="season-actions">
+                <form method="post" action="<?= e(app_href('api/toggle-episode.php')) ?>">
+                    <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
+                    <input type="hidden" name="uid" value="<?= e($uid) ?>">
+                    <?php if (app_is_admin($user)): ?><input type="hidden" name="target_user" value="<?= e($targetUsername) ?>"><?php endif; ?>
+                    <input type="hidden" name="season" value="<?= e((string)$seasonNumber) ?>">
+                    <input type="hidden" name="action" value="mark_season_watched">
+                    <input type="hidden" name="redirect" value="<?= e($seasonRedirect) ?>">
+                    <button class="secondary" type="submit">Mark season watched</button>
+                </form>
+                <form method="post" action="<?= e(app_href('api/toggle-episode.php')) ?>">
+                    <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
+                    <input type="hidden" name="uid" value="<?= e($uid) ?>">
+                    <?php if (app_is_admin($user)): ?><input type="hidden" name="target_user" value="<?= e($targetUsername) ?>"><?php endif; ?>
+                    <input type="hidden" name="season" value="<?= e((string)$seasonNumber) ?>">
+                    <input type="hidden" name="action" value="mark_season_unwatched">
+                    <input type="hidden" name="redirect" value="<?= e($seasonRedirect) ?>">
+                    <button class="secondary" type="submit">Clear season watched</button>
+                </form>
+            </div>
             <div class="episode-grid rich">
                 <?php foreach ($episodes as $episodeData): ?>
                     <?php
@@ -128,7 +155,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
                         <input type="hidden" name="air_date" value="<?= e($airDate) ?>">
                         <input type="hidden" name="still_path" value="<?= e((string)($episodeData['still_path'] ?? '')) ?>">
                         <input type="hidden" name="local_still_path" value="<?= e((string)($episodeData['local_still_path'] ?? '')) ?>">
-                        <input type="hidden" name="redirect" value="<?= e($_SERVER['REQUEST_URI'] ?? 'item.php?uid=' . $uid) ?>">
+                        <input type="hidden" name="redirect" value="<?= e($seasonRedirect) ?>">
                         <button class="episode-button <?= $isWatched ? 'watched' : '' ?>" type="submit" title="<?= e($episodeTitle) ?>">
                             <img class="episode-still" src="<?= e($episodeArt) ?>" alt="Image for <?= e($episodeTitle) ?>" loading="lazy">
                             <span>S<?= e((string)$seasonNumber) ?>E<?= e((string)$episodeNumber) ?></span>

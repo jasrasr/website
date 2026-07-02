@@ -103,6 +103,9 @@ button.danger, .danger { background: var(--danger); color: #190707; }
 .inline-form { margin: .75rem 0; }
 .season-block { margin: 1rem 0; border: 1px solid rgba(255,255,255,.12); border-radius: 1rem; padding: .75rem; background: rgba(17,24,39,.45); }
 .season-block > summary { cursor: pointer; font-weight: 800; padding: .25rem; }
+.season-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0 1rem; }
+.season-actions form { margin: 0; }
+.season-actions .secondary { min-width: 10.5rem; }
 .episode-grid.rich { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: .55rem; }
 .episode-card-form { margin: 0; }
 .episode-button small { display: block; font-size: .68rem; line-height: 1.1; opacity: .82; margin-top: .12rem; }
