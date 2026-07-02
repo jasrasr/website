@@ -2,11 +2,11 @@
 /**
  * File: api/update-status.php
  * Project: TV Binge Board
- * Description: Updates status, rating, notes, episode totals, and last watched episode for a media item.
+ * Description: Updates status, rating, notes, manual TV totals, and last watched episode for a media item.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-02
- * Revision: 1.4.2
+ * Revision: 1.4.3
  */
 declare(strict_types=1);
 
@@ -27,7 +27,7 @@ $library['items'][$index]['status'] = $status;
 $rating = trim((string)($_POST['rating'] ?? ''));
 $library['items'][$index]['rating'] = $rating === '' ? null : max(1, min(10, (int)$rating));
 $library['items'][$index]['notes'] = trim((string)($_POST['notes'] ?? ''));
-if (($library['items'][$index]['type'] ?? '') === 'tv') {
+if (($library['items'][$index]['type'] ?? '') === 'tv' && empty($library['items'][$index]['tmdb_id'])) {
     $library['items'][$index]['total_seasons'] = trim((string)($_POST['total_seasons'] ?? '')) === '' ? ($library['items'][$index]['total_seasons'] ?? null) : max(0, (int)$_POST['total_seasons']);
     $library['items'][$index]['total_episodes'] = trim((string)($_POST['total_episodes'] ?? '')) === '' ? ($library['items'][$index]['total_episodes'] ?? null) : max(0, (int)$_POST['total_episodes']);
 }

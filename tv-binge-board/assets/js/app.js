@@ -77,6 +77,41 @@
             runSearch(searchQuery.value.trim(), { showEmptyHint: true });
         });
     }
+
+    document.querySelectorAll('select[name="season"][data-episode-options]').forEach(function (seasonSelect) {
+        const form = seasonSelect.closest('form');
+        const episodeSelect = form ? form.querySelector('select[name="episode"]') : null;
+        if (!episodeSelect) { return; }
+
+        let episodeMap = {};
+        try {
+            episodeMap = JSON.parse(seasonSelect.dataset.episodeOptions || '{}') || {};
+        } catch (error) {
+            episodeMap = {};
+        }
+
+        function syncEpisodeOptions() {
+            const seasonValue = String(seasonSelect.value || '');
+            const count = Math.max(0, parseInt(episodeMap[seasonValue] || '0', 10) || 0);
+            const previousValue = String(episodeSelect.value || '');
+            episodeSelect.innerHTML = '';
+            for (let episode = 1; episode <= count; episode += 1) {
+                const option = document.createElement('option');
+                option.value = String(episode);
+                option.textContent = String(episode);
+                if (String(episode) === previousValue || (episode === 1 && previousValue === '')) {
+                    option.selected = true;
+                }
+                episodeSelect.appendChild(option);
+            }
+            if (count > 0 && !episodeSelect.value) {
+                episodeSelect.value = String(Math.min(count, parseInt(previousValue || '1', 10) || 1));
+            }
+        }
+
+        seasonSelect.addEventListener('change', syncEpisodeOptions);
+        syncEpisodeOptions();
+    });
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function () { navigator.serviceWorker.register('service-worker.js').catch(function () {}); });
     }

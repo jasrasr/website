@@ -195,6 +195,46 @@ function app_total_episodes_from_item(array $item): int
     return $sum;
 }
 
+
+function app_tv_season_options(array $item): array
+{
+    $options = [];
+    foreach (($item['seasons'] ?? []) as $season) {
+        if (!is_array($season)) { continue; }
+        $seasonNumber = (int)($season['season_number'] ?? 0);
+        if ($seasonNumber <= 0) { continue; }
+        $options[$seasonNumber] = max(0, (int)($season['episode_count'] ?? 0));
+    }
+    if ($options !== []) {
+        ksort($options);
+        return $options;
+    }
+
+    $totalSeasons = max(0, (int)($item['total_seasons'] ?? 0));
+    $fallbackEpisodes = max(0, (int)($item['total_episodes'] ?? 0));
+    if ($totalSeasons > 0) {
+        $perSeason = $totalSeasons > 0 ? (int)ceil($fallbackEpisodes / max($totalSeasons, 1)) : 0;
+        for ($season = 1; $season <= $totalSeasons; $season++) {
+            $options[$season] = max(0, $perSeason);
+        }
+    }
+    return $options;
+}
+
+function app_tv_episode_options(array $item, int $seasonNumber): array
+{
+    $seasonNumber = max(1, $seasonNumber);
+    $seasons = app_tv_season_options($item);
+    $count = max(0, (int)($seasons[$seasonNumber] ?? 0));
+    if ($count <= 0) {
+        $lastSeason = (int)($item['last_episode']['season'] ?? 0);
+        if ($lastSeason === $seasonNumber) {
+            $count = max($count, (int)($item['last_episode']['episode'] ?? 0));
+        }
+    }
+    return $count > 0 ? range(1, $count) : [];
+}
+
 function app_tmdb_public_url_for_item(array $item): string
 {
     $tmdbId = (int)($item['tmdb_id'] ?? 0);
@@ -324,14 +364,42 @@ function app_render_media_card(array $item, bool $editable = false, string $targ
                             <textarea name="notes" rows="3"><?= e((string)($item['notes'] ?? '')) ?></textarea>
                         </label>
                         <?php if (($item['type'] ?? '') === 'tv'): ?>
+                            <?php
+                                $seasonOptions = app_tv_season_options($item);
+                                $selectedSeason = max(1, (int)($item['last_episode']['season'] ?? (array_key_first($seasonOptions) ?: 1)));
+                                if ($seasonOptions !== [] && !isset($seasonOptions[$selectedSeason])) {
+                                    $selectedSeason = (int)array_key_first($seasonOptions);
+                                }
+                                $episodeOptions = app_tv_episode_options($item, $selectedSeason);
+                                $selectedEpisode = max(1, (int)($item['last_episode']['episode'] ?? ($episodeOptions[0] ?? 1)));
+                                if ($episodeOptions !== [] && !in_array($selectedEpisode, $episodeOptions, true)) {
+                                    $selectedEpisode = (int)end($episodeOptions);
+                                    reset($episodeOptions);
+                                }
+                                $seasonOptionsJson = htmlspecialchars((string)json_encode($seasonOptions, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                            ?>
                             <div class="grid-2">
-                                <label>Season <input type="number" name="season" min="0" value="<?= e((string)($item['last_episode']['season'] ?? '')) ?>"></label>
-                                <label>Episode <input type="number" name="episode" min="0" value="<?= e((string)($item['last_episode']['episode'] ?? '')) ?>"></label>
+                                <label>Season
+                                    <select name="season" data-episode-options="<?= $seasonOptionsJson ?>">
+                                        <?php foreach (array_keys($seasonOptions) as $seasonOption): ?>
+                                            <option value="<?= e((string)$seasonOption) ?>" <?= $seasonOption === $selectedSeason ? 'selected' : '' ?>><?= e((string)$seasonOption) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </label>
+                                <label>Episode
+                                    <select name="episode">
+                                        <?php foreach ($episodeOptions as $episodeOption): ?>
+                                            <option value="<?= e((string)$episodeOption) ?>" <?= $episodeOption === $selectedEpisode ? 'selected' : '' ?>><?= e((string)$episodeOption) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </label>
                             </div>
+                            <?php if (empty($item['tmdb_id'])): ?>
                             <div class="grid-2">
                                 <label>Total seasons <input type="number" name="total_seasons" min="0" value="<?= e((string)($item['total_seasons'] ?? '')) ?>"></label>
                                 <label>Total episodes <input type="number" name="total_episodes" min="0" value="<?= e((string)($item['total_episodes'] ?? '')) ?>"></label>
                             </div>
+                            <?php endif; ?>
                         <?php endif; ?>
                         <button type="submit">Save</button>
                     </form>
