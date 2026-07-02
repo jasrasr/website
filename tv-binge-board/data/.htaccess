@@ -1,0 +1,15 @@
+# File: data/.htaccess
+# Project: TV Binge Board
+# Description: Blocks browser access to JSON data, uploads, imports, cache, and lock files.
+# Author: Jason Lamb / ChatGPT
+# Created: 2026-07-02
+# Modified: 2026-07-02
+# Revision: 1.4.2
+
+Options -Indexes
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Deny from all
+</IfModule>

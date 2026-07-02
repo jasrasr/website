@@ -1,0 +1,115 @@
+/**
+ * File: assets/css/app.css
+ * Project: TV Binge Board
+ * Description: Mobile-first application styles, cards, forms, navigation, media list layout, avatars, episode grids, and import UI.
+ * Author: Jason Lamb / ChatGPT
+ * Created: 2026-07-02
+ * Modified: 2026-07-02
+ * Revision: 1.4.2
+ */
+
+
+:root {
+    color-scheme: dark;
+    --bg: #0b1020;
+    --panel: #111827;
+    --panel-2: #1f2937;
+    --text: #f9fafb;
+    --muted: #9ca3af;
+    --border: #374151;
+    --accent: #60a5fa;
+    --danger: #f87171;
+    --success: #34d399;
+    --warning: #fbbf24;
+    --shadow: 0 10px 30px rgba(0, 0, 0, .25);
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: radial-gradient(circle at top, #172554 0, var(--bg) 42%); color: var(--text); padding-bottom: 7.25rem; }
+a { color: var(--accent); }
+.topbar { position: sticky; top: 0; z-index: 20; display: flex; justify-content: space-between; align-items: center; padding: .85rem 1rem; background: rgba(11, 16, 32, .86); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+.brand { font-weight: 800; text-decoration: none; color: var(--text); letter-spacing: .02em; }
+.version, .muted { color: var(--muted); }
+.container { width: min(1040px, 100%); margin: 0 auto; padding: 1rem; }
+.card, .hero-card, .media-card, .user-card, .stat-card { background: rgba(17, 24, 39, .94); border: 1px solid var(--border); border-radius: 1.2rem; box-shadow: var(--shadow); }
+.card, .hero-card { padding: 1rem; margin-bottom: 1rem; }
+.hero-card { background: linear-gradient(135deg, rgba(37,99,235,.35), rgba(17,24,39,.94)); }
+.narrow { max-width: 560px; margin-inline: auto; }
+h1, h2, h3 { margin-top: 0; line-height: 1.1; }
+.stack { display: grid; gap: .85rem; }
+label { display: grid; gap: .35rem; font-weight: 650; }
+input, select, textarea, button, .button { width: 100%; border-radius: .8rem; border: 1px solid var(--border); padding: .85rem 1rem; font: inherit; }
+input, select, textarea { background: #030712; color: var(--text); }
+button, .button { display: inline-flex; justify-content: center; align-items: center; text-decoration: none; cursor: pointer; background: var(--accent); color: #08111f; font-weight: 800; border: 0; }
+button.secondary, .button.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+button.danger, .danger { background: var(--danger); color: #190707; }
+.actions { display: flex; gap: .75rem; flex-wrap: wrap; }
+.actions .button, .actions button { width: auto; }
+.actions.small { align-items: center; }
+.wrap-actions form { margin: 0; }
+.media-list { display: grid; gap: .9rem; }
+.media-card { display: grid; grid-template-columns: 92px 1fr; gap: .9rem; padding: .75rem; overflow: hidden; }
+.poster { width: 92px; aspect-ratio: 2/3; object-fit: cover; border-radius: .75rem; background: var(--panel-2); }
+.placeholder-poster { display: grid; place-items: center; color: var(--muted); font-size: 2rem; }
+.media-title-row { display: flex; justify-content: space-between; align-items: start; gap: .5rem; }
+.media-title-row h3 a { color: var(--text); text-decoration: none; }
+.pill, .chip { display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; border: 1px solid var(--border); padding: .25rem .55rem; color: var(--muted); font-size: .78rem; white-space: nowrap; }
+.pill.admin { color: #fde68a; border-color: #92400e; }
+.pill.success { color: var(--success); border-color: #065f46; }
+.chip-row { display: flex; gap: .5rem; flex-wrap: wrap; }
+.chip { text-decoration: none; background: var(--panel-2); }
+.edit-panel { margin-top: .5rem; }
+.edit-panel summary { cursor: pointer; color: var(--accent); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+.grid-3 { display: grid; grid-template-columns: 1fr; gap: .75rem; }
+.alert { padding: .85rem 1rem; border-radius: .85rem; margin-bottom: 1rem; background: var(--panel-2); border: 1px solid var(--border); }
+.alert.success { border-color: #065f46; }
+.alert.danger { border-color: #7f1d1d; }
+.user-strip { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; color: var(--muted); }
+.user-strip-name, .profile-heading { display: flex; align-items: center; gap: .75rem; }
+.small-profile { gap: .55rem; }
+.avatar { border-radius: 999px; object-fit: cover; border: 1px solid var(--border); flex: 0 0 auto; }
+.avatar-fallback { display: inline-grid; place-items: center; background: var(--panel-2); color: var(--accent); font-weight: 900; }
+.user-list { display: grid; gap: .8rem; }
+.user-card { padding: .85rem; display: flex; justify-content: space-between; gap: .75rem; align-items: center; }
+.stacked-card { display: grid; gap: .75rem; }
+.user-card-main { display: flex; justify-content: space-between; gap: .75rem; align-items: center; }
+.inline-form { display: flex; gap: .6rem; align-items: center; margin: .5rem 0; }
+.checkbox-row { display: flex; grid-template-columns: auto 1fr; align-items: center; gap: .6rem; }
+.checkbox-row input { width: auto; }
+.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; margin-bottom: 1rem; }
+.stat-card { padding: 1rem; display: grid; gap: .2rem; }
+.stat-card strong { font-size: 1.55rem; }
+.stat-card span { color: var(--muted); }
+.progress { height: .55rem; width: 100%; background: #030712; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; margin: .25rem 0; }
+.progress span { display: block; height: 100%; background: var(--success); }
+.episode-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .45rem; margin-bottom: 1rem; }
+.episode-grid form { margin: 0; }
+.episode-button { padding: .55rem .25rem; background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+.episode-button.watched { background: var(--success); color: #052012; }
+.compact-list { padding-left: 1rem; line-height: 1.6; }
+.filter-form { margin-top: .75rem; }
+.bottom-nav { position: fixed; left: 50%; bottom: .75rem; transform: translateX(-50%); z-index: 30; width: min(760px, calc(100% - 1rem)); display: grid; grid-auto-flow: column; gap: .25rem; padding: .35rem; background: rgba(17, 24, 39, .94); backdrop-filter: blur(14px); border: 1px solid var(--border); border-radius: 1.2rem; box-shadow: var(--shadow); overflow-x: auto; }
+.bottom-nav a { color: var(--text); text-decoration: none; text-align: center; padding: .7rem .3rem; border-radius: .9rem; font-weight: 700; font-size: .82rem; min-width: 4.4rem; }
+.bottom-nav a:hover { background: var(--panel-2); }
+.footer { text-align: center; color: var(--muted); font-size: .82rem; padding: 1rem; }
+.markdown-body p { line-height: 1.55; }
+.task-list { list-style: none; padding-left: 0; }
+@media (min-width: 720px) { .media-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hero-card, .card { padding: 1.25rem; } .grid-3 { grid-template-columns: repeat(3, 1fr); } .stats-grid { grid-template-columns: repeat(4, 1fr); } .episode-grid { grid-template-columns: repeat(10, minmax(0, 1fr)); } }
+
+
+.small-link { color: #93c5fd; font-weight: 700; text-decoration: none; }
+.small-link:hover { text-decoration: underline; }
+.button { display: inline-block; text-align: center; text-decoration: none; }
+.inline-form { margin: .75rem 0; }
+.season-block { margin: 1rem 0; border: 1px solid rgba(255,255,255,.12); border-radius: 1rem; padding: .75rem; background: rgba(17,24,39,.45); }
+.season-block > summary { cursor: pointer; font-weight: 800; padding: .25rem; }
+.episode-grid.rich { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: .55rem; }
+.episode-card-form { margin: 0; }
+.episode-button small { display: block; font-size: .68rem; line-height: 1.1; opacity: .82; margin-top: .12rem; }
+.episode-button span { display: block; font-weight: 800; }
+
+/* rev 1.4.0 local artwork and episode still UI */
+.episode-button { overflow: hidden; display: grid; gap: .2rem; padding: .35rem; min-height: 8.4rem; }
+.episode-still { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: .55rem; background: #030712; border: 1px solid rgba(255,255,255,.08); }
+.episode-button.watched .episode-still { border-color: rgba(5, 32, 18, .55); opacity: .9; }
+.artwork-meta { font-size: .78rem; color: var(--muted); }

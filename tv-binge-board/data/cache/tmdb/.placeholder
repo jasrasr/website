@@ -1,0 +1,11 @@
+# Placeholder
+
+File: data/cache/tmdb/.placeholder
+Project: TV Binge Board
+Description: TMDB cache files are stored here after searches.
+Author: Jason Lamb / ChatGPT
+Created: 2026-07-02
+Modified: 2026-07-02
+Revision: 1.4.2
+
+This file keeps the directory in source control and documents the intended purpose of the folder.

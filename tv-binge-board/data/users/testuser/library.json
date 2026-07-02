@@ -1,0 +1,59 @@
+{
+    "_meta": {
+        "project": "TV Binge Board",
+        "description": "Tracked shows, movies, statuses, ratings, notes, and episode progress.",
+        "version": "1.4.2",
+        "updated_at": "2026-07-02T00:00:00-04:00"
+    },
+    "items": [
+        {
+            "uid": "tv-1399",
+            "source": "tmdb",
+            "tmdb_id": 1399,
+            "type": "tv",
+            "title": "Game of Thrones",
+            "year": "2011",
+            "poster_path": "",
+            "poster_url": "",
+            "overview": "Seed example TV show. Replace or delete this from the UI.",
+            "status": "watching",
+            "rating": 8,
+            "notes": "Example notes field.",
+            "episodes": [
+                {
+                    "season": 1,
+                    "episode": 1,
+                    "watched_at": "2026-07-02T00:00:00-04:00"
+                }
+            ],
+            "last_episode": {
+                "season": 1,
+                "episode": 1,
+                "watched_at": "2026-07-02T00:00:00-04:00"
+            },
+            "created_at": "2026-07-02T00:00:00-04:00",
+            "updated_at": "2026-07-02T00:00:00-04:00",
+            "total_seasons": 8,
+            "total_episodes": 73
+        },
+        {
+            "uid": "movie-550",
+            "source": "tmdb",
+            "tmdb_id": 550,
+            "type": "movie",
+            "title": "Fight Club",
+            "year": "1999",
+            "poster_path": "",
+            "poster_url": "",
+            "overview": "Seed example movie. Replace or delete this from the UI.",
+            "status": "watchlist",
+            "rating": null,
+            "notes": "",
+            "episodes": [],
+            "created_at": "2026-07-02T00:00:00-04:00",
+            "updated_at": "2026-07-02T00:00:00-04:00",
+            "total_seasons": null,
+            "total_episodes": null
+        }
+    ]
+}

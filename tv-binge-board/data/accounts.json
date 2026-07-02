@@ -1,0 +1,36 @@
+{
+    "_meta": {
+        "project": "TV Binge Board",
+        "description": "Application user accounts and password hashes.",
+        "version": "1.4.2",
+        "updated_at": "2026-07-02T00:00:00-04:00"
+    },
+    "users": [
+        {
+            "id": "admin-seed",
+            "username": "admin",
+            "display_name": "Admin",
+            "password_hash": "$2y$12$hOb7bwEvBsBBhtu8FXkgyeyL93k7luVCCDp2MCqaJEqbBw88/e8Hi",
+            "role": "admin",
+            "can_track": false,
+            "public_share_enabled": false,
+            "created_at": "2026-07-02T00:00:00-04:00",
+            "last_login_at": null,
+            "disabled": false,
+            "password_changed_at": "2026-07-02T00:00:00-04:00"
+        },
+        {
+            "id": "testuser-seed",
+            "username": "testuser",
+            "display_name": "Test User",
+            "password_hash": "$2y$12$6KXAuuMNdXo897sG7QgcDu3JCqmwBLB0q9U5qYd0lUQvKuJdZZ1g.",
+            "role": "user",
+            "can_track": true,
+            "public_share_enabled": true,
+            "created_at": "2026-07-02T00:00:00-04:00",
+            "last_login_at": null,
+            "disabled": false,
+            "password_changed_at": "2026-07-02T00:00:00-04:00"
+        }
+    ]
+}

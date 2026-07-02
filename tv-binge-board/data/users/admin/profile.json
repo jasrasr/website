@@ -1,0 +1,14 @@
+{
+    "_meta": {
+        "project": "TV Binge Board",
+        "description": "Admin profile. Admins manage users and do not track media.",
+        "version": "1.4.2",
+        "updated_at": "2026-07-02T00:00:00-04:00"
+    },
+    "username": "admin",
+    "display_name": "Admin",
+    "bio": "Administration account. No personal tracking library.",
+    "public_share_enabled": false,
+    "created_at": "2026-07-02T00:00:00-04:00",
+    "avatar_url": ""
+}
