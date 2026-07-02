@@ -2,11 +2,11 @@
 /**
  * File: admin/users.php
  * Project: TV Binge Board
- * Description: Admin-only user list, account state controls, password reset, exports, and activity audit.
+ * Description: Admin-only user list, account creation, account state controls, password reset, exports, and activity audit.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-02
- * Revision: 1.4.2
+ * Revision: 1.4.3
  */
 declare(strict_types=1);
 
@@ -19,8 +19,25 @@ app_page_header('Manage Users');
 ?>
 <section class="card">
     <h1>Manage users</h1>
-    <p>The admin account can inspect and edit normal user libraries, reset passwords, and disable accounts. It does not track its own shows.</p>
+    <p>The admin account can create users, inspect and edit normal user libraries, reset passwords, and disable accounts. It does not track its own shows.</p>
     <div class="actions"><a class="button secondary" href="site-settings.php">Site settings</a></div>
+</section>
+<section class="card narrow">
+    <h2>Create user</h2>
+    <form method="post" action="../api/admin-user-action.php" class="stack">
+        <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
+        <input type="hidden" name="action" value="create_user">
+        <label>Display name
+            <input name="display_name" autocomplete="name">
+        </label>
+        <label>Username
+            <input name="username" autocomplete="username" minlength="3" required>
+        </label>
+        <label>Password
+            <input type="password" name="new_password" autocomplete="new-password" minlength="8" required>
+        </label>
+        <button type="submit">Create user</button>
+    </form>
 </section>
 <section class="card">
     <div class="user-list">
