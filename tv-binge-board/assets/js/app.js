@@ -112,6 +112,57 @@
         seasonSelect.addEventListener('change', syncEpisodeOptions);
         syncEpisodeOptions();
     });
+
+    document.querySelectorAll('.import-match').forEach(function (container) {
+        const queryInput = container.querySelector('[data-match-query]');
+        const resultsBox = container.querySelector('[data-match-results]');
+        const summary = container.querySelector('[data-match-summary]');
+        const card = container.closest('.import-match-card');
+        const idInput = card ? card.querySelector('input[name^="matched_tmdb_id["]') : null;
+        const typeInput = card ? card.querySelector('input[name^="matched_type["]') : null;
+        const titleText = card ? (card.querySelector('h3') ? card.querySelector('h3').textContent.trim() : '') : '';
+        const typeText = card ? (card.querySelector('.muted') ? card.querySelector('.muted').textContent.split('·')[0].trim() : '') : '';
+        const findButton = container.querySelector('[data-find-match]');
+        if (!queryInput || !resultsBox || !summary || !findButton || !idInput || !typeInput) { return; }
+
+        function setMatch(id, type, label) {
+            idInput.value = String(id || '');
+            typeInput.value = String(type || '');
+            summary.textContent = label || 'No TMDB match selected yet.';
+        }
+
+        function renderResults(results) {
+            resultsBox.innerHTML = '';
+            results.forEach(function (item) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'secondary';
+                button.textContent = `${item.title || 'Untitled'}${item.year ? ' (' + item.year + ')' : ''}`;
+                button.addEventListener('click', function () {
+                    setMatch(item.tmdb_id || '', item.type || '', `Selected match: ${(item.type || '').toUpperCase()} #${item.tmdb_id || ''} - ${item.title || 'Untitled'}`);
+                });
+                resultsBox.appendChild(button);
+            });
+        }
+
+        findButton.addEventListener('click', async function () {
+            const q = queryInput.value.trim() || titleText;
+            if (!q) { return; }
+            summary.textContent = 'Searching TMDB...';
+            try {
+                const response = await fetch(`api/import-match-search.php?q=${encodeURIComponent(q)}&type=${encodeURIComponent(typeText)}`);
+                const data = await response.json();
+                if (!response.ok || data.error) {
+                    summary.textContent = data.error || 'Search failed.';
+                    return;
+                }
+                renderResults(data.results || []);
+                summary.textContent = (data.results || []).length > 0 ? 'Pick the correct match below.' : 'No TMDB results found.';
+            } catch (error) {
+                summary.textContent = 'Search failed.';
+            }
+        });
+    });
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function () { navigator.serviceWorker.register('service-worker.js').catch(function () {}); });
     }

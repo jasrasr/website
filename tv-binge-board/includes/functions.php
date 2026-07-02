@@ -102,7 +102,7 @@ function app_page_footer(): void
 <footer class="footer">
     <p><?= e(APP_PUBLIC_SITE_NOTE) ?></p>
     <p>Metadata may use TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
-    <p><a href="<?= e(app_href('changelog.php')) ?>">Changelog</a> · <a href="<?= e(app_href('README.md')) ?>">README</a> · <a href="<?= e(app_href('TASKS.md')) ?>">Task list</a></p>
+    <p><a href="<?= e(app_href('changelog.php')) ?>">CHANGELOG</a> · <a href="<?= e(app_href('readme.php')) ?>">README</a> · <a href="<?= e(app_href('tasks.php')) ?>">TASKS</a></p>
 </footer>
 <script src="<?= e(app_href('assets/js/app.js?v=' . rawurlencode(APP_VERSION))) ?>"></script>
 </body>
@@ -570,6 +570,138 @@ function app_normalize_import_item(array $row): array
         $item['last_episode'] = $entry;
     }
     return $item;
+}
+
+
+function app_import_template_csv(): string
+{
+    $fp = fopen('php://temp', 'r+');
+    fputcsv($fp, ['type','title','year','tmdb_id','status','rating','season','episode','notes']);
+    fputcsv($fp, ['tv','JAG','','4376','watchlist','','','','Sample TMDB-linked TV row']);
+    rewind($fp);
+    $csv = stream_get_contents($fp);
+    fclose($fp);
+    return is_string($csv) ? $csv : '';
+}
+
+function app_import_supplied_fields(array $row): array
+{
+    $fields = [];
+    foreach ($row as $key => $value) {
+        if (!is_string($key)) { continue; }
+        if (trim((string)$value) !== '') { $fields[] = $key; }
+    }
+    return array_values(array_unique($fields));
+}
+
+function app_import_build_existing_lookup(array $library): array
+{
+    $existing = [];
+    foreach (($library['items'] ?? []) as $item) {
+        if (!is_array($item)) { continue; }
+        $uid = (string)($item['uid'] ?? '');
+        if ($uid !== '') { $existing[$uid] = $item; }
+        $key = strtolower((string)($item['type'] ?? '') . '|' . (string)($item['title'] ?? ''));
+        if ($key !== '|') { $existing[$key] = $item; }
+    }
+    return $existing;
+}
+
+function app_import_match_review_item(array $row, array $existingLookup): array
+{
+    $item = app_normalize_import_item($row);
+    $suppliedFields = app_import_supplied_fields($row);
+    $existingItem = $existingLookup[(string)($item['uid'] ?? '')] ?? $existingLookup[strtolower((string)($item['type'] ?? '') . '|' . (string)($item['title'] ?? ''))] ?? null;
+    $review = $item + [
+        'source_row' => $row,
+        'supplied_fields' => $suppliedFields,
+        'duplicate' => is_array($existingItem),
+        'match_status' => 'unmatched',
+        'match_query' => trim((string)($item['title'] ?? '') . ' ' . (string)($item['year'] ?? '')),
+        'matched_tmdb_id' => null,
+        'matched_type' => '',
+        'match_candidates' => [],
+    ];
+    if ((int)($item['tmdb_id'] ?? 0) > 0) {
+        $review['matched_tmdb_id'] = (int)$item['tmdb_id'];
+        $review['matched_type'] = (string)$item['type'];
+        $review['match_status'] = 'exact';
+        return $review;
+    }
+    if (trim((string)($item['title'] ?? '')) === '') {
+        $review['match_status'] = 'needs_match';
+        return $review;
+    }
+    if (!function_exists('app_tmdb_search') || !app_tmdb_configured()) {
+        $review['match_status'] = 'needs_match';
+        return $review;
+    }
+    try {
+        $results = app_tmdb_search((string)$review['match_query']);
+        $filtered = [];
+        foreach ($results as $result) {
+            if (!is_array($result)) { continue; }
+            if (($item['type'] ?? '') !== '' && ($result['type'] ?? '') !== ($item['type'] ?? '')) { continue; }
+            $filtered[] = [
+                'tmdb_id' => (int)($result['tmdb_id'] ?? 0),
+                'type' => (string)($result['type'] ?? ''),
+                'title' => (string)($result['title'] ?? ''),
+                'year' => (string)($result['year'] ?? ''),
+                'tmdb_url' => (string)($result['tmdb_url'] ?? ''),
+            ];
+            if (count($filtered) >= 5) { break; }
+        }
+        $review['match_candidates'] = $filtered;
+        if ($filtered !== []) {
+            $review['matched_tmdb_id'] = (int)($filtered[0]['tmdb_id'] ?? 0);
+            $review['matched_type'] = (string)($filtered[0]['type'] ?? '');
+            $review['match_status'] = strcasecmp((string)($filtered[0]['title'] ?? ''), (string)($item['title'] ?? '')) === 0 ? 'suggested' : 'needs_match';
+        } else {
+            $review['match_status'] = 'needs_match';
+        }
+    } catch (Throwable $ex) {
+        $review['match_status'] = 'needs_match';
+    }
+    return $review;
+}
+
+function app_import_apply_uploaded_fields(array $existingItem, array $reviewItem): array
+{
+    $merged = $existingItem;
+    $sourceRow = is_array($reviewItem['source_row'] ?? null) ? $reviewItem['source_row'] : [];
+    $supplied = is_array($reviewItem['supplied_fields'] ?? null) ? $reviewItem['supplied_fields'] : [];
+    $map = [
+        'type' => 'type',
+        'title' => 'title',
+        'year' => 'year',
+        'status' => 'status',
+        'rating' => 'rating',
+        'notes' => 'notes',
+        'release_date' => 'release_date',
+        'overview' => 'overview',
+        'tmdb_id' => 'tmdb_id',
+    ];
+    foreach ($map as $sourceKey => $targetKey) {
+        if (in_array($sourceKey, $supplied, true) && array_key_exists($targetKey, $reviewItem)) {
+            $merged[$targetKey] = $reviewItem[$targetKey];
+        }
+    }
+    if (in_array('season', $supplied, true) && in_array('episode', $supplied, true) && !empty($reviewItem['last_episode'])) {
+        $merged['last_episode'] = $reviewItem['last_episode'];
+        $keys = app_watched_episode_keys($merged);
+        $entry = $reviewItem['last_episode'];
+        $key = (int)($entry['season'] ?? 0) . '-' . (int)($entry['episode'] ?? 0);
+        if (empty($keys[$key])) {
+            $merged['episodes'][] = $entry;
+        }
+    }
+    if ((int)($reviewItem['matched_tmdb_id'] ?? 0) > 0) {
+        $merged['tmdb_id'] = (int)$reviewItem['matched_tmdb_id'];
+        $merged['type'] = (string)($reviewItem['matched_type'] ?? ($merged['type'] ?? ''));
+        $merged['tmdb_url'] = app_tmdb_external_url((string)$merged['type'], (int)$merged['tmdb_id']);
+    }
+    $merged['updated_at'] = date(DATE_ATOM);
+    return $merged;
 }
 
 function app_export_csv(array $items): string

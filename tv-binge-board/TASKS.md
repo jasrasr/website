@@ -135,6 +135,7 @@ Completed tasks stay in this file with `[x]` so the project history can be audit
 
 - [x] Add true TMDB season/episode metadata instead of even-split episode grid.
 - [ ] Add import column mapping UI.
+- [ ] Add LLM-based parsing or fuzzy AI service integration.
 - [ ] Add friend activity feed.
 - [ ] Add list comparison between connected users.
 - [ ] Add tags/custom lists.

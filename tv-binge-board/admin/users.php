@@ -2,7 +2,7 @@
 /**
  * File: admin/users.php
  * Project: TV Binge Board
- * Description: Admin-only user list, account creation, account state controls, password reset, exports, and activity audit.
+ * Description: Admin-only user list, account creation, account state controls, password reset, exports, imports, and activity audit.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-02
@@ -58,6 +58,7 @@ app_page_header('Manage Users');
             <div class="actions small wrap-actions">
                 <a class="button secondary" href="../export.php?format=json&u=<?= e($username) ?>">JSON</a>
                 <a class="button secondary" href="../export.php?format=csv&u=<?= e($username) ?>">CSV</a>
+                <a class="button secondary" href="../import.php?u=<?= e($username) ?>">Import</a>
                 <form method="post" action="../api/admin-user-action.php">
                     <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
                     <input type="hidden" name="target_user" value="<?= e($username) ?>">
