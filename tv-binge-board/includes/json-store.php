@@ -2,11 +2,11 @@
 /**
  * File: includes/json-store.php
  * Project: TV Binge Board
- * Description: Safe JSON read/write helpers with file locking, atomic saves, and directory utilities.
+ * Description: Safe JSON read/write helpers with file locking, restore-point backups, atomic saves, and directory utilities.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-02
- * Revision: 1.4.2
+ * Revision: 1.4.3
  */
 declare(strict_types=1);
 
@@ -47,6 +47,41 @@ function app_load_json(string $path, array $default = []): array
     return is_array($decoded) ? $decoded : $default;
 }
 
+function app_data_relative_path(string $path): ?string
+{
+    $root = realpath(APP_DATA_DIR);
+    $full = realpath($path);
+    if ($root === false || $full === false) {
+        return null;
+    }
+    $root = rtrim($root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+    if (!str_starts_with($full, $root)) {
+        return null;
+    }
+    $relative = substr($full, strlen($root));
+    if ($relative === '' || str_contains($relative, '..' . DIRECTORY_SEPARATOR)) {
+        return null;
+    }
+    return $relative;
+}
+
+function app_backup_existing_json(string $path): void
+{
+    if (!is_file($path) || !str_ends_with(strtolower($path), '.json')) {
+        return;
+    }
+    $relative = app_data_relative_path($path);
+    if ($relative === null || str_starts_with(str_replace('\\', '/', $relative), 'restore-points/')) {
+        return;
+    }
+    $backupPath = APP_DATA_DIR . DIRECTORY_SEPARATOR . 'restore-points' . DIRECTORY_SEPARATOR . date('Ymd-His') . DIRECTORY_SEPARATOR . $relative;
+    app_ensure_dir(dirname($backupPath));
+    if (!copy($path, $backupPath)) {
+        throw new RuntimeException('Unable to create restore-point backup: ' . $backupPath);
+    }
+    chmod($backupPath, 0644);
+}
+
 function app_save_json(string $path, array $data): void
 {
     app_ensure_dir(dirname($path));
@@ -64,6 +99,7 @@ function app_save_json(string $path, array $data): void
 
     try {
         flock($lock, LOCK_EX);
+        app_backup_existing_json($path);
         $tmp = $path . '.tmp.' . bin2hex(random_bytes(4));
         if (file_put_contents($tmp, $json . PHP_EOL, LOCK_EX) === false) {
             throw new RuntimeException('Unable to write temporary JSON file: ' . $tmp);

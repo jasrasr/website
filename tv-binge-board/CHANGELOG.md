@@ -18,6 +18,7 @@ Revision: 1.4.3
 - Bumped the visible app revision and service worker cache to refresh browser assets.
 - Added versioned CSS/JS asset URLs so browsers load current frontend code after deploys.
 - Stopped tracking runtime JSON account, settings, activity, login, profile, library, and connection data so deploys do not overwrite live users.
+- Added automatic restore-point backups before existing runtime JSON files are overwritten.
 
 
 ## rev 1.4.2 - 2026-07-02

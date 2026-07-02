@@ -126,6 +126,7 @@ Completed tasks stay in this file with `[x]` so the project history can be audit
 - [x] Add stronger session cookie settings for HTTPS.
 - [x] Add activity log for admin changes.
 - [x] Add recurring/manual JSON backup helper.
+- [x] Add automatic pre-overwrite JSON restore points.
 - [ ] Add server-side upload malware scanning if this becomes public/multi-user.
 - [ ] Add account recovery/reset-by-email workflow.
 - [ ] Add optional two-factor authentication.

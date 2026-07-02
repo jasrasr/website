@@ -25,6 +25,7 @@ data/users/*/connections.json
 data/users/*/imports/*
 data/users/*/uploads/*
 data/cache/tmdb/*.json
+data/restore-points/*
 
 # Runtime local artwork cache. Keep folders/placeholders, not downloaded images.
 public-cache/posters/*

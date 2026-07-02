@@ -82,6 +82,7 @@ Change these immediately after upload if the site is public.
 - `TASKS.md` with completed tasks retained for audit.
 - PWA icons and basic service worker.
 - CLI backup helper: `tools/backup-data.php`.
+- Automatic restore-point backups under `data/restore-points/` before runtime JSON overwrites.
 - `.placeholder` files in intentionally empty folders.
 - Unused artwork cleanup on delete and from the admin Site Settings page.
 - `data/.htaccess` protection for JSON data.
@@ -193,6 +194,8 @@ php tools/backup-data.php
 ```
 
 Backups are written to `data/backups/` and exclude lock/temp files and previous backups.
+
+Before an existing runtime JSON file is overwritten through the web app, the prior file is copied to `data/restore-points/YYYYMMDD-HHMMSS/` using the same relative path. The restore-point folder is ignored by Git and should stay on the server for recovery.
 
 ## Security notes
 
