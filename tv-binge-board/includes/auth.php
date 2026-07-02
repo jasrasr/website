@@ -6,7 +6,7 @@
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-02
- * Revision: 1.4.2
+ * Revision: 1.4.3
  */
 declare(strict_types=1);
 
@@ -176,14 +176,36 @@ function app_create_user(string $username, string $password, string $displayName
     return $user;
 }
 
+function app_login_client_ip(): string
+{
+    return trim((string)($_SERVER['REMOTE_ADDR'] ?? ''));
+}
+
+function app_trusted_login_ips(): array
+{
+    if (defined('TRUSTED_LOGIN_IPS_LOCAL') && is_array(TRUSTED_LOGIN_IPS_LOCAL)) {
+        return array_values(array_filter(array_map(static fn($ip) => trim((string)$ip), TRUSTED_LOGIN_IPS_LOCAL), static fn($ip) => $ip !== ''));
+    }
+    return [];
+}
+
+function app_login_is_trusted_client(): bool
+{
+    $ip = app_login_client_ip();
+    return $ip !== '' && in_array($ip, app_trusted_login_ips(), true);
+}
+
 function app_login_key(string $username): string
 {
-    $ip = (string)($_SERVER['REMOTE_ADDR'] ?? 'unknown');
-    return sha1(app_sanitize_username($username) . '|' . $ip);
+    $ip = app_login_client_ip();
+    return sha1(app_sanitize_username($username) . '|' . ($ip !== '' ? $ip : 'unknown'));
 }
 
 function app_login_is_limited(string $username): bool
 {
+    if (app_login_is_trusted_client()) {
+        return false;
+    }
     $attempts = app_load_json(app_login_attempts_path(), ['attempts' => []]);
     $key = app_login_key($username);
     $entry = $attempts['attempts'][$key] ?? null;
@@ -199,6 +221,9 @@ function app_login_is_limited(string $username): bool
 
 function app_record_login_failure(string $username): void
 {
+    if (app_login_is_trusted_client()) {
+        return;
+    }
     $attempts = app_load_json(app_login_attempts_path(), ['_meta' => app_json_meta('Rate-limiting login attempts.'), 'attempts' => []]);
     $key = app_login_key($username);
     $entry = $attempts['attempts'][$key] ?? ['count' => 0];
