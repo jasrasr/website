@@ -6,7 +6,7 @@
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-02
- * Revision: 1.4.2
+ * Revision: 1.4.3
  */
 declare(strict_types=1);
 
@@ -25,10 +25,11 @@ app_page_header('Search');
     <h1>Add a show or movie</h1>
     <form id="searchForm" class="stack">
         <label>Search title
-            <input id="searchQuery" name="q" placeholder="Movie or TV title" required>
+            <input id="searchQuery" name="q" placeholder="Movie or TV title" autocomplete="off" required>
         </label>
         <button type="submit">Search TMDB</button>
     </form>
+    <p id="searchStatus" class="muted" aria-live="polite"></p>
     <p class="muted">TMDB search/add uses the server-side API credential. Your API key/token is never exposed to browser JavaScript.</p>
 </section>
 <section id="searchResults" class="media-list" aria-live="polite"></section>
