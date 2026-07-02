@@ -645,7 +645,21 @@ function app_simple_markdown(string $markdown): string
     $lines = preg_split('/\R/', $markdown) ?: [];
     $html = '';
     $inList = false;
+    $inHtmlComment = false;
     foreach ($lines as $line) {
+        $trimmed = trim($line);
+        if ($inHtmlComment) {
+            if (str_contains($trimmed, '-->')) {
+                $inHtmlComment = false;
+            }
+            continue;
+        }
+        if (str_starts_with($trimmed, '<!--')) {
+            if (!str_contains($trimmed, '-->')) {
+                $inHtmlComment = true;
+            }
+            continue;
+        }
         $escaped = e($line);
         if (preg_match('/^###\s+(.*)$/', $line, $m)) {
             if ($inList) { $html .= '</ul>'; $inList = false; }
