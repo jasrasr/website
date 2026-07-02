@@ -2,11 +2,11 @@
 /**
  * File: tests/user-entry-points-test.php
  * Project: TV Binge Board
- * Description: Static regression checks for public registration and admin account creation entry points.
+ * Description: Static regression checks for public registration, admin account creation, and logout entry points.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-02
- * Revision: 1.0.0
+ * Revision: 1.0.1
  */
 declare(strict_types=1);
 
@@ -23,6 +23,10 @@ $checks = [
     'admin user action supports create_user' => [
         'file' => $root . '/api/admin-user-action.php',
         'needles' => ["\$action === 'create_user'", 'app_create_user', "'user-created-admin'"],
+    ],
+    'signed-in nav exposes logout' => [
+        'file' => $root . '/includes/functions.php',
+        'needles' => ["app_href('logout.php')", '>Logout</a>'],
     ],
 ];
 
@@ -49,3 +53,4 @@ echo 'User entry point checks passed.' . PHP_EOL;
 
 // Example Usage:
 //   php .\tests\user-entry-points-test.php
+

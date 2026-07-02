@@ -6,7 +6,7 @@
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-02
- * Revision: 1.4.2
+ * Revision: 1.4.3
  */
 declare(strict_types=1);
 
@@ -96,6 +96,7 @@ function app_page_footer(): void
         <a href="<?= e(app_href('admin/site-settings.php')) ?>">Site</a>
     <?php endif; ?>
     <a href="<?= e(app_href('settings.php')) ?>">Settings</a>
+    <a href="<?= e(app_href('logout.php')) ?>">Logout</a>
 </nav>
 <?php endif; ?>
 <footer class="footer">
@@ -672,3 +673,4 @@ function app_simple_markdown(string $markdown): string
     if ($inList) { $html .= '</ul>'; }
     return $html;
 }
+
