@@ -5,7 +5,7 @@
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-03
- * Revision: 1.4.5
+ * Revision: 1.4.6
  */
 
 (function () {
@@ -37,7 +37,12 @@
 
         const changelog = document.querySelector('a[href*="changelog.php"]');
         const changelogHref = changelog ? changelog.getAttribute('href') || 'changelog.php' : 'changelog.php';
-        const summary = 'New in rev ' + currentRevision + ': in-app update notices now appear once after a deployed revision changes, with a direct link to the changelog.';
+        const summaries = {
+            '1.5.2': 'Added Next up / Caught up episode status so TV cards can show what episode to watch next or when you are current.',
+            '1.5.1': 'Added one-time in-app update notices with a direct changelog link.',
+            '1.5.0': 'Added text-only episode view and a Check for new episodes action.'
+        };
+        const summary = 'New in rev ' + currentRevision + ': ' + (summaries[currentRevision] || 'See the changelog for update details.');
         const notice = document.createElement('section');
         notice.className = 'update-notice';
         notice.setAttribute('role', 'status');

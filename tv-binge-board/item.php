@@ -2,15 +2,16 @@
 /**
  * File: item.php
  * Project: TV Binge Board
- * Description: Media detail page with editable metadata, TMDB links, metadata refresh controls, local artwork refresh controls, spoiler-safe episode display modes, completion percentage, and TMDB-backed TV episode grid.
+ * Description: Media detail page with editable metadata, next-up/caught-up TV status, TMDB links, metadata refresh controls, local artwork refresh controls, spoiler-safe episode display modes, completion percentage, and TMDB-backed TV episode grid.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-03
- * Revision: 1.5.0
+ * Revision: 1.5.1
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/tmdb.php';
+require_once __DIR__ . '/includes/next-up.php';
 $user = app_require_login();
 $targetUsername = app_is_admin($user) && isset($_GET['u']) ? app_sanitize_username((string)$_GET['u']) : (string)$user['username'];
 if (!app_find_user($targetUsername) || (!app_is_admin($user) && $targetUsername !== $user['username'])) { http_response_code(403); exit('Forbidden.'); }
@@ -22,6 +23,7 @@ $item = $library['items'][$index];
 $editable = app_is_admin($user) || $targetUsername === $user['username'];
 $watched = app_watched_episode_keys($item);
 $percent = app_episode_percent($item);
+$nextUpSummary = app_next_up_summary($item, true);
 $requestedSeason = max(0, (int)($_GET['season'] ?? 1));
 $episodeView = (string)($_GET['episode_view'] ?? ($_COOKIE['tvbb_episode_view'] ?? 'image'));
 if (!in_array($episodeView, ['image', 'text'], true)) { $episodeView = 'image'; }
@@ -94,6 +96,13 @@ app_page_header((string)($item['title'] ?? 'Item'));
         </div>
     <?php endif; ?>
 </section>
+<?php if (($item['type'] ?? '') === 'tv' && ($nextUpSummary['label'] ?? '') !== ''): ?>
+<section class="card next-up-card <?= e((string)($nextUpSummary['css'] ?? '')) ?>">
+    <h2><?= e((string)$nextUpSummary['label']) ?></h2>
+    <?php if (($nextUpSummary['detail'] ?? '') !== ''): ?><p><?= e((string)$nextUpSummary['detail']) ?></p><?php endif; ?>
+    <p class="muted">This is calculated from your watched episode records and the currently saved TMDB season/episode metadata.</p>
+</section>
+<?php endif; ?>
 <div class="media-list"><?php app_render_media_card($item, $editable, app_is_admin($user) ? $targetUsername : ''); ?></div>
 <?php if (($item['type'] ?? '') === 'tv'): ?>
 <section class="card">

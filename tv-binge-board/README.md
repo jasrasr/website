@@ -1,11 +1,11 @@
 <!--
 File: README.md
 Project: TV Binge Board
-Description: Setup, usage, credentials, deployment, tester attribution, search/add/import hub, episode display modes, in-app update notices, screenshot-assisted import, and architecture notes for the PHP/JSON watch tracker.
+Description: Setup, usage, credentials, deployment, tester attribution, search/add/import hub, episode display modes, next-up tracking, in-app update notices, screenshot-assisted import, and architecture notes for the PHP/JSON watch tracker.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.1
+Revision: 1.5.2
 -->
 
 # TV Binge Board
@@ -39,9 +39,9 @@ Seed credentials are still present while the app is being tested and configured.
 
 Matt served as an early user tester for TV Binge Board. His feedback directly shaped several rev 1.4.4 usability changes, including Smart sorting for active shows, the Hide 100% / finished items filter, compact mobile list cards, moving long show descriptions to the detail page, and the progress rollback fix when a season or episode is corrected.
 
-Matt's later testing also shaped rev 1.5.0: a spoiler-safe text-only episode list, a more compact episode display, and a clearer way to check TMDB for newly available episodes.
+Matt's later testing also shaped rev 1.5.0 and rev 1.5.2: a spoiler-safe text-only episode list, a more compact episode display, a clearer way to check TMDB for newly available episodes, and next-up/caught-up tracking on list and detail pages.
 
-## Features included through rev 1.5.1
+## Features included through rev 1.5.2
 
 - Project renamed to TV Binge Board with `tv-binge-board` as the folder/URL slug.
 - JSON file storage with file locking, atomic writes, and pre-overwrite restore points.
@@ -65,7 +65,10 @@ Matt's later testing also shaped rev 1.5.0: a spoiler-safe text-only episode lis
 - Watchlist and status management.
 - Smart default watchlist sort that prioritizes active/in-progress items.
 - Hide 100% / finished items filter.
+- Hide 100% / finished items also hides caught-up TV shows.
 - Compact mobile list cards with full descriptions kept on the item detail page.
+- Next-up/caught-up TV labels on compact list cards.
+- Dedicated next-up/caught-up status card on TV detail pages.
 - Ratings and notes.
 - Last watched season/episode field for TV shows.
 - Manual last-episode rollback trims later watched episodes so completion percentage recalculates correctly.
@@ -132,16 +135,23 @@ The notice includes:
 
 This is intentionally not a text, email, push, or account-level notification system. It is only an on-screen indicator for users who are actively opening the site while live changes are being deployed.
 
-## Episode display and new episodes
+## Episode display, next-up tracking, and new episodes
 
 TV detail pages have two episode display modes:
 
 - **Picture cards**: shows episode stills when available.
 - **Text-only**: hides episode stills, makes the list more compact, and reduces spoiler risk from episode images.
 
+Next-up tracking uses the user's watched episode records plus saved TMDB season/episode metadata. The app can show:
+
+- `Start: S1E1` when nothing has been watched yet.
+- `Next up: SxEy` when there is an available unwatched episode.
+- `Caught up` when there are no currently available unwatched episodes in the saved metadata.
+- `Likely next` when episode metadata is incomplete and the app can only infer from the last watched episode.
+
 For TMDB-linked shows, the episode grid uses cached TMDB season metadata. Cached season data refreshes weekly when the detail page is viewed. The **Check for new episodes** button forces a metadata refresh immediately and updates cached season/episode information so newly available episodes appear in the grid.
 
-This does not automatically mark new episodes as watched. It only makes newly available episodes visible for tracking.
+This does not automatically mark new episodes as watched. It only makes newly available episodes visible for tracking and helps the user see what to watch next or whether they are caught up.
 
 ## Installation
 
@@ -312,7 +322,7 @@ data/**/*.tmp.*
 
 ## Revision
 
-Current project revision: `1.5.1`
+Current project revision: `1.5.2`
 
 Note: file header revisions are file-specific and should only be bumped when that file changes. New files should start with their own file revision instead of inheriting the project revision.
 

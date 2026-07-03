@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.1
+Revision: 1.5.2
 -->
 
 # TV Binge Board Task List
@@ -172,6 +172,16 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Store the last seen rev in browser local storage so the notice does not keep repeating.
 - [x] Add dismiss button.
 - [x] Bump visible revision and service worker cache to `rev 1.5.1`.
+
+## rev 1.5.2 Matt next-up / caught-up pass
+
+- [x] Add `includes/next-up.php` helper functions.
+- [x] Calculate next available unwatched TV episode from watched records and saved TMDB metadata.
+- [x] Show `Next up: SxEy`, `Start: S1E1`, `Caught up`, or `Likely next` on compact list cards.
+- [x] Add a dedicated next-up/caught-up status card to item detail pages.
+- [x] Update Hide 100% / finished filter to also hide caught-up TV shows.
+- [x] Update Smart sort so caught-up shows sit below shows with available next episodes.
+- [x] Update the one-time update notice summary for rev 1.5.2.
 
 ## Import plan
 
