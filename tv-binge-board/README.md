@@ -5,7 +5,7 @@ Description: Setup, usage, credentials, deployment, and architecture notes for t
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-02
-Revision: 1.4.3
+Revision: 1.4.5
 -->
 
 # TV Binge Board
@@ -28,34 +28,36 @@ https://jasr.me/github/tv-binge-board/
 
 ## Seed credentials
 
-Change these immediately after upload if the site is public.
+Seed credentials are still present while the app is being tested and configured. Keep them only during testing, then change/remove them during the future security wrap-up before public use.
 
 | Role | Username | Password | Purpose |
 |---|---|---|---|
 | Admin | `admin` | `admin123` | Manage other accounts. Does not track personal shows. |
 | User | `testuser` | `testuser123` | Initial test user with sample library data. |
 
-## Features included through rev 1.4.3
+## Features included through rev 1.4.5
 
 - Project renamed to TV Binge Board with `tv-binge-board` as the folder/URL slug.
-- JSON file storage with file locking and atomic writes.
+- JSON file storage with file locking, atomic writes, and pre-overwrite restore points.
 - User registration and sign-in.
 - Guest-facing Create account entry point.
 - Login failure rate limiting.
 - User password change page.
-- Seeded admin account.
-- Seeded test user account.
+- Seeded admin account and seeded test user account.
 - Admin account can create users and manage other users' lists.
 - Admin account is blocked from tracking its own shows/movies.
-- Admin reset-password action.
-- Admin disable/enable user action.
+- Admin reset-password and disable/enable user actions.
 - Site setting to enable/disable public registration.
 - Admin activity log.
 - Mobile-first UI.
 - Logout link in the signed-in bottom navigation.
 - Watchlist and status management.
+- Smart default watchlist sort that prioritizes active/in-progress items.
+- Hide 100% / finished items filter.
+- Compact mobile list cards with full descriptions kept on the item detail page.
 - Ratings and notes.
 - Last watched season/episode field for TV shows.
+- Manual last-episode rollback trims later watched episodes so completion percentage recalculates correctly.
 - Per-item detail page.
 - Episode grid with watched/unwatched toggle.
 - TV completion percentage based on watched episodes and total episode count.
@@ -68,6 +70,8 @@ Change these immediately after upload if the site is public.
 - TMDB poster/detail refresh action.
 - Local TMDB poster cache for linked movies and TV shows.
 - Local season poster and episode still cache for TV shows.
+- Preferred TMDB poster/backdrop picker for linked items.
+- Local backdrop cache for selected TMDB backdrops.
 - Per-item local artwork refresh and force-refresh actions.
 - TMDB external links for linked movies and TV shows.
 - Existing manual item link-to-TMDB workflow.
@@ -82,7 +86,6 @@ Change these immediately after upload if the site is public.
 - `TASKS.md` with completed tasks retained for audit.
 - PWA icons and basic service worker.
 - CLI backup helper: `tools/backup-data.php`.
-- Automatic restore-point backups under `data/restore-points/` before runtime JSON overwrites.
 - `.placeholder` files in intentionally empty folders.
 - Unused artwork cleanup on delete and from the admin Site Settings page.
 - `data/.htaccess` protection for JSON data.
@@ -92,8 +95,8 @@ Change these immediately after upload if the site is public.
 1. Upload the full folder contents to your PHP host.
 2. Make sure PHP can write to the `data/` folder.
 3. Open `login.php`.
-4. Sign in with `admin` / `admin123` or `testuser` / `testuser123`.
-5. Change the seeded passwords before using publicly.
+4. Sign in with the seeded testing accounts while still testing/configuring.
+5. During the future security wrap-up, change/remove seeded credentials and review public registration.
 6. Visit `admin/site-settings.php` to review public registration.
 
 ## TMDB setup
@@ -116,7 +119,8 @@ TMDB integration currently supports:
 - Refresh all linked items in a library.
 - Cache movie, TV, search, and season detail responses in `data/cache/tmdb/`.
 - Use real TMDB season/episode metadata for the episode grid when available.
-- Download TMDB artwork into `public-cache/posters/` and `public-cache/stills/` for local display.
+- Download TMDB artwork into `public-cache/posters/`, `public-cache/stills/`, and `public-cache/backdrops/` for local display.
+- Choose preferred TMDB posters and backdrops from the item detail page.
 - Fall back from episode still to season poster to show poster to placeholder.
 
 The footer includes the required TMDB-style attribution text.
@@ -129,17 +133,21 @@ TMDB-linked items now prefer local artwork when available. The app keeps TMDB me
 /public-cache/
   posters/
   stills/
+  backdrops/
 ```
 
 Artwork behavior:
 
 - New TMDB-linked movies and shows cache the main poster locally when added or linked.
 - `Refresh TMDB details/poster` refreshes metadata and downloads the current poster.
+- `Choose poster/backdrop` opens a TMDB image picker for linked items.
+- Selecting a poster updates `poster_path` and caches the selected poster locally.
+- Selecting a backdrop updates `backdrop_path` and caches the selected backdrop locally.
 - `Cache local artwork` on an item downloads the show/movie poster, season posters, and episode stills when TMDB has them.
 - `Force refresh artwork` re-downloads artwork even when a local file already exists.
 - Episode images fall back in this order: local episode still, TMDB episode still URL, local season poster, TMDB season poster URL, show/movie poster, placeholder.
 
-Downloaded poster/still files are runtime cache files and should not be committed to GitHub. The folders stay in source control through `.placeholder` files.
+Downloaded poster/still/backdrop files are runtime cache files and should not be committed to GitHub. The folders stay in source control through `.placeholder` files.
 
 ## JSON storage layout
 
@@ -199,14 +207,15 @@ Before an existing runtime JSON file is overwritten through the web app, the pri
 
 ## Security notes
 
-This is still a starter project, not a finished production identity platform.
+This is still a testing/configuration-stage project, not a finished production identity platform.
 
-Recommended next hardening steps:
+Future security wrap-up before public use:
 
-- Change the seed passwords.
+- Change/remove the seed passwords.
+- Remove public seed credentials from public-facing documentation.
+- Disable public registration or restrict it tightly unless intentionally public.
 - Force HTTPS.
 - Keep `data/.htaccess` in place.
-- Disable public registration if this is a personal/family app.
 - Add account recovery/reset-by-email before public launch.
 - Add optional two-factor authentication if multiple people use it.
 - Add malware scanning before allowing public screenshot uploads.
@@ -230,20 +239,21 @@ data/users/*/connections.json
 data/users/*/imports/*
 data/users/*/uploads/*
 data/cache/tmdb/*.json
-data/backups/*.zip
+data/restore-points/*
 public-cache/posters/*
 public-cache/stills/*
+public-cache/backdrops/*
 data/**/*.lock
 data/**/*.tmp.*
 ```
 
 ## Revision
 
-Current revision: `1.4.3`
+Current revision: `1.4.5`
 
 
 ## Artwork cache cleanup
 
-Cached posters and episode stills are stored under `public-cache/` only after media is added to a user library or explicitly refreshed. Search results do not create local artwork files.
+Cached posters, episode stills, and selected backdrops are stored under `public-cache/` only after media is added to a user library, explicitly refreshed, or selected from the artwork picker. Search results do not create local artwork files.
 
 When a library item is deleted, the app runs unused-artwork cleanup. Admins can also run cleanup manually from **Admin → Site Settings → Remove unused artwork**. Cleanup keeps files still referenced by any tracked user library item or by cached season metadata for a tracked TV show, then removes orphaned poster/still files.
