@@ -5,10 +5,19 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-02
-Revision: 1.4.4
+Revision: 1.4.5
 -->
 
 # Changelog
+
+## rev 1.4.5 - 2026-07-02
+
+- Added a TMDB poster/backdrop picker for linked media items.
+- Added `artwork.php` to preview current artwork and select alternate TMDB posters or backdrops.
+- Added `api/select-artwork.php` to save selected artwork and cache the selected image locally.
+- Added `public-cache/backdrops/` for selected backdrop images while keeping runtime image files out of GitHub.
+- Added a Choose poster/backdrop action from the item detail page.
+- Updated README and task planning notes for the future security wrap-up.
 
 ## rev 1.4.4 - 2026-07-02
 
@@ -79,7 +88,7 @@ Revision: 1.4.4
 - Added admin disable/enable user action.
 - Added site setting to enable/disable public registration.
 - Added login failure rate limiting.
-- Added stronger session cookie settings.
+- Added stronger session cookie settings for HTTPS.
 - Added activity log for admin and account-changing actions.
 - Added CSV and JSON export.
 - Added CSV/JSON import staging review with duplicate detection.
@@ -98,7 +107,7 @@ Revision: 1.4.4
 
 - Created initial PHP/JSON mobile-first watch tracker.
 - Added JSON storage helpers with file locking and atomic saves.
-- Added user authentication with seeded `admin` and `testuser` accounts.
+- Added authentication with seeded accounts.
 - Added admin-only user management and user library management.
 - Blocked admin accounts from personal show/movie tracking.
 - Added user registration.

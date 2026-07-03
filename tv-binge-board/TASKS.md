@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-02
-Revision: 1.4.2
+Revision: 1.4.5
 -->
 
 # TV Binge Board Task List
@@ -21,8 +21,8 @@ Completed tasks stay in this file with `[x]` so the project history can be audit
 - [x] Mobile-first layout created.
 - [x] Login/logout added.
 - [x] User registration added.
-- [x] Seeded `admin` account added.
-- [x] Seeded `testuser` account added.
+- [x] Seeded administrator account added.
+- [x] Seeded testing account added.
 - [x] Admin does not track its own shows/movies.
 - [x] Admin can manage normal user libraries.
 - [x] User library JSON structure created.
@@ -67,7 +67,7 @@ Completed tasks stay in this file with `[x]` so the project history can be audit
 - [x] Store episode title and air date when toggling watched episodes.
 - [x] Add refresh-all TMDB metadata action for linked library items.
 - [x] Update CSV export with TMDB URL and metadata columns.
-- [ ] Add UI to pick preferred poster/backdrop images.
+- [x] Add UI to pick preferred poster/backdrop images.
 - [x] Add scheduled/one-click stale cache cleanup.
 
 
@@ -83,7 +83,7 @@ Completed tasks stay in this file with `[x]` so the project history can be audit
 - [x] Display episode stills in the episode grid.
 - [x] Add fallback chain for missing episode images.
 - [x] Keep runtime poster/still files out of GitHub while preserving folders.
-- [ ] Add UI to choose alternate TMDB poster/backdrop images.
+- [x] Add UI to choose alternate TMDB poster/backdrop images.
 - [x] Add stale artwork cleanup tool.
 
 ## rev 1.4.2 maintenance pass
@@ -93,6 +93,29 @@ Completed tasks stay in this file with `[x]` so the project history can be audit
 - [x] Add admin-only unused artwork cleanup endpoint.
 - [x] Add Site Settings button to remove orphaned cached artwork.
 - [x] Keep completed cleanup tasks visible for audit.
+
+## rev 1.4.4 Matt testing/mobile list cleanup pass
+
+- [x] Add Smart sort so currently watching/in-progress items float higher on My List.
+- [x] Add Hide 100% / finished items filter.
+- [x] Replace tall list cards with compact mobile cards on My List.
+- [x] Keep long descriptions on the detail page instead of the list page.
+- [x] Fix last-episode rollback so lowering progress removes later watched episode records.
+- [x] Bump visible revision and service worker cache to `rev 1.4.4`.
+
+## rev 1.4.5 poster/backdrop selection pass
+
+- [x] Add `artwork.php` picker for TMDB-linked items.
+- [x] Show current poster and backdrop on the artwork picker.
+- [x] List alternate TMDB posters with vote/size metadata.
+- [x] List alternate TMDB backdrops with vote/size metadata.
+- [x] Add `api/select-artwork.php` to save the preferred poster/backdrop choice.
+- [x] Cache selected posters locally.
+- [x] Cache selected backdrops locally in `public-cache/backdrops/`.
+- [x] Add item detail link to choose poster/backdrop.
+- [x] Add `.gitignore` and `.placeholder` support for backdrop cache files.
+- [x] Update `README.md` for `rev 1.4.5`.
+- [x] Update `CHANGELOG.md` for `rev 1.4.5`.
 
 ## Import plan
 
@@ -120,7 +143,9 @@ Completed tasks stay in this file with `[x]` so the project history can be audit
 
 ## Security hardening
 
-- [ ] Change seed passwords after deployment.
+- [ ] Future security wrap-up: rotate testing credentials after testing/configuration is complete.
+- [ ] Future security wrap-up: review public-facing setup documentation before public use.
+- [ ] Future security wrap-up: disable public registration or restrict it tightly before public use.
 - [x] Add login rate limiting.
 - [x] Add password change flow.
 - [x] Add stronger session cookie settings for HTTPS.
@@ -150,7 +175,8 @@ When resuming on another device:
 3. Review this file.
 4. Confirm whether `includes/config.local.php` exists on the target server.
 5. Confirm that `data/.htaccess` is uploaded.
-6. Sign in as `admin` and confirm user management works.
-7. Sign in as `testuser` and confirm manual add works.
+6. Confirm administrator user management works.
+7. Confirm normal user manual add works.
 8. Test export/import with a small CSV.
 9. Add TMDB key only after the core app loads correctly.
+10. Before public use, complete the security wrap-up tasks above.
