@@ -2,11 +2,11 @@
 /**
  * File: item.php
  * Project: TV Binge Board
- * Description: Media detail page with editable metadata, TMDB links, local artwork refresh controls, completion percentage, and TMDB-backed TV episode grid.
+ * Description: Media detail page with editable metadata, TMDB links, local artwork refresh controls, artwork picker entry point, completion percentage, and TMDB-backed TV episode grid.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-02
- * Revision: 1.4.2
+ * Revision: 1.4.5
  */
 declare(strict_types=1);
 
@@ -24,6 +24,7 @@ $watched = app_watched_episode_keys($item);
 $percent = app_episode_percent($item);
 $requestedSeason = max(0, (int)($_GET['season'] ?? 1));
 $tmdbUrl = app_tmdb_public_url_for_item($item);
+$artworkQuery = 'artwork.php?uid=' . rawurlencode($uid) . (app_is_admin($user) ? '&u=' . rawurlencode($targetUsername) : '');
 
 $seasonSummaries = [];
 if (($item['type'] ?? '') === 'tv') {
@@ -55,8 +56,10 @@ app_page_header((string)($item['title'] ?? 'Item'));
     <?php if (!empty($item['overview'])): ?><p><?= e((string)$item['overview']) ?></p><?php endif; ?>
     <?php if (!empty($item['metadata_refreshed_at'])): ?><p class="muted">TMDB metadata refreshed: <?= e((string)$item['metadata_refreshed_at']) ?></p><?php endif; ?>
     <?php if (!empty($item['local_poster_path'])): ?><p class="muted">Local poster cached: <?= e((string)($item['poster_cached_at'] ?? 'cached')) ?></p><?php endif; ?>
+    <?php if (!empty($item['local_backdrop_path'])): ?><p class="muted">Local backdrop cached: <?= e((string)($item['backdrop_cached_at'] ?? 'cached')) ?></p><?php endif; ?>
     <?php if ($editable && !empty($item['tmdb_id'])): ?>
         <div class="actions wrap-actions">
+            <a class="button secondary" href="<?= e(app_href($artworkQuery)) ?>">Choose poster/backdrop</a>
             <form method="post" action="<?= e(app_href('api/refresh-artwork.php')) ?>">
                 <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
                 <input type="hidden" name="uid" value="<?= e($uid) ?>">
