@@ -1,11 +1,11 @@
 <!--
 File: README.md
 Project: TV Binge Board
-Description: Setup, usage, credentials, deployment, tester attribution, PWA install support, search/add/import hub, episode display modes, next-up tracking, in-app update notices, screenshot-assisted import, and architecture notes for the PHP/JSON watch tracker.
+Description: Setup, usage, credentials, deployment, tester attribution, PWA install support, JL-style app icon, search/add/import hub, episode display modes, next-up tracking, in-app update notices, screenshot-assisted import, and architecture notes for the PHP/JSON watch tracker.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.3
+Revision: 1.5.4
 -->
 
 # TV Binge Board
@@ -30,7 +30,7 @@ https://jasr.me/github/tv-binge-board/
 
 Matt served as an early user tester for TV Binge Board. His feedback directly shaped several usability passes, including Smart sorting for active shows, the Hide 100% / finished items filter, compact mobile list cards, moving long show descriptions to the detail page, progress rollback fixes, text-only episode display, checking for newly available episodes, and next-up/caught-up tracking.
 
-## Features included through rev 1.5.3
+## Features included through rev 1.5.4
 
 - JSON file storage with file locking, atomic writes, and pre-overwrite restore points.
 - User registration and sign-in.
@@ -52,7 +52,7 @@ Matt served as an early user tester for TV Binge Board. His feedback directly sh
 - CSV/JSON import staging review with duplicate detection.
 - Screenshot upload queue for OCR/AI-assisted import text processing.
 - One-time in-app update notice when a deployed project revision changes.
-- PWA manifest, icons, app scope, app shortcuts, offline fallback, install help page, and service-worker update reload prompt.
+- PWA manifest, generated JL-style app icon, app scope, app shortcuts, offline fallback, install help page, and service-worker update reload prompt.
 - `CHANGELOG.md` rendered from `changelog.php`.
 - `TASKS.md` with completed tasks retained for audit.
 - `data/.htaccess` protection for JSON data.
@@ -73,20 +73,22 @@ The app is PWA-compatible and has been polished for a more app-like Home Screen 
 Included PWA pieces:
 
 - `manifest.webmanifest` with `id`, `scope`, `start_url`, `orientation`, standalone display mode, categories, language, app shortcuts, and icons.
+- `app-icon.php`, a generated JL-style PNG icon inspired by the JasonLamb.me mark.
+- Browser favicon links for 32px and 192px generated icons.
+- Apple touch icon link for the 180px generated icon.
+- Manifest icon links for 192px and 512px generated icons.
 - `service-worker.js` shell cache.
 - `offline.php` fallback page for offline navigation.
 - `install.php` with iPhone/iPad, Android, and desktop install guidance.
 - Dashboard card that links users to install instructions.
 - Frontend install button support when the browser exposes a native install prompt.
 - `New version available` reload prompt when a waiting service-worker update is detected.
-- Existing icon assets at `assets/icons/icon-192.png` and `assets/icons/icon-512.png`.
 
 Important limitations:
 
 - Server-backed features still require network access.
 - Offline mode only provides a controlled fallback and cached shell assets.
-- iPhone Home Screen icons may not update automatically after changing the icon file; users may need to delete and re-add the Home Screen app.
-- A dedicated 180x180 Apple icon is still listed as a future enhancement.
+- iPhone Home Screen icons may not update automatically after changing the icon; users may need to delete and re-add the Home Screen app.
 
 ## Search/add/import hub
 
@@ -177,6 +179,6 @@ Future security wrap-up before public use:
 
 ## Revision
 
-Current project revision: `1.5.3`
+Current project revision: `1.5.4`
 
 Note: file header revisions are file-specific and should only be bumped when that file changes. New files should start with their own file revision instead of inheriting the project revision.
