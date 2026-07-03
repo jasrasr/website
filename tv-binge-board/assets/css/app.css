@@ -1,11 +1,11 @@
 /**
  * File: assets/css/app.css
  * Project: TV Binge Board
- * Description: Mobile-first application styles, cards, forms, navigation, media list layout, avatars, episode grids, and import UI.
+ * Description: Mobile-first application styles, cards, forms, navigation, media list layout, avatars, episode grids, compact list cards, and import UI.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-02
- * Revision: 1.4.2
+ * Revision: 1.4.4
  */
 
 
@@ -116,3 +116,15 @@ button.danger, .danger { background: var(--danger); color: #190707; }
 .episode-still { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: .55rem; background: #030712; border: 1px solid rgba(255,255,255,.08); }
 .episode-button.watched .episode-still { border-color: rgba(5, 32, 18, .55); opacity: .9; }
 .artwork-meta { font-size: .78rem; color: var(--muted); }
+
+/* rev 1.4.4 compact mobile list cards */
+.compact-media-list { gap: .65rem; }
+.compact-media-card { grid-template-columns: 70px 1fr; gap: .7rem; padding: .65rem; align-items: start; }
+.compact-media-card .poster { width: 70px; border-radius: .65rem; }
+.compact-media-card h3 { margin-bottom: .15rem; font-size: 1rem; }
+.compact-media-card .media-title-row { align-items: start; }
+.compact-media-card p { margin: .2rem 0; }
+.compact-media-card .progress { margin: .35rem 0 .15rem; height: .45rem; }
+.compact-media-card .pill { font-size: .7rem; padding: .18rem .45rem; }
+.compact-meta-line { font-size: .84rem; line-height: 1.25; }
+.compact-actions { margin-top: .35rem !important; }
