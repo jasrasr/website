@@ -17,7 +17,7 @@ Revision: 1.4.5
 - Added `api/select-artwork.php` to save selected artwork and cache the selected image locally.
 - Added `public-cache/backdrops/` for selected backdrop images while keeping runtime image files out of GitHub.
 - Added a Choose poster/backdrop action from the item detail page.
-- Updated task planning notes for the future security wrap-up.
+- Updated README and task planning notes for the future security wrap-up.
 
 ## rev 1.4.4 - 2026-07-02
 
