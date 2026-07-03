@@ -1,11 +1,11 @@
 <!--
 File: README.md
 Project: TV Binge Board
-Description: Setup, usage, credentials, deployment, tester attribution, search/add/import hub, episode display modes, next-up tracking, in-app update notices, screenshot-assisted import, and architecture notes for the PHP/JSON watch tracker.
+Description: Setup, usage, credentials, deployment, tester attribution, PWA install support, search/add/import hub, episode display modes, next-up tracking, in-app update notices, screenshot-assisted import, and architecture notes for the PHP/JSON watch tracker.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.2
+Revision: 1.5.3
 -->
 
 # TV Binge Board
@@ -26,6 +26,37 @@ Example hosted URL:
 https://jasr.me/github/tv-binge-board/
 ```
 
+## User testing attribution
+
+Matt served as an early user tester for TV Binge Board. His feedback directly shaped several usability passes, including Smart sorting for active shows, the Hide 100% / finished items filter, compact mobile list cards, moving long show descriptions to the detail page, progress rollback fixes, text-only episode display, checking for newly available episodes, and next-up/caught-up tracking.
+
+## Features included through rev 1.5.3
+
+- JSON file storage with file locking, atomic writes, and pre-overwrite restore points.
+- User registration and sign-in.
+- Admin account can create users and manage other users' lists.
+- Admin account is blocked from tracking its own shows/movies.
+- Mobile-first UI.
+- Search page acts as the main add/import/upload hub.
+- Search page includes TMDB search, manual add, CSV/JSON import upload, and screenshot upload.
+- Smart default watchlist sort that prioritizes active/in-progress items.
+- Hide 100% / finished items filter.
+- Hide 100% / finished items also hides caught-up TV shows.
+- Compact mobile list cards.
+- Next-up/caught-up TV labels on compact list cards.
+- Dedicated next-up/caught-up status card on TV detail pages.
+- Picture-card and spoiler-safe text-only episode display modes.
+- Check for new episodes action for TMDB-linked TV shows.
+- CSV and JSON export.
+- CSV import column-mapping screen for non-standard headers.
+- CSV/JSON import staging review with duplicate detection.
+- Screenshot upload queue for OCR/AI-assisted import text processing.
+- One-time in-app update notice when a deployed project revision changes.
+- PWA manifest, icons, app scope, app shortcuts, offline fallback, install help page, and service-worker update reload prompt.
+- `CHANGELOG.md` rendered from `changelog.php`.
+- `TASKS.md` with completed tasks retained for audit.
+- `data/.htaccess` protection for JSON data.
+
 ## Seed credentials
 
 Seed credentials are still present while the app is being tested and configured. Keep them only during testing, then change/remove them during the future security wrap-up before public use.
@@ -35,81 +66,27 @@ Seed credentials are still present while the app is being tested and configured.
 | Admin | configured seed admin | configured testing password | Manage other accounts. Does not track personal shows. |
 | User | configured seed test user | configured testing password | Initial test user with sample library data. |
 
-## User testing attribution
+## PWA / Home Screen install
 
-Matt served as an early user tester for TV Binge Board. His feedback directly shaped several rev 1.4.4 usability changes, including Smart sorting for active shows, the Hide 100% / finished items filter, compact mobile list cards, moving long show descriptions to the detail page, and the progress rollback fix when a season or episode is corrected.
+The app is PWA-compatible and has been polished for a more app-like Home Screen flow.
 
-Matt's later testing also shaped rev 1.5.0 and rev 1.5.2: a spoiler-safe text-only episode list, a more compact episode display, a clearer way to check TMDB for newly available episodes, and next-up/caught-up tracking on list and detail pages.
+Included PWA pieces:
 
-## Features included through rev 1.5.2
+- `manifest.webmanifest` with `id`, `scope`, `start_url`, `orientation`, standalone display mode, categories, language, app shortcuts, and icons.
+- `service-worker.js` shell cache.
+- `offline.php` fallback page for offline navigation.
+- `install.php` with iPhone/iPad, Android, and desktop install guidance.
+- Dashboard card that links users to install instructions.
+- Frontend install button support when the browser exposes a native install prompt.
+- `New version available` reload prompt when a waiting service-worker update is detected.
+- Existing icon assets at `assets/icons/icon-192.png` and `assets/icons/icon-512.png`.
 
-- Project renamed to TV Binge Board with `tv-binge-board` as the folder/URL slug.
-- JSON file storage with file locking, atomic writes, and pre-overwrite restore points.
-- User registration and sign-in.
-- Guest-facing Create account entry point.
-- Login failure rate limiting.
-- User password change page.
-- Seeded admin account and seeded test user account.
-- Admin account can create users and manage other users' lists.
-- Admin account is blocked from tracking its own shows/movies.
-- Admin reset-password and disable/enable user actions.
-- Site setting to enable/disable public registration.
-- Admin activity log.
-- Mobile-first UI.
-- Search page now acts as the main add/import/upload hub.
-- Search page includes TMDB search, manual add, CSV/JSON import upload, and screenshot upload.
-- Bottom navigation includes a visual overflow hint when more items are available by horizontal scrolling.
-- One-time in-app update notice when a deployed project revision changes.
-- Update notice includes rev number, short summary, dismiss action, and changelog link.
-- Logout link in the signed-in bottom navigation.
-- Watchlist and status management.
-- Smart default watchlist sort that prioritizes active/in-progress items.
-- Hide 100% / finished items filter.
-- Hide 100% / finished items also hides caught-up TV shows.
-- Compact mobile list cards with full descriptions kept on the item detail page.
-- Next-up/caught-up TV labels on compact list cards.
-- Dedicated next-up/caught-up status card on TV detail pages.
-- Ratings and notes.
-- Last watched season/episode field for TV shows.
-- Manual last-episode rollback trims later watched episodes so completion percentage recalculates correctly.
-- Per-item detail page.
-- Episode grid with watched/unwatched toggle.
-- Picture-card and spoiler-safe text-only episode display modes.
-- Check for new episodes action for TMDB-linked TV shows.
-- TV completion percentage based on watched episodes and total episode count.
-- Search/filter/sort on the watchlist.
-- Optional public list sharing per user.
-- User-to-user connection requests.
-- User avatar URL support.
-- TMDB search endpoint with cache support.
-- Live TMDB suggestions while typing in Search.
-- TMDB poster/detail refresh action.
-- TMDB metadata refresh action for newly available seasons/episodes.
-- Local TMDB poster cache for linked movies and TV shows.
-- Local season poster and episode still cache for TV shows.
-- Preferred TMDB poster/backdrop picker for linked items.
-- Local backdrop cache for selected TMDB backdrops.
-- Per-item local artwork refresh and force-refresh actions.
-- TMDB external links for linked movies and TV shows.
-- Existing manual item link-to-TMDB workflow.
-- Richer TMDB metadata: genres, ratings, release dates, runtime, homepage, and season summaries.
-- TMDB-backed TV season/episode grids with episode titles and air dates when available.
-- Batch refresh for all linked TMDB items in a library.
-- Manual add fallback when no TMDB API key is configured.
-- CSV and JSON export.
-- CSV import column-mapping screen for non-standard headers.
-- CSV/JSON import staging review with duplicate detection.
-- Downloadable import error report for rows that cannot be staged.
-- Screenshot upload queue for OCR/AI-assisted import text processing.
-- Screenshot text parsing into confidence-scored show/movie guesses.
-- Manual approve/reject screen before screenshot guesses become import review rows.
-- `CHANGELOG.md` rendered from `changelog.php`.
-- `TASKS.md` with completed tasks retained for audit.
-- PWA icons and basic service worker.
-- CLI backup helper: `tools/backup-data.php`.
-- `.placeholder` files in intentionally empty folders.
-- Unused artwork cleanup on delete and from the admin Site Settings page.
-- `data/.htaccess` protection for JSON data.
+Important limitations:
+
+- Server-backed features still require network access.
+- Offline mode only provides a controlled fallback and cached shell assets.
+- iPhone Home Screen icons may not update automatically after changing the icon file; users may need to delete and re-add the Home Screen app.
+- A dedicated 180x180 Apple icon is still listed as a future enhancement.
 
 ## Search/add/import hub
 
@@ -120,20 +97,13 @@ For normal tracking users, `search.php` is the main intake page. It includes:
 - CSV/JSON import upload that submits into the existing import workflow.
 - Screenshot upload that submits into the existing screenshot-assisted import queue.
 
-The standalone `import.php` and `upload-screenshot.php` pages still exist for review, mapping, and queue detail work, but users should be able to start all intake workflows from Search.
+The standalone `import.php` and `upload-screenshot.php` pages still exist for review, mapping, and queue detail work, but users can start all intake workflows from Search.
 
 ## In-app update notices
 
 The app displays a browser-local update notice when the deployed project revision changes. The notice appears on the next page load after the user sees a new rev, then records that rev in local storage so it does not keep repeating.
 
-The notice includes:
-
-- Current rev number.
-- Brief update summary.
-- Link to `changelog.php`.
-- Dismiss button.
-
-This is intentionally not a text, email, push, or account-level notification system. It is only an on-screen indicator for users who are actively opening the site while live changes are being deployed.
+The notice includes the current rev number, a brief update summary, a link to `changelog.php`, and a dismiss button. This is not a text, email, push, or account-level notification system.
 
 ## Episode display, next-up tracking, and new episodes
 
@@ -153,15 +123,6 @@ For TMDB-linked shows, the episode grid uses cached TMDB season metadata. Cached
 
 This does not automatically mark new episodes as watched. It only makes newly available episodes visible for tracking and helps the user see what to watch next or whether they are caught up.
 
-## Installation
-
-1. Upload the full folder contents to your PHP host.
-2. Make sure PHP can write to the `data/` folder.
-3. Open `login.php`.
-4. Sign in with the seeded testing accounts while still testing/configuring.
-5. During the future security wrap-up, change/remove seeded credentials and review public registration.
-6. Visit `admin/site-settings.php` to review public registration.
-
 ## TMDB setup
 
 TMDB search and linking are optional. Manual add works without TMDB.
@@ -170,73 +131,9 @@ TMDB search and linking are optional. Manual add works without TMDB.
 2. Add either `TMDB_API_READ_ACCESS_TOKEN_LOCAL` or `TMDB_API_KEY_LOCAL`. Prefer the read access token when available.
 3. Do not commit `includes/config.local.php` to GitHub.
 
-The app calls TMDB only from PHP on the server. Browser JavaScript calls the local `api/search-tmdb.php` endpoint, so the TMDB credential is not exposed to users.
-
-TMDB integration currently supports:
-
-- Search movie and TV results.
-- Add search results with full details.
-- Link an existing/manual item to TMDB.
-- Open linked items on TMDB.
-- Refresh one linked item.
-- Refresh all linked items in a library.
-- Cache movie, TV, search, and season detail responses in `data/cache/tmdb/`.
-- Use real TMDB season/episode metadata for the episode grid when available.
-- Download TMDB artwork into `public-cache/posters/`, `public-cache/stills/`, and `public-cache/backdrops/` for local display.
-- Choose preferred TMDB posters and backdrops from the item detail page.
-- Fall back from episode still to season poster to show poster to placeholder.
-
-The footer includes the required TMDB-style attribution text.
-
-## Local artwork cache
-
-TMDB-linked items now prefer local artwork when available. The app keeps TMDB metadata in JSON, but downloads browser-visible images into:
-
-```text
-/public-cache/
-  posters/
-  stills/
-  backdrops/
-```
-
-Artwork behavior:
-
-- New TMDB-linked movies and shows cache the main poster locally when added or linked.
-- `Refresh TMDB details/poster` refreshes metadata and downloads the current poster.
-- `Choose poster/backdrop` opens a TMDB image picker for linked items.
-- Selecting a poster updates `poster_path` and caches the selected poster locally.
-- Selecting a backdrop updates `backdrop_path` and caches the selected backdrop locally.
-- `Cache local artwork` on an item downloads the show/movie poster, season posters, and episode stills when TMDB has them.
-- `Force refresh artwork` re-downloads artwork even when a local file already exists.
-- Episode images fall back in this order: local episode still, TMDB episode still URL, local season poster, TMDB season poster URL, show/movie poster, placeholder.
-
-Downloaded poster/still/backdrop files are runtime cache files and should not be committed to GitHub. The folders stay in source control through `.placeholder` files.
-
-## JSON storage layout
-
-```text
-/data/
-  accounts.json
-  settings.json
-  activity-log.json
-  login-attempts.json
-  cache/
-    tmdb/
-  users/
-    admin/
-      profile.json
-      connections.json
-    testuser/
-      profile.json
-      library.json
-      connections.json
-      imports/
-      uploads/
-```
+The app calls TMDB only from PHP on the server. Browser JavaScript calls local PHP endpoints, so the TMDB credential is not exposed to users.
 
 ## Import/export
-
-Export links are available from Settings for normal users and from Admin > Users for admins.
 
 Supported export formats:
 
@@ -248,13 +145,9 @@ Supported import formats:
 - CSV with standard or custom headers.
 - JSON using this app's `items` array structure, or a plain array of media items.
 
-CSV imports now use a mapping step before the review screen. After upload, the app detects headers and lets the user map odd columns to app fields such as `title`, `type`, `status`, `rating`, `season`, `episode`, `notes`, and `overview`. Unused columns can be skipped.
-
-Imports are staged first. Nothing is written into a library until the user confirms the import. Duplicate rows are detected and skipped unless explicitly included. Rows that cannot be staged, such as rows missing a mapped title, are written to a downloadable CSV error report from the import review screen.
+CSV imports use a mapping step before the review screen. Imports are staged first. Nothing is written into a library until the user confirms the import.
 
 ## Screenshot-assisted import
-
-`upload-screenshot.php` validates and stores screenshots in the user's protected data folder, then creates a review queue entry. The upload itself does not automatically add shows.
 
 The screenshot flow is intentionally staged:
 
@@ -264,19 +157,7 @@ The screenshot flow is intentionally staged:
 4. Approved guesses create a normal import review file.
 5. Confirm the import review before anything is written to the library.
 
-Server-side image AI extraction is the next required improvement so uploaded images can be processed directly without requiring users to paste OCR text manually.
-
-## Backup
-
-Run this from CLI if your PHP build has `ZipArchive`:
-
-```bash
-php tools/backup-data.php
-```
-
-Backups are written to `data/backups/` and exclude lock/temp files and previous backups.
-
-Before an existing runtime JSON file is overwritten through the web app, the prior file is copied to `data/restore-points/YYYYMMDD-HHMMSS/` using the same relative path. The restore-point folder is ignored by Git and should stay on the server for recovery.
+Server-side image AI extraction is still a future task so uploaded images can be processed directly without requiring users to paste OCR text manually.
 
 ## Security notes
 
@@ -294,41 +175,8 @@ Future security wrap-up before public use:
 - Add upload safety scanning before allowing public screenshot uploads.
 - Do not commit live user data, screenshots, or secrets.
 
-## Deployment notes for GitHub
-
-Do not commit real user data or secrets from a live site. Runtime JSON data is intentionally ignored and should stay on the server between deploys.
-
-Suggested `.gitignore` additions for a live deployment branch:
-
-```text
-includes/config.local.php
-data/accounts.json
-data/settings.json
-data/activity-log.json
-data/login-attempts.json
-data/users/*/library.json
-data/users/*/profile.json
-data/users/*/connections.json
-data/users/*/imports/*
-data/users/*/uploads/*
-data/cache/tmdb/*.json
-data/restore-points/*
-public-cache/posters/*
-public-cache/stills/*
-public-cache/backdrops/*
-data/**/*.lock
-data/**/*.tmp.*
-```
-
 ## Revision
 
-Current project revision: `1.5.2`
+Current project revision: `1.5.3`
 
 Note: file header revisions are file-specific and should only be bumped when that file changes. New files should start with their own file revision instead of inheriting the project revision.
-
-
-## Artwork cache cleanup
-
-Cached posters, episode stills, and selected backdrops are stored under `public-cache/` only after media is added to a user library, explicitly refreshed, or selected from the artwork picker. Search results do not create local artwork files.
-
-When a library item is deleted, the app runs unused-artwork cleanup. Admins can also run cleanup manually from **Admin → Site Settings → Remove unused artwork**. Cleanup keeps files still referenced by any tracked user library item or by cached season metadata for a tracked TV show, then removes orphaned poster/still files.

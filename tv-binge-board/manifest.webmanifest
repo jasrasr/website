@@ -1,11 +1,40 @@
 {
+  "id": "./",
   "name": "TV Binge Board",
   "short_name": "TV Binge Board",
   "description": "Mobile-friendly JSON-based TV and movie tracking.",
   "start_url": "index.php",
+  "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "browser"],
+  "orientation": "portrait",
   "background_color": "#0b1020",
   "theme_color": "#111827",
+  "categories": ["entertainment", "productivity"],
+  "lang": "en-US",
+  "shortcuts": [
+    {
+      "name": "Search / Add",
+      "short_name": "Search",
+      "description": "Search TMDB or add a show or movie.",
+      "url": "search.php",
+      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "My List",
+      "short_name": "List",
+      "description": "Open the full watch list.",
+      "url": "watchlist.php",
+      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Import",
+      "short_name": "Import",
+      "description": "Upload CSV, JSON, or screenshots.",
+      "url": "search.php#file-import",
+      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ],
   "icons": [
     {
       "src": "assets/icons/icon-192.png",

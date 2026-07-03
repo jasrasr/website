@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.2
+Revision: 1.5.3
 -->
 
 # TV Binge Board Task List
@@ -38,150 +38,35 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] README added.
 - [x] `.placeholder` files added.
 
-## rev 1.2.0 development pass
+## Completed revision passes
 
-- [x] Add password change page.
-- [x] Add admin reset-password action.
-- [x] Add admin disable/enable user action.
-- [x] Add option to disable public registration.
-- [x] Add CSV export for each user's library.
-- [x] Add JSON export for each user's library.
-- [x] Add CSV import review screen.
-- [x] Add duplicate detection during import.
-- [x] Add poster refresh action using TMDB ID.
-- [x] Add per-season episode grid for TV shows.
-- [x] Add completed percentage for TV shows.
-- [x] Add search/filter/sort on `watchlist.php`.
-- [x] Add user profile avatars.
-- [x] Add PWA icons.
-- [x] Add backup script for the `data/` folder.
+- [x] rev 1.2.0 - account controls, import/export, episode grid, PWA icons, backups.
+- [x] rev 1.3.0 - richer TMDB metadata, TMDB links, season/episode metadata, refresh-all metadata.
+- [x] rev 1.4.0 - local artwork cache, poster/still cache, refresh artwork, fallback artwork chain.
+- [x] rev 1.4.2 - project rename cleanup, rev labels, unused artwork cleanup.
+- [x] rev 1.4.4 - Matt mobile list feedback: Smart sort, Hide 100% / finished, compact cards, progress rollback.
+- [x] rev 1.4.5 - poster/backdrop picker.
+- [x] rev 1.4.6 - CSV import mapping and downloadable import error report.
+- [x] rev 1.4.7 - Matt tester attribution in docs/changelog.
+- [x] rev 1.4.8 - screenshot-assisted import review from OCR/AI text.
+- [x] rev 1.4.9 - Search as add/import/upload hub and bottom-nav overflow hint.
+- [x] rev 1.5.0 - Matt episode list feedback: picture/text toggle and check for new episodes.
+- [x] rev 1.5.1 - one-time in-app update notice.
+- [x] rev 1.5.2 - Matt next-up/caught-up tracking.
 
-## rev 1.3.0 TMDB integration pass
+## rev 1.5.3 PWA polish pass
 
-- [x] Add server-side TMDB read-access-token support.
-- [x] Keep TMDB credentials out of browser JavaScript.
-- [x] Add external TMDB links for linked items.
-- [x] Fetch full TMDB details when adding from search.
-- [x] Add link-to-TMDB workflow for existing manual items.
-- [x] Add richer TMDB metadata fields: release date, genres, vote average/count, runtime, homepage, and TV status.
-- [x] Add TMDB season details cache.
-- [x] Add TMDB-backed TV episode grid with episode titles and air dates.
-- [x] Store episode title and air date when toggling watched episodes.
-- [x] Add refresh-all TMDB metadata action for linked library items.
-- [x] Update CSV export with TMDB URL and metadata columns.
-- [x] Add UI to pick preferred poster/backdrop images.
-- [x] Add scheduled/one-click stale cache cleanup.
-
-## rev 1.4.0 local artwork pass
-
-- [x] Add browser-visible local artwork cache folder.
-- [x] Cache main TMDB posters locally when adding or linking items.
-- [x] Add local poster refresh when refreshing TMDB metadata.
-- [x] Add item-level local artwork cache/refresh API.
-- [x] Add force-refresh option for artwork when TMDB images change.
-- [x] Cache TMDB season posters locally.
-- [x] Cache TMDB episode stills locally when requested.
-- [x] Display episode stills in the episode grid.
-- [x] Add fallback chain for missing episode images.
-- [x] Keep runtime poster/still files out of GitHub while preserving folders.
-- [x] Add UI to choose alternate TMDB poster/backdrop images.
-- [x] Add stale artwork cleanup tool.
-
-## rev 1.4.2 maintenance pass
-
-- [x] Standardize headers and display labels to `rev 1.4.2`.
-- [x] Remove unused local artwork automatically after deleting a media item.
-- [x] Add admin-only unused artwork cleanup endpoint.
-- [x] Add Site Settings button to remove orphaned cached artwork.
-- [x] Keep completed cleanup tasks visible for audit.
-
-## rev 1.4.4 Matt testing/mobile list cleanup pass
-
-- [x] Add Smart sort so currently watching/in-progress items float higher on My List.
-- [x] Add Hide 100% / finished items filter.
-- [x] Replace tall list cards with compact mobile cards on My List.
-- [x] Keep long descriptions on the detail page instead of the list page.
-- [x] Fix last-episode rollback so lowering progress removes later watched episode records.
-- [x] Bump visible revision and service worker cache to `rev 1.4.4`.
-
-## rev 1.4.5 poster/backdrop selection pass
-
-- [x] Add `artwork.php` picker for TMDB-linked items.
-- [x] Show current poster and backdrop on the artwork picker.
-- [x] List alternate TMDB posters with vote/size metadata.
-- [x] List alternate TMDB backdrops with vote/size metadata.
-- [x] Add `api/select-artwork.php` to save the preferred poster/backdrop choice.
-- [x] Cache selected posters locally.
-- [x] Cache selected backdrops locally in `public-cache/backdrops/`.
-- [x] Add item detail link to choose poster/backdrop.
-- [x] Add `.gitignore` and `.placeholder` support for backdrop cache files.
-- [x] Update `README.md` for `rev 1.4.5`.
-- [x] Update `CHANGELOG.md` for `rev 1.4.5`.
-
-## rev 1.4.6 import mapping pass
-
-- [x] Add CSV column-mapping screen before import review.
-- [x] Add automatic header guesses for common odd CSV headers.
-- [x] Add first-rows CSV preview on the mapping screen.
-- [x] Add downloadable import error report for rows that cannot be staged.
-- [x] Bump visible revision and service worker cache to `rev 1.4.6`.
-- [x] Update `README.md` for `rev 1.4.6`.
-- [x] Update `CHANGELOG.md` for `rev 1.4.6`.
-
-## rev 1.4.7 attribution/documentation pass
-
-- [x] Add Matt user testing attribution to README.
-- [x] Add Matt attribution to the rev 1.4.4 changelog items that came from his testing feedback.
-- [x] Bump visible project revision and service worker cache to `rev 1.4.7`.
-
-## rev 1.4.8 screenshot-assisted import review pass
-
-- [x] Add OCR/AI text processing outside the core library save path.
-- [x] Parse pasted OCR/AI text into show/movie guesses.
-- [x] Display parsed guesses with confidence levels.
-- [x] Add manual approve/reject screen for screenshot guesses.
-- [x] Approved screenshot guesses create a normal import review file.
-- [x] Keep library writes behind the existing import review confirmation step.
-- [x] Document project-level vs file-level revision rules.
-
-## rev 1.4.9 search/add/import hub pass
-
-- [x] Make Search the main intake hub for normal tracking users.
-- [x] Add TMDB search, manual add, CSV/JSON import upload, and screenshot upload sections to Search.
-- [x] Keep CSV/JSON upload routed through the existing import mapping/review workflow.
-- [x] Keep screenshot upload routed through the existing screenshot queue/review workflow.
-- [x] Add bottom navigation overflow hint so users can tell there are more nav items to the right.
-- [ ] Add direct image processing for uploaded screenshots so the upload itself can produce guesses.
-
-## rev 1.5.0 Matt episode list / new episode pass
-
-- [x] Add Picture cards / Text-only episode display toggle on item detail pages.
-- [x] Add spoiler-safe text-only episode mode to hide episode still images.
-- [x] Make text-only mode more compact for mobile episode lists.
-- [x] Persist the episode display preference in a browser cookie.
-- [x] Add Check for new episodes action for TMDB-linked TV shows.
-- [x] Add `api/refresh-metadata.php` to force-refresh item, season, and episode metadata.
-- [x] Show last metadata check timestamp on the item detail page.
-- [x] Update README and changelog for Matt's new testing feedback.
-
-## rev 1.5.1 in-app update notice pass
-
-- [x] Add one-time on-screen update notice when the deployed rev changes.
-- [x] Show current rev number and a brief update summary in the notice.
-- [x] Add direct changelog link from the notice.
-- [x] Store the last seen rev in browser local storage so the notice does not keep repeating.
-- [x] Add dismiss button.
-- [x] Bump visible revision and service worker cache to `rev 1.5.1`.
-
-## rev 1.5.2 Matt next-up / caught-up pass
-
-- [x] Add `includes/next-up.php` helper functions.
-- [x] Calculate next available unwatched TV episode from watched records and saved TMDB metadata.
-- [x] Show `Next up: SxEy`, `Start: S1E1`, `Caught up`, or `Likely next` on compact list cards.
-- [x] Add a dedicated next-up/caught-up status card to item detail pages.
-- [x] Update Hide 100% / finished filter to also hide caught-up TV shows.
-- [x] Update Smart sort so caught-up shows sit below shows with available next episodes.
-- [x] Update the one-time update notice summary for rev 1.5.2.
+- [x] Add `id`, `scope`, `orientation`, `display_override`, categories, language, and shortcuts to `manifest.webmanifest`.
+- [x] Add PWA install/help page at `install.php`.
+- [x] Add dashboard Install / Add to Home Screen card.
+- [x] Add offline fallback page at `offline.php`.
+- [x] Improve service-worker app-shell caching.
+- [x] Avoid broad caching of authenticated dynamic PHP pages.
+- [x] Add service-worker `SKIP_WAITING` message support.
+- [x] Add frontend New version available / Reload now prompt for waiting service-worker updates.
+- [x] Add dynamic iOS/mobile web app meta tag setup from the frontend script.
+- [x] Update in-app revision notice summary for rev 1.5.3.
+- [x] Bump visible revision and service worker cache to `rev 1.5.3`.
 
 ## Import plan
 
@@ -207,6 +92,18 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Display parsed guesses with confidence levels.
 - [x] Add manual approve/reject screen for screenshot guesses.
 - [ ] Add direct image processing from the uploaded screenshot itself.
+
+## PWA plan
+
+- [x] Add baseline manifest and app icons.
+- [x] Register service worker.
+- [x] Add manifest scope, id, orientation, display override, and shortcuts.
+- [x] Add offline fallback page.
+- [x] Add install/help page.
+- [x] Add visible install card.
+- [x] Add service-worker update reload prompt.
+- [ ] Add custom Apple 180x180 icon asset instead of scaling the existing 192x192 icon.
+- [ ] Add screenshot assets for richer PWA install surfaces.
 
 ## Security hardening
 
