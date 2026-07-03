@@ -5,10 +5,19 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.0
+Revision: 1.5.1
 -->
 
 # Changelog
+
+## rev 1.5.1 - 2026-07-03
+
+- Added a one-time in-app update notice that appears when the deployed project revision changes.
+- The notice shows the current rev number, a brief summary, and a direct link to the changelog.
+- The notice is browser-local and uses local storage; it does not send text or email notifications.
+- The notice appears on the next page load after a new deployed revision is seen, then records that rev so it does not keep repeating.
+- Added dismiss support for users who do not want to open the changelog.
+- Bumped the visible project revision and service worker cache to 1.5.1.
 
 ## rev 1.5.0 - 2026-07-03
 
