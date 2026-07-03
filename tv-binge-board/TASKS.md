@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.3
+Revision: 1.5.4
 -->
 
 # TV Binge Board Task List
@@ -53,20 +53,18 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] rev 1.5.0 - Matt episode list feedback: picture/text toggle and check for new episodes.
 - [x] rev 1.5.1 - one-time in-app update notice.
 - [x] rev 1.5.2 - Matt next-up/caught-up tracking.
+- [x] rev 1.5.3 - PWA polish and install/offline support.
 
-## rev 1.5.3 PWA polish pass
+## rev 1.5.4 JL favicon/app icon pass
 
-- [x] Add `id`, `scope`, `orientation`, `display_override`, categories, language, and shortcuts to `manifest.webmanifest`.
-- [x] Add PWA install/help page at `install.php`.
-- [x] Add dashboard Install / Add to Home Screen card.
-- [x] Add offline fallback page at `offline.php`.
-- [x] Improve service-worker app-shell caching.
-- [x] Avoid broad caching of authenticated dynamic PHP pages.
-- [x] Add service-worker `SKIP_WAITING` message support.
-- [x] Add frontend New version available / Reload now prompt for waiting service-worker updates.
-- [x] Add dynamic iOS/mobile web app meta tag setup from the frontend script.
-- [x] Update in-app revision notice summary for rev 1.5.3.
-- [x] Bump visible revision and service worker cache to `rev 1.5.3`.
+- [x] Add `app-icon.php` dynamic JL-style PNG icon generator.
+- [x] Match the app icon direction to the JasonLamb.me JL mark.
+- [x] Use generated 32px and 192px PNG icons for browser favicon links.
+- [x] Use generated 180px PNG icon for Apple touch icon.
+- [x] Use generated 192px and 512px PNG icons in `manifest.webmanifest`.
+- [x] Update manifest shortcut icons to use the generated JL-style icon.
+- [x] Update the service worker shell cache to include the generated icon sizes.
+- [x] Bump visible revision and service worker cache to `rev 1.5.4`.
 
 ## Import plan
 
@@ -102,7 +100,8 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Add install/help page.
 - [x] Add visible install card.
 - [x] Add service-worker update reload prompt.
-- [ ] Add custom Apple 180x180 icon asset instead of scaling the existing 192x192 icon.
+- [x] Add generated 180px Apple icon endpoint.
+- [x] Add generated 192px and 512px manifest icon endpoints.
 - [ ] Add screenshot assets for richer PWA install surfaces.
 
 ## Security hardening
