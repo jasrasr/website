@@ -1,14 +1,14 @@
 /**
  * File: service-worker.js
  * Project: TV Binge Board
- * Description: PWA service worker for app-shell caching, offline fallback navigation, static asset cache hits, and user-triggered update activation.
+ * Description: PWA service worker for app-shell caching, offline fallback navigation, static asset cache hits, PWA screenshot asset caching, and user-triggered update activation.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-03
- * Revision: 1.5.6
+ * Revision: 1.5.7
  */
 
-const CACHE_NAME = 'tv-binge-board-rev-1.5.6';
+const CACHE_NAME = 'tv-binge-board-rev-1.5.7';
 const OFFLINE_URL = 'offline.php';
 const SHELL_ASSETS = [
     './',
@@ -25,7 +25,10 @@ const SHELL_ASSETS = [
     'assets/icons/icon-jl-192.png',
     'assets/icons/icon-jl-512.png',
     'assets/icons/icon-192.png',
-    'assets/icons/icon-512.png'
+    'assets/icons/icon-512.png',
+    'assets/screenshots/pwa-mobile-list.svg',
+    'assets/screenshots/pwa-mobile-search-import.svg',
+    'assets/screenshots/pwa-desktop-dashboard.svg'
 ];
 const STATIC_ASSETS = SHELL_ASSETS.filter(function (asset) { return asset !== './' && !asset.endsWith('.php'); });
 

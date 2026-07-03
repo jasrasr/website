@@ -5,10 +5,20 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.6
+Revision: 1.5.7
 -->
 
 # Changelog
+
+## rev 1.5.7 - 2026-07-03
+
+- Added PWA screenshot assets for richer install surfaces.
+- Added `assets/screenshots/pwa-mobile-list.svg`.
+- Added `assets/screenshots/pwa-mobile-search-import.svg`.
+- Added `assets/screenshots/pwa-desktop-dashboard.svg`.
+- Added manifest `screenshots` entries with narrow and wide form factors.
+- Added the screenshot assets to the service worker cache list.
+- Bumped the visible project revision and service worker cache to 1.5.7.
 
 ## rev 1.5.6 - 2026-07-03
 

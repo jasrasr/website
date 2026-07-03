@@ -54,5 +54,28 @@
       "type": "image/png",
       "purpose": "any"
     }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/screenshots/pwa-mobile-list.svg",
+      "sizes": "390x844",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "Compact mobile watch list with next-up tracking"
+    },
+    {
+      "src": "assets/screenshots/pwa-mobile-search-import.svg",
+      "sizes": "390x844",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "Search, add, file import, and screenshot import hub"
+    },
+    {
+      "src": "assets/screenshots/pwa-desktop-dashboard.svg",
+      "sizes": "1365x768",
+      "type": "image/svg+xml",
+      "form_factor": "wide",
+      "label": "Wide dashboard with tracking cards and install features"
+    }
   ]
 }
