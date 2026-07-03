@@ -4,8 +4,8 @@ Project: TV Binge Board
 Description: Restart-friendly task list and implementation plan for continuing development on another device.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
-Modified: 2026-07-02
-Revision: 1.4.6
+Modified: 2026-07-03
+Revision: 1.4.8
 -->
 
 # TV Binge Board Task List
@@ -13,6 +13,10 @@ Revision: 1.4.6
 ## Audit rule
 
 Completed tasks stay in this file with `[x]` so the project history can be audited later. Do not remove completed tasks unless the wording itself reveals a sensitive security detail.
+
+## Revision rule
+
+The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the README revision note. Individual file header revisions are file-specific and should only change when that file changes. New files should start with their own file revision instead of inheriting the project revision.
 
 ## Current state
 
@@ -127,6 +131,22 @@ Completed tasks stay in this file with `[x]` so the project history can be audit
 - [x] Update `README.md` for `rev 1.4.6`.
 - [x] Update `CHANGELOG.md` for `rev 1.4.6`.
 
+## rev 1.4.7 attribution/documentation pass
+
+- [x] Add Matt user testing attribution to README.
+- [x] Add Matt attribution to the rev 1.4.4 changelog items that came from his testing feedback.
+- [x] Bump visible project revision and service worker cache to `rev 1.4.7`.
+
+## rev 1.4.8 screenshot-assisted import review pass
+
+- [x] Add OCR/AI text processing outside the core library save path.
+- [x] Parse pasted OCR/AI text into show/movie guesses.
+- [x] Display parsed guesses with confidence levels.
+- [x] Add manual approve/reject screen for screenshot guesses.
+- [x] Approved screenshot guesses create a normal import review file.
+- [x] Keep library writes behind the existing import review confirmation step.
+- [x] Document project-level vs file-level revision rules.
+
 ## Import plan
 
 - [x] Create `import.php` page.
@@ -147,9 +167,9 @@ Completed tasks stay in this file with `[x]` so the project history can be audit
 - [x] Create review queue JSON file.
 - [x] Require manual approval before any future screenshot import writes data.
 - [x] Keep original screenshot attached to import history for audit/debugging.
-- [ ] Add OCR/AI processing outside the core save path.
-- [ ] Display parsed guesses with confidence levels.
-- [ ] Add manual approve/reject screen for screenshot guesses.
+- [x] Add OCR/AI processing outside the core save path.
+- [x] Display parsed guesses with confidence levels.
+- [x] Add manual approve/reject screen for screenshot guesses.
 
 ## Security hardening
 
