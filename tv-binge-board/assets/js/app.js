@@ -5,7 +5,7 @@
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-03
- * Revision: 1.5.0
+ * Revision: 1.5.1
  */
 
 (function () {
@@ -77,6 +77,7 @@
         const changelog = document.querySelector('a[href*="changelog.php"]');
         const changelogHref = changelog ? changelog.getAttribute('href') || 'changelog.php' : 'changelog.php';
         const summaries = {
+            '1.5.4': 'Updated the PWA app icon assets to use the JasonLamb.me JL favicon/logo style.',
             '1.5.3': 'Polished the PWA setup with stronger manifest metadata, offline fallback, install help, and better update reload handling.',
             '1.5.2': 'Added Next up / Caught up episode status so TV cards can show what episode to watch next or when you are current.',
             '1.5.1': 'Added one-time in-app update notices with a direct changelog link.',
