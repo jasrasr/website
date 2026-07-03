@@ -1,11 +1,11 @@
 /**
  * File: assets/css/app.css
  * Project: TV Binge Board
- * Description: Mobile-first application styles, cards, forms, navigation, media list layout, avatars, episode grids, spoiler-safe text-only episode mode, compact list cards, artwork picker, import mapping, screenshot guess review, and import review UI.
+ * Description: Mobile-first application styles, cards, forms, navigation, media list layout, avatars, episode grids, spoiler-safe text-only episode mode, in-app update notices, compact list cards, artwork picker, import mapping, screenshot guess review, and import review UI.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-03
- * Revision: 1.4.8
+ * Revision: 1.4.9
  */
 
 
@@ -172,3 +172,10 @@ button.danger, .danger { background: var(--danger); color: #190707; }
 .episode-button.episode-text-only small { font-size: .82rem; margin-top: 0; }
 .episode-button.episode-text-only small:last-child { color: var(--muted); justify-self: end; white-space: nowrap; }
 @media (min-width: 720px) { .text-episode-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
+
+/* file rev 1.4.9 one-time update notices */
+.update-notice { display: grid; gap: .75rem; margin-bottom: 1rem; padding: .95rem; border: 1px solid rgba(96,165,250,.55); border-radius: 1.1rem; background: linear-gradient(135deg, rgba(37,99,235,.32), rgba(17,24,39,.96)); box-shadow: var(--shadow); }
+.update-notice p { margin: .35rem 0 0; color: var(--muted); }
+.update-notice-actions { display: flex; gap: .55rem; flex-wrap: wrap; }
+.update-notice-actions .button, .update-notice-actions button { width: auto; }
+@media (min-width: 720px) { .update-notice { grid-template-columns: 1fr auto; align-items: center; } }
