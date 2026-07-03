@@ -2,11 +2,11 @@
 /**
  * File: upload-screenshot.php
  * Project: TV Binge Board
- * Description: Screenshot-assisted import staging page with protected uploads, OCR/AI text processing, confidence-scored guesses, and manual approve/reject review before import staging.
+ * Description: Screenshot-assisted import staging page with protected uploads, optional browser-side OCR text capture, confidence-scored guesses, and manual approve/reject review before import staging.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-03
- * Revision: 1.5.0
+ * Revision: 1.5.1
  */
 declare(strict_types=1);
 
@@ -87,7 +87,7 @@ function app_screenshot_guess_from_line(string $line, int $index): ?array
         'status' => $status,
         'season' => $season,
         'episode' => $episode,
-        'notes' => 'Parsed from screenshot OCR/AI text.',
+        'notes' => 'Parsed from screenshot OCR text.',
         'confidence' => $confidence,
         'decision' => $confidence >= 70 ? 'approve' : 'review',
     ];
@@ -120,7 +120,7 @@ function app_screenshot_guess_row(array $guess, array $post, int $index): ?array
     $episode = trim((string)($post['episode'][$index] ?? ($guess['episode'] ?? '')));
     $notes = trim((string)($post['notes'][$index] ?? ($guess['notes'] ?? '')));
     $confidence = max(0, min(100, (int)($guess['confidence'] ?? 0)));
-    $row = [
+    return [
         'type' => $type,
         'title' => $title,
         'year' => trim((string)($post['year'][$index] ?? ($guess['year'] ?? ''))),
@@ -131,7 +131,6 @@ function app_screenshot_guess_row(array $guess, array $post, int $index): ?array
         'notes' => trim($notes . ($notes !== '' ? ' ' : '') . 'Screenshot guess confidence: ' . $confidence . '%.'),
         'overview' => '',
     ];
-    return $row;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -151,18 +150,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $destName = 'screenshot-' . $id . '.' . $ext;
             $dest = app_user_dir($username) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . $destName;
             if (!move_uploaded_file($tmp, $dest)) { throw new RuntimeException('Unable to save screenshot.'); }
+            $clientText = trim((string)($_POST['client_ocr_text'] ?? ''));
+            $guesses = $clientText !== '' ? app_screenshot_parse_text($clientText) : [];
             $queue = app_screenshot_queue($username);
-            $queue['items'][] = ['id' => $id, 'filename' => $destName, 'mime' => $mime, 'width' => (int)$info[0], 'height' => (int)$info[1], 'status' => 'needs-processing', 'notes' => 'Paste OCR/AI text output to generate review guesses. No library data has changed.', 'guesses' => [], 'created_at' => date(DATE_ATOM)];
+            $queue['items'][] = [
+                'id' => $id,
+                'filename' => $destName,
+                'mime' => $mime,
+                'width' => (int)$info[0],
+                'height' => (int)$info[1],
+                'status' => $guesses ? 'needs-review' : 'needs-processing',
+                'notes' => $guesses ? 'Browser OCR created review guesses. No library data has changed.' : 'Screenshot saved. Use browser OCR, manual text fallback, or a future server-side vision extractor to generate guesses.',
+                'ocr_text' => $clientText,
+                'processed_by' => $guesses ? 'browser-ocr' : '',
+                'guesses' => $guesses,
+                'created_at' => date(DATE_ATOM),
+                'processed_at' => $guesses ? date(DATE_ATOM) : '',
+            ];
             app_save_screenshot_queue($username, $queue);
-            app_log_activity($username, 'screenshot-uploaded', $username, ['id' => $id]);
-            app_flash('Screenshot uploaded. Paste OCR/AI text to process guesses.', 'success');
+            app_log_activity($username, 'screenshot-uploaded', $username, ['id' => $id, 'browser_ocr_guesses' => count($guesses)]);
+            app_flash($guesses ? 'Screenshot uploaded and browser OCR guesses are ready to review.' : 'Screenshot uploaded. Open the queue item to process text fallback.', $guesses ? 'success' : 'info');
             header('Location: upload-screenshot.php?item=' . rawurlencode($id)); exit;
         }
         if ($action === 'process_text') {
             $id = app_sanitize_username((string)($_POST['item_id'] ?? ''));
             $ocrText = trim((string)($_POST['ocr_text'] ?? ''));
             if ($id === '') { throw new RuntimeException('Missing screenshot queue item.'); }
-            if ($ocrText === '') { throw new RuntimeException('Paste OCR/AI text before processing.'); }
+            if ($ocrText === '') { throw new RuntimeException('Paste OCR text before processing.'); }
             $queue = app_screenshot_queue($username);
             $index = app_screenshot_item_index($queue, $id);
             if ($index === null) { throw new RuntimeException('Screenshot queue item not found.'); }
@@ -171,10 +185,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $queue['items'][$index]['ocr_text'] = $ocrText;
             $queue['items'][$index]['guesses'] = $guesses;
             $queue['items'][$index]['status'] = 'needs-review';
+            $queue['items'][$index]['processed_by'] = 'manual-text';
             $queue['items'][$index]['processed_at'] = date(DATE_ATOM);
             app_save_screenshot_queue($username, $queue);
             app_log_activity($username, 'screenshot-processed', $username, ['id' => $id, 'guesses' => count($guesses)]);
-            app_flash('Screenshot text processed. Review and approve the guesses below.', 'success');
+            app_flash('Text processed. Review and approve the guesses below.', 'success');
             header('Location: upload-screenshot.php?item=' . rawurlencode($id)); exit;
         }
         if ($action === 'save_guesses') {
@@ -238,11 +253,13 @@ app_page_header('Upload Screenshot');
 <section class="card">
     <h1>Upload screenshot for assisted import</h1>
     <?php if ($error): ?><div class="alert danger"><?= e($error) ?></div><?php endif; ?>
-    <p>This stores the screenshot in your protected user data folder and creates a review queue entry. The upload step does not parse or import automatically.</p>
-    <form method="post" enctype="multipart/form-data" class="stack">
+    <p>Choose an image from a tracking app. The page will try browser-side OCR before upload and create editable guesses when text is found. Manual fallback remains available.</p>
+    <form method="post" enctype="multipart/form-data" class="stack" id="screenshotUploadForm">
         <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
         <input type="hidden" name="action" value="upload">
-        <label>Screenshot <input type="file" name="screenshot" accept="image/png,image/jpeg,image/webp" required></label>
+        <input type="hidden" name="client_ocr_text" id="clientOcrText" value="">
+        <label>Screenshot <input type="file" name="screenshot" id="screenshotFileInput" accept="image/png,image/jpeg,image/webp" required></label>
+        <p class="muted" id="clientOcrStatus">Select an image. Browser OCR will run when available before upload.</p>
         <button type="submit">Upload screenshot</button>
     </form>
 </section>
@@ -266,17 +283,17 @@ app_page_header('Upload Screenshot');
 </section>
 <?php if ($selectedItem): ?>
 <section class="card">
-    <h2>Process screenshot text</h2>
+    <h2>Process fallback text</h2>
     <p class="muted">Queue item: <strong><?= e((string)($selectedItem['filename'] ?? $selectedId)) ?></strong></p>
-    <p>Use iPhone Live Text, another OCR tool, or an AI vision pass to extract text from the screenshot, then paste that text here. This processing step only creates guesses; it still does not write to your library.</p>
+    <p>Use this fallback when browser OCR does not capture enough text. Paste text from iPhone Live Text, OCR, or another tool. This step only creates guesses; it does not write to your library.</p>
     <form method="post" class="stack">
         <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
         <input type="hidden" name="action" value="process_text">
         <input type="hidden" name="item_id" value="<?= e($selectedId) ?>">
-        <label>OCR/AI text output
+        <label>Fallback text output
             <textarea name="ocr_text" rows="8" placeholder="Example: The Crown S2E4&#10;Lost S1E8&#10;The Matrix 1999"><?= e((string)($selectedItem['ocr_text'] ?? '')) ?></textarea>
         </label>
-        <button type="submit">Process text into guesses</button>
+        <button type="submit">Process fallback text into guesses</button>
     </form>
 </section>
 <?php $guesses = is_array($selectedItem['guesses'] ?? null) ? $selectedItem['guesses'] : []; if ($guesses): ?>
