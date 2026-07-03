@@ -1,11 +1,11 @@
 /**
  * File: assets/js/app.js
  * Project: TV Binge Board
- * Description: Client-side behavior for live TMDB search/add result cards and PWA registration.
+ * Description: Client-side behavior for live TMDB search/add result cards, import match search, bottom navigation overflow hint, and PWA registration.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
- * Modified: 2026-07-02
- * Revision: 1.4.3
+ * Modified: 2026-07-03
+ * Revision: 1.4.4
  */
 
 (function () {
@@ -131,9 +131,9 @@
             summary.textContent = label || 'No TMDB match selected yet.';
         }
 
-        function renderResults(results) {
+        function renderResults(items) {
             resultsBox.innerHTML = '';
-            results.forEach(function (item) {
+            items.forEach(function (item) {
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.className = 'secondary';
@@ -163,6 +163,28 @@
             }
         });
     });
+
+    (function setupBottomNavHint() {
+        const nav = document.querySelector('.bottom-nav');
+        if (!nav) { return; }
+        const style = document.createElement('style');
+        style.textContent = '.bottom-nav-more-hint{position:fixed;right:.9rem;bottom:1.1rem;z-index:31;display:grid;place-items:center;width:2.15rem;height:2.15rem;border-radius:999px;background:rgba(31,41,55,.92);border:1px solid rgba(156,163,175,.45);color:#f9fafb;font-size:1.4rem;font-weight:900;pointer-events:none;box-shadow:0 10px 24px rgba(0,0,0,.28)}@media (min-width:760px){.bottom-nav-more-hint{right:calc(50% - 370px)}}';
+        document.head.appendChild(style);
+        const hint = document.createElement('span');
+        hint.className = 'bottom-nav-more-hint';
+        hint.setAttribute('aria-hidden', 'true');
+        hint.textContent = '›';
+        nav.insertAdjacentElement('afterend', hint);
+        function syncHint() {
+            const canScroll = nav.scrollWidth > nav.clientWidth + 8;
+            const atEnd = nav.scrollLeft + nav.clientWidth >= nav.scrollWidth - 8;
+            hint.hidden = !canScroll || atEnd;
+        }
+        nav.addEventListener('scroll', syncHint, { passive: true });
+        window.addEventListener('resize', syncHint);
+        syncHint();
+    }());
+
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function () { navigator.serviceWorker.register('service-worker.js').catch(function () {}); });
     }
