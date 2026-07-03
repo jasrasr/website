@@ -2,15 +2,16 @@
 /**
  * File: upload-screenshot.php
  * Project: TV Binge Board
- * Description: Screenshot-assisted import staging page with protected uploads, OCR/AI text processing, confidence-scored guesses, and manual approve/reject review before import staging.
+ * Description: Screenshot-assisted import staging page with protected uploads, direct AI/OCR image processing, confidence-scored guesses, and manual approve/reject review before import staging.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-03
- * Revision: 1.5.0
+ * Revision: 1.5.6
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/tmdb.php';
+require_once __DIR__ . '/includes/screenshot-vision.php';
 $user = app_require_login();
 if (!app_can_track($user)) { app_page_header('Upload Screenshot'); echo '<section class="card"><h1>Screenshot upload disabled for admin</h1></section>'; app_page_footer(); exit; }
 $username = (string)$user['username'];
@@ -40,6 +41,34 @@ function app_screenshot_item_index(array $queue, string $id): ?int
         if ((string)($item['id'] ?? '') === $id) { return (int)$index; }
     }
     return null;
+}
+
+function app_screenshot_file_path(string $username, array $item): string
+{
+    $filename = basename((string)($item['filename'] ?? ''));
+    if ($filename === '') { throw new RuntimeException('Screenshot filename is missing.'); }
+    $path = app_user_dir($username) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . $filename;
+    if (!is_file($path)) { throw new RuntimeException('Screenshot file was not found.'); }
+    return $path;
+}
+
+function app_screenshot_apply_direct_processing(string $username, array $queue, int $index): array
+{
+    $item = $queue['items'][$index] ?? null;
+    if (!is_array($item)) { throw new RuntimeException('Screenshot queue item not found.'); }
+    $path = app_screenshot_file_path($username, $item);
+    $mime = (string)($item['mime'] ?? 'image/jpeg');
+    $result = app_screenshot_process_image_direct($path, $mime);
+    $guesses = is_array($result['guesses'] ?? null) ? $result['guesses'] : [];
+    if ($guesses === []) { throw new RuntimeException('Direct image processing did not return usable guesses.'); }
+    $queue['items'][$index]['ocr_text'] = (string)($result['raw_text'] ?? '');
+    $queue['items'][$index]['guesses'] = $guesses;
+    $queue['items'][$index]['status'] = 'needs-review';
+    $queue['items'][$index]['processing_method'] = (string)($result['method'] ?? 'direct-image');
+    $queue['items'][$index]['processed_at'] = date(DATE_ATOM);
+    $queue['items'][$index]['notes'] = 'Image processed directly from the uploaded screenshot. Review the guesses below before creating an import review. No library data has changed.';
+    unset($queue['items'][$index]['processing_error']);
+    return $queue;
 }
 
 function app_screenshot_clean_title(string $line): string
@@ -152,10 +181,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $dest = app_user_dir($username) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . $destName;
             if (!move_uploaded_file($tmp, $dest)) { throw new RuntimeException('Unable to save screenshot.'); }
             $queue = app_screenshot_queue($username);
-            $queue['items'][] = ['id' => $id, 'filename' => $destName, 'mime' => $mime, 'width' => (int)$info[0], 'height' => (int)$info[1], 'status' => 'needs-processing', 'notes' => 'Paste OCR/AI text output to generate review guesses. No library data has changed.', 'guesses' => [], 'created_at' => date(DATE_ATOM)];
+            $queue['items'][] = ['id' => $id, 'filename' => $destName, 'mime' => $mime, 'width' => (int)$info[0], 'height' => (int)$info[1], 'status' => 'needs-processing', 'notes' => 'Screenshot uploaded. Direct image processing has not completed yet. No library data has changed.', 'guesses' => [], 'created_at' => date(DATE_ATOM)];
+            $newIndex = count($queue['items']) - 1;
+            $processed = false;
+            try {
+                $queue = app_screenshot_apply_direct_processing($username, $queue, $newIndex);
+                $processed = true;
+            } catch (Throwable $processingEx) {
+                $queue['items'][$newIndex]['processing_error'] = $processingEx->getMessage();
+                $queue['items'][$newIndex]['notes'] = 'Direct image processing is not ready: ' . $processingEx->getMessage() . ' You can retry image processing later or paste OCR/AI text manually. No library data has changed.';
+            }
             app_save_screenshot_queue($username, $queue);
-            app_log_activity($username, 'screenshot-uploaded', $username, ['id' => $id]);
-            app_flash('Screenshot uploaded. Paste OCR/AI text to process guesses.', 'success');
+            app_log_activity($username, 'screenshot-uploaded', $username, ['id' => $id, 'processed' => $processed]);
+            if ($processed) {
+                app_flash('Screenshot uploaded and processed into review guesses. Review them before creating an import review.', 'success');
+            } else {
+                app_flash('Screenshot uploaded. Direct image processing needs configuration or retry; manual text fallback is still available.', 'success');
+            }
+            header('Location: upload-screenshot.php?item=' . rawurlencode($id)); exit;
+        }
+        if ($action === 'process_image') {
+            $id = app_sanitize_username((string)($_POST['item_id'] ?? ''));
+            if ($id === '') { throw new RuntimeException('Missing screenshot queue item.'); }
+            $queue = app_screenshot_queue($username);
+            $index = app_screenshot_item_index($queue, $id);
+            if ($index === null) { throw new RuntimeException('Screenshot queue item not found.'); }
+            $queue = app_screenshot_apply_direct_processing($username, $queue, $index);
+            $guessCount = count($queue['items'][$index]['guesses'] ?? []);
+            app_save_screenshot_queue($username, $queue);
+            app_log_activity($username, 'screenshot-image-processed', $username, ['id' => $id, 'guesses' => $guessCount]);
+            app_flash('Screenshot image processed directly. Review and approve the guesses below.', 'success');
             header('Location: upload-screenshot.php?item=' . rawurlencode($id)); exit;
         }
         if ($action === 'process_text') {
@@ -171,7 +226,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $queue['items'][$index]['ocr_text'] = $ocrText;
             $queue['items'][$index]['guesses'] = $guesses;
             $queue['items'][$index]['status'] = 'needs-review';
+            $queue['items'][$index]['processing_method'] = 'pasted-text';
             $queue['items'][$index]['processed_at'] = date(DATE_ATOM);
+            $queue['items'][$index]['notes'] = 'Pasted text processed into review guesses. No library data has changed.';
             app_save_screenshot_queue($username, $queue);
             app_log_activity($username, 'screenshot-processed', $username, ['id' => $id, 'guesses' => count($guesses)]);
             app_flash('Screenshot text processed. Review and approve the guesses below.', 'success');
@@ -238,12 +295,12 @@ app_page_header('Upload Screenshot');
 <section class="card">
     <h1>Upload screenshot for assisted import</h1>
     <?php if ($error): ?><div class="alert danger"><?= e($error) ?></div><?php endif; ?>
-    <p>This stores the screenshot in your protected user data folder and creates a review queue entry. The upload step does not parse or import automatically.</p>
+    <p>Upload a TV Time or similar screenshot. The site will try to process the image directly into review guesses when AI vision or local OCR is configured. Nothing is written to your library until you approve guesses and confirm the import review.</p>
     <form method="post" enctype="multipart/form-data" class="stack">
         <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
         <input type="hidden" name="action" value="upload">
         <label>Screenshot <input type="file" name="screenshot" accept="image/png,image/jpeg,image/webp" required></label>
-        <button type="submit">Upload screenshot</button>
+        <button type="submit">Upload and process screenshot</button>
     </form>
 </section>
 <section class="card">
@@ -254,7 +311,7 @@ app_page_header('Upload Screenshot');
             <?php $id = (string)($item['id'] ?? ''); ?>
             <article class="screenshot-queue-item">
                 <h3><?= e((string)($item['filename'] ?? 'screenshot')) ?></h3>
-                <p class="muted"><?= e((string)($item['status'] ?? '')) ?> · <?= e((string)($item['created_at'] ?? '')) ?> · <?= e((string)($item['width'] ?? '?')) ?>×<?= e((string)($item['height'] ?? '?')) ?></p>
+                <p class="muted"><?= e((string)($item['status'] ?? '')) ?> · <?= e((string)($item['created_at'] ?? '')) ?> · <?= e((string)($item['width'] ?? '?')) ?>×<?= e((string)($item['height'] ?? '?')) ?><?= !empty($item['processing_method']) ? ' · ' . e((string)$item['processing_method']) : '' ?></p>
                 <p class="muted"><?= e((string)($item['notes'] ?? '')) ?></p>
                 <div class="actions wrap-actions">
                     <a class="button secondary" href="<?= e(app_href('upload-screenshot.php?item=' . rawurlencode($id))) ?>">Open</a>
@@ -266,9 +323,21 @@ app_page_header('Upload Screenshot');
 </section>
 <?php if ($selectedItem): ?>
 <section class="card">
-    <h2>Process screenshot text</h2>
+    <h2>Process uploaded image</h2>
     <p class="muted">Queue item: <strong><?= e((string)($selectedItem['filename'] ?? $selectedId)) ?></strong></p>
-    <p>Use iPhone Live Text, another OCR tool, or an AI vision pass to extract text from the screenshot, then paste that text here. This processing step only creates guesses; it still does not write to your library.</p>
+    <p>This tries to read the uploaded screenshot directly and extract show/movie titles, TV season/episode progress, completion status, and watchlist/watch-progress context.</p>
+    <?php if (!empty($selectedItem['processing_error'])): ?><div class="alert danger"><?= e((string)$selectedItem['processing_error']) ?></div><?php endif; ?>
+    <form method="post" class="actions wrap-actions">
+        <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
+        <input type="hidden" name="action" value="process_image">
+        <input type="hidden" name="item_id" value="<?= e($selectedId) ?>">
+        <button type="submit" class="secondary">Process image into guesses</button>
+    </form>
+    <p class="muted">Requires an AI vision key in `includes/config.local.php` or a server OCR tool. If neither is available, use the fallback text box below.</p>
+</section>
+<section class="card">
+    <h2>Fallback: process pasted text</h2>
+    <p>Use this only when direct image processing is unavailable or you want to paste text from iPhone Live Text or another OCR tool.</p>
     <form method="post" class="stack">
         <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
         <input type="hidden" name="action" value="process_text">
@@ -276,7 +345,7 @@ app_page_header('Upload Screenshot');
         <label>OCR/AI text output
             <textarea name="ocr_text" rows="8" placeholder="Example: The Crown S2E4&#10;Lost S1E8&#10;The Matrix 1999"><?= e((string)($selectedItem['ocr_text'] ?? '')) ?></textarea>
         </label>
-        <button type="submit">Process text into guesses</button>
+        <button type="submit">Process pasted text into guesses</button>
     </form>
 </section>
 <?php $guesses = is_array($selectedItem['guesses'] ?? null) ? $selectedItem['guesses'] : []; if ($guesses): ?>
@@ -297,6 +366,7 @@ app_page_header('Upload Screenshot');
                 </div>
                 <div class="confidence-bar"><span style="width: <?= e((string)$confidence) ?>%"></span></div>
                 <p class="muted">Source text: <?= e((string)($guess['source_text'] ?? '')) ?></p>
+                <?php if (isset($guess['completion_percent']) && $guess['completion_percent'] !== null): ?><p class="muted">Completion from screenshot: <?= e((string)$guess['completion_percent']) ?>%</p><?php endif; ?>
                 <div class="grid-3">
                     <label>Decision
                         <select name="decision[<?= e((string)$index) ?>]">

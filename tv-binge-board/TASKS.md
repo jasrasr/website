@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.5
+Revision: 1.5.6
 -->
 
 # TV Binge Board Task List
@@ -55,17 +55,20 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] rev 1.5.2 - Matt next-up/caught-up tracking.
 - [x] rev 1.5.3 - PWA polish and install/offline support.
 - [x] rev 1.5.4 - JL favicon/app icon asset update.
+- [x] rev 1.5.5 - explicit Apple icon/cache-bust pass.
 
-## rev 1.5.5 explicit Apple icon/cache-bust pass
+## rev 1.5.6 direct screenshot image processing pass
 
-- [x] Add `assets/icons/apple-touch-icon.png`.
-- [x] Add `assets/icons/apple-touch-icon-180.png`.
-- [x] Add `assets/icons/icon-jl-192.png`.
-- [x] Add `assets/icons/icon-jl-512.png`.
-- [x] Update `manifest.webmanifest` to use `icon-jl-*` filenames instead of the old `icon-192.png` and `icon-512.png` paths.
-- [x] Keep legacy icon files in place for fallback compatibility.
-- [x] Update the service worker cache name and shell asset list for the new icon filenames.
-- [x] Bump visible revision and service worker cache to `rev 1.5.5`.
+- [x] Add `includes/screenshot-vision.php` direct image processing helper.
+- [x] Add optional AI vision extraction from uploaded screenshot files.
+- [x] Add local OCR fallback when the server has `tesseract` available.
+- [x] Automatically attempt direct image processing immediately after screenshot upload.
+- [x] Add retry action to process an existing queued screenshot image.
+- [x] Extract title, type, status, season, episode, year, completion percentage, and tracking context when visible.
+- [x] Keep manual pasted OCR/AI text as fallback.
+- [x] Keep library writes behind manual guess approval and normal import review confirmation.
+- [x] Add AI vision settings to `includes/config.local.example.php`.
+- [x] Bump visible revision and service worker cache to `rev 1.5.6`.
 
 ## Import plan
 
@@ -90,7 +93,7 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Add OCR/AI processing outside the core save path.
 - [x] Display parsed guesses with confidence levels.
 - [x] Add manual approve/reject screen for screenshot guesses.
-- [ ] Add direct image processing from the uploaded screenshot itself.
+- [x] Add direct image processing from the uploaded screenshot itself.
 
 ## PWA plan
 

@@ -5,10 +5,21 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.5
+Revision: 1.5.6
 -->
 
 # Changelog
+
+## rev 1.5.6 - 2026-07-03
+
+- Added direct image processing for uploaded screenshots.
+- Added `includes/screenshot-vision.php` for optional AI vision extraction with local OCR fallback when available.
+- Screenshot upload now tries to process the uploaded image immediately into review guesses.
+- Added a retry action to process an existing queued screenshot image directly.
+- Direct image processing extracts show/movie title, type, status, season, episode, year, completion percentage, and tracking context when visible.
+- Kept the manual pasted OCR/AI text box as a fallback only.
+- Added optional AI vision configuration examples to `includes/config.local.example.php`.
+- Bumped the visible project revision and service worker cache to 1.5.6.
 
 ## rev 1.5.5 - 2026-07-03
 
