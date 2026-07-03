@@ -2,23 +2,26 @@
 /**
  * File: watchlist.php
  * Project: TV Binge Board
- * Description: Full editable library list with search, status/type filters, compact mobile cards, in-progress filtering, and smart sorting.
+ * Description: Full editable library list with search, status/type filters, compact mobile cards, next-up/caught-up indicators, in-progress filtering, and smart sorting.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
- * Modified: 2026-07-02
- * Revision: 1.4.4
+ * Modified: 2026-07-03
+ * Revision: 1.4.5
  */
 declare(strict_types=1);
 
-
-require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/includes/next-up.php';
 $user = app_require_login();
 
 function app_watchlist_status_rank(array $item): int
 {
     $status = (string)($item['status'] ?? 'watchlist');
     $percent = app_episode_percent($item);
+    $nextUp = app_next_up_summary($item);
 
+    if (($item['type'] ?? '') === 'tv' && ($nextUp['state'] ?? '') === 'caught-up') {
+        return 2;
+    }
     if (($item['type'] ?? '') === 'tv' && $percent !== null && $percent >= 100) {
         return 3;
     }
@@ -35,6 +38,8 @@ function app_watchlist_status_rank(array $item): int
 function app_watchlist_is_in_progress(array $item): bool
 {
     if (($item['type'] ?? '') === 'tv') {
+        $nextUp = app_next_up_summary($item);
+        if (($nextUp['state'] ?? '') === 'caught-up') { return false; }
         $percent = app_episode_percent($item);
         return $percent === null || $percent < 100;
     }
@@ -94,6 +99,7 @@ function app_render_compact_media_card(array $item): void
     $percent = app_episode_percent($item);
     $genreText = app_media_genre_text($item);
     $lastEpisode = $item['last_episode'] ?? [];
+    $nextUp = app_next_up_summary($item);
     ?>
     <article class="media-card compact-media-card">
         <img class="poster" src="<?= e($poster) ?>" alt="Poster for <?= e($item['title'] ?? 'media') ?>" loading="lazy">
@@ -106,7 +112,8 @@ function app_render_compact_media_card(array $item): void
             <?php if ($genreText !== ''): ?><p class="muted compact-meta-line"><?= e($genreText) ?></p><?php endif; ?>
             <?php if ($percent !== null): ?>
                 <div class="progress"><span style="width: <?= e((string)$percent) ?>%"></span></div>
-                <p class="muted compact-meta-line"><?= e((string)$percent) ?>% complete<?php if (!empty($lastEpisode)): ?> · S<?= e((string)($lastEpisode['season'] ?? '?')) ?>E<?= e((string)($lastEpisode['episode'] ?? '?')) ?><?php endif; ?></p>
+                <p class="muted compact-meta-line"><?= e((string)$percent) ?>% complete<?php if (!empty($lastEpisode)): ?> · Last S<?= e((string)($lastEpisode['season'] ?? '?')) ?>E<?= e((string)($lastEpisode['episode'] ?? '?')) ?><?php endif; ?></p>
+                <?php if (($nextUp['label'] ?? '') !== ''): ?><p class="compact-meta-line next-up-line <?= e((string)($nextUp['css'] ?? '')) ?>"><?= e((string)$nextUp['label']) ?></p><?php endif; ?>
             <?php elseif (!empty($item['rating'])): ?>
                 <p class="muted compact-meta-line">Rating: <?= e((string)$item['rating']) ?>/10</p>
             <?php endif; ?>
@@ -152,7 +159,7 @@ $currentSort = (string)($_GET['sort'] ?? 'smart');
                 </select>
             </label>
         </div>
-        <label class="checkbox-row"><input type="checkbox" name="in_progress" value="1" <?= !empty($_GET['in_progress']) ? 'checked' : '' ?>> Hide 100% / finished items</label>
+        <label class="checkbox-row"><input type="checkbox" name="in_progress" value="1" <?= !empty($_GET['in_progress']) ? 'checked' : '' ?>> Hide 100% / caught-up / finished items</label>
         <div class="actions"><button type="submit">Apply</button><a class="button secondary" href="watchlist.php">Reset</a></div>
     </form>
 </section>
