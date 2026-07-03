@@ -1,11 +1,11 @@
 <!--
 File: README.md
 Project: TV Binge Board
-Description: Setup, usage, credentials, deployment, tester attribution, screenshot-assisted import, and architecture notes for the PHP/JSON watch tracker.
+Description: Setup, usage, credentials, deployment, tester attribution, search/add/import hub, screenshot-assisted import, and architecture notes for the PHP/JSON watch tracker.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.4.8
+Revision: 1.4.9
 -->
 
 # TV Binge Board
@@ -39,7 +39,7 @@ Seed credentials are still present while the app is being tested and configured.
 
 Matt served as an early user tester for TV Binge Board. His feedback directly shaped several rev 1.4.4 usability changes, including Smart sorting for active shows, the Hide 100% / finished items filter, compact mobile list cards, moving long show descriptions to the detail page, and the progress rollback fix when a season or episode is corrected.
 
-## Features included through rev 1.4.8
+## Features included through rev 1.4.9
 
 - Project renamed to TV Binge Board with `tv-binge-board` as the folder/URL slug.
 - JSON file storage with file locking, atomic writes, and pre-overwrite restore points.
@@ -54,6 +54,9 @@ Matt served as an early user tester for TV Binge Board. His feedback directly sh
 - Site setting to enable/disable public registration.
 - Admin activity log.
 - Mobile-first UI.
+- Search page now acts as the main add/import/upload hub.
+- Search page includes TMDB search, manual add, CSV/JSON import upload, and screenshot upload.
+- Bottom navigation includes a visual overflow hint when more items are available by horizontal scrolling.
 - Logout link in the signed-in bottom navigation.
 - Watchlist and status management.
 - Smart default watchlist sort that prioritizes active/in-progress items.
@@ -97,6 +100,17 @@ Matt served as an early user tester for TV Binge Board. His feedback directly sh
 - `.placeholder` files in intentionally empty folders.
 - Unused artwork cleanup on delete and from the admin Site Settings page.
 - `data/.htaccess` protection for JSON data.
+
+## Search/add/import hub
+
+For normal tracking users, `search.php` is the main intake page. It includes:
+
+- TMDB search for adding a known show or movie with metadata.
+- Manual add for quick placeholders or missing TMDB results.
+- CSV/JSON import upload that submits into the existing import workflow.
+- Screenshot upload that submits into the existing screenshot-assisted import queue.
+
+The standalone `import.php` and `upload-screenshot.php` pages still exist for review, mapping, and queue detail work, but users should be able to start all intake workflows from Search.
 
 ## Installation
 
@@ -199,19 +213,17 @@ Imports are staged first. Nothing is written into a library until the user confi
 
 ## Screenshot-assisted import
 
-`upload-screenshot.php` validates and stores screenshots in the user's protected data folder, then creates a review queue entry. The upload itself does not parse text and does not automatically add shows.
+`upload-screenshot.php` validates and stores screenshots in the user's protected data folder, then creates a review queue entry. The upload itself does not automatically add shows.
 
 The screenshot flow is intentionally staged:
 
-1. Upload a screenshot.
-2. Use iPhone Live Text, another OCR tool, or an AI vision pass to extract text from the screenshot.
-3. Paste the OCR/AI text output into the screenshot queue item.
-4. The app parses the text into show/movie guesses with confidence scores.
-5. Review each guess, edit the fields, and approve or reject it.
-6. Approved guesses create a normal import review file.
-7. Confirm the import review before anything is written to the library.
+1. Upload a screenshot from Search or from `upload-screenshot.php`.
+2. Process the screenshot into guesses using the available OCR/AI path.
+3. Review each guess, edit the fields, and approve or reject it.
+4. Approved guesses create a normal import review file.
+5. Confirm the import review before anything is written to the library.
 
-This keeps OCR/AI processing outside the core save path and prevents mistaken text extraction from silently changing watch history.
+Server-side image AI extraction is the next required improvement so uploaded images can be processed directly without requiring users to paste OCR text manually.
 
 ## Backup
 
@@ -269,7 +281,7 @@ data/**/*.tmp.*
 
 ## Revision
 
-Current project revision: `1.4.8`
+Current project revision: `1.4.9`
 
 Note: file header revisions are file-specific and should only be bumped when that file changes. New files should start with their own file revision instead of inheriting the project revision.
 
