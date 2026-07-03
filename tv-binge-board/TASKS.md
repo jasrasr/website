@@ -144,7 +144,7 @@ Completed tasks stay in this file with `[x]` so the project history can be audit
 ## Security hardening
 
 - [ ] Future security wrap-up: rotate testing credentials after testing/configuration is complete.
-- [ ] Future security wrap-up: remove public testing credential details from public-facing docs before public use.
+- [ ] Future security wrap-up: review public-facing setup documentation before public use.
 - [ ] Future security wrap-up: disable public registration or restrict it tightly before public use.
 - [x] Add login rate limiting.
 - [x] Add password change flow.
