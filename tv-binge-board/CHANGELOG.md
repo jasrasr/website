@@ -5,10 +5,20 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.4.7
+Revision: 1.4.8
 -->
 
 # Changelog
+
+## rev 1.4.8 - 2026-07-03
+
+- Added OCR/AI text processing for screenshot-assisted imports outside the core library save path.
+- Added confidence-scored guesses parsed from pasted screenshot OCR/AI text.
+- Added manual approve/reject review for screenshot guesses before they become import review rows.
+- Approved screenshot guesses now create a normal import review file; nothing is written to the library until that import review is confirmed.
+- Added screenshot queue status updates for needs-processing, needs-review, and review-created states.
+- Added screenshot review UI styling.
+- Documented that project revision and file header revision are separate: file headers should change only when that specific file changes.
 
 ## rev 1.4.7 - 2026-07-03
 
