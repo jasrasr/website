@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.6
+Revision: 1.5.7
 -->
 
 # TV Binge Board Task List
@@ -56,19 +56,16 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] rev 1.5.3 - PWA polish and install/offline support.
 - [x] rev 1.5.4 - JL favicon/app icon asset update.
 - [x] rev 1.5.5 - explicit Apple icon/cache-bust pass.
+- [x] rev 1.5.6 - direct screenshot image processing.
 
-## rev 1.5.6 direct screenshot image processing pass
+## rev 1.5.7 PWA screenshot asset pass
 
-- [x] Add `includes/screenshot-vision.php` direct image processing helper.
-- [x] Add optional AI vision extraction from uploaded screenshot files.
-- [x] Add local OCR fallback when the server has `tesseract` available.
-- [x] Automatically attempt direct image processing immediately after screenshot upload.
-- [x] Add retry action to process an existing queued screenshot image.
-- [x] Extract title, type, status, season, episode, year, completion percentage, and tracking context when visible.
-- [x] Keep manual pasted OCR/AI text as fallback.
-- [x] Keep library writes behind manual guess approval and normal import review confirmation.
-- [x] Add AI vision settings to `includes/config.local.example.php`.
-- [x] Bump visible revision and service worker cache to `rev 1.5.6`.
+- [x] Add `assets/screenshots/pwa-mobile-list.svg`.
+- [x] Add `assets/screenshots/pwa-mobile-search-import.svg`.
+- [x] Add `assets/screenshots/pwa-desktop-dashboard.svg`.
+- [x] Add manifest `screenshots` entries with narrow and wide form factors.
+- [x] Add the screenshot assets to the service worker cache list.
+- [x] Bump visible revision and service worker cache to `rev 1.5.7`.
 
 ## Import plan
 
@@ -107,7 +104,7 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Update 192px and 512px PWA icon assets to match the JL favicon/logo direction.
 - [x] Add explicit Apple touch icon files.
 - [x] Add new icon filenames to avoid iOS caching the old icon URL.
-- [ ] Add screenshot assets for richer PWA install surfaces.
+- [x] Add screenshot assets for richer PWA install surfaces.
 
 ## Security hardening
 
