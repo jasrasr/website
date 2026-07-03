@@ -6,7 +6,7 @@
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-02
- * Revision: 1.4.3
+ * Revision: 1.4.4
  */
 declare(strict_types=1);
 
@@ -34,16 +34,26 @@ if (($library['items'][$index]['type'] ?? '') === 'tv' && empty($library['items'
 $season = trim((string)($_POST['season'] ?? ''));
 $episode = trim((string)($_POST['episode'] ?? ''));
 if (($library['items'][$index]['type'] ?? '') === 'tv' && $season !== '' && $episode !== '') {
-    $entry = ['season' => max(0, (int)$season), 'episode' => max(0, (int)$episode), 'watched_at' => date(DATE_ATOM)];
-    $library['items'][$index]['last_episode'] = $entry;
-    $keys = app_watched_episode_keys($library['items'][$index]);
-    if (empty($keys[$entry['season'] . '-' . $entry['episode']])) {
-        $library['items'][$index]['episodes'][] = $entry;
+    $selectedSeason = max(0, (int)$season);
+    $selectedEpisode = max(0, (int)$episode);
+    $entry = ['season' => $selectedSeason, 'episode' => $selectedEpisode, 'watched_at' => date(DATE_ATOM)];
+    $trimmedEpisodes = [];
+    foreach (($library['items'][$index]['episodes'] ?? []) as $existingEntry) {
+        if (!is_array($existingEntry)) { continue; }
+        $existingSeason = (int)($existingEntry['season'] ?? 0);
+        $existingEpisode = (int)($existingEntry['episode'] ?? 0);
+        if ($existingSeason < $selectedSeason || ($existingSeason === $selectedSeason && $existingEpisode <= $selectedEpisode)) {
+            $trimmedEpisodes[$existingSeason . '-' . $existingEpisode] = $existingEntry;
+        }
     }
+    $trimmedEpisodes[$selectedSeason . '-' . $selectedEpisode] = $entry;
+    ksort($trimmedEpisodes, SORT_NATURAL);
+    $library['items'][$index]['episodes'] = array_values($trimmedEpisodes);
+    $library['items'][$index]['last_episode'] = $entry;
 }
 $library['items'][$index]['updated_at'] = date(DATE_ATOM);
 app_save_library($targetUser, $library);
 app_log_activity((string)$user['username'], 'media-status-updated', $targetUser, ['uid' => $uid, 'status' => $status]);
 app_flash('List item saved.', 'success');
-header('Location: ' . (string)($_POST['redirect'] ?? '../watchlist.php'));
+header('Location: ../watchlist.php');
 exit;
