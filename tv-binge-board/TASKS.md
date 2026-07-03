@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.4.8
+Revision: 1.4.9
 -->
 
 # TV Binge Board Task List
@@ -56,8 +56,6 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Add PWA icons.
 - [x] Add backup script for the `data/` folder.
 
-
-
 ## rev 1.3.0 TMDB integration pass
 
 - [x] Add server-side TMDB read-access-token support.
@@ -73,7 +71,6 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Update CSV export with TMDB URL and metadata columns.
 - [x] Add UI to pick preferred poster/backdrop images.
 - [x] Add scheduled/one-click stale cache cleanup.
-
 
 ## rev 1.4.0 local artwork pass
 
@@ -147,6 +144,15 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Keep library writes behind the existing import review confirmation step.
 - [x] Document project-level vs file-level revision rules.
 
+## rev 1.4.9 search/add/import hub pass
+
+- [x] Make Search the main intake hub for normal tracking users.
+- [x] Add TMDB search, manual add, CSV/JSON import upload, and screenshot upload sections to Search.
+- [x] Keep CSV/JSON upload routed through the existing import mapping/review workflow.
+- [x] Keep screenshot upload routed through the existing screenshot queue/review workflow.
+- [x] Add bottom navigation overflow hint so users can tell there are more nav items to the right.
+- [ ] Add direct image processing for uploaded screenshots so the upload itself can produce guesses.
+
 ## Import plan
 
 - [x] Create `import.php` page.
@@ -170,6 +176,7 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Add OCR/AI processing outside the core save path.
 - [x] Display parsed guesses with confidence levels.
 - [x] Add manual approve/reject screen for screenshot guesses.
+- [ ] Add direct image processing from the uploaded screenshot itself.
 
 ## Security hardening
 
@@ -182,7 +189,7 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Add activity log for admin changes.
 - [x] Add recurring/manual JSON backup helper.
 - [x] Add automatic pre-overwrite JSON restore points.
-- [ ] Add server-side upload malware scanning if this becomes public/multi-user.
+- [ ] Add server-side upload safety scanning if this becomes public/multi-user.
 - [ ] Add account recovery/reset-by-email workflow.
 - [ ] Add optional two-factor authentication.
 
@@ -190,7 +197,7 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 
 - [x] Add true TMDB season/episode metadata instead of even-split episode grid.
 - [x] Add import column mapping UI.
-- [ ] Add LLM-based parsing or fuzzy AI service integration.
+- [ ] Add structured parsing or fuzzy matching service integration.
 - [ ] Add friend activity feed.
 - [ ] Add list comparison between connected users.
 - [ ] Add tags/custom lists.
