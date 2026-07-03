@@ -23,6 +23,7 @@ const SHELL_ASSETS = [
     'assets/icons/icon-192.png',
     'assets/icons/icon-512.png'
 ];
+const STATIC_ASSETS = SHELL_ASSETS.filter(function (asset) { return asset !== './' && !asset.endsWith('.php'); });
 
 self.addEventListener('install', function (event) {
     event.waitUntil(caches.open(CACHE_NAME).then(function (cache) {
@@ -53,7 +54,7 @@ self.addEventListener('fetch', function (event) {
         return;
     }
 
-    if (isSameOrigin && SHELL_ASSETS.some(function (asset) { return requestUrl.pathname.endsWith(asset.replace('./', '')); })) {
+    if (isSameOrigin && STATIC_ASSETS.some(function (asset) { return requestUrl.pathname.endsWith(asset); })) {
         event.respondWith(caches.match(event.request).then(function (cached) {
             return cached || fetch(event.request).then(function (response) {
                 const copy = response.clone();
