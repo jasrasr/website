@@ -21,8 +21,8 @@ Completed tasks stay in this file with `[x]` so the project history can be audit
 - [x] Mobile-first layout created.
 - [x] Login/logout added.
 - [x] User registration added.
-- [x] Seeded `admin` account added.
-- [x] Seeded `testuser` account added.
+- [x] Seeded administrator account added.
+- [x] Seeded testing account added.
 - [x] Admin does not track its own shows/movies.
 - [x] Admin can manage normal user libraries.
 - [x] User library JSON structure created.
@@ -114,6 +114,7 @@ Completed tasks stay in this file with `[x]` so the project history can be audit
 - [x] Cache selected backdrops locally in `public-cache/backdrops/`.
 - [x] Add item detail link to choose poster/backdrop.
 - [x] Add `.gitignore` and `.placeholder` support for backdrop cache files.
+- [x] Update `README.md` for `rev 1.4.5`.
 - [x] Update `CHANGELOG.md` for `rev 1.4.5`.
 
 ## Import plan
@@ -142,8 +143,8 @@ Completed tasks stay in this file with `[x]` so the project history can be audit
 
 ## Security hardening
 
-- [ ] Future security wrap-up: change seed passwords after testing/configuration is complete.
-- [ ] Future security wrap-up: remove public seed credentials from public-facing docs before public use.
+- [ ] Future security wrap-up: rotate testing credentials after testing/configuration is complete.
+- [ ] Future security wrap-up: remove public testing credential details from public-facing docs before public use.
 - [ ] Future security wrap-up: disable public registration or restrict it tightly before public use.
 - [x] Add login rate limiting.
 - [x] Add password change flow.
@@ -174,8 +175,8 @@ When resuming on another device:
 3. Review this file.
 4. Confirm whether `includes/config.local.php` exists on the target server.
 5. Confirm that `data/.htaccess` is uploaded.
-6. Sign in as `admin` and confirm user management works.
-7. Sign in as `testuser` and confirm manual add works.
+6. Sign in as admin and confirm user management works.
+7. Sign in as the test user and confirm manual add works.
 8. Test export/import with a small CSV.
 9. Add TMDB key only after the core app loads correctly.
 10. Before public use, complete the security wrap-up tasks above.
