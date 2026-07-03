@@ -5,10 +5,19 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.3
+Revision: 1.5.4
 -->
 
 # Changelog
+
+## rev 1.5.4 - 2026-07-03
+
+- Updated the PWA app icon assets to match the JasonLamb.me JL favicon/logo style.
+- Replaced `assets/icons/icon-192.png` with a JL-style 192px icon.
+- Replaced `assets/icons/icon-512.png` with a JL-style 512px icon.
+- Kept the existing manifest and Apple touch icon paths so the app continues using the same install/icon references.
+- Refreshed the service worker cache name so installed PWAs can pick up the new icon assets.
+- Bumped the visible project revision and service worker cache to 1.5.4.
 
 ## rev 1.5.3 - 2026-07-03
 
