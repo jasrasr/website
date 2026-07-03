@@ -5,7 +5,7 @@ Description: Setup, usage, credentials, deployment, and architecture notes for t
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-02
-Revision: 1.4.5
+Revision: 1.4.6
 -->
 
 # TV Binge Board
@@ -35,7 +35,7 @@ Seed credentials are still present while the app is being tested and configured.
 | Admin | configured seed admin | configured testing password | Manage other accounts. Does not track personal shows. |
 | User | configured seed test user | configured testing password | Initial test user with sample library data. |
 
-## Features included through rev 1.4.5
+## Features included through rev 1.4.6
 
 - Project renamed to TV Binge Board with `tv-binge-board` as the folder/URL slug.
 - JSON file storage with file locking, atomic writes, and pre-overwrite restore points.
@@ -80,7 +80,9 @@ Seed credentials are still present while the app is being tested and configured.
 - Batch refresh for all linked TMDB items in a library.
 - Manual add fallback when no TMDB API key is configured.
 - CSV and JSON export.
+- CSV import column-mapping screen for non-standard headers.
 - CSV/JSON import staging review with duplicate detection.
+- Downloadable import error report for rows that cannot be staged.
 - Screenshot upload queue for future OCR/AI-assisted import.
 - `CHANGELOG.md` rendered from `changelog.php`.
 - `TASKS.md` with completed tasks retained for audit.
@@ -182,10 +184,12 @@ Supported export formats:
 
 Supported import formats:
 
-- CSV with headers such as `title`, `type`, `status`, `rating`, `season`, `episode`, `notes`, `overview`
-- JSON using this app's `items` array structure, or a plain array of media items
+- CSV with standard or custom headers.
+- JSON using this app's `items` array structure, or a plain array of media items.
 
-Imports are staged first. Nothing is written into a library until the user confirms the import. Duplicate rows are detected and skipped unless explicitly included.
+CSV imports now use a mapping step before the review screen. After upload, the app detects headers and lets the user map odd columns to app fields such as `title`, `type`, `status`, `rating`, `season`, `episode`, `notes`, and `overview`. Unused columns can be skipped.
+
+Imports are staged first. Nothing is written into a library until the user confirms the import. Duplicate rows are detected and skipped unless explicitly included. Rows that cannot be staged, such as rows missing a mapped title, are written to a downloadable CSV error report from the import review screen.
 
 ## Screenshot-assisted import
 
@@ -249,7 +253,7 @@ data/**/*.tmp.*
 
 ## Revision
 
-Current revision: `1.4.5`
+Current revision: `1.4.6`
 
 
 ## Artwork cache cleanup
