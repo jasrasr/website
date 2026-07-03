@@ -32,8 +32,8 @@ Seed credentials are still present while the app is being tested and configured.
 
 | Role | Username | Password | Purpose |
 |---|---|---|---|
-| Admin | `admin` | `admin123` | Manage other accounts. Does not track personal shows. |
-| User | `testuser` | `testuser123` | Initial test user with sample library data. |
+| Admin | configured seed admin | configured testing password | Manage other accounts. Does not track personal shows. |
+| User | configured seed test user | configured testing password | Initial test user with sample library data. |
 
 ## Features included through rev 1.4.5
 
@@ -211,8 +211,8 @@ This is still a testing/configuration-stage project, not a finished production i
 
 Future security wrap-up before public use:
 
-- Change/remove the seed passwords.
-- Remove public seed credentials from public-facing documentation.
+- Rotate the testing credentials.
+- Remove public testing credential details from public-facing documentation.
 - Disable public registration or restrict it tightly unless intentionally public.
 - Force HTTPS.
 - Keep `data/.htaccess` in place.
