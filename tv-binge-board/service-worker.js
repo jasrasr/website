@@ -5,10 +5,10 @@
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-03
- * Revision: 1.5.3
+ * Revision: 1.5.4
  */
 
-const CACHE_NAME = 'tv-binge-board-rev-1.5.3';
+const CACHE_NAME = 'tv-binge-board-rev-1.5.4';
 const OFFLINE_URL = 'offline.php';
 const SHELL_ASSETS = [
     './',
@@ -17,13 +17,15 @@ const SHELL_ASSETS = [
     OFFLINE_URL,
     'install.php',
     'manifest.webmanifest',
+    'app-icon.php?size=32',
+    'app-icon.php?size=180',
+    'app-icon.php?size=192',
+    'app-icon.php?size=512',
     'assets/css/app.css',
     'assets/js/app.js',
-    'assets/img/poster-placeholder.svg',
-    'assets/icons/icon-192.png',
-    'assets/icons/icon-512.png'
+    'assets/img/poster-placeholder.svg'
 ];
-const STATIC_ASSETS = SHELL_ASSETS.filter(function (asset) { return asset !== './' && !asset.endsWith('.php'); });
+const STATIC_ASSETS = SHELL_ASSETS.filter(function (asset) { return asset !== './' && !asset.endsWith('.php') && !asset.includes('.php?'); });
 
 self.addEventListener('install', function (event) {
     event.waitUntil(caches.open(CACHE_NAME).then(function (cache) {
