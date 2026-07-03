@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-02
-Revision: 1.4.5
+Revision: 1.4.6
 -->
 
 # TV Binge Board Task List
@@ -117,6 +117,16 @@ Completed tasks stay in this file with `[x]` so the project history can be audit
 - [x] Update `README.md` for `rev 1.4.5`.
 - [x] Update `CHANGELOG.md` for `rev 1.4.5`.
 
+## rev 1.4.6 import mapping pass
+
+- [x] Add CSV column-mapping screen before import review.
+- [x] Add automatic header guesses for common odd CSV headers.
+- [x] Add first-rows CSV preview on the mapping screen.
+- [x] Add downloadable import error report for rows that cannot be staged.
+- [x] Bump visible revision and service worker cache to `rev 1.4.6`.
+- [x] Update `README.md` for `rev 1.4.6`.
+- [x] Update `CHANGELOG.md` for `rev 1.4.6`.
+
 ## Import plan
 
 - [x] Create `import.php` page.
@@ -126,8 +136,8 @@ Completed tasks stay in this file with `[x]` so the project history can be audit
 - [x] Detect duplicates before confirmation.
 - [x] Require final confirmation before importing.
 - [x] Write import activity log with timestamp and item count.
-- [ ] Add custom column-mapping UI for odd CSV headers.
-- [ ] Add downloadable import error report.
+- [x] Add custom column-mapping UI for odd CSV headers.
+- [x] Add downloadable import error report.
 
 ## Screenshot-assisted import plan
 
@@ -159,7 +169,7 @@ Completed tasks stay in this file with `[x]` so the project history can be audit
 ## Future enhancements
 
 - [x] Add true TMDB season/episode metadata instead of even-split episode grid.
-- [ ] Add import column mapping UI.
+- [x] Add import column mapping UI.
 - [ ] Add LLM-based parsing or fuzzy AI service integration.
 - [ ] Add friend activity feed.
 - [ ] Add list comparison between connected users.

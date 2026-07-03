@@ -1,11 +1,11 @@
 /**
  * File: assets/css/app.css
  * Project: TV Binge Board
- * Description: Mobile-first application styles, cards, forms, navigation, media list layout, avatars, episode grids, compact list cards, artwork picker, and import UI.
+ * Description: Mobile-first application styles, cards, forms, navigation, media list layout, avatars, episode grids, compact list cards, artwork picker, import mapping, and import review UI.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-02
- * Revision: 1.4.5
+ * Revision: 1.4.6
  */
 
 
@@ -142,3 +142,15 @@ button.danger, .danger { background: var(--danger); color: #190707; }
 .artwork-option p { margin: 0; font-size: .82rem; }
 .artwork-option form { margin: 0; }
 @media (min-width: 720px) { .current-artwork-grid { grid-template-columns: 220px 1fr; } }
+
+/* rev 1.4.6 import mapping */
+.import-map-grid { display: grid; grid-template-columns: 1fr; gap: .75rem; }
+.import-preview summary { cursor: pointer; font-weight: 800; color: var(--accent); }
+.table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: .85rem; }
+.import-preview-table { width: 100%; border-collapse: collapse; min-width: 640px; }
+.import-preview-table th, .import-preview-table td { border-bottom: 1px solid var(--border); padding: .65rem; text-align: left; vertical-align: top; }
+.import-preview-table th { color: var(--text); background: rgba(31, 41, 55, .75); }
+.import-preview-table td { color: var(--muted); font-size: .88rem; }
+.import-preview-table tr:last-child td { border-bottom: 0; }
+.import-match-card { align-items: start; }
+@media (min-width: 720px) { .import-map-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
