@@ -4,11 +4,17 @@ Project: TV Binge Board
 Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
-Modified: 2026-07-02
-Revision: 1.4.6
+Modified: 2026-07-03
+Revision: 1.4.7
 -->
 
 # Changelog
+
+## rev 1.4.7 - 2026-07-03
+
+- Added tester attribution for Matt in the README.
+- Added explicit changelog attribution noting that Matt's user testing directly informed several rev 1.4.4 usability changes.
+- Bumped documentation and visible app revision references to 1.4.7 for this attribution/documentation update.
 
 ## rev 1.4.6 - 2026-07-02
 
@@ -31,10 +37,10 @@ Revision: 1.4.6
 
 ## rev 1.4.4 - 2026-07-02
 
-- Added a default Smart sort on My List that puts actively watching items first and pushes finished/dropped items lower.
-- Added a Hide 100% / finished items filter for testers who want to see only items still in progress.
-- Replaced the full watchlist cards with compact mobile cards that keep long descriptions on the detail page.
-- Fixed manual last-episode rollback so lowering the selected episode trims later watched episodes and recalculates progress.
+- Added a default Smart sort on My List that puts actively watching items first and pushes finished/dropped items lower. Suggested by Matt during user testing.
+- Added a Hide 100% / finished items filter for testers who want to see only items still in progress. Suggested by Matt during user testing.
+- Replaced the full watchlist cards with compact mobile cards that keep long descriptions on the detail page. Suggested by Matt during user testing.
+- Fixed manual last-episode rollback so lowering the selected episode trims later watched episodes and recalculates progress. Reported by Matt during user testing.
 - Bumped the visible app revision to 1.4.4.
 - Added compact-card CSS and refreshed the service worker cache name so mobile browsers pick up the new layout.
 
