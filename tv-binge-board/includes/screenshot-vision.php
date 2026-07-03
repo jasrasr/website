@@ -6,40 +6,64 @@
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-03
  * Modified: 2026-07-03
- * Revision: 1.0.0
+ * Revision: 1.0.1
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/functions.php';
 
+function app_screenshot_secret_value(mixed $value): string
+{
+    $value = trim((string)$value);
+    if ($value === '' || str_starts_with(strtolower($value), 'paste-your-')) { return ''; }
+    return $value;
+}
+
 function app_screenshot_ai_key(): string
 {
-    if (defined('OPENAI_API_KEY_LOCAL') && OPENAI_API_KEY_LOCAL !== '') { return (string)OPENAI_API_KEY_LOCAL; }
-    if (defined('AI_VISION_API_KEY_LOCAL') && AI_VISION_API_KEY_LOCAL !== '') { return (string)AI_VISION_API_KEY_LOCAL; }
-    $env = getenv('OPENAI_API_KEY');
-    if (is_string($env) && $env !== '') { return $env; }
-    $env = getenv('AI_VISION_API_KEY');
-    return is_string($env) ? $env : '';
+    if (defined('OPENAI_API_KEY_LOCAL')) {
+        $value = app_screenshot_secret_value(OPENAI_API_KEY_LOCAL);
+        if ($value !== '') { return $value; }
+    }
+    if (defined('AI_VISION_API_KEY_LOCAL')) {
+        $value = app_screenshot_secret_value(AI_VISION_API_KEY_LOCAL);
+        if ($value !== '') { return $value; }
+    }
+    $env = app_screenshot_secret_value(getenv('OPENAI_API_KEY') ?: '');
+    if ($env !== '') { return $env; }
+    return app_screenshot_secret_value(getenv('AI_VISION_API_KEY') ?: '');
 }
 
 function app_screenshot_ai_model(): string
 {
-    if (defined('OPENAI_VISION_MODEL_LOCAL') && OPENAI_VISION_MODEL_LOCAL !== '') { return (string)OPENAI_VISION_MODEL_LOCAL; }
-    if (defined('AI_VISION_MODEL_LOCAL') && AI_VISION_MODEL_LOCAL !== '') { return (string)AI_VISION_MODEL_LOCAL; }
-    $env = getenv('OPENAI_VISION_MODEL');
-    if (is_string($env) && $env !== '') { return $env; }
-    $env = getenv('AI_VISION_MODEL');
-    return is_string($env) && $env !== '' ? $env : 'gpt-4o-mini';
+    if (defined('OPENAI_VISION_MODEL_LOCAL')) {
+        $value = app_screenshot_secret_value(OPENAI_VISION_MODEL_LOCAL);
+        if ($value !== '') { return $value; }
+    }
+    if (defined('AI_VISION_MODEL_LOCAL')) {
+        $value = app_screenshot_secret_value(AI_VISION_MODEL_LOCAL);
+        if ($value !== '') { return $value; }
+    }
+    $env = app_screenshot_secret_value(getenv('OPENAI_VISION_MODEL') ?: '');
+    if ($env !== '') { return $env; }
+    $env = app_screenshot_secret_value(getenv('AI_VISION_MODEL') ?: '');
+    return $env !== '' ? $env : 'gpt-4o-mini';
 }
 
 function app_screenshot_ai_endpoint(): string
 {
-    if (defined('OPENAI_CHAT_COMPLETIONS_URL_LOCAL') && OPENAI_CHAT_COMPLETIONS_URL_LOCAL !== '') { return (string)OPENAI_CHAT_COMPLETIONS_URL_LOCAL; }
-    if (defined('AI_VISION_ENDPOINT_LOCAL') && AI_VISION_ENDPOINT_LOCAL !== '') { return (string)AI_VISION_ENDPOINT_LOCAL; }
-    $env = getenv('OPENAI_CHAT_COMPLETIONS_URL');
-    if (is_string($env) && $env !== '') { return $env; }
-    $env = getenv('AI_VISION_ENDPOINT');
-    return is_string($env) && $env !== '' ? $env : 'https://api.openai.com/v1/chat/completions';
+    if (defined('OPENAI_CHAT_COMPLETIONS_URL_LOCAL')) {
+        $value = app_screenshot_secret_value(OPENAI_CHAT_COMPLETIONS_URL_LOCAL);
+        if ($value !== '') { return $value; }
+    }
+    if (defined('AI_VISION_ENDPOINT_LOCAL')) {
+        $value = app_screenshot_secret_value(AI_VISION_ENDPOINT_LOCAL);
+        if ($value !== '') { return $value; }
+    }
+    $env = app_screenshot_secret_value(getenv('OPENAI_CHAT_COMPLETIONS_URL') ?: '');
+    if ($env !== '') { return $env; }
+    $env = app_screenshot_secret_value(getenv('AI_VISION_ENDPOINT') ?: '');
+    return $env !== '' ? $env : 'https://api.openai.com/v1/chat/completions';
 }
 
 function app_screenshot_ai_configured(): bool
