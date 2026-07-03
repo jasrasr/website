@@ -1,11 +1,11 @@
 /**
  * File: assets/js/app.js
  * Project: TV Binge Board
- * Description: Client-side behavior for live TMDB search/add result cards, import match search, bottom navigation overflow hint, and PWA registration.
+ * Description: Client-side behavior for live TMDB search/add result cards, import match search, one-time update notices, bottom navigation overflow hint, and PWA registration.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-03
- * Revision: 1.4.4
+ * Revision: 1.4.5
  */
 
 (function () {
@@ -19,6 +19,35 @@
     let latestSuggestRequest = 0;
 
     function escapeHtml(value) { return String(value || '').replace(/[&<>'"]/g, function (char) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]; }); }
+
+    function getCurrentRevision() {
+        const version = document.querySelector('.version');
+        if (!version) { return ''; }
+        return String(version.textContent || '').replace(/^\s*rev\s+/i, '').trim();
+    }
+
+    function setupUpdateNotice() {
+        const currentRevision = getCurrentRevision();
+        if (!currentRevision) { return; }
+        const storageKey = 'tvbb_last_seen_app_revision';
+        let previousRevision = '';
+        try { previousRevision = window.localStorage.getItem(storageKey) || ''; } catch (error) { previousRevision = ''; }
+        if (previousRevision === currentRevision) { return; }
+        try { window.localStorage.setItem(storageKey, currentRevision); } catch (error) {}
+
+        const changelog = document.querySelector('a[href*="changelog.php"]');
+        const changelogHref = changelog ? changelog.getAttribute('href') || 'changelog.php' : 'changelog.php';
+        const summary = 'New in rev ' + currentRevision + ': in-app update notices now appear once after a deployed revision changes, with a direct link to the changelog.';
+        const notice = document.createElement('section');
+        notice.className = 'update-notice';
+        notice.setAttribute('role', 'status');
+        notice.innerHTML = '<div><strong>TV Binge Board updated to rev ' + escapeHtml(currentRevision) + '</strong><p>' + escapeHtml(summary) + '</p></div><div class="update-notice-actions"><a class="button secondary" href="' + escapeHtml(changelogHref) + '">View changelog</a><button class="secondary" type="button" data-dismiss-update-notice>Dismiss</button></div>';
+        const container = document.querySelector('main.container') || document.body;
+        container.insertAdjacentElement('afterbegin', notice);
+        const dismiss = notice.querySelector('[data-dismiss-update-notice]');
+        if (dismiss) { dismiss.addEventListener('click', function () { notice.remove(); }); }
+    }
+
     function resultCard(item) {
         const poster = item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : 'assets/img/poster-placeholder.svg';
         const tmdbLink = item.tmdb_url ? `<a class="small-link" href="${escapeHtml(item.tmdb_url)}" target="_blank" rel="noopener">Open on TMDB</a>` : '';
@@ -65,6 +94,7 @@
             if (results) { results.innerHTML = '<div class="alert danger">Search failed. Use manual add for now.</div>'; }
         }
     }
+    setupUpdateNotice();
     if (form && results && searchQuery) {
         searchQuery.addEventListener('input', function () {
             const query = searchQuery.value.trim();

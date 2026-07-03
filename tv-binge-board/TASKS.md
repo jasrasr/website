@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.0
+Revision: 1.5.1
 -->
 
 # TV Binge Board Task List
@@ -163,6 +163,15 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Add `api/refresh-metadata.php` to force-refresh item, season, and episode metadata.
 - [x] Show last metadata check timestamp on the item detail page.
 - [x] Update README and changelog for Matt's new testing feedback.
+
+## rev 1.5.1 in-app update notice pass
+
+- [x] Add one-time on-screen update notice when the deployed rev changes.
+- [x] Show current rev number and a brief update summary in the notice.
+- [x] Add direct changelog link from the notice.
+- [x] Store the last seen rev in browser local storage so the notice does not keep repeating.
+- [x] Add dismiss button.
+- [x] Bump visible revision and service worker cache to `rev 1.5.1`.
 
 ## Import plan
 
