@@ -175,8 +175,8 @@ When resuming on another device:
 3. Review this file.
 4. Confirm whether `includes/config.local.php` exists on the target server.
 5. Confirm that `data/.htaccess` is uploaded.
-6. Sign in as admin and confirm user management works.
-7. Sign in as the test user and confirm manual add works.
+6. Confirm administrator user management works.
+7. Confirm normal user manual add works.
 8. Test export/import with a small CSV.
 9. Add TMDB key only after the core app loads correctly.
 10. Before public use, complete the security wrap-up tasks above.
