@@ -5,10 +5,20 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-02
-Revision: 1.4.5
+Revision: 1.4.6
 -->
 
 # Changelog
+
+## rev 1.4.6 - 2026-07-02
+
+- Added a CSV column-mapping step before import review.
+- Added automatic header guesses for common CSV column names.
+- Added mapping support for title, type, status, rating, season, episode, notes, overview, year, TMDB ID, release date, poster fields, and TMDB URL.
+- Added a first-rows preview table on the mapping screen.
+- Added downloadable CSV import error reports for rows that cannot be staged.
+- Bumped the visible app revision and service worker cache to 1.4.6.
+- Updated README and TASKS for the import mapping pass.
 
 ## rev 1.4.5 - 2026-07-02
 
