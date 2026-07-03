@@ -2,11 +2,11 @@
 /**
  * File: dashboard.php
  * Project: TV Binge Board
- * Description: User landing page with watch progress and admin account routing.
+ * Description: User landing page with watch progress, PWA install help, and admin account routing.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
- * Modified: 2026-07-02
- * Revision: 1.4.2
+ * Modified: 2026-07-03
+ * Revision: 1.4.3
  */
 declare(strict_types=1);
 
@@ -26,6 +26,7 @@ $activity = app_activity_events(6);
         <a class="button" href="admin/users.php">Manage users</a>
         <a class="button secondary" href="admin/site-settings.php">Site settings</a>
         <a class="button secondary" href="changelog.php">View changelog</a>
+        <a class="button secondary" href="install.php">Install app</a>
     </div>
     <p class="muted">Public registration: <?= !empty($settings['public_registration_enabled']) ? 'enabled' : 'disabled' ?></p>
 </section>
@@ -54,6 +55,13 @@ usort($recent, fn($a, $b) => strcmp((string)($b['updated_at'] ?? ''), (string)($
     <div class="actions">
         <a class="button" href="search.php">Add something</a>
         <a class="button secondary" href="watchlist.php">Open full list</a>
+    </div>
+</section>
+<section class="card install-prompt-card">
+    <h2>Use it like an app</h2>
+    <p>Add TV Binge Board to your Home Screen for a cleaner app-style launch.</p>
+    <div class="actions">
+        <a class="button secondary" href="install.php">Install / Add to Home Screen</a>
     </div>
 </section>
 <section class="stats-grid">
