@@ -5,17 +5,27 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.4
+Revision: 1.5.5
 -->
 
 # Changelog
+
+## rev 1.5.5 - 2026-07-03
+
+- Added explicit cache-busting PWA icon filenames so iOS does not keep reusing the old `icon-192.png` URL.
+- Added `assets/icons/apple-touch-icon.png`.
+- Added `assets/icons/apple-touch-icon-180.png`.
+- Added `assets/icons/icon-jl-192.png`.
+- Added `assets/icons/icon-jl-512.png`.
+- Updated `manifest.webmanifest` icons and shortcuts to use the new `icon-jl-*` filenames.
+- Updated the service worker cache name and shell asset list to include the new icon filenames.
+- Bumped the visible project revision and service worker cache to 1.5.5.
 
 ## rev 1.5.4 - 2026-07-03
 
 - Updated the PWA app icon assets to match the JasonLamb.me JL favicon/logo style.
 - Replaced `assets/icons/icon-192.png` with a JL-style 192px icon.
 - Replaced `assets/icons/icon-512.png` with a JL-style 512px icon.
-- Kept the existing manifest and Apple touch icon paths so the app continues using the same install/icon references.
 - Refreshed the service worker cache name so installed PWAs can pick up the new icon assets.
 - Bumped the visible project revision and service worker cache to 1.5.4.
 
