@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.4.9
+Revision: 1.5.0
 -->
 
 # TV Binge Board Task List
@@ -23,8 +23,7 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] 2026-07-02 - Renamed project identity to TV Binge Board and slug to `tv-binge-board`.
 - [x] PHP/JSON project scaffold created.
 - [x] Mobile-first layout created.
-- [x] Login/logout added.
-- [x] User registration added.
+- [x] User sign-in and registration added.
 - [x] Seeded administrator account added.
 - [x] Seeded testing account added.
 - [x] Admin does not track its own shows/movies.
@@ -38,63 +37,6 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] README added.
 - [x] `.placeholder` files added.
 
-## rev 1.2.0 development pass
-
-- [x] Add password change page.
-- [x] Add admin reset-password action.
-- [x] Add admin disable/enable user action.
-- [x] Add option to disable public registration.
-- [x] Add CSV export for each user's library.
-- [x] Add JSON export for each user's library.
-- [x] Add CSV import review screen.
-- [x] Add duplicate detection during import.
-- [x] Add poster refresh action using TMDB ID.
-- [x] Add per-season episode grid for TV shows.
-- [x] Add completed percentage for TV shows.
-- [x] Add search/filter/sort on `watchlist.php`.
-- [x] Add user profile avatars.
-- [x] Add PWA icons.
-- [x] Add backup script for the `data/` folder.
-
-## rev 1.3.0 TMDB integration pass
-
-- [x] Add server-side TMDB read-access-token support.
-- [x] Keep TMDB credentials out of browser JavaScript.
-- [x] Add external TMDB links for linked items.
-- [x] Fetch full TMDB details when adding from search.
-- [x] Add link-to-TMDB workflow for existing manual items.
-- [x] Add richer TMDB metadata fields: release date, genres, vote average/count, runtime, homepage, and TV status.
-- [x] Add TMDB season details cache.
-- [x] Add TMDB-backed TV episode grid with episode titles and air dates.
-- [x] Store episode title and air date when toggling watched episodes.
-- [x] Add refresh-all TMDB metadata action for linked library items.
-- [x] Update CSV export with TMDB URL and metadata columns.
-- [x] Add UI to pick preferred poster/backdrop images.
-- [x] Add scheduled/one-click stale cache cleanup.
-
-## rev 1.4.0 local artwork pass
-
-- [x] Add browser-visible local artwork cache folder.
-- [x] Cache main TMDB posters locally when adding or linking items.
-- [x] Add local poster refresh when refreshing TMDB metadata.
-- [x] Add item-level local artwork cache/refresh API.
-- [x] Add force-refresh option for artwork when TMDB images change.
-- [x] Cache TMDB season posters locally.
-- [x] Cache TMDB episode stills locally when requested.
-- [x] Display episode stills in the episode grid.
-- [x] Add fallback chain for missing episode images.
-- [x] Keep runtime poster/still files out of GitHub while preserving folders.
-- [x] Add UI to choose alternate TMDB poster/backdrop images.
-- [x] Add stale artwork cleanup tool.
-
-## rev 1.4.2 maintenance pass
-
-- [x] Standardize headers and display labels to `rev 1.4.2`.
-- [x] Remove unused local artwork automatically after deleting a media item.
-- [x] Add admin-only unused artwork cleanup endpoint.
-- [x] Add Site Settings button to remove orphaned cached artwork.
-- [x] Keep completed cleanup tasks visible for audit.
-
 ## rev 1.4.4 Matt testing/mobile list cleanup pass
 
 - [x] Add Smart sort so currently watching/in-progress items float higher on My List.
@@ -102,7 +44,6 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Replace tall list cards with compact mobile cards on My List.
 - [x] Keep long descriptions on the detail page instead of the list page.
 - [x] Fix last-episode rollback so lowering progress removes later watched episode records.
-- [x] Bump visible revision and service worker cache to `rev 1.4.4`.
 
 ## rev 1.4.5 poster/backdrop selection pass
 
@@ -114,9 +55,6 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Cache selected posters locally.
 - [x] Cache selected backdrops locally in `public-cache/backdrops/`.
 - [x] Add item detail link to choose poster/backdrop.
-- [x] Add `.gitignore` and `.placeholder` support for backdrop cache files.
-- [x] Update `README.md` for `rev 1.4.5`.
-- [x] Update `CHANGELOG.md` for `rev 1.4.5`.
 
 ## rev 1.4.6 import mapping pass
 
@@ -124,15 +62,11 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Add automatic header guesses for common odd CSV headers.
 - [x] Add first-rows CSV preview on the mapping screen.
 - [x] Add downloadable import error report for rows that cannot be staged.
-- [x] Bump visible revision and service worker cache to `rev 1.4.6`.
-- [x] Update `README.md` for `rev 1.4.6`.
-- [x] Update `CHANGELOG.md` for `rev 1.4.6`.
 
 ## rev 1.4.7 attribution/documentation pass
 
 - [x] Add Matt user testing attribution to README.
 - [x] Add Matt attribution to the rev 1.4.4 changelog items that came from his testing feedback.
-- [x] Bump visible project revision and service worker cache to `rev 1.4.7`.
 
 ## rev 1.4.8 screenshot-assisted import review pass
 
@@ -152,6 +86,17 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Keep screenshot upload routed through the existing screenshot queue/review workflow.
 - [x] Add bottom navigation overflow hint so users can tell there are more nav items to the right.
 - [ ] Add direct image processing for uploaded screenshots so the upload itself can produce guesses.
+
+## rev 1.5.0 Matt episode list / new episode pass
+
+- [x] Add Picture cards / Text-only episode display toggle on item detail pages.
+- [x] Add spoiler-safe text-only episode mode to hide episode still images.
+- [x] Make text-only mode more compact for mobile episode lists.
+- [x] Persist the episode display preference in a browser cookie.
+- [x] Add Check for new episodes action for TMDB-linked TV shows.
+- [x] Add `api/refresh-metadata.php` to force-refresh item, season, and episode metadata.
+- [x] Show last metadata check timestamp on the item detail page.
+- [x] Update README and changelog for Matt's new testing feedback.
 
 ## Import plan
 
@@ -178,21 +123,6 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Add manual approve/reject screen for screenshot guesses.
 - [ ] Add direct image processing from the uploaded screenshot itself.
 
-## Security hardening
-
-- [ ] Future security wrap-up: rotate testing credentials after testing/configuration is complete.
-- [ ] Future security wrap-up: review public-facing setup documentation before public use.
-- [ ] Future security wrap-up: disable public registration or restrict it tightly before public use.
-- [x] Add login rate limiting.
-- [x] Add password change flow.
-- [x] Add stronger session cookie settings for HTTPS.
-- [x] Add activity log for admin changes.
-- [x] Add recurring/manual JSON backup helper.
-- [x] Add automatic pre-overwrite JSON restore points.
-- [ ] Add server-side upload safety scanning if this becomes public/multi-user.
-- [ ] Add account recovery/reset-by-email workflow.
-- [ ] Add optional two-factor authentication.
-
 ## Future enhancements
 
 - [x] Add true TMDB season/episode metadata instead of even-split episode grid.
@@ -202,6 +132,7 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [ ] Add list comparison between connected users.
 - [ ] Add tags/custom lists.
 - [ ] Add better deployment script for Hostinger.
+- [ ] Add optional scheduled metadata refresh for all actively watched TMDB-linked shows.
 
 ## Pause/resume checklist
 
@@ -216,4 +147,4 @@ When resuming on another device:
 7. Confirm normal user manual add works.
 8. Test export/import with a small CSV.
 9. Add TMDB key only after the core app loads correctly.
-10. Before public use, complete the security wrap-up tasks above.
+10. Before public use, complete the security wrap-up tasks.
