@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.4
+Revision: 1.5.5
 -->
 
 # TV Binge Board Task List
@@ -54,14 +54,18 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] rev 1.5.1 - one-time in-app update notice.
 - [x] rev 1.5.2 - Matt next-up/caught-up tracking.
 - [x] rev 1.5.3 - PWA polish and install/offline support.
+- [x] rev 1.5.4 - JL favicon/app icon asset update.
 
-## rev 1.5.4 JL favicon/app icon pass
+## rev 1.5.5 explicit Apple icon/cache-bust pass
 
-- [x] Update `assets/icons/icon-192.png` to a JL-style image matching the JasonLamb.me favicon/logo direction.
-- [x] Update `assets/icons/icon-512.png` to a JL-style image matching the JasonLamb.me favicon/logo direction.
-- [x] Keep the existing manifest and Apple touch icon paths so current PWA references continue to work.
-- [x] Refresh the service worker cache name for the new icon assets.
-- [x] Bump visible revision and service worker cache to `rev 1.5.4`.
+- [x] Add `assets/icons/apple-touch-icon.png`.
+- [x] Add `assets/icons/apple-touch-icon-180.png`.
+- [x] Add `assets/icons/icon-jl-192.png`.
+- [x] Add `assets/icons/icon-jl-512.png`.
+- [x] Update `manifest.webmanifest` to use `icon-jl-*` filenames instead of the old `icon-192.png` and `icon-512.png` paths.
+- [x] Keep legacy icon files in place for fallback compatibility.
+- [x] Update the service worker cache name and shell asset list for the new icon filenames.
+- [x] Bump visible revision and service worker cache to `rev 1.5.5`.
 
 ## Import plan
 
@@ -98,6 +102,8 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Add visible install card.
 - [x] Add service-worker update reload prompt.
 - [x] Update 192px and 512px PWA icon assets to match the JL favicon/logo direction.
+- [x] Add explicit Apple touch icon files.
+- [x] Add new icon filenames to avoid iOS caching the old icon URL.
 - [ ] Add screenshot assets for richer PWA install surfaces.
 
 ## Security hardening

@@ -5,10 +5,10 @@
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-03
- * Revision: 1.5.4
+ * Revision: 1.5.5
  */
 
-const CACHE_NAME = 'tv-binge-board-rev-1.5.4';
+const CACHE_NAME = 'tv-binge-board-rev-1.5.5';
 const OFFLINE_URL = 'offline.php';
 const SHELL_ASSETS = [
     './',
@@ -20,6 +20,10 @@ const SHELL_ASSETS = [
     'assets/css/app.css',
     'assets/js/app.js',
     'assets/img/poster-placeholder.svg',
+    'assets/icons/apple-touch-icon.png',
+    'assets/icons/apple-touch-icon-180.png',
+    'assets/icons/icon-jl-192.png',
+    'assets/icons/icon-jl-512.png',
     'assets/icons/icon-192.png',
     'assets/icons/icon-512.png'
 ];
