@@ -5,10 +5,18 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.7
+Revision: 1.5.8
 -->
 
 # Changelog
+
+## rev 1.5.8 - 2026-07-03
+
+- Added `scripts/make-release-zip.ps1` to create a clean release ZIP for shared-hosting uploads.
+- The release helper excludes runtime data, local secret config, logs, cache files, and generated release ZIPs.
+- Added an optional placeholder mode so protective `.htaccess` and `.placeholder` files can be included without bundling live data.
+- Added output summary details for ZIP path, size, file count, and placeholder mode.
+- Bumped the visible project revision and service worker cache to 1.5.8.
 
 ## rev 1.5.7 - 2026-07-03
 
