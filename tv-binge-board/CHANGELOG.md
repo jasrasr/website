@@ -5,10 +5,19 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.3
+Revision: 1.5.4
 -->
 
 # Changelog
+
+## rev 1.5.4 - 2026-07-03
+
+- Updated the PWA, Apple touch, and browser favicon flow to use a JL-style icon matching the JasonLamb.me mark.
+- Added `app-icon.php`, a dynamic PNG icon generator for 32, 180, 192, and 512 pixel app icon sizes.
+- Updated `manifest.webmanifest` icons and shortcuts to use the generated JL-style app icon.
+- Updated the page header to use the generated icon for browser favicon and Apple Home Screen icon links.
+- Updated the service worker cache name and cached shell icon URLs.
+- Bumped the visible project revision and service worker cache to 1.5.4.
 
 ## rev 1.5.3 - 2026-07-03
 
