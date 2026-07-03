@@ -1,11 +1,11 @@
 /**
  * File: assets/css/app.css
  * Project: TV Binge Board
- * Description: Mobile-first application styles, cards, forms, navigation, media list layout, avatars, episode grids, compact list cards, and import UI.
+ * Description: Mobile-first application styles, cards, forms, navigation, media list layout, avatars, episode grids, compact list cards, artwork picker, and import UI.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-02
- * Revision: 1.4.4
+ * Revision: 1.4.5
  */
 
 
@@ -128,3 +128,17 @@ button.danger, .danger { background: var(--danger); color: #190707; }
 .compact-media-card .pill { font-size: .7rem; padding: .18rem .45rem; }
 .compact-meta-line { font-size: .84rem; line-height: 1.25; }
 .compact-actions { margin-top: .35rem !important; }
+
+/* rev 1.4.5 artwork picker */
+.current-artwork-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+.current-poster-preview { width: min(180px, 100%); aspect-ratio: 2 / 3; object-fit: cover; border-radius: .8rem; border: 1px solid var(--border); background: #030712; }
+.current-backdrop-preview { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: .8rem; border: 1px solid var(--border); background: #030712; }
+.artwork-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: .85rem; }
+.artwork-grid.backdrop-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.artwork-option { border: 1px solid var(--border); border-radius: 1rem; padding: .65rem; background: rgba(3, 7, 18, .45); display: grid; gap: .45rem; }
+.artwork-option.selected { border-color: var(--success); box-shadow: 0 0 0 2px rgba(52, 211, 153, .16); }
+.artwork-option img { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; border-radius: .7rem; background: #030712; }
+.backdrop-grid .artwork-option img { aspect-ratio: 16 / 9; }
+.artwork-option p { margin: 0; font-size: .82rem; }
+.artwork-option form { margin: 0; }
+@media (min-width: 720px) { .current-artwork-grid { grid-template-columns: 220px 1fr; } }
