@@ -15,6 +15,8 @@ Revision: 1.4.4
 - Added a default Smart sort on My List that puts actively watching items first and pushes finished/dropped items lower.
 - Added a Hide 100% / finished items filter for testers who want to see only items still in progress.
 - Replaced the full watchlist cards with compact mobile cards that keep long descriptions on the detail page.
+- Fixed manual last-episode rollback so lowering the selected episode trims later watched episodes and recalculates progress.
+- Bumped the visible app revision to 1.4.4.
 - Added compact-card CSS and refreshed the service worker cache name so mobile browsers pick up the new layout.
 
 ## rev 1.4.3 - 2026-07-02
