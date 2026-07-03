@@ -1,11 +1,11 @@
 <!--
 File: README.md
 Project: TV Binge Board
-Description: Setup, usage, credentials, deployment, tester attribution, PWA install support, explicit Apple touch icon files, JL-style app icon assets, search/add/import hub, episode display modes, next-up tracking, in-app update notices, screenshot-assisted import, and architecture notes for the PHP/JSON watch tracker.
+Description: Setup, usage, credentials, deployment, tester attribution, PWA install support, search/add/import hub, direct screenshot image processing, episode display modes, next-up tracking, in-app update notices, and architecture notes for the PHP/JSON watch tracker.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.5
+Revision: 1.5.6
 -->
 
 # TV Binge Board
@@ -30,7 +30,7 @@ https://jasr.me/github/tv-binge-board/
 
 Matt served as an early user tester for TV Binge Board. His feedback directly shaped several usability passes, including Smart sorting for active shows, the Hide 100% / finished items filter, compact mobile list cards, moving long show descriptions to the detail page, progress rollback fixes, text-only episode display, checking for newly available episodes, and next-up/caught-up tracking.
 
-## Features included through rev 1.5.5
+## Features included through rev 1.5.6
 
 - JSON file storage with file locking, atomic writes, and pre-overwrite restore points.
 - User registration and sign-in.
@@ -50,7 +50,8 @@ Matt served as an early user tester for TV Binge Board. His feedback directly sh
 - CSV and JSON export.
 - CSV import column-mapping screen for non-standard headers.
 - CSV/JSON import staging review with duplicate detection.
-- Screenshot upload queue for OCR/AI-assisted import text processing.
+- Direct screenshot image processing into review guesses when AI vision or local OCR is configured.
+- Screenshot upload queue with confidence-scored manual approve/reject review before import staging.
 - One-time in-app update notice when a deployed project revision changes.
 - PWA manifest, explicit Apple touch icon files, JL-style app icon assets, app scope, app shortcuts, offline fallback, install help page, and service-worker update reload prompt.
 - `CHANGELOG.md` rendered from `changelog.php`.
@@ -113,16 +114,23 @@ TV detail pages have two episode display modes:
 - **Picture cards**: shows episode stills when available.
 - **Text-only**: hides episode stills, makes the list more compact, and reduces spoiler risk from episode images.
 
-Next-up tracking uses the user's watched episode records plus saved TMDB season/episode metadata. The app can show:
-
-- `Start: S1E1` when nothing has been watched yet.
-- `Next up: SxEy` when there is an available unwatched episode.
-- `Caught up` when there are no currently available unwatched episodes in the saved metadata.
-- `Likely next` when episode metadata is incomplete and the app can only infer from the last watched episode.
+Next-up tracking uses the user's watched episode records plus saved TMDB season/episode metadata. The app can show `Start`, `Next up`, `Caught up`, or `Likely next` depending on the saved episode data.
 
 For TMDB-linked shows, the episode grid uses cached TMDB season metadata. Cached season data refreshes weekly when the detail page is viewed. The **Check for new episodes** button forces a metadata refresh immediately and updates cached season/episode information so newly available episodes appear in the grid.
 
-This does not automatically mark new episodes as watched. It only makes newly available episodes visible for tracking and helps the user see what to watch next or whether they are caught up.
+## Direct screenshot image processing
+
+Screenshot upload now attempts to process the uploaded image itself. The upload still does not write anything to the library. The flow is:
+
+1. Upload a screenshot from Search or from `upload-screenshot.php`.
+2. The server attempts direct image processing.
+3. The resulting guesses are shown for manual review.
+4. Approved guesses create a normal import review file.
+5. Confirm the import review before anything is written to the library.
+
+Direct image processing supports an optional AI vision path and a local OCR fallback when the server has OCR available. Configure the AI vision values in `includes/config.local.php`; see `includes/config.local.example.php` for the exact local constants.
+
+If AI vision is not configured and local OCR is unavailable, the manual pasted text fallback remains available.
 
 ## TMDB setup
 
@@ -148,18 +156,6 @@ Supported import formats:
 
 CSV imports use a mapping step before the review screen. Imports are staged first. Nothing is written into a library until the user confirms the import.
 
-## Screenshot-assisted import
-
-The screenshot flow is intentionally staged:
-
-1. Upload a screenshot from Search or from `upload-screenshot.php`.
-2. Process the screenshot into guesses using the available OCR/AI path.
-3. Review each guess, edit the fields, and approve or reject it.
-4. Approved guesses create a normal import review file.
-5. Confirm the import review before anything is written to the library.
-
-Server-side image AI extraction is still a future task so uploaded images can be processed directly without requiring users to paste OCR text manually.
-
 ## Security notes
 
 This is still a testing/configuration-stage project, not a finished production identity platform.
@@ -178,6 +174,6 @@ Future security wrap-up before public use:
 
 ## Revision
 
-Current project revision: `1.5.5`
+Current project revision: `1.5.6`
 
 Note: file header revisions are file-specific and should only be bumped when that file changes. New files should start with their own file revision instead of inheriting the project revision.
