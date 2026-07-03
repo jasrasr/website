@@ -107,7 +107,7 @@ Revision: 1.4.5
 
 - Created initial PHP/JSON mobile-first watch tracker.
 - Added JSON storage helpers with file locking and atomic saves.
-- Added user authentication with seeded accounts.
+- Added authentication with seeded accounts.
 - Added admin-only user management and user library management.
 - Blocked admin accounts from personal show/movie tracking.
 - Added user registration.
