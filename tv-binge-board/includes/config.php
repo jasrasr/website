@@ -6,13 +6,13 @@
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-03
- * Revision: 1.5.3
+ * Revision: 1.5.4
  */
 declare(strict_types=1);
 
 
 const APP_NAME = 'TV Binge Board';
-const APP_VERSION = '1.5.3';
+const APP_VERSION = '1.5.4';
 const APP_TIMEZONE = 'America/New_York';
 const APP_SESSION_NAME = 'tv_binge_board_session';
 const APP_DEFAULT_POSTER = 'assets/img/poster-placeholder.svg';
@@ -27,7 +27,7 @@ define('APP_ROOT', dirname(__DIR__));
 define('APP_DATA_DIR', APP_ROOT . DIRECTORY_SEPARATOR . 'data');
 define('APP_CACHE_DIR', APP_DATA_DIR . DIRECTORY_SEPARATOR . 'cache');
 define('APP_UPLOADS_DIR', APP_DATA_DIR . DIRECTORY_SEPARATOR . 'uploads');
-define('APP_BACKUP_DIR', APP_DATA_DIR . DIRECTORY_SEPARATOR . 'backups');
+define('APP_BACKUP_DIR', APP_ROOT . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'backups');
 define('APP_PUBLIC_CACHE_DIR', APP_ROOT . DIRECTORY_SEPARATOR . 'public-cache');
 define('APP_PUBLIC_CACHE_URL', 'public-cache');
 
