@@ -5,10 +5,21 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.1
+Revision: 1.5.2
 -->
 
 # Changelog
+
+## rev 1.5.2 - 2026-07-03
+
+- Added Matt-requested Next up / Caught up episode status for TV tracking.
+- Added `includes/next-up.php` to calculate the next available unwatched episode from watched episode records and TMDB metadata.
+- List cards now show `Next up: SxEy`, `Start: S1E1`, `Caught up`, or `Likely next` when metadata is incomplete.
+- Item detail pages now show a dedicated next-up/caught-up status card.
+- Hide 100% / finished items now also hides caught-up TV shows.
+- Smart sort now pushes caught-up shows below shows with available next episodes.
+- Updated the one-time in-app update notice summary for rev 1.5.2.
+- Bumped the visible project revision and service worker cache to 1.5.2.
 
 ## rev 1.5.1 - 2026-07-03
 
@@ -93,13 +104,11 @@ Revision: 1.5.1
 - Stopped tracking runtime JSON account, settings, activity, login, profile, library, and connection data so deploys do not overwrite live users.
 - Added automatic restore-point backups before existing runtime JSON files are overwritten.
 
-
 ## rev 1.4.2 - 2026-07-02
 
 - Renamed the project from WatchLedger to TV Binge Board.
 - Updated the folder/URL slug recommendation to `tv-binge-board`.
 - Updated app constants, session name, manifest, service worker cache name, export filenames, backup filename prefix, docs, and seeded JSON metadata to match the new name.
-
 
 ## rev 1.4.1 - 2026-07-02
 
@@ -120,8 +129,7 @@ Revision: 1.5.1
 - Added episode still display in the TV episode grid.
 - Added fallback chain from local episode still to season poster to show poster to placeholder.
 - Updated watched episode records to preserve still-path/local-still references for audit and display.
-- Updated `.gitignore` to keep downloaded artwork out of source control while retaining cache folders.
-
+- Updated `.gitignore` to keep downloaded artwork out of source control while retaining folders.
 
 ## rev 1.3.0 - 2026-07-02
 
