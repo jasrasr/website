@@ -1,11 +1,11 @@
 /**
  * File: assets/css/app.css
  * Project: TV Binge Board
- * Description: Mobile-first application styles, cards, forms, navigation, media list layout, avatars, episode grids, spoiler-safe text-only episode mode, in-app update notices, compact list cards, artwork picker, import mapping, screenshot guess review, and import review UI.
+ * Description: Mobile-first application styles, cards, forms, navigation, media list layout, avatars, episode grids, spoiler-safe text-only episode mode, in-app update notices, next-up/caught-up labels, compact list cards, artwork picker, import mapping, screenshot guess review, and import review UI.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-03
- * Revision: 1.4.9
+ * Revision: 1.5.0
  */
 
 
@@ -97,7 +97,6 @@ button.danger, .danger { background: var(--danger); color: #190707; }
 .task-list { list-style: none; padding-left: 0; }
 @media (min-width: 720px) { .media-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hero-card, .card { padding: 1.25rem; } .grid-3 { grid-template-columns: repeat(3, 1fr); } .stats-grid { grid-template-columns: repeat(4, 1fr); } .episode-grid { grid-template-columns: repeat(10, minmax(0, 1fr)); } }
 
-
 .small-link { color: #93c5fd; font-weight: 700; text-decoration: none; }
 .small-link:hover { text-decoration: underline; }
 .button { display: inline-block; text-align: center; text-decoration: none; }
@@ -179,3 +178,14 @@ button.danger, .danger { background: var(--danger); color: #190707; }
 .update-notice-actions { display: flex; gap: .55rem; flex-wrap: wrap; }
 .update-notice-actions .button, .update-notice-actions button { width: auto; }
 @media (min-width: 720px) { .update-notice { grid-template-columns: 1fr auto; align-items: center; } }
+
+/* file rev 1.5.0 next-up and caught-up status */
+.next-up-line { font-weight: 800; }
+.next-up-next, .next-up-start { color: var(--accent); }
+.next-up-caught-up { color: var(--success); }
+.next-up-likely, .next-up-unknown { color: var(--warning); }
+.next-up-card { border-color: rgba(96,165,250,.42); }
+.next-up-card h2 { margin-bottom: .35rem; }
+.next-up-card.next-up-caught-up { border-color: rgba(52,211,153,.5); background: linear-gradient(135deg, rgba(6,95,70,.28), rgba(17,24,39,.96)); }
+.next-up-card.next-up-next, .next-up-card.next-up-start { background: linear-gradient(135deg, rgba(37,99,235,.25), rgba(17,24,39,.96)); }
+.next-up-card.next-up-likely, .next-up-card.next-up-unknown { border-color: rgba(251,191,36,.5); }
