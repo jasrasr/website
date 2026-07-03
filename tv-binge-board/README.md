@@ -1,11 +1,11 @@
 <!--
 File: README.md
 Project: TV Binge Board
-Description: Setup, usage, credentials, deployment, tester attribution, search/add/import hub, episode display modes, screenshot-assisted import, and architecture notes for the PHP/JSON watch tracker.
+Description: Setup, usage, credentials, deployment, tester attribution, search/add/import hub, episode display modes, in-app update notices, screenshot-assisted import, and architecture notes for the PHP/JSON watch tracker.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.0
+Revision: 1.5.1
 -->
 
 # TV Binge Board
@@ -41,7 +41,7 @@ Matt served as an early user tester for TV Binge Board. His feedback directly sh
 
 Matt's later testing also shaped rev 1.5.0: a spoiler-safe text-only episode list, a more compact episode display, and a clearer way to check TMDB for newly available episodes.
 
-## Features included through rev 1.5.0
+## Features included through rev 1.5.1
 
 - Project renamed to TV Binge Board with `tv-binge-board` as the folder/URL slug.
 - JSON file storage with file locking, atomic writes, and pre-overwrite restore points.
@@ -59,6 +59,8 @@ Matt's later testing also shaped rev 1.5.0: a spoiler-safe text-only episode lis
 - Search page now acts as the main add/import/upload hub.
 - Search page includes TMDB search, manual add, CSV/JSON import upload, and screenshot upload.
 - Bottom navigation includes a visual overflow hint when more items are available by horizontal scrolling.
+- One-time in-app update notice when a deployed project revision changes.
+- Update notice includes rev number, short summary, dismiss action, and changelog link.
 - Logout link in the signed-in bottom navigation.
 - Watchlist and status management.
 - Smart default watchlist sort that prioritizes active/in-progress items.
@@ -116,6 +118,19 @@ For normal tracking users, `search.php` is the main intake page. It includes:
 - Screenshot upload that submits into the existing screenshot-assisted import queue.
 
 The standalone `import.php` and `upload-screenshot.php` pages still exist for review, mapping, and queue detail work, but users should be able to start all intake workflows from Search.
+
+## In-app update notices
+
+The app displays a browser-local update notice when the deployed project revision changes. The notice appears on the next page load after the user sees a new rev, then records that rev in local storage so it does not keep repeating.
+
+The notice includes:
+
+- Current rev number.
+- Brief update summary.
+- Link to `changelog.php`.
+- Dismiss button.
+
+This is intentionally not a text, email, push, or account-level notification system. It is only an on-screen indicator for users who are actively opening the site while live changes are being deployed.
 
 ## Episode display and new episodes
 
@@ -297,7 +312,7 @@ data/**/*.tmp.*
 
 ## Revision
 
-Current project revision: `1.5.0`
+Current project revision: `1.5.1`
 
 Note: file header revisions are file-specific and should only be bumped when that file changes. New files should start with their own file revision instead of inheriting the project revision.
 
