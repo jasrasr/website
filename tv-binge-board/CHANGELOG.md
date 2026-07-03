@@ -5,10 +5,19 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.4.8
+Revision: 1.4.9
 -->
 
 # Changelog
+
+## rev 1.4.9 - 2026-07-03
+
+- Made Search the main add/import/upload hub for normal tracking users.
+- Added quick anchors on Search for TMDB search, manual add, CSV/JSON import, and screenshot upload.
+- Added a CSV/JSON upload form directly on Search that submits into the existing import review workflow.
+- Added a screenshot upload form directly on Search that submits into the existing screenshot queue.
+- Added a bottom navigation overflow hint so users can tell more nav items are available by horizontal scrolling.
+- Bumped the visible project revision and service worker cache to 1.4.9.
 
 ## rev 1.4.8 - 2026-07-03
 
