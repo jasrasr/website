@@ -27,7 +27,7 @@ define('APP_ROOT', dirname(__DIR__));
 define('APP_DATA_DIR', APP_ROOT . DIRECTORY_SEPARATOR . 'data');
 define('APP_CACHE_DIR', APP_DATA_DIR . DIRECTORY_SEPARATOR . 'cache');
 define('APP_UPLOADS_DIR', APP_DATA_DIR . DIRECTORY_SEPARATOR . 'uploads');
-define('APP_BACKUP_DIR', APP_ROOT . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'backups');
+define('APP_BACKUP_DIR', APP_DATA_DIR . DIRECTORY_SEPARATOR . 'backups');
 define('APP_PUBLIC_CACHE_DIR', APP_ROOT . DIRECTORY_SEPARATOR . 'public-cache');
 define('APP_PUBLIC_CACHE_URL', 'public-cache');
 
