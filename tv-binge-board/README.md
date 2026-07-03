@@ -1,11 +1,11 @@
 <!--
 File: README.md
 Project: TV Binge Board
-Description: Setup, usage, credentials, deployment, and architecture notes for the PHP/JSON watch tracker.
+Description: Setup, usage, credentials, deployment, tester attribution, and architecture notes for the PHP/JSON watch tracker.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
-Modified: 2026-07-02
-Revision: 1.4.6
+Modified: 2026-07-03
+Revision: 1.4.7
 -->
 
 # TV Binge Board
@@ -35,7 +35,11 @@ Seed credentials are still present while the app is being tested and configured.
 | Admin | configured seed admin | configured testing password | Manage other accounts. Does not track personal shows. |
 | User | configured seed test user | configured testing password | Initial test user with sample library data. |
 
-## Features included through rev 1.4.6
+## User testing attribution
+
+Matt served as an early user tester for TV Binge Board. His feedback directly shaped several rev 1.4.4 usability changes, including Smart sorting for active shows, the Hide 100% / finished items filter, compact mobile list cards, moving long show descriptions to the detail page, and the progress rollback fix when a season or episode is corrected.
+
+## Features included through rev 1.4.7
 
 - Project renamed to TV Binge Board with `tv-binge-board` as the folder/URL slug.
 - JSON file storage with file locking, atomic writes, and pre-overwrite restore points.
@@ -253,7 +257,7 @@ data/**/*.tmp.*
 
 ## Revision
 
-Current revision: `1.4.6`
+Current revision: `1.4.7`
 
 
 ## Artwork cache cleanup
