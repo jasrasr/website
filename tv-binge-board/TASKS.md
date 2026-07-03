@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.4.9
+Revision: 1.5.0
 -->
 
 # TV Binge Board Task List
@@ -153,6 +153,17 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Add bottom navigation overflow hint so users can tell there are more nav items to the right.
 - [ ] Add direct image processing for uploaded screenshots so the upload itself can produce guesses.
 
+## rev 1.5.0 Matt episode list / new episode pass
+
+- [x] Add Picture cards / Text-only episode display toggle on item detail pages.
+- [x] Add spoiler-safe text-only episode mode to hide episode still images.
+- [x] Make text-only mode more compact for mobile episode lists.
+- [x] Persist the episode display preference in a browser cookie.
+- [x] Add Check for new episodes action for TMDB-linked TV shows.
+- [x] Add `api/refresh-metadata.php` to force-refresh item, season, and episode metadata.
+- [x] Show last metadata check timestamp on the item detail page.
+- [x] Update README and changelog for Matt's new testing feedback.
+
 ## Import plan
 
 - [x] Create `import.php` page.
@@ -180,7 +191,7 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 
 ## Security hardening
 
-- [ ] Future security wrap-up: rotate testing credentials after testing/configuration is complete.
+- [ ] Future security wrap-up: rotate testing values after testing/configuration is complete.
 - [ ] Future security wrap-up: review public-facing setup documentation before public use.
 - [ ] Future security wrap-up: disable public registration or restrict it tightly before public use.
 - [x] Add login rate limiting.
@@ -202,6 +213,7 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [ ] Add list comparison between connected users.
 - [ ] Add tags/custom lists.
 - [ ] Add better deployment script for Hostinger.
+- [ ] Add optional scheduled metadata refresh for all actively watched TMDB-linked shows.
 
 ## Pause/resume checklist
 
@@ -216,4 +228,4 @@ When resuming on another device:
 7. Confirm normal user manual add works.
 8. Test export/import with a small CSV.
 9. Add TMDB key only after the core app loads correctly.
-10. Before public use, complete the security wrap-up tasks above.
+10. Before public use, complete the security-wrap-up tasks above.

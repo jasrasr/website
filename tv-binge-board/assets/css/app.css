@@ -1,11 +1,11 @@
 /**
  * File: assets/css/app.css
  * Project: TV Binge Board
- * Description: Mobile-first application styles, cards, forms, navigation, media list layout, avatars, episode grids, compact list cards, artwork picker, import mapping, screenshot guess review, and import review UI.
+ * Description: Mobile-first application styles, cards, forms, navigation, media list layout, avatars, episode grids, spoiler-safe text-only episode mode, compact list cards, artwork picker, import mapping, screenshot guess review, and import review UI.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-03
- * Revision: 1.4.7
+ * Revision: 1.4.8
  */
 
 
@@ -57,6 +57,7 @@ button.danger, .danger { background: var(--danger); color: #190707; }
 .pill.success { color: var(--success); border-color: #065f46; }
 .chip-row { display: flex; gap: .5rem; flex-wrap: wrap; }
 .chip { text-decoration: none; background: var(--panel-2); }
+.chip.active { color: var(--text); border-color: var(--accent); box-shadow: 0 0 0 2px rgba(96, 165, 250, .14); }
 .edit-panel { margin-top: .5rem; }
 .edit-panel summary { cursor: pointer; color: var(--accent); }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
@@ -161,3 +162,13 @@ button.danger, .danger { background: var(--danger); color: #190707; }
 .screenshot-queue-item h3, .screenshot-guess-card h3 { margin-bottom: .25rem; }
 .confidence-bar { height: .45rem; width: 100%; background: #030712; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; margin: .35rem 0 .65rem; }
 .confidence-bar span { display: block; height: 100%; background: var(--success); }
+
+/* file rev 1.4.8 spoiler-safe text episode mode */
+.episode-view-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: .75rem 0 .25rem; }
+.text-episode-grid { grid-template-columns: 1fr !important; gap: .4rem !important; }
+.text-episode-grid .episode-card-form { width: 100%; }
+.episode-button.episode-text-only { min-height: 0; display: grid; grid-template-columns: 4.8rem 1fr auto; align-items: center; text-align: left; gap: .55rem; padding: .75rem .85rem; }
+.episode-button.episode-text-only span { font-size: .95rem; }
+.episode-button.episode-text-only small { font-size: .82rem; margin-top: 0; }
+.episode-button.episode-text-only small:last-child { color: var(--muted); justify-self: end; white-space: nowrap; }
+@media (min-width: 720px) { .text-episode-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }

@@ -5,10 +5,21 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.4.9
+Revision: 1.5.0
 -->
 
 # Changelog
+
+## rev 1.5.0 - 2026-07-03
+
+- Added Matt-requested episode display controls on the item detail page.
+- Added a Picture cards / Text-only toggle for TV episode lists.
+- Added spoiler-safe text-only episode mode to hide episode still images and compact the episode list.
+- Added a Check for new episodes action for TMDB-linked TV shows.
+- Added `api/refresh-metadata.php` to force-refresh TMDB item, season, and episode metadata so newly available episodes appear in the episode grid.
+- Added a visible timestamp for the last new-episode metadata check.
+- Updated the episode metadata note to explain that cached TMDB season data refreshes weekly on view and can be refreshed immediately with the new button.
+- Bumped the visible project revision and service worker cache to 1.5.0.
 
 ## rev 1.4.9 - 2026-07-03
 
@@ -105,7 +116,7 @@ Revision: 1.4.9
 
 ## rev 1.3.0 - 2026-07-02
 
-- Added TMDB read access token support in addition to v3 API-key fallback.
+- Added TMDB token support in addition to key fallback.
 - Added external TMDB links for linked movies and TV shows.
 - Added full TMDB detail enrichment when adding items from search.
 - Added manual item link-to-TMDB workflow.

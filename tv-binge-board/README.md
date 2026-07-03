@@ -1,11 +1,11 @@
 <!--
 File: README.md
 Project: TV Binge Board
-Description: Setup, usage, credentials, deployment, tester attribution, search/add/import hub, screenshot-assisted import, and architecture notes for the PHP/JSON watch tracker.
+Description: Setup, usage, credentials, deployment, tester attribution, search/add/import hub, episode display modes, screenshot-assisted import, and architecture notes for the PHP/JSON watch tracker.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.4.9
+Revision: 1.5.0
 -->
 
 # TV Binge Board
@@ -39,7 +39,9 @@ Seed credentials are still present while the app is being tested and configured.
 
 Matt served as an early user tester for TV Binge Board. His feedback directly shaped several rev 1.4.4 usability changes, including Smart sorting for active shows, the Hide 100% / finished items filter, compact mobile list cards, moving long show descriptions to the detail page, and the progress rollback fix when a season or episode is corrected.
 
-## Features included through rev 1.4.9
+Matt's later testing also shaped rev 1.5.0: a spoiler-safe text-only episode list, a more compact episode display, and a clearer way to check TMDB for newly available episodes.
+
+## Features included through rev 1.5.0
 
 - Project renamed to TV Binge Board with `tv-binge-board` as the folder/URL slug.
 - JSON file storage with file locking, atomic writes, and pre-overwrite restore points.
@@ -67,6 +69,8 @@ Matt served as an early user tester for TV Binge Board. His feedback directly sh
 - Manual last-episode rollback trims later watched episodes so completion percentage recalculates correctly.
 - Per-item detail page.
 - Episode grid with watched/unwatched toggle.
+- Picture-card and spoiler-safe text-only episode display modes.
+- Check for new episodes action for TMDB-linked TV shows.
 - TV completion percentage based on watched episodes and total episode count.
 - Search/filter/sort on the watchlist.
 - Optional public list sharing per user.
@@ -75,6 +79,7 @@ Matt served as an early user tester for TV Binge Board. His feedback directly sh
 - TMDB search endpoint with cache support.
 - Live TMDB suggestions while typing in Search.
 - TMDB poster/detail refresh action.
+- TMDB metadata refresh action for newly available seasons/episodes.
 - Local TMDB poster cache for linked movies and TV shows.
 - Local season poster and episode still cache for TV shows.
 - Preferred TMDB poster/backdrop picker for linked items.
@@ -111,6 +116,17 @@ For normal tracking users, `search.php` is the main intake page. It includes:
 - Screenshot upload that submits into the existing screenshot-assisted import queue.
 
 The standalone `import.php` and `upload-screenshot.php` pages still exist for review, mapping, and queue detail work, but users should be able to start all intake workflows from Search.
+
+## Episode display and new episodes
+
+TV detail pages have two episode display modes:
+
+- **Picture cards**: shows episode stills when available.
+- **Text-only**: hides episode stills, makes the list more compact, and reduces spoiler risk from episode images.
+
+For TMDB-linked shows, the episode grid uses cached TMDB season metadata. Cached season data refreshes weekly when the detail page is viewed. The **Check for new episodes** button forces a metadata refresh immediately and updates cached season/episode information so newly available episodes appear in the grid.
+
+This does not automatically mark new episodes as watched. It only makes newly available episodes visible for tracking.
 
 ## Installation
 
@@ -250,7 +266,7 @@ Future security wrap-up before public use:
 - Keep `data/.htaccess` in place.
 - Add account recovery/reset-by-email before public launch.
 - Add optional two-factor authentication if multiple people use it.
-- Add malware scanning before allowing public screenshot uploads.
+- Add upload safety scanning before allowing public screenshot uploads.
 - Do not commit live user data, screenshots, or secrets.
 
 ## Deployment notes for GitHub
@@ -281,7 +297,7 @@ data/**/*.tmp.*
 
 ## Revision
 
-Current project revision: `1.4.9`
+Current project revision: `1.5.0`
 
 Note: file header revisions are file-specific and should only be bumped when that file changes. New files should start with their own file revision instead of inheriting the project revision.
 

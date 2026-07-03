@@ -2,11 +2,11 @@
 /**
  * File: item.php
  * Project: TV Binge Board
- * Description: Media detail page with editable metadata, TMDB links, local artwork refresh controls, artwork picker entry point, completion percentage, and TMDB-backed TV episode grid.
+ * Description: Media detail page with editable metadata, TMDB links, metadata refresh controls, local artwork refresh controls, spoiler-safe episode display modes, completion percentage, and TMDB-backed TV episode grid.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
- * Modified: 2026-07-02
- * Revision: 1.4.5
+ * Modified: 2026-07-03
+ * Revision: 1.5.0
  */
 declare(strict_types=1);
 
@@ -23,6 +23,12 @@ $editable = app_is_admin($user) || $targetUsername === $user['username'];
 $watched = app_watched_episode_keys($item);
 $percent = app_episode_percent($item);
 $requestedSeason = max(0, (int)($_GET['season'] ?? 1));
+$episodeView = (string)($_GET['episode_view'] ?? ($_COOKIE['tvbb_episode_view'] ?? 'image'));
+if (!in_array($episodeView, ['image', 'text'], true)) { $episodeView = 'image'; }
+if (isset($_GET['episode_view'])) {
+    setcookie('tvbb_episode_view', $episodeView, ['expires' => time() + 31536000, 'path' => '/', 'secure' => !empty($_SERVER['HTTPS']), 'httponly' => false, 'samesite' => 'Lax']);
+}
+$baseItemQuery = 'item.php?uid=' . rawurlencode($uid) . (app_is_admin($user) ? '&u=' . rawurlencode($targetUsername) : '');
 $tmdbUrl = app_tmdb_public_url_for_item($item);
 $artworkQuery = 'artwork.php?uid=' . rawurlencode($uid) . (app_is_admin($user) ? '&u=' . rawurlencode($targetUsername) : '');
 
@@ -55,17 +61,25 @@ app_page_header((string)($item['title'] ?? 'Item'));
     <?php if ($percent !== null): ?><div class="progress"><span style="width: <?= e((string)$percent) ?>%"></span></div><p class="muted"><?= e((string)$percent) ?>% complete</p><?php endif; ?>
     <?php if (!empty($item['overview'])): ?><p><?= e((string)$item['overview']) ?></p><?php endif; ?>
     <?php if (!empty($item['metadata_refreshed_at'])): ?><p class="muted">TMDB metadata refreshed: <?= e((string)$item['metadata_refreshed_at']) ?></p><?php endif; ?>
+    <?php if (!empty($item['metadata_checked_for_new_episodes_at'])): ?><p class="muted">Checked for new episodes: <?= e((string)$item['metadata_checked_for_new_episodes_at']) ?></p><?php endif; ?>
     <?php if (!empty($item['local_poster_path'])): ?><p class="muted">Local poster cached: <?= e((string)($item['poster_cached_at'] ?? 'cached')) ?></p><?php endif; ?>
     <?php if (!empty($item['local_backdrop_path'])): ?><p class="muted">Local backdrop cached: <?= e((string)($item['backdrop_cached_at'] ?? 'cached')) ?></p><?php endif; ?>
     <?php if ($editable && !empty($item['tmdb_id'])): ?>
         <div class="actions wrap-actions">
+            <form method="post" action="<?= e(app_href('api/refresh-metadata.php')) ?>">
+                <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
+                <input type="hidden" name="uid" value="<?= e($uid) ?>">
+                <?php if (app_is_admin($user)): ?><input type="hidden" name="target_user" value="<?= e($targetUsername) ?>"><?php endif; ?>
+                <input type="hidden" name="redirect" value="<?= e($_SERVER['REQUEST_URI'] ?? $baseItemQuery) ?>">
+                <button class="secondary" type="submit"><?= ($item['type'] ?? '') === 'tv' ? 'Check for new episodes' : 'Refresh TMDB metadata' ?></button>
+            </form>
             <a class="button secondary" href="<?= e(app_href($artworkQuery)) ?>">Choose poster/backdrop</a>
             <form method="post" action="<?= e(app_href('api/refresh-artwork.php')) ?>">
                 <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
                 <input type="hidden" name="uid" value="<?= e($uid) ?>">
                 <?php if (app_is_admin($user)): ?><input type="hidden" name="target_user" value="<?= e($targetUsername) ?>"><?php endif; ?>
                 <input type="hidden" name="scope" value="item">
-                <input type="hidden" name="redirect" value="<?= e($_SERVER['REQUEST_URI'] ?? 'item.php?uid=' . $uid) ?>">
+                <input type="hidden" name="redirect" value="<?= e($_SERVER['REQUEST_URI'] ?? $baseItemQuery) ?>">
                 <button class="secondary" type="submit">Cache local artwork</button>
             </form>
             <form method="post" action="<?= e(app_href('api/refresh-artwork.php')) ?>">
@@ -74,7 +88,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
                 <?php if (app_is_admin($user)): ?><input type="hidden" name="target_user" value="<?= e($targetUsername) ?>"><?php endif; ?>
                 <input type="hidden" name="scope" value="item">
                 <input type="hidden" name="force" value="1">
-                <input type="hidden" name="redirect" value="<?= e($_SERVER['REQUEST_URI'] ?? 'item.php?uid=' . $uid) ?>">
+                <input type="hidden" name="redirect" value="<?= e($_SERVER['REQUEST_URI'] ?? $baseItemQuery) ?>">
                 <button class="secondary" type="submit">Force refresh artwork</button>
             </form>
         </div>
@@ -85,10 +99,17 @@ app_page_header((string)($item['title'] ?? 'Item'));
 <section class="card">
     <h2>Episode grid</h2>
     <?php if (!empty($item['tmdb_id']) && app_tmdb_configured()): ?>
-        <p class="muted">Using TMDB season metadata when available. Cached season data is refreshed weekly.</p>
+        <p class="muted">Using TMDB season metadata when available. Cached season data refreshes weekly on view; use Check for new episodes to force a refresh immediately.</p>
     <?php else: ?>
         <p class="muted">No TMDB episode metadata available. Link this show to TMDB or set total seasons/episodes manually.</p>
     <?php endif; ?>
+    <div class="episode-view-toolbar">
+        <span class="muted">Episode display:</span>
+        <a class="chip <?= $episodeView === 'image' ? 'active' : '' ?>" href="<?= e(app_href($baseItemQuery . '&episode_view=image#episodes')) ?>">Picture cards</a>
+        <a class="chip <?= $episodeView === 'text' ? 'active' : '' ?>" href="<?= e(app_href($baseItemQuery . '&episode_view=text#episodes')) ?>">Text-only</a>
+    </div>
+    <p class="muted">Text-only mode is more compact and avoids episode stills that may reveal spoilers.</p>
+    <div id="episodes"></div>
     <?php foreach (array_slice($seasonSummaries, 0, 30) as $summary): ?>
         <?php
             $seasonNumber = (int)($summary['season_number'] ?? 0);
@@ -112,10 +133,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
         <details class="season-block" id="season-<?= e((string)$seasonNumber) ?>" <?= $seasonNumber === $requestedSeason ? 'open' : '' ?>>
             <summary><?= e($seasonName) ?> <span class="muted">(<?= e((string)count($episodes)) ?> episodes)</span></summary>
             <?php
-                $seasonRedirect = ($_SERVER['REQUEST_URI'] ?? ('item.php?uid=' . $uid . ($targetUsername !== '' ? '&u=' . rawurlencode($targetUsername) : '')))
-                    . (str_contains((string)($_SERVER['REQUEST_URI'] ?? ''), '?') ? '&' : '?')
-                    . 'season=' . $seasonNumber
-                    . '#season-' . $seasonNumber;
+                $seasonRedirect = $baseItemQuery . '&episode_view=' . rawurlencode($episodeView) . '&season=' . $seasonNumber . '#season-' . $seasonNumber;
             ?>
             <div class="season-actions">
                 <form method="post" action="<?= e(app_href('api/toggle-episode.php')) ?>">
@@ -137,7 +155,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
                     <button class="secondary" type="submit">Clear season watched</button>
                 </form>
             </div>
-            <div class="episode-grid rich">
+            <div class="episode-grid rich <?= $episodeView === 'text' ? 'text-episode-grid' : 'image-episode-grid' ?>">
                 <?php foreach ($episodes as $episodeData): ?>
                     <?php
                         $episodeNumber = (int)($episodeData['episode_number'] ?? 0);
@@ -146,7 +164,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
                         $isWatched = !empty($watched[$key]);
                         $episodeTitle = (string)($episodeData['name'] ?? ('Episode ' . $episodeNumber));
                         $airDate = (string)($episodeData['air_date'] ?? '');
-                        $episodeArt = app_episode_art_url($episodeData, is_array($seasonDetails) ? $seasonDetails : $summary, $item);
+                        $episodeArt = $episodeView === 'image' ? app_episode_art_url($episodeData, is_array($seasonDetails) ? $seasonDetails : $summary, $item) : '';
                     ?>
                     <form method="post" action="<?= e(app_href('api/toggle-episode.php')) ?>" class="episode-card-form">
                         <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
@@ -159,10 +177,10 @@ app_page_header((string)($item['title'] ?? 'Item'));
                         <input type="hidden" name="still_path" value="<?= e((string)($episodeData['still_path'] ?? '')) ?>">
                         <input type="hidden" name="local_still_path" value="<?= e((string)($episodeData['local_still_path'] ?? '')) ?>">
                         <input type="hidden" name="redirect" value="<?= e($seasonRedirect) ?>">
-                        <button class="episode-button <?= $isWatched ? 'watched' : '' ?>" type="submit" title="<?= e($episodeTitle) ?>">
-                            <img class="episode-still" src="<?= e($episodeArt) ?>" alt="Image for <?= e($episodeTitle) ?>" loading="lazy">
+                        <button class="episode-button <?= $isWatched ? 'watched' : '' ?> <?= $episodeView === 'text' ? 'episode-text-only' : '' ?>" type="submit" title="<?= e($episodeTitle) ?>">
+                            <?php if ($episodeView === 'image'): ?><img class="episode-still" src="<?= e($episodeArt) ?>" alt="Image for <?= e($episodeTitle) ?>" loading="lazy"><?php endif; ?>
                             <span>S<?= e((string)$seasonNumber) ?>E<?= e((string)$episodeNumber) ?></span>
-                            <small><?= e(app_excerpt($episodeTitle, 34)) ?></small>
+                            <small><?= e(app_excerpt($episodeTitle, $episodeView === 'text' ? 58 : 34)) ?></small>
                             <?php if ($airDate !== ''): ?><small><?= e($airDate) ?></small><?php endif; ?>
                         </button>
                     </form>
