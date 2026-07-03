@@ -1,10 +1,10 @@
 # File: .gitignore
 # Project: TV Binge Board
-# Description: Keeps local secrets, live user data, locks, backups, uploads, and temporary JSON files out of source control.
+# Description: Keeps local secrets, live user data, locks, backups, uploads, temporary JSON files, and runtime artwork out of source control.
 # Author: Jason Lamb / ChatGPT
 # Created: 2026-07-02
 # Modified: 2026-07-02
-# Revision: 1.4.2
+# Revision: 1.4.5
 
 includes/config.local.php
 *.lock
@@ -32,3 +32,5 @@ public-cache/posters/*
 !public-cache/posters/.placeholder
 public-cache/stills/*
 !public-cache/stills/.placeholder
+public-cache/backdrops/*
+!public-cache/backdrops/.placeholder
