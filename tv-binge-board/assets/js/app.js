@@ -1,11 +1,11 @@
 /**
  * File: assets/js/app.js
  * Project: TV Binge Board
- * Description: Client-side behavior for live TMDB search/add result cards, import match search, one-time update notices, bottom navigation overflow hint, and PWA registration.
+ * Description: Client-side behavior for live TMDB search/add result cards, import match search, PWA install/update handling, one-time update notices, bottom navigation overflow hint, and service-worker registration.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-03
- * Revision: 1.4.6
+ * Revision: 1.5.0
  */
 
 (function () {
@@ -17,6 +17,8 @@
     const autosuggestDelay = 350;
     let autosuggestTimer = 0;
     let latestSuggestRequest = 0;
+    let deferredInstallPrompt = null;
+    let reloadAfterControllerChange = false;
 
     function escapeHtml(value) { return String(value || '').replace(/[&<>'"]/g, function (char) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]; }); }
 
@@ -24,6 +26,43 @@
         const version = document.querySelector('.version');
         if (!version) { return ''; }
         return String(version.textContent || '').replace(/^\s*rev\s+/i, '').trim();
+    }
+
+    function addOrUpdateMeta(name, content) {
+        let meta = document.head.querySelector('meta[name="' + name + '"]');
+        if (!meta) {
+            meta = document.createElement('meta');
+            meta.setAttribute('name', name);
+            document.head.appendChild(meta);
+        }
+        meta.setAttribute('content', content);
+    }
+
+    function setupPwaMetaTags() {
+        addOrUpdateMeta('mobile-web-app-capable', 'yes');
+        addOrUpdateMeta('apple-mobile-web-app-capable', 'yes');
+        addOrUpdateMeta('apple-mobile-web-app-title', 'TV Binge Board');
+        addOrUpdateMeta('apple-mobile-web-app-status-bar-style', 'black-translucent');
+        let appleIcon = document.head.querySelector('link[rel="apple-touch-icon"][sizes="180x180"]');
+        if (!appleIcon) {
+            appleIcon = document.createElement('link');
+            appleIcon.setAttribute('rel', 'apple-touch-icon');
+            appleIcon.setAttribute('sizes', '180x180');
+            appleIcon.setAttribute('href', 'assets/icons/icon-192.png');
+            document.head.appendChild(appleIcon);
+        }
+    }
+
+    function renderTopNotice(kind, title, message, actionsHtml) {
+        const notice = document.createElement('section');
+        notice.className = 'update-notice ' + (kind || '');
+        notice.setAttribute('role', 'status');
+        notice.innerHTML = '<div><strong>' + escapeHtml(title) + '</strong><p>' + escapeHtml(message) + '</p></div><div class="update-notice-actions">' + (actionsHtml || '') + '<button class="secondary" type="button" data-dismiss-update-notice>Dismiss</button></div>';
+        const container = document.querySelector('main.container') || document.body;
+        container.insertAdjacentElement('afterbegin', notice);
+        const dismiss = notice.querySelector('[data-dismiss-update-notice]');
+        if (dismiss) { dismiss.addEventListener('click', function () { notice.remove(); }); }
+        return notice;
     }
 
     function setupUpdateNotice() {
@@ -38,19 +77,49 @@
         const changelog = document.querySelector('a[href*="changelog.php"]');
         const changelogHref = changelog ? changelog.getAttribute('href') || 'changelog.php' : 'changelog.php';
         const summaries = {
+            '1.5.3': 'Polished the PWA setup with stronger manifest metadata, offline fallback, install help, and better update reload handling.',
             '1.5.2': 'Added Next up / Caught up episode status so TV cards can show what episode to watch next or when you are current.',
             '1.5.1': 'Added one-time in-app update notices with a direct changelog link.',
             '1.5.0': 'Added text-only episode view and a Check for new episodes action.'
         };
-        const summary = 'New in rev ' + currentRevision + ': ' + (summaries[currentRevision] || 'See the changelog for update details.');
-        const notice = document.createElement('section');
-        notice.className = 'update-notice';
-        notice.setAttribute('role', 'status');
-        notice.innerHTML = '<div><strong>TV Binge Board updated to rev ' + escapeHtml(currentRevision) + '</strong><p>' + escapeHtml(summary) + '</p></div><div class="update-notice-actions"><a class="button secondary" href="' + escapeHtml(changelogHref) + '">View changelog</a><button class="secondary" type="button" data-dismiss-update-notice>Dismiss</button></div>';
-        const container = document.querySelector('main.container') || document.body;
-        container.insertAdjacentElement('afterbegin', notice);
-        const dismiss = notice.querySelector('[data-dismiss-update-notice]');
-        if (dismiss) { dismiss.addEventListener('click', function () { notice.remove(); }); }
+        renderTopNotice('', 'TV Binge Board updated to rev ' + currentRevision, 'New in rev ' + currentRevision + ': ' + (summaries[currentRevision] || 'See the changelog for update details.'), '<a class="button secondary" href="' + escapeHtml(changelogHref) + '">View changelog</a>');
+    }
+
+    function setupInstallButton() {
+        const installButton = document.getElementById('pwaInstallButton');
+        const installStatus = document.getElementById('pwaInstallStatus');
+        window.addEventListener('beforeinstallprompt', function (event) {
+            event.preventDefault();
+            deferredInstallPrompt = event;
+            if (installButton) { installButton.hidden = false; }
+            if (installStatus) { installStatus.textContent = 'Install is available from this browser.'; }
+        });
+        if (installButton) {
+            installButton.addEventListener('click', async function () {
+                if (!deferredInstallPrompt) {
+                    if (installStatus) { installStatus.textContent = 'Use the browser Share/Menu button and choose Add to Home Screen or Install app.'; }
+                    return;
+                }
+                deferredInstallPrompt.prompt();
+                const choice = await deferredInstallPrompt.userChoice.catch(function () { return { outcome: 'dismissed' }; });
+                deferredInstallPrompt = null;
+                installButton.hidden = true;
+                if (installStatus) { installStatus.textContent = choice.outcome === 'accepted' ? 'Install accepted.' : 'Install dismissed.'; }
+            });
+        }
+    }
+
+    function showServiceWorkerReloadNotice(worker) {
+        const existing = document.querySelector('.update-notice.service-worker-update');
+        if (existing) { return; }
+        const notice = renderTopNotice('service-worker-update', 'New version available', 'A newer app shell has been downloaded. Reload to use the latest cached files.', '<button class="secondary" type="button" data-reload-app>Reload now</button>');
+        const reload = notice.querySelector('[data-reload-app]');
+        if (reload) {
+            reload.addEventListener('click', function () {
+                reloadAfterControllerChange = true;
+                if (worker) { worker.postMessage({ type: 'SKIP_WAITING' }); }
+            });
+        }
     }
 
     function resultCard(item) {
@@ -99,7 +168,11 @@
             if (results) { results.innerHTML = '<div class="alert danger">Search failed. Use manual add for now.</div>'; }
         }
     }
+
+    setupPwaMetaTags();
     setupUpdateNotice();
+    setupInstallButton();
+
     if (form && results && searchQuery) {
         searchQuery.addEventListener('input', function () {
             const query = searchQuery.value.trim();
@@ -221,6 +294,22 @@
     }());
 
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function () { navigator.serviceWorker.register('service-worker.js').catch(function () {}); });
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('service-worker.js').then(function (registration) {
+                if (registration.waiting) { showServiceWorkerReloadNotice(registration.waiting); }
+                registration.addEventListener('updatefound', function () {
+                    const worker = registration.installing;
+                    if (!worker) { return; }
+                    worker.addEventListener('statechange', function () {
+                        if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                            showServiceWorkerReloadNotice(worker);
+                        }
+                    });
+                });
+            }).catch(function () {});
+        });
+        navigator.serviceWorker.addEventListener('controllerchange', function () {
+            if (reloadAfterControllerChange) { window.location.reload(); }
+        });
     }
 }());
