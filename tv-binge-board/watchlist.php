@@ -2,15 +2,15 @@
 /**
  * File: watchlist.php
  * Project: TV Binge Board
- * Description: Full editable library list with search, status/type filters, compact mobile cards, next-up/caught-up indicators, in-progress filtering, and smart sorting.
+ * Description: Full editable library list with automatic new-episode checks, search, status/type filters, compact mobile cards, next-up/caught-up indicators, in-progress filtering, and smart sorting.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-03
- * Revision: 1.4.5
+ * Revision: 1.5.9
  */
 declare(strict_types=1);
 
-require_once __DIR__ . '/includes/next-up.php';
+require_once __DIR__ . '/includes/auto-refresh.php';
 $user = app_require_login();
 
 function app_watchlist_status_rank(array $item): int
@@ -132,12 +132,17 @@ if (!app_can_track($user)):
 </section>
 <?php
 else:
-$library = app_library($user['username']);
+$autoRefresh = app_auto_refresh_user_library((string)$user['username']);
+$autoRefreshNotice = app_auto_refresh_notice($autoRefresh);
+$library = is_array($autoRefresh['library'] ?? null) ? $autoRefresh['library'] : app_library($user['username']);
 $items = app_watchlist_filter_sort_items($library['items'], $_GET);
 $currentSort = (string)($_GET['sort'] ?? 'smart');
 ?>
 <section class="card">
     <h1>My List</h1>
+    <?php if ($autoRefreshNotice !== ''): ?>
+        <div class="alert success"><?= e($autoRefreshNotice) ?> Newly aired episodes and seasons are now available for next-up tracking.</div>
+    <?php endif; ?>
     <form method="get" class="stack filter-form">
         <label>Search
             <input name="q" value="<?= e((string)($_GET['q'] ?? '')) ?>" placeholder="Title, notes, overview">
