@@ -2,11 +2,11 @@
 /**
  * File: item.php
  * Project: TV Binge Board
- * Description: Media detail page with editable metadata, next-up/caught-up TV status, TMDB links, metadata refresh controls, local artwork refresh controls, host-friendly season actions, spoiler-safe episode display modes, completion percentage, and TMDB-backed TV episode grid.
+ * Description: Media detail page with editable metadata, next-up/caught-up TV status, TMDB links, metadata refresh controls, local artwork refresh controls, host-friendly watch progress actions, spoiler-safe episode display modes, completion percentage, and TMDB-backed TV episode grid.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
- * Modified: 2026-07-03
- * Revision: 1.5.10
+ * Modified: 2026-07-04
+ * Revision: 1.5.12
  */
 declare(strict_types=1);
 
@@ -141,26 +141,23 @@ app_page_header((string)($item['title'] ?? 'Item'));
         ?>
         <details class="season-block" id="season-<?= e((string)$seasonNumber) ?>" <?= $seasonNumber === $requestedSeason ? 'open' : '' ?>>
             <summary><?= e($seasonName) ?> <span class="muted">(<?= e((string)count($episodes)) ?> episodes)</span></summary>
-            <?php
-                $seasonRedirect = $baseItemQuery . '&episode_view=' . rawurlencode($episodeView) . '&season=' . $seasonNumber . '#season-' . $seasonNumber;
-            ?>
             <div class="season-actions">
-                <form method="post" action="<?= e(app_href('api/toggle-episode.php')) ?>">
+                <form method="post" action="<?= e(app_href('watch-progress.php')) ?>">
                     <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
                     <input type="hidden" name="uid" value="<?= e($uid) ?>">
-                    <?php if (app_is_admin($user)): ?><input type="hidden" name="target_user" value="<?= e($targetUsername) ?>"><?php endif; ?>
-                    <input type="hidden" name="season" value="<?= e((string)$seasonNumber) ?>">
-                    <input type="hidden" name="mode" value="season_watch">
-                    <input type="hidden" name="redirect" value="<?= e($seasonRedirect) ?>">
+                    <?php if (app_is_admin($user)): ?><input type="hidden" name="tu" value="<?= e($targetUsername) ?>"><?php endif; ?>
+                    <input type="hidden" name="s" value="<?= e((string)$seasonNumber) ?>">
+                    <input type="hidden" name="op" value="sw">
+                    <input type="hidden" name="v" value="<?= e($episodeView) ?>">
                     <button class="secondary" type="submit">Mark season watched</button>
                 </form>
-                <form method="post" action="<?= e(app_href('api/toggle-episode.php')) ?>">
+                <form method="post" action="<?= e(app_href('watch-progress.php')) ?>">
                     <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
                     <input type="hidden" name="uid" value="<?= e($uid) ?>">
-                    <?php if (app_is_admin($user)): ?><input type="hidden" name="target_user" value="<?= e($targetUsername) ?>"><?php endif; ?>
-                    <input type="hidden" name="season" value="<?= e((string)$seasonNumber) ?>">
-                    <input type="hidden" name="mode" value="season_clear">
-                    <input type="hidden" name="redirect" value="<?= e($seasonRedirect) ?>">
+                    <?php if (app_is_admin($user)): ?><input type="hidden" name="tu" value="<?= e($targetUsername) ?>"><?php endif; ?>
+                    <input type="hidden" name="s" value="<?= e((string)$seasonNumber) ?>">
+                    <input type="hidden" name="op" value="sc">
+                    <input type="hidden" name="v" value="<?= e($episodeView) ?>">
                     <button class="secondary" type="submit">Clear season watched</button>
                 </form>
             </div>
@@ -175,17 +172,14 @@ app_page_header((string)($item['title'] ?? 'Item'));
                         $airDate = (string)($episodeData['air_date'] ?? '');
                         $episodeArt = $episodeView === 'image' ? app_episode_art_url($episodeData, is_array($seasonDetails) ? $seasonDetails : $summary, $item) : '';
                     ?>
-                    <form method="post" action="<?= e(app_href('api/toggle-episode.php')) ?>" class="episode-card-form">
+                    <form method="post" action="<?= e(app_href('watch-progress.php')) ?>" class="episode-card-form">
                         <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
                         <input type="hidden" name="uid" value="<?= e($uid) ?>">
-                        <?php if (app_is_admin($user)): ?><input type="hidden" name="target_user" value="<?= e($targetUsername) ?>"><?php endif; ?>
-                        <input type="hidden" name="season" value="<?= e((string)$seasonNumber) ?>">
-                        <input type="hidden" name="episode" value="<?= e((string)$episodeNumber) ?>">
-                        <input type="hidden" name="episode_title" value="<?= e($episodeTitle) ?>">
-                        <input type="hidden" name="air_date" value="<?= e($airDate) ?>">
-                        <input type="hidden" name="still_path" value="<?= e((string)($episodeData['still_path'] ?? '')) ?>">
-                        <input type="hidden" name="local_still_path" value="<?= e((string)($episodeData['local_still_path'] ?? '')) ?>">
-                        <input type="hidden" name="redirect" value="<?= e($seasonRedirect) ?>">
+                        <?php if (app_is_admin($user)): ?><input type="hidden" name="tu" value="<?= e($targetUsername) ?>"><?php endif; ?>
+                        <input type="hidden" name="s" value="<?= e((string)$seasonNumber) ?>">
+                        <input type="hidden" name="e" value="<?= e((string)$episodeNumber) ?>">
+                        <input type="hidden" name="op" value="et">
+                        <input type="hidden" name="v" value="<?= e($episodeView) ?>">
                         <button class="episode-button <?= $isWatched ? 'watched' : '' ?> <?= $episodeView === 'text' ? 'episode-text-only' : '' ?>" type="submit" title="<?= e($episodeTitle) ?>">
                             <?php if ($episodeView === 'image'): ?><img class="episode-still" src="<?= e($episodeArt) ?>" alt="Image for <?= e($episodeTitle) ?>" loading="lazy"><?php endif; ?>
                             <span>S<?= e((string)$seasonNumber) ?>E<?= e((string)$episodeNumber) ?></span>
