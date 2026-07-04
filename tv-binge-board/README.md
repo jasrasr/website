@@ -1,11 +1,11 @@
 <!--
 File: README.md
 Project: TV Binge Board
-Description: Setup, usage, credentials, release packaging, tester attribution, PWA install support, PWA screenshot assets, search/add/import hub, direct screenshot image processing, episode display modes, next-up tracking, in-app update notices, and architecture notes for the PHP/JSON watch tracker.
+Description: Setup, usage, credentials, persistent login, release packaging, tester attribution, PWA install support, PWA screenshot assets, search/add/import hub, direct screenshot image processing, episode display modes, next-up tracking, automatic new-episode refresh, in-app update notices, and architecture notes for the PHP/JSON watch tracker.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.8
+Revision: 1.5.11
 -->
 
 # TV Binge Board
@@ -30,10 +30,11 @@ https://jasr.me/github/tv-binge-board/
 
 Matt served as an early user tester for TV Binge Board. His feedback directly shaped several usability passes, including Smart sorting for active shows, the Hide 100% / finished items filter, compact mobile list cards, moving long show descriptions to the detail page, progress rollback fixes, text-only episode display, checking for newly available episodes, and next-up/caught-up tracking.
 
-## Features included through rev 1.5.8
+## Features included through rev 1.5.11
 
 - JSON file storage with file locking, atomic writes, and pre-overwrite restore points.
 - User registration and sign-in.
+- Persistent Remember Me login with hashed server-side tokens and one-year cookies.
 - Admin account can create users and manage other users' lists.
 - Admin account is blocked from tracking its own shows/movies.
 - Mobile-first UI.
@@ -45,6 +46,8 @@ Matt served as an early user tester for TV Binge Board. His feedback directly sh
 - Compact mobile list cards.
 - Next-up/caught-up TV labels on compact list cards.
 - Dedicated next-up/caught-up status card on TV detail pages.
+- Automatic lazy refresh for stale tracked TMDB-linked TV shows.
+- New seasons/newly aired episodes become available for next-up tracking without marking them watched.
 - Picture-card and spoiler-safe text-only episode display modes.
 - Check for new episodes action for TMDB-linked TV shows.
 - CSV and JSON export.
@@ -67,6 +70,22 @@ Seed credentials are still present while the app is being tested and configured.
 |---|---|---|---|
 | Admin | configured seed admin | configured testing password | Manage other accounts. Does not track personal shows. |
 | User | configured seed test user | configured testing password | Initial test user with sample library data. |
+
+## Persistent login
+
+The login form includes a checked-by-default **Keep me signed in on this device** option.
+
+When enabled:
+
+- The browser receives a one-year `HttpOnly`, `Secure` when HTTPS is active, `SameSite=Lax` remember-me cookie.
+- The raw remember token is never stored in JSON.
+- `data/remember-tokens.json` stores only a selector, username, token hash, timestamps, expiration, and user-agent hash.
+- If the PHP session expires but the remember cookie is valid, the app recreates the session automatically.
+- The token rotates when it is used.
+- Logout revokes the current remember token.
+- Password changes and admin password resets revoke saved remember tokens for that account.
+
+The login can still be lost if the browser clears website data, cookies are blocked, private browsing is used, or the account is disabled.
 
 ## Release packaging
 
@@ -136,7 +155,9 @@ TV detail pages have two episode display modes:
 
 Next-up tracking uses the user's watched episode records plus saved TMDB season/episode metadata. The app can show `Start`, `Next up`, `Caught up`, or `Likely next` depending on the saved episode data.
 
-For TMDB-linked shows, the episode grid uses cached TMDB season metadata. Cached season data refreshes weekly when the detail page is viewed. The **Check for new episodes** button forces a metadata refresh immediately and updates cached season/episode information so newly available episodes appear in the grid.
+For TMDB-linked shows, Dashboard and My List perform a throttled lazy refresh for stale tracked TV shows. New seasons and newly aired episodes are added to saved metadata for next-up tracking and the episode grid. Watched episode records are preserved; new episodes are not marked watched automatically.
+
+The **Check for new episodes** button still forces a refresh immediately for the current show.
 
 ## Direct screenshot image processing
 
@@ -190,10 +211,10 @@ Future security wrap-up before public use:
 - Add account recovery/reset-by-email before public launch.
 - Add optional two-factor authentication if multiple people use it.
 - Add upload safety scanning before allowing public screenshot uploads.
-- Do not commit live user data, screenshots, or secrets.
+- Do not commit live user data, screenshots, remember-token data, or secrets.
 
 ## Revision
 
-Current project revision: `1.5.8`
+Current project revision: `1.5.11`
 
 Note: file header revisions are file-specific and should only be bumped when that file changes. New files should start with their own file revision instead of inheriting the project revision.

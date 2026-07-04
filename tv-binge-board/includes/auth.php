@@ -2,24 +2,28 @@
 /**
  * File: includes/auth.php
  * Project: TV Binge Board
- * Description: Session, authentication, authorization, account, settings, logging, and CSRF helpers.
+ * Description: Session, persistent remember-me authentication, authorization, account, settings, logging, and CSRF helpers.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
- * Modified: 2026-07-02
- * Revision: 1.4.3
+ * Modified: 2026-07-03
+ * Revision: 1.5.11
  */
 declare(strict_types=1);
 
 
 require_once __DIR__ . '/json-store.php';
 
-$secureCookie = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+function app_cookie_secure(): bool
+{
+    return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+}
+
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_name(APP_SESSION_NAME);
     session_set_cookie_params([
-        'lifetime' => 0,
+        'lifetime' => APP_SESSION_COOKIE_SECONDS,
         'path' => '/',
-        'secure' => $secureCookie,
+        'secure' => app_cookie_secure(),
         'httponly' => true,
         'samesite' => 'Lax',
     ]);
@@ -30,6 +34,7 @@ function app_accounts_path(): string { return APP_DATA_DIR . DIRECTORY_SEPARATOR
 function app_settings_path(): string { return APP_DATA_DIR . DIRECTORY_SEPARATOR . 'settings.json'; }
 function app_activity_path(): string { return APP_DATA_DIR . DIRECTORY_SEPARATOR . 'activity-log.json'; }
 function app_login_attempts_path(): string { return APP_DATA_DIR . DIRECTORY_SEPARATOR . 'login-attempts.json'; }
+function app_remember_tokens_path(): string { return APP_DATA_DIR . DIRECTORY_SEPARATOR . 'remember-tokens.json'; }
 
 function app_default_accounts(): array
 {
@@ -246,7 +251,179 @@ function app_clear_login_failures(string $username): void
     app_save_json(app_login_attempts_path(), $attempts);
 }
 
-function app_login(string $username, string $password): bool
+function app_remember_cookie_name(): string
+{
+    return APP_SESSION_NAME . '_remember';
+}
+
+function app_remember_cookie_options(int $expires): array
+{
+    return [
+        'expires' => $expires,
+        'path' => '/',
+        'secure' => app_cookie_secure(),
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ];
+}
+
+function app_default_remember_tokens(): array
+{
+    return ['_meta' => app_json_meta('Long-lived remember-me token hashes.'), 'tokens' => []];
+}
+
+function app_get_remember_tokens(): array
+{
+    $store = app_load_json(app_remember_tokens_path(), app_default_remember_tokens());
+    if (!isset($store['tokens']) || !is_array($store['tokens'])) { $store['tokens'] = []; }
+    return $store;
+}
+
+function app_save_remember_tokens(array $store): void
+{
+    $store['_meta']['updated_at'] = date(DATE_ATOM);
+    $store['_meta']['version'] = APP_VERSION;
+    app_save_json(app_remember_tokens_path(), $store);
+}
+
+function app_remember_user_agent_hash(): string
+{
+    return hash('sha256', (string)($_SERVER['HTTP_USER_AGENT'] ?? ''));
+}
+
+function app_remember_prune_store(array $store): array
+{
+    $now = time();
+    $store['tokens'] = array_values(array_filter($store['tokens'] ?? [], static function ($token) use ($now) {
+        if (!is_array($token)) { return false; }
+        $expires = strtotime((string)($token['expires_at'] ?? '')) ?: 0;
+        return $expires > $now;
+    }));
+    return $store;
+}
+
+function app_remember_parse_cookie(): ?array
+{
+    $value = (string)($_COOKIE[app_remember_cookie_name()] ?? '');
+    if ($value === '' || !str_contains($value, ':')) { return null; }
+    [$selector, $validator] = explode(':', $value, 2);
+    if (!ctype_xdigit($selector) || !ctype_xdigit($validator) || strlen($selector) < 16 || strlen($validator) < 40) { return null; }
+    return ['selector' => $selector, 'validator' => $validator];
+}
+
+function app_set_remember_cookie(string $selector, string $validator, int $expires): void
+{
+    setcookie(app_remember_cookie_name(), $selector . ':' . $validator, app_remember_cookie_options($expires));
+    $_COOKIE[app_remember_cookie_name()] = $selector . ':' . $validator;
+}
+
+function app_clear_remember_cookie(): void
+{
+    setcookie(app_remember_cookie_name(), '', app_remember_cookie_options(time() - 42000));
+    unset($_COOKIE[app_remember_cookie_name()]);
+}
+
+function app_issue_remember_token(string $username): void
+{
+    $username = app_sanitize_username($username);
+    if ($username === '') { return; }
+    $selector = bin2hex(random_bytes(12));
+    $validator = bin2hex(random_bytes(32));
+    $expires = time() + APP_REMEMBER_ME_SECONDS;
+    $store = app_remember_prune_store(app_get_remember_tokens());
+    $store['tokens'][] = [
+        'selector' => $selector,
+        'username' => $username,
+        'validator_hash' => hash('sha256', $validator),
+        'created_at' => date(DATE_ATOM),
+        'last_used_at' => date(DATE_ATOM),
+        'expires_at' => date(DATE_ATOM, $expires),
+        'user_agent_hash' => app_remember_user_agent_hash(),
+    ];
+    $perUser = [];
+    foreach ($store['tokens'] as $token) {
+        $tokenUser = (string)($token['username'] ?? '');
+        $perUser[$tokenUser] = ($perUser[$tokenUser] ?? 0) + 1;
+    }
+    if (($perUser[$username] ?? 0) > APP_REMEMBER_ME_MAX_TOKENS_PER_USER) {
+        $seen = 0;
+        $store['tokens'] = array_values(array_filter(array_reverse($store['tokens']), static function ($token) use ($username, &$seen) {
+            if ((string)($token['username'] ?? '') !== $username) { return true; }
+            $seen++;
+            return $seen <= APP_REMEMBER_ME_MAX_TOKENS_PER_USER;
+        }));
+        $store['tokens'] = array_reverse($store['tokens']);
+    }
+    app_save_remember_tokens($store);
+    app_set_remember_cookie($selector, $validator, $expires);
+}
+
+function app_revoke_remember_tokens_for_user(string $username): void
+{
+    $username = app_sanitize_username($username);
+    $store = app_get_remember_tokens();
+    $store['tokens'] = array_values(array_filter($store['tokens'] ?? [], static fn($token) => !is_array($token) || (string)($token['username'] ?? '') !== $username));
+    app_save_remember_tokens($store);
+}
+
+function app_forget_current_remember_token(): void
+{
+    $parsed = app_remember_parse_cookie();
+    if ($parsed !== null) {
+        $store = app_get_remember_tokens();
+        $store['tokens'] = array_values(array_filter($store['tokens'] ?? [], static fn($token) => !is_array($token) || (string)($token['selector'] ?? '') !== $parsed['selector']));
+        app_save_remember_tokens($store);
+    }
+    app_clear_remember_cookie();
+}
+
+function app_remember_authenticate(): ?array
+{
+    $parsed = app_remember_parse_cookie();
+    if ($parsed === null) { return null; }
+    $store = app_remember_prune_store(app_get_remember_tokens());
+    $matchedIndex = null;
+    foreach ($store['tokens'] as $index => $token) {
+        if (is_array($token) && (string)($token['selector'] ?? '') === $parsed['selector']) {
+            $matchedIndex = $index;
+            break;
+        }
+    }
+    if ($matchedIndex === null) {
+        app_clear_remember_cookie();
+        app_save_remember_tokens($store);
+        return null;
+    }
+    $token = $store['tokens'][$matchedIndex];
+    if (!hash_equals((string)($token['validator_hash'] ?? ''), hash('sha256', $parsed['validator']))) {
+        unset($store['tokens'][$matchedIndex]);
+        app_save_remember_tokens($store);
+        app_clear_remember_cookie();
+        app_log_activity('system', 'remember-token-rejected', (string)($token['username'] ?? ''), ['reason' => 'validator-mismatch']);
+        return null;
+    }
+    $user = app_find_user((string)($token['username'] ?? ''));
+    if (!$user || !empty($user['disabled'])) {
+        app_revoke_remember_tokens_for_user((string)($token['username'] ?? ''));
+        app_clear_remember_cookie();
+        return null;
+    }
+    $newValidator = bin2hex(random_bytes(32));
+    $expires = time() + APP_REMEMBER_ME_SECONDS;
+    $store['tokens'][$matchedIndex]['validator_hash'] = hash('sha256', $newValidator);
+    $store['tokens'][$matchedIndex]['last_used_at'] = date(DATE_ATOM);
+    $store['tokens'][$matchedIndex]['expires_at'] = date(DATE_ATOM, $expires);
+    $store['tokens'][$matchedIndex]['user_agent_hash'] = app_remember_user_agent_hash();
+    app_save_remember_tokens($store);
+    app_set_remember_cookie($parsed['selector'], $newValidator, $expires);
+    session_regenerate_id(true);
+    $_SESSION['user'] = $user['username'];
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    app_log_activity('system', 'remember-login', $user['username']);
+    return $user;
+}
+
+function app_login(string $username, string $password, bool $remember = false): bool
 {
     if (app_login_is_limited($username)) {
         return false;
@@ -263,7 +440,14 @@ function app_login(string $username, string $password): bool
 
     session_regenerate_id(true);
     $_SESSION['user'] = $user['username'];
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     app_clear_login_failures($username);
+
+    if ($remember) {
+        app_issue_remember_token($user['username']);
+    } else {
+        app_forget_current_remember_token();
+    }
 
     $user['last_login_at'] = date(DATE_ATOM);
     app_update_account($user);
@@ -283,7 +467,9 @@ function app_change_password(string $username, string $currentPassword, string $
     $user['password_hash'] = password_hash($newPassword, PASSWORD_DEFAULT);
     $user['password_changed_at'] = date(DATE_ATOM);
     app_update_account($user);
-    app_log_activity($username, 'password-changed', $username);
+    app_revoke_remember_tokens_for_user($username);
+    app_clear_remember_cookie();
+    app_log_activity($username, 'password-changed', $username, ['remember_tokens_revoked' => true]);
     return true;
 }
 
@@ -299,15 +485,24 @@ function app_admin_reset_password(string $actor, string $targetUsername, string 
     $user['password_hash'] = password_hash($newPassword, PASSWORD_DEFAULT);
     $user['password_changed_at'] = date(DATE_ATOM);
     app_update_account($user);
-    app_log_activity($actor, 'admin-password-reset', $targetUsername);
+    app_revoke_remember_tokens_for_user($targetUsername);
+    app_log_activity($actor, 'admin-password-reset', $targetUsername, ['remember_tokens_revoked' => true]);
 }
 
 function app_logout(): void
 {
+    app_forget_current_remember_token();
     $_SESSION = [];
     if (ini_get('session.use_cookies')) {
         $params = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], (bool)$params['secure'], (bool)$params['httponly']);
+        setcookie(session_name(), '', [
+            'expires' => time() - 42000,
+            'path' => (string)($params['path'] ?? '/'),
+            'domain' => (string)($params['domain'] ?? ''),
+            'secure' => (bool)($params['secure'] ?? false),
+            'httponly' => (bool)($params['httponly'] ?? true),
+            'samesite' => (string)($params['samesite'] ?? 'Lax'),
+        ]);
     }
     session_destroy();
 }
@@ -315,10 +510,11 @@ function app_logout(): void
 function app_current_user(): ?array
 {
     if (empty($_SESSION['user'])) {
-        return null;
+        return app_remember_authenticate();
     }
     $user = app_find_user((string)$_SESSION['user']);
     if ($user && !empty($user['disabled'])) {
+        app_revoke_remember_tokens_for_user((string)$user['username']);
         app_logout();
         return null;
     }

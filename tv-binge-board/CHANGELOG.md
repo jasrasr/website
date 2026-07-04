@@ -5,15 +5,45 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.8
+Revision: 1.5.11
 -->
 
 # Changelog
 
+## rev 1.5.11 - 2026-07-03
+
+- Added persistent Remember Me login support.
+- Login now includes a checked-by-default `Keep me signed in on this device` option.
+- Added a secure long-lived remember-me cookie valid for up to one year.
+- Remember tokens are stored server-side only as hashed validators in `data/remember-tokens.json`.
+- Remember tokens rotate when they are used to restore a session.
+- Logout revokes the current remember token.
+- Password changes and admin password resets revoke saved remember tokens for that user.
+- Bumped the visible project revision and service worker cache to 1.5.11.
+
+## rev 1.5.10 - 2026-07-03
+
+- Fixed the season-level Mark season watched / Clear season watched buttons returning a host-level 403.
+- Changed season button POST fields to neutral `mode=season_watch` and `mode=season_clear` values.
+- Kept backward compatibility for the earlier season action values in `api/toggle-episode.php`.
+- Added basic redirect validation before returning to the item page.
+- Bumped the visible project revision and service worker cache to 1.5.10.
+
+## rev 1.5.9 - 2026-07-03
+
+- Added automatic checks for tracked TMDB-linked TV shows.
+- Added `includes/auto-refresh.php` with lazy metadata refresh helpers.
+- Dashboard and My List now check a limited number of stale tracked TV shows when the user loads the page.
+- Saved TMDB series metadata is refreshed so new seasons and newly available episodes appear in next-up tracking and the episode grid.
+- Affected season metadata caches are refreshed when season counts or airing metadata changes.
+- Completed/caught-up shows move back to Watching when an unwatched aired episode becomes available.
+- Watched episode records are preserved; new episodes are made available to watch but are not marked watched automatically.
+- Bumped the visible project revision and service worker cache to 1.5.9.
+
 ## rev 1.5.8 - 2026-07-03
 
 - Added `scripts/make-release-zip.ps1` to create a clean release ZIP for shared-hosting uploads.
-- The release helper excludes runtime data, local secret config, logs, cache files, and generated release ZIPs.
+- The release helper excludes runtime data, local config, logs, cache files, and generated release ZIPs.
 - Added an optional placeholder mode so protective `.htaccess` and `.placeholder` files can be included without bundling live data.
 - Added output summary details for ZIP path, size, file count, and placeholder mode.
 - Bumped the visible project revision and service worker cache to 1.5.8.
