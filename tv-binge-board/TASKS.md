@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.8
+Revision: 1.5.9
 -->
 
 # TV Binge Board Task List
@@ -58,14 +58,18 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] rev 1.5.5 - explicit Apple icon/cache-bust pass.
 - [x] rev 1.5.6 - direct screenshot image processing.
 - [x] rev 1.5.7 - PWA screenshot asset pass.
+- [x] rev 1.5.8 - release ZIP helper pass.
 
-## rev 1.5.8 release helper pass
+## rev 1.5.9 automatic new episode refresh pass
 
-- [x] Add `scripts/make-release-zip.ps1`.
-- [x] Exclude runtime data, local config, logs, cache files, and generated ZIPs from packaged releases.
-- [x] Add optional placeholder mode for `.htaccess` and `.placeholder` files without bundling live data.
-- [x] Document release packaging in README.
-- [x] Bump visible revision and service worker cache to `rev 1.5.8`.
+- [x] Add `includes/auto-refresh.php`.
+- [x] Automatically check stale tracked TMDB-linked TV shows from Dashboard and My List.
+- [x] Refresh saved TMDB series metadata so new seasons and newly aired episodes become available for next-up tracking.
+- [x] Refresh affected season caches when a new/changed season, last-aired episode, or next-announced episode is detected.
+- [x] Move completed/caught-up shows back to Watching when a newly aired unwatched episode becomes available.
+- [x] Preserve watched episode records; new episodes are added as available-to-watch, not marked watched.
+- [x] Add a visible tracked-show check notice when the automatic refresh checks items.
+- [x] Bump visible revision and service worker cache to `rev 1.5.9`.
 
 ## Import plan
 
@@ -130,7 +134,7 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [ ] Add list comparison between connected users.
 - [ ] Add tags/custom lists.
 - [x] Add better deployment script for Hostinger.
-- [ ] Add optional scheduled metadata refresh for all actively watched TMDB-linked shows.
+- [x] Add optional scheduled/lazy metadata refresh for actively tracked TMDB-linked shows.
 
 ## Pause/resume checklist
 
