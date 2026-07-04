@@ -2,11 +2,11 @@
 /**
  * File: item.php
  * Project: TV Binge Board
- * Description: Media detail page with editable metadata, next-up/caught-up TV status, TMDB links, metadata refresh controls, local artwork refresh controls, spoiler-safe episode display modes, completion percentage, and TMDB-backed TV episode grid.
+ * Description: Media detail page with editable metadata, next-up/caught-up TV status, TMDB links, metadata refresh controls, local artwork refresh controls, host-friendly season actions, spoiler-safe episode display modes, completion percentage, and TMDB-backed TV episode grid.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-03
- * Revision: 1.5.1
+ * Revision: 1.5.10
  */
 declare(strict_types=1);
 
@@ -150,7 +150,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
                     <input type="hidden" name="uid" value="<?= e($uid) ?>">
                     <?php if (app_is_admin($user)): ?><input type="hidden" name="target_user" value="<?= e($targetUsername) ?>"><?php endif; ?>
                     <input type="hidden" name="season" value="<?= e((string)$seasonNumber) ?>">
-                    <input type="hidden" name="action" value="mark_season_watched">
+                    <input type="hidden" name="mode" value="season_watch">
                     <input type="hidden" name="redirect" value="<?= e($seasonRedirect) ?>">
                     <button class="secondary" type="submit">Mark season watched</button>
                 </form>
@@ -159,7 +159,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
                     <input type="hidden" name="uid" value="<?= e($uid) ?>">
                     <?php if (app_is_admin($user)): ?><input type="hidden" name="target_user" value="<?= e($targetUsername) ?>"><?php endif; ?>
                     <input type="hidden" name="season" value="<?= e((string)$seasonNumber) ?>">
-                    <input type="hidden" name="action" value="mark_season_unwatched">
+                    <input type="hidden" name="mode" value="season_clear">
                     <input type="hidden" name="redirect" value="<?= e($seasonRedirect) ?>">
                     <button class="secondary" type="submit">Clear season watched</button>
                 </form>
