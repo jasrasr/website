@@ -2,11 +2,11 @@
 /**
  * File: api/toggle-episode.php
  * Project: TV Binge Board
- * Description: Toggles individual TV episodes or updates season watch state while preserving TMDB episode artwork references.
+ * Description: Toggles individual TV episodes or updates season watch state while preserving TMDB episode artwork references and using host-friendly mode parameters.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
- * Modified: 2026-07-02
- * Revision: 1.4.3
+ * Modified: 2026-07-03
+ * Revision: 1.5.10
  */
 declare(strict_types=1);
 
@@ -18,7 +18,13 @@ if ($targetUser === '' || !app_find_user($targetUser)) { http_response_code(400)
 $uid = (string)($_POST['uid'] ?? '');
 $season = max(0, (int)($_POST['season'] ?? 0));
 $episode = max(0, (int)($_POST['episode'] ?? 0));
-$action = (string)($_POST['action'] ?? 'toggle_episode');
+$mode = (string)($_POST['mode'] ?? $_POST['action'] ?? 'toggle_episode');
+$modeMap = [
+    'season_watch' => 'mark_season_watched',
+    'season_clear' => 'mark_season_unwatched',
+    'episode_toggle' => 'toggle_episode',
+];
+$action = $modeMap[$mode] ?? $mode;
 $episodeTitle = trim((string)($_POST['episode_title'] ?? ''));
 $airDate = trim((string)($_POST['air_date'] ?? ''));
 $stillPath = trim((string)($_POST['still_path'] ?? ''));
@@ -128,5 +134,9 @@ if (($library['items'][$index]['episodes'] ?? []) === []) {
 $library['items'][$index]['updated_at'] = date(DATE_ATOM);
 app_save_library($targetUser, $library);
 app_log_activity((string)$user['username'], $activity, $targetUser, $activityData);
-header('Location: ' . (string)($_POST['redirect'] ?? '../item.php?uid=' . rawurlencode($uid)));
+$redirect = (string)($_POST['redirect'] ?? '../item.php?uid=' . rawurlencode($uid));
+if ($redirect === '' || str_starts_with($redirect, 'http://') || str_starts_with($redirect, 'https://') || str_contains($redirect, "\n") || str_contains($redirect, "\r")) {
+    $redirect = '../item.php?uid=' . rawurlencode($uid);
+}
+header('Location: ' . $redirect);
 exit;
