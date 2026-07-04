@@ -1,11 +1,11 @@
 <!--
 File: README.md
 Project: TV Binge Board
-Description: Setup, usage, credentials, deployment, tester attribution, PWA install support, PWA screenshot assets, search/add/import hub, direct screenshot image processing, episode display modes, next-up tracking, in-app update notices, and architecture notes for the PHP/JSON watch tracker.
+Description: Setup, usage, credentials, release packaging, tester attribution, PWA install support, PWA screenshot assets, search/add/import hub, direct screenshot image processing, episode display modes, next-up tracking, in-app update notices, and architecture notes for the PHP/JSON watch tracker.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-03
-Revision: 1.5.7
+Revision: 1.5.8
 -->
 
 # TV Binge Board
@@ -30,7 +30,7 @@ https://jasr.me/github/tv-binge-board/
 
 Matt served as an early user tester for TV Binge Board. His feedback directly shaped several usability passes, including Smart sorting for active shows, the Hide 100% / finished items filter, compact mobile list cards, moving long show descriptions to the detail page, progress rollback fixes, text-only episode display, checking for newly available episodes, and next-up/caught-up tracking.
 
-## Features included through rev 1.5.7
+## Features included through rev 1.5.8
 
 - JSON file storage with file locking, atomic writes, and pre-overwrite restore points.
 - User registration and sign-in.
@@ -54,6 +54,7 @@ Matt served as an early user tester for TV Binge Board. His feedback directly sh
 - Screenshot upload queue with confidence-scored manual approve/reject review before import staging.
 - One-time in-app update notice when a deployed project revision changes.
 - PWA manifest, explicit Apple touch icon files, JL-style app icon assets, app scope, app shortcuts, screenshot assets, offline fallback, install help page, and service-worker update reload prompt.
+- PowerShell release ZIP helper for shared-hosting uploads.
 - `CHANGELOG.md` rendered from `changelog.php`.
 - `TASKS.md` with completed tasks retained for audit.
 - `data/.htaccess` protection for JSON data.
@@ -66,6 +67,24 @@ Seed credentials are still present while the app is being tested and configured.
 |---|---|---|---|
 | Admin | configured seed admin | configured testing password | Manage other accounts. Does not track personal shows. |
 | User | configured seed test user | configured testing password | Initial test user with sample library data. |
+
+## Release packaging
+
+Use the PowerShell release helper to build a clean ZIP before manually uploading files to shared hosting.
+
+From inside the `tv-binge-board` folder:
+
+```powershell
+.\scripts\make-release-zip.ps1
+```
+
+Optional placeholder mode keeps `.placeholder` and protective `.htaccess` files from runtime folders without bundling live data:
+
+```powershell
+.\scripts\make-release-zip.ps1 -IncludePlaceholders -OpenFolder
+```
+
+The ZIP excludes runtime data, `includes/config.local.php`, cache files, logs, and generated release ZIPs. Keep the server's live `includes/config.local.php` and `data` folder in place when uploading a new release.
 
 ## PWA / Home Screen install
 
@@ -175,6 +194,6 @@ Future security wrap-up before public use:
 
 ## Revision
 
-Current project revision: `1.5.7`
+Current project revision: `1.5.8`
 
 Note: file header revisions are file-specific and should only be bumped when that file changes. New files should start with their own file revision instead of inheriting the project revision.
