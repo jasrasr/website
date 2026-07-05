@@ -5,10 +5,21 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-05
-Revision: 1.5.20
+Revision: 1.5.21
 -->
 
 # Changelog
+
+## rev 1.5.21 - 2026-07-05
+
+- Added optional screenshot attachments to `suggestions.php`.
+- Suggestion attachments accept PNG, JPG, and JPEG only.
+- Upload validation checks extension, upload status, file size, and image MIME/dimensions using `getimagesize()`.
+- Screenshots are saved under `public-cache/suggestions/` with random suggestion-based filenames.
+- Suggestion JSON now stores attachment metadata including public URL, original filename, MIME type, dimensions, and byte size.
+- Public board entries display attached screenshots as clickable previews.
+- HEIC is intentionally not accepted for this suggestion-board screenshot field; iPhone screenshots are normally PNG, while HEIC photos should be converted to PNG or JPG before upload.
+- Bumped the visible project revision and service worker cache to 1.5.21.
 
 ## rev 1.5.20 - 2026-07-05
 
@@ -37,13 +48,4 @@ Revision: 1.5.20
 - Shared-title rows compare each person's status, rating, and TV episode progress.
 - Bumped the visible project revision to 1.5.18.
 
-## rev 1.5.17 - 2026-07-05
-
-- Reduced the Home screen notice footprint with compact dashboard notice styling.
-- Added a manual `Reload latest app files` action in Settings for refreshing the cached PWA shell when needed.
-- Made the Home screen `Use it like an app` prompt dismissible per user.
-- Added a Settings checkbox to show or hide the Add to Home Screen reminder on Home.
-- Added a persistent link to the install instructions from Settings.
-- Bumped the visible project revision and service worker cache to 1.5.17.
-
-Older entries are available in Git history before rev 1.5.17.
+Older entries are available in Git history before rev 1.5.18.
