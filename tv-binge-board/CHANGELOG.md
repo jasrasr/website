@@ -5,10 +5,19 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-05
-Revision: 1.5.18
+Revision: 1.5.19
 -->
 
 # Changelog
+
+## rev 1.5.19 - 2026-07-05
+
+- Completed the remaining non-security feature backlog in one pass.
+- Added `smart-import.php` for paste-based structured parsing with fuzzy existing-library matching and optional TMDB matching.
+- Added `lists.php` for user-created custom lists and per-item tags.
+- Added `recommendations.php` for friend/public-list recommendations based on visible libraries, completion status, ratings, repeated support, and shared-title overlap.
+- Added Dashboard links to Smart import, Lists / tags, and Recommendations.
+- Bumped the visible project revision and service worker cache to 1.5.19.
 
 ## rev 1.5.18 - 2026-07-05
 
@@ -45,20 +54,4 @@ Revision: 1.5.18
 - Removed the 30-season display limit so long-running shows such as Survivor can list seasons beyond season 30.
 - Bumped the visible project revision and service worker cache to 1.5.15.
 
-## rev 1.5.14 - 2026-07-05
-
-- Added visible watched episode checkmarks.
-- Watched episode buttons now show a checkmark before the episode code and a watched-status line.
-- Added an episode-grid legend explaining watched versus unwatched tiles.
-
-## rev 1.5.13 - 2026-07-04
-
-- Selecting an unwatched later episode marks prior episodes and prior seasons as watched.
-- Selecting an already watched episode clears only that episode.
-
-## rev 1.5.12 - 2026-07-04
-
-- Added `watch-progress.php` as a root-level watch progress endpoint to avoid host-level 403 blocks.
-- Updated episode and season progress forms to use the new endpoint.
-
-Older entries are available in Git history before rev 1.5.12.
+Older entries are available in Git history before rev 1.5.15.

@@ -6,13 +6,12 @@
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-05
- * Revision: 1.5.18
+ * Revision: 1.5.19
  */
 declare(strict_types=1);
 
-
 const APP_NAME = 'TV Binge Board';
-const APP_VERSION = '1.5.18';
+const APP_VERSION = '1.5.19';
 const APP_TIMEZONE = 'America/New_York';
 const APP_SESSION_NAME = 'tv_binge_board_session';
 const APP_DEFAULT_POSTER = 'assets/img/poster-placeholder.svg';
@@ -34,7 +33,6 @@ define('APP_BACKUP_DIR', APP_DATA_DIR . DIRECTORY_SEPARATOR . 'backups');
 define('APP_PUBLIC_CACHE_DIR', APP_ROOT . DIRECTORY_SEPARATOR . 'public-cache');
 define('APP_PUBLIC_CACHE_URL', 'public-cache');
 
-// Put TMDB credentials in includes/config.local.php rather than source control.
 const TMDB_API_KEY = '';
 const TMDB_API_READ_ACCESS_TOKEN = '';
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w342';

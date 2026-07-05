@@ -2,11 +2,11 @@
 /**
  * File: dashboard.php
  * Project: TV Binge Board
- * Description: User landing page with automatic new-episode checks, watch progress, dismissible PWA install help, compact dashboard notices, and admin account routing.
+ * Description: User landing page with automatic new-episode checks, watch progress, dismissible PWA install help, compact dashboard notices, advanced feature links, and admin account routing.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-05
- * Revision: 1.5.17
+ * Revision: 1.5.19
  */
 declare(strict_types=1);
 
@@ -59,10 +59,13 @@ $showInstallPrompt = empty($profile['hide_install_prompt']);
 ?>
 <section class="hero-card">
     <h1>What’s next?</h1>
-    <p>Track movies, shows, ratings, notes, exports, imports, and episode progress from a mobile-friendly page.</p>
+    <p>Track movies, shows, ratings, notes, exports, imports, episode progress, tags, custom lists, and friend recommendations.</p>
     <div class="actions">
         <a class="button" href="search.php">Add something</a>
         <a class="button secondary" href="watchlist.php">Open full list</a>
+        <a class="button secondary" href="smart-import.php">Smart import</a>
+        <a class="button secondary" href="lists.php">Lists / tags</a>
+        <a class="button secondary" href="recommendations.php">Recommendations</a>
     </div>
 </section>
 <?php if ($autoRefreshNotice !== ''): ?>
