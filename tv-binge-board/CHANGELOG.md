@@ -5,10 +5,17 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-05
-Revision: 1.5.17
+Revision: 1.5.18
 -->
 
 # Changelog
+
+## rev 1.5.18 - 2026-07-05
+
+- Added `compare.php` for list comparison between the signed-in user and a visible public or connected user.
+- Comparison shows titles on both lists, only yours, only theirs, and titles worth checking from the other user.
+- Shared-title rows compare each person's status, rating, and TV episode progress.
+- Bumped the visible project revision to 1.5.18.
 
 ## rev 1.5.17 - 2026-07-05
 
@@ -54,15 +61,4 @@ Revision: 1.5.17
 - Added `watch-progress.php` as a root-level watch progress endpoint to avoid host-level 403 blocks.
 - Updated episode and season progress forms to use the new endpoint.
 
-## rev 1.5.11 - 2026-07-03
-
-- Added persistent Remember Me login support.
-- Login now includes a checked-by-default `Keep me signed in on this device` option.
-- Added a secure long-lived remember-me cookie valid for up to one year.
-- Remember tokens are stored server-side only as hashed validators in `data/remember-tokens.json`.
-- Remember tokens rotate when they are used to restore a session.
-- Logout revokes the current remember token.
-- Password changes and admin password resets revoke saved remember tokens for that user.
-- Bumped the visible project revision and service worker cache to 1.5.11.
-
-Older entries are available in Git history before rev 1.5.11.
+Older entries are available in Git history before rev 1.5.12.
