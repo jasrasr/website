@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-05
-Revision: 1.5.16
+Revision: 1.5.17
 -->
 
 # TV Binge Board Task List
@@ -44,6 +44,7 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] rev 1.5.14 - watched episode checkmarks.
 - [x] rev 1.5.15 - Matt feedback gap pass: explicit unmark, current-detail refresh, full season list, prior-progress prompts.
 - [x] rev 1.5.16 - friend activity feed on Connections.
+- [x] rev 1.5.17 - compact notices, persistent install-card dismissal, and Settings reload/install controls.
 
 ## Import plan
 
@@ -83,6 +84,7 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Add explicit Apple touch icon files.
 - [x] Add new icon filenames to avoid iOS caching the old icon URL.
 - [x] Add screenshot assets for richer PWA install surfaces.
+- [x] Move update/install reminders into a smaller, user-controlled Settings flow.
 
 ## Social features
 

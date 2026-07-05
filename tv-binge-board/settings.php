@@ -2,18 +2,17 @@
 /**
  * File: settings.php
  * Project: TV Binge Board
- * Description: User profile, avatar, sharing preferences, exports, imports, and account actions.
+ * Description: User profile, avatar, sharing preferences, dashboard prompt preferences, app install/reload links, exports, imports, and account actions.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
- * Modified: 2026-07-02
- * Revision: 1.4.2
+ * Modified: 2026-07-05
+ * Revision: 1.5.17
  */
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/includes/functions.php';
 $user = app_require_login();
-$profile = app_profile($user['username']);
+$profile = app_profile((string)$user['username']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     app_verify_csrf();
@@ -21,7 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $profile['bio'] = trim((string)($_POST['bio'] ?? ''));
     $profile['avatar_url'] = trim((string)($_POST['avatar_url'] ?? ''));
     $profile['public_share_enabled'] = isset($_POST['public_share_enabled']);
-    app_save_profile($user['username'], $profile);
+    $profile['hide_install_prompt'] = !isset($_POST['show_install_prompt']);
+    app_save_profile((string)$user['username'], $profile);
 
     $user['display_name'] = $profile['display_name'];
     $user['public_share_enabled'] = $profile['public_share_enabled'];
@@ -60,8 +60,21 @@ app_page_header('Settings');
         <?php else: ?>
         <p class="muted">Admin accounts do not have public tracking lists.</p>
         <?php endif; ?>
+        <label class="checkbox-row">
+            <input type="checkbox" name="show_install_prompt" value="1" <?= empty($profile['hide_install_prompt']) ? 'checked' : '' ?>>
+            Show the Add to Home Screen reminder on Home
+        </label>
         <button type="submit">Save settings</button>
     </form>
+</section>
+<section class="card">
+    <h2>App install and reload</h2>
+    <p class="muted">Use these when you want install instructions or a manual refresh of the app shell after updates.</p>
+    <div class="actions">
+        <a class="button secondary" href="install.php">Install / Add to Home Screen</a>
+        <button class="secondary" type="button" data-app-reload>Reload latest app files</button>
+    </div>
+    <p class="muted" data-app-update-status></p>
 </section>
 <section class="card">
     <h2>Data</h2>
@@ -80,4 +93,28 @@ app_page_header('Settings');
     <h2>Account</h2>
     <div class="actions"><a class="button secondary" href="change-password.php">Change password</a><a class="button secondary" href="logout.php">Sign out</a></div>
 </section>
+<script>
+document.querySelectorAll('[data-app-reload]').forEach(function (button) {
+    button.addEventListener('click', function () {
+        var status = document.querySelector('[data-app-update-status]');
+        if (status) { status.textContent = 'Reloading latest app files...'; }
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistration().then(function (registration) {
+                if (registration && registration.waiting) {
+                    registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                    window.setTimeout(function () { window.location.reload(); }, 900);
+                    return;
+                }
+                if (registration) {
+                    registration.update().finally(function () { window.location.reload(); });
+                    return;
+                }
+                window.location.reload();
+            }).catch(function () { window.location.reload(); });
+            return;
+        }
+        window.location.reload();
+    });
+});
+</script>
 <?php app_page_footer(); ?>
