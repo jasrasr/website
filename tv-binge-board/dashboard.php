@@ -2,7 +2,7 @@
 /**
  * File: dashboard.php
  * Project: TV Binge Board
- * Description: User landing page with automatic new-episode checks, watch progress, dismissible PWA install help, and admin account routing.
+ * Description: User landing page with automatic new-episode checks, watch progress, dismissible PWA install help, compact dashboard notices, and admin account routing.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-05
@@ -14,6 +14,11 @@ require_once __DIR__ . '/includes/auto-refresh.php';
 $user = app_require_login();
 
 app_page_header('Dashboard');
+?>
+<style>
+.update-notice{gap:.4rem;margin-bottom:.55rem;padding:.55rem .7rem;border-radius:.8rem;font-size:.88rem}.update-notice p{margin:.15rem 0 0;font-size:.82rem}.update-notice-actions{gap:.4rem}.update-notice-actions .button,.update-notice-actions button{padding:.55rem .75rem}.compact-dashboard-note{padding:.85rem;margin-bottom:.85rem}.compact-dashboard-note h2{font-size:1.08rem;margin-bottom:.35rem}.compact-dashboard-note p{margin:.25rem 0}.compact-dashboard-note .actions{margin-top:.55rem;gap:.5rem}.compact-dashboard-note form{margin:0}.compact-dashboard-note .button,.compact-dashboard-note button{padding:.65rem .85rem}@media (min-width:720px){.compact-dashboard-note{display:grid;grid-template-columns:1fr auto;align-items:center;gap:.8rem}}
+</style>
+<?php
 if (app_is_admin($user)):
 $settings = app_get_settings();
 $activity = app_activity_events(6);
