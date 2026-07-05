@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-05
-Revision: 1.5.19
+Revision: 1.5.20
 -->
 
 # TV Binge Board Task List
@@ -47,6 +47,27 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] rev 1.5.17 - compact notices, persistent install-card dismissal, and Settings reload/install controls.
 - [x] rev 1.5.18 - list comparison between visible public or connected users.
 - [x] rev 1.5.19 - remaining non-security feature backlog: smart parsing/fuzzy matching, tags/custom lists, and advanced recommendations.
+- [x] rev 1.5.20 - public suggestion and bug board with required email capture.
+
+## Suggestion board
+
+- [x] Add public suggestion and bug board.
+- [x] Require an email address for each submission.
+- [x] Pull the email from the logged-in user's saved profile when available.
+- [x] Prompt for email if the logged-in user does not have one saved yet.
+- [x] Save the first submitted email back to the logged-in user's profile.
+- [x] Save submissions to `data/suggestions.json`.
+- [x] Show submissions publicly in an issue-style list with type and status filters.
+- [x] Mask email addresses on the public board while keeping full email in JSON.
+
+## Next list-page update
+
+- [ ] Make the top of the List page smaller.
+- [ ] Remember the last List filter used per user.
+- [ ] Default to hiding 100% complete/watched/caught-up items.
+- [ ] Search list results by partial title entry.
+- [ ] Show only a title search box by default.
+- [ ] Add an expandable advanced-search area for other criteria.
 
 ## Import plan
 
