@@ -5,14 +5,14 @@
  * Description: Application configuration, version constants, timezone, session/remember-me lifetimes, TMDB constants, local cache paths, and optional local overrides.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
- * Modified: 2026-07-04
- * Revision: 1.5.14
+ * Modified: 2026-07-05
+ * Revision: 1.5.15
  */
 declare(strict_types=1);
 
 
 const APP_NAME = 'TV Binge Board';
-const APP_VERSION = '1.5.14';
+const APP_VERSION = '1.5.15';
 const APP_TIMEZONE = 'America/New_York';
 const APP_SESSION_NAME = 'tv_binge_board_session';
 const APP_DEFAULT_POSTER = 'assets/img/poster-placeholder.svg';

@@ -2,16 +2,17 @@
 /**
  * File: item.php
  * Project: TV Binge Board
- * Description: Media detail page with editable metadata, next-up/caught-up TV status, TMDB links, metadata refresh controls, local artwork refresh controls, host-friendly watch progress actions, watched episode checkmarks, spoiler-safe episode display modes, completion percentage, and TMDB-backed TV episode grid.
+ * Description: Media detail page with editable metadata, next-up/caught-up TV status, TMDB links, metadata refresh controls, local artwork refresh controls, host-friendly watch progress actions, watched episode checkmarks, current-show auto-refresh, spoiler-safe episode display modes, completion percentage, and TMDB-backed TV episode grid.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
- * Modified: 2026-07-04
- * Revision: 1.5.14
+ * Modified: 2026-07-05
+ * Revision: 1.5.15
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/tmdb.php';
 require_once __DIR__ . '/includes/next-up.php';
+require_once __DIR__ . '/includes/auto-refresh.php';
 $user = app_require_login();
 $targetUsername = app_is_admin($user) && isset($_GET['u']) ? app_sanitize_username((string)$_GET['u']) : (string)$user['username'];
 if (!app_find_user($targetUsername) || (!app_is_admin($user) && $targetUsername !== $user['username'])) { http_response_code(403); exit('Forbidden.'); }
@@ -20,6 +21,25 @@ $library = app_library($targetUsername);
 $index = app_find_media_index($library, $uid);
 if ($index === null) { http_response_code(404); exit('Item not found.'); }
 $item = $library['items'][$index];
+$detailAutoRefreshNotice = '';
+if (app_auto_refresh_is_trackable_tv($item) && app_auto_refresh_is_stale($item, 3600)) {
+    try {
+        $refreshResult = app_auto_refresh_tv_item($item);
+        if (!empty($refreshResult['checked']) && is_array($refreshResult['item'] ?? null)) {
+            $library['items'][$index] = $refreshResult['item'];
+            app_save_library($targetUsername, $library);
+            $item = $library['items'][$index];
+            $newAvailable = (int)($refreshResult['new_available'] ?? 0);
+            if ($newAvailable > 0 || !empty($refreshResult['reopened'])) {
+                $detailAutoRefreshNotice = 'Checked TMDB and found newly available episode metadata.';
+            } else {
+                $detailAutoRefreshNotice = 'Checked this show for newly available episodes.';
+            }
+        }
+    } catch (Throwable $ex) {
+        $detailAutoRefreshNotice = 'Could not auto-check this show for new episodes: ' . $ex->getMessage();
+    }
+}
 $editable = app_is_admin($user) || $targetUsername === $user['username'];
 $watched = app_watched_episode_keys($item);
 $percent = app_episode_percent($item);
@@ -46,7 +66,7 @@ if (($item['type'] ?? '') === 'tv') {
         $totalSeasons = max(1, (int)($item['total_seasons'] ?? ($item['last_episode']['season'] ?? 1)));
         $totalEpisodes = max((int)($item['total_episodes'] ?? 10), 10);
         $episodesPerSeason = max(1, (int)ceil($totalEpisodes / max($totalSeasons, 1)));
-        for ($season = 1; $season <= min($totalSeasons, 25); $season++) {
+        for ($season = 1; $season <= min($totalSeasons, 80); $season++) {
             $seasonSummaries[] = ['season_number' => $season, 'name' => 'Season ' . $season, 'episode_count' => min($episodesPerSeason, 40), 'air_date' => ''];
         }
     }
@@ -56,6 +76,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
 ?>
 <section class="card">
     <h1><?= e((string)($item['title'] ?? 'Untitled')) ?></h1>
+    <?php if ($detailAutoRefreshNotice !== ''): ?><div class="alert success"><?= e($detailAutoRefreshNotice) ?></div><?php endif; ?>
     <p class="muted"><?= e(strtoupper((string)($item['type'] ?? 'movie'))) ?> · <?= e((string)($item['year'] ?? '')) ?> · <?= e(app_statuses()[$item['status'] ?? 'watchlist'] ?? 'Watchlist') ?></p>
     <?php $genreText = app_media_genre_text($item); if ($genreText !== ''): ?><p class="muted"><?= e($genreText) ?></p><?php endif; ?>
     <?php if (!empty($item['vote_average'])): ?><p class="muted">TMDB score: <?= e((string)$item['vote_average']) ?>/10<?= !empty($item['vote_count']) ? ' · ' . e((string)$item['vote_count']) . ' votes' : '' ?></p><?php endif; ?>
@@ -64,6 +85,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
     <?php if (!empty($item['overview'])): ?><p><?= e((string)$item['overview']) ?></p><?php endif; ?>
     <?php if (!empty($item['metadata_refreshed_at'])): ?><p class="muted">TMDB metadata refreshed: <?= e((string)$item['metadata_refreshed_at']) ?></p><?php endif; ?>
     <?php if (!empty($item['metadata_checked_for_new_episodes_at'])): ?><p class="muted">Checked for new episodes: <?= e((string)$item['metadata_checked_for_new_episodes_at']) ?></p><?php endif; ?>
+    <?php if (!empty($item['auto_new_episode_checked_at'])): ?><p class="muted">Auto-checked for new episodes: <?= e((string)$item['auto_new_episode_checked_at']) ?></p><?php endif; ?>
     <?php if (!empty($item['local_poster_path'])): ?><p class="muted">Local poster cached: <?= e((string)($item['poster_cached_at'] ?? 'cached')) ?></p><?php endif; ?>
     <?php if (!empty($item['local_backdrop_path'])): ?><p class="muted">Local backdrop cached: <?= e((string)($item['backdrop_cached_at'] ?? 'cached')) ?></p><?php endif; ?>
     <?php if ($editable && !empty($item['tmdb_id'])): ?>
@@ -108,7 +130,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
 <section class="card">
     <h2>Episode grid</h2>
     <?php if (!empty($item['tmdb_id']) && app_tmdb_configured()): ?>
-        <p class="muted">Using TMDB season metadata when available. Cached season data refreshes weekly on view; use Check for new episodes to force a refresh immediately.</p>
+        <p class="muted">Using TMDB season metadata when available. The detail page auto-checks stale shows; use Check for new episodes to force a refresh immediately.</p>
     <?php else: ?>
         <p class="muted">No TMDB episode metadata available. Link this show to TMDB or set total seasons/episodes manually.</p>
     <?php endif; ?>
@@ -119,8 +141,9 @@ app_page_header((string)($item['title'] ?? 'Item'));
     </div>
     <p class="muted">Text-only mode is more compact and avoids episode stills that may reveal spoilers.</p>
     <p class="muted">Green with ✓ Watched = watched. Gray/dark without a checkmark = unwatched.</p>
+    <p class="muted">When marking a later episode or season, the app asks whether to also mark prior episodes or seasons as watched.</p>
     <div id="episodes"></div>
-    <?php foreach (array_slice($seasonSummaries, 0, 30) as $summary): ?>
+    <?php foreach ($seasonSummaries as $summary): ?>
         <?php
             $seasonNumber = (int)($summary['season_number'] ?? 0);
             $seasonName = (string)($summary['name'] ?? ('Season ' . $seasonNumber));
@@ -143,7 +166,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
         <details class="season-block" id="season-<?= e((string)$seasonNumber) ?>" <?= $seasonNumber === $requestedSeason ? 'open' : '' ?>>
             <summary><?= e($seasonName) ?> <span class="muted">(<?= e((string)count($episodes)) ?> episodes)</span></summary>
             <div class="season-actions">
-                <form method="post" action="<?= e(app_href('watch-progress.php')) ?>">
+                <form method="post" action="<?= e(app_href('watch-progress.php')) ?>" onsubmit="return tvbbConfirmSeasonProgress(this);" data-through-season="<?= $seasonNumber > 1 ? '1' : '0' ?>" data-season-label="Season <?= e((string)$seasonNumber) ?>">
                     <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
                     <input type="hidden" name="uid" value="<?= e($uid) ?>">
                     <?php if (app_is_admin($user)): ?><input type="hidden" name="tu" value="<?= e($targetUsername) ?>"><?php endif; ?>
@@ -159,7 +182,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
                     <input type="hidden" name="s" value="<?= e((string)$seasonNumber) ?>">
                     <input type="hidden" name="op" value="sc">
                     <input type="hidden" name="v" value="<?= e($episodeView) ?>">
-                    <button class="secondary" type="submit">Clear season watched</button>
+                    <button class="secondary" type="submit">Unmark season watched</button>
                 </form>
             </div>
             <div class="episode-grid rich <?= $episodeView === 'text' ? 'text-episode-grid' : 'image-episode-grid' ?>">
@@ -173,20 +196,20 @@ app_page_header((string)($item['title'] ?? 'Item'));
                         $airDate = (string)($episodeData['air_date'] ?? '');
                         $episodeArt = $episodeView === 'image' ? app_episode_art_url($episodeData, is_array($seasonDetails) ? $seasonDetails : $summary, $item) : '';
                     ?>
-                    <form method="post" action="<?= e(app_href('watch-progress.php')) ?>" class="episode-card-form">
+                    <form method="post" action="<?= e(app_href('watch-progress.php')) ?>" class="episode-card-form" onsubmit="return tvbbConfirmEpisodeProgress(this);" data-watched="<?= $isWatched ? '1' : '0' ?>" data-fill-prior="<?= (!$isWatched && ($seasonNumber > 1 || $episodeNumber > 1)) ? '1' : '0' ?>" data-episode-label="S<?= e((string)$seasonNumber) ?>E<?= e((string)$episodeNumber) ?>">
                         <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
                         <input type="hidden" name="uid" value="<?= e($uid) ?>">
                         <?php if (app_is_admin($user)): ?><input type="hidden" name="tu" value="<?= e($targetUsername) ?>"><?php endif; ?>
                         <input type="hidden" name="s" value="<?= e((string)$seasonNumber) ?>">
                         <input type="hidden" name="e" value="<?= e((string)$episodeNumber) ?>">
-                        <input type="hidden" name="op" value="et">
+                        <input type="hidden" name="op" value="<?= $isWatched ? 'ec' : 'et' ?>">
                         <input type="hidden" name="v" value="<?= e($episodeView) ?>">
                         <button class="episode-button <?= $isWatched ? 'watched' : '' ?> <?= $episodeView === 'text' ? 'episode-text-only' : '' ?>" type="submit" title="<?= e($episodeTitle) ?>">
                             <?php if ($episodeView === 'image'): ?><img class="episode-still" src="<?= e($episodeArt) ?>" alt="Image for <?= e($episodeTitle) ?>" loading="lazy"><?php endif; ?>
                             <span><?= $isWatched ? '✓ ' : '' ?>S<?= e((string)$seasonNumber) ?>E<?= e((string)$episodeNumber) ?></span>
                             <small><?= e(app_excerpt($episodeTitle, $episodeView === 'text' ? 58 : 34)) ?></small>
                             <?php if ($airDate !== ''): ?><small><?= e($airDate) ?></small><?php endif; ?>
-                            <?php if ($isWatched): ?><small>✓ Watched</small><?php endif; ?>
+                            <small><?= $isWatched ? '✓ Watched - tap to unmark' : '○ Unwatched - tap to mark' ?></small>
                         </button>
                     </form>
                 <?php endforeach; ?>
@@ -194,4 +217,24 @@ app_page_header((string)($item['title'] ?? 'Item'));
         </details>
     <?php endforeach; ?>
 </section>
+<script>
+function tvbbConfirmEpisodeProgress(form) {
+    if (!form || form.dataset.watched === '1') { return true; }
+    var op = form.querySelector('input[name="op"]');
+    if (!op || form.dataset.fillPrior !== '1') { return true; }
+    var label = form.dataset.episodeLabel || 'this episode';
+    var includePrior = window.confirm('Mark all previous episodes and prior seasons as watched too?\n\nOK = mark through ' + label + '.\nCancel = only mark ' + label + '.');
+    if (!includePrior) { op.value = 'eo'; }
+    return true;
+}
+function tvbbConfirmSeasonProgress(form) {
+    if (!form || form.dataset.throughSeason !== '1') { return true; }
+    var op = form.querySelector('input[name="op"]');
+    if (!op) { return true; }
+    var label = form.dataset.seasonLabel || 'this season';
+    var includePrior = window.confirm('Mark all previous seasons as watched too?\n\nOK = mark through ' + label + '.\nCancel = only mark ' + label + '.');
+    if (includePrior) { op.value = 'swp'; }
+    return true;
+}
+</script>
 <?php endif; app_page_footer(); ?>

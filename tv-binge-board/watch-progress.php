@@ -2,11 +2,11 @@
 /**
  * File: watch-progress.php
  * Project: TV Binge Board
- * Description: Host-friendly watch progress endpoint for episode and season watched state, including automatic prior-episode progress fill.
+ * Description: Host-friendly watch progress endpoint for episode and season watched state, including optional prior-episode and prior-season progress fill.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-04
- * Modified: 2026-07-04
- * Revision: 1.1.0
+ * Modified: 2026-07-05
+ * Revision: 1.2.0
  */
 declare(strict_types=1);
 
@@ -115,15 +115,20 @@ $seasonEpisodes = app_progress_season_episode_data($item, $season);
 $activity = 'episode-progress-updated';
 $activityData = ['uid' => $uid, 'season' => $season];
 
-if ($operation === 'sw') {
-    foreach ($seasonEpisodes as $episodeData) {
-        $episodeNumber = (int)($episodeData['episode_number'] ?? 0);
-        if ($episodeNumber > 0 && !isset($existing[$season . '-' . $episodeNumber])) {
-            $existing[$season . '-' . $episodeNumber] = app_progress_episode_entry($season, $episodeNumber, $seasonEpisodes);
+if ($operation === 'sw' || $operation === 'swp') {
+    $seasonsToMark = $operation === 'swp' ? app_progress_season_numbers($item, $season) : [$season];
+    foreach ($seasonsToMark as $seasonToMark) {
+        $episodesToMark = app_progress_season_episode_data($item, (int)$seasonToMark);
+        foreach ($episodesToMark as $episodeData) {
+            $episodeNumber = (int)($episodeData['episode_number'] ?? 0);
+            if ($episodeNumber > 0 && !isset($existing[$seasonToMark . '-' . $episodeNumber])) {
+                $existing[$seasonToMark . '-' . $episodeNumber] = app_progress_episode_entry((int)$seasonToMark, $episodeNumber, $episodesToMark);
+            }
         }
     }
-    $activity = 'season-watched';
-    $activityData['episode_count'] = count($seasonEpisodes);
+    $activity = $operation === 'swp' ? 'season-watched-through' : 'season-watched';
+    $activityData['episode_count'] = count($existing);
+    $activityData['through_season'] = $operation === 'swp' ? $season : null;
 } elseif ($operation === 'sc') {
     foreach (array_keys($existing) as $key) {
         [$entrySeason] = array_map('intval', explode('-', $key, 2));
@@ -133,9 +138,12 @@ if ($operation === 'sw') {
 } else {
     if ($episode <= 0) { http_response_code(400); exit('Missing episode.'); }
     $key = $season . '-' . $episode;
-    if (isset($existing[$key])) {
+    if ($operation === 'ec' || isset($existing[$key])) {
         unset($existing[$key]);
         $activity = 'episode-unwatched';
+    } elseif ($operation === 'eo') {
+        $existing[$key] = app_progress_episode_entry($season, $episode, $seasonEpisodes);
+        $activity = 'episode-watched';
     } else {
         foreach (app_progress_season_numbers($item, $season) as $seasonNumber) {
             $episodesToFill = app_progress_season_episode_data($item, (int)$seasonNumber);
