@@ -4,8 +4,8 @@ Project: TV Binge Board
 Description: Restart-friendly task list and implementation plan for continuing development on another device.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
-Modified: 2026-07-03
-Revision: 1.5.9
+Modified: 2026-07-05
+Revision: 1.5.16
 -->
 
 # TV Binge Board Task List
@@ -20,30 +20,7 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 
 ## Current state
 
-- [x] 2026-07-02 - Renamed project identity to TV Binge Board and slug to `tv-binge-board`.
-- [x] PHP/JSON project scaffold created.
-- [x] Mobile-first layout created.
-- [x] Login/logout added.
-- [x] User registration added.
-- [x] Seeded administrator account added.
-- [x] Seeded testing account added.
-- [x] Admin does not track its own shows/movies.
-- [x] Admin can manage normal user libraries.
-- [x] User library JSON structure created.
-- [x] Public sharing toggle added.
-- [x] Connections scaffolding added.
-- [x] Manual add added.
-- [x] TMDB search endpoint added.
-- [x] Changelog viewer added.
-- [x] README added.
-- [x] `.placeholder` files added.
-
-## Completed revision passes
-
-- [x] rev 1.2.0 - account controls, import/export, episode grid, PWA icons, backups.
-- [x] rev 1.3.0 - richer TMDB metadata, TMDB links, season/episode metadata, refresh-all metadata.
-- [x] rev 1.4.0 - local artwork cache, poster/still cache, refresh artwork, fallback artwork chain.
-- [x] rev 1.4.2 - project rename cleanup, rev labels, unused artwork cleanup.
+- [x] TV Binge Board PHP/JSON tracker scaffold, mobile layout, authentication, admin management, seed accounts, manual add, TMDB search, import/export, public sharing, connections, changelog, README, and placeholders.
 - [x] rev 1.4.4 - Matt mobile list feedback: Smart sort, Hide 100% / finished, compact cards, progress rollback.
 - [x] rev 1.4.5 - poster/backdrop picker.
 - [x] rev 1.4.6 - CSV import mapping and downloadable import error report.
@@ -59,17 +36,14 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] rev 1.5.6 - direct screenshot image processing.
 - [x] rev 1.5.7 - PWA screenshot asset pass.
 - [x] rev 1.5.8 - release ZIP helper pass.
-
-## rev 1.5.9 automatic new episode refresh pass
-
-- [x] Add `includes/auto-refresh.php`.
-- [x] Automatically check stale tracked TMDB-linked TV shows from Dashboard and My List.
-- [x] Refresh saved TMDB series metadata so new seasons and newly aired episodes become available for next-up tracking.
-- [x] Refresh affected season caches when a new/changed season, last-aired episode, or next-announced episode is detected.
-- [x] Move completed/caught-up shows back to Watching when a newly aired unwatched episode becomes available.
-- [x] Preserve watched episode records; new episodes are added as available-to-watch, not marked watched.
-- [x] Add a visible tracked-show check notice when the automatic refresh checks items.
-- [x] Bump visible revision and service worker cache to `rev 1.5.9`.
+- [x] rev 1.5.9 - automatic new episode refresh pass.
+- [x] rev 1.5.10 - season-level 403 mitigation pass.
+- [x] rev 1.5.11 - persistent remember-me login pass.
+- [x] rev 1.5.12 - root-level watch progress endpoint.
+- [x] rev 1.5.13 - mark prior episodes from later episode.
+- [x] rev 1.5.14 - watched episode checkmarks.
+- [x] rev 1.5.15 - Matt feedback gap pass: explicit unmark, current-detail refresh, full season list, prior-progress prompts.
+- [x] rev 1.5.16 - friend activity feed on Connections.
 
 ## Import plan
 
@@ -110,6 +84,19 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Add new icon filenames to avoid iOS caching the old icon URL.
 - [x] Add screenshot assets for richer PWA install surfaces.
 
+## Social features
+
+- [x] Add public sharing toggle.
+- [x] Add connection request/accept flow.
+- [x] Add friend activity feed.
+- [ ] Add list comparison between connected users.
+
+## Future non-security enhancements
+
+- [ ] Add structured parsing or fuzzy matching service integration.
+- [ ] Add tags/custom lists.
+- [ ] Add advanced friend/list recommendations.
+
 ## Security hardening
 
 - [ ] Future security wrap-up: rotate testing values after testing/configuration is complete.
@@ -124,17 +111,6 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [ ] Add server-side upload safety scanning if this becomes public/multi-user.
 - [ ] Add account recovery/reset-by-email workflow.
 - [ ] Add optional two-factor authentication.
-
-## Future enhancements
-
-- [x] Add true TMDB season/episode metadata instead of even-split episode grid.
-- [x] Add import column mapping UI.
-- [ ] Add structured parsing or fuzzy matching service integration.
-- [ ] Add friend activity feed.
-- [ ] Add list comparison between connected users.
-- [ ] Add tags/custom lists.
-- [x] Add better deployment script for Hostinger.
-- [x] Add optional scheduled/lazy metadata refresh for actively tracked TMDB-linked shows.
 
 ## Pause/resume checklist
 
