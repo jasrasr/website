@@ -2,11 +2,11 @@
 /**
  * File: settings.php
  * Project: TV Binge Board
- * Description: User profile, avatar, sharing preferences, dashboard prompt preferences, app install/reload links, exports, imports, and account actions.
+ * Description: User profile, email, avatar, sharing preferences, dashboard prompt preferences, app install/reload links, exports, imports, suggestions, and account actions.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-05
- * Revision: 1.5.17
+ * Revision: 1.5.20
  */
 declare(strict_types=1);
 
@@ -16,7 +16,9 @@ $profile = app_profile((string)$user['username']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     app_verify_csrf();
+    $email = trim((string)($_POST['email'] ?? $profile['email'] ?? $user['email'] ?? ''));
     $profile['display_name'] = trim((string)($_POST['display_name'] ?? $profile['display_name'] ?? $user['username']));
+    $profile['email'] = filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : '';
     $profile['bio'] = trim((string)($_POST['bio'] ?? ''));
     $profile['avatar_url'] = trim((string)($_POST['avatar_url'] ?? ''));
     $profile['public_share_enabled'] = isset($_POST['public_share_enabled']);
@@ -24,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     app_save_profile((string)$user['username'], $profile);
 
     $user['display_name'] = $profile['display_name'];
+    $user['email'] = $profile['email'];
     $user['public_share_enabled'] = $profile['public_share_enabled'];
     app_update_account($user);
 
@@ -44,6 +47,9 @@ app_page_header('Settings');
         </div>
         <label>Display name
             <input name="display_name" value="<?= e((string)($profile['display_name'] ?? $user['display_name'] ?? $user['username'])) ?>">
+        </label>
+        <label>Email for suggestions
+            <input type="email" name="email" value="<?= e((string)($profile['email'] ?? $user['email'] ?? '')) ?>" placeholder="name@example.com">
         </label>
         <label>Avatar image URL
             <input name="avatar_url" value="<?= e((string)($profile['avatar_url'] ?? '')) ?>" placeholder="https://example.com/avatar.png">
@@ -66,6 +72,11 @@ app_page_header('Settings');
         </label>
         <button type="submit">Save settings</button>
     </form>
+</section>
+<section class="card">
+    <h2>Suggestions</h2>
+    <p class="muted">Open the public suggestion and bug board.</p>
+    <div class="actions"><a class="button secondary" href="suggestions.php">Suggestions / bugs</a></div>
 </section>
 <section class="card">
     <h2>App install and reload</h2>
