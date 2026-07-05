@@ -6,7 +6,7 @@
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-05
  * Modified: 2026-07-05
- * Revision: 1.0.0
+ * Revision: 1.0.1
  */
 declare(strict_types=1);
 
@@ -132,6 +132,7 @@ $types = app_suggestion_types();
 
 app_page_header('Suggestions');
 ?>
+<style>.honeypot{position:absolute;left:-9999px;opacity:0;height:0;overflow:hidden}</style>
 <section class="card">
     <h1>Suggestions and bugs</h1>
     <p>Submit a feature update, bug, or usability note. Items are saved to JSON and shown below like a lightweight issue tracker.</p>
@@ -139,7 +140,7 @@ app_page_header('Suggestions');
     <?php foreach ($errors as $error): ?><p class="alert danger"><?= e($error) ?></p><?php endforeach; ?>
     <form method="post" class="stack">
         <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
-        <label class="visually-hidden">Website <input name="website" autocomplete="off"></label>
+        <label class="honeypot">Website <input name="website" autocomplete="off" tabindex="-1"></label>
         <div class="grid-2">
             <label>Type
                 <select name="type"><?php foreach ($types as $value => $label): ?><option value="<?= e($value) ?>"><?= e($label) ?></option><?php endforeach; ?></select>
