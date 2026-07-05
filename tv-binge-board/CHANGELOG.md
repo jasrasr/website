@@ -5,10 +5,18 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-05
-Revision: 1.5.15
+Revision: 1.5.16
 -->
 
 # Changelog
+
+## rev 1.5.16 - 2026-07-05
+
+- Added a Friend activity feed to the Connections page.
+- The feed shows recent visible activity from connected users and users who share their lists publicly.
+- Activity summaries include added/updated titles, status updates, episode progress, and season progress.
+- The feed respects existing list visibility rules and links back to each visible user's public/shared list.
+- Bumped the visible project revision and service worker cache to 1.5.16.
 
 ## rev 1.5.15 - 2026-07-05
 
