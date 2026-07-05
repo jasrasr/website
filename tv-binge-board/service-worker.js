@@ -5,10 +5,10 @@
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-05
- * Revision: 1.5.15
+ * Revision: 1.5.16
  */
 
-const CACHE_NAME = 'tv-binge-board-rev-1.5.15';
+const CACHE_NAME = 'tv-binge-board-rev-1.5.16';
 const OFFLINE_URL = 'offline.php';
 const SHELL_ASSETS = [
     './',
