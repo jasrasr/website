@@ -2,11 +2,11 @@
 /**
  * File: watch-progress.php
  * Project: TV Binge Board
- * Description: Host-friendly watch progress endpoint for toggling episodes and season watched state without API-path or redirect-payload WAF triggers.
+ * Description: Host-friendly watch progress endpoint for episode and season watched state, including automatic prior-episode progress fill.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-04
  * Modified: 2026-07-04
- * Revision: 1.0.0
+ * Revision: 1.1.0
  */
 declare(strict_types=1);
 
@@ -38,46 +38,37 @@ function app_progress_redirect(string $uid, string $targetUser, array $user, int
 
 function app_progress_season_episode_data(array $item, int $season): array
 {
-    $episodes = [];
     if (!empty($item['tmdb_id']) && app_tmdb_configured()) {
         try {
             $seasonDetails = app_tmdb_season_details((int)$item['tmdb_id'], $season);
-            if (is_array($seasonDetails) && !empty($seasonDetails['episodes']) && is_array($seasonDetails['episodes'])) {
-                return $seasonDetails['episodes'];
-            }
+            if (is_array($seasonDetails['episodes'] ?? null)) { return $seasonDetails['episodes']; }
         } catch (Throwable $ex) {}
     }
 
     $episodeCount = 0;
     foreach (($item['seasons'] ?? []) as $seasonEntry) {
-        if (!is_array($seasonEntry)) { continue; }
-        if ((int)($seasonEntry['season_number'] ?? 0) === $season) {
+        if (is_array($seasonEntry) && (int)($seasonEntry['season_number'] ?? 0) === $season) {
             $episodeCount = max(0, (int)($seasonEntry['episode_count'] ?? 0));
             break;
         }
     }
-    if ($episodeCount <= 0) {
-        foreach (($item['episodes'] ?? []) as $entry) {
-            if (!is_array($entry)) { continue; }
-            if ((int)($entry['season'] ?? 0) === $season) {
-                $episodeCount = max($episodeCount, (int)($entry['episode'] ?? 0));
-            }
+    foreach (($item['episodes'] ?? []) as $entry) {
+        if (is_array($entry) && (int)($entry['season'] ?? 0) === $season) {
+            $episodeCount = max($episodeCount, (int)($entry['episode'] ?? 0));
         }
     }
+    $episodes = [];
     for ($n = 1; $n <= min($episodeCount, 80); $n++) {
-        $episodes[] = ['season_number' => $season, 'episode_number' => $n, 'name' => 'Episode ' . $n, 'air_date' => '', 'still_path' => '', 'local_still_path' => ''];
+        $episodes[] = ['episode_number' => $n, 'name' => 'Episode ' . $n, 'air_date' => '', 'still_path' => '', 'local_still_path' => ''];
     }
     return $episodes;
 }
 
-function app_progress_episode_entry(array $item, int $season, int $episode, array $seasonEpisodes): array
+function app_progress_episode_entry(int $season, int $episode, array $seasonEpisodes): array
 {
     $episodeData = [];
     foreach ($seasonEpisodes as $candidate) {
-        if (is_array($candidate) && (int)($candidate['episode_number'] ?? 0) === $episode) {
-            $episodeData = $candidate;
-            break;
-        }
+        if (is_array($candidate) && (int)($candidate['episode_number'] ?? 0) === $episode) { $episodeData = $candidate; break; }
     }
     return [
         'season' => $season,
@@ -90,41 +81,45 @@ function app_progress_episode_entry(array $item, int $season, int $episode, arra
     ];
 }
 
-$redirect = app_progress_redirect($uid, $targetUser, $user, $season, $episodeView);
-if ($uid === '' || $season <= 0) {
-    http_response_code(400);
-    exit('Missing item or season.');
+function app_progress_season_numbers(array $item, int $throughSeason): array
+{
+    $numbers = [];
+    foreach (($item['seasons'] ?? []) as $seasonEntry) {
+        if (!is_array($seasonEntry)) { continue; }
+        $number = (int)($seasonEntry['season_number'] ?? 0);
+        if ($number > 0 && $number <= $throughSeason) { $numbers[$number] = true; }
+    }
+    for ($number = 1; $number <= $throughSeason; $number++) { $numbers[$number] = true; }
+    $result = array_keys($numbers);
+    sort($result, SORT_NUMERIC);
+    return $result;
 }
+
+$redirect = app_progress_redirect($uid, $targetUser, $user, $season, $episodeView);
+if ($uid === '' || $season <= 0) { http_response_code(400); exit('Missing item or season.'); }
 
 $library = app_library($targetUser);
 $index = app_find_media_index($library, $uid);
-if ($index === null || ($library['items'][$index]['type'] ?? '') !== 'tv') {
-    http_response_code(404);
-    exit('TV item not found.');
-}
+if ($index === null || ($library['items'][$index]['type'] ?? '') !== 'tv') { http_response_code(404); exit('TV item not found.'); }
 
 $item = $library['items'][$index];
-$seasonEpisodes = app_progress_season_episode_data($item, $season);
 $existing = [];
 foreach (($item['episodes'] ?? []) as $entry) {
     if (!is_array($entry)) { continue; }
     $entrySeason = (int)($entry['season'] ?? 0);
     $entryEpisode = (int)($entry['episode'] ?? 0);
-    if ($entrySeason <= 0 || $entryEpisode <= 0) { continue; }
-    $existing[$entrySeason . '-' . $entryEpisode] = $entry;
+    if ($entrySeason > 0 && $entryEpisode > 0) { $existing[$entrySeason . '-' . $entryEpisode] = $entry; }
 }
 
+$seasonEpisodes = app_progress_season_episode_data($item, $season);
 $activity = 'episode-progress-updated';
 $activityData = ['uid' => $uid, 'season' => $season];
 
 if ($operation === 'sw') {
     foreach ($seasonEpisodes as $episodeData) {
-        if (!is_array($episodeData)) { continue; }
         $episodeNumber = (int)($episodeData['episode_number'] ?? 0);
-        if ($episodeNumber <= 0) { continue; }
-        $key = $season . '-' . $episodeNumber;
-        if (!isset($existing[$key])) {
-            $existing[$key] = app_progress_episode_entry($item, $season, $episodeNumber, $seasonEpisodes);
+        if ($episodeNumber > 0 && !isset($existing[$season . '-' . $episodeNumber])) {
+            $existing[$season . '-' . $episodeNumber] = app_progress_episode_entry($season, $episodeNumber, $seasonEpisodes);
         }
     }
     $activity = 'season-watched';
@@ -136,17 +131,23 @@ if ($operation === 'sw') {
     }
     $activity = 'season-unwatched';
 } else {
-    if ($episode <= 0) {
-        http_response_code(400);
-        exit('Missing episode.');
-    }
+    if ($episode <= 0) { http_response_code(400); exit('Missing episode.'); }
     $key = $season . '-' . $episode;
     if (isset($existing[$key])) {
         unset($existing[$key]);
         $activity = 'episode-unwatched';
     } else {
-        $existing[$key] = app_progress_episode_entry($item, $season, $episode, $seasonEpisodes);
-        $activity = 'episode-watched';
+        foreach (app_progress_season_numbers($item, $season) as $seasonNumber) {
+            $episodesToFill = app_progress_season_episode_data($item, (int)$seasonNumber);
+            foreach ($episodesToFill as $episodeData) {
+                $episodeNumber = (int)($episodeData['episode_number'] ?? 0);
+                if ($episodeNumber <= 0 || ($seasonNumber === $season && $episodeNumber > $episode)) { continue; }
+                if (!isset($existing[$seasonNumber . '-' . $episodeNumber])) {
+                    $existing[$seasonNumber . '-' . $episodeNumber] = app_progress_episode_entry((int)$seasonNumber, $episodeNumber, $episodesToFill);
+                }
+            }
+        }
+        $activity = 'episode-watched-through';
     }
     $activityData['episode'] = $episode;
 }
