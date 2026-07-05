@@ -6,13 +6,13 @@
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-05
- * Revision: 1.5.16
+ * Revision: 1.5.17
  */
 declare(strict_types=1);
 
 
 const APP_NAME = 'TV Binge Board';
-const APP_VERSION = '1.5.16';
+const APP_VERSION = '1.5.17';
 const APP_TIMEZONE = 'America/New_York';
 const APP_SESSION_NAME = 'tv_binge_board_session';
 const APP_DEFAULT_POSTER = 'assets/img/poster-placeholder.svg';
