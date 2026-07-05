@@ -5,10 +5,21 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-05
-Revision: 1.5.16
+Revision: 1.5.17
 -->
 
 # Changelog
+
+## rev 1.5.17 - 2026-07-05
+
+- Removed the large automatic update notices from the Home screen by hiding the legacy update banners.
+- Added a manual `Reload latest app files` action in Settings for refreshing the cached PWA shell when needed.
+- Made the Home screen `Use it like an app` prompt dismissible per user.
+- Added a Settings checkbox to show or hide the Add to Home Screen reminder on Home.
+- Added a persistent link to the install instructions from Settings.
+- Compact dashboard prompt styling now uses less screen space.
+- Added explicit 180px Apple touch icon metadata in the shared page header.
+- Bumped the visible project revision and service worker cache to 1.5.17.
 
 ## rev 1.5.16 - 2026-07-05
 
@@ -56,23 +67,4 @@ Revision: 1.5.16
 - Password changes and admin password resets revoke saved remember tokens for that user.
 - Bumped the visible project revision and service worker cache to 1.5.11.
 
-## rev 1.5.10 - 2026-07-03
-
-- Fixed the season-level Mark season watched / Clear season watched buttons returning a host-level 403.
-- Changed season button POST fields to neutral `mode=season_watch` and `mode=season_clear` values.
-- Kept backward compatibility for the earlier season action values in `api/toggle-episode.php`.
-- Added basic redirect validation before returning to the item page.
-- Bumped the visible project revision and service worker cache to 1.5.10.
-
-## rev 1.5.9 - 2026-07-03
-
-- Added automatic checks for tracked TMDB-linked TV shows.
-- Added `includes/auto-refresh.php` with lazy metadata refresh helpers.
-- Dashboard and My List now check a limited number of stale tracked TV shows when the user loads the page.
-- Saved TMDB series metadata is refreshed so new seasons and newly available episodes appear in next-up tracking and the episode grid.
-- Affected season metadata caches are refreshed when season counts or airing metadata changes.
-- Completed/caught-up shows move back to Watching when an unwatched aired episode becomes available.
-- Watched episode records are preserved; new episodes are made available to watch but are not marked watched automatically.
-- Bumped the visible project revision and service worker cache to 1.5.9.
-
-Older entries are available in Git history before rev 1.5.9.
+Older entries are available in Git history before rev 1.5.11.
