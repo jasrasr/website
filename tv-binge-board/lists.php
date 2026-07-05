@@ -6,7 +6,7 @@
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-05
  * Modified: 2026-07-05
- * Revision: 1.0.0
+ * Revision: 1.0.1
  */
 declare(strict_types=1);
 
@@ -127,9 +127,9 @@ app_page_header('Custom Lists');
 <?php if ($data['lists']): ?>
 <section class="card"><h2>Your lists</h2><div class="chip-row"><?php foreach ($data['lists'] as $list): ?><a class="chip <?= (string)($list['id'] ?? '') === $listId ? 'active' : '' ?>" href="lists.php?list=<?= e((string)($list['id'] ?? '')) ?>"><?= e((string)($list['name'] ?? 'List')) ?> · <?= e((string)count((array)($list['items'] ?? []))) ?></a><?php endforeach; ?></div></section>
 <?php endif; ?>
-<?php if ($selectedList): $selectedItems = array_values(array_filter((array)($selectedList['items'] ?? []), static fn($uid) => isset($GLOBALS['itemsByUid'][$uid]))); ?>
+<?php if ($selectedList): $selectedItems = array_values(array_filter((array)($selectedList['items'] ?? []), static fn($uid) => isset($itemsByUid[(string)$uid]))); ?>
 <section class="card"><h2><?= e((string)$selectedList['name']) ?></h2><?php if (!empty($selectedList['description'])): ?><p><?= e((string)$selectedList['description']) ?></p><?php endif; ?><div class="actions"><form method="post" onsubmit="return confirm('Delete this custom list?');"><input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>"><input type="hidden" name="action" value="delete_list"><input type="hidden" name="list_id" value="<?= e((string)$selectedList['id']) ?>"><button class="danger" type="submit">Delete list</button></form></div></section>
-<section class="card"><h2>Items in this list</h2><div class="media-list"><?php if (!$selectedItems): ?><p class="muted">No items in this list yet.</p><?php endif; ?><?php foreach ($selectedItems as $uid) { app_render_media_card($itemsByUid[$uid], true); } ?></div></section>
+<section class="card"><h2>Items in this list</h2><div class="media-list"><?php if (!$selectedItems): ?><p class="muted">No items in this list yet.</p><?php endif; ?><?php foreach ($selectedItems as $uid) { app_render_media_card($itemsByUid[(string)$uid], true); } ?></div></section>
 <section class="card"><h2>Add or remove items</h2><div class="user-list">
 <?php foreach ($itemsByUid as $uid => $item): $inList = in_array($uid, $selectedItems, true); ?>
 <article class="user-card"><div><strong><?= e((string)($item['title'] ?? 'Untitled')) ?></strong><p class="muted"><?= e(strtoupper((string)($item['type'] ?? 'movie'))) ?> · <?= e(app_statuses()[(string)($item['status'] ?? 'watchlist')] ?? 'Watchlist') ?></p></div><form method="post"><input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>"><input type="hidden" name="action" value="toggle_item"><input type="hidden" name="list_id" value="<?= e((string)$selectedList['id']) ?>"><input type="hidden" name="return_list" value="<?= e((string)$selectedList['id']) ?>"><input type="hidden" name="uid" value="<?= e($uid) ?>"><button class="<?= $inList ? 'secondary' : '' ?>" type="submit"><?= $inList ? 'Remove' : 'Add' ?></button></form></article>
