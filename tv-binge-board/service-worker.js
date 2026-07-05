@@ -4,11 +4,11 @@
  * Description: PWA service worker for app-shell caching, offline fallback navigation, static asset cache hits, PWA screenshot asset caching, and user-triggered update activation.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
- * Modified: 2026-07-03
- * Revision: 1.5.11
+ * Modified: 2026-07-05
+ * Revision: 1.5.15
  */
 
-const CACHE_NAME = 'tv-binge-board-rev-1.5.11';
+const CACHE_NAME = 'tv-binge-board-rev-1.5.15';
 const OFFLINE_URL = 'offline.php';
 const SHELL_ASSETS = [
     './',
