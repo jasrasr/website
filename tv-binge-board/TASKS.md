@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-05
-Revision: 1.5.17
+Revision: 1.5.18
 -->
 
 # TV Binge Board Task List
@@ -45,6 +45,7 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] rev 1.5.15 - Matt feedback gap pass: explicit unmark, current-detail refresh, full season list, prior-progress prompts.
 - [x] rev 1.5.16 - friend activity feed on Connections.
 - [x] rev 1.5.17 - compact notices, persistent install-card dismissal, and Settings reload/install controls.
+- [x] rev 1.5.18 - list comparison between visible public or connected users.
 
 ## Import plan
 
@@ -91,7 +92,7 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Add public sharing toggle.
 - [x] Add connection request/accept flow.
 - [x] Add friend activity feed.
-- [ ] Add list comparison between connected users.
+- [x] Add list comparison between connected users.
 
 ## Future non-security enhancements
 
