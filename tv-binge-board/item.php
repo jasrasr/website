@@ -2,11 +2,11 @@
 /**
  * File: item.php
  * Project: TV Binge Board
- * Description: Media detail page with editable metadata, next-up/caught-up TV status, TMDB links, metadata refresh controls, local artwork refresh controls, host-friendly watch progress actions, spoiler-safe episode display modes, completion percentage, and TMDB-backed TV episode grid.
+ * Description: Media detail page with editable metadata, next-up/caught-up TV status, TMDB links, metadata refresh controls, local artwork refresh controls, host-friendly watch progress actions, watched episode checkmarks, spoiler-safe episode display modes, completion percentage, and TMDB-backed TV episode grid.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-04
- * Revision: 1.5.12
+ * Revision: 1.5.14
  */
 declare(strict_types=1);
 
@@ -118,6 +118,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
         <a class="chip <?= $episodeView === 'text' ? 'active' : '' ?>" href="<?= e(app_href($baseItemQuery . '&episode_view=text#episodes')) ?>">Text-only</a>
     </div>
     <p class="muted">Text-only mode is more compact and avoids episode stills that may reveal spoilers.</p>
+    <p class="muted">Green with ✓ Watched = watched. Gray/dark without a checkmark = unwatched.</p>
     <div id="episodes"></div>
     <?php foreach (array_slice($seasonSummaries, 0, 30) as $summary): ?>
         <?php
@@ -182,9 +183,10 @@ app_page_header((string)($item['title'] ?? 'Item'));
                         <input type="hidden" name="v" value="<?= e($episodeView) ?>">
                         <button class="episode-button <?= $isWatched ? 'watched' : '' ?> <?= $episodeView === 'text' ? 'episode-text-only' : '' ?>" type="submit" title="<?= e($episodeTitle) ?>">
                             <?php if ($episodeView === 'image'): ?><img class="episode-still" src="<?= e($episodeArt) ?>" alt="Image for <?= e($episodeTitle) ?>" loading="lazy"><?php endif; ?>
-                            <span>S<?= e((string)$seasonNumber) ?>E<?= e((string)$episodeNumber) ?></span>
+                            <span><?= $isWatched ? '✓ ' : '' ?>S<?= e((string)$seasonNumber) ?>E<?= e((string)$episodeNumber) ?></span>
                             <small><?= e(app_excerpt($episodeTitle, $episodeView === 'text' ? 58 : 34)) ?></small>
                             <?php if ($airDate !== ''): ?><small><?= e($airDate) ?></small><?php endif; ?>
+                            <?php if ($isWatched): ?><small>✓ Watched</small><?php endif; ?>
                         </button>
                     </form>
                 <?php endforeach; ?>
