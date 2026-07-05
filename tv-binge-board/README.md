@@ -1,11 +1,11 @@
 <!--
 File: README.md
 Project: TV Binge Board
-Description: Setup, usage, credentials, persistent login, release packaging, tester attribution, PWA install support, PWA screenshot assets, search/add/import hub, direct screenshot image processing, episode display modes, next-up tracking, automatic new-episode refresh, in-app update notices, and architecture notes for the PHP/JSON watch tracker.
+Description: Setup, usage, credentials, persistent login, release packaging, tester attribution, PWA install support, social sharing, friend activity feed, search/add/import hub, direct screenshot image processing, episode display modes, next-up tracking, automatic new-episode refresh, in-app update notices, and architecture notes for the PHP/JSON watch tracker.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
-Modified: 2026-07-03
-Revision: 1.5.11
+Modified: 2026-07-05
+Revision: 1.5.16
 -->
 
 # TV Binge Board
@@ -28,9 +28,9 @@ https://jasr.me/github/tv-binge-board/
 
 ## User testing attribution
 
-Matt served as an early user tester for TV Binge Board. His feedback directly shaped several usability passes, including Smart sorting for active shows, the Hide 100% / finished items filter, compact mobile list cards, moving long show descriptions to the detail page, progress rollback fixes, text-only episode display, checking for newly available episodes, and next-up/caught-up tracking.
+Matt served as an early user tester for TV Binge Board. His feedback directly shaped several usability passes, including Smart sorting for active shows, the Hide 100% / finished items filter, compact mobile list cards, moving long show descriptions to the detail page, progress rollback fixes, text-only episode display, checking for newly available episodes, next-up/caught-up tracking, clearer watched-state indicators, and prior-episode marking prompts.
 
-## Features included through rev 1.5.11
+## Features included through rev 1.5.16
 
 - JSON file storage with file locking, atomic writes, and pre-overwrite restore points.
 - User registration and sign-in.
@@ -50,6 +50,9 @@ Matt served as an early user tester for TV Binge Board. His feedback directly sh
 - New seasons/newly aired episodes become available for next-up tracking without marking them watched.
 - Picture-card and spoiler-safe text-only episode display modes.
 - Check for new episodes action for TMDB-linked TV shows.
+- Watched episode checkmarks, explicit unmarking, and optional prior-episode/prior-season marking prompts.
+- Public sharing and mutual connection requests.
+- Friend activity feed on the Connections page for visible connected/public-list activity.
 - CSV and JSON export.
 - CSV import column-mapping screen for non-standard headers.
 - CSV/JSON import staging review with duplicate detection.
@@ -118,103 +121,3 @@ Included PWA pieces:
 - Legacy icon files at `assets/icons/icon-192.png` and `assets/icons/icon-512.png` remain for fallback compatibility.
 - `service-worker.js` shell cache.
 - `offline.php` fallback page for offline navigation.
-- `install.php` with iPhone/iPad, Android, and desktop install guidance.
-- Dashboard card that links users to install instructions.
-- Frontend install button support when the browser exposes a native install prompt.
-- `New version available` reload prompt when a waiting service-worker update is detected.
-
-Important limitations:
-
-- Server-backed features still require network access.
-- Offline mode only provides a controlled fallback and cached shell assets.
-- iPhone Home Screen icons may not update automatically after changing the icon file; users may need to delete and re-add the Home Screen app.
-
-## Search/add/import hub
-
-For normal tracking users, `search.php` is the main intake page. It includes:
-
-- TMDB search for adding a known show or movie with metadata.
-- Manual add for quick placeholders or missing TMDB results.
-- CSV/JSON import upload that submits into the existing import workflow.
-- Screenshot upload that submits into the existing screenshot-assisted import queue.
-
-The standalone `import.php` and `upload-screenshot.php` pages still exist for review, mapping, and queue detail work, but users can start all intake workflows from Search.
-
-## In-app update notices
-
-The app displays a browser-local update notice when the deployed project revision changes. The notice appears on the next page load after the user sees a new rev, then records that rev in local storage so it does not keep repeating.
-
-The notice includes the current rev number, a brief update summary, a link to `changelog.php`, and a dismiss button. This is not a text, email, push, or account-level notification system.
-
-## Episode display, next-up tracking, and new episodes
-
-TV detail pages have two episode display modes:
-
-- **Picture cards**: shows episode stills when available.
-- **Text-only**: hides episode stills, makes the list more compact, and reduces spoiler risk from episode images.
-
-Next-up tracking uses the user's watched episode records plus saved TMDB season/episode metadata. The app can show `Start`, `Next up`, `Caught up`, or `Likely next` depending on the saved episode data.
-
-For TMDB-linked shows, Dashboard and My List perform a throttled lazy refresh for stale tracked TV shows. New seasons and newly aired episodes are added to saved metadata for next-up tracking and the episode grid. Watched episode records are preserved; new episodes are not marked watched automatically.
-
-The **Check for new episodes** button still forces a refresh immediately for the current show.
-
-## Direct screenshot image processing
-
-Screenshot upload now attempts to process the uploaded image itself. The upload still does not write anything to the library. The flow is:
-
-1. Upload a screenshot from Search or from `upload-screenshot.php`.
-2. The server attempts direct image processing.
-3. The resulting guesses are shown for manual review.
-4. Approved guesses create a normal import review file.
-5. Confirm the import review before anything is written to the library.
-
-Direct image processing supports an optional AI vision path and a local OCR fallback when the server has OCR available. Configure the AI vision values in `includes/config.local.php`; see `includes/config.local.example.php` for the exact local constants.
-
-If AI vision is not configured and local OCR is unavailable, the manual pasted text fallback remains available.
-
-## TMDB setup
-
-TMDB search and linking are optional. Manual add works without TMDB.
-
-1. Copy `includes/config.local.example.php` to `includes/config.local.php`.
-2. Add either `TMDB_API_READ_ACCESS_TOKEN_LOCAL` or `TMDB_API_KEY_LOCAL`. Prefer the read access token when available.
-3. Do not commit `includes/config.local.php` to GitHub.
-
-The app calls TMDB only from PHP on the server. Browser JavaScript calls local PHP endpoints, so the TMDB credential is not exposed to users.
-
-## Import/export
-
-Supported export formats:
-
-- JSON
-- CSV
-
-Supported import formats:
-
-- CSV with standard or custom headers.
-- JSON using this app's `items` array structure, or a plain array of media items.
-
-CSV imports use a mapping step before the review screen. Imports are staged first. Nothing is written into a library until the user confirms the import.
-
-## Security notes
-
-This is still a testing/configuration-stage project, not a finished production identity platform.
-
-Future security wrap-up before public use:
-
-- Rotate the testing credentials.
-- Remove public testing credential details from public-facing documentation.
-- Disable public registration or restrict it tightly unless intentionally public.
-- Force HTTPS.
-- Keep `data/.htaccess` in place.
-- Add account recovery/reset-by-email before public launch.
-- Add optional two-factor authentication if multiple people use it.
-- Add upload safety scanning before allowing public screenshot uploads.
-- Do not commit live user data, screenshots, remember-token data, or secrets.
-
-## Revision
-
-Current project revision: `1.5.11`
-
-Note: file header revisions are file-specific and should only be bumped when that file changes. New files should start with their own file revision instead of inheriting the project revision.
