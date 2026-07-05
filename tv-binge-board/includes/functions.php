@@ -57,6 +57,7 @@ function app_page_header(string $title): void
     <meta name="theme-color" content="#111827">
     <title><?= e($title) ?> - <?= e(APP_NAME) ?></title>
     <link rel="stylesheet" href="<?= e(app_href('assets/css/app.css?v=' . rawurlencode(APP_VERSION))) ?>">
+    <link rel="stylesheet" href="<?= e(app_href('assets/css/overrides.css?v=' . rawurlencode(APP_VERSION))) ?>">
     <link rel="manifest" href="<?= e(app_href('manifest.webmanifest')) ?>">
     <link rel="apple-touch-icon" sizes="180x180" href="<?= e(app_href('assets/icons/apple-touch-icon-180.png')) ?>">
 </head>
@@ -132,7 +133,7 @@ function app_save_library(string $username, array $library): void
 
 function app_make_media_uid(string $type, ?int $tmdbId, string $title): string
 {
-    $type = in_array($type, ['movie', 'tv'], true) ? $type : 'movie';
+    $type = in_array($type, ['movie', 'tv']) ? $type : 'movie';
     if ($tmdbId !== null && $tmdbId > 0) {
         return $type . '-' . $tmdbId;
     }
