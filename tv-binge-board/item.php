@@ -2,11 +2,11 @@
 /**
  * File: item.php
  * Project: TV Binge Board
- * Description: Media detail page with editable metadata, next-up/caught-up TV status, TMDB links, metadata refresh controls, local artwork refresh controls, host-friendly watch progress actions, spoiler-safe episode display modes, completion percentage, and TMDB-backed TV episode grid.
+ * Description: Media detail page with editable metadata, next-up/caught-up TV status, TMDB links, metadata refresh controls, local artwork refresh controls, clearer watch progress actions, spoiler-safe episode display modes, completion percentage, and TMDB-backed TV episode grid.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-04
- * Revision: 1.5.12
+ * Revision: 1.5.13
  */
 declare(strict_types=1);
 
@@ -118,6 +118,8 @@ app_page_header((string)($item['title'] ?? 'Item'));
         <a class="chip <?= $episodeView === 'text' ? 'active' : '' ?>" href="<?= e(app_href($baseItemQuery . '&episode_view=text#episodes')) ?>">Text-only</a>
     </div>
     <p class="muted">Text-only mode is more compact and avoids episode stills that may reveal spoilers.</p>
+    <p class="muted"><span class="pill success">Green = watched</span> <span class="pill">Gray = unwatched</span></p>
+    <p class="muted">Selecting an unwatched later episode now marks all earlier episodes and prior seasons as watched. Selecting a watched episode clears only that episode.</p>
     <div id="episodes"></div>
     <?php foreach (array_slice($seasonSummaries, 0, 30) as $summary): ?>
         <?php
@@ -142,7 +144,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
         <details class="season-block" id="season-<?= e((string)$seasonNumber) ?>" <?= $seasonNumber === $requestedSeason ? 'open' : '' ?>>
             <summary><?= e($seasonName) ?> <span class="muted">(<?= e((string)count($episodes)) ?> episodes)</span></summary>
             <div class="season-actions">
-                <form method="post" action="<?= e(app_href('watch-progress.php')) ?>">
+                <form method="post" action="<?= e(app_href('progress.php')) ?>">
                     <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
                     <input type="hidden" name="uid" value="<?= e($uid) ?>">
                     <?php if (app_is_admin($user)): ?><input type="hidden" name="tu" value="<?= e($targetUsername) ?>"><?php endif; ?>
@@ -151,7 +153,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
                     <input type="hidden" name="v" value="<?= e($episodeView) ?>">
                     <button class="secondary" type="submit">Mark season watched</button>
                 </form>
-                <form method="post" action="<?= e(app_href('watch-progress.php')) ?>">
+                <form method="post" action="<?= e(app_href('progress.php')) ?>">
                     <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
                     <input type="hidden" name="uid" value="<?= e($uid) ?>">
                     <?php if (app_is_admin($user)): ?><input type="hidden" name="tu" value="<?= e($targetUsername) ?>"><?php endif; ?>
@@ -172,7 +174,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
                         $airDate = (string)($episodeData['air_date'] ?? '');
                         $episodeArt = $episodeView === 'image' ? app_episode_art_url($episodeData, is_array($seasonDetails) ? $seasonDetails : $summary, $item) : '';
                     ?>
-                    <form method="post" action="<?= e(app_href('watch-progress.php')) ?>" class="episode-card-form">
+                    <form method="post" action="<?= e(app_href('progress.php')) ?>" class="episode-card-form">
                         <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
                         <input type="hidden" name="uid" value="<?= e($uid) ?>">
                         <?php if (app_is_admin($user)): ?><input type="hidden" name="tu" value="<?= e($targetUsername) ?>"><?php endif; ?>
@@ -185,6 +187,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
                             <span>S<?= e((string)$seasonNumber) ?>E<?= e((string)$episodeNumber) ?></span>
                             <small><?= e(app_excerpt($episodeTitle, $episodeView === 'text' ? 58 : 34)) ?></small>
                             <?php if ($airDate !== ''): ?><small><?= e($airDate) ?></small><?php endif; ?>
+                            <small><?= $isWatched ? '✓ Watched' : '○ Unwatched' ?></small>
                         </button>
                     </form>
                 <?php endforeach; ?>
