@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-05
-Revision: 1.5.20
+Revision: 1.5.21
 -->
 
 # TV Binge Board Task List
@@ -48,6 +48,7 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] rev 1.5.18 - list comparison between visible public or connected users.
 - [x] rev 1.5.19 - remaining non-security feature backlog: smart parsing/fuzzy matching, tags/custom lists, and advanced recommendations.
 - [x] rev 1.5.20 - public suggestion and bug board with required email capture.
+- [x] rev 1.5.21 - PNG/JPG screenshot attachments for suggestions.
 
 ## Suggestion board
 
@@ -59,6 +60,11 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Save submissions to `data/suggestions.json`.
 - [x] Show submissions publicly in an issue-style list with type and status filters.
 - [x] Mask email addresses on the public board while keeping full email in JSON.
+- [x] Add optional screenshot upload to suggestions.
+- [x] Restrict suggestion screenshots to PNG/JPG/JPEG.
+- [x] Store public screenshot previews under `public-cache/suggestions/`.
+- [x] Save attachment metadata to suggestion JSON.
+- [x] Document that iPhone screenshots are usually PNG and HEIC photos must be converted first.
 
 ## Next list-page update
 
