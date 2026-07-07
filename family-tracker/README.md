@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: README.md
-Revision: 0.2.1
+Revision: 1.1.1
 Description: Setup, deployment, privacy, and maintenance notes for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,7 @@ Modified: 2026-07-06
 
 # Family GPS Tracker
 
-Current Project Revision: **0.2.1**
+Current Project Revision: **1.1.1**
 
 A small PHP + JSON backend site for consent-based family location sharing. It is intentionally designed for shared hosting and mirrors the lightweight pattern from the `gps-eta` project: browser GPS, no database, protected JSON storage, mobile-first UI, Leaflet/OpenStreetMap maps, and shared breadcrumb history.
 
@@ -64,6 +64,14 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
 5. Copy the one-time invite code shown after setup, or use **Regenerate Invite Code** later.
 
 6. Have each family member join with the invite code on their own device.
+
+## Revision numbering
+
+This project starts at **1.0.0**, not 0.x.x.
+
+- Rev 1.0.0 = initial scaffold
+- Rev 1.1.0 = history/trails feature
+- Rev 1.1.1 = header, placeholder, and revision-numbering audit
 
 ## Live data placeholder rule
 
@@ -128,4 +136,4 @@ family-tracker/
 
 ## Revision
 
-Rev 0.2.1 - Header and placeholder audit.
+Rev 1.1.1 - Header, placeholder, and revision-numbering audit.
