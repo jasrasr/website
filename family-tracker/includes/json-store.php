@@ -2,7 +2,7 @@
 /**
  * Project: Family GPS Tracker
  * File: includes/json-store.php
- * Revision: 0.1.0
+ * Revision: 1.0.0
  * Description: JSON read/write helpers with simple file locking.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
