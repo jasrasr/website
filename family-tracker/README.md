@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: README.md
-Revision: 1.2.0
+Revision: 1.2.1
 Description: Setup, deployment, privacy, and maintenance notes for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,7 @@ Modified: 2026-07-06
 
 # Family GPS Tracker
 
-Current Project Revision: **1.2.0**
+Current Project Revision: **1.2.1**
 
 A small PHP + JSON backend site for consent-based family location sharing. It is designed for shared hosting and mirrors the lightweight pattern from the `gps-eta` project: browser GPS, no database, protected JSON storage, mobile-first UI, Leaflet/OpenStreetMap maps, and shared breadcrumb history.
 
@@ -21,7 +21,8 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
 - Login/logout with PHP sessions.
 - Share your current browser GPS location with your family group.
 - View family members on a live map.
-- Show a Family Notices card when another member joins during an active session.
+- Show server-stored Family Notices when another member joins after your account was created.
+- Let each user dismiss notices once so they do not reappear for that user.
 - Copy a visible generated invite code.
 - Require two confirmations before regenerating an invite code.
 - View shared family trail history on `history.php`.
@@ -49,6 +50,7 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
    - `data/families/`
    - `data/locations/`
    - `data/trails/`
+   - `data/notices/`
    - `data/locks/`
    - `data/audit/`
 
@@ -59,6 +61,13 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
 5. Copy the one-time invite code shown after setup, or use **Regenerate Invite Code** later.
 
 6. Have each family member join with the invite code on their own device.
+
+## Notice behavior
+
+- Join notices are generated from server-side family membership records.
+- A user sees member-joined notices for family members who joined after that user's account was created.
+- Dismissing a notice stores that notice ID under `data/notices/` for that user and family.
+- A dismissed notice should not appear again for that same user after refresh, page navigation, or login.
 
 ## Invite-code behavior
 
@@ -74,6 +83,7 @@ This project starts at **1.0.0**, not 0.x.x.
 - Rev 1.1.0 = history/trails feature
 - Rev 1.1.1 = header, placeholder, and revision-numbering audit
 - Rev 1.2.0 = join notices and invite-code safety controls
+- Rev 1.2.1 = server-stored dismissible notices
 
 ## Live data placeholder rule
 
@@ -85,10 +95,9 @@ Current live-data folders with placeholders:
 - `data/families/.placeholder`
 - `data/locations/.placeholder`
 - `data/trails/.placeholder`
+- `data/notices/.placeholder`
 - `data/locks/.placeholder`
 - `data/audit/.placeholder`
-
-No new live-data folder was added for Rev 1.2.0.
 
 Do not commit runtime JSON files from these folders. Only the `.placeholder` files belong in Git.
 
@@ -104,4 +113,4 @@ That is safer than trusting web-server rules alone.
 
 ## Revision
 
-Rev 1.2.0 - Join notices and invite-code safety controls.
+Rev 1.2.1 - Server-stored dismissible notices.
