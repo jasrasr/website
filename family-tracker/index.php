@@ -2,8 +2,8 @@
 /**
  * Project: Family GPS Tracker
  * File: index.php
- * Revision: 0.1.0
- * Description: Mobile-first family location sharing UI.
+ * Revision: 0.2.0
+ * Description: Mobile-first family location sharing UI with latest-location and trail-history maps.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-06
@@ -29,7 +29,7 @@ require_once __DIR__ . '/includes/config.php';
         <div>
             <p class="eyebrow">Rev <?= htmlspecialchars(APP_REVISION, ENT_QUOTES, 'UTF-8') ?> • Updated <?= htmlspecialchars(APP_UPDATED, ENT_QUOTES, 'UTF-8') ?></p>
             <h1><?= htmlspecialchars(APP_NAME, ENT_QUOTES, 'UTF-8') ?></h1>
-            <p class="hero-copy">Consent-based family location sharing with PHP, JSON files, browser GPS, and an OpenStreetMap-powered live map.</p>
+            <p class="hero-copy">Consent-based family location sharing with PHP, JSON files, browser GPS, an all-family map, individual member focus, and shared breadcrumb history.</p>
         </div>
     </header>
 
@@ -162,6 +162,35 @@ require_once __DIR__ . '/includes/config.php';
             <div id="map" role="application" aria-label="Family location map"></div>
         </section>
 
+        <section class="card history-card">
+            <div class="section-header map-header">
+                <div>
+                    <p class="eyebrow">Shared history</p>
+                    <h2>History Map</h2>
+                    <p class="muted">Shows breadcrumb trails visible to logged-in members in this family group. Select one member for individual focus.</p>
+                </div>
+                <div class="map-controls">
+                    <button id="historyRefreshBtn" type="button" class="secondary">Refresh History</button>
+                    <button id="historyClearFocusBtn" type="button" class="secondary">Show Everyone</button>
+                    <label>Member
+                        <select id="historyMemberFilter">
+                            <option value="">All members</option>
+                        </select>
+                    </label>
+                    <label>History window
+                        <select id="historyRangeFilter">
+                            <option value="60">Last hour</option>
+                            <option value="240" selected>Last 4 hours</option>
+                            <option value="720">Last 12 hours</option>
+                            <option value="1440">Last 24 hours</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+            <div id="historyMap" role="application" aria-label="Family trail history map"></div>
+            <div id="historyMemberDetail" class="detail-grid history-detail"></div>
+        </section>
+
         <section class="card">
             <h2>Family Members</h2>
             <div id="memberList" class="member-list">No members loaded yet.</div>
@@ -177,5 +206,6 @@ require_once __DIR__ . '/includes/config.php';
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="assets/js/app.js?v=<?= urlencode(APP_REVISION) ?>"></script>
+<script src="assets/js/history.js?v=<?= urlencode(APP_REVISION) ?>"></script>
 </body>
 </html>
