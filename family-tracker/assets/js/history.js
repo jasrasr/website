@@ -19,6 +19,17 @@
     let members = [];
     let trails = [];
 
+    if (!mapEl || !window.L) return;
+
+    Object.assign(mapEl.style, {
+        width: '100%',
+        minHeight: '62vh',
+        borderRadius: '1rem',
+        overflow: 'hidden',
+        background: '#1f2937',
+        border: '1px solid rgba(255,255,255,.12)',
+    });
+
     function status(message) {
         if (statusText) statusText.textContent = message;
     }
@@ -31,17 +42,12 @@
     }
 
     function initMap() {
-        if (map || !window.L || !mapEl) return;
+        if (map) return;
         map = L.map('historyMap').setView([41.4993, -81.6944], 10);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; OpenStreetMap contributors',
         }).addTo(map);
-    }
-
-    function clearLayers() {
-        for (const layer of layers) layer.remove();
-        layers = [];
     }
 
     function esc(value) {
@@ -66,13 +72,34 @@
         if (current && members.some(member => member.id === current)) memberFilter.value = current;
     }
 
+    function visibleMembers() {
+        const selected = memberFilter.value;
+        return selected ? members.filter(member => member.id === selected) : members;
+    }
+
+    function visibleTrails() {
+        const selected = memberFilter.value;
+        return selected ? trails.filter(trail => trail.member && trail.member.id === selected) : trails;
+    }
+
+    function clearLayers() {
+        for (const layer of layers) layer.remove();
+        layers = [];
+    }
+
+    function fit(bounds) {
+        if (!bounds.length) return;
+        if (bounds.length === 1) map.setView(bounds[0], 15);
+        if (bounds.length > 1) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+    }
+
     function renderDetail() {
         const id = memberFilter.value;
         const member = members.find(item => item.id === id);
         const trail = trails.find(item => item.member && item.member.id === id);
         if (!detail) return;
         if (!member) {
-            detail.innerHTML = '<div class="detail-item"><span>View</span><strong>All members</strong></div>';
+            detail.innerHTML = '<p class="muted">Showing all members.</p>';
             return;
         }
         const loc = member.location || null;
@@ -84,17 +111,15 @@
             ['First point', points[0] ? fmt(points[0].serverTime) : 'None in range'],
             ['Last point', points.length ? fmt(points[points.length - 1].serverTime) : 'None in range'],
         ];
-        detail.innerHTML = rows.map(row => `<div class="detail-item"><span>${esc(row[0])}</span><strong>${esc(row[1])}</strong></div>`).join('');
+        detail.innerHTML = rows.map(row => `<p><strong>${esc(row[0])}:</strong> ${esc(row[1])}</p>`).join('');
     }
 
     function render() {
         initMap();
         clearLayers();
-        const selected = memberFilter.value;
         const bounds = [];
 
-        for (const member of members) {
-            if (selected && member.id !== selected) continue;
+        for (const member of visibleMembers()) {
             const loc = member.location;
             if (!loc || typeof loc.latitude !== 'number' || typeof loc.longitude !== 'number') continue;
             const latLng = [loc.latitude, loc.longitude];
@@ -105,21 +130,19 @@
             layers.push(marker);
         }
 
-        for (const trail of trails) {
+        for (const trail of visibleTrails()) {
             const member = trail.member || {};
-            if (selected && member.id !== selected) continue;
             const points = (trail.points || []).filter(point => typeof point.latitude === 'number' && typeof point.longitude === 'number');
             if (points.length < 2) continue;
             const latLngs = points.map(point => [point.latitude, point.longitude]);
             bounds.push(...latLngs);
-            const line = L.polyline(latLngs, { weight: selected ? 6 : 4, opacity: selected ? 0.9 : 0.65 }).addTo(map);
+            const line = L.polyline(latLngs, { weight: memberFilter.value ? 6 : 4, opacity: memberFilter.value ? 0.9 : 0.65 }).addTo(map);
             line.bindPopup(`<strong>${esc(member.displayName || member.username || 'Member')}</strong><br>${points.length} history points`);
             layers.push(line);
         }
 
         renderDetail();
-        if (bounds.length === 1) map.setView(bounds[0], 15);
-        if (bounds.length > 1) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+        fit(bounds);
     }
 
     async function refresh() {
