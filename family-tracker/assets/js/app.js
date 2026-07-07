@@ -1,8 +1,8 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/app.js
- * Revision: 1.3.3
- * Description: Front-end auth, invite-code copy, update notices, server notices, persistent-login GPS updates, mobile-safe map rendering, family refresh, and Leaflet rendering.
+ * Revision: 1.3.4
+ * Description: Front-end auth, invite-code copy, update notices, server notices, persistent-login GPS updates, mobile map fallback, family refresh, and Leaflet desktop rendering.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-06
@@ -21,6 +21,7 @@
         lastSentAt: 0,
         map: null,
         tileLayer: null,
+        mobileMap: false,
         mapResizeObserver: null,
         markers: new Map(),
         circles: new Map(),
@@ -66,7 +67,13 @@
         if (document.getElementById('family-tracker-map-layout-style')) return;
         const style = document.createElement('style');
         style.id = 'family-tracker-map-layout-style';
-        style.textContent = '#map img.leaflet-tile,#map img.leaflet-marker-icon,#map img.leaflet-marker-shadow{max-width:none;max-height:none;}';
+        style.textContent = [
+            '#map img.leaflet-tile,#map img.leaflet-marker-icon,#map img.leaflet-marker-shadow{max-width:none;max-height:none;}',
+            '.mobile-map-iframe{width:100%;height:100%;border:0;display:block;background:#1f2937;}',
+            '.mobile-map-empty{height:100%;display:grid;place-items:center;text-align:center;padding:1rem;color:var(--muted);}',
+            '.member-actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.55rem;}',
+            '.member-actions a{border:1px solid var(--border);border-radius:999px;color:var(--text);padding:.38rem .65rem;text-decoration:none;font-weight:800;font-size:.82rem;background:rgba(255,255,255,.06);}'
+        ].join('\n');
         document.head.appendChild(style);
     }
 
@@ -214,7 +221,12 @@
         return window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
     }
 
+    function useMobileMapFallback() {
+        return isCoarsePointer() || window.innerWidth <= 850;
+    }
+
     function invalidateMapSoon() {
+        if (state.mobileMap) return;
         if (!state.map) return;
         const run = () => {
             if (!state.map) return;
@@ -232,13 +244,18 @@
     }
 
     function initMap() {
-        if (state.map || !window.L) return;
+        if (state.map || state.mobileMap) return;
         const mapEl = $('map');
         if (!mapEl) return;
-        const mobileSafe = isCoarsePointer();
+        if (useMobileMapFallback()) {
+            state.mobileMap = true;
+            renderMobileMap([]);
+            return;
+        }
+        if (!window.L) return;
         state.map = L.map(mapEl, {
             zoomControl: true,
-            dragging: !mobileSafe,
+            dragging: true,
             tap: false,
             scrollWheelZoom: false,
         }).setView([41.4993, -81.6944], 10);
@@ -426,6 +443,15 @@
         }
     }
 
+    function mapLinks(lat, lon, label) {
+        const encodedLabel = encodeURIComponent(label || 'Location');
+        return {
+            apple: `https://maps.apple.com/?ll=${lat},${lon}&q=${encodedLabel}`,
+            google: `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`,
+            osm: `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=16/${lat}/${lon}`,
+        };
+    }
+
     function renderMembers(members) {
         if (!members.length) {
             els.members.textContent = 'No family members found.';
@@ -445,10 +471,22 @@
             if (loc) {
                 const accuracyFeet = metersToFeet(loc.accuracy);
                 meta.textContent = `${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)} • ${formatAge(loc.ageSeconds)} • accuracy ${Number.isFinite(accuracyFeet) ? accuracyFeet.toFixed(0) + ' ft' : 'unknown'}`;
+                const actions = document.createElement('div');
+                actions.className = 'member-actions';
+                const links = mapLinks(loc.latitude, loc.longitude, member.displayName || member.username || 'Location');
+                for (const [label, href] of [['Apple Maps', links.apple], ['Google Maps', links.google], ['OSM', links.osm]]) {
+                    const a = document.createElement('a');
+                    a.href = href;
+                    a.target = '_blank';
+                    a.rel = 'noopener';
+                    a.textContent = label;
+                    actions.appendChild(a);
+                }
+                main.append(name, meta, actions);
             } else {
                 meta.textContent = 'No shared location yet.';
+                main.append(name, meta);
             }
-            main.append(name, meta);
             const badge = document.createElement('span');
             badge.className = 'badge';
             if (!loc) { badge.classList.add('missing'); badge.textContent = 'No location'; }
@@ -469,7 +507,61 @@
         return `<strong>${escapeHtml(member.displayName || 'Unknown')}</strong><br>${formatAge(loc.ageSeconds)}<br>${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}`;
     }
 
+    function validLocations(members) {
+        return members.filter((member) => {
+            const loc = member.location;
+            return loc && typeof loc.latitude === 'number' && typeof loc.longitude === 'number';
+        });
+    }
+
+    function osmEmbedUrl(locations) {
+        const first = locations.find((member) => member.id === state.user?.id) || locations[0];
+        const firstLoc = first.location;
+        let south = firstLoc.latitude - 0.01;
+        let north = firstLoc.latitude + 0.01;
+        let west = firstLoc.longitude - 0.01;
+        let east = firstLoc.longitude + 0.01;
+
+        for (const member of locations) {
+            const loc = member.location;
+            south = Math.min(south, loc.latitude - 0.006);
+            north = Math.max(north, loc.latitude + 0.006);
+            west = Math.min(west, loc.longitude - 0.006);
+            east = Math.max(east, loc.longitude + 0.006);
+        }
+
+        const marker = `${firstLoc.latitude},${firstLoc.longitude}`;
+        const bbox = `${west},${south},${east},${north}`;
+        return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${encodeURIComponent(marker)}`;
+    }
+
+    function renderMobileMap(members) {
+        const mapEl = $('map');
+        if (!mapEl) return;
+        const locations = validLocations(members);
+        mapEl.innerHTML = '';
+        if (!locations.length) {
+            const empty = document.createElement('div');
+            empty.className = 'mobile-map-empty';
+            empty.innerHTML = '<div><strong>No shared locations yet.</strong><br><span>Locations will appear here after a member grants GPS permission.</span></div>';
+            mapEl.appendChild(empty);
+            return;
+        }
+
+        const iframe = document.createElement('iframe');
+        iframe.className = 'mobile-map-iframe';
+        iframe.title = 'Family location map';
+        iframe.loading = 'lazy';
+        iframe.referrerPolicy = 'no-referrer-when-downgrade';
+        iframe.src = osmEmbedUrl(locations);
+        mapEl.appendChild(iframe);
+    }
+
     function renderMap(members) {
+        if (state.mobileMap) {
+            renderMobileMap(members);
+            return;
+        }
         if (!state.map) return;
         invalidateMapSoon();
         const bounds = [];
