@@ -2,7 +2,7 @@
 /**
  * Project: Family GPS Tracker
  * File: api.php
- * Revision: 0.1.0
+ * Revision: 1.0.0
  * Description: JSON API for auth, family membership, invite codes, and location updates.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
