@@ -1,7 +1,7 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/history.js
- * Revision: 0.2.1
+ * Revision: 1.1.0
  * Description: Trail history map view.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
