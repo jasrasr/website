@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: README.md
-Revision: 1.3.1
+Revision: 1.3.2
 Description: Setup, deployment, privacy, and maintenance notes for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,7 @@ Modified: 2026-07-06
 
 # Family GPS Tracker
 
-Current Project Revision: **1.3.1**
+Current Project Revision: **1.3.2**
 
 A small PHP + JSON backend site for consent-based family location sharing. It is designed for shared hosting and mirrors the lightweight pattern from the `gps-eta` project: browser GPS, persistent login cookies, no database, protected JSON storage, mobile-first UI, Leaflet/OpenStreetMap maps, and shared breadcrumb history.
 
@@ -25,9 +25,11 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
 - Update your location when you return to the page after it was hidden.
 - Start a higher-frequency GPS watch with **Start Sharing**.
 - View family members on a live map with a constrained mobile map height.
+- Use delayed and repeated Leaflet map-size refreshes to reduce partial map tiles after reload.
 - Show compact GPS accuracy, speed, heading, and last-update cards.
 - Show server-stored Family Notices when another member joins after your account was created.
 - Let each user dismiss notices once so they do not reappear for that user.
+- Show a dismissible app-updated notice with a changelog link when the app revision changes.
 - Copy a visible generated invite code.
 - Require two confirmations before regenerating an invite code.
 - View shared family trail history on `history.php`.
@@ -84,7 +86,15 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
 
 - The mobile map height is capped so page scrolling is stable.
 - Map dragging is disabled on coarse-pointer/mobile devices to keep the page from getting trapped while scrolling.
+- Map setup is delayed until after the app panel is visible.
+- The map is resized again after browser paint, resize, orientation changes, and family-location rendering.
 - GPS accuracy, speed, heading, and last-update values are shown as compact metric cards.
+
+## App update notice behavior
+
+- When the app revision changes, the browser shows a small app-updated notice near the top of the page.
+- The notice links to `changelog.php`.
+- Dismissal is stored in the local browser for that revision only.
 
 ## Notice behavior
 
@@ -111,6 +121,7 @@ This project starts at **1.0.0**, not 0.x.x.
 - Rev 1.2.1 = server-stored dismissible notices
 - Rev 1.3.0 = long session cookies, persistent login, and automatic logged-in location updates
 - Rev 1.3.1 = mobile map, compact metric, and invite-code explanation fixes
+- Rev 1.3.2 = app-updated notice and map reload rendering fix
 
 ## Live data placeholder rule
 
@@ -141,4 +152,4 @@ That is safer than trusting web-server rules alone.
 
 ## Revision
 
-Rev 1.3.1 - Mobile map, compact metric, and invite-code explanation fixes.
+Rev 1.3.2 - App-updated notice and map reload rendering fix.
