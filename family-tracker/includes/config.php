@@ -24,6 +24,8 @@ const MAX_TRAIL_LOOKBACK_MINUTES = 1440;
 const MAX_FAMILY_NOTICES = 25;
 const AUTO_LOCATION_INTERVAL_SECONDS = 60;
 const SESSION_LIFETIME_SECONDS = 2592000;
+const REMEMBER_COOKIE_NAME = 'family_tracker_remember';
+const REMEMBER_ME_LIFETIME_SECONDS = 7776000;
 const MIN_PASSWORD_LENGTH = 8;
 const SESSION_NAME = 'family_tracker_session';
 
@@ -44,15 +46,4 @@ session_set_cookie_params([
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
-}
-
-if (session_status() === PHP_SESSION_ACTIVE && session_id() !== '') {
-    setcookie(session_name(), session_id(), [
-        'expires' => time() + SESSION_LIFETIME_SECONDS,
-        'path' => '/',
-        'domain' => '',
-        'secure' => $isHttps,
-        'httponly' => true,
-        'samesite' => 'Lax',
-    ]);
 }
