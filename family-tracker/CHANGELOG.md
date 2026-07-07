@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.2.1
+Revision: 1.3.0
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,16 @@ Modified: 2026-07-06
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.2.1**
+Current Project Revision: **1.3.0**
+
+## Rev 1.3.0 - 2026-07-06
+
+- Added 30-day rolling session cookies for persistent login.
+- Added automatic location update immediately after login or session restore.
+- Added recurring automatic location updates about every 60 seconds while logged in and the page is open.
+- Added a visibility-change refresh so location updates when the user returns to the page.
+- Updated UI text to clarify automatic logged-in updates and the higher-frequency Start Sharing GPS watch.
+- No new live-data folder was added.
 
 ## Rev 1.2.1 - 2026-07-06
 
