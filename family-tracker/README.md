@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: README.md
-Revision: 1.2.1
+Revision: 1.3.0
 Description: Setup, deployment, privacy, and maintenance notes for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,7 @@ Modified: 2026-07-06
 
 # Family GPS Tracker
 
-Current Project Revision: **1.2.1**
+Current Project Revision: **1.3.0**
 
 A small PHP + JSON backend site for consent-based family location sharing. It is designed for shared hosting and mirrors the lightweight pattern from the `gps-eta` project: browser GPS, no database, protected JSON storage, mobile-first UI, Leaflet/OpenStreetMap maps, and shared breadcrumb history.
 
@@ -19,6 +19,8 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
 - Create a family group with one owner account.
 - Join an existing family group with an invite code.
 - Login/logout with PHP sessions.
+- Uses 30-day long session cookies.
+- Supports optional persistent login with Remember Me for this device.
 - Share your current browser GPS location with your family group.
 - View family members on a live map.
 - Show server-stored Family Notices when another member joins after your account was created.
@@ -35,7 +37,7 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
 ## Requirements
 
 - PHP 8.0 or newer recommended.
-- HTTPS is required by modern browsers for precise browser geolocation.
+- HTTPS is required by modern browsers for precise browser geolocation and secure cookies.
 - Apache-compatible hosting if you want the included `.htaccess` protection to work.
 - A browser that supports `navigator.geolocation`.
 
@@ -51,6 +53,7 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
    - `data/locations/`
    - `data/trails/`
    - `data/notices/`
+   - `data/persistent_logins/`
    - `data/locks/`
    - `data/audit/`
 
@@ -61,6 +64,14 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
 5. Copy the one-time invite code shown after setup, or use **Regenerate Invite Code** later.
 
 6. Have each family member join with the invite code on their own device.
+
+## Login behavior
+
+- PHP session cookies now last 30 days.
+- The Remember Me checkbox creates a separate persistent login for that browser/device.
+- Persistent login records are stored under `data/persistent_logins/` as hashed records.
+- The persistent login cookie is HTTP-only, same-site Lax, and secure when the site is served over HTTPS.
+- Logout revokes the current persistent login for that device.
 
 ## Notice behavior
 
@@ -84,6 +95,7 @@ This project starts at **1.0.0**, not 0.x.x.
 - Rev 1.1.1 = header, placeholder, and revision-numbering audit
 - Rev 1.2.0 = join notices and invite-code safety controls
 - Rev 1.2.1 = server-stored dismissible notices
+- Rev 1.3.0 = long session cookies and persistent login
 
 ## Live data placeholder rule
 
@@ -96,6 +108,7 @@ Current live-data folders with placeholders:
 - `data/locations/.placeholder`
 - `data/trails/.placeholder`
 - `data/notices/.placeholder`
+- `data/persistent_logins/.placeholder`
 - `data/locks/.placeholder`
 - `data/audit/.placeholder`
 
@@ -113,4 +126,4 @@ That is safer than trusting web-server rules alone.
 
 ## Revision
 
-Rev 1.2.1 - Server-stored dismissible notices.
+Rev 1.3.0 - Long session cookies and persistent login.
