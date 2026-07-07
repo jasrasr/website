@@ -2,7 +2,7 @@
 /**
  * Project: Family GPS Tracker
  * File: index.php
- * Revision: 1.3.0
+ * Revision: 1.3.1
  * Description: Mobile-first family location sharing UI.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
@@ -126,7 +126,7 @@ require_once __DIR__ . '/includes/config.php';
                 <button id="copyInviteBtn" type="button" class="secondary">Copy Code</button>
                 <button id="regenerateInviteBtn" type="button">Regenerate Invite Code</button>
             </div>
-            <p class="muted">Copy only works while the full generated code is visible. After a page refresh, only the last four characters are shown.</p>
+            <p class="muted">For security, the app stores the invite code as a hash plus the last four characters only. The full code can be copied only right after creation or regeneration.</p>
         </section>
 
         <section id="familyNoticeCard" class="card hidden">
@@ -175,7 +175,7 @@ require_once __DIR__ . '/includes/config.php';
             <div class="section-header">
                 <div>
                     <h2>Family Map</h2>
-                    <p class="muted">Stale locations are still shown, but marked in the member list.</p>
+                    <p class="muted">Stale locations are still shown, but marked in the member list. On phones, the map height is limited so page scrolling stays usable.</p>
                 </div>
             </div>
             <div id="map" role="application" aria-label="Family location map"></div>
