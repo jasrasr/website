@@ -14,12 +14,13 @@ Current Project Revision: **1.3.0**
 
 ## Rev 1.3.0 - 2026-07-06
 
-- Added 30-day rolling session cookies for persistent login.
-- Added automatic location update immediately after login or session restore.
-- Added recurring automatic location updates about every 60 seconds while logged in and the page is open.
-- Added a visibility-change refresh so location updates when the user returns to the page.
-- Updated UI text to clarify automatic logged-in updates and the higher-frequency Start Sharing GPS watch.
-- No new live-data folder was added.
+- Added 30-day long session cookies.
+- Added optional persistent login with a Remember Me checkbox on login, create-family, and join-family forms.
+- Added hashed persistent-login records in `data/persistent_logins/`.
+- Added `data/persistent_logins/.placeholder` for the new live-data folder.
+- Logout now revokes the current persistent login for that device.
+- Kept automatic location update immediately after login or session restore.
+- Kept recurring automatic location updates about every 60 seconds while logged in and the page is open.
 
 ## Rev 1.2.1 - 2026-07-06
 
