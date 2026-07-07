@@ -2,7 +2,7 @@
 /**
  * Project: Family GPS Tracker
  * File: index.php
- * Revision: 1.2.0
+ * Revision: 1.3.0
  * Description: Mobile-first family location sharing UI.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
@@ -50,6 +50,10 @@ require_once __DIR__ . '/includes/config.php';
             <label>Password
                 <input name="password" type="password" autocomplete="current-password" required>
             </label>
+            <label class="check-row">
+                <input name="rememberMe" type="checkbox" checked>
+                <span>Keep me signed in on this device.</span>
+            </label>
             <button type="submit">Login</button>
         </form>
 
@@ -71,6 +75,10 @@ require_once __DIR__ . '/includes/config.php';
                 <input name="consentAccepted" type="checkbox" required>
                 <span>I understand this app only tracks users who create/login to their own account and grant GPS permission.</span>
             </label>
+            <label class="check-row">
+                <input name="rememberMe" type="checkbox" checked>
+                <span>Keep me signed in on this device.</span>
+            </label>
             <button type="submit">Create Tracker</button>
         </form>
 
@@ -91,6 +99,10 @@ require_once __DIR__ . '/includes/config.php';
             <label class="check-row">
                 <input name="consentAccepted" type="checkbox" required>
                 <span>I consent to sharing my location with this family group while sharing is active.</span>
+            </label>
+            <label class="check-row">
+                <input name="rememberMe" type="checkbox" checked>
+                <span>Keep me signed in on this device.</span>
             </label>
             <button type="submit">Join Tracker</button>
         </form>
