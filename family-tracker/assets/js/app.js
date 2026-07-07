@@ -1,8 +1,8 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/app.js
- * Revision: 1.0.0
- * Description: Front-end auth, geolocation sharing, family refresh, and Leaflet rendering.
+ * Revision: 1.2.0
+ * Description: Front-end auth, invite-code copy, join notices, geolocation sharing, family refresh, and Leaflet rendering.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-06
@@ -20,6 +20,7 @@
         markers: new Map(),
         circles: new Map(),
         refreshTimer: null,
+        notices: [],
     };
 
     const $ = (id) => document.getElementById(id);
@@ -34,7 +35,10 @@
         family: $('familyTitle'),
         invite: $('inviteCard'),
         inviteCode: $('inviteCodeDisplay'),
+        copyInvite: $('copyInviteBtn'),
         regenerateInvite: $('regenerateInviteBtn'),
+        noticeCard: $('familyNoticeCard'),
+        notices: $('familyNoticeList'),
         logout: $('logoutBtn'),
         start: $('startSharingBtn'),
         stop: $('stopSharingBtn'),
@@ -71,17 +75,12 @@
     }
 
     async function api(action, payload = null) {
-        const options = {
-            method: payload ? 'POST' : 'GET',
-            headers: {},
-            credentials: 'same-origin',
-        };
+        const options = { method: payload ? 'POST' : 'GET', headers: {}, credentials: 'same-origin' };
         if (payload) {
             options.headers['Content-Type'] = 'application/json';
             options.body = JSON.stringify(payload);
         }
         if (state.csrfToken) options.headers['X-CSRF-Token'] = state.csrfToken;
-
         const response = await fetch(`api.php?action=${encodeURIComponent(action)}`, options);
         const data = await response.json().catch(() => ({ ok: false, error: 'Invalid API response.' }));
         if (!response.ok || !data.ok) throw new Error(data.error || `API request failed: ${response.status}`);
@@ -105,9 +104,7 @@
 
         if (state.user.role === 'owner') {
             els.invite.classList.remove('hidden');
-            els.inviteCode.textContent = state.family?.inviteCodeLast4
-                ? `Last code ended in ${state.family.inviteCodeLast4}`
-                : 'No invite metadata yet';
+            els.inviteCode.textContent = state.family?.inviteCodeLast4 ? `Last code ended in ${state.family.inviteCodeLast4}` : 'No invite metadata yet';
         } else {
             els.invite.classList.add('hidden');
         }
@@ -120,21 +117,13 @@
     }
 
     async function loadMe() {
-        try {
-            applySession(await api('me'));
-        } catch (error) {
-            setStatus(error.message);
-            showAuth();
-        }
+        try { applySession(await api('me')); } catch (error) { setStatus(error.message); showAuth(); }
     }
 
     function initMap() {
         if (state.map || !window.L) return;
         state.map = L.map('map', { zoomControl: true }).setView([41.4993, -81.6944], 10);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap contributors',
-        }).addTo(state.map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(state.map);
         setTimeout(() => state.map.invalidateSize(), 150);
     }
 
@@ -146,13 +135,8 @@
         return `${Math.round(minutes / 60)}h ago`;
     }
 
-    function metersToFeet(value) {
-        return value === null || value === undefined ? null : value * 3.28084;
-    }
-
-    function mpsToMph(value) {
-        return value === null || value === undefined ? null : value * 2.23694;
-    }
+    function metersToFeet(value) { return value === null || value === undefined ? null : value * 3.28084; }
+    function mpsToMph(value) { return value === null || value === undefined ? null : value * 2.23694; }
 
     function updateMetrics(coords) {
         const accuracyFeet = metersToFeet(coords.accuracy);
@@ -217,11 +201,68 @@
         );
     }
 
+    function familyMemberKey() {
+        return state.family?.id ? `family-tracker-members-${state.family.id}` : '';
+    }
+
+    function addNotice(message) {
+        state.notices.unshift({ message, time: new Date() });
+        state.notices = state.notices.slice(0, 10);
+        renderNotices();
+    }
+
+    function renderNotices() {
+        if (!els.noticeCard || !els.notices) return;
+        if (!state.notices.length) {
+            els.noticeCard.classList.add('hidden');
+            return;
+        }
+        els.noticeCard.classList.remove('hidden');
+        els.notices.innerHTML = '';
+        for (const notice of state.notices) {
+            const card = document.createElement('article');
+            card.className = 'member-card';
+            const main = document.createElement('div');
+            const name = document.createElement('div');
+            name.className = 'member-name';
+            name.textContent = notice.message;
+            const meta = document.createElement('div');
+            meta.className = 'member-meta';
+            meta.textContent = notice.time.toLocaleString();
+            main.append(name, meta);
+            const badge = document.createElement('span');
+            badge.className = 'badge';
+            badge.textContent = 'New';
+            card.append(main, badge);
+            els.notices.append(card);
+        }
+    }
+
+    function detectNewFamilyMembers(members) {
+        const key = familyMemberKey();
+        if (!key || !Array.isArray(members)) return;
+        const currentIds = members.map(member => member.id).filter(Boolean);
+        const raw = window.localStorage.getItem(key);
+        if (!raw) {
+            window.localStorage.setItem(key, JSON.stringify(currentIds));
+            return;
+        }
+        let previousIds = [];
+        try { previousIds = JSON.parse(raw); } catch { previousIds = []; }
+        const previous = new Set(Array.isArray(previousIds) ? previousIds : []);
+        for (const member of members) {
+            if (!member.id || previous.has(member.id) || member.id === state.user?.id) continue;
+            addNotice(`${member.displayName || member.username || 'A family member'} joined the family tracker.`);
+        }
+        window.localStorage.setItem(key, JSON.stringify(currentIds));
+    }
+
     async function refreshFamilyLocations() {
         if (!state.user) return;
         try {
             const data = await api('family_locations');
             const members = data.members || [];
+            detectNewFamilyMembers(members);
             renderMembers(members);
             renderMap(members);
         } catch (error) {
@@ -254,24 +295,16 @@
             main.append(name, meta);
             const badge = document.createElement('span');
             badge.className = 'badge';
-            if (!loc) {
-                badge.classList.add('missing');
-                badge.textContent = 'No location';
-            } else if (loc.isStale) {
-                badge.classList.add('stale');
-                badge.textContent = 'Stale';
-            } else {
-                badge.textContent = 'Live-ish';
-            }
+            if (!loc) { badge.classList.add('missing'); badge.textContent = 'No location'; }
+            else if (loc.isStale) { badge.classList.add('stale'); badge.textContent = 'Stale'; }
+            else { badge.textContent = 'Live-ish'; }
             card.append(main, badge);
             els.members.append(card);
         }
     }
 
     function escapeHtml(value) {
-        return String(value).replace(/[&<>'"]/g, (char) => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;',
-        }[char]));
+        return String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
     }
 
     function markerLabel(member) {
@@ -292,12 +325,8 @@
             activeIds.add(id);
             bounds.push(latLng);
             let marker = state.markers.get(id);
-            if (!marker) {
-                marker = L.marker(latLng).addTo(state.map);
-                state.markers.set(id, marker);
-            } else {
-                marker.setLatLng(latLng);
-            }
+            if (!marker) { marker = L.marker(latLng).addTo(state.map); state.markers.set(id, marker); }
+            else { marker.setLatLng(latLng); }
             marker.bindPopup(markerLabel(member));
             let circle = state.circles.get(id);
             if (!circle && Number.isFinite(loc.accuracy)) {
@@ -309,16 +338,10 @@
             }
         }
         for (const [id, marker] of state.markers.entries()) {
-            if (!activeIds.has(id)) {
-                marker.remove();
-                state.markers.delete(id);
-            }
+            if (!activeIds.has(id)) { marker.remove(); state.markers.delete(id); }
         }
         for (const [id, circle] of state.circles.entries()) {
-            if (!activeIds.has(id)) {
-                circle.remove();
-                state.circles.delete(id);
-            }
+            if (!activeIds.has(id)) { circle.remove(); state.circles.delete(id); }
         }
         if (bounds.length === 1) state.map.setView(bounds[0], 15);
         if (bounds.length > 1) state.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
@@ -326,6 +349,35 @@
 
     function startFamilyRefresh() {
         if (!state.refreshTimer) state.refreshTimer = window.setInterval(refreshFamilyLocations, 15000);
+    }
+
+    function currentInviteCode() {
+        const text = els.inviteCode?.textContent || '';
+        const match = text.match(/[A-Z0-9]{5}-[A-Z0-9]{5}/);
+        return match ? match[0] : '';
+    }
+
+    async function copyInviteCode() {
+        const code = currentInviteCode();
+        if (!code) return setStatus('Full invite code is not visible. Regenerate a code first, then copy it.');
+        try {
+            await navigator.clipboard.writeText(code);
+            setStatus(`Copied invite code: ${code}`);
+        } catch {
+            setStatus(`Copy failed. Manually copy this invite code: ${code}`);
+        }
+    }
+
+    async function regenerateInviteCode() {
+        if (!window.confirm('Warning: regenerating the invite code invalidates the current invite code. Continue?')) return;
+        if (!window.confirm('Second warning: anyone with the old code will no longer be able to join. Generate a new code anyway?')) return;
+        try {
+            const data = await api('regenerate_invite', {});
+            els.inviteCode.textContent = data.inviteCode;
+            setStatus(`New invite code generated: ${data.inviteCode}`);
+        } catch (error) {
+            setStatus(error.message);
+        }
     }
 
     function wireForms() {
@@ -354,6 +406,8 @@
                 await api('logout', {});
                 state.user = null;
                 state.family = null;
+                state.notices = [];
+                renderNotices();
                 setStatus('Logged out.');
                 showAuth();
             } catch (error) { setStatus(error.message); }
@@ -362,17 +416,12 @@
         els.stop.addEventListener('click', stopSharing);
         els.updateOnce.addEventListener('click', updateOnce);
         els.refresh.addEventListener('click', refreshFamilyLocations);
+        els.copyInvite?.addEventListener('click', copyInviteCode);
         els.deleteLocation.addEventListener('click', async () => {
             if (!window.confirm('Delete your stored location and breadcrumb trail? This does not delete your account.')) return;
             try { await api('delete_my_location', {}); setStatus('Your stored location was deleted.'); await refreshFamilyLocations(); } catch (error) { setStatus(error.message); }
         });
-        els.regenerateInvite.addEventListener('click', async () => {
-            try {
-                const data = await api('regenerate_invite', {});
-                els.inviteCode.textContent = data.inviteCode;
-                setStatus(`New invite code generated: ${data.inviteCode}`);
-            } catch (error) { setStatus(error.message); }
-        });
+        els.regenerateInvite.addEventListener('click', regenerateInviteCode);
     }
 
     wireForms();
