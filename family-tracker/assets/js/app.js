@@ -1,8 +1,8 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/app.js
- * Revision: 1.2.0
- * Description: Front-end auth, invite-code copy, join notices, geolocation sharing, family refresh, and Leaflet rendering.
+ * Revision: 1.2.1
+ * Description: Front-end auth, invite-code copy, server notices, geolocation sharing, family refresh, and Leaflet rendering.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-06
@@ -85,6 +85,19 @@
         const data = await response.json().catch(() => ({ ok: false, error: 'Invalid API response.' }));
         if (!response.ok || !data.ok) throw new Error(data.error || `API request failed: ${response.status}`);
         if (data.csrfToken) state.csrfToken = data.csrfToken;
+        return data;
+    }
+
+    async function noticeApi(payload = null) {
+        const options = { method: payload ? 'POST' : 'GET', headers: {}, credentials: 'same-origin' };
+        if (payload) {
+            options.headers['Content-Type'] = 'application/json';
+            options.headers['X-CSRF-Token'] = state.csrfToken;
+            options.body = JSON.stringify(payload);
+        }
+        const response = await fetch('notices.php', options);
+        const data = await response.json().catch(() => ({ ok: false, error: 'Invalid notice response.' }));
+        if (!response.ok || !data.ok) throw new Error(data.error || `Notice request failed: ${response.status}`);
         return data;
     }
 
@@ -201,20 +214,22 @@
         );
     }
 
-    function familyMemberKey() {
-        return state.family?.id ? `family-tracker-members-${state.family.id}` : '';
-    }
-
-    function addNotice(message) {
-        state.notices.unshift({ message, time: new Date() });
-        state.notices = state.notices.slice(0, 10);
-        renderNotices();
+    async function refreshFamilyNotices() {
+        if (!state.user) return;
+        try {
+            const data = await noticeApi();
+            state.notices = data.notices || [];
+            renderNotices();
+        } catch (error) {
+            setStatus(error.message);
+        }
     }
 
     function renderNotices() {
         if (!els.noticeCard || !els.notices) return;
         if (!state.notices.length) {
             els.noticeCard.classList.add('hidden');
+            els.notices.textContent = 'No new notices.';
             return;
         }
         els.noticeCard.classList.remove('hidden');
@@ -225,36 +240,30 @@
             const main = document.createElement('div');
             const name = document.createElement('div');
             name.className = 'member-name';
-            name.textContent = notice.message;
+            name.textContent = notice.message || 'Family notice';
             const meta = document.createElement('div');
             meta.className = 'member-meta';
-            meta.textContent = notice.time.toLocaleString();
+            meta.textContent = notice.createdAt ? new Date(notice.createdAt).toLocaleString() : 'New notice';
             main.append(name, meta);
-            const badge = document.createElement('span');
-            badge.className = 'badge';
-            badge.textContent = 'New';
-            card.append(main, badge);
+            const dismiss = document.createElement('button');
+            dismiss.type = 'button';
+            dismiss.className = 'secondary';
+            dismiss.textContent = 'Dismiss';
+            dismiss.addEventListener('click', () => dismissNotice(notice.id));
+            card.append(main, dismiss);
             els.notices.append(card);
         }
     }
 
-    function detectNewFamilyMembers(members) {
-        const key = familyMemberKey();
-        if (!key || !Array.isArray(members)) return;
-        const currentIds = members.map(member => member.id).filter(Boolean);
-        const raw = window.localStorage.getItem(key);
-        if (!raw) {
-            window.localStorage.setItem(key, JSON.stringify(currentIds));
-            return;
+    async function dismissNotice(noticeId) {
+        try {
+            await noticeApi({ noticeId });
+            state.notices = state.notices.filter((notice) => notice.id !== noticeId);
+            renderNotices();
+            setStatus('Notice dismissed.');
+        } catch (error) {
+            setStatus(error.message);
         }
-        let previousIds = [];
-        try { previousIds = JSON.parse(raw); } catch { previousIds = []; }
-        const previous = new Set(Array.isArray(previousIds) ? previousIds : []);
-        for (const member of members) {
-            if (!member.id || previous.has(member.id) || member.id === state.user?.id) continue;
-            addNotice(`${member.displayName || member.username || 'A family member'} joined the family tracker.`);
-        }
-        window.localStorage.setItem(key, JSON.stringify(currentIds));
     }
 
     async function refreshFamilyLocations() {
@@ -262,9 +271,9 @@
         try {
             const data = await api('family_locations');
             const members = data.members || [];
-            detectNewFamilyMembers(members);
             renderMembers(members);
             renderMap(members);
+            await refreshFamilyNotices();
         } catch (error) {
             setStatus(error.message);
         }
