@@ -2,8 +2,8 @@
 /**
  * Project: Family GPS Tracker
  * File: api.php
- * Revision: 1.0.0
- * Description: JSON API for auth, family membership, invite codes, and location updates.
+ * Revision: 1.3.0
+ * Description: JSON API for auth, persistent sessions, family membership, invite codes, and location updates.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-06
@@ -38,6 +38,8 @@ try {
 
         case 'logout':
             require_csrf();
+            clear_persistent_session_cookie();
+            $_SESSION = [];
             session_destroy();
             ok(['message' => 'Logged out.']);
             break;
@@ -67,6 +69,23 @@ try {
 } catch (Throwable $ex) {
     error_log('Family Tracker API error: ' . $ex->getMessage());
     fail('Server error. Check PHP error logs.', 500);
+}
+
+function clear_persistent_session_cookie(): void
+{
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
+    if (session_status() === PHP_SESSION_ACTIVE && session_id() !== '') {
+        setcookie(session_name(), '', [
+            'expires' => time() - 3600,
+            'path' => '/',
+            'domain' => '',
+            'secure' => $isHttps,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    }
 }
 
 function handle_register_family(array $input): void
