@@ -3,7 +3,7 @@
  * Project: Family GPS Tracker
  * File: api.php
  * Revision: 1.3.0
- * Description: JSON API for auth, persistent sessions, family membership, invite codes, and location updates.
+ * Description: JSON API for auth, persistent login, family membership, invite codes, and location updates.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-06
@@ -38,9 +38,7 @@ try {
 
         case 'logout':
             require_csrf();
-            clear_persistent_session_cookie();
-            $_SESSION = [];
-            session_destroy();
+            logout_current_session();
             ok(['message' => 'Logged out.']);
             break;
 
@@ -71,23 +69,6 @@ try {
     fail('Server error. Check PHP error logs.', 500);
 }
 
-function clear_persistent_session_cookie(): void
-{
-    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-        || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
-
-    if (session_status() === PHP_SESSION_ACTIVE && session_id() !== '') {
-        setcookie(session_name(), '', [
-            'expires' => time() - 3600,
-            'path' => '/',
-            'domain' => '',
-            'secure' => $isHttps,
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ]);
-    }
-}
-
 function handle_register_family(array $input): void
 {
     $displayName = str_field($input, 'displayName', 80);
@@ -95,6 +76,7 @@ function handle_register_family(array $input): void
     $password = (string)($input['password'] ?? '');
     $familyName = str_field($input, 'familyName', 80);
     $consent = bool_field($input, 'consentAccepted');
+    $rememberMe = bool_field($input, 'rememberMe');
 
     if ($displayName === '' || $familyName === '') {
         fail('Display name and family name are required.', 400);
@@ -154,8 +136,7 @@ function handle_register_family(array $input): void
     });
 
     [$user, $family, $inviteCode] = $result;
-    $_SESSION['user_id'] = $user['id'];
-    ensure_csrf_token();
+    start_authenticated_session($user, $rememberMe);
 
     ok(build_me_payload($user) + [
         'oneTimeInviteCode' => $inviteCode,
@@ -170,6 +151,7 @@ function handle_join_family(array $input): void
     $password = (string)($input['password'] ?? '');
     $inviteCode = str_field($input, 'inviteCode', 40);
     $consent = bool_field($input, 'consentAccepted');
+    $rememberMe = bool_field($input, 'rememberMe');
 
     if ($displayName === '') {
         fail('Display name is required.', 400);
@@ -217,8 +199,7 @@ function handle_join_family(array $input): void
     });
 
     [$user] = $result;
-    $_SESSION['user_id'] = $user['id'];
-    ensure_csrf_token();
+    start_authenticated_session($user, $rememberMe);
     ok(build_me_payload($user) + ['message' => 'Joined family tracker.']);
 }
 
@@ -226,6 +207,7 @@ function handle_login(array $input): void
 {
     $username = normalize_username(str_field($input, 'username', 120));
     $password = (string)($input['password'] ?? '');
+    $rememberMe = bool_field($input, 'rememberMe');
 
     $index = read_json_file(username_index_path(), ['usernames' => []]);
     $userId = $index['usernames'][$username] ?? '';
@@ -240,10 +222,9 @@ function handle_login(array $input): void
 
     $user['lastLoginAt'] = now_iso();
     write_user($user);
-    $_SESSION['user_id'] = $user['id'];
-    ensure_csrf_token();
+    start_authenticated_session($user, $rememberMe);
 
-    audit_event('login', ['userId' => $user['id']]);
+    audit_event('login', ['userId' => $user['id'], 'rememberMe' => $rememberMe]);
     ok(build_me_payload($user) + ['message' => 'Logged in.']);
 }
 
