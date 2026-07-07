@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.3.2
+Revision: 1.3.3
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,15 @@ Modified: 2026-07-06
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.3.2**
+Current Project Revision: **1.3.3**
+
+## Rev 1.3.3 - 2026-07-06
+
+- Added a runtime Leaflet image layout fix for mobile browsers where map tiles render at the wrong size after reload.
+- Forced map tile and marker images to ignore inherited responsive image constraints.
+- Disabled retina tile mode to keep OpenStreetMap tile sizing predictable on iPhone reloads.
+- Added longer delayed map refresh passes after paint to catch late mobile layout changes.
+- Added `assets/js/map-layout.js` as a supplemental map layout helper.
 
 ## Rev 1.3.2 - 2026-07-06
 
