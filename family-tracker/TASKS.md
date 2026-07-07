@@ -17,7 +17,7 @@ Modified: 2026-07-06
 - [x] Rev 1.1.1 - Header audit, changelog project revision, live-data placeholder documentation, and 1.x revision-numbering correction.
 - [x] Rev 1.2.0 - Family join notices, invite-code copy button, and two-step regenerate warning.
 - [x] Rev 1.2.1 - Server-stored family notices with per-user dismissal.
-- [x] Rev 1.3.0 - Persistent session cookies and automatic logged-in location updates.
+- [x] Rev 1.3.0 - Long session cookies, optional persistent login, and automatic logged-in location updates.
 
 ## Live data folder rule
 
@@ -26,12 +26,13 @@ Modified: 2026-07-06
 - [x] `data/locations/.placeholder` exists for latest-location JSON.
 - [x] `data/trails/.placeholder` exists for breadcrumb trail JSON.
 - [x] `data/notices/.placeholder` exists for server-stored notice dismissals.
+- [x] `data/persistent_logins/.placeholder` exists for persistent login records.
 - [x] `data/locks/.placeholder` exists for lock files.
 - [x] `data/audit/.placeholder` exists for audit logs.
-- [x] Rev 1.3.0 added no new live-data folder.
 
 ## Next practical improvements
 
+- Add per-device persistent login management so users can revoke other saved devices.
 - Add per-member display colors.
 - Add member nickname editing.
 - Add stale/offline notification badges.
