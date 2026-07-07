@@ -2,7 +2,7 @@
 /**
  * Project: Family GPS Tracker
  * File: trails.php
- * Revision: 0.2.0
+ * Revision: 0.2.1
  * Description: Shared family trail-history endpoint.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
