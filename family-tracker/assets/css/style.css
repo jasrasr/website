@@ -2,7 +2,7 @@
  * Project: Family GPS Tracker
  * File: assets/css/style.css
  * Revision: 1.3.1
- * Description: Mobile-first dark UI styling with constrained mobile map layout.
+ * Description: Mobile-first dark UI styling with constrained mobile map layout and compact metrics.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-06
@@ -90,7 +90,7 @@ code {
 }
 .card h2 { margin: 0 0 0.75rem; }
 .hidden { display: none !important; }
-.grid, .dashboard-grid { display: grid; gap: 1rem; }
+.grid, .dashboard-grid { display: grid; gap: 0.6rem; }
 .auth-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
 .form-card { display: grid; gap: 0.85rem; }
 .check-row { grid-template-columns: auto 1fr; align-items: start; }
@@ -99,10 +99,22 @@ code {
 .account-card, .section-header, .invite-row, .button-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
 .controls-card .button-row { justify-content: flex-start; margin-top: 0.8rem; }
 .danger-zone { border-top: 1px dashed rgba(251, 113, 133, 0.35); padding-top: 0.85rem; }
-.dashboard-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 1rem 0; }
-.metric-card { background: var(--panel); border: 1px solid var(--border); border-radius: 1.2rem; padding: 1rem; min-height: 8.5rem; display: grid; align-content: center; gap: 0.25rem; }
+.dashboard-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0.6rem 0 1rem; }
+.metric-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 0.65rem 0.75rem;
+    min-height: 4.25rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
 .metric-label, .metric-unit, .muted { color: var(--muted); }
-.metric-card strong { font-size: clamp(1.55rem, 5vw, 2.5rem); line-height: 1; }
+.metric-label { width: 100%; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.03em; text-transform: uppercase; }
+.metric-card strong { font-size: clamp(1.25rem, 4vw, 1.8rem); line-height: 1; }
+.metric-unit { font-size: 0.82rem; }
 .map-card { overflow: hidden; }
 #map, #historyMap {
     width: 100%;
@@ -129,7 +141,8 @@ code {
 .warning-card { border-color: rgba(250, 204, 21, 0.35); }
 .danger { border-color: rgba(251, 113, 133, 0.45); color: #fecdd3; }
 @media (max-width: 850px) {
-    .auth-grid, .dashboard-grid, .detail-grid { grid-template-columns: 1fr; }
+    .auth-grid, .detail-grid { grid-template-columns: 1fr; }
+    .dashboard-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .hero { padding-top: 1rem; }
     .account-card, .section-header, .invite-row, .button-row { align-items: stretch; flex-direction: column; }
     .invite-row code { width: 100%; text-align: center; overflow-wrap: anywhere; }
