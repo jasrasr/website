@@ -2,7 +2,7 @@
 /**
  * Project: Family GPS Tracker
  * File: index.php
- * Revision: 0.1.0
+ * Revision: 1.0.0
  * Description: Mobile-first family location sharing UI.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
