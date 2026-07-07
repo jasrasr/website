@@ -1,3 +1,11 @@
+# Project: Family GPS Tracker
+# File: includes/.htaccess
+# Revision: 0.2.1
+# Description: Blocks direct web access to server-side include files.
+# Author: Jason Lamb / ChatGPT scaffold
+# Created: 2026-07-06
+# Modified: 2026-07-06
+
 Require all denied
 Deny from all
 Options -Indexes

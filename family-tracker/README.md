@@ -1,6 +1,18 @@
+<!--
+Project: Family GPS Tracker
+File: README.md
+Revision: 0.2.1
+Description: Setup, deployment, privacy, and maintenance notes for the PHP/JSON family tracker.
+Author: Jason Lamb / ChatGPT scaffold
+Created: 2026-07-06
+Modified: 2026-07-06
+-->
+
 # Family GPS Tracker
 
-A small PHP + JSON backend site for consent-based family location sharing. It is intentionally designed for shared hosting and mirrors the lightweight pattern from the `gps-eta` project: browser GPS, no database, protected JSON storage, mobile-first UI, and Leaflet/OpenStreetMap maps.
+Current Project Revision: **0.2.1**
+
+A small PHP + JSON backend site for consent-based family location sharing. It is intentionally designed for shared hosting and mirrors the lightweight pattern from the `gps-eta` project: browser GPS, no database, protected JSON storage, mobile-first UI, Leaflet/OpenStreetMap maps, and shared breadcrumb history.
 
 ## What it does
 
@@ -9,6 +21,8 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
 - Login/logout with PHP sessions.
 - Share your current browser GPS location with your family group.
 - View family members on a live map.
+- View shared family trail history on `history.php`.
+- Filter trail history by all members or a single member.
 - Store latest location in JSON.
 - Store a short per-user breadcrumb trail in JSON.
 - Delete your own stored location and trail.
@@ -51,6 +65,21 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
 
 6. Have each family member join with the invite code on their own device.
 
+## Live data placeholder rule
+
+Runtime JSON data is intentionally stored under `data/`. Any folder that receives live app data must have a `.placeholder` file committed to Git so the folder exists after deployment.
+
+Current live-data folders with placeholders:
+
+- `data/users/.placeholder`
+- `data/families/.placeholder`
+- `data/locations/.placeholder`
+- `data/trails/.placeholder`
+- `data/locks/.placeholder`
+- `data/audit/.placeholder`
+
+Do not commit runtime JSON files from these folders. Only the `.placeholder` files belong in Git.
+
 ## Stronger production setup
 
 The included `data/.htaccess` blocks direct web access to JSON files on Apache. Better still, move `data/` outside `public_html` and update `includes/config.php`:
@@ -70,15 +99,20 @@ This app stores location only after a logged-in user explicitly taps **Start Sha
 ```text
 family-tracker/
 ├── index.php
+├── history.php
 ├── api.php
+├── trails.php
 ├── CHANGELOG.md
 ├── README.md
 ├── TASKS.md
 ├── .htaccess
 ├── assets/
 │   ├── css/style.css
-│   └── js/app.js
+│   └── js/
+│       ├── app.js
+│       └── history.js
 ├── includes/
+│   ├── .htaccess
 │   ├── config.php
 │   ├── json-store.php
 │   └── security.php
@@ -94,4 +128,4 @@ family-tracker/
 
 ## Revision
 
-Rev 0.1.0 - Initial scaffold.
+Rev 0.2.1 - Header and placeholder audit.

@@ -1,4 +1,29 @@
+<!--
+Project: Family GPS Tracker
+File: TASKS.md
+Revision: 0.2.1
+Description: Restart-friendly task list and maintenance backlog for the PHP/JSON family tracker.
+Author: Jason Lamb / ChatGPT scaffold
+Created: 2026-07-06
+Modified: 2026-07-06
+-->
+
 # Family GPS Tracker Task List
+
+## Completed
+
+- [x] Rev 0.1.0 - Initial PHP + JSON family tracker scaffold.
+- [x] Rev 0.2.0 - Shared history endpoint and separate history map page.
+- [x] Rev 0.2.1 - Header audit, changelog project revision, and live-data placeholder documentation.
+
+## Live data folder rule
+
+- [x] `data/users/.placeholder` exists for account JSON.
+- [x] `data/families/.placeholder` exists for family JSON.
+- [x] `data/locations/.placeholder` exists for latest-location JSON.
+- [x] `data/trails/.placeholder` exists for breadcrumb trail JSON.
+- [x] `data/locks/.placeholder` exists for lock files.
+- [x] `data/audit/.placeholder` exists for audit logs.
 
 ## Next practical improvements
 
