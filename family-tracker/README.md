@@ -18,7 +18,8 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
 
 - Create a family group with one owner account.
 - Join an existing family group with an invite code.
-- Login/logout with 30-day rolling PHP session cookies.
+- Login/logout with 30-day long PHP session cookies.
+- Supports optional Remember Me persistent login for this device.
 - Request and save your current browser GPS location after login or session restore.
 - Update your location about every 60 seconds while logged in and the page is open.
 - Update your location when you return to the page after it was hidden.
@@ -38,7 +39,7 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
 ## Requirements
 
 - PHP 8.0 or newer recommended.
-- HTTPS is required by modern browsers for precise browser geolocation.
+- HTTPS is required by modern browsers for precise browser geolocation and secure cookies.
 - Apache-compatible hosting if you want the included `.htaccess` protection to work.
 - A browser that supports `navigator.geolocation`.
 
@@ -54,6 +55,7 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
    - `data/locations/`
    - `data/trails/`
    - `data/notices/`
+   - `data/persistent_logins/`
    - `data/locks/`
    - `data/audit/`
 
@@ -67,7 +69,11 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
 
 ## Login and location behavior
 
-- Session cookies last 30 days and are refreshed on requests.
+- Session cookies last 30 days.
+- The Remember Me checkbox creates a separate persistent login for that browser/device.
+- Persistent login records are stored under `data/persistent_logins/` as hashed records.
+- The persistent login cookie is HTTP-only, same-site Lax, and secure when the site is served over HTTPS.
+- Logout revokes the current persistent login for that device.
 - After login or session restore, the app requests GPS once and sends the current location if permission is granted.
 - While logged in with the page open, the app requests GPS about every 60 seconds.
 - Browser and phone power rules still apply: locked phones, closed tabs, backgrounded browsers, and battery saver may pause updates.
@@ -95,7 +101,7 @@ This project starts at **1.0.0**, not 0.x.x.
 - Rev 1.1.1 = header, placeholder, and revision-numbering audit
 - Rev 1.2.0 = join notices and invite-code safety controls
 - Rev 1.2.1 = server-stored dismissible notices
-- Rev 1.3.0 = persistent login and automatic logged-in location updates
+- Rev 1.3.0 = long session cookies, persistent login, and automatic logged-in location updates
 
 ## Live data placeholder rule
 
@@ -108,10 +114,9 @@ Current live-data folders with placeholders:
 - `data/locations/.placeholder`
 - `data/trails/.placeholder`
 - `data/notices/.placeholder`
+- `data/persistent_logins/.placeholder`
 - `data/locks/.placeholder`
 - `data/audit/.placeholder`
-
-No new live-data folder was added for Rev 1.3.0.
 
 Do not commit runtime JSON files from these folders. Only the `.placeholder` files belong in Git.
 
@@ -127,4 +132,4 @@ That is safer than trusting web-server rules alone.
 
 ## Revision
 
-Rev 1.3.0 - Persistent login and automatic logged-in location updates.
+Rev 1.3.0 - Long session cookies, persistent login, and automatic logged-in location updates.
