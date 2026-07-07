@@ -31,6 +31,7 @@ $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
     || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
 
 ini_set('session.gc_maxlifetime', (string)SESSION_LIFETIME_SECONDS);
+ini_set('session.cookie_lifetime', (string)SESSION_LIFETIME_SECONDS);
 session_name(SESSION_NAME);
 session_set_cookie_params([
     'lifetime' => SESSION_LIFETIME_SECONDS,
@@ -43,4 +44,15 @@ session_set_cookie_params([
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
+}
+
+if (session_status() === PHP_SESSION_ACTIVE && session_id() !== '') {
+    setcookie(session_name(), session_id(), [
+        'expires' => time() + SESSION_LIFETIME_SECONDS,
+        'path' => '/',
+        'domain' => '',
+        'secure' => $isHttps,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
 }
