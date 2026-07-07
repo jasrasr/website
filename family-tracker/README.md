@@ -1,6 +1,6 @@
 # Family GPS Tracker
 
-A small PHP + JSON backend site for consent-based family location sharing. It is intentionally designed for shared hosting and mirrors the lightweight pattern from the `gps-eta` project: browser GPS, no database, protected JSON storage, mobile-first UI, and Leaflet/OpenStreetMap maps.
+A small PHP + JSON backend site for consent-based family location sharing. It is intentionally designed for shared hosting and mirrors the lightweight pattern from the `gps-eta` project: browser GPS, no database, protected JSON storage, mobile-first UI, Leaflet/OpenStreetMap maps, and shared breadcrumb history.
 
 ## What it does
 
@@ -8,9 +8,14 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
 - Join an existing family group with an invite code.
 - Login/logout with PHP sessions.
 - Share your current browser GPS location with your family group.
-- View family members on a live map.
+- View all family members with locations on a live map.
+- View a separate history map with all connected members.
+- Focus the history map on an individual member.
+- View a member detail panel with latest location, speed, heading, accuracy, and age.
 - Store latest location in JSON.
 - Store a short per-user breadcrumb trail in JSON.
+- Show shared trail history for all connected family members.
+- Filter history by member and by time window.
 - Delete your own stored location and trail.
 - Regenerate family invite codes as the owner.
 
@@ -21,6 +26,32 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
 - It does not provide emergency-grade location accuracy.
 - It does not use a road-routing, traffic, or paid map API.
 - It does not replace Life360. It is more like “Life360’s bargain-bin cousin who owns a PHP manual and a soldering iron.”
+
+## How family linking works
+
+1. The first person creates a family tracker and becomes the owner.
+2. The owner copies the generated invite code.
+3. Another family member opens the same site and chooses **Join Family**.
+4. They enter the invite code, create their own username/password, and accept consent.
+5. After login, they appear on the same family map once they share location.
+
+Regenerating the invite code invalidates the prior invite code.
+
+## GPS update behavior
+
+Location sharing uses the browser's `navigator.geolocation.watchPosition()` call. That means the phone/browser decides when a fresh GPS position exists. The front end throttles writes so normal sharing sends no more than one server update about every 10 seconds. The family map refreshes every 15 seconds. The history map refreshes every 30 seconds. Locations older than 5 minutes are marked stale.
+
+History points are stored each time a location is accepted by the server, up to `MAX_TRAIL_POINTS` per user.
+
+## Map modes
+
+- **Family Map**: fits the map around all members with current locations.
+- **History Map**: shows latest markers plus breadcrumb trails.
+- **Member filter**: shows all trails or one member's trail.
+- **History window**: filters history to last hour, 4 hours, 12 hours, or 24 hours.
+- **Show Everyone**: resets the history map back to all members.
+
+All connected/logged-in members in the same family can view current locations and available trail history for that family.
 
 ## Requirements
 
@@ -71,13 +102,15 @@ This app stores location only after a logged-in user explicitly taps **Start Sha
 family-tracker/
 ├── index.php
 ├── api.php
+├── trails.php
 ├── CHANGELOG.md
 ├── README.md
 ├── TASKS.md
 ├── .htaccess
 ├── assets/
 │   ├── css/style.css
-│   └── js/app.js
+│   ├── js/app.js
+│   └── js/history.js
 ├── includes/
 │   ├── config.php
 │   ├── json-store.php
@@ -94,4 +127,4 @@ family-tracker/
 
 ## Revision
 
-Rev 0.1.0 - Initial scaffold.
+Rev 0.2.0 - Shared history map, member focus, and member detail panel.
