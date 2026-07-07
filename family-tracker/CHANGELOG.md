@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.3.1
+Revision: 1.3.2
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,15 @@ Modified: 2026-07-06
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.3.1**
+Current Project Revision: **1.3.2**
+
+## Rev 1.3.2 - 2026-07-06
+
+- Added `changelog.php` so the changelog can be opened from the app.
+- Added a dismissible app-updated notice that links to the changelog.
+- The app-updated notice is keyed to the current revision and is dismissed with local browser storage.
+- Delayed map setup until after the app panel is visible.
+- Added repeated Leaflet `invalidateSize()` calls after page paint, resize, orientation changes, and family-location rendering to reduce partial tile rendering on reload.
 
 ## Rev 1.3.1 - 2026-07-06
 
