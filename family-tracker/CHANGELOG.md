@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 0.2.1
+Revision: 1.1.1
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,16 +10,17 @@ Modified: 2026-07-06
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **0.2.1**
+Current Project Revision: **1.1.1**
 
-## Rev 0.2.1 - 2026-07-06
+## Rev 1.1.1 - 2026-07-06
 
+- Renumbered project revisions to the preferred 1.x sequence.
+- Replaced prior 0.x revision references with 1.x equivalents.
 - Audited live-data folders and confirmed each runtime data directory has a `.placeholder` tracked in Git.
 - Added document headers to README, changelog, task list, and Apache access-control files.
-- Bumped `APP_REVISION` to `0.2.1`.
 - Clarified project revision and live-data placeholder expectations.
 
-## Rev 0.2.0 - 2026-07-06
+## Rev 1.1.0 - 2026-07-06
 
 - Added shared trail-history endpoint via `trails.php`.
 - Added separate `history.php` view for shared family trail history.
@@ -27,7 +28,7 @@ Current Project Revision: **0.2.1**
 - Added history window filtering for last hour, 4 hours, 12 hours, or 24 hours.
 - Added member filtering for map history.
 
-## Rev 0.1.0 - 2026-07-06
+## Rev 1.0.0 - 2026-07-06
 
 - Initial PHP + JSON scaffold.
 - Added owner-created family groups.
