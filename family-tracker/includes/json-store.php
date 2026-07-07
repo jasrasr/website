@@ -27,7 +27,7 @@ function ensure_dir(string $dir): void
 
 function init_app_storage(): void
 {
-    foreach (['users', 'families', 'locations', 'trails', 'notices', 'remember_tokens', 'locks', 'audit'] as $folder) {
+    foreach (['users', 'families', 'locations', 'trails', 'notices', 'persistent_logins', 'locks', 'audit'] as $folder) {
         ensure_dir(DATA_DIR . '/' . $folder);
     }
 }
@@ -135,7 +135,7 @@ function family_notices_path(string $familyId): string
 
 function remember_token_path(string $selector): string
 {
-    return DATA_DIR . '/remember_tokens/' . safe_id($selector) . '.json';
+    return DATA_DIR . '/persistent_logins/' . safe_id($selector) . '.json';
 }
 
 function username_index_path(): string
