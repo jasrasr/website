@@ -2,7 +2,7 @@
 /**
  * Project: Family GPS Tracker
  * File: index.php
- * Revision: 1.0.0
+ * Revision: 1.2.0
  * Description: Mobile-first family location sharing UI.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
@@ -111,8 +111,15 @@ require_once __DIR__ . '/includes/config.php';
             <p class="muted">Owner-only. Regenerating a code invalidates the previous one.</p>
             <div class="invite-row">
                 <code id="inviteCodeDisplay">Not generated this session</code>
+                <button id="copyInviteBtn" type="button" class="secondary">Copy Code</button>
                 <button id="regenerateInviteBtn" type="button">Regenerate Invite Code</button>
             </div>
+            <p class="muted">Copy only works while the full generated code is visible. After a page refresh, only the last four characters are shown.</p>
+        </section>
+
+        <section id="familyNoticeCard" class="card hidden">
+            <h2>Family Notices</h2>
+            <div id="familyNoticeList" class="member-list">No new notices.</div>
         </section>
 
         <section class="card controls-card">
