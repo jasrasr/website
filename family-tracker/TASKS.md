@@ -1,10 +1,15 @@
 # Family GPS Tracker Task List
 
+## Completed
+
+- [x] Rev 0.1.0 - Initial PHP + JSON family tracker scaffold.
+- [x] Rev 0.2.0 - Shared trail-history endpoint, history map, member focus, and member detail panel.
+
 ## Next practical improvements
 
 - Add per-member display colors.
 - Add member nickname editing.
-- Add stale/offline notification badges.
+- Add stale/offline notification badges beyond the current stale marker.
 - Add optional geofence zones, such as Home, School, Work, Church, or Grandma’s House.
 - Add owner ability to deactivate a member.
 - Add push notification support through a proper provider if this moves beyond a toy/site project.
