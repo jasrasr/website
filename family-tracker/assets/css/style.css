@@ -1,8 +1,8 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/css/style.css
- * Revision: 1.0.0
- * Description: Mobile-first dark UI styling.
+ * Revision: 1.3.1
+ * Description: Mobile-first dark UI styling with constrained mobile map layout.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-06
@@ -103,8 +103,21 @@ code {
 .metric-card { background: var(--panel); border: 1px solid var(--border); border-radius: 1.2rem; padding: 1rem; min-height: 8.5rem; display: grid; align-content: center; gap: 0.25rem; }
 .metric-label, .metric-unit, .muted { color: var(--muted); }
 .metric-card strong { font-size: clamp(1.55rem, 5vw, 2.5rem); line-height: 1; }
-#map, #historyMap { width: 100%; min-height: min(70vh, 620px); border-radius: 1rem; overflow: hidden; background: #1f2937; border: 1px solid var(--border); }
-.leaflet-container { color: #111827; }
+.map-card { overflow: hidden; }
+#map, #historyMap {
+    width: 100%;
+    height: clamp(20rem, 48vh, 30rem);
+    min-height: 20rem;
+    max-height: 30rem;
+    border-radius: 1rem;
+    overflow: hidden;
+    background: #1f2937;
+    border: 1px solid var(--border);
+}
+.leaflet-container {
+    color: #111827;
+    touch-action: pan-y;
+}
 .member-list { display: grid; gap: 0.75rem; }
 .member-card { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; padding: 0.85rem; border-radius: 1rem; background: rgba(255, 255, 255, 0.055); border: 1px solid var(--border); }
 .member-name { font-weight: 850; }
@@ -119,6 +132,12 @@ code {
     .auth-grid, .dashboard-grid, .detail-grid { grid-template-columns: 1fr; }
     .hero { padding-top: 1rem; }
     .account-card, .section-header, .invite-row, .button-row { align-items: stretch; flex-direction: column; }
+    .invite-row code { width: 100%; text-align: center; overflow-wrap: anywhere; }
+    .member-card { grid-template-columns: 1fr; }
     button { width: 100%; }
-    #map, #historyMap { min-height: 62vh; }
+    #map, #historyMap {
+        height: 20rem;
+        min-height: 20rem;
+        max-height: 20rem;
+    }
 }
