@@ -1,0 +1,8 @@
+Rev 0.2.0 local validation before publishing branch:
+
+php -l family-tracker/index.php
+php -l family-tracker/trails.php
+php -l family-tracker/includes/config.php
+node --check family-tracker/assets/js/history.js
+
+Branch comparison against main showed eight changed files.
