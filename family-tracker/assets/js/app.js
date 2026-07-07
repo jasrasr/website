@@ -1,8 +1,8 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/app.js
- * Revision: 1.2.1
- * Description: Front-end auth, invite-code copy, server notices, geolocation sharing, family refresh, and Leaflet rendering.
+ * Revision: 1.3.0
+ * Description: Front-end auth, invite-code copy, server notices, persistent-login GPS updates, family refresh, and Leaflet rendering.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-06
@@ -10,11 +10,14 @@
 (() => {
     'use strict';
 
+    const AUTO_LOCATION_INTERVAL_MS = 60000;
+
     const state = {
         csrfToken: '',
         user: null,
         family: null,
         watchId: null,
+        autoLocationTimer: null,
         lastSentAt: 0,
         map: null,
         markers: new Map(),
@@ -57,6 +60,7 @@
     }
 
     function showAuth() {
+        stopAutoLocationUpdates();
         els.auth.classList.remove('hidden');
         els.app.classList.add('hidden');
     }
@@ -126,7 +130,8 @@
         initMap();
         startFamilyRefresh();
         refreshFamilyLocations();
-        setStatus('Logged in. Location sharing is off until you start it.');
+        startAutoLocationUpdates();
+        setStatus('Logged in. Automatic location updates run about every minute while this page is open.');
     }
 
     async function loadMe() {
@@ -183,9 +188,39 @@
         await refreshFamilyLocations();
     }
 
+    function requestAutoLocation(reason = 'auto') {
+        if (!state.user) return;
+        if (!navigator.geolocation) {
+            if (reason === 'login') setStatus('This browser does not support geolocation.');
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            (position) => sendLocation(position, true).catch((error) => setStatus(error.message)),
+            (error) => {
+                if (reason === 'login') {
+                    setStatus(`GPS permission is needed for automatic location updates: ${error.message}`);
+                }
+            },
+            { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
+        );
+    }
+
+    function startAutoLocationUpdates() {
+        stopAutoLocationUpdates();
+        requestAutoLocation('login');
+        state.autoLocationTimer = window.setInterval(() => requestAutoLocation('interval'), AUTO_LOCATION_INTERVAL_MS);
+    }
+
+    function stopAutoLocationUpdates() {
+        if (state.autoLocationTimer) {
+            window.clearInterval(state.autoLocationTimer);
+            state.autoLocationTimer = null;
+        }
+    }
+
     function startSharing() {
         if (!navigator.geolocation) return setStatus('This browser does not support geolocation.');
-        if (state.watchId !== null) return setStatus('Location sharing is already active.');
+        if (state.watchId !== null) return setStatus('Continuous GPS watch is already active.');
         els.start.disabled = true;
         els.stop.disabled = false;
         state.watchId = navigator.geolocation.watchPosition(
@@ -193,7 +228,7 @@
             (error) => setStatus(`GPS error: ${error.message}`),
             { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
         );
-        setStatus('Location sharing started. Browser permission may be required.');
+        setStatus('Continuous GPS watch started. Automatic logged-in updates also remain active.');
     }
 
     function stopSharing() {
@@ -201,7 +236,7 @@
         state.watchId = null;
         els.start.disabled = false;
         els.stop.disabled = true;
-        setStatus('Location sharing stopped. Last stored location remains visible until deleted or replaced.');
+        setStatus('Continuous GPS watch stopped. Automatic logged-in updates still run while this page is open.');
     }
 
     function updateOnce() {
@@ -412,6 +447,7 @@
         els.logout.addEventListener('click', async () => {
             try {
                 stopSharing();
+                stopAutoLocationUpdates();
                 await api('logout', {});
                 state.user = null;
                 state.family = null;
@@ -431,6 +467,9 @@
             try { await api('delete_my_location', {}); setStatus('Your stored location was deleted.'); await refreshFamilyLocations(); } catch (error) { setStatus(error.message); }
         });
         els.regenerateInvite.addEventListener('click', regenerateInviteCode);
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && state.user) requestAutoLocation('visible');
+        });
     }
 
     wireForms();
