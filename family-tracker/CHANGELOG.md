@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.3.0
+Revision: 1.3.1
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,15 @@ Modified: 2026-07-06
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.3.0**
+Current Project Revision: **1.3.1**
+
+## Rev 1.3.1 - 2026-07-06
+
+- Reduced mobile map height and constrained map overflow so scrolling past the map is stable.
+- Disabled map dragging on coarse-pointer/mobile devices so the page scroll does not get trapped by the map.
+- Made the GPS accuracy, speed, heading, and last-update cards compact two-line metric blocks.
+- Clarified why only the last four invite-code characters appear after refresh.
+- Clarified that Copy Code requires the full invite code, which is visible only immediately after creation or regeneration.
 
 ## Rev 1.3.0 - 2026-07-06
 
