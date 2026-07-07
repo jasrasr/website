@@ -1,8 +1,8 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/css/style.css
- * Revision: 0.1.0
- * Description: Mobile-first dark UI styling.
+ * Revision: 0.2.0
+ * Description: Mobile-first dark UI styling for latest-location and trail-history views.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-06
@@ -40,7 +40,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
     font: inherit;
 }
 
@@ -66,6 +67,13 @@ button.secondary {
     box-shadow: none;
 }
 
+button.secondary.active,
+button.secondary[aria-pressed="true"] {
+    background: rgba(74, 222, 128, 0.18);
+    color: #bbf7d0;
+    border: 1px solid rgba(74, 222, 128, 0.45);
+}
+
 button.danger-button {
     background: rgba(251, 113, 133, 0.16);
     color: #fecdd3;
@@ -73,7 +81,8 @@ button.danger-button {
     border: 1px solid rgba(251, 113, 133, 0.35);
 }
 
-input {
+input,
+select {
     width: 100%;
     border: 1px solid var(--border);
     border-radius: 0.9rem;
@@ -83,7 +92,13 @@ input {
     outline: none;
 }
 
-input:focus {
+select option {
+    background: #111827;
+    color: var(--text);
+}
+
+input:focus,
+select:focus {
     border-color: rgba(74, 222, 128, 0.75);
     box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.12);
 }
@@ -241,7 +256,23 @@ code {
     line-height: 1;
 }
 
-#map {
+.map-header {
+    align-items: flex-start;
+}
+
+.map-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(9rem, 1fr));
+    gap: 0.75rem;
+    width: min(100%, 34rem);
+}
+
+.map-controls button {
+    align-self: end;
+}
+
+#map,
+#historyMap {
     width: 100%;
     min-height: min(70vh, 620px);
     border-radius: 1rem;
@@ -298,6 +329,39 @@ code {
     color: #cbd5e1;
 }
 
+.detail-card {
+    border-color: rgba(74, 222, 128, 0.35);
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.detail-item {
+    background: rgba(255, 255, 255, 0.055);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 0.8rem;
+}
+
+.detail-item span {
+    display: block;
+    color: var(--muted);
+    font-size: 0.82rem;
+}
+
+.detail-item strong {
+    display: block;
+    margin-top: 0.25rem;
+    word-break: break-word;
+}
+
+.history-detail {
+    margin-top: 1rem;
+}
+
 .warning-card {
     border-color: rgba(250, 204, 21, 0.35);
 }
@@ -309,7 +373,8 @@ code {
 
 @media (max-width: 850px) {
     .auth-grid,
-    .dashboard-grid {
+    .dashboard-grid,
+    .detail-grid {
         grid-template-columns: 1fr;
     }
 
@@ -325,11 +390,17 @@ code {
         flex-direction: column;
     }
 
+    .map-controls {
+        grid-template-columns: 1fr;
+        width: 100%;
+    }
+
     button {
         width: 100%;
     }
 
-    #map {
+    #map,
+    #historyMap {
         min-height: 62vh;
     }
 }
