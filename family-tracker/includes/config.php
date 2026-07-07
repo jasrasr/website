@@ -2,7 +2,7 @@
 /**
  * Project: Family GPS Tracker
  * File: includes/config.php
- * Revision: 1.2.1
+ * Revision: 1.3.0
  * Description: Central application configuration.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
@@ -12,7 +12,7 @@
 declare(strict_types=1);
 
 const APP_NAME = 'Family GPS Tracker';
-const APP_REVISION = '1.2.1';
+const APP_REVISION = '1.3.0';
 const APP_UPDATED = '2026-07-06';
 
 define('DATA_DIR', realpath(__DIR__ . '/../data') ?: (__DIR__ . '/../data'));
@@ -24,13 +24,19 @@ const MAX_TRAIL_LOOKBACK_MINUTES = 1440;
 const MAX_FAMILY_NOTICES = 25;
 const MIN_PASSWORD_LENGTH = 8;
 const SESSION_NAME = 'family_tracker_session';
+const SESSION_LIFETIME_SECONDS = 2592000;
+const REMEMBER_COOKIE_NAME = 'family_tracker_remember';
+const REMEMBER_ME_LIFETIME_SECONDS = 7776000;
 
 $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
     || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
 
+ini_set('session.gc_maxlifetime', (string)SESSION_LIFETIME_SECONDS);
+ini_set('session.cookie_lifetime', (string)SESSION_LIFETIME_SECONDS);
+
 session_name(SESSION_NAME);
 session_set_cookie_params([
-    'lifetime' => 0,
+    'lifetime' => SESSION_LIFETIME_SECONDS,
     'path' => '/',
     'domain' => '',
     'secure' => $isHttps,
