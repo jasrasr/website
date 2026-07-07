@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.1.1
+Revision: 1.2.0
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,14 @@ Modified: 2026-07-06
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.1.1**
+Current Project Revision: **1.2.0**
+
+## Rev 1.2.0 - 2026-07-06
+
+- Added Family Notices for newly joined members during an active session.
+- Added Copy Code for visible invite codes.
+- Added a two-step confirmation before invite-code regeneration.
+- No new live-data folder was added.
 
 ## Rev 1.1.1 - 2026-07-06
 
