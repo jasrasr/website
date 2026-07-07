@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: README.md
-Revision: 1.3.0
+Revision: 1.3.1
 Description: Setup, deployment, privacy, and maintenance notes for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,7 @@ Modified: 2026-07-06
 
 # Family GPS Tracker
 
-Current Project Revision: **1.3.0**
+Current Project Revision: **1.3.1**
 
 A small PHP + JSON backend site for consent-based family location sharing. It is designed for shared hosting and mirrors the lightweight pattern from the `gps-eta` project: browser GPS, persistent login cookies, no database, protected JSON storage, mobile-first UI, Leaflet/OpenStreetMap maps, and shared breadcrumb history.
 
@@ -24,7 +24,8 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
 - Update your location about every 60 seconds while logged in and the page is open.
 - Update your location when you return to the page after it was hidden.
 - Start a higher-frequency GPS watch with **Start Sharing**.
-- View family members on a live map.
+- View family members on a live map with a constrained mobile map height.
+- Show compact GPS accuracy, speed, heading, and last-update cards.
 - Show server-stored Family Notices when another member joins after your account was created.
 - Let each user dismiss notices once so they do not reappear for that user.
 - Copy a visible generated invite code.
@@ -79,6 +80,12 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
 - Browser and phone power rules still apply: locked phones, closed tabs, backgrounded browsers, and battery saver may pause updates.
 - The **Start Sharing** button still exists for a higher-frequency browser GPS watch while the page remains active.
 
+## Map and metric behavior
+
+- The mobile map height is capped so page scrolling is stable.
+- Map dragging is disabled on coarse-pointer/mobile devices to keep the page from getting trapped while scrolling.
+- GPS accuracy, speed, heading, and last-update values are shown as compact metric cards.
+
 ## Notice behavior
 
 - Join notices are generated from server-side family membership records.
@@ -88,6 +95,7 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
 
 ## Invite-code behavior
 
+- The app stores the invite code as a hash plus the last four characters only.
 - The full invite code is visible only immediately after family creation or regeneration.
 - The Copy Code button copies the full code only while the full code is visible.
 - Regenerate Invite Code shows two confirmations because the current code stops working after regeneration.
@@ -102,6 +110,7 @@ This project starts at **1.0.0**, not 0.x.x.
 - Rev 1.2.0 = join notices and invite-code safety controls
 - Rev 1.2.1 = server-stored dismissible notices
 - Rev 1.3.0 = long session cookies, persistent login, and automatic logged-in location updates
+- Rev 1.3.1 = mobile map, compact metric, and invite-code explanation fixes
 
 ## Live data placeholder rule
 
@@ -132,4 +141,4 @@ That is safer than trusting web-server rules alone.
 
 ## Revision
 
-Rev 1.3.0 - Long session cookies, persistent login, and automatic logged-in location updates.
+Rev 1.3.1 - Mobile map, compact metric, and invite-code explanation fixes.
