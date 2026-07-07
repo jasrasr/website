@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: README.md
-Revision: 1.2.1
+Revision: 1.3.0
 Description: Setup, deployment, privacy, and maintenance notes for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,16 +10,19 @@ Modified: 2026-07-06
 
 # Family GPS Tracker
 
-Current Project Revision: **1.2.1**
+Current Project Revision: **1.3.0**
 
-A small PHP + JSON backend site for consent-based family location sharing. It is designed for shared hosting and mirrors the lightweight pattern from the `gps-eta` project: browser GPS, no database, protected JSON storage, mobile-first UI, Leaflet/OpenStreetMap maps, and shared breadcrumb history.
+A small PHP + JSON backend site for consent-based family location sharing. It is designed for shared hosting and mirrors the lightweight pattern from the `gps-eta` project: browser GPS, persistent login cookies, no database, protected JSON storage, mobile-first UI, Leaflet/OpenStreetMap maps, and shared breadcrumb history.
 
 ## What it does
 
 - Create a family group with one owner account.
 - Join an existing family group with an invite code.
-- Login/logout with PHP sessions.
-- Share your current browser GPS location with your family group.
+- Login/logout with 30-day rolling PHP session cookies.
+- Request and save your current browser GPS location after login or session restore.
+- Update your location about every 60 seconds while logged in and the page is open.
+- Update your location when you return to the page after it was hidden.
+- Start a higher-frequency GPS watch with **Start Sharing**.
 - View family members on a live map.
 - Show server-stored Family Notices when another member joins after your account was created.
 - Let each user dismiss notices once so they do not reappear for that user.
@@ -62,6 +65,14 @@ A small PHP + JSON backend site for consent-based family location sharing. It is
 
 6. Have each family member join with the invite code on their own device.
 
+## Login and location behavior
+
+- Session cookies last 30 days and are refreshed on requests.
+- After login or session restore, the app requests GPS once and sends the current location if permission is granted.
+- While logged in with the page open, the app requests GPS about every 60 seconds.
+- Browser and phone power rules still apply: locked phones, closed tabs, backgrounded browsers, and battery saver may pause updates.
+- The **Start Sharing** button still exists for a higher-frequency browser GPS watch while the page remains active.
+
 ## Notice behavior
 
 - Join notices are generated from server-side family membership records.
@@ -84,6 +95,7 @@ This project starts at **1.0.0**, not 0.x.x.
 - Rev 1.1.1 = header, placeholder, and revision-numbering audit
 - Rev 1.2.0 = join notices and invite-code safety controls
 - Rev 1.2.1 = server-stored dismissible notices
+- Rev 1.3.0 = persistent login and automatic logged-in location updates
 
 ## Live data placeholder rule
 
@@ -99,6 +111,8 @@ Current live-data folders with placeholders:
 - `data/locks/.placeholder`
 - `data/audit/.placeholder`
 
+No new live-data folder was added for Rev 1.3.0.
+
 Do not commit runtime JSON files from these folders. Only the `.placeholder` files belong in Git.
 
 ## Stronger production setup
@@ -113,4 +127,4 @@ That is safer than trusting web-server rules alone.
 
 ## Revision
 
-Rev 1.2.1 - Server-stored dismissible notices.
+Rev 1.3.0 - Persistent login and automatic logged-in location updates.
