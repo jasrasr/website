@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.3.3
+Revision: 1.3.4
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,14 @@ Modified: 2026-07-06
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.3.3**
+Current Project Revision: **1.3.4**
+
+## Rev 1.3.4 - 2026-07-06
+
+- Replaced the in-page Leaflet map with a mobile OpenStreetMap iframe fallback on phones and other coarse-pointer devices.
+- Kept Leaflet rendering for desktop browsers.
+- Added Apple Maps, Google Maps, and OpenStreetMap links to member cards when a member has a shared location.
+- This avoids the recurring iPhone Safari Leaflet tile-rendering problem seen after reload and incognito join testing.
 
 ## Rev 1.3.3 - 2026-07-06
 
