@@ -2,7 +2,7 @@
 /**
  * Project: Family GPS Tracker
  * File: includes/json-store.php
- * Revision: 1.2.1
+ * Revision: 1.3.0
  * Description: JSON read/write helpers with simple file locking.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
@@ -27,7 +27,7 @@ function ensure_dir(string $dir): void
 
 function init_app_storage(): void
 {
-    foreach (['users', 'families', 'locations', 'trails', 'notices', 'locks', 'audit'] as $folder) {
+    foreach (['users', 'families', 'locations', 'trails', 'notices', 'persistent_logins', 'locks', 'audit'] as $folder) {
         ensure_dir(DATA_DIR . '/' . $folder);
     }
 }
@@ -131,6 +131,11 @@ function trail_path(string $userId): string
 function family_notices_path(string $familyId): string
 {
     return DATA_DIR . '/notices/' . safe_id($familyId) . '.json';
+}
+
+function remember_token_path(string $selector): string
+{
+    return DATA_DIR . '/persistent_logins/' . safe_id($selector) . '.json';
 }
 
 function username_index_path(): string
