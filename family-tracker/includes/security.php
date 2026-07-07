@@ -2,7 +2,7 @@
 /**
  * Project: Family GPS Tracker
  * File: includes/security.php
- * Revision: 0.1.0
+ * Revision: 1.0.0
  * Description: Request, validation, session, and response helpers.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
