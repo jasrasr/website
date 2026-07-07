@@ -1,8 +1,8 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/app.js
- * Revision: 1.3.0
- * Description: Front-end auth, invite-code copy, server notices, persistent-login GPS updates, family refresh, and Leaflet rendering.
+ * Revision: 1.3.1
+ * Description: Front-end auth, invite-code copy, server notices, persistent-login GPS updates, mobile-safe map rendering, family refresh, and Leaflet rendering.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-06
@@ -138,11 +138,27 @@
         try { applySession(await api('me')); } catch (error) { setStatus(error.message); showAuth(); }
     }
 
+    function isCoarsePointer() {
+        return window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    }
+
+    function invalidateMapSoon() {
+        if (!state.map) return;
+        window.setTimeout(() => state.map.invalidateSize(), 150);
+        window.setTimeout(() => state.map.invalidateSize(), 500);
+    }
+
     function initMap() {
         if (state.map || !window.L) return;
-        state.map = L.map('map', { zoomControl: true }).setView([41.4993, -81.6944], 10);
+        const mobileSafe = isCoarsePointer();
+        state.map = L.map('map', {
+            zoomControl: true,
+            dragging: !mobileSafe,
+            tap: false,
+            scrollWheelZoom: false,
+        }).setView([41.4993, -81.6944], 10);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(state.map);
-        setTimeout(() => state.map.invalidateSize(), 150);
+        invalidateMapSoon();
     }
 
     function formatAge(seconds) {
@@ -389,6 +405,7 @@
         }
         if (bounds.length === 1) state.map.setView(bounds[0], 15);
         if (bounds.length > 1) state.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+        invalidateMapSoon();
     }
 
     function startFamilyRefresh() {
@@ -403,7 +420,7 @@
 
     async function copyInviteCode() {
         const code = currentInviteCode();
-        if (!code) return setStatus('Full invite code is not visible. Regenerate a code first, then copy it.');
+        if (!code) return setStatus('Only the last four characters are visible. The full invite code is not stored for security; regenerate a code to copy the full code.');
         try {
             await navigator.clipboard.writeText(code);
             setStatus(`Copied invite code: ${code}`);
