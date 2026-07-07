@@ -1,8 +1,8 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/app.js
- * Revision: 1.3.1
- * Description: Front-end auth, invite-code copy, server notices, persistent-login GPS updates, mobile-safe map rendering, family refresh, and Leaflet rendering.
+ * Revision: 1.3.2
+ * Description: Front-end auth, invite-code copy, update notices, server notices, persistent-login GPS updates, mobile-safe map rendering, family refresh, and Leaflet rendering.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-06
@@ -20,6 +20,7 @@
         autoLocationTimer: null,
         lastSentAt: 0,
         map: null,
+        mapResizeObserver: null,
         markers: new Map(),
         circles: new Map(),
         refreshTimer: null,
@@ -29,6 +30,7 @@
     const $ = (id) => document.getElementById(id);
     const els = {
         status: $('statusText'),
+        statusCard: $('statusCard'),
         auth: $('authCard'),
         app: $('trackerApp'),
         login: $('loginForm'),
@@ -76,6 +78,55 @@
         for (const [key, value] of data.entries()) out[key] = value;
         for (const checkbox of form.querySelectorAll('input[type="checkbox"]')) out[checkbox.name] = checkbox.checked;
         return out;
+    }
+
+    function appRevision() {
+        const shell = document.querySelector('.app-shell');
+        const fromData = shell?.getAttribute('data-app-revision');
+        if (fromData) return fromData;
+        const eyebrow = document.querySelector('.eyebrow')?.textContent || '';
+        const match = eyebrow.match(/Rev\s+([0-9]+\.[0-9]+\.[0-9]+)/i);
+        return match ? match[1] : 'unknown';
+    }
+
+    function showUpdateNoticeIfNeeded() {
+        const revision = appRevision();
+        const storageKey = 'family-tracker-dismissed-update-revision';
+        if (window.localStorage.getItem(storageKey) === revision) return;
+        if (document.getElementById('appUpdateNotice')) return;
+
+        const card = document.createElement('section');
+        card.id = 'appUpdateNotice';
+        card.className = 'card';
+        card.setAttribute('aria-live', 'polite');
+        card.style.display = 'flex';
+        card.style.alignItems = 'center';
+        card.style.justifyContent = 'space-between';
+        card.style.gap = '0.75rem';
+        card.style.padding = '0.75rem 1rem';
+
+        const text = document.createElement('div');
+        const strong = document.createElement('strong');
+        strong.textContent = `App updated to Rev ${revision}. `;
+        const link = document.createElement('a');
+        link.href = 'changelog.php';
+        link.textContent = 'View changelog';
+        link.style.color = 'var(--accent)';
+        link.style.fontWeight = '850';
+        text.append(strong, link);
+
+        const dismiss = document.createElement('button');
+        dismiss.type = 'button';
+        dismiss.className = 'secondary';
+        dismiss.textContent = 'Dismiss';
+        dismiss.style.width = 'auto';
+        dismiss.addEventListener('click', () => {
+            window.localStorage.setItem(storageKey, revision);
+            card.remove();
+        });
+
+        card.append(text, dismiss);
+        els.statusCard?.insertAdjacentElement('afterend', card);
     }
 
     async function api(action, payload = null) {
@@ -127,10 +178,13 @@
         }
 
         showApp();
-        initMap();
-        startFamilyRefresh();
-        refreshFamilyLocations();
-        startAutoLocationUpdates();
+        window.requestAnimationFrame(() => {
+            initMap();
+            startFamilyRefresh();
+            refreshFamilyLocations();
+            startAutoLocationUpdates();
+            invalidateMapSoon();
+        });
         setStatus('Logged in. Automatic location updates run about every minute while this page is open.');
     }
 
@@ -144,20 +198,36 @@
 
     function invalidateMapSoon() {
         if (!state.map) return;
-        window.setTimeout(() => state.map.invalidateSize(), 150);
-        window.setTimeout(() => state.map.invalidateSize(), 500);
+        const run = () => {
+            if (!state.map) return;
+            state.map.invalidateSize({ pan: false });
+        };
+        window.requestAnimationFrame(run);
+        [100, 300, 700, 1200].forEach((delay) => window.setTimeout(run, delay));
+    }
+
+    function attachMapResizeWatch(mapEl) {
+        if (!window.ResizeObserver || state.mapResizeObserver) return;
+        state.mapResizeObserver = new ResizeObserver(() => invalidateMapSoon());
+        state.mapResizeObserver.observe(mapEl);
     }
 
     function initMap() {
         if (state.map || !window.L) return;
+        const mapEl = $('map');
+        if (!mapEl) return;
         const mobileSafe = isCoarsePointer();
-        state.map = L.map('map', {
+        state.map = L.map(mapEl, {
             zoomControl: true,
             dragging: !mobileSafe,
             tap: false,
             scrollWheelZoom: false,
         }).setView([41.4993, -81.6944], 10);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(state.map);
+        attachMapResizeWatch(mapEl);
+        window.addEventListener('resize', invalidateMapSoon);
+        window.addEventListener('orientationchange', () => window.setTimeout(invalidateMapSoon, 450));
+        state.map.whenReady(invalidateMapSoon);
         invalidateMapSoon();
     }
 
@@ -375,6 +445,7 @@
 
     function renderMap(members) {
         if (!state.map) return;
+        invalidateMapSoon();
         const bounds = [];
         const activeIds = new Set();
         for (const member of members) {
@@ -403,8 +474,8 @@
         for (const [id, circle] of state.circles.entries()) {
             if (!activeIds.has(id)) { circle.remove(); state.circles.delete(id); }
         }
-        if (bounds.length === 1) state.map.setView(bounds[0], 15);
-        if (bounds.length > 1) state.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+        if (bounds.length === 1) state.map.setView(bounds[0], 15, { animate: false });
+        if (bounds.length > 1) state.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15, animate: false });
         invalidateMapSoon();
     }
 
@@ -489,6 +560,7 @@
         });
     }
 
+    showUpdateNoticeIfNeeded();
     wireForms();
     loadMe();
 })();
