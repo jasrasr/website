@@ -1,7 +1,7 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/app.js
- * Revision: 1.3.2
+ * Revision: 1.3.3
  * Description: Front-end auth, invite-code copy, update notices, server notices, persistent-login GPS updates, mobile-safe map rendering, family refresh, and Leaflet rendering.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
@@ -20,6 +20,7 @@
         autoLocationTimer: null,
         lastSentAt: 0,
         map: null,
+        tileLayer: null,
         mapResizeObserver: null,
         markers: new Map(),
         circles: new Map(),
@@ -59,6 +60,23 @@
 
     function setStatus(message) {
         els.status.textContent = message;
+    }
+
+    function installMapLayoutFix() {
+        if (document.getElementById('family-tracker-map-layout-style')) return;
+        const style = document.createElement('style');
+        style.id = 'family-tracker-map-layout-style';
+        style.textContent = '#map img.leaflet-tile,#map img.leaflet-marker-icon,#map img.leaflet-marker-shadow{max-width:none;max-height:none;}';
+        document.head.appendChild(style);
+    }
+
+    function applyMapImageLayout() {
+        const map = $('map');
+        if (!map) return;
+        for (const image of map.getElementsByTagName('img')) {
+            image.style.maxWidth = 'none';
+            image.style.maxHeight = 'none';
+        }
     }
 
     function showAuth() {
@@ -201,9 +219,10 @@
         const run = () => {
             if (!state.map) return;
             state.map.invalidateSize({ pan: false });
+            applyMapImageLayout();
         };
         window.requestAnimationFrame(run);
-        [100, 300, 700, 1200].forEach((delay) => window.setTimeout(run, delay));
+        [100, 300, 700, 1200, 2000, 3500].forEach((delay) => window.setTimeout(run, delay));
     }
 
     function attachMapResizeWatch(mapEl) {
@@ -223,7 +242,14 @@
             tap: false,
             scrollWheelZoom: false,
         }).setView([41.4993, -81.6944], 10);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(state.map);
+        state.tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            detectRetina: false,
+            keepBuffer: 8,
+            updateWhenIdle: false,
+            attribution: '&copy; OpenStreetMap contributors',
+        }).addTo(state.map);
+        state.tileLayer.on('tileload', applyMapImageLayout);
         attachMapResizeWatch(mapEl);
         window.addEventListener('resize', invalidateMapSoon);
         window.addEventListener('orientationchange', () => window.setTimeout(invalidateMapSoon, 450));
@@ -560,6 +586,7 @@
         });
     }
 
+    installMapLayoutFix();
     showUpdateNoticeIfNeeded();
     wireForms();
     loadMe();
