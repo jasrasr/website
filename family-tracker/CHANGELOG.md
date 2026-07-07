@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.2.1
+Revision: 1.3.0
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,15 @@ Modified: 2026-07-06
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.2.1**
+Current Project Revision: **1.3.0**
+
+## Rev 1.3.0 - 2026-07-06
+
+- Added 30-day long session cookies.
+- Added optional persistent login with a Remember Me checkbox on login, create-family, and join-family forms.
+- Added hashed persistent-login records in `data/persistent_logins/`.
+- Added `data/persistent_logins/.placeholder` for the new live-data folder.
+- Logout now revokes the current persistent login for that device.
 
 ## Rev 1.2.1 - 2026-07-06
 
