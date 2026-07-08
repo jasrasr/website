@@ -1,8 +1,8 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/member-badges.js
- * Revision: 1.3.6
- * Description: Adds You and Owner badges plus a display-name update form.
+ * Revision: 1.3.7
+ * Description: Adds You/Owner badges, display-name update, and city-based latest-location labels.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-06
@@ -11,6 +11,10 @@
     'use strict';
 
     var csrfToken = '';
+    var cityCache = {};
+    var stateAbbr = {
+        'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA', 'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA', 'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD', 'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO', 'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH', 'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC', 'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY', 'District of Columbia': 'DC'
+    };
 
     function css() {
         if (document.getElementById('family-tracker-member-badge-style')) return;
@@ -101,6 +105,91 @@
         });
     }
 
+    function cityCacheKey(lat, lon) {
+        return 'family-tracker-city-v1:' + Number(lat).toFixed(3) + ',' + Number(lon).toFixed(3);
+    }
+
+    function storedCity(key) {
+        if (cityCache[key]) return cityCache[key];
+        try {
+            var stored = window.localStorage.getItem(key);
+            if (stored) {
+                cityCache[key] = stored;
+                return stored;
+            }
+        } catch (ignore) { }
+        return '';
+    }
+
+    function saveCity(key, city) {
+        cityCache[key] = city;
+        try { window.localStorage.setItem(key, city); } catch (ignore) { }
+    }
+
+    function cityFromAddress(address) {
+        if (!address) return '';
+        var city = address.city || address.town || address.village || address.municipality || address.hamlet || address.suburb || address.county || '';
+        var state = address.state_code || stateAbbr[address.state] || address.state || '';
+        if (city && state) return city + ', ' + state;
+        return city || state || '';
+    }
+
+    function lookupCity(lat, lon, callback) {
+        var key = cityCacheKey(lat, lon);
+        var cached = storedCity(key);
+        if (cached) return callback(cached);
+
+        var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&addressdetails=1&lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lon);
+        fetch(url)
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                var city = cityFromAddress(data && data.address) || 'Closest city unavailable';
+                saveCity(key, city);
+                callback(city);
+            })
+            .catch(function () {
+                callback('Closest city unavailable');
+            });
+    }
+
+    function parseMeta(text) {
+        var match = String(text || '').match(/(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)\s*•\s*([^•]+)/);
+        if (!match) return null;
+        return { lat: Number(match[1]), lon: Number(match[2]), age: normalizeAge(match[3]) };
+    }
+
+    function normalizeAge(text) {
+        var match = String(text || '').trim().match(/^(\d+)\s*([smhd])\s*ago$/i);
+        if (!match) return String(text || '').trim();
+        var number = Number(match[1]);
+        var unit = match[2].toLowerCase();
+        if (unit === 'h' && number >= 24) {
+            return Math.floor(number / 24) + 'd ago';
+        }
+        return number + unit + ' ago';
+    }
+
+    function enhanceLocationLabels() {
+        var list = document.getElementById('memberList');
+        if (!list) return;
+        var metas = list.getElementsByClassName('member-meta');
+        for (var i = 0; i < metas.length; i++) {
+            (function (meta) {
+                var parsed = parseMeta(meta.textContent);
+                if (!parsed) return;
+                var marker = Number(parsed.lat).toFixed(5) + ',' + Number(parsed.lon).toFixed(5) + ':' + parsed.age;
+                if (meta.getAttribute('data-location-label') === marker) return;
+                meta.setAttribute('data-location-label', marker);
+                meta.textContent = 'Closest city... • ' + parsed.age;
+                lookupCity(parsed.lat, parsed.lon, function (city) {
+                    if (meta.getAttribute('data-location-label') === marker) {
+                        meta.textContent = city + ' • ' + parsed.age;
+                    }
+                });
+            }(metas[i]));
+        }
+    }
+
     function run() {
         css();
         addProfileForm();
@@ -129,6 +218,7 @@
             if (list.firstElementChild !== card) list.insertBefore(card, list.firstElementChild);
             break;
         }
+        enhanceLocationLabels();
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
