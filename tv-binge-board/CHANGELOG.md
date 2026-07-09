@@ -5,10 +5,19 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-05
-Revision: 1.5.21
+Revision: 1.5.22
 -->
 
 # Changelog
+
+## rev 1.5.22 - 2026-07-05
+
+- Changed the episode-grid prior-progress prompt to appear only when the selected episode would skip over an unwatched earlier episode.
+- Marking the true next unwatched episode no longer asks whether to mark all prior episodes and seasons.
+- The season-level prior-season prompt now appears only when there is an unwatched earlier episode before that season.
+- Episode and season metadata are sorted before prompt checks so the gap detection follows natural season/episode order.
+- Updated the Episode grid helper text to explain the new gap-aware behavior.
+- Bumped the visible project revision and service worker cache to 1.5.22.
 
 ## rev 1.5.21 - 2026-07-05
 
@@ -41,11 +50,4 @@ Revision: 1.5.21
 - Added Dashboard links to Smart import, Lists / tags, and Recommendations.
 - Bumped the visible project revision and service worker cache to 1.5.19.
 
-## rev 1.5.18 - 2026-07-05
-
-- Added `compare.php` for list comparison between the signed-in user and a visible public or connected user.
-- Comparison shows titles on both lists, only yours, only theirs, and titles worth checking from the other user.
-- Shared-title rows compare each person's status, rating, and TV episode progress.
-- Bumped the visible project revision to 1.5.18.
-
-Older entries are available in Git history before rev 1.5.18.
+Older entries are available in Git history before rev 1.5.19.

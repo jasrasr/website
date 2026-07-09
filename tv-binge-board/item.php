@@ -2,11 +2,11 @@
 /**
  * File: item.php
  * Project: TV Binge Board
- * Description: Media detail page with editable metadata, next-up/caught-up TV status, TMDB links, metadata refresh controls, local artwork refresh controls, host-friendly watch progress actions, watched episode checkmarks, current-show auto-refresh, spoiler-safe episode display modes, completion percentage, and TMDB-backed TV episode grid.
+ * Description: Media detail page with editable metadata, next-up/caught-up TV status, TMDB links, metadata refresh controls, local artwork refresh controls, host-friendly watch progress actions, watched episode checkmarks, current-show auto-refresh, spoiler-safe episode display modes, completion percentage, gap-aware prior-progress prompts, and TMDB-backed TV episode grid.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-05
- * Revision: 1.5.15
+ * Revision: 1.5.22
  */
 declare(strict_types=1);
 
@@ -70,6 +70,7 @@ if (($item['type'] ?? '') === 'tv') {
             $seasonSummaries[] = ['season_number' => $season, 'name' => 'Season ' . $season, 'episode_count' => min($episodesPerSeason, 40), 'air_date' => ''];
         }
     }
+    usort($seasonSummaries, static fn($left, $right) => (int)($left['season_number'] ?? 0) <=> (int)($right['season_number'] ?? 0));
 }
 
 app_page_header((string)($item['title'] ?? 'Item'));
@@ -141,9 +142,9 @@ app_page_header((string)($item['title'] ?? 'Item'));
     </div>
     <p class="muted">Text-only mode is more compact and avoids episode stills that may reveal spoilers.</p>
     <p class="muted">Green with ✓ Watched = watched. Gray/dark without a checkmark = unwatched.</p>
-    <p class="muted">When marking a later episode or season, the app asks whether to also mark prior episodes or seasons as watched.</p>
+    <p class="muted">The prior-episode prompt appears only when the selected episode or season would skip over unwatched earlier progress.</p>
     <div id="episodes"></div>
-    <?php foreach ($seasonSummaries as $summary): ?>
+    <?php $hasUnwatchedBeforeEpisode = false; foreach ($seasonSummaries as $summary): ?>
         <?php
             $seasonNumber = (int)($summary['season_number'] ?? 0);
             $seasonName = (string)($summary['name'] ?? ('Season ' . $seasonNumber));
@@ -162,11 +163,12 @@ app_page_header((string)($item['title'] ?? 'Item'));
                     $episodes[] = ['season_number' => $seasonNumber, 'episode_number' => $episode, 'name' => 'Episode ' . $episode, 'air_date' => '', 'overview' => ''];
                 }
             }
+            usort($episodes, static fn($left, $right) => (int)($left['episode_number'] ?? 0) <=> (int)($right['episode_number'] ?? 0));
         ?>
         <details class="season-block" id="season-<?= e((string)$seasonNumber) ?>" <?= $seasonNumber === $requestedSeason ? 'open' : '' ?>>
             <summary><?= e($seasonName) ?> <span class="muted">(<?= e((string)count($episodes)) ?> episodes)</span></summary>
             <div class="season-actions">
-                <form method="post" action="<?= e(app_href('watch-progress.php')) ?>" onsubmit="return tvbbConfirmSeasonProgress(this);" data-through-season="<?= $seasonNumber > 1 ? '1' : '0' ?>" data-season-label="Season <?= e((string)$seasonNumber) ?>">
+                <form method="post" action="<?= e(app_href('watch-progress.php')) ?>" onsubmit="return tvbbConfirmSeasonProgress(this);" data-through-season="<?= $hasUnwatchedBeforeEpisode ? '1' : '0' ?>" data-season-label="Season <?= e((string)$seasonNumber) ?>">
                     <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
                     <input type="hidden" name="uid" value="<?= e($uid) ?>">
                     <?php if (app_is_admin($user)): ?><input type="hidden" name="tu" value="<?= e($targetUsername) ?>"><?php endif; ?>
@@ -192,11 +194,12 @@ app_page_header((string)($item['title'] ?? 'Item'));
                         if ($episodeNumber <= 0) { continue; }
                         $key = $seasonNumber . '-' . $episodeNumber;
                         $isWatched = !empty($watched[$key]);
+                        $hasPriorUnwatchedGap = !$isWatched && $hasUnwatchedBeforeEpisode;
                         $episodeTitle = (string)($episodeData['name'] ?? ('Episode ' . $episodeNumber));
                         $airDate = (string)($episodeData['air_date'] ?? '');
                         $episodeArt = $episodeView === 'image' ? app_episode_art_url($episodeData, is_array($seasonDetails) ? $seasonDetails : $summary, $item) : '';
                     ?>
-                    <form method="post" action="<?= e(app_href('watch-progress.php')) ?>" class="episode-card-form" onsubmit="return tvbbConfirmEpisodeProgress(this);" data-watched="<?= $isWatched ? '1' : '0' ?>" data-fill-prior="<?= (!$isWatched && ($seasonNumber > 1 || $episodeNumber > 1)) ? '1' : '0' ?>" data-episode-label="S<?= e((string)$seasonNumber) ?>E<?= e((string)$episodeNumber) ?>">
+                    <form method="post" action="<?= e(app_href('watch-progress.php')) ?>" class="episode-card-form" onsubmit="return tvbbConfirmEpisodeProgress(this);" data-watched="<?= $isWatched ? '1' : '0' ?>" data-fill-prior="<?= $hasPriorUnwatchedGap ? '1' : '0' ?>" data-episode-label="S<?= e((string)$seasonNumber) ?>E<?= e((string)$episodeNumber) ?>">
                         <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
                         <input type="hidden" name="uid" value="<?= e($uid) ?>">
                         <?php if (app_is_admin($user)): ?><input type="hidden" name="tu" value="<?= e($targetUsername) ?>"><?php endif; ?>
@@ -212,6 +215,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
                             <small><?= $isWatched ? '✓ Watched - tap to unmark' : '○ Unwatched - tap to mark' ?></small>
                         </button>
                     </form>
+                    <?php if (!$isWatched) { $hasUnwatchedBeforeEpisode = true; } ?>
                 <?php endforeach; ?>
             </div>
         </details>
@@ -223,7 +227,7 @@ function tvbbConfirmEpisodeProgress(form) {
     var op = form.querySelector('input[name="op"]');
     if (!op || form.dataset.fillPrior !== '1') { return true; }
     var label = form.dataset.episodeLabel || 'this episode';
-    var includePrior = window.confirm('Mark all previous episodes and prior seasons as watched too?\n\nOK = mark through ' + label + '.\nCancel = only mark ' + label + '.');
+    var includePrior = window.confirm('There are unwatched earlier episodes before ' + label + '. Mark all previous episodes and prior seasons as watched too?\n\nOK = mark through ' + label + '.\nCancel = only mark ' + label + '.');
     if (!includePrior) { op.value = 'eo'; }
     return true;
 }
@@ -232,7 +236,7 @@ function tvbbConfirmSeasonProgress(form) {
     var op = form.querySelector('input[name="op"]');
     if (!op) { return true; }
     var label = form.dataset.seasonLabel || 'this season';
-    var includePrior = window.confirm('Mark all previous seasons as watched too?\n\nOK = mark through ' + label + '.\nCancel = only mark ' + label + '.');
+    var includePrior = window.confirm('There are unwatched earlier episodes before ' + label + '. Mark all previous seasons as watched too?\n\nOK = mark through ' + label + '.\nCancel = only mark ' + label + '.');
     if (includePrior) { op.value = 'swp'; }
     return true;
 }

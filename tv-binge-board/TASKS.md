@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-05
-Revision: 1.5.21
+Revision: 1.5.22
 -->
 
 # TV Binge Board Task List
@@ -49,6 +49,13 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] rev 1.5.19 - remaining non-security feature backlog: smart parsing/fuzzy matching, tags/custom lists, and advanced recommendations.
 - [x] rev 1.5.20 - public suggestion and bug board with required email capture.
 - [x] rev 1.5.21 - PNG/JPG screenshot attachments for suggestions.
+- [x] rev 1.5.22 - gap-aware episode/season prior-progress prompts.
+
+## Matt feedback
+
+- [x] Do not prompt when marking the very next unwatched episode.
+- [x] Prompt only when a selected episode would skip over an unwatched earlier episode.
+- [x] Apply the same gap-aware logic to season-level prior-season prompts.
 
 ## Suggestion board
 
