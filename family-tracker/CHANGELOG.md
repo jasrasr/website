@@ -1,16 +1,30 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.4.1
+Revision: 1.4.2
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
-Modified: 2026-07-06
+Modified: 2026-07-09
 -->
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.4.1**
+Current Project Revision: **1.4.2**
+
+## Rev 1.4.2 - 2026-07-09
+
+- Added an inline Account & Group settings card.
+- Moved display-name editing out of injected UI and into the main layout.
+- Added owner-only active group-name editing.
+- Added member username and short ID display for duplicate-name troubleshooting.
+- Added member-location format choices: closest city, rounded GPS, or both.
+- Added a manual Refresh Location Labels button.
+- Added rounded GPS fallback when closest-city lookup fails.
+- Added a diagnostics panel for GPS permission, online status, session API timing, signed-in user, active group, and build revision.
+- Added `health.php`, a signed-in health-check page for runtime folder permissions and deployment checks.
+- Marked completed items in `todo.md`.
+- Added no new live-data folder.
 
 ## Rev 1.4.1 - 2026-07-06
 
