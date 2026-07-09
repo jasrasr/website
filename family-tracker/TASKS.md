@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: TASKS.md
-Revision: 1.3.2
+Revision: 1.4.0
 Description: Restart-friendly task list and maintenance backlog for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -20,29 +20,32 @@ Modified: 2026-07-06
 - [x] Rev 1.3.0 - Long session cookies, optional persistent login, and automatic logged-in location updates.
 - [x] Rev 1.3.1 - Mobile map height/scroll fix, compact metric cards, and invite-code explanation cleanup.
 - [x] Rev 1.3.2 - Browser-readable changelog, dismissible app-updated notice, and map reload rendering fix.
+- [x] Rev 1.3.4 - Mobile map fallback and member map links.
+- [x] Rev 1.3.5 - You/Owner member badges.
+- [x] Rev 1.3.6 - Display-name update option.
+- [x] Rev 1.3.7 - Closest-city latest-location labels.
+- [x] Rev 1.4.0 - Multi-group/circle support.
 
 ## Live data folder rule
 
 - [x] `data/users/.placeholder` exists for account JSON.
-- [x] `data/families/.placeholder` exists for family JSON.
+- [x] `data/families/.placeholder` exists for family/group JSON.
 - [x] `data/locations/.placeholder` exists for latest-location JSON.
 - [x] `data/trails/.placeholder` exists for breadcrumb trail JSON.
 - [x] `data/notices/.placeholder` exists for server-stored notice dismissals.
 - [x] `data/persistent_logins/.placeholder` exists for persistent login records.
 - [x] `data/locks/.placeholder` exists for lock files.
 - [x] `data/audit/.placeholder` exists for audit logs.
-- [x] Rev 1.3.2 added no new live-data folder.
+- [x] Rev 1.4.0 added no new live-data folder.
 
 ## Next practical improvements
 
+- Add per-group member management so owners can remove or deactivate members from only one group.
+- Add per-group display nicknames.
+- Add per-group colors/icons for members.
+- Add per-group notices for group creation, join, switch, and invite regeneration.
 - Add per-device persistent login management so users can revoke other saved devices.
-- Add per-member display colors.
-- Add member nickname editing.
-- Add stale/offline notification badges.
 - Add optional geofence zones, such as Home, School, Work, Church, or Grandma’s House.
-- Add owner ability to deactivate a member.
-- Add push notification support through a proper provider if this moves beyond a toy/site project.
-- Add emergency contact card per member.
 - Add export/delete-all account data controls.
 - Add a one-time setup health check page that verifies folder write permissions and `.htaccess` protection.
 
@@ -57,6 +60,7 @@ Modified: 2026-07-06
 
 ## Known limitations
 
+- Location storage is still one latest point per user, tagged with the active group at the time of update.
 - Browser GPS pauses or becomes unreliable when the phone sleeps, locks, or the browser is backgrounded.
 - iOS Safari and Android browsers may behave differently for long-running location watches.
 - Accuracy depends on device, OS, permissions, signal, and battery mode.
