@@ -2,11 +2,11 @@
 /**
  * Project: Family GPS Tracker
  * File: index.php
- * Revision: 1.4.0
- * Description: Mobile-first family/circle tracker UI.
+ * Revision: 1.4.2
+ * Description: Mobile-first family/circle tracker UI with account settings and diagnostics.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
- * Modified: 2026-07-06
+ * Modified: 2026-07-09
  */
 
 declare(strict_types=1);
@@ -23,10 +23,10 @@ require_once __DIR__ . '/includes/config.php';
     <link rel="stylesheet" href="assets/css/style.css?v=<?= urlencode(APP_REVISION) ?>">
 </head>
 <body>
-<div class="app-shell">
+<div class="app-shell" data-app-revision="<?= htmlspecialchars(APP_REVISION, ENT_QUOTES, 'UTF-8') ?>">
     <header class="hero">
         <div>
-            <p class="eyebrow">Rev <?= htmlspecialchars(APP_REVISION, ENT_QUOTES, 'UTF-8') ?> • Updated <?= htmlspecialchars(APP_UPDATED, ENT_QUOTES, 'UTF-8') ?></p>
+            <p class="eyebrow">Rev <?= htmlspecialchars(APP_REVISION, ENT_QUOTES, 'UTF-8') ?> • Build <?= htmlspecialchars(APP_BUILD_LABEL, ENT_QUOTES, 'UTF-8') ?></p>
             <h1><?= htmlspecialchars(APP_NAME, ENT_QUOTES, 'UTF-8') ?></h1>
             <p class="hero-copy">Private family and friend-circle map app with persistent sessions, browser permission, JSON files, and OpenStreetMap.</p>
         </div>
@@ -71,6 +71,36 @@ require_once __DIR__ . '/includes/config.php';
     <main id="trackerApp" class="hidden">
         <section class="card account-card"><div><p class="eyebrow">Signed in</p><h2 id="accountTitle">Account</h2><p id="familyTitle" class="muted">Group loading…</p></div><button id="logoutBtn" type="button" class="secondary">Logout</button></section>
 
+        <section id="accountSettingsCard" class="card profile-edit">
+            <div><p class="eyebrow">Settings</p><h2>Account & Group</h2></div>
+            <div class="settings-grid">
+                <form id="displayNameForm" class="profile-edit">
+                    <label>Display name
+                        <input id="displayNameInput" name="displayName" maxlength="80" required>
+                    </label>
+                    <button type="submit" class="secondary">Save Display Name</button>
+                    <div class="profile-edit-note">Shown on the account card, member list, and map labels.</div>
+                </form>
+                <form id="groupNameForm" class="profile-edit hidden">
+                    <label>Active group name
+                        <input id="groupNameInput" name="groupName" maxlength="80" required>
+                    </label>
+                    <button type="submit" class="secondary">Save Group Name</button>
+                    <div class="profile-edit-note">Owner-only. Changes the current circle/group name.</div>
+                </form>
+            </div>
+            <div class="settings-grid">
+                <label>Member location text
+                    <select id="locationFormatSelect">
+                        <option value="city">Closest city + age</option>
+                        <option value="gps">Rounded GPS + age</option>
+                        <option value="both">Closest city + GPS + age</option>
+                    </select>
+                </label>
+                <div class="settings-row"><button id="refreshLocationLabelsBtn" type="button" class="secondary">Refresh Location Labels</button></div>
+            </div>
+        </section>
+
         <section id="inviteCard" class="card hidden">
             <h2>Invite Code</h2>
             <p class="muted">Owner-only. Regenerating a code invalidates the previous one for the active group.</p>
@@ -93,6 +123,18 @@ require_once __DIR__ . '/includes/config.php';
 
         <section class="card"><h2>Group Members</h2><div id="memberList" class="member-list">No members loaded yet.</div></section>
 
+        <section id="diagnosticsCard" class="card">
+            <div class="section-header"><div><p class="eyebrow">Diagnostics</p><h2>App Health</h2></div><button id="refreshDiagnosticsBtn" type="button" class="secondary">Refresh Diagnostics</button></div>
+            <div class="diag-grid">
+                <div class="diag-item"><strong>GPS Permission</strong><span id="diagPermission">Unknown</span></div>
+                <div class="diag-item"><strong>Online</strong><span id="diagOnline">Unknown</span></div>
+                <div class="diag-item"><strong>Session API</strong><span id="diagApi">Unknown</span></div>
+                <div class="diag-item"><strong>Signed In</strong><span id="diagUser">Unknown</span></div>
+                <div class="diag-item"><strong>Active Group</strong><span id="diagGroup">Unknown</span></div>
+                <div class="diag-item"><strong>Build</strong><span id="diagBuild"><?= htmlspecialchars(APP_REVISION . ' • ' . APP_BUILD_LABEL, ENT_QUOTES, 'UTF-8') ?></span></div>
+            </div>
+        </section>
+
         <section class="card warning-card"><h2>Reality Check</h2><p>This is a web app. Mobile browsers may pause updates when the page is closed, hidden, or limited by the operating system.</p></section>
     </main>
 </div>
@@ -101,5 +143,6 @@ require_once __DIR__ . '/includes/config.php';
 <script src="assets/js/app.js?v=<?= urlencode(APP_REVISION) ?>"></script>
 <script src="assets/js/member-badges.js?v=<?= urlencode(APP_REVISION) ?>"></script>
 <script src="assets/js/groups.js?v=<?= urlencode(APP_REVISION) ?>"></script>
+<script src="assets/js/account-settings.js?v=<?= urlencode(APP_REVISION) ?>"></script>
 </body>
 </html>
