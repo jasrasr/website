@@ -1,16 +1,16 @@
 <!--
 Project: Family GPS Tracker
 File: README.md
-Revision: 1.4.0
+Revision: 1.4.2
 Description: Setup, deployment, privacy, and maintenance notes for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
-Modified: 2026-07-06
+Modified: 2026-07-09
 -->
 
 # Family GPS Tracker
 
-Current Project Revision: **1.4.0**
+Current Project Revision: **1.4.2**
 
 A small PHP + JSON backend site for consent-based family and friend-circle location sharing. It is designed for shared hosting: browser GPS, persistent login cookies, no database, protected JSON storage, mobile-friendly maps, and multiple share groups per user account.
 
@@ -20,14 +20,19 @@ A small PHP + JSON backend site for consent-based family and friend-circle locat
 - Create additional groups/circles from the signed-in app.
 - Join additional groups/circles with invite codes without creating another login.
 - Switch the active group; the active group controls the map, member list, invite code, and location updates.
+- Rename the active group when signed in as that group owner.
+- Edit display name from the Account & Group settings card.
+- Show member username and short ID for troubleshooting duplicate names.
+- Choose member location text format: closest city, rounded GPS, or both.
+- Refresh closest-city labels manually.
+- Use diagnostics to check GPS permission, session/API timing, online status, active group, and build revision.
+- Use `health.php` to verify folder permissions and deployment protection checks.
 - Track per-group owner/member roles.
 - Login/logout with 30-day session cookies and optional Remember Me persistent login.
 - Request and save browser GPS location while the page is open.
 - View active-group members on a map.
-- Show closest city and age for latest member locations.
 - Show server-stored notices and per-user dismissals.
 - View shared trail history on `history.php`.
-- Edit display name from the signed-in account card.
 
 ## Multi-group behavior
 
@@ -37,7 +42,19 @@ The app still stores group records in `data/families/` for backward compatibilit
 - A user can own one group and be a member of another.
 - The **Groups / Circles** card lets the user create, join, or switch groups.
 - Group owners can regenerate the invite code for the active group.
+- Group owners can rename the active group.
 - Existing users are automatically treated as members of their current original family/group.
+
+## Health check
+
+Open `health.php` while signed in to check:
+
+- writable runtime folders;
+- expected `.placeholder` files;
+- presence of `.htaccess` protection files;
+- HTTPS detection;
+- current session username;
+- PHP version and resolved `DATA_DIR`.
 
 ## Requirements
 
@@ -66,6 +83,8 @@ The app still stores group records in `data/families/` for backward compatibilit
 
 This project starts at **1.0.0**, not 0.x.x.
 
+- Rev 1.4.2 = account settings, group rename, diagnostics, health check, and location display options
+- Rev 1.4.1 = invite-code UI cleanup
 - Rev 1.4.0 = multi-group/circle support
 - Rev 1.3.7 = closest-city latest-location labels
 - Rev 1.3.6 = display-name editing
@@ -91,7 +110,7 @@ Current live-data folders with placeholders:
 - `data/locks/.placeholder`
 - `data/audit/.placeholder`
 
-Rev 1.4.0 adds no new live-data folder.
+Rev 1.4.2 adds no new live-data folder.
 
 ## Stronger production setup
 
@@ -105,4 +124,4 @@ That is safer than trusting web-server rules alone.
 
 ## Revision
 
-Rev 1.4.0 - Multi-group/circle support.
+Rev 1.4.2 - Account settings, group rename, diagnostics, health check, and location display options.
