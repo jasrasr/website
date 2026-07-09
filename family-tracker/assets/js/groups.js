@@ -1,8 +1,8 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/groups.js
- * Revision: 1.4.0
- * Description: Multi-circle/group UI for creating, joining, and switching active groups.
+ * Revision: 1.4.1
+ * Description: Multi-circle/group UI for creating, joining, and switching active groups without duplicate invite-code displays.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-06
@@ -23,9 +23,6 @@
             '.groups-row{display:grid;grid-template-columns:1fr auto;gap:.6rem;align-items:end}',
             '.groups-card button{width:auto}',
             '.groups-mini{color:var(--muted);font-size:.9rem}',
-            '.groups-code{display:none;margin-top:.35rem}',
-            '.groups-code.visible{display:block}',
-            '.groups-code code{width:100%;overflow-wrap:anywhere;text-align:center}',
             '@media(max-width:850px){.groups-row{grid-template-columns:1fr}.groups-card button{width:100%}}'
         ].join('\n');
         document.head.appendChild(style);
@@ -66,7 +63,7 @@
         var card = document.createElement('section');
         card.id = 'groupsCard';
         card.className = 'card groups-card';
-        card.innerHTML = '<div><p class="eyebrow">Groups / Circles</p><h2>Active Group</h2><p class="groups-mini">Create separate circles for family, friends, trips, or other groups. The selected group controls the map, invite code, and member list.</p></div><label>Current group<select id="activeGroupSelect"></select></label><div class="groups-row"><label>Create new group<input id="newGroupName" maxlength="80" placeholder="Friends, Road Trip, Youth Group"></label><button id="createGroupBtn" type="button" class="secondary">Create</button></div><div class="groups-row"><label>Join another group<input id="joinGroupCode" maxlength="40" placeholder="ABCDE-12345"></label><button id="joinGroupBtn" type="button" class="secondary">Join</button></div><div id="newGroupCodeBox" class="groups-code"><p class="groups-mini">Save this new group invite code now:</p><code id="newGroupInviteCode"></code></div>';
+        card.innerHTML = '<div><p class="eyebrow">Groups / Circles</p><h2>Active Group</h2><p class="groups-mini">Create separate circles for family, friends, trips, or other groups. The selected group controls the map, invite code, and member list. Full invite codes appear only in the Invite Code card.</p></div><label>Current group<select id="activeGroupSelect"></select></label><div class="groups-row"><label>Create new group<input id="newGroupName" maxlength="80" placeholder="Friends, Road Trip, Youth Group"></label><button id="createGroupBtn" type="button" class="secondary">Create</button></div><div class="groups-row"><label>Join another group<input id="joinGroupCode" maxlength="40" placeholder="ABCDE-12345"></label><button id="joinGroupBtn" type="button" class="secondary">Join</button></div>';
         account.insertAdjacentElement('afterend', card);
 
         document.getElementById('activeGroupSelect').addEventListener('change', function (event) {
@@ -103,6 +100,14 @@
 
         var refresh = document.getElementById('refreshBtn');
         if (refresh) refresh.click();
+    }
+
+    function showFullInviteCode(code, messagePrefix) {
+        var inviteCard = document.getElementById('inviteCard');
+        var inviteDisplay = document.getElementById('inviteCodeDisplay');
+        if (inviteCard) inviteCard.classList.remove('hidden');
+        if (inviteDisplay) inviteDisplay.textContent = code;
+        setStatus(messagePrefix + ': ' + code);
     }
 
     function render(data) {
@@ -150,15 +155,7 @@
             render(data);
             requestLocationUpdate();
             if (data.oneTimeInviteCode) {
-                var box = document.getElementById('newGroupCodeBox');
-                var code = document.getElementById('newGroupInviteCode');
-                if (box && code) {
-                    code.textContent = data.oneTimeInviteCode;
-                    box.classList.add('visible');
-                }
-                var inviteDisplay = document.getElementById('inviteCodeDisplay');
-                if (inviteDisplay) inviteDisplay.textContent = data.oneTimeInviteCode;
-                setStatus('Group created. Save the invite code: ' + data.oneTimeInviteCode);
+                showFullInviteCode(data.oneTimeInviteCode, 'Group created. Save this invite code');
             } else {
                 setStatus('Group created. Updating location for this group...');
             }
