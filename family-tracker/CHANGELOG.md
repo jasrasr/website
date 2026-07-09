@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.3.7
+Revision: 1.4.0
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,17 @@ Modified: 2026-07-06
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.3.7**
+Current Project Revision: **1.4.0**
+
+## Rev 1.4.0 - 2026-07-06
+
+- Added multi-group/circle support using the existing family JSON storage as group records.
+- Added `groups.php` for listing groups, creating a new group, joining another group by invite code, and switching the active group.
+- Added `assets/js/groups.js` for the Groups / Circles UI.
+- Updated the main app so the active group controls the map, member list, location updates, and invite-code regeneration.
+- Added per-group owner/member role handling through group `memberRoles` and `memberIds` metadata.
+- Existing users are treated as members of their current family/group and can create or join additional groups.
+- Added no new live-data folder.
 
 ## Rev 1.3.7 - 2026-07-06
 
