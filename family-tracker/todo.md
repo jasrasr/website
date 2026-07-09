@@ -1,31 +1,44 @@
 <!--
 Project: Family GPS Tracker
 File: todo.md
-Revision: 1.0.0
-Project Revision Reference: 1.3.7
+Revision: 1.4.2
+Project Revision Reference: 1.4.2
 Description: Feature backlog and improvement ideas for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
-Modified: 2026-07-06
+Modified: 2026-07-09
 -->
 
 # Family GPS Tracker TODO
 
-Current App Revision Context: **1.3.7**
+Current App Revision Context: **1.4.2**
 
-This file is the feature backlog for future improvements. It is intentionally broader than `TASKS.md`; use this as the idea list, then move selected work into implementation tasks when ready.
+This file is the feature backlog for future improvements. Checked items are implemented or materially covered in the current app.
+
+## Completed in Rev 1.4.2
+
+- [x] Move display-name editing into the main app layout with cleaner styling.
+- [x] Add a family/group-name edit option for owners so the active group name can be changed separately from the owner display name.
+- [x] Add a visible account ID or username under each member for troubleshooting duplicate names.
+- [x] Add a manual **Refresh Location Labels** button for closest-city lookups.
+- [x] Add a graceful fallback when closest-city lookup fails, using rounded coordinates.
+- [x] Add a setting to choose member-list location format: closest city, rounded GPS, or both.
+- [x] Add a visible timestamp beside the app revision so it is obvious when Hostinger has deployed the latest code.
+- [x] Add a simple diagnostics panel that shows browser GPS permission state, session state, and last API response time.
+- [x] Add a setup/health-check page that verifies folder write permissions and direct-access protection.
+- [x] Add a support/debug page that can show sanitized JSON/runtime metadata without exposing secrets.
 
 ## Priority 1 - Practical fixes and polish
 
-- [ ] Add a true account/profile page instead of injecting profile controls from JavaScript.
-- [ ] Move display-name editing into the main app layout with cleaner styling.
-- [ ] Add a family-name edit option for owners so the family name can be changed separately from the owner display name.
-- [ ] Add a visible account ID or username under each member for troubleshooting duplicate names.
-- [ ] Add a manual **Refresh Location Labels** button for closest-city lookups.
-- [ ] Add a graceful fallback when closest-city lookup fails, such as showing rounded coordinates only when needed.
-- [ ] Add a setting to choose member-list location format: closest city, rounded GPS, or both.
-- [ ] Add a visible timestamp beside the app revision so it is obvious when Hostinger has deployed the latest code.
-- [ ] Add a simple diagnostics panel that shows browser GPS permission state, session state, and last API response time.
+- [ ] Add a dedicated account/profile page in addition to the inline Account & Group settings card.
+- [x] Move display-name editing into the main app layout with cleaner styling.
+- [x] Add a family/group-name edit option for owners so the group name can be changed separately from the owner display name.
+- [x] Add a visible account ID or username under each member for troubleshooting duplicate names.
+- [x] Add a manual **Refresh Location Labels** button for closest-city lookups.
+- [x] Add a graceful fallback when closest-city lookup fails, such as showing rounded coordinates only when needed.
+- [x] Add a setting to choose member-list location format: closest city, rounded GPS, or both.
+- [x] Add a visible timestamp beside the app revision so it is obvious when Hostinger has deployed the latest code.
+- [x] Add a simple diagnostics panel that shows browser GPS permission state, session state, and last API response time.
 
 ## Priority 2 - Family and member management
 
@@ -74,7 +87,7 @@ This file is the feature backlog for future improvements. It is intentionally br
 - [ ] Add a force logout for all sessions on password change.
 - [ ] Add stronger audit logging for account changes, invite changes, and member removals.
 - [ ] Move `data/` outside the public web root for production.
-- [ ] Add a setup/health-check page that verifies folder write permissions and direct-access protection.
+- [x] Add a setup/health-check page that verifies folder write permissions and `.htaccess` protection.
 - [ ] Add Content Security Policy headers after CDN and iframe behavior is tested.
 
 ## Priority 6 - Data management and privacy
@@ -102,7 +115,7 @@ This file is the feature backlog for future improvements. It is intentionally br
 ## Priority 8 - UI cleanup
 
 - [ ] Consolidate JavaScript files so profile, badge, and location-label features are not split awkwardly.
-- [ ] Move injected CSS into `assets/css/style.css`.
+- [ ] Finish moving all injected CSS into `assets/css/style.css`.
 - [ ] Reduce card height on mobile for the account, invite, notices, and member sections.
 - [ ] Add a compact mode for small screens.
 - [ ] Add a high-contrast mode.
@@ -116,7 +129,7 @@ This file is the feature backlog for future improvements. It is intentionally br
 - [ ] Add a platform-admin role separate from family owner.
 - [ ] Add a platform admin dashboard for viewing families and account counts.
 - [ ] Add owner impersonation prevention and admin audit rules if platform admin is added.
-- [ ] Add a support/debug page that can show sanitized JSON metadata without exposing secrets.
+- [x] Add a support/debug page that can show sanitized JSON metadata without exposing secrets.
 
 ## Priority 10 - Longer-term ideas
 
@@ -127,7 +140,7 @@ This file is the feature backlog for future improvements. It is intentionally br
 - [ ] Add emergency contact cards per member.
 - [ ] Add check-in buttons such as **I'm OK**, **Need Help**, or **On My Way**.
 - [ ] Add temporary sharing links with expiration.
-- [ ] Add family groups or subgroups for large families.
+- [x] Add family groups or subgroups for large families.
 - [ ] Add import/export compatibility with other family-location tools if feasible.
 
 ## Implementation notes
