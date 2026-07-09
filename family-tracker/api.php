@@ -2,8 +2,8 @@
 /**
  * Project: Family GPS Tracker
  * File: api.php
- * Revision: 1.3.0
- * Description: JSON API for auth, persistent login, family membership, invite codes, and location updates.
+ * Revision: 1.4.0
+ * Description: JSON API for auth, persistent login, multi-group membership, invite codes, and location updates.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-06
@@ -79,7 +79,7 @@ function handle_register_family(array $input): void
     $rememberMe = bool_field($input, 'rememberMe');
 
     if ($displayName === '' || $familyName === '') {
-        fail('Display name and family name are required.', 400);
+        fail('Display name and family/group name are required.', 400);
     }
     validate_username_or_fail($username);
     validate_password_or_fail($password);
@@ -104,7 +104,10 @@ function handle_register_family(array $input): void
         $family = [
             'id' => $familyId,
             'name' => $familyName,
+            'type' => 'group',
             'ownerUserId' => $userId,
+            'memberIds' => [$userId],
+            'memberRoles' => [$userId => 'owner'],
             'inviteCodeHash' => password_hash($inviteNormalized, PASSWORD_DEFAULT),
             'inviteCodeLast4' => substr($inviteNormalized, -4),
             'inviteCodeCreatedAt' => $createdAt,
@@ -118,6 +121,8 @@ function handle_register_family(array $input): void
             'username' => $username,
             'passwordHash' => password_hash($password, PASSWORD_DEFAULT),
             'familyId' => $familyId,
+            'activeFamilyId' => $familyId,
+            'groupIds' => [$familyId],
             'role' => 'owner',
             'isActive' => true,
             'consentAcceptedAt' => $createdAt,
@@ -140,7 +145,7 @@ function handle_register_family(array $input): void
 
     ok(build_me_payload($user) + [
         'oneTimeInviteCode' => $inviteCode,
-        'message' => 'Family tracker created. Save the invite code now.',
+        'message' => 'Group created. Save the invite code now.',
     ]);
 }
 
@@ -182,6 +187,8 @@ function handle_join_family(array $input): void
             'username' => $username,
             'passwordHash' => password_hash($password, PASSWORD_DEFAULT),
             'familyId' => $family['id'],
+            'activeFamilyId' => $family['id'],
+            'groupIds' => [$family['id']],
             'role' => 'member',
             'isActive' => true,
             'consentAcceptedAt' => $createdAt,
@@ -189,6 +196,8 @@ function handle_join_family(array $input): void
             'lastLoginAt' => $createdAt,
         ];
 
+        $family = ensure_family_membership($family, $user, 'member');
+        write_family($family);
         write_user($user);
         $index['usernames'][$username] = $userId;
         write_json_file($indexPath, $index);
@@ -200,7 +209,7 @@ function handle_join_family(array $input): void
 
     [$user] = $result;
     start_authenticated_session($user, $rememberMe);
-    ok(build_me_payload($user) + ['message' => 'Joined family tracker.']);
+    ok(build_me_payload($user) + ['message' => 'Joined group.']);
 }
 
 function handle_login(array $input): void
@@ -221,6 +230,7 @@ function handle_login(array $input): void
     }
 
     $user['lastLoginAt'] = now_iso();
+    $user = add_user_group_id($user, (string)($user['familyId'] ?? ''));
     write_user($user);
     start_authenticated_session($user, $rememberMe);
 
@@ -231,22 +241,22 @@ function handle_login(array $input): void
 function handle_family_locations(): void
 {
     $user = require_user();
-    $familyId = (string)$user['familyId'];
-    $family = read_family($familyId);
+    $family = current_family_for_user($user);
     if (!$family) {
-        fail('Family not found.', 404);
+        fail('Active group not found.', 404);
     }
+    $familyId = (string)$family['id'];
 
     $members = [];
     $now = time();
     foreach (list_json_records('users') as $member) {
-        if (($member['familyId'] ?? '') !== $familyId || empty($member['isActive'])) {
+        if (empty($member['isActive']) || family_member_role($family, $member) === null) {
             continue;
         }
 
-        $public = public_user($member);
+        $public = public_user_for_family($member, $family);
         $location = read_json_file(location_path((string)$member['id']), []);
-        if ($location) {
+        if ($location && (($location['familyId'] ?? '') === $familyId || empty($location['familyId']))) {
             $serverTime = isset($location['serverTime']) ? strtotime((string)$location['serverTime']) : false;
             $ageSeconds = $serverTime ? max(0, $now - $serverTime) : null;
             $location['ageSeconds'] = $ageSeconds;
@@ -271,6 +281,11 @@ function handle_family_locations(): void
 function handle_update_location(array $input): void
 {
     $user = require_user();
+    $family = current_family_for_user($user);
+    if (!$family) {
+        fail('Active group not found.', 404);
+    }
+    $familyId = (string)$family['id'];
     $lat = float_field($input, 'latitude', -90, 90);
     $lon = float_field($input, 'longitude', -180, 180);
 
@@ -286,7 +301,7 @@ function handle_update_location(array $input): void
 
     $location = [
         'userId' => $user['id'],
-        'familyId' => $user['familyId'],
+        'familyId' => $familyId,
         'latitude' => $lat,
         'longitude' => $lon,
         'accuracy' => $accuracy,
@@ -298,13 +313,13 @@ function handle_update_location(array $input): void
         'source' => 'browser-geolocation',
     ];
 
-    with_named_lock('location_' . $user['id'], function () use ($user, $location): void {
+    with_named_lock('location_' . $user['id'], function () use ($user, $location, $familyId): void {
         write_json_file(location_path((string)$user['id']), $location);
 
         $trailPath = trail_path((string)$user['id']);
         $trail = read_json_file($trailPath, ['points' => []]);
         $trail['userId'] = $user['id'];
-        $trail['familyId'] = $user['familyId'];
+        $trail['familyId'] = $familyId;
         $trail['updatedAt'] = $location['serverTime'];
         $trail['points'][] = $location;
         if (count($trail['points']) > MAX_TRAIL_POINTS) {
@@ -334,9 +349,9 @@ function handle_regenerate_invite(): void
 {
     $user = require_user();
     require_owner($user);
-    $family = read_family((string)$user['familyId']);
+    $family = current_family_for_user($user);
     if (!$family) {
-        fail('Family not found.', 404);
+        fail('Active group not found.', 404);
     }
 
     $code = generate_invite_code();
