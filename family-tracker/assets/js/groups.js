@@ -36,6 +36,11 @@
         if (status) status.textContent = text;
     }
 
+    function requestLocationUpdate() {
+        var updateOnce = document.getElementById('updateOnceBtn');
+        if (updateOnce) window.setTimeout(function () { updateOnce.click(); }, 500);
+    }
+
     function api(payload) {
         var options = { credentials: 'same-origin' };
         if (payload) {
@@ -127,7 +132,8 @@
         setStatus('Switching group...');
         api({ action: 'switch_group', groupId: groupId }).then(function (data) {
             render(data);
-            setStatus('Active group switched.');
+            requestLocationUpdate();
+            setStatus('Active group switched. Updating location for this group...');
         }).catch(function (error) {
             setStatus(error.message || 'Could not switch group.');
             loadGroups();
@@ -142,6 +148,7 @@
         api({ action: 'create_group', groupName: name }).then(function (data) {
             if (input) input.value = '';
             render(data);
+            requestLocationUpdate();
             if (data.oneTimeInviteCode) {
                 var box = document.getElementById('newGroupCodeBox');
                 var code = document.getElementById('newGroupInviteCode');
@@ -153,7 +160,7 @@
                 if (inviteDisplay) inviteDisplay.textContent = data.oneTimeInviteCode;
                 setStatus('Group created. Save the invite code: ' + data.oneTimeInviteCode);
             } else {
-                setStatus('Group created.');
+                setStatus('Group created. Updating location for this group...');
             }
         }).catch(function (error) {
             setStatus(error.message || 'Could not create group.');
@@ -168,7 +175,8 @@
         api({ action: 'join_group', inviteCode: code }).then(function (data) {
             if (input) input.value = '';
             render(data);
-            setStatus('Joined and switched to group.');
+            requestLocationUpdate();
+            setStatus('Joined and switched to group. Updating location for this group...');
         }).catch(function (error) {
             setStatus(error.message || 'Could not join group.');
         });
