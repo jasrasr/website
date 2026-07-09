@@ -2,11 +2,11 @@
 /**
  * Project: Family GPS Tracker
  * File: groups.php
- * Revision: 1.4.0
- * Description: JSON endpoint for multi-circle/group creation, joining, listing, and active-group switching.
+ * Revision: 1.4.2
+ * Description: JSON endpoint for multi-circle/group creation, joining, renaming, listing, and active-group switching.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
- * Modified: 2026-07-06
+ * Modified: 2026-07-09
  */
 
 declare(strict_types=1);
@@ -34,6 +34,9 @@ try {
             break;
         case 'switch_group':
             handle_switch_group($user, $input);
+            break;
+        case 'rename_group':
+            handle_rename_group($user, $input);
             break;
         default:
             fail('Unknown group action.', 404);
@@ -192,4 +195,26 @@ function handle_switch_group(array $user, array $input): void
     $updatedUser = set_active_family_for_user($user, $groupId);
     audit_event('switch_group', ['userId' => $updatedUser['id'], 'familyId' => $groupId]);
     ok(groups_payload($updatedUser, ['message' => 'Active group switched.']));
+}
+
+function handle_rename_group(array $user, array $input): void
+{
+    $groupId = str_field($input, 'groupId', 80);
+    $name = str_field($input, 'groupName', 80);
+    if ($groupId === '' || $name === '') {
+        fail('Group ID and group name are required.', 400);
+    }
+
+    $updatedUser = read_user((string)$user['id']) ?: $user;
+    $family = read_family($groupId);
+    if (!$family || family_member_role($family, $updatedUser) !== 'owner') {
+        fail('Owner permission required for that group.', 403);
+    }
+
+    $family['name'] = $name;
+    $family['updatedAt'] = now_iso();
+    write_family($family);
+    audit_event('rename_group', ['userId' => $updatedUser['id'], 'familyId' => $groupId]);
+
+    ok(groups_payload($updatedUser, ['message' => 'Group name updated.']));
 }
