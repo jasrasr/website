@@ -1,11 +1,11 @@
 <!--
 Project: Family GPS Tracker
 File: TASKS.md
-Revision: 1.4.0
+Revision: 1.4.2
 Description: Restart-friendly task list and maintenance backlog for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
-Modified: 2026-07-06
+Modified: 2026-07-09
 -->
 
 # Family GPS Tracker Task List
@@ -25,6 +25,8 @@ Modified: 2026-07-06
 - [x] Rev 1.3.6 - Display-name update option.
 - [x] Rev 1.3.7 - Closest-city latest-location labels.
 - [x] Rev 1.4.0 - Multi-group/circle support.
+- [x] Rev 1.4.1 - Invite-code UI cleanup.
+- [x] Rev 1.4.2 - Account settings, group rename, location-label options, diagnostics, and health check.
 
 ## Live data folder rule
 
@@ -36,7 +38,7 @@ Modified: 2026-07-06
 - [x] `data/persistent_logins/.placeholder` exists for persistent login records.
 - [x] `data/locks/.placeholder` exists for lock files.
 - [x] `data/audit/.placeholder` exists for audit logs.
-- [x] Rev 1.4.0 added no new live-data folder.
+- [x] Rev 1.4.2 added no new live-data folder.
 
 ## Next practical improvements
 
@@ -45,9 +47,9 @@ Modified: 2026-07-06
 - Add per-group colors/icons for members.
 - Add per-group notices for group creation, join, switch, and invite regeneration.
 - Add per-device persistent login management so users can revoke other saved devices.
-- Add optional geofence zones, such as Home, School, Work, Church, or Grandma’s House.
+- Add password-change and force-logout workflow.
 - Add export/delete-all account data controls.
-- Add a one-time setup health check page that verifies folder write permissions and `.htaccess` protection.
+- Add optional geofence zones, such as Home, School, Work, Church, or Grandma’s House.
 
 ## Security hardening
 
