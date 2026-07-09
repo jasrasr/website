@@ -2,8 +2,8 @@
 /**
  * Project: Family GPS Tracker
  * File: includes/security.php
- * Revision: 1.3.0
- * Description: Request, validation, session, persistent-login, and response helpers.
+ * Revision: 1.4.0
+ * Description: Request, validation, session, persistent-login, multi-group, and response helpers.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-06
@@ -216,6 +216,9 @@ function start_authenticated_session(array $user, bool $rememberMe = false): voi
 {
     session_regenerate_id(true);
     $_SESSION['user_id'] = $user['id'];
+    if (!empty($user['familyId'])) {
+        $_SESSION['active_family_id'] = (string)$user['familyId'];
+    }
     ensure_csrf_token();
     if ($rememberMe) {
         issue_persistent_login($user);
@@ -266,10 +269,132 @@ function require_user(): array
     return $user;
 }
 
+function user_group_ids(array $user): array
+{
+    $ids = [];
+    if (!empty($user['familyId'])) {
+        $ids[] = safe_id((string)$user['familyId']);
+    }
+    foreach (($user['groupIds'] ?? []) as $id) {
+        if (is_string($id) && $id !== '') {
+            $ids[] = safe_id($id);
+        }
+    }
+    return array_values(array_unique(array_filter($ids)));
+}
+
+function add_user_group_id(array $user, string $familyId): array
+{
+    $ids = user_group_ids($user);
+    $ids[] = safe_id($familyId);
+    $user['groupIds'] = array_values(array_unique(array_filter($ids)));
+    return $user;
+}
+
+function family_member_role(array $family, array $user): ?string
+{
+    $userId = (string)($user['id'] ?? '');
+    $familyId = (string)($family['id'] ?? '');
+    if ($userId === '' || $familyId === '') {
+        return null;
+    }
+    if (($family['ownerUserId'] ?? '') === $userId) {
+        return 'owner';
+    }
+    $roles = $family['memberRoles'] ?? [];
+    if (is_array($roles) && isset($roles[$userId]) && is_string($roles[$userId])) {
+        return $roles[$userId] === 'owner' ? 'owner' : 'member';
+    }
+    $memberIds = $family['memberIds'] ?? [];
+    if (is_array($memberIds) && in_array($userId, $memberIds, true)) {
+        return 'member';
+    }
+    if (($user['familyId'] ?? '') === $familyId || in_array($familyId, user_group_ids($user), true)) {
+        return (($user['role'] ?? '') === 'owner' && ($family['ownerUserId'] ?? '') === $userId) ? 'owner' : 'member';
+    }
+    return null;
+}
+
+function ensure_family_membership(array $family, array $user, string $role = 'member'): array
+{
+    $userId = (string)($user['id'] ?? '');
+    if ($userId === '') {
+        return $family;
+    }
+    $family['memberIds'] = array_values(array_unique(array_filter(array_merge($family['memberIds'] ?? [], [$userId]))));
+    $roles = $family['memberRoles'] ?? [];
+    if (!is_array($roles)) {
+        $roles = [];
+    }
+    if (($family['ownerUserId'] ?? '') === $userId || $role === 'owner') {
+        $roles[$userId] = 'owner';
+    } elseif (empty($roles[$userId])) {
+        $roles[$userId] = 'member';
+    }
+    $family['memberRoles'] = $roles;
+    $family['updatedAt'] = now_iso();
+    return $family;
+}
+
+function active_family_id_for_user(array $user): string
+{
+    $ids = user_group_ids($user);
+    $candidates = [
+        $_SESSION['active_family_id'] ?? '',
+        $user['activeFamilyId'] ?? '',
+        $user['familyId'] ?? '',
+    ];
+    foreach ($candidates as $candidate) {
+        if (is_string($candidate) && in_array(safe_id($candidate), $ids, true)) {
+            return safe_id($candidate);
+        }
+    }
+    return $ids[0] ?? '';
+}
+
+function current_family_for_user(array $user): ?array
+{
+    $familyId = active_family_id_for_user($user);
+    if ($familyId === '') {
+        return null;
+    }
+    $family = read_family($familyId);
+    if (!$family || family_member_role($family, $user) === null) {
+        return null;
+    }
+    $_SESSION['active_family_id'] = $familyId;
+    return $family;
+}
+
+function set_active_family_for_user(array $user, string $familyId): array
+{
+    $familyId = safe_id($familyId);
+    $family = read_family($familyId);
+    if (!$family || family_member_role($family, $user) === null) {
+        fail('You are not a member of that group.', 403);
+    }
+    $user = add_user_group_id($user, $familyId);
+    $user['familyId'] = $familyId;
+    $user['activeFamilyId'] = $familyId;
+    $user['role'] = family_member_role($family, $user) ?? 'member';
+    write_user($user);
+    $_SESSION['active_family_id'] = $familyId;
+    return $user;
+}
+
+function public_user_for_family(array $user, array $family): array
+{
+    $public = public_user($user);
+    $public['role'] = family_member_role($family, $user) ?? ($public['role'] ?? 'member');
+    $public['activeFamilyId'] = $family['id'] ?? ($public['familyId'] ?? '');
+    return $public;
+}
+
 function require_owner(array $user): void
 {
-    if (($user['role'] ?? '') !== 'owner') {
-        fail('Owner permission required.', 403);
+    $family = current_family_for_user($user);
+    if (!$family || family_member_role($family, $user) !== 'owner') {
+        fail('Owner permission required for the active group.', 403);
     }
 }
 
@@ -334,11 +459,11 @@ function build_me_payload(?array $user): array
         ];
     }
 
-    $family = !empty($user['familyId']) ? read_family((string)$user['familyId']) : null;
+    $family = current_family_for_user($user);
     return [
         'authenticated' => true,
         'csrfToken' => $csrf,
-        'user' => public_user($user),
+        'user' => $family ? public_user_for_family($user, $family) : public_user($user),
         'family' => $family ? public_family($family, true) : null,
     ];
 }
