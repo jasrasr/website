@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.4.3
+Revision: 1.4.4
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,21 @@ Modified: 2026-07-09
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.4.3**
+Current Project Revision: **1.4.4**
+
+## Rev 1.4.4 - 2026-07-09
+
+- Added owner-only Member Management for the active group.
+- Added `member-management.php` for updating active-group member metadata and removing a member from the active group.
+- Added `assets/js/member-management.js` for member nickname, relationship, color, and remove controls.
+- Added per-group member nicknames.
+- Added per-group relationship labels: Dad, Mom, Child, Grandparent, Friend, or Other.
+- Added per-group member colors shown in member cards and badges.
+- Added joined-at display for active-group members.
+- Added duplicate display-label warnings.
+- Added active-group removal that does not delete the user's account.
+- Updated new-group and join-group flows to bootstrap member metadata.
+- Added no new live-data folder.
 
 ## Rev 1.4.3 - 2026-07-09
 
@@ -37,21 +51,4 @@ Current Project Revision: **1.4.3**
 - Added a diagnostics panel for GPS permission, online status, session API timing, signed-in user, active group, and build revision.
 - Added `health.php`, a signed-in health-check page for runtime folder permissions and deployment checks.
 - Marked completed items in `todo.md`.
-- Added no new live-data folder.
-
-## Rev 1.4.1 - 2026-07-06
-
-- Removed the duplicate temporary group invite-code display from the Groups / Circles card.
-- The full invite code now appears only in the main Invite Code card.
-- Creating a new group still switches to that group and places the one-time code in the Invite Code card for copying.
-- Added no new live-data folder.
-
-## Rev 1.4.0 - 2026-07-06
-
-- Added multi-group/circle support using the existing family JSON storage as group records.
-- Added `groups.php` for listing groups, creating a new group, joining another group by invite code, and switching the active group.
-- Added `assets/js/groups.js` for the Groups / Circles UI.
-- Updated the main app so the active group controls the map, member list, location updates, and invite-code regeneration.
-- Added per-group owner/member role handling through group `memberRoles` and `memberIds` metadata.
-- Existing users are treated as members of their current family/group and can create or join additional groups.
 - Added no new live-data folder.
