@@ -2,8 +2,8 @@
 /**
  * Project: Family GPS Tracker
  * File: api.php
- * Revision: 1.4.3
- * Description: JSON API for auth, persistent login, multi-group membership, invite codes, location updates, and group notices.
+ * Revision: 1.4.4
+ * Description: JSON API for auth, persistent login, multi-group membership, invite codes, location updates, member metadata, and group notices.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-09
@@ -24,44 +24,35 @@ try {
         case 'me':
             ok(build_me_payload(current_user()));
             break;
-
         case 'register_family':
             handle_register_family(request_input());
             break;
-
         case 'join_family':
             handle_join_family(request_input());
             break;
-
         case 'login':
             handle_login(request_input());
             break;
-
         case 'logout':
             require_csrf();
             logout_current_session();
             ok(['message' => 'Logged out.']);
             break;
-
         case 'family_locations':
             handle_family_locations();
             break;
-
         case 'update_location':
             require_csrf();
             handle_update_location(request_input());
             break;
-
         case 'delete_my_location':
             require_csrf();
             handle_delete_my_location();
             break;
-
         case 'regenerate_invite':
             require_csrf();
             handle_regenerate_invite();
             break;
-
         default:
             fail('Unknown API action.', 404);
     }
@@ -91,7 +82,6 @@ function handle_register_family(array $input): void
     $result = with_named_lock('registration', function () use ($displayName, $username, $password, $familyName): array {
         $indexPath = username_index_path();
         $index = read_json_file($indexPath, ['usernames' => []]);
-
         if (!empty($index['usernames'][$username])) {
             fail('Username already exists.', 409);
         }
@@ -109,6 +99,8 @@ function handle_register_family(array $input): void
             'ownerUserId' => $userId,
             'memberIds' => [$userId],
             'memberRoles' => [$userId => 'owner'],
+            'memberJoinedAt' => [$userId => $createdAt],
+            'memberProfiles' => [$userId => ['nickname' => '', 'relationship' => '', 'color' => '']],
             'inviteCodeHash' => password_hash($inviteNormalized, PASSWORD_DEFAULT),
             'inviteCodeLast4' => substr($inviteNormalized, -4),
             'inviteCodeCreatedAt' => $createdAt,
@@ -138,7 +130,6 @@ function handle_register_family(array $input): void
 
         audit_event('register_family', ['userId' => $userId, 'familyId' => $familyId]);
         add_group_notice($familyId, 'group_created', $displayName . ' created the group ' . $familyName . '.', $userId);
-
         return [$user, $family, $inviteCode];
     });
 
@@ -199,6 +190,10 @@ function handle_join_family(array $input): void
         ];
 
         $family = ensure_family_membership($family, $user, 'member');
+        $family['memberJoinedAt'] = is_array($family['memberJoinedAt'] ?? null) ? $family['memberJoinedAt'] : [];
+        $family['memberJoinedAt'][$userId] = $createdAt;
+        $family['memberProfiles'] = is_array($family['memberProfiles'] ?? null) ? $family['memberProfiles'] : [];
+        $family['memberProfiles'][$userId] = ['nickname' => '', 'relationship' => '', 'color' => ''];
         write_family($family);
         write_user($user);
         $index['usernames'][$username] = $userId;
@@ -206,7 +201,6 @@ function handle_join_family(array $input): void
 
         audit_event('join_family', ['userId' => $userId, 'familyId' => $family['id']]);
         add_group_notice((string)$family['id'], 'member_joined_group', $displayName . ' joined ' . $family['name'] . '.', $userId);
-
         return [$user, $family];
     });
 
@@ -241,6 +235,26 @@ function handle_login(array $input): void
     ok(build_me_payload($user) + ['message' => 'Logged in.']);
 }
 
+function group_profile_for_member(array $family, string $userId): array
+{
+    $profiles = is_array($family['memberProfiles'] ?? null) ? $family['memberProfiles'] : [];
+    $profile = is_array($profiles[$userId] ?? null) ? $profiles[$userId] : [];
+    $nickname = trim((string)($profile['nickname'] ?? ''));
+    $relationship = trim((string)($profile['relationship'] ?? ''));
+    $color = trim((string)($profile['color'] ?? ''));
+    if ($color !== '' && !preg_match('/^#[0-9a-fA-F]{6}$/', $color)) {
+        $color = '';
+    }
+    return ['nickname' => $nickname, 'relationship' => $relationship, 'color' => $color];
+}
+
+function member_joined_at(array $family, array $member): ?string
+{
+    $joined = is_array($family['memberJoinedAt'] ?? null) ? $family['memberJoinedAt'] : [];
+    $userId = (string)($member['id'] ?? '');
+    return $joined[$userId] ?? ($member['createdAt'] ?? null);
+}
+
 function handle_family_locations(): void
 {
     $user = require_user();
@@ -251,6 +265,7 @@ function handle_family_locations(): void
     $familyId = (string)$family['id'];
 
     $members = [];
+    $displayCounts = [];
     $now = time();
     foreach (list_json_records('users') as $member) {
         if (empty($member['isActive']) || family_member_role($family, $member) === null) {
@@ -258,6 +273,13 @@ function handle_family_locations(): void
         }
 
         $public = public_user_for_family($member, $family);
+        $profile = group_profile_for_member($family, (string)$member['id']);
+        $displayLabel = $profile['nickname'] !== '' ? $profile['nickname'] : (string)($public['displayName'] ?: $public['username']);
+        $public['groupProfile'] = $profile;
+        $public['displayLabel'] = $displayLabel;
+        $public['joinedAt'] = member_joined_at($family, $member);
+        $displayCounts[strtolower($displayLabel)] = ($displayCounts[strtolower($displayLabel)] ?? 0) + 1;
+
         $location = read_json_file(location_path((string)$member['id']), []);
         if ($location && (($location['familyId'] ?? '') === $familyId || empty($location['familyId']))) {
             $serverTime = isset($location['serverTime']) ? strtotime((string)$location['serverTime']) : false;
@@ -271,7 +293,13 @@ function handle_family_locations(): void
         $members[] = $public;
     }
 
-    usort($members, fn($a, $b) => strcasecmp((string)$a['displayName'], (string)$b['displayName']));
+    foreach ($members as &$member) {
+        $key = strtolower((string)($member['displayLabel'] ?? $member['displayName'] ?? ''));
+        $member['hasDuplicateDisplayLabel'] = ($displayCounts[$key] ?? 0) > 1;
+    }
+    unset($member);
+
+    usort($members, fn($a, $b) => strcasecmp((string)($a['displayLabel'] ?? $a['displayName']), (string)($b['displayLabel'] ?? $b['displayName'])));
 
     ok([
         'family' => public_family($family, true),
@@ -318,7 +346,6 @@ function handle_update_location(array $input): void
 
     with_named_lock('location_' . $user['id'], function () use ($user, $location, $familyId): void {
         write_json_file(location_path((string)$user['id']), $location);
-
         $trailPath = trail_path((string)$user['id']);
         $trail = read_json_file($trailPath, ['points' => []]);
         $trail['userId'] = $user['id'];
