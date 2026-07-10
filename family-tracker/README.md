@@ -1,8 +1,8 @@
 <!--
 Project: Family GPS Tracker
 File: README.md
-Revision: 1.4.2
-Description: Setup, deployment, privacy, and maintenance notes for the PHP/JSON family tracker.
+Revision: 1.4.3
+Description: Setup, deployment, privacy, account security, and maintenance notes for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
 Modified: 2026-07-09
@@ -10,7 +10,7 @@ Modified: 2026-07-09
 
 # Family GPS Tracker
 
-Current Project Revision: **1.4.2**
+Current Project Revision: **1.4.3**
 
 A small PHP + JSON backend site for consent-based family and friend-circle location sharing. It is designed for shared hosting: browser GPS, persistent login cookies, no database, protected JSON storage, mobile-friendly maps, and multiple share groups per user account.
 
@@ -22,7 +22,11 @@ A small PHP + JSON backend site for consent-based family and friend-circle locat
 - Switch the active group; the active group controls the map, member list, invite code, and location updates.
 - Rename the active group when signed in as that group owner.
 - Edit display name from the Account & Group settings card.
+- Change password and revoke remembered devices.
+- List remembered devices and revoke one or all of them.
+- Download a signed-in user's own data export.
 - Show member username and short ID for troubleshooting duplicate names.
+- Separate group members into Live / Recent, Stale, and No Location Yet sections.
 - Choose member location text format: closest city, rounded GPS, or both.
 - Refresh closest-city labels manually.
 - Use diagnostics to check GPS permission, session/API timing, online status, active group, and build revision.
@@ -31,7 +35,7 @@ A small PHP + JSON backend site for consent-based family and friend-circle locat
 - Login/logout with 30-day session cookies and optional Remember Me persistent login.
 - Request and save browser GPS location while the page is open.
 - View active-group members on a map.
-- Show server-stored notices and per-user dismissals.
+- Show server-stored group notices and per-user dismissals.
 - View shared trail history on `history.php`.
 
 ## Multi-group behavior
@@ -44,6 +48,18 @@ The app still stores group records in `data/families/` for backward compatibilit
 - Group owners can regenerate the invite code for the active group.
 - Group owners can rename the active group.
 - Existing users are automatically treated as members of their current original family/group.
+
+## Account security
+
+The Account Security & Data card supports:
+
+- password change;
+- remembered-device list;
+- revoke one remembered device;
+- revoke all remembered devices;
+- download-my-data export.
+
+Changing the password revokes remembered-device tokens. The current browser session remains active until logout.
 
 ## Health check
 
@@ -83,6 +99,7 @@ Open `health.php` while signed in to check:
 
 This project starts at **1.0.0**, not 0.x.x.
 
+- Rev 1.4.3 = account security, remembered devices, data export, group notices, and member status sections
 - Rev 1.4.2 = account settings, group rename, diagnostics, health check, and location display options
 - Rev 1.4.1 = invite-code UI cleanup
 - Rev 1.4.0 = multi-group/circle support
@@ -110,7 +127,7 @@ Current live-data folders with placeholders:
 - `data/locks/.placeholder`
 - `data/audit/.placeholder`
 
-Rev 1.4.2 adds no new live-data folder.
+Rev 1.4.3 adds no new live-data folder.
 
 ## Stronger production setup
 
@@ -124,4 +141,4 @@ That is safer than trusting web-server rules alone.
 
 ## Revision
 
-Rev 1.4.2 - Account settings, group rename, diagnostics, health check, and location display options.
+Rev 1.4.3 - Account security, remembered devices, data export, group notices, and member status sections.
