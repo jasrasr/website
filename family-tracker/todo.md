@@ -1,8 +1,8 @@
 <!--
 Project: Family GPS Tracker
 File: todo.md
-Revision: 1.4.3
-Project Revision Reference: 1.4.3
+Revision: 1.4.4
+Project Revision Reference: 1.4.4
 Description: Feature backlog and improvement ideas for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -11,9 +11,19 @@ Modified: 2026-07-09
 
 # Family GPS Tracker TODO
 
-Current App Revision Context: **1.4.3**
+Current App Revision Context: **1.4.4**
 
 This file is the feature backlog for future improvements. Checked items are implemented or materially covered in the current app.
+
+## Completed in Rev 1.4.4
+
+- [x] Add an owner dashboard for managing family members in the active group.
+- [x] Let owners remove a member from the active group without deleting the account.
+- [x] Add member nicknames separate from login username and display name.
+- [x] Add optional member colors for member cards and badges.
+- [x] Add relationship labels such as Dad, Mom, Child, Grandparent, Friend, or Other.
+- [x] Add a visible **Joined At** date for each active-group member.
+- [x] Add a warning if two members have the same group display label.
 
 ## Completed in Rev 1.4.3
 
@@ -25,20 +35,6 @@ This file is the feature backlog for future improvements. Checked items are impl
 - [x] Add per-device persistent-login management so users can revoke remembered devices.
 - [x] Add a force logout for remembered-device sessions on password change.
 - [x] Add export-my-data for a signed-in user.
-- [x] Add stronger audit logging for account changes, invite changes, and remembered-device revocation.
-
-## Completed in Rev 1.4.2
-
-- [x] Move display-name editing into the main app layout with cleaner styling.
-- [x] Add a family/group-name edit option for owners so the active group name can be changed separately from the owner display name.
-- [x] Add a visible account ID or username under each member for troubleshooting duplicate names.
-- [x] Add a manual **Refresh Location Labels** button for closest-city lookups.
-- [x] Add a graceful fallback when closest-city lookup fails, using rounded coordinates.
-- [x] Add a setting to choose member-list location format: closest city, rounded GPS, or both.
-- [x] Add a visible timestamp beside the app revision so it is obvious when Hostinger has deployed the latest code.
-- [x] Add a simple diagnostics panel that shows browser GPS permission state, session state, and last API response time.
-- [x] Add a setup/health-check page that verifies folder write permissions and direct-access protection.
-- [x] Add a support/debug page that can show sanitized JSON/runtime metadata without exposing secrets.
 
 ## Priority 1 - Practical fixes and polish
 
@@ -54,15 +50,15 @@ This file is the feature backlog for future improvements. Checked items are impl
 
 ## Priority 2 - Family and member management
 
-- [ ] Add an owner dashboard for managing family members.
-- [ ] Let owners deactivate or remove a member from the family.
+- [x] Add an owner dashboard for managing family members.
+- [x] Let owners deactivate or remove a member from the family/group.
 - [ ] Let owners transfer ownership to another member.
-- [ ] Add member nicknames separate from login username and display name.
-- [ ] Add optional member colors or icons for map labels.
-- [ ] Add relationship labels such as Dad, Mom, Child, Grandparent, Friend, or Other.
+- [x] Add member nicknames separate from login username and display name.
+- [x] Add optional member colors or icons for map labels/cards.
+- [x] Add relationship labels such as Dad, Mom, Child, Grandparent, Friend, or Other.
 - [ ] Add a member detail page showing current status, last update, trail summary, and map links.
-- [ ] Add a visible **Joined At** date for each family member.
-- [ ] Add a warning if two members have the same display name.
+- [x] Add a visible **Joined At** date for each family member.
+- [x] Add a warning if two members have the same display name.
 
 ## Priority 3 - Location and map features
 
