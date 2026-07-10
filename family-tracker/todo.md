@@ -1,8 +1,8 @@
 <!--
 Project: Family GPS Tracker
 File: todo.md
-Revision: 1.4.2
-Project Revision Reference: 1.4.2
+Revision: 1.4.3
+Project Revision Reference: 1.4.3
 Description: Feature backlog and improvement ideas for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -11,9 +11,21 @@ Modified: 2026-07-09
 
 # Family GPS Tracker TODO
 
-Current App Revision Context: **1.4.2**
+Current App Revision Context: **1.4.3**
 
 This file is the feature backlog for future improvements. Checked items are implemented or materially covered in the current app.
+
+## Completed in Rev 1.4.3
+
+- [x] Add notices when the invite code is regenerated.
+- [x] Add notices when a display name changes.
+- [x] Add per-group notices for group creation, join, rename, and invite regeneration.
+- [x] Add a list of stale members separate from live members.
+- [x] Add a password-change form.
+- [x] Add per-device persistent-login management so users can revoke remembered devices.
+- [x] Add a force logout for remembered-device sessions on password change.
+- [x] Add export-my-data for a signed-in user.
+- [x] Add stronger audit logging for account changes, invite changes, and remembered-device revocation.
 
 ## Completed in Rev 1.4.2
 
@@ -58,7 +70,7 @@ This file is the feature backlog for future improvements. Checked items are impl
 - [ ] Add a button to center the map on the signed-in user.
 - [ ] Add a button to center the map on each family member.
 - [ ] Show all live family members on the mobile fallback map when possible.
-- [ ] Add a list of stale members separate from live members.
+- [x] Add a list of stale members separate from live members.
 - [ ] Add a **last known location** panel for each member.
 - [ ] Add a trail-history preview on the main page.
 - [ ] Add configurable trail retention, such as 24 hours, 7 days, or manual cleanup.
@@ -70,8 +82,8 @@ This file is the feature backlog for future improvements. Checked items are impl
 
 - [ ] Add notices when a member's location becomes stale.
 - [ ] Add notices when a member starts sharing again after being stale.
-- [ ] Add notices when the invite code is regenerated.
-- [ ] Add notices when a display name changes.
+- [x] Add notices when the invite code is regenerated.
+- [x] Add notices when a display name changes.
 - [ ] Add optional email alerts for owner-only administrative events.
 - [ ] Add browser notification support for supported devices.
 - [ ] Add a daily or weekly summary of member activity.
@@ -80,19 +92,19 @@ This file is the feature backlog for future improvements. Checked items are impl
 ## Priority 5 - Authentication and security
 
 - [ ] Add login throttling by username and IP hash.
-- [ ] Add a password-change form.
+- [x] Add a password-change form.
 - [ ] Add a password-reset flow.
 - [ ] Add optional TOTP/MFA for owner accounts.
-- [ ] Add per-device persistent-login management so users can revoke remembered devices.
-- [ ] Add a force logout for all sessions on password change.
-- [ ] Add stronger audit logging for account changes, invite changes, and member removals.
+- [x] Add per-device persistent-login management so users can revoke remembered devices.
+- [x] Add a force logout for all remembered devices on password change.
+- [x] Add stronger audit logging for account changes, invite changes, and member removals.
 - [ ] Move `data/` outside the public web root for production.
 - [x] Add a setup/health-check page that verifies folder write permissions and `.htaccess` protection.
 - [ ] Add Content Security Policy headers after CDN and iframe behavior is tested.
 
 ## Priority 6 - Data management and privacy
 
-- [ ] Add export-my-data for a signed-in user.
+- [x] Add export-my-data for a signed-in user.
 - [ ] Add delete-my-account with confirmation.
 - [ ] Add owner-controlled export for family data.
 - [ ] Add data-retention settings for location history.
