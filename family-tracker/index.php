@@ -2,8 +2,8 @@
 /**
  * Project: Family GPS Tracker
  * File: index.php
- * Revision: 1.4.2
- * Description: Mobile-first family/circle tracker UI with account settings and diagnostics.
+ * Revision: 1.4.3
+ * Description: Mobile-first family/circle tracker UI with account settings, diagnostics, and account security tools.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-09
@@ -101,6 +101,25 @@ require_once __DIR__ . '/includes/config.php';
             </div>
         </section>
 
+        <section id="accountSecurityCard" class="card profile-edit">
+            <div><p class="eyebrow">Security</p><h2>Account Security & Data</h2></div>
+            <div class="settings-grid">
+                <form id="passwordChangeForm" class="profile-edit">
+                    <label>Current password <input id="currentPasswordInput" type="password" autocomplete="current-password" required></label>
+                    <label>New password <input id="newPasswordInput" type="password" autocomplete="new-password" minlength="8" required></label>
+                    <label>Confirm new password <input id="confirmPasswordInput" type="password" autocomplete="new-password" minlength="8" required></label>
+                    <button type="submit" class="secondary">Change Password</button>
+                    <div class="profile-edit-note">Changing the password revokes all remembered-device tokens.</div>
+                </form>
+                <div class="profile-edit">
+                    <h3>Remembered Devices</h3>
+                    <div id="rememberedDeviceList" class="member-list">Loading devices…</div>
+                    <div class="button-row"><button id="refreshDevicesBtn" type="button" class="secondary">Refresh Devices</button><button id="revokeAllDevicesBtn" type="button" class="danger-button">Revoke All</button></div>
+                    <button id="exportMyDataBtn" type="button" class="secondary">Download My Data</button>
+                </div>
+            </div>
+        </section>
+
         <section id="inviteCard" class="card hidden">
             <h2>Invite Code</h2>
             <p class="muted">Owner-only. Regenerating a code invalidates the previous one for the active group.</p>
@@ -142,7 +161,9 @@ require_once __DIR__ . '/includes/config.php';
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="assets/js/app.js?v=<?= urlencode(APP_REVISION) ?>"></script>
 <script src="assets/js/member-badges.js?v=<?= urlencode(APP_REVISION) ?>"></script>
+<script src="assets/js/member-sections.js?v=<?= urlencode(APP_REVISION) ?>"></script>
 <script src="assets/js/groups.js?v=<?= urlencode(APP_REVISION) ?>"></script>
 <script src="assets/js/account-settings.js?v=<?= urlencode(APP_REVISION) ?>"></script>
+<script src="assets/js/account-security.js?v=<?= urlencode(APP_REVISION) ?>"></script>
 </body>
 </html>
