@@ -74,7 +74,7 @@
 
         var grid = document.createElement('div');
         grid.className = 'member-management-grid';
-        grid.innerHTML = '<label>Nickname<input class="member-nickname" maxlength="80"></label><label>Relationship<label class="sr-only">Relationship</label><select class="member-relationship"><option value="">None</option><option>Dad</option><option>Mom</option><option>Child</option><option>Grandparent</option><option>Friend</option><option>Other</option></select></label><label>Map color<input class="member-color" type="color"></label>';
+        grid.innerHTML = '<label>Nickname<input class="member-nickname" maxlength="80"></label><label>Relationship<select class="member-relationship"><option value="">None</option><option>Dad</option><option>Mom</option><option>Child</option><option>Grandparent</option><option>Friend</option><option>Other</option></select></label><label>Map color<input class="member-color" type="color"></label>';
         grid.querySelector('.member-nickname').value = text(profile.nickname);
         var relation = grid.querySelector('.member-relationship');
         relation.value = text(profile.relationship);
