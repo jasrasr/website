@@ -2,16 +2,17 @@
 /**
  * Project: Family GPS Tracker
  * File: notices.php
- * Revision: 1.2.1
- * Description: Server-stored family notices with per-user dismissal state.
+ * Revision: 1.4.3
+ * Description: Server-stored active-group notices with per-user dismissal state.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
- * Modified: 2026-07-06
+ * Modified: 2026-07-09
  */
 
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/security.php';
+require_once __DIR__ . '/includes/notice-store.php';
 
 init_app_storage();
 
@@ -30,24 +31,18 @@ try {
     fail('Server error. Check PHP error logs.', 500);
 }
 
-function notice_state_path_for_user(array $user): string
+function active_notice_family(array $user): array
 {
-    return family_notices_path((string)$user['familyId']);
+    $family = current_family_for_user($user);
+    if (!$family) {
+        fail('Active group not found.', 404);
+    }
+    return $family;
 }
 
-function notice_id_for_member(array $member): string
+function notice_id_for_member(array $member, string $familyId): string
 {
-    return 'member_joined_' . safe_id((string)($member['id'] ?? ''));
-}
-
-function read_notice_state(array $user): array
-{
-    return read_json_file(notice_state_path_for_user($user), ['dismissedBy' => []]);
-}
-
-function write_notice_state(array $user, array $state): void
-{
-    write_json_file(notice_state_path_for_user($user), $state);
+    return 'member_joined_' . safe_id($familyId) . '_' . safe_id((string)($member['id'] ?? ''));
 }
 
 function user_created_time(array $user): int
@@ -58,16 +53,32 @@ function user_created_time(array $user): int
 
 function unread_family_notices(array $user): array
 {
-    $familyId = (string)$user['familyId'];
+    $family = active_notice_family($user);
+    $familyId = (string)$family['id'];
     $currentUserId = (string)$user['id'];
     $currentUserCreated = user_created_time($user);
-    $state = read_notice_state($user);
-    $dismissed = $state['dismissedBy'][$currentUserId] ?? [];
-    $dismissed = is_array($dismissed) ? array_flip($dismissed) : [];
+    $state = read_group_notice_state($familyId);
+    $dismissed = dismissed_notice_lookup($state, $currentUserId);
     $notices = [];
 
+    foreach ($state['notices'] as $notice) {
+        $noticeId = safe_id((string)($notice['id'] ?? ''));
+        if ($noticeId === '' || isset($dismissed[$noticeId])) {
+            continue;
+        }
+        if (($notice['actorUserId'] ?? '') === $currentUserId) {
+            continue;
+        }
+        $notices[] = [
+            'id' => $noticeId,
+            'type' => $notice['type'] ?? 'group_notice',
+            'message' => $notice['message'] ?? 'Group notice.',
+            'createdAt' => $notice['createdAt'] ?? null,
+        ];
+    }
+
     foreach (list_json_records('users') as $member) {
-        if (($member['familyId'] ?? '') !== $familyId || empty($member['isActive'])) {
+        if (empty($member['isActive']) || family_member_role($family, $member) === null) {
             continue;
         }
         if ((string)($member['id'] ?? '') === $currentUserId) {
@@ -78,16 +89,16 @@ function unread_family_notices(array $user): array
             continue;
         }
 
-        $noticeId = notice_id_for_member($member);
+        $noticeId = notice_id_for_member($member, $familyId);
         if (isset($dismissed[$noticeId])) {
             continue;
         }
 
-        $displayName = (string)($member['displayName'] ?? $member['username'] ?? 'A family member');
+        $displayName = (string)($member['displayName'] ?? $member['username'] ?? 'A group member');
         $notices[] = [
             'id' => $noticeId,
             'type' => 'member_joined',
-            'message' => $displayName . ' joined the family tracker.',
+            'message' => $displayName . ' joined this group.',
             'displayName' => $displayName,
             'createdAt' => $member['createdAt'] ?? null,
         ];
@@ -104,15 +115,6 @@ function dismiss_notice(array $user, array $input): void
         fail('Notice ID is required.', 400);
     }
 
-    with_named_lock('notices_' . (string)$user['familyId'], function () use ($user, $noticeId): void {
-        $state = read_notice_state($user);
-        $userId = (string)$user['id'];
-        $state['dismissedBy'] = is_array($state['dismissedBy'] ?? null) ? $state['dismissedBy'] : [];
-        $state['dismissedBy'][$userId] = is_array($state['dismissedBy'][$userId] ?? null) ? $state['dismissedBy'][$userId] : [];
-        if (!in_array($noticeId, $state['dismissedBy'][$userId], true)) {
-            $state['dismissedBy'][$userId][] = $noticeId;
-        }
-        $state['updatedAt'] = now_iso();
-        write_notice_state($user, $state);
-    });
+    $family = active_notice_family($user);
+    dismiss_group_notice_for_user((string)$family['id'], (string)$user['id'], $noticeId);
 }
