@@ -2,8 +2,8 @@
 /**
  * Project: Family GPS Tracker
  * File: groups.php
- * Revision: 1.4.3
- * Description: JSON endpoint for multi-circle/group creation, joining, renaming, listing, switching, and group notices.
+ * Revision: 1.4.4
+ * Description: JSON endpoint for multi-circle/group creation, joining, renaming, listing, switching, member metadata bootstrap, and group notices.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-09
@@ -71,25 +71,18 @@ function groups_payload(array $user, array $extra = []): array
         return strcasecmp((string)($a['name'] ?? ''), (string)($b['name'] ?? ''));
     });
 
-    return [
-        'csrfToken' => ensure_csrf_token(),
-        'user' => public_user($user),
-        'activeGroupId' => $activeId,
-        'groups' => $groups,
-    ] + $extra;
+    return ['csrfToken' => ensure_csrf_token(), 'user' => public_user($user), 'activeGroupId' => $activeId, 'groups' => $groups] + $extra;
 }
 
 function normalize_group_memberships(array $user): array
 {
     $changed = false;
     $ids = user_group_ids($user);
-
     foreach (list_json_records('families') as $family) {
         if (family_member_role($family, $user) !== null) {
             $ids[] = (string)$family['id'];
         }
     }
-
     $ids = array_values(array_unique(array_filter(array_map('safe_id', $ids))));
     if (($user['groupIds'] ?? []) !== $ids) {
         $user['groupIds'] = $ids;
@@ -106,6 +99,19 @@ function normalize_group_memberships(array $user): array
     return $user;
 }
 
+function bootstrap_member_metadata(array $family, string $userId, string $joinedAt): array
+{
+    $family['memberJoinedAt'] = is_array($family['memberJoinedAt'] ?? null) ? $family['memberJoinedAt'] : [];
+    if (empty($family['memberJoinedAt'][$userId])) {
+        $family['memberJoinedAt'][$userId] = $joinedAt;
+    }
+    $family['memberProfiles'] = is_array($family['memberProfiles'] ?? null) ? $family['memberProfiles'] : [];
+    if (!is_array($family['memberProfiles'][$userId] ?? null)) {
+        $family['memberProfiles'][$userId] = ['nickname' => '', 'relationship' => '', 'color' => ''];
+    }
+    return $family;
+}
+
 function handle_create_group(array $user, array $input): void
 {
     $name = str_field($input, 'groupName', 80);
@@ -119,14 +125,17 @@ function handle_create_group(array $user, array $input): void
         $inviteCode = generate_invite_code();
         $inviteNormalized = normalize_invite_code($inviteCode);
         $createdAt = now_iso();
+        $userId = (string)$latestUser['id'];
 
         $family = [
             'id' => $familyId,
             'name' => $name,
             'type' => 'group',
-            'ownerUserId' => $latestUser['id'],
-            'memberIds' => [$latestUser['id']],
-            'memberRoles' => [$latestUser['id'] => 'owner'],
+            'ownerUserId' => $userId,
+            'memberIds' => [$userId],
+            'memberRoles' => [$userId => 'owner'],
+            'memberJoinedAt' => [$userId => $createdAt],
+            'memberProfiles' => [$userId => ['nickname' => '', 'relationship' => '', 'color' => '']],
             'inviteCodeHash' => password_hash($inviteNormalized, PASSWORD_DEFAULT),
             'inviteCodeLast4' => substr($inviteNormalized, -4),
             'inviteCodeCreatedAt' => $createdAt,
@@ -143,17 +152,13 @@ function handle_create_group(array $user, array $input): void
         write_family($family);
         write_user($latestUser);
         $_SESSION['active_family_id'] = $familyId;
-
-        audit_event('create_group', ['userId' => $latestUser['id'], 'familyId' => $familyId]);
-        add_group_notice($familyId, 'group_created', $latestUser['displayName'] . ' created the group ' . $name . '.', (string)$latestUser['id']);
+        audit_event('create_group', ['userId' => $userId, 'familyId' => $familyId]);
+        add_group_notice($familyId, 'group_created', $latestUser['displayName'] . ' created the group ' . $name . '.', $userId);
         return [$latestUser, $inviteCode];
     });
 
     [$updatedUser, $inviteCode] = $result;
-    ok(groups_payload($updatedUser, [
-        'oneTimeInviteCode' => $inviteCode,
-        'message' => 'Group created. Save or copy the invite code now.',
-    ]));
+    ok(groups_payload($updatedUser, ['oneTimeInviteCode' => $inviteCode, 'message' => 'Group created. Save or copy the invite code now.']));
 }
 
 function handle_join_existing_group(array $user, array $input): void
@@ -171,6 +176,7 @@ function handle_join_existing_group(array $user, array $input): void
 
         $latestUser = read_user((string)$user['id']) ?: $user;
         $family = ensure_family_membership($family, $latestUser, 'member');
+        $family = bootstrap_member_metadata($family, (string)$latestUser['id'], now_iso());
         write_family($family);
 
         $latestUser = add_user_group_id($latestUser, (string)$family['id']);
@@ -220,6 +226,5 @@ function handle_rename_group(array $user, array $input): void
     write_family($family);
     audit_event('rename_group', ['userId' => $updatedUser['id'], 'familyId' => $groupId]);
     add_group_notice($groupId, 'group_renamed', $updatedUser['displayName'] . ' renamed ' . $oldName . ' to ' . $name . '.', (string)$updatedUser['id']);
-
     ok(groups_payload($updatedUser, ['message' => 'Group name updated.']));
 }
