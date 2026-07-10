@@ -77,6 +77,15 @@ function joined_at_for_member(array $family, array $member): ?string
     return $joined[$userId] ?? ($member['createdAt'] ?? null);
 }
 
+function require_group_member(array $family, string $memberId): array
+{
+    $member = read_user($memberId);
+    if (!$member || family_member_role($family, $member) === null) {
+        fail('Member not found in active group.', 404);
+    }
+    return $member;
+}
+
 function management_members(array $family): array
 {
     $members = [];
@@ -117,21 +126,17 @@ function update_member_profile(array $user, array $family, array $input): void
 {
     require_active_group_owner($user, $family);
     $memberId = safe_id(str_field($input, 'memberId', 80));
-    if ($memberId === '' || family_member_role($family, ['id' => $memberId, 'groupIds' => [(string)$family['id']]]) === null) {
-        fail('Member not found in active group.', 404);
+    if ($memberId === '') {
+        fail('Member ID is required.', 400);
     }
+    require_group_member($family, $memberId);
 
     $nickname = str_field($input, 'nickname', 80);
     $relationship = str_field($input, 'relationship', 40);
     $color = valid_member_color(str_field($input, 'color', 20));
 
     $family['memberProfiles'] = is_array($family['memberProfiles'] ?? null) ? $family['memberProfiles'] : [];
-    $family['memberProfiles'][$memberId] = [
-        'nickname' => $nickname,
-        'relationship' => $relationship,
-        'color' => $color,
-        'updatedAt' => now_iso(),
-    ];
+    $family['memberProfiles'][$memberId] = ['nickname' => $nickname, 'relationship' => $relationship, 'color' => $color, 'updatedAt' => now_iso()];
     $family['updatedAt'] = now_iso();
     write_family($family);
 
@@ -150,9 +155,6 @@ function remove_group_from_user(array $member, string $familyId): array
     if (($member['activeFamilyId'] ?? '') === $familyId) {
         $member['activeFamilyId'] = $ids[0] ?? '';
     }
-    if (($_SESSION['active_family_id'] ?? '') === $familyId && ($member['id'] ?? '') === ($_SESSION['user_id'] ?? '')) {
-        $_SESSION['active_family_id'] = $member['activeFamilyId'] ?? '';
-    }
     $member['updatedAt'] = now_iso();
     return $member;
 }
@@ -164,10 +166,7 @@ function remove_member_from_group(array $user, array $family, array $input): voi
     if ($memberId === '' || $memberId === (string)$user['id']) {
         fail('You cannot remove yourself from the active group here.', 400);
     }
-    $member = read_user($memberId);
-    if (!$member || family_member_role($family, $member) === null) {
-        fail('Member not found in active group.', 404);
-    }
+    $member = require_group_member($family, $memberId);
 
     $displayName = (string)($member['displayName'] ?? $member['username'] ?? 'A member');
     $familyId = (string)$family['id'];
