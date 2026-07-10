@@ -2,16 +2,17 @@
 /**
  * Project: Family GPS Tracker
  * File: api.php
- * Revision: 1.4.0
- * Description: JSON API for auth, persistent login, multi-group membership, invite codes, and location updates.
+ * Revision: 1.4.3
+ * Description: JSON API for auth, persistent login, multi-group membership, invite codes, location updates, and group notices.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
- * Modified: 2026-07-06
+ * Modified: 2026-07-09
  */
 
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/security.php';
+require_once __DIR__ . '/includes/notice-store.php';
 
 init_app_storage();
 
@@ -136,6 +137,7 @@ function handle_register_family(array $input): void
         write_json_file($indexPath, $index);
 
         audit_event('register_family', ['userId' => $userId, 'familyId' => $familyId]);
+        add_group_notice($familyId, 'group_created', $displayName . ' created the group ' . $familyName . '.', $userId);
 
         return [$user, $family, $inviteCode];
     });
@@ -203,6 +205,7 @@ function handle_join_family(array $input): void
         write_json_file($indexPath, $index);
 
         audit_event('join_family', ['userId' => $userId, 'familyId' => $family['id']]);
+        add_group_notice((string)$family['id'], 'member_joined_group', $displayName . ' joined ' . $family['name'] . '.', $userId);
 
         return [$user, $family];
     });
@@ -363,5 +366,6 @@ function handle_regenerate_invite(): void
     write_family($family);
 
     audit_event('regenerate_invite', ['userId' => $user['id'], 'familyId' => $family['id']]);
+    add_group_notice((string)$family['id'], 'invite_regenerated', $user['displayName'] . ' regenerated the invite code for ' . $family['name'] . '.', (string)$user['id']);
     ok(['inviteCode' => $code, 'family' => public_family($family, true)]);
 }
