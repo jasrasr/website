@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.4.2
+Revision: 1.4.3
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,20 @@ Modified: 2026-07-09
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.4.2**
+Current Project Revision: **1.4.3**
+
+## Rev 1.4.3 - 2026-07-09
+
+- Added `account.php` for signed-in account security actions and data export.
+- Added password-change support with remembered-device revocation.
+- Added remembered-device listing, single-device revoke, and revoke-all controls.
+- Added Download My Data export for the signed-in user.
+- Added shared group-notice helpers in `includes/notice-store.php`.
+- Made notices active-group aware.
+- Added server-stored notices for group creation, group join, group rename, display-name change, and invite-code regeneration.
+- Added `assets/js/account-security.js` for the account security UI.
+- Added `assets/js/member-sections.js` to separate members into Live / Recent, Stale, and No Location Yet sections.
+- Added no new live-data folder.
 
 ## Rev 1.4.2 - 2026-07-09
 
@@ -42,18 +55,3 @@ Current Project Revision: **1.4.2**
 - Added per-group owner/member role handling through group `memberRoles` and `memberIds` metadata.
 - Existing users are treated as members of their current family/group and can create or join additional groups.
 - Added no new live-data folder.
-
-## Rev 1.3.7 - 2026-07-06
-
-- Replaced member-list coordinate text with closest-city text when a saved location exists.
-- Removed accuracy text from the member-list latest-location line.
-- Normalized latest-location age text to `s`, `m`, `h`, or `d` age units.
-- Cached reverse-geocoded city labels in local browser storage.
-- Added no new live-data folder.
-
-## Rev 1.3.6 - 2026-07-06
-
-- Added a display-name edit form to the signed-in account card.
-- Added `profile.php` to save the signed-in user's display name.
-- The saved name refreshes the account card and family member list.
-- No new live-data folder was added.
