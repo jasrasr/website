@@ -2,8 +2,8 @@
 /**
  * Project: Family GPS Tracker
  * File: groups.php
- * Revision: 1.4.2
- * Description: JSON endpoint for multi-circle/group creation, joining, renaming, listing, and active-group switching.
+ * Revision: 1.4.3
+ * Description: JSON endpoint for multi-circle/group creation, joining, renaming, listing, switching, and group notices.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-09
@@ -12,6 +12,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/security.php';
+require_once __DIR__ . '/includes/notice-store.php';
 
 init_app_storage();
 
@@ -144,6 +145,7 @@ function handle_create_group(array $user, array $input): void
         $_SESSION['active_family_id'] = $familyId;
 
         audit_event('create_group', ['userId' => $latestUser['id'], 'familyId' => $familyId]);
+        add_group_notice($familyId, 'group_created', $latestUser['displayName'] . ' created the group ' . $name . '.', (string)$latestUser['id']);
         return [$latestUser, $inviteCode];
     });
 
@@ -180,6 +182,7 @@ function handle_join_existing_group(array $user, array $input): void
         $_SESSION['active_family_id'] = (string)$family['id'];
 
         audit_event('join_existing_group', ['userId' => $latestUser['id'], 'familyId' => $family['id']]);
+        add_group_notice((string)$family['id'], 'member_joined_group', $latestUser['displayName'] . ' joined ' . $family['name'] . '.', (string)$latestUser['id']);
         return $latestUser;
     });
 
@@ -211,10 +214,12 @@ function handle_rename_group(array $user, array $input): void
         fail('Owner permission required for that group.', 403);
     }
 
+    $oldName = (string)($family['name'] ?? 'group');
     $family['name'] = $name;
     $family['updatedAt'] = now_iso();
     write_family($family);
     audit_event('rename_group', ['userId' => $updatedUser['id'], 'familyId' => $groupId]);
+    add_group_notice($groupId, 'group_renamed', $updatedUser['displayName'] . ' renamed ' . $oldName . ' to ' . $name . '.', (string)$updatedUser['id']);
 
     ok(groups_payload($updatedUser, ['message' => 'Group name updated.']));
 }
