@@ -1,8 +1,8 @@
 <!--
 Project: Family GPS Tracker
 File: README.md
-Revision: 1.4.3
-Description: Setup, deployment, privacy, account security, and maintenance notes for the PHP/JSON family tracker.
+Revision: 1.4.4
+Description: Setup, deployment, privacy, account security, member management, and maintenance notes for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
 Modified: 2026-07-09
@@ -10,7 +10,7 @@ Modified: 2026-07-09
 
 # Family GPS Tracker
 
-Current Project Revision: **1.4.3**
+Current Project Revision: **1.4.4**
 
 A small PHP + JSON backend site for consent-based family and friend-circle location sharing. It is designed for shared hosting: browser GPS, persistent login cookies, no database, protected JSON storage, mobile-friendly maps, and multiple share groups per user account.
 
@@ -21,6 +21,10 @@ A small PHP + JSON backend site for consent-based family and friend-circle locat
 - Join additional groups/circles with invite codes without creating another login.
 - Switch the active group; the active group controls the map, member list, invite code, and location updates.
 - Rename the active group when signed in as that group owner.
+- Owner-only member management for the active group.
+- Set per-group member nicknames, relationship labels, and colors.
+- Remove a member from the active group without deleting that user's account.
+- Show joined-at dates and duplicate display-label warnings.
 - Edit display name from the Account & Group settings card.
 - Change password and revoke remembered devices.
 - List remembered devices and revoke one or all of them.
@@ -38,6 +42,19 @@ A small PHP + JSON backend site for consent-based family and friend-circle locat
 - Show server-stored group notices and per-user dismissals.
 - View shared trail history on `history.php`.
 
+## Member management
+
+Owners see a **Member Management** card for the active group. It supports:
+
+- group nickname;
+- relationship label;
+- color selection;
+- joined-at visibility;
+- duplicate display-label warning;
+- remove from active group.
+
+Removing a member from a group updates that user's group membership but does not delete the account or other group memberships.
+
 ## Multi-group behavior
 
 The app still stores group records in `data/families/` for backward compatibility, but the UI now treats them as groups/circles.
@@ -51,26 +68,13 @@ The app still stores group records in `data/families/` for backward compatibilit
 
 ## Account security
 
-The Account Security & Data card supports:
-
-- password change;
-- remembered-device list;
-- revoke one remembered device;
-- revoke all remembered devices;
-- download-my-data export.
+The Account Security & Data card supports password change, remembered-device list, revoke one remembered device, revoke all remembered devices, and download-my-data export.
 
 Changing the password revokes remembered-device tokens. The current browser session remains active until logout.
 
 ## Health check
 
-Open `health.php` while signed in to check:
-
-- writable runtime folders;
-- expected `.placeholder` files;
-- presence of `.htaccess` protection files;
-- HTTPS detection;
-- current session username;
-- PHP version and resolved `DATA_DIR`.
+Open `health.php` while signed in to check writable runtime folders, expected `.placeholder` files, `.htaccess` protection files, HTTPS detection, session username, PHP version, and resolved `DATA_DIR`.
 
 ## Requirements
 
@@ -82,15 +86,7 @@ Open `health.php` while signed in to check:
 ## Install
 
 1. Upload the entire `family-tracker` folder to your web host.
-2. Confirm these folders are writable by PHP:
-   - `data/users/`
-   - `data/families/`
-   - `data/locations/`
-   - `data/trails/`
-   - `data/notices/`
-   - `data/persistent_logins/`
-   - `data/locks/`
-   - `data/audit/`
+2. Confirm these folders are writable by PHP: `data/users/`, `data/families/`, `data/locations/`, `data/trails/`, `data/notices/`, `data/persistent_logins/`, `data/locks/`, and `data/audit/`.
 3. Open the site in a browser over HTTPS.
 4. Use **Create First Group** to create the first owner account and group.
 5. Use **Groups / Circles** to create friend groups, trip groups, or other separate circles.
@@ -99,18 +95,11 @@ Open `health.php` while signed in to check:
 
 This project starts at **1.0.0**, not 0.x.x.
 
+- Rev 1.4.4 = owner member management, nicknames, relationship labels, member colors, joined-at, duplicate warnings, and remove-from-group
 - Rev 1.4.3 = account security, remembered devices, data export, group notices, and member status sections
 - Rev 1.4.2 = account settings, group rename, diagnostics, health check, and location display options
 - Rev 1.4.1 = invite-code UI cleanup
 - Rev 1.4.0 = multi-group/circle support
-- Rev 1.3.7 = closest-city latest-location labels
-- Rev 1.3.6 = display-name editing
-- Rev 1.3.5 = You/Owner member badges
-- Rev 1.3.4 = mobile map fallback
-- Rev 1.3.3 = mobile map layout repair attempt
-- Rev 1.3.2 = app-updated notice and changelog page
-- Rev 1.3.1 = mobile map and compact metrics
-- Rev 1.3.0 = long session cookies and persistent login
 
 ## Live data placeholder rule
 
@@ -127,7 +116,7 @@ Current live-data folders with placeholders:
 - `data/locks/.placeholder`
 - `data/audit/.placeholder`
 
-Rev 1.4.3 adds no new live-data folder.
+Rev 1.4.4 adds no new live-data folder.
 
 ## Stronger production setup
 
@@ -141,4 +130,4 @@ That is safer than trusting web-server rules alone.
 
 ## Revision
 
-Rev 1.4.3 - Account security, remembered devices, data export, group notices, and member status sections.
+Rev 1.4.4 - Owner member management, nicknames, relationship labels, member colors, joined-at display, duplicate warnings, and remove-from-group.
