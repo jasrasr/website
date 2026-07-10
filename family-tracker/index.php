@@ -2,8 +2,8 @@
 /**
  * Project: Family GPS Tracker
  * File: index.php
- * Revision: 1.4.3
- * Description: Mobile-first family/circle tracker UI with account settings, diagnostics, and account security tools.
+ * Revision: 1.4.4
+ * Description: Mobile-first family/circle tracker UI with account settings, diagnostics, account security, and owner member management.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-09
@@ -37,35 +37,9 @@ require_once __DIR__ . '/includes/config.php';
     <section id="statusCard" class="card status-card" aria-live="polite"><strong>Status:</strong> <span id="statusText">Loading…</span></section>
 
     <section id="authCard" class="grid auth-grid hidden">
-        <form id="loginForm" class="card form-card">
-            <h2>Login</h2>
-            <label>Username <input name="username" autocomplete="username" required></label>
-            <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
-            <label class="check-row"><input name="rememberMe" type="checkbox" checked><span>Keep me signed in on this device.</span></label>
-            <button type="submit">Login</button>
-        </form>
-
-        <form id="registerForm" class="card form-card">
-            <h2>Create First Group</h2>
-            <label>Your display name <input name="displayName" autocomplete="name" required></label>
-            <label>Username <input name="username" autocomplete="username" required></label>
-            <label>Password <input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
-            <label>Group name <input name="familyName" placeholder="Family, Friends, Road Trip" required></label>
-            <label class="check-row"><input name="consentAccepted" type="checkbox" required><span>I understand each user must use their own account and grant browser permission.</span></label>
-            <label class="check-row"><input name="rememberMe" type="checkbox" checked><span>Keep me signed in on this device.</span></label>
-            <button type="submit">Create Tracker</button>
-        </form>
-
-        <form id="joinForm" class="card form-card">
-            <h2>Join Group</h2>
-            <label>Invite code <input name="inviteCode" placeholder="ABCDE-12345" required></label>
-            <label>Your display name <input name="displayName" autocomplete="name" required></label>
-            <label>Username <input name="username" autocomplete="username" required></label>
-            <label>Password <input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
-            <label class="check-row"><input name="consentAccepted" type="checkbox" required><span>I consent to sharing with this group while signed in.</span></label>
-            <label class="check-row"><input name="rememberMe" type="checkbox" checked><span>Keep me signed in on this device.</span></label>
-            <button type="submit">Join Tracker</button>
-        </form>
+        <form id="loginForm" class="card form-card"><h2>Login</h2><label>Username <input name="username" autocomplete="username" required></label><label>Password <input name="password" type="password" autocomplete="current-password" required></label><label class="check-row"><input name="rememberMe" type="checkbox" checked><span>Keep me signed in on this device.</span></label><button type="submit">Login</button></form>
+        <form id="registerForm" class="card form-card"><h2>Create First Group</h2><label>Your display name <input name="displayName" autocomplete="name" required></label><label>Username <input name="username" autocomplete="username" required></label><label>Password <input name="password" type="password" autocomplete="new-password" minlength="8" required></label><label>Group name <input name="familyName" placeholder="Family, Friends, Road Trip" required></label><label class="check-row"><input name="consentAccepted" type="checkbox" required><span>I understand each user must use their own account and grant browser permission.</span></label><label class="check-row"><input name="rememberMe" type="checkbox" checked><span>Keep me signed in on this device.</span></label><button type="submit">Create Tracker</button></form>
+        <form id="joinForm" class="card form-card"><h2>Join Group</h2><label>Invite code <input name="inviteCode" placeholder="ABCDE-12345" required></label><label>Your display name <input name="displayName" autocomplete="name" required></label><label>Username <input name="username" autocomplete="username" required></label><label>Password <input name="password" type="password" autocomplete="new-password" minlength="8" required></label><label class="check-row"><input name="consentAccepted" type="checkbox" required><span>I consent to sharing with this group while signed in.</span></label><label class="check-row"><input name="rememberMe" type="checkbox" checked><span>Keep me signed in on this device.</span></label><button type="submit">Join Tracker</button></form>
     </section>
 
     <main id="trackerApp" class="hidden">
@@ -74,86 +48,32 @@ require_once __DIR__ . '/includes/config.php';
         <section id="accountSettingsCard" class="card profile-edit">
             <div><p class="eyebrow">Settings</p><h2>Account & Group</h2></div>
             <div class="settings-grid">
-                <form id="displayNameForm" class="profile-edit">
-                    <label>Display name
-                        <input id="displayNameInput" name="displayName" maxlength="80" required>
-                    </label>
-                    <button type="submit" class="secondary">Save Display Name</button>
-                    <div class="profile-edit-note">Shown on the account card, member list, and map labels.</div>
-                </form>
-                <form id="groupNameForm" class="profile-edit hidden">
-                    <label>Active group name
-                        <input id="groupNameInput" name="groupName" maxlength="80" required>
-                    </label>
-                    <button type="submit" class="secondary">Save Group Name</button>
-                    <div class="profile-edit-note">Owner-only. Changes the current circle/group name.</div>
-                </form>
+                <form id="displayNameForm" class="profile-edit"><label>Display name<input id="displayNameInput" name="displayName" maxlength="80" required></label><button type="submit" class="secondary">Save Display Name</button><div class="profile-edit-note">Shown on the account card, member list, and map labels.</div></form>
+                <form id="groupNameForm" class="profile-edit hidden"><label>Active group name<input id="groupNameInput" name="groupName" maxlength="80" required></label><button type="submit" class="secondary">Save Group Name</button><div class="profile-edit-note">Owner-only. Changes the current circle/group name.</div></form>
             </div>
-            <div class="settings-grid">
-                <label>Member location text
-                    <select id="locationFormatSelect">
-                        <option value="city">Closest city + age</option>
-                        <option value="gps">Rounded GPS + age</option>
-                        <option value="both">Closest city + GPS + age</option>
-                    </select>
-                </label>
-                <div class="settings-row"><button id="refreshLocationLabelsBtn" type="button" class="secondary">Refresh Location Labels</button></div>
-            </div>
+            <div class="settings-grid"><label>Member location text<select id="locationFormatSelect"><option value="city">Closest city + age</option><option value="gps">Rounded GPS + age</option><option value="both">Closest city + GPS + age</option></select></label><div class="settings-row"><button id="refreshLocationLabelsBtn" type="button" class="secondary">Refresh Location Labels</button></div></div>
         </section>
 
         <section id="accountSecurityCard" class="card profile-edit">
             <div><p class="eyebrow">Security</p><h2>Account Security & Data</h2></div>
             <div class="settings-grid">
-                <form id="passwordChangeForm" class="profile-edit">
-                    <label>Current password <input id="currentPasswordInput" type="password" autocomplete="current-password" required></label>
-                    <label>New password <input id="newPasswordInput" type="password" autocomplete="new-password" minlength="8" required></label>
-                    <label>Confirm new password <input id="confirmPasswordInput" type="password" autocomplete="new-password" minlength="8" required></label>
-                    <button type="submit" class="secondary">Change Password</button>
-                    <div class="profile-edit-note">Changing the password revokes all remembered-device tokens.</div>
-                </form>
-                <div class="profile-edit">
-                    <h3>Remembered Devices</h3>
-                    <div id="rememberedDeviceList" class="member-list">Loading devices…</div>
-                    <div class="button-row"><button id="refreshDevicesBtn" type="button" class="secondary">Refresh Devices</button><button id="revokeAllDevicesBtn" type="button" class="danger-button">Revoke All</button></div>
-                    <button id="exportMyDataBtn" type="button" class="secondary">Download My Data</button>
-                </div>
+                <form id="passwordChangeForm" class="profile-edit"><label>Current password <input id="currentPasswordInput" type="password" autocomplete="current-password" required></label><label>New password <input id="newPasswordInput" type="password" autocomplete="new-password" minlength="8" required></label><label>Confirm new password <input id="confirmPasswordInput" type="password" autocomplete="new-password" minlength="8" required></label><button type="submit" class="secondary">Change Password</button><div class="profile-edit-note">Changing the password revokes all remembered-device tokens.</div></form>
+                <div class="profile-edit"><h3>Remembered Devices</h3><div id="rememberedDeviceList" class="member-list">Loading devices…</div><div class="button-row"><button id="refreshDevicesBtn" type="button" class="secondary">Refresh Devices</button><button id="revokeAllDevicesBtn" type="button" class="danger-button">Revoke All</button></div><button id="exportMyDataBtn" type="button" class="secondary">Download My Data</button></div>
             </div>
         </section>
 
-        <section id="inviteCard" class="card hidden">
-            <h2>Invite Code</h2>
-            <p class="muted">Owner-only. Regenerating a code invalidates the previous one for the active group.</p>
-            <div class="invite-row"><code id="inviteCodeDisplay">Not generated this session</code><button id="copyInviteBtn" type="button" class="secondary">Copy Code</button><button id="regenerateInviteBtn" type="button">Regenerate Invite Code</button></div>
-            <p class="muted">For security, the app stores the invite code as a hash plus the last four characters only. The full code can be copied only right after creation or regeneration.</p>
-        </section>
+        <section id="inviteCard" class="card hidden"><h2>Invite Code</h2><p class="muted">Owner-only. Regenerating a code invalidates the previous one for the active group.</p><div class="invite-row"><code id="inviteCodeDisplay">Not generated this session</code><button id="copyInviteBtn" type="button" class="secondary">Copy Code</button><button id="regenerateInviteBtn" type="button">Regenerate Invite Code</button></div><p class="muted">For security, the app stores the invite code as a hash plus the last four characters only. The full code can be copied only right after creation or regeneration.</p></section>
 
         <section id="familyNoticeCard" class="card hidden"><h2>Group Notices</h2><div id="familyNoticeList" class="member-list">No new notices.</div></section>
 
+        <section id="ownerMemberManagementCard" class="card profile-edit hidden"><div><p class="eyebrow">Owner Tools</p><h2>Member Management</h2><p class="muted">Owner-only for the active group. Set group nicknames, relationship labels, map colors, and remove a member from this group only.</p></div><div id="ownerMemberManagementList" class="member-list">Loading member tools…</div></section>
+
         <section class="card controls-card"><h2>Sharing</h2><p class="muted">The app updates about every minute while this page is open. Start Sharing adds a higher-frequency watch.</p><div class="button-row"><button id="startSharingBtn" type="button">Start Sharing</button><button id="stopSharingBtn" type="button" class="secondary" disabled>Stop Sharing</button><button id="updateOnceBtn" type="button" class="secondary">Update Once</button><button id="refreshBtn" type="button" class="secondary">Refresh Group</button></div><div class="button-row danger-zone"><button id="deleteLocationBtn" type="button" class="danger-button">Delete My Saved Point</button></div></section>
 
-        <section class="dashboard-grid">
-            <article class="metric-card"><span class="metric-label">GPS Accuracy</span><strong id="accuracyValue">--</strong><span class="metric-unit">feet</span></article>
-            <article class="metric-card"><span class="metric-label">Speed</span><strong id="speedValue">--</strong><span class="metric-unit">mph</span></article>
-            <article class="metric-card"><span class="metric-label">Heading</span><strong id="headingValue">--</strong><span class="metric-unit">degrees</span></article>
-            <article class="metric-card"><span class="metric-label">Last Update</span><strong id="lastUpdateValue">--</strong><span class="metric-unit">local time</span></article>
-        </section>
-
+        <section class="dashboard-grid"><article class="metric-card"><span class="metric-label">GPS Accuracy</span><strong id="accuracyValue">--</strong><span class="metric-unit">feet</span></article><article class="metric-card"><span class="metric-label">Speed</span><strong id="speedValue">--</strong><span class="metric-unit">mph</span></article><article class="metric-card"><span class="metric-label">Heading</span><strong id="headingValue">--</strong><span class="metric-unit">degrees</span></article><article class="metric-card"><span class="metric-label">Last Update</span><strong id="lastUpdateValue">--</strong><span class="metric-unit">local time</span></article></section>
         <section class="card map-card"><div class="section-header"><div><h2>Group Map</h2><p class="muted">Stale points are still shown, but marked in the member list.</p></div></div><div id="map" role="application" aria-label="Group map"></div></section>
-
         <section class="card"><h2>Group Members</h2><div id="memberList" class="member-list">No members loaded yet.</div></section>
-
-        <section id="diagnosticsCard" class="card">
-            <div class="section-header"><div><p class="eyebrow">Diagnostics</p><h2>App Health</h2></div><button id="refreshDiagnosticsBtn" type="button" class="secondary">Refresh Diagnostics</button></div>
-            <div class="diag-grid">
-                <div class="diag-item"><strong>GPS Permission</strong><span id="diagPermission">Unknown</span></div>
-                <div class="diag-item"><strong>Online</strong><span id="diagOnline">Unknown</span></div>
-                <div class="diag-item"><strong>Session API</strong><span id="diagApi">Unknown</span></div>
-                <div class="diag-item"><strong>Signed In</strong><span id="diagUser">Unknown</span></div>
-                <div class="diag-item"><strong>Active Group</strong><span id="diagGroup">Unknown</span></div>
-                <div class="diag-item"><strong>Build</strong><span id="diagBuild"><?= htmlspecialchars(APP_REVISION . ' • ' . APP_BUILD_LABEL, ENT_QUOTES, 'UTF-8') ?></span></div>
-            </div>
-        </section>
-
+        <section id="diagnosticsCard" class="card"><div class="section-header"><div><p class="eyebrow">Diagnostics</p><h2>App Health</h2></div><button id="refreshDiagnosticsBtn" type="button" class="secondary">Refresh Diagnostics</button></div><div class="diag-grid"><div class="diag-item"><strong>GPS Permission</strong><span id="diagPermission">Unknown</span></div><div class="diag-item"><strong>Online</strong><span id="diagOnline">Unknown</span></div><div class="diag-item"><strong>Session API</strong><span id="diagApi">Unknown</span></div><div class="diag-item"><strong>Signed In</strong><span id="diagUser">Unknown</span></div><div class="diag-item"><strong>Active Group</strong><span id="diagGroup">Unknown</span></div><div class="diag-item"><strong>Build</strong><span id="diagBuild"><?= htmlspecialchars(APP_REVISION . ' • ' . APP_BUILD_LABEL, ENT_QUOTES, 'UTF-8') ?></span></div></div></section>
         <section class="card warning-card"><h2>Reality Check</h2><p>This is a web app. Mobile browsers may pause updates when the page is closed, hidden, or limited by the operating system.</p></section>
     </main>
 </div>
@@ -162,6 +82,7 @@ require_once __DIR__ . '/includes/config.php';
 <script src="assets/js/app.js?v=<?= urlencode(APP_REVISION) ?>"></script>
 <script src="assets/js/member-badges.js?v=<?= urlencode(APP_REVISION) ?>"></script>
 <script src="assets/js/member-sections.js?v=<?= urlencode(APP_REVISION) ?>"></script>
+<script src="assets/js/member-management.js?v=<?= urlencode(APP_REVISION) ?>"></script>
 <script src="assets/js/groups.js?v=<?= urlencode(APP_REVISION) ?>"></script>
 <script src="assets/js/account-settings.js?v=<?= urlencode(APP_REVISION) ?>"></script>
 <script src="assets/js/account-security.js?v=<?= urlencode(APP_REVISION) ?>"></script>
