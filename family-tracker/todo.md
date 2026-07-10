@@ -97,7 +97,7 @@ This file is the feature backlog for future improvements. Checked items are impl
 - [ ] Add optional TOTP/MFA for owner accounts.
 - [x] Add per-device persistent-login management so users can revoke remembered devices.
 - [x] Add a force logout for all remembered devices on password change.
-- [x] Add stronger audit logging for account changes, invite changes, and member removals.
+- [ ] Add stronger audit logging for account changes, invite changes, and member removals.
 - [ ] Move `data/` outside the public web root for production.
 - [x] Add a setup/health-check page that verifies folder write permissions and `.htaccess` protection.
 - [ ] Add Content Security Policy headers after CDN and iframe behavior is tested.
