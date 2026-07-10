@@ -1,8 +1,8 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/member-badges.js
- * Revision: 1.4.2
- * Description: Enhances member cards with You/Owner badges, identifiers, and configurable location labels.
+ * Revision: 1.4.4
+ * Description: Enhances member cards with You/Owner/relationship/duplicate badges, identifiers, group nicknames, color swatches, and configurable location labels.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-09
@@ -13,13 +13,8 @@
     var cityCache = {};
     var latestMembers = [];
     var stateAbbr = {
-        'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA', 'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'ID', 'Indiana': 'IN', 'Iowa': 'IA', 'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD', 'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO', 'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH', 'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC', 'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY', 'District of Columbia': 'DC'
+        'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA', 'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA', 'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD', 'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO', 'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH', 'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC', 'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY', 'District of Columbia': 'DC'
     };
-
-    function setStatus(text) {
-        var node = document.getElementById('statusText');
-        if (node) node.textContent = text;
-    }
 
     function account() {
         var text = (document.getElementById('accountTitle') || {}).textContent || '';
@@ -40,6 +35,14 @@
         var item = document.createElement('span');
         item.className = 'role-badge ' + kind;
         item.textContent = text;
+        return item;
+    }
+
+    function colorSwatch(color) {
+        if (!/^#[0-9a-fA-F]{6}$/.test(color || '')) return null;
+        var item = span('color', 'Color');
+        item.style.borderColor = color;
+        item.style.color = color;
         return item;
     }
 
@@ -84,24 +87,18 @@
         return city || state || '';
     }
 
-    function gpsLabel(lat, lon) {
-        return Number(lat).toFixed(3) + ', ' + Number(lon).toFixed(3);
-    }
+    function gpsLabel(lat, lon) { return Number(lat).toFixed(3) + ', ' + Number(lon).toFixed(3); }
 
     function lookupCity(lat, lon, callback) {
         var key = cityCacheKey(lat, lon);
         var cached = storedCity(key);
         if (cached) return callback(cached);
-
         var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&addressdetails=1&lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lon);
-        fetch(url)
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                var city = cityFromAddress(data && data.address) || gpsLabel(lat, lon);
-                saveCity(key, city);
-                callback(city);
-            })
-            .catch(function () { callback(gpsLabel(lat, lon)); });
+        fetch(url).then(function (r) { return r.json(); }).then(function (data) {
+            var city = cityFromAddress(data && data.address) || gpsLabel(lat, lon);
+            saveCity(key, city);
+            callback(city);
+        }).catch(function () { callback(gpsLabel(lat, lon)); });
     }
 
     function normalizeAge(text) {
@@ -159,22 +156,35 @@
     function fetchMembers() {
         return fetch('api.php?action=family_locations', { credentials: 'same-origin' })
             .then(function (response) { return response.json(); })
-            .then(function (data) {
-                if (data && data.ok) latestMembers = data.members || [];
-            }).catch(function () { });
+            .then(function (data) { if (data && data.ok) latestMembers = data.members || []; })
+            .catch(function () { });
     }
 
     function findMemberForCard(card) {
+        var existingId = card.dataset.memberId || '';
+        if (existingId) {
+            for (var x = 0; x < latestMembers.length; x++) if (latestMembers[x].id === existingId) return latestMembers[x];
+        }
         var nameNode = card.getElementsByClassName('member-name')[0];
-        var name = nameNode ? norm(nameNode.textContent) : '';
+        var name = nameNode ? norm(nameNode.textContent.replace(/\s*\(you\)$/i, '')) : '';
         for (var i = 0; i < latestMembers.length; i++) {
-            if (norm(latestMembers[i].displayName || latestMembers[i].username) === name) return latestMembers[i];
+            if (norm(latestMembers[i].displayLabel) === name || norm(latestMembers[i].displayName) === name || norm(latestMembers[i].username) === name) return latestMembers[i];
         }
         return null;
     }
 
+    function enhanceName(card, member) {
+        var name = card.getElementsByClassName('member-name')[0];
+        if (!name || !member) return;
+        var label = member.displayLabel || member.displayName || member.username || 'Unknown';
+        name.textContent = label;
+        var profile = member.groupProfile || {};
+        if (profile.color && /^#[0-9a-fA-F]{6}$/.test(profile.color)) name.style.color = profile.color;
+    }
+
     function enhanceIdentifiers(card, member) {
         if (!member) return;
+        card.dataset.memberId = member.id || '';
         var main = card.firstElementChild;
         if (!main) return;
         var ident = main.getElementsByClassName('member-ident')[0];
@@ -185,7 +195,12 @@
             if (header && header.nextSibling) main.insertBefore(ident, header.nextSibling);
             else main.appendChild(ident);
         }
-        ident.textContent = '@' + (member.username || 'unknown') + ' • ID ' + String(member.id || '').slice(-8);
+        var profile = member.groupProfile || {};
+        var parts = ['@' + (member.username || 'unknown'), 'ID ' + String(member.id || '').slice(-8)];
+        if (profile.relationship) parts.push(profile.relationship);
+        if (member.joinedAt) parts.push('Joined ' + new Date(member.joinedAt).toLocaleDateString());
+        if (member.hasDuplicateDisplayLabel) parts.push('duplicate name');
+        ident.textContent = parts.join(' • ');
     }
 
     function enhanceBadges(card, info, member) {
@@ -200,14 +215,18 @@
             name.parentNode.insertBefore(header, name);
             header.appendChild(name);
         }
-        var isYou = info && norm(name.textContent) === norm(info.name);
+        var profile = (member && member.groupProfile) || {};
+        var isYou = info && member && norm(member.displayName) === norm(info.name);
         var isOwner = member && String(member.role || '').toLowerCase() === 'owner';
-        if (!isYou && !isOwner) return;
         var badges = document.createElement('div');
         badges.className = 'role-badges';
         if (isYou) badges.appendChild(span('you', 'You'));
         if (isOwner) badges.appendChild(span('owner', 'Owner'));
-        header.appendChild(badges);
+        if (profile.relationship) badges.appendChild(span('relationship', profile.relationship));
+        if (member && member.hasDuplicateDisplayLabel) badges.appendChild(span('duplicate', 'Duplicate Name'));
+        var swatch = colorSwatch(profile.color);
+        if (swatch) badges.appendChild(swatch);
+        if (badges.children.length) header.appendChild(badges);
     }
 
     function run() {
@@ -218,19 +237,15 @@
         for (var i = 0; i < cards.length; i++) {
             var card = cards[i];
             var member = findMemberForCard(card);
+            enhanceName(card, member);
             enhanceIdentifiers(card, member);
             enhanceBadges(card, info, member);
-            if (info) {
-                var name = card.getElementsByClassName('member-name')[0];
-                if (name && norm(name.textContent) === norm(info.name) && list.firstElementChild !== card) list.insertBefore(card, list.firstElementChild);
-            }
+            if (info && member && norm(member.displayName) === norm(info.name) && list.firstElementChild !== card) list.insertBefore(card, list.firstElementChild);
         }
         enhanceLocationLabels();
     }
 
-    function refreshAll() {
-        fetchMembers().then(run);
-    }
+    function refreshAll() { fetchMembers().then(run); }
 
     window.addEventListener('familyTrackerLocationFormatChanged', function (event) {
         if (event.detail && event.detail.clearCache) clearCityCache();
