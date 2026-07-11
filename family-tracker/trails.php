@@ -2,11 +2,11 @@
 /**
  * Project: Family GPS Tracker
  * File: trails.php
- * Revision: 1.1.0
- * Description: Shared family trail-history endpoint.
+ * Revision: 1.4.5
+ * Description: Active-group trail-history endpoint with optional member filtering.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
- * Modified: 2026-07-06
+ * Modified: 2026-07-09
  */
 
 declare(strict_types=1);
@@ -17,11 +17,11 @@ init_app_storage();
 
 try {
     $user = require_user();
-    $familyId = (string)$user['familyId'];
-    $family = read_family($familyId);
+    $family = current_family_for_user($user);
     if (!$family) {
-        fail('Family not found.', 404);
+        fail('Active group not found.', 404);
     }
+    $familyId = (string)$family['id'];
 
     $memberId = safe_id(is_string($_GET['memberId'] ?? null) ? (string)$_GET['memberId'] : '');
     $minutesRaw = isset($_GET['minutes']) ? (int)$_GET['minutes'] : DEFAULT_TRAIL_MINUTES;
@@ -30,7 +30,7 @@ try {
 
     $trails = [];
     foreach (list_json_records('users') as $member) {
-        if (($member['familyId'] ?? '') !== $familyId || empty($member['isActive'])) {
+        if (empty($member['isActive']) || family_member_role($family, $member) === null) {
             continue;
         }
         if ($memberId !== '' && (string)$member['id'] !== $memberId) {
@@ -59,7 +59,7 @@ try {
         }
 
         $trails[] = [
-            'member' => public_user($member),
+            'member' => public_user_for_family($member, $family),
             'points' => array_values($points),
             'pointCount' => count($points),
         ];
