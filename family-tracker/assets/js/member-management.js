@@ -13,10 +13,9 @@
     var csrfToken = '';
     var currentUserId = '';
 
-    function status(text) {
-        var node = document.getElementById('statusText');
-        if (node) node.textContent = text;
-    }
+    function status(text) { var node = document.getElementById('statusText'); if (node) node.textContent = text; }
+    function cleanColor(value) { return /^#[0-9a-fA-F]{6}$/.test(value || '') ? value : '#6B7280'; }
+    function text(value) { return value == null ? '' : String(value); }
 
     function api(payload) {
         var options = { credentials: 'same-origin' };
@@ -34,19 +33,28 @@
         });
     }
 
+    function ensureLeaveCard() {
+        var card = document.getElementById('leaveGroupCard');
+        if (card) return card;
+        var anchor = document.getElementById('groupsCard') || document.querySelector('.account-card');
+        if (!anchor) return null;
+        card = document.createElement('section');
+        card.id = 'leaveGroupCard';
+        card.className = 'card profile-edit hidden';
+        card.innerHTML = '<div><p class="eyebrow">Membership</p><h2>Leave Active Group</h2><p class="muted">Leaving removes your membership and active-group profile data. Your account and other groups remain intact.</p></div><button id="leaveGroupBtn" type="button" class="danger-button">Leave Active Group</button>';
+        anchor.insertAdjacentElement('afterend', card);
+        document.getElementById('leaveGroupBtn').addEventListener('click', leaveGroup);
+        return card;
+    }
+
     function refreshMainList() {
         var refresh = document.getElementById('refreshBtn');
         if (refresh) refresh.click();
         window.dispatchEvent(new CustomEvent('familyTrackerMemberUiRefresh'));
     }
 
-    function cleanColor(value) { return /^#[0-9a-fA-F]{6}$/.test(value || '') ? value : '#6B7280'; }
-    function text(value) { return value == null ? '' : String(value); }
-
     function metaLine(member) {
-        var parts = [];
-        parts.push('@' + (member.username || 'unknown'));
-        parts.push('Role: ' + (member.role || 'member'));
+        var parts = ['@' + (member.username || 'unknown'), 'Role: ' + (member.role || 'member')];
         if (member.joinedAt) parts.push('Joined: ' + new Date(member.joinedAt).toLocaleDateString());
         if (member.isDisabledInGroup) parts.push('Temporarily disabled');
         if (member.hasDuplicateDisplayLabel) parts.push('Duplicate name warning');
@@ -58,16 +66,13 @@
         var card = document.createElement('article');
         card.className = 'member-card member-management-card';
         card.dataset.memberId = member.id || '';
-
         var main = document.createElement('div');
         var title = document.createElement('div');
         title.className = 'member-name';
         title.textContent = (member.displayLabel || member.displayName || member.username || 'Unknown') + (member.id === currentUserId ? ' (you)' : '');
-
         var meta = document.createElement('div');
         meta.className = 'member-meta';
         meta.textContent = metaLine(member);
-
         var grid = document.createElement('div');
         grid.className = 'member-management-grid';
         grid.innerHTML = '<label>Nickname<input class="member-nickname" maxlength="80"></label><label>Relationship<select class="member-relationship"><option value="">None</option><option>Dad</option><option>Mom</option><option>Child</option><option>Grandparent</option><option>Friend</option><option>Other</option></select></label><label>Map color<input class="member-color" type="color"></label>';
@@ -82,7 +87,6 @@
             relation.value = text(profile.relationship);
         }
         grid.querySelector('.member-color').value = cleanColor(profile.color);
-
         var actions = document.createElement('div');
         actions.className = 'button-row';
         var save = document.createElement('button');
@@ -91,7 +95,6 @@
         save.textContent = 'Save Member Settings';
         save.addEventListener('click', function () { saveMember(card); });
         actions.appendChild(save);
-
         if (member.id !== currentUserId && member.role !== 'owner') {
             var toggle = document.createElement('button');
             toggle.type = 'button';
@@ -99,7 +102,6 @@
             toggle.textContent = member.isDisabledInGroup ? 'Restore To Group' : 'Temporarily Disable';
             toggle.addEventListener('click', function () { toggleMember(member); });
             actions.appendChild(toggle);
-
             var remove = document.createElement('button');
             remove.type = 'button';
             remove.className = 'danger-button';
@@ -107,7 +109,6 @@
             remove.addEventListener('click', function () { removeMember(member); });
             actions.appendChild(remove);
         }
-
         main.append(title, meta, grid, actions);
         var badge = document.createElement('span');
         badge.className = 'badge' + (member.isDisabledInGroup || member.hasDuplicateDisplayLabel ? ' stale' : '');
@@ -117,49 +118,26 @@
     }
 
     function render(data) {
+        currentUserId = data.currentUserId || '';
+        var leaveCard = ensureLeaveCard();
+        if (leaveCard) leaveCard.classList.toggle('hidden', !data.canLeave);
         var card = document.getElementById('ownerMemberManagementCard');
         var list = document.getElementById('ownerMemberManagementList');
-        var leaveCard = document.getElementById('leaveGroupCard');
-        currentUserId = data.currentUserId || '';
-        if (leaveCard) {
-            if (data.canLeave) leaveCard.classList.remove('hidden');
-            else leaveCard.classList.add('hidden');
-        }
         if (!card || !list) return;
-        if (!data.isOwner) {
-            card.classList.add('hidden');
-            return;
-        }
+        if (!data.isOwner) { card.classList.add('hidden'); return; }
         card.classList.remove('hidden');
         list.innerHTML = '';
-        var members = data.members || [];
-        if (!members.length) {
-            list.textContent = 'No members found.';
-            return;
-        }
-        members.forEach(function (member) { list.appendChild(renderMember(member)); });
+        (data.members || []).forEach(function (member) { list.appendChild(renderMember(member)); });
+        if (!list.children.length) list.textContent = 'No members found.';
     }
 
-    function load() {
-        api(null).then(render).catch(function () {
-            var card = document.getElementById('ownerMemberManagementCard');
-            if (card) card.classList.add('hidden');
-        });
-    }
+    function load() { api(null).then(render).catch(function () { var card = document.getElementById('ownerMemberManagementCard'); if (card) card.classList.add('hidden'); }); }
 
     function saveMember(card) {
         status('Saving member settings...');
-        api({
-            action: 'update_member_profile',
-            memberId: card.dataset.memberId || '',
-            nickname: card.querySelector('.member-nickname').value.trim(),
-            relationship: card.querySelector('.member-relationship').value.trim(),
-            color: card.querySelector('.member-color').value.trim()
-        }).then(function (data) {
-            render(data);
-            refreshMainList();
-            status(data.message || 'Member settings saved.');
-        }).catch(function (error) { status(error.message || 'Could not save member settings.'); });
+        api({ action: 'update_member_profile', memberId: card.dataset.memberId || '', nickname: card.querySelector('.member-nickname').value.trim(), relationship: card.querySelector('.member-relationship').value.trim(), color: card.querySelector('.member-color').value.trim() })
+            .then(function (data) { render(data); refreshMainList(); status(data.message || 'Member settings saved.'); })
+            .catch(function (error) { status(error.message || 'Could not save member settings.'); });
     }
 
     function toggleMember(member) {
@@ -168,40 +146,25 @@
         var prompt = member.isDisabledInGroup ? 'Restore ' + label + ' to the active group?' : 'Temporarily disable ' + label + '? They will lose access until restored.';
         if (!window.confirm(prompt)) return;
         status(member.isDisabledInGroup ? 'Restoring member...' : 'Disabling member...');
-        api({ action: action, memberId: member.id }).then(function (data) {
-            render(data);
-            refreshMainList();
-            status(data.message || 'Member status updated.');
-        }).catch(function (error) { status(error.message || 'Could not update member status.'); });
+        api({ action: action, memberId: member.id }).then(function (data) { render(data); refreshMainList(); status(data.message || 'Member status updated.'); })
+            .catch(function (error) { status(error.message || 'Could not update member status.'); });
     }
 
     function removeMember(member) {
         var label = member.displayLabel || member.displayName || member.username || 'this member';
         if (!window.confirm('Permanently remove ' + label + ' from the active group? Their account will not be deleted.')) return;
         status('Removing member from group...');
-        api({ action: 'remove_member', memberId: member.id }).then(function (data) {
-            render(data);
-            refreshMainList();
-            status(data.message || 'Member removed from group.');
-        }).catch(function (error) { status(error.message || 'Could not remove member.'); });
+        api({ action: 'remove_member', memberId: member.id }).then(function (data) { render(data); refreshMainList(); status(data.message || 'Member removed from group.'); })
+            .catch(function (error) { status(error.message || 'Could not remove member.'); });
     }
 
     function leaveGroup() {
         if (!window.confirm('Leave the active group? You will need a new invite to rejoin.')) return;
         status('Leaving group...');
-        api({ action: 'leave_group' }).then(function (data) {
-            status(data.message || 'You left the group.');
-            window.setTimeout(function () { window.location.reload(); }, 500);
-        }).catch(function (error) { status(error.message || 'Could not leave group.'); });
+        api({ action: 'leave_group' }).then(function (data) { status(data.message || 'You left the group.'); window.setTimeout(function () { window.location.reload(); }, 500); })
+            .catch(function (error) { status(error.message || 'Could not leave group.'); });
     }
 
-    function boot() {
-        var leave = document.getElementById('leaveGroupBtn');
-        if (leave) leave.addEventListener('click', leaveGroup);
-        load();
-        window.setInterval(load, 45000);
-    }
-
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-    else boot();
+    function boot() { ensureLeaveCard(); load(); window.setInterval(load, 45000); }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 }());
