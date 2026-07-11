@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.4.9
+Revision: 1.5.0
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,20 @@ Modified: 2026-07-11
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.4.9**
+Current Project Revision: **1.5.0**
+
+## Rev 1.5.0 - 2026-07-11
+
+- Kept the automatic location-permission request on launch.
+- Added quick active-group check-ins: I'm OK, On My Way, Arrived, and Need Help.
+- Added optional check-in notes.
+- Added manual trip mode with destination, ETA minutes, estimated arrival time, optional note, and end-trip control.
+- Added an active-group member status panel for check-ins and active trips.
+- Added a recent check-in and trip activity panel on the main page.
+- Added `presence.php` and `assets/js/presence.js`.
+- Stored check-ins and trip records in the existing active-group JSON record.
+- Added group notices and audit events for check-ins, trip starts, and trip endings.
+- Added no new live-data folder.
 
 ## Rev 1.4.9 - 2026-07-11
 
