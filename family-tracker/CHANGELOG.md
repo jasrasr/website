@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.4.8
+Revision: 1.4.9
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,19 @@ Modified: 2026-07-11
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.4.8**
+Current Project Revision: **1.4.9**
+
+## Rev 1.4.9 - 2026-07-11
+
+- Kept the automatic location-permission request on launch.
+- Added a Privacy & Account Lifecycle card to the main app.
+- Added `privacy.php` with plain-language data-storage, location-sharing, and background-browser disclosures.
+- Added `lifecycle.php` for account-deletion eligibility checks, expired remembered-device cleanup, and permanent account deletion.
+- Added password plus exact-text confirmation for account deletion.
+- Blocked account deletion when the user owns a group that still contains other members.
+- Allowed deletion of single-member owned groups together with the account.
+- Account deletion removes the user record, username index entry, location, trail, remembered-device tokens, and group memberships.
+- Added no new live-data folder.
 
 ## Rev 1.4.8 - 2026-07-11
 
@@ -38,24 +50,4 @@ Current Project Revision: **1.4.8**
 - Added owner-filtered audit history sourced from the existing audit files.
 - Added owner-controlled active-group JSON export.
 - Added an Owner Dashboard link to the main active-group member-management card.
-- Added no new live-data folder.
-
-## Rev 1.4.6 - 2026-07-09
-
-- Added map mode preference: embedded app map, static OpenStreetMap preview, or external map links.
-- Added Center on Me and Center on Member controls.
-- Added active-group member selector for map tools.
-- Added static member map preview and group-area external link.
-- Added `assets/js/map-tools.js`.
-- Added no new live-data folder.
-
-## Rev 1.4.5 - 2026-07-09
-
-- Added a main-page Last Known Location quick-detail card.
-- Added member selector for quick detail.
-- Added per-member Details links in the member list.
-- Added `member-detail.php`, a signed-in member detail page.
-- Added `assets/js/member-detail.js` for last-known metrics, static OpenStreetMap preview, external map links, and trail preview.
-- Updated `trails.php` to use the active group.
-- Added an Open History Map link near the group map.
 - Added no new live-data folder.
