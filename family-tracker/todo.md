@@ -1,8 +1,8 @@
 <!--
 Project: Family GPS Tracker
 File: todo.md
-Revision: 1.5.1
-Project Revision Reference: 1.5.1
+Revision: 1.5.2
+Project Revision Reference: 1.5.2
 Description: Feature backlog and improvement ideas for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -11,26 +11,26 @@ Modified: 2026-07-11
 
 # Family GPS Tracker TODO
 
-Current App Revision Context: **1.5.1**
+Current App Revision Context: **1.5.2**
 
-## Completed in Rev 1.5.1
+## Completed in Rev 1.5.2
 
 - [x] Keep automatic location permission request on launch.
-- [x] Add notices when a member becomes stale.
-- [x] Add notices when a stale or missing member starts sharing again.
-- [x] Add configurable trail retention.
-- [x] Add owner-controlled cleanup of old active-group trail points.
-- [x] Add a Location Health panel with live, stale, missing, and trail-point counts.
+- [x] Add temporary member disable/restore for an active group.
+- [x] Add a separate permanent remove-from-group action.
+- [x] Add leave-group control for non-owner members.
+- [x] Add visible disabled-member state in owner member management.
+- [x] Add audit and group-notice events for membership lifecycle changes.
 
 ## Completed previously
 
+- [x] Stale/recovered-sharing notices and configurable trail retention.
 - [x] Quick check-ins and manual trip/ETA sharing.
 - [x] Expiring and maximum-use managed invites.
 - [x] Guarded group and account deletion.
 - [x] Privacy details and remembered-device cleanup.
 - [x] Multi-group/circle support.
 - [x] Owner dashboard, ownership transfer, audit history, activity, and group export.
-- [x] Owner member management and remove-from-group.
 - [x] Member nicknames, relationship labels, colors, joined dates, and duplicate warnings.
 - [x] Password change, remembered-device controls, and user export.
 - [x] Member detail, trail preview, last-known location, and map links.
@@ -39,11 +39,11 @@ Current App Revision Context: **1.5.1**
 
 ## Next reasonable batches
 
-### Membership lifecycle
+### Member experience
 
-- [ ] Add temporary member disable/restore for an active group.
 - [ ] Add optional member profile pictures.
-- [ ] Add leave-group control for non-owners.
+- [ ] Add member-controlled nickname/profile preferences.
+- [ ] Add a clearer disabled-access landing message.
 
 ### Location features
 
