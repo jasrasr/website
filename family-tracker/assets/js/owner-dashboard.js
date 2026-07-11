@@ -1,8 +1,8 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/owner-dashboard.js
- * Revision: 1.4.8
- * Description: Owner dashboard behavior for settings, ownership transfer, activity, audit filtering, export, and guarded deletion.
+ * Revision: 1.4.9
+ * Description: Owner dashboard behavior for settings, retention, ownership, activity, audit, export, and guarded deletion.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-11
  * Modified: 2026-07-11
@@ -69,6 +69,7 @@
         $('ownerGroupName').value = family.name || '';
         $('ownerGroupDescription').value = family.description || '';
         $('ownerGroupColor').value = family.color || '#4ADE80';
+        $('ownerTrailRetention').value = String(family.trailRetentionDays == null ? 30 : family.trailRetentionDays);
         $('ownerDeleteConfirmation').placeholder = family.name || 'Exact group name';
         $('ownerDeleteGroupBtn').disabled = !data.canDeleteGroup;
     }
@@ -150,12 +151,24 @@
             action: 'update_group_settings',
             name: $('ownerGroupName').value.trim(),
             description: $('ownerGroupDescription').value.trim(),
-            color: $('ownerGroupColor').value
+            color: $('ownerGroupColor').value,
+            trailRetentionDays: Number($('ownerTrailRetention').value)
         }).then(function (result) {
             data = result;
             render();
             status(result.message || 'Group settings updated.');
         }).catch(function (error) { status(error.message || 'Could not save group settings.'); });
+    }
+
+    function cleanupTrails() {
+        var days = Number($('ownerTrailRetention').value);
+        if (!window.confirm(days === 0 ? 'Retention is unlimited. Run cleanup anyway?' : 'Delete trail points older than ' + days + ' day(s) for this group?')) return;
+        status('Cleaning old trail points...');
+        post({ action: 'cleanup_trails' }).then(function (result) {
+            data = result;
+            render();
+            status(result.message || 'Trail cleanup complete.');
+        }).catch(function (error) { status(error.message || 'Trail cleanup failed.'); });
     }
 
     function transferOwnership() {
@@ -197,6 +210,7 @@
 
     function boot() {
         $('ownerGroupSettingsForm').addEventListener('submit', saveSettings);
+        $('ownerCleanupTrailsBtn').addEventListener('click', cleanupTrails);
         $('ownerTransferBtn').addEventListener('click', transferOwnership);
         $('ownerRefreshBtn').addEventListener('click', load);
         $('ownerAuditFilter').addEventListener('input', renderAudit);
