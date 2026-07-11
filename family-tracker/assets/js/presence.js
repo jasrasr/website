@@ -1,8 +1,8 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/presence.js
- * Revision: 1.5.0
- * Description: Check-in, trip/ETA sharing, and recent presence activity UI behavior.
+ * Revision: 1.5.1
+ * Description: Check-in, trip/ETA sharing, recent activity, and trail-status panel bootstrap.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-11
  * Modified: 2026-07-11
@@ -149,6 +149,22 @@
         }).catch(function (error) { status(error.message || 'Could not end trip sharing.'); });
     }
 
+    function addTrailStatusPanel() {
+        if ($('trailStatusCard')) return;
+        var anchor = $('presenceActivityCard') || $('diagnosticsCard');
+        if (!anchor) return;
+        var section = document.createElement('section');
+        section.id = 'trailStatusCard';
+        section.className = 'card profile-edit';
+        section.innerHTML = '<div class="section-header"><div><p class="eyebrow">Location Health</p><h2>Live Status & Trail Retention</h2><p id="trailRetentionSummary" class="muted">Loading retention and location status…</p></div><button id="refreshTrailStatusBtn" type="button" class="secondary">Refresh</button></div><div id="trailStatusCounts" class="settings-grid">Loading status…</div><div id="trailOwnerControls" class="settings-grid hidden"><label>Keep trail history<select id="trailRetentionSelect"><option value="24">24 hours</option><option value="168">7 days</option><option value="720">30 days</option><option value="2160">90 days</option></select></label><div class="button-row"><button id="saveTrailRetentionBtn" type="button" class="secondary">Save Retention</button><button id="cleanupGroupTrailsBtn" type="button" class="danger-button">Clean Old Trails</button></div></div><p class="profile-edit-note">The app checks once per minute for members becoming stale or sharing again. Launch-time location permission remains unchanged.</p>';
+        anchor.insertAdjacentElement('afterend', section);
+
+        var script = document.createElement('script');
+        var revision = (document.querySelector('.app-shell') || {}).dataset ? document.querySelector('.app-shell').dataset.appRevision : '1.5.1';
+        script.src = 'assets/js/trail-status.js?v=' + encodeURIComponent(revision || '1.5.1');
+        document.body.appendChild(script);
+    }
+
     function boot() {
         document.querySelectorAll('[data-check-in]').forEach(function (button) {
             button.addEventListener('click', function () { sendCheckIn(button.getAttribute('data-check-in')); });
@@ -156,6 +172,7 @@
         $('tripShareForm').addEventListener('submit', startTrip);
         $('endTripBtn').addEventListener('click', endTrip);
         $('refreshPresenceBtn').addEventListener('click', load);
+        addTrailStatusPanel();
         load();
         window.setInterval(load, 30000);
     }
