@@ -2,8 +2,8 @@
 /**
  * Project: Family GPS Tracker
  * File: index.php
- * Revision: 1.4.7
- * Description: Mobile-first family/circle tracker UI with account settings, diagnostics, owner dashboard, member detail, and map tools.
+ * Revision: 1.4.8
+ * Description: Mobile-first family/circle tracker UI with account settings, diagnostics, owner dashboard, member detail, map tools, and managed invite joins.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-11
@@ -46,6 +46,7 @@ require_once __DIR__ . '/includes/config.php';
     </main>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="assets/js/invite-management.js?v=<?= urlencode(APP_REVISION) ?>"></script>
 <script src="assets/js/app.js?v=<?= urlencode(APP_REVISION) ?>"></script>
 <script src="assets/js/member-badges.js?v=<?= urlencode(APP_REVISION) ?>"></script>
 <script src="assets/js/member-sections.js?v=<?= urlencode(APP_REVISION) ?>"></script>
