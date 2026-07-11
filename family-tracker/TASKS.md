@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: TASKS.md
-Revision: 1.4.7
+Revision: 1.4.8
 Description: Restart-friendly task list and maintenance backlog for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -24,18 +24,19 @@ Modified: 2026-07-11
 - [x] Rev 1.4.5 - Member detail page, quick detail, active-group trails, and history links.
 - [x] Rev 1.4.6 - Map modes and center controls.
 - [x] Rev 1.4.7 - Owner dashboard, group settings, ownership transfer, activity feed, audit history, and group export.
+- [x] Rev 1.4.8 - Expiring/limited-use invites, invite revocation, and guarded group deletion.
 
 ## Live data folder rule
 
 - [x] Existing runtime folders retain `.placeholder` files.
-- [x] Rev 1.4.7 added no new live-data folder.
+- [x] Rev 1.4.8 added no new live-data folder.
 
 ## Next practical improvements
 
-- Add expiring and limited-use invite codes.
 - Add temporary member disable/restore controls.
-- Add delete-group workflow with ownership and membership safeguards.
 - Add delete-my-account controls.
+- Add owner/member invitation activity details.
+- Add configurable trail retention and cleanup.
 - Add optional geofence zones.
 - Add trip mode with ETA sharing.
 
