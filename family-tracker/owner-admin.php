@@ -2,8 +2,8 @@
 /**
  * Project: Family GPS Tracker
  * File: owner-admin.php
- * Revision: 1.4.8
- * Description: Owner-only active-group administration API for settings, ownership transfer, audit history, activity, export, and guarded deletion.
+ * Revision: 1.4.9
+ * Description: Owner-only active-group administration API for settings, ownership, audit, export, retention cleanup, and guarded deletion.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-11
  * Modified: 2026-07-11
@@ -35,6 +35,7 @@ try {
     switch ($action) {
         case 'update_group_settings': update_group_settings($user, $family, $input); break;
         case 'transfer_ownership': transfer_group_ownership($user, $family, $input); break;
+        case 'cleanup_trails': cleanup_group_trails($user, $family); break;
         case 'delete_group': delete_active_group($user, $family, $input); break;
         default: fail('Unknown owner administration action.', 404);
     }
@@ -87,11 +88,22 @@ function activity_for_family(array $family, int $limit = 50): array
     return array_slice($items, 0, $limit);
 }
 
+function valid_retention_days(mixed $value): int
+{
+    $days = (int)$value;
+    return in_array($days, [0, 1, 7, 30, 90, 365], true) ? $days : 30;
+}
+
 function owner_payload(array $user, array $family): array
 {
     return [
         'csrfToken' => ensure_csrf_token(),
-        'family' => public_family($family, true) + ['role' => 'owner', 'description' => (string)($family['description'] ?? ''), 'color' => (string)($family['color'] ?? '#4ADE80')],
+        'family' => public_family($family, true) + [
+            'role' => 'owner',
+            'description' => (string)($family['description'] ?? ''),
+            'color' => (string)($family['color'] ?? '#4ADE80'),
+            'trailRetentionDays' => valid_retention_days($family['trailRetentionDays'] ?? 30),
+        ],
         'currentUserId' => $user['id'],
         'members' => owner_members($family),
         'activity' => activity_for_family($family),
@@ -111,14 +123,16 @@ function update_group_settings(array $user, array $family, array $input): void
     $name = str_field($input, 'name', 80);
     $description = str_field($input, 'description', 240);
     $color = valid_group_color(str_field($input, 'color', 20));
+    $retentionDays = valid_retention_days($input['trailRetentionDays'] ?? 30);
     if ($name === '') fail('Group name is required.', 400);
     $oldName = (string)($family['name'] ?? 'Group');
     $family['name'] = $name;
     $family['description'] = $description;
     $family['color'] = $color;
+    $family['trailRetentionDays'] = $retentionDays;
     $family['updatedAt'] = now_iso();
     write_family($family);
-    audit_event('update_group_settings', ['userId' => $user['id'], 'familyId' => $family['id']]);
+    audit_event('update_group_settings', ['userId' => $user['id'], 'familyId' => $family['id'], 'trailRetentionDays' => $retentionDays]);
     add_group_notice((string)$family['id'], 'group_settings_updated', $user['displayName'] . ' updated settings for ' . $oldName . '.', (string)$user['id']);
     ok(owner_payload($user, $family) + ['message' => 'Group settings updated.']);
 }
@@ -145,6 +159,31 @@ function transfer_group_ownership(array $user, array $family, array $input): voi
     ok(['message' => 'Ownership transferred. Reloading the app is recommended.']);
 }
 
+function cleanup_group_trails(array $user, array $family): void
+{
+    $days = valid_retention_days($family['trailRetentionDays'] ?? 30);
+    if ($days === 0) {
+        ok(owner_payload($user, $family) + ['message' => 'Trail retention is unlimited; no points were removed.']);
+    }
+    $cutoff = time() - ($days * 86400);
+    $removed = 0;
+    foreach (owner_members($family) as $member) {
+        $path = trail_path((string)$member['id']);
+        $trail = read_json_file($path, ['points' => []]);
+        if (($trail['familyId'] ?? '') !== ($family['id'] ?? '')) continue;
+        $before = count($trail['points'] ?? []);
+        $trail['points'] = array_values(array_filter($trail['points'] ?? [], function ($point) use ($cutoff) {
+            $time = isset($point['serverTime']) ? strtotime((string)$point['serverTime']) : false;
+            return $time && $time >= $cutoff;
+        }));
+        $removed += $before - count($trail['points']);
+        $trail['updatedAt'] = now_iso();
+        write_json_file($path, $trail);
+    }
+    audit_event('cleanup_group_trails', ['userId' => $user['id'], 'familyId' => $family['id'], 'retentionDays' => $days, 'removedPoints' => $removed]);
+    ok(owner_payload($user, $family) + ['message' => $removed . ' old trail point(s) removed.']);
+}
+
 function remove_family_from_user_record(array $member, string $familyId): array
 {
     $ids = array_values(array_filter(user_group_ids($member), fn($id) => $id !== $familyId));
@@ -154,9 +193,7 @@ function remove_family_from_user_record(array $member, string $familyId): array
     if (($member['familyId'] ?? '') !== '') {
         $next = read_family((string)$member['familyId']);
         $member['role'] = $next ? (family_member_role($next, $member) ?? 'member') : 'member';
-    } else {
-        $member['role'] = 'member';
-    }
+    } else $member['role'] = 'member';
     $member['updatedAt'] = now_iso();
     return $member;
 }
@@ -167,11 +204,9 @@ function delete_active_group(array $user, array $family, array $input): void
     if ($confirmation !== (string)$family['name']) fail('Type the exact group name to confirm deletion.', 400);
     $remainingForOwner = array_values(array_filter(user_group_ids($user), fn($id) => $id !== (string)$family['id']));
     if (!$remainingForOwner) fail('Create or join another group before deleting your only group.', 400);
-
     $familyId = (string)$family['id'];
     $familyName = (string)$family['name'];
     audit_event('delete_group', ['userId' => $user['id'], 'familyId' => $familyId, 'groupName' => $familyName]);
-
     foreach (list_json_records('users') as $member) {
         if (family_member_role($family, $member) === null) continue;
         $member = remove_family_from_user_record($member, $familyId);
@@ -181,7 +216,6 @@ function delete_active_group(array $user, array $family, array $input): void
         $trail = read_json_file(trail_path((string)$member['id']), []);
         if (($trail['familyId'] ?? '') === $familyId) delete_json_file(trail_path((string)$member['id']));
     }
-
     delete_json_file(family_notices_path($familyId));
     delete_json_file(family_path($familyId));
     $_SESSION['active_family_id'] = $remainingForOwner[0];
