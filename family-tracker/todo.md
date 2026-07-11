@@ -1,8 +1,8 @@
 <!--
 Project: Family GPS Tracker
 File: todo.md
-Revision: 1.4.5
-Project Revision Reference: 1.4.5
+Revision: 1.4.6
+Project Revision Reference: 1.4.6
 Description: Feature backlog and improvement ideas for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -11,9 +11,18 @@ Modified: 2026-07-09
 
 # Family GPS Tracker TODO
 
-Current App Revision Context: **1.4.5**
+Current App Revision Context: **1.4.6**
 
 This file is the feature backlog for future improvements. Checked items are implemented or materially covered in the current app.
+
+## Completed in Rev 1.4.6
+
+- [x] Add a map mode toggle: embedded app map, static fallback preview, and external map links.
+- [x] Add a button to center map tools on the signed-in user.
+- [x] Add a button to center map tools on each member with a saved location.
+- [x] Add a member selector for map centering.
+- [x] Add static OpenStreetMap preview rendering for the selected member.
+- [x] Add active-group external map links from the map tools panel.
 
 ## Completed in Rev 1.4.5
 
@@ -33,17 +42,6 @@ This file is the feature backlog for future improvements. Checked items are impl
 - [x] Add relationship labels such as Dad, Mom, Child, Grandparent, Friend, or Other.
 - [x] Add a visible **Joined At** date for each active-group member.
 - [x] Add a warning if two members have the same group display label.
-
-## Completed in Rev 1.4.3
-
-- [x] Add notices when the invite code is regenerated.
-- [x] Add notices when a display name changes.
-- [x] Add per-group notices for group creation, join, rename, and invite regeneration.
-- [x] Add a list of stale members separate from live members.
-- [x] Add a password-change form.
-- [x] Add per-device persistent-login management so users can revoke remembered devices.
-- [x] Add a force logout for remembered-device sessions on password change.
-- [x] Add export-my-data for a signed-in user.
 
 ## Priority 1 - Practical fixes and polish
 
@@ -71,10 +69,10 @@ This file is the feature backlog for future improvements. Checked items are impl
 
 ## Priority 3 - Location and map features
 
-- [ ] Add a map mode toggle: embedded map, static fallback, and external map links.
-- [ ] Add a button to center the map on the signed-in user.
-- [ ] Add a button to center the map on each family member.
-- [ ] Show all live family members on the mobile fallback map when possible.
+- [x] Add a map mode toggle: embedded map, static fallback, and external map links.
+- [x] Add a button to center the map tools on the signed-in user.
+- [x] Add a button to center the map tools on each family member.
+- [ ] Show all live family members as individual markers on the mobile fallback map when possible.
 - [x] Add a list of stale members separate from live members.
 - [x] Add a **last known location** panel for each selected member.
 - [x] Add a trail-history preview on the member detail page.
