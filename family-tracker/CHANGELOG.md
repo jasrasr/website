@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.4.7
+Revision: 1.4.8
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,21 @@ Modified: 2026-07-11
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.4.7**
+Current Project Revision: **1.4.8**
+
+## Rev 1.4.8 - 2026-07-11
+
+- Kept the existing automatic location-permission request on launch.
+- Added managed invite codes with optional 1-hour, 24-hour, 7-day, or no expiration.
+- Added invite-use limits of 1, 5, or unlimited.
+- Added owner invite listing, usage counts, expiration state, and revoke controls.
+- Added one-time full-code display for newly created managed invites.
+- Added invite-aware joining for new accounts and existing signed-in accounts.
+- Preserved compatibility with the original legacy group invite code.
+- Added guarded active-group deletion from the Owner Dashboard.
+- Group deletion requires the exact group name and requires the owner to belong to another group first.
+- Group deletion removes the group from all members and deletes matching latest-location and trail records.
+- Added no new live-data folder.
 
 ## Rev 1.4.7 - 2026-07-11
 
