@@ -1,8 +1,8 @@
 /*
  * Project: Family GPS Tracker
  * File: assets/css/style.css
- * Revision: 1.4.4
- * Description: Mobile-first dark UI styling with account security, diagnostics, group controls, member sections, and owner member management.
+ * Revision: 1.4.5
+ * Description: Mobile-first dark UI styling with account security, diagnostics, owner tools, and member detail views.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-09
@@ -12,6 +12,7 @@
 * { box-sizing: border-box; }
 html, body { min-height: 100%; margin: 0; }
 body { padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); background: radial-gradient(circle at top left, #1f2a44 0, var(--bg) 42rem); color: var(--text); }
+a { color: var(--accent); }
 button, input, select { font: inherit; }
 button { border: 0; border-radius: 999px; padding: 0.85rem 1.1rem; background: var(--accent); color: #052e16; font-weight: 800; cursor: pointer; box-shadow: 0 10px 25px rgba(74, 222, 128, 0.15); }
 button:disabled { cursor: not-allowed; opacity: 0.5; }
@@ -38,6 +39,8 @@ code { display: inline-block; padding: 0.7rem 0.8rem; border-radius: 0.8rem; bac
 .check-row input { width: auto; margin-top: 0.2rem; }
 .status-card { position: sticky; top: 0.5rem; z-index: 500; background: rgba(17, 24, 39, 0.92); }
 .account-card, .section-header, .invite-row, .button-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+.compact-label { min-width: min(16rem, 100%); }
+.secondary-link { border: 1px solid var(--border); border-radius: 999px; color: var(--text); padding: 0.38rem 0.65rem; text-decoration: none; font-weight: 800; font-size: 0.82rem; background: rgba(255,255,255,0.06); }
 .controls-card .button-row { justify-content: flex-start; margin-top: 0.8rem; }
 .danger-zone { border-top: 1px dashed rgba(251, 113, 133, 0.35); padding-top: 0.85rem; }
 .dashboard-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0.6rem 0 1rem; }
@@ -47,7 +50,7 @@ code { display: inline-block; padding: 0.7rem 0.8rem; border-radius: 0.8rem; bac
 .metric-card strong { font-size: clamp(1.25rem, 4vw, 1.8rem); line-height: 1; }
 .metric-unit { font-size: 0.82rem; }
 .map-card { overflow: hidden; }
-#map, #historyMap { width: 100%; height: clamp(20rem, 48vh, 30rem); min-height: 20rem; max-height: 30rem; border-radius: 1rem; overflow: hidden; background: #1f2937; border: 1px solid var(--border); }
+#map, #historyMap, .detail-map-box { width: 100%; height: clamp(20rem, 48vh, 30rem); min-height: 20rem; max-height: 30rem; border-radius: 1rem; overflow: hidden; background: #1f2937; border: 1px solid var(--border); }
 .leaflet-container { color: #111827; touch-action: pan-y; }
 .member-list { display: grid; gap: 0.75rem; }
 .member-card { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; padding: 0.85rem; border-radius: 1rem; background: rgba(255, 255, 255, 0.055); border: 1px solid var(--border); }
@@ -68,6 +71,7 @@ code { display: inline-block; padding: 0.7rem 0.8rem; border-radius: 0.8rem; bac
 .badge.stale { background: rgba(250, 204, 21, 0.14); color: #fef08a; }
 .badge.missing { background: rgba(148, 163, 184, 0.14); color: #cbd5e1; }
 .detail-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; }
+.detail-actions { grid-column: 1 / -1; }
 .warning-card { border-color: rgba(250, 204, 21, 0.35); }
 .danger { border-color: rgba(251, 113, 133, 0.45); color: #fecdd3; }
 .settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
@@ -95,5 +99,5 @@ code { display: inline-block; padding: 0.7rem 0.8rem; border-radius: 0.8rem; bac
     .invite-row code { width: 100%; text-align: center; overflow-wrap: anywhere; }
     .member-card { grid-template-columns: 1fr; }
     button, .settings-row button, .groups-card button { width: 100%; }
-    #map, #historyMap { height: 20rem; min-height: 20rem; max-height: 20rem; }
+    #map, #historyMap, .detail-map-box { height: 20rem; min-height: 20rem; max-height: 20rem; }
 }
