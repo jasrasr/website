@@ -1,8 +1,8 @@
 <!--
 Project: Family GPS Tracker
 File: todo.md
-Revision: 1.5.2
-Project Revision Reference: 1.5.2
+Revision: 1.5.3
+Project Revision Reference: 1.5.3
 Description: Feature backlog and improvement ideas for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -11,31 +11,27 @@ Modified: 2026-07-11
 
 # Family GPS Tracker TODO
 
-Current App Revision Context: **1.5.2**
+Current App Revision Context: **1.5.3**
 
-## Completed in Rev 1.5.2
+## Completed in Rev 1.5.3
 
+- [x] Add web app manifest and home-screen install support.
+- [x] Add service-worker app-shell caching.
+- [x] Add online/offline status messaging.
+- [x] Add compact layout mode.
+- [x] Add high-contrast appearance mode.
+- [x] Add light appearance mode.
+- [x] Add manual cached-app refresh control.
 - [x] Keep automatic location permission request on launch.
-- [x] Add temporary member disable/restore for an active group.
-- [x] Add a separate permanent remove-from-group action.
-- [x] Add leave-group control for non-owner members.
-- [x] Add visible disabled-member state in owner member management.
-- [x] Add audit and group-notice events for membership lifecycle changes.
 
 ## Completed previously
 
+- [x] Temporary member disable/restore and safe leave-group control.
 - [x] Stale/recovered-sharing notices and configurable trail retention.
 - [x] Quick check-ins and manual trip/ETA sharing.
 - [x] Expiring and maximum-use managed invites.
 - [x] Guarded group and account deletion.
-- [x] Privacy details and remembered-device cleanup.
-- [x] Multi-group/circle support.
-- [x] Owner dashboard, ownership transfer, audit history, activity, and group export.
-- [x] Member nicknames, relationship labels, colors, joined dates, and duplicate warnings.
-- [x] Password change, remembered-device controls, and user export.
-- [x] Member detail, trail preview, last-known location, and map links.
-- [x] Map mode preference and center controls.
-- [x] Diagnostics and signed-in health check.
+- [x] Multi-group support, owner dashboard, member management, maps, diagnostics, and account security.
 
 ## Next reasonable batches
 
@@ -61,10 +57,10 @@ Current App Revision Context: **1.5.2**
 
 ### PWA and UI
 
-- [ ] Add web app manifest and home-screen install support.
-- [ ] Add service-worker app-shell caching and offline status.
-- [ ] Add compact, high-contrast, and light appearance modes.
-- [ ] Add loading skeletons and clearer success/error banners.
+- [ ] Add loading skeletons.
+- [ ] Add clearer success/error banners instead of relying mainly on the sticky status line.
+- [ ] Add a PNG icon set for broader home-screen compatibility.
+- [ ] Evaluate offline location-update queuing; do not queue sensitive writes without conflict handling.
 
 ## Implementation notes
 
