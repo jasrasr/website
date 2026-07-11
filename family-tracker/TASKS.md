@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: TASKS.md
-Revision: 1.4.4
+Revision: 1.4.5
 Description: Restart-friendly task list and maintenance backlog for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -29,6 +29,7 @@ Modified: 2026-07-09
 - [x] Rev 1.4.2 - Account settings, group rename, location-label options, diagnostics, and health check.
 - [x] Rev 1.4.3 - Account security tools, remembered-device management, data export, group notices, and member status sections.
 - [x] Rev 1.4.4 - Owner member management, nicknames, relationship labels, member colors, joined-at display, duplicate warnings, and remove-from-group.
+- [x] Rev 1.4.5 - Member detail page, quick-detail panel, detail links, active-group trail filtering, and history map link.
 
 ## Live data folder rule
 
@@ -40,15 +41,14 @@ Modified: 2026-07-09
 - [x] `data/persistent_logins/.placeholder` exists for persistent login records.
 - [x] `data/locks/.placeholder` exists for lock files.
 - [x] `data/audit/.placeholder` exists for audit logs.
-- [x] Rev 1.4.4 added no new live-data folder.
+- [x] Rev 1.4.5 added no new live-data folder.
 
 ## Next practical improvements
 
 - Add owner/member role transfer.
 - Add delete-my-account controls.
 - Add owner-controlled export for active-group data.
-- Add per-group member detail pages.
-- Add map center buttons for each member.
+- Add map mode toggle: embedded map, static fallback, and external links.
 - Add optional geofence zones, such as Home, School, Work, Church, or Grandma’s House.
 - Add trip mode with ETA sharing.
 
