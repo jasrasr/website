@@ -1,8 +1,8 @@
 <!--
 Project: Family GPS Tracker
 File: README.md
-Revision: 1.4.4
-Description: Setup, deployment, privacy, account security, member management, and maintenance notes for the PHP/JSON family tracker.
+Revision: 1.4.5
+Description: Setup, deployment, privacy, account security, member management, member details, and maintenance notes for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
 Modified: 2026-07-09
@@ -10,7 +10,7 @@ Modified: 2026-07-09
 
 # Family GPS Tracker
 
-Current Project Revision: **1.4.4**
+Current Project Revision: **1.4.5**
 
 A small PHP + JSON backend site for consent-based family and friend-circle location sharing. It is designed for shared hosting: browser GPS, persistent login cookies, no database, protected JSON storage, mobile-friendly maps, and multiple share groups per user account.
 
@@ -25,33 +25,31 @@ A small PHP + JSON backend site for consent-based family and friend-circle locat
 - Set per-group member nicknames, relationship labels, and colors.
 - Remove a member from the active group without deleting that user's account.
 - Show joined-at dates and duplicate display-label warnings.
+- Show a main-page Last Known Location quick-detail card.
+- Open a signed-in member detail page with last-known metrics, static map preview, external map links, and recent trail points.
+- Use active-group trail history on `trails.php` and `history.php`.
 - Edit display name from the Account & Group settings card.
 - Change password and revoke remembered devices.
 - List remembered devices and revoke one or all of them.
 - Download a signed-in user's own data export.
-- Show member username and short ID for troubleshooting duplicate names.
 - Separate group members into Live / Recent, Stale, and No Location Yet sections.
-- Choose member location text format: closest city, rounded GPS, or both.
-- Refresh closest-city labels manually.
-- Use diagnostics to check GPS permission, session/API timing, online status, active group, and build revision.
-- Use `health.php` to verify folder permissions and deployment protection checks.
-- Track per-group owner/member roles.
-- Login/logout with 30-day session cookies and optional Remember Me persistent login.
-- Request and save browser GPS location while the page is open.
-- View active-group members on a map.
 - Show server-stored group notices and per-user dismissals.
-- View shared trail history on `history.php`.
+
+## Member detail
+
+The main page includes a **Last Known Location** quick-detail card. Each member card also gets a **Details** link to `member-detail.php?memberId=...`.
+
+The member detail page shows:
+
+- username, role, relationship, and joined date;
+- last known age, coordinates, accuracy, speed, heading, and status;
+- Apple Maps, Google Maps, and OpenStreetMap links;
+- static OpenStreetMap preview;
+- recent trail points for 1 hour, 4 hours, 12 hours, or 24 hours.
 
 ## Member management
 
-Owners see a **Member Management** card for the active group. It supports:
-
-- group nickname;
-- relationship label;
-- color selection;
-- joined-at visibility;
-- duplicate display-label warning;
-- remove from active group.
+Owners see a **Member Management** card for the active group. It supports group nickname, relationship label, color selection, joined-at visibility, duplicate display-label warning, and remove from active group.
 
 Removing a member from a group updates that user's group membership but does not delete the account or other group memberships.
 
@@ -95,6 +93,7 @@ Open `health.php` while signed in to check writable runtime folders, expected `.
 
 This project starts at **1.0.0**, not 0.x.x.
 
+- Rev 1.4.5 = member detail page, quick-detail panel, active-group trail filtering, and per-member detail links
 - Rev 1.4.4 = owner member management, nicknames, relationship labels, member colors, joined-at, duplicate warnings, and remove-from-group
 - Rev 1.4.3 = account security, remembered devices, data export, group notices, and member status sections
 - Rev 1.4.2 = account settings, group rename, diagnostics, health check, and location display options
@@ -116,7 +115,7 @@ Current live-data folders with placeholders:
 - `data/locks/.placeholder`
 - `data/audit/.placeholder`
 
-Rev 1.4.4 adds no new live-data folder.
+Rev 1.4.5 adds no new live-data folder.
 
 ## Stronger production setup
 
@@ -130,4 +129,4 @@ That is safer than trusting web-server rules alone.
 
 ## Revision
 
-Rev 1.4.4 - Owner member management, nicknames, relationship labels, member colors, joined-at display, duplicate warnings, and remove-from-group.
+Rev 1.4.5 - Member detail page, quick-detail panel, active-group trail filtering, and per-member detail links.
