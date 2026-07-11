@@ -1,11 +1,11 @@
 /*
  * Project: Family GPS Tracker
  * File: assets/css/style.css
- * Revision: 1.4.5
- * Description: Mobile-first dark UI styling with account security, diagnostics, owner tools, and member detail views.
+ * Revision: 1.5.3
+ * Description: Mobile-first tracker styling with saved appearance and compact-density modes.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
- * Modified: 2026-07-09
+ * Modified: 2026-07-11
  */
 
 :root { color-scheme: dark; --bg: #0b1020; --panel: #111827; --panel-soft: #162033; --text: #f8fafc; --muted: #aeb8c8; --border: rgba(255, 255, 255, 0.12); --accent: #4ade80; --danger: #fb7185; --warning: #facc15; --shadow: 0 24px 70px rgba(0, 0, 0, 0.35); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
@@ -90,6 +90,29 @@ code { display: inline-block; padding: 0.7rem 0.8rem; border-radius: 0.8rem; bac
 .groups-row { display: grid; grid-template-columns: 1fr auto; gap: 0.6rem; align-items: end; }
 .groups-card button { width: auto; }
 .groups-mini, .profile-edit-note { color: var(--muted); font-size: 0.9rem; }
+
+html[data-appearance="light"] { color-scheme: light; --bg: #eef2f7; --panel: #ffffff; --panel-soft: #f8fafc; --text: #172033; --muted: #526173; --border: rgba(15, 23, 42, 0.16); --accent: #15803d; --danger: #be123c; --warning: #a16207; --shadow: 0 18px 50px rgba(15, 23, 42, 0.12); }
+html[data-appearance="light"] body { background: radial-gradient(circle at top left, #dce9f9 0, var(--bg) 42rem); }
+html[data-appearance="light"] .card { background: rgba(255, 255, 255, 0.88); }
+html[data-appearance="light"] .status-card { background: rgba(255, 255, 255, 0.94); }
+html[data-appearance="light"] input, html[data-appearance="light"] select { background: rgba(15, 23, 42, 0.04); }
+html[data-appearance="light"] select option { background: #ffffff; color: #172033; }
+html[data-appearance="light"] button.secondary { background: #dbe4ef; color: #172033; }
+html[data-appearance="contrast"] { color-scheme: dark; --bg: #000000; --panel: #000000; --panel-soft: #090909; --text: #ffffff; --muted: #ffffff; --border: #ffffff; --accent: #00ff66; --danger: #ff4d6d; --warning: #ffff00; --shadow: none; }
+html[data-appearance="contrast"] body { background: #000000; }
+html[data-appearance="contrast"] .card, html[data-appearance="contrast"] .member-card, html[data-appearance="contrast"] .metric-card, html[data-appearance="contrast"] .diag-item { background: #000000; border-width: 2px; }
+html[data-appearance="contrast"] button, html[data-appearance="contrast"] input, html[data-appearance="contrast"] select, html[data-appearance="contrast"] .secondary-link { border: 2px solid #ffffff; }
+html[data-density="compact"] .app-shell { width: min(1180px, calc(100% - 0.7rem)); padding-top: 0.35rem; }
+html[data-density="compact"] .hero { padding: 0.75rem 0 0.35rem; }
+html[data-density="compact"] .hero h1 { font-size: clamp(1.8rem, 7vw, 3.5rem); }
+html[data-density="compact"] .hero-copy { margin: 0.35rem 0; }
+html[data-density="compact"] .card { margin: 0.5rem 0; padding: 0.7rem; border-radius: 1rem; }
+html[data-density="compact"] .card h2 { margin-bottom: 0.4rem; }
+html[data-density="compact"] .profile-edit, html[data-density="compact"] .groups-card, html[data-density="compact"] .member-list { gap: 0.45rem; }
+html[data-density="compact"] button, html[data-density="compact"] input, html[data-density="compact"] select { padding-top: 0.58rem; padding-bottom: 0.58rem; }
+html[data-density="compact"] .member-card { padding: 0.55rem; }
+html[data-density="compact"] .metric-card { min-height: 3.4rem; padding: 0.45rem 0.55rem; }
+
 @media (max-width: 850px) {
     .auth-grid, .detail-grid, .settings-grid, .diag-grid, .member-management-grid { grid-template-columns: 1fr; }
     .settings-row, .groups-row { grid-template-columns: 1fr; }
