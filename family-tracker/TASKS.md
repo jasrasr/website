@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: TASKS.md
-Revision: 1.4.5
+Revision: 1.4.6
 Description: Restart-friendly task list and maintenance backlog for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -30,6 +30,7 @@ Modified: 2026-07-09
 - [x] Rev 1.4.3 - Account security tools, remembered-device management, data export, group notices, and member status sections.
 - [x] Rev 1.4.4 - Owner member management, nicknames, relationship labels, member colors, joined-at display, duplicate warnings, and remove-from-group.
 - [x] Rev 1.4.5 - Member detail page, quick-detail panel, detail links, active-group trail filtering, and history map link.
+- [x] Rev 1.4.6 - Map tools, map mode preference, center-on-user/member controls, static preview, and external map links.
 
 ## Live data folder rule
 
@@ -41,16 +42,16 @@ Modified: 2026-07-09
 - [x] `data/persistent_logins/.placeholder` exists for persistent login records.
 - [x] `data/locks/.placeholder` exists for lock files.
 - [x] `data/audit/.placeholder` exists for audit logs.
-- [x] Rev 1.4.5 added no new live-data folder.
+- [x] Rev 1.4.6 added no new live-data folder.
 
 ## Next practical improvements
 
 - Add owner/member role transfer.
 - Add delete-my-account controls.
 - Add owner-controlled export for active-group data.
-- Add map mode toggle: embedded map, static fallback, and external links.
 - Add optional geofence zones, such as Home, School, Work, Church, or Grandma’s House.
 - Add trip mode with ETA sharing.
+- Add PWA install support.
 
 ## Security hardening
 
@@ -67,4 +68,5 @@ Modified: 2026-07-09
 - Browser GPS pauses or becomes unreliable when the phone sleeps, locks, or the browser is backgrounded.
 - iOS Safari and Android browsers may behave differently for long-running location watches.
 - Accuracy depends on device, OS, permissions, signal, and battery mode.
+- The Map Tools panel uses static preview/external links as a stable fallback; the embedded app map still uses the existing Leaflet/mobile fallback behavior.
 - This is not a true native Life360 replacement unless paired with a native app or PWA/background-location strategy.
