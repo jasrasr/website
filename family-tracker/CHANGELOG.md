@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.5.1
+Revision: 1.5.2
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,19 @@ Modified: 2026-07-11
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.5.1**
+Current Project Revision: **1.5.2**
+
+## Rev 1.5.2 - 2026-07-11
+
+- Kept the automatic location-permission request on launch.
+- Added owner-controlled temporary member disable and restore for the active group.
+- Temporarily disabled members lose active-group membership until restored, while their account remains intact.
+- Added a distinct Disabled state in owner member-management cards.
+- Added permanent remove-from-group as a separate action from temporary disable.
+- Added a safe Leave Active Group control for non-owner members.
+- Leaving removes active-group membership, profile, check-in, trip, and location-state metadata while preserving the account and other groups.
+- Added audit and group-notice events for disable, restore, removal, and voluntary leave actions.
+- Added no new live-data folder.
 
 ## Rev 1.5.1 - 2026-07-11
 
@@ -27,16 +39,7 @@ Current Project Revision: **1.5.1**
 
 ## Rev 1.5.0 - 2026-07-11
 
-- Kept the automatic location-permission request on launch.
-- Added quick active-group check-ins: I'm OK, On My Way, Arrived, and Need Help.
-- Added optional check-in notes.
-- Added manual trip mode with destination, ETA minutes, estimated arrival time, optional note, and end-trip control.
-- Added an active-group member status panel for check-ins and active trips.
-- Added a recent check-in and trip activity panel on the main page.
-- Added `presence.php` and `assets/js/presence.js`.
-- Stored check-ins and trip records in the existing active-group JSON record.
-- Added group notices and audit events for check-ins, trip starts, and trip endings.
-- Added no new live-data folder.
+- Added quick check-ins, manual trip/ETA sharing, group status, and presence activity.
 
 ## Rev 1.4.9 - 2026-07-11
 
