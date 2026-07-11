@@ -1,8 +1,8 @@
 <!--
 Project: Family GPS Tracker
 File: README.md
-Revision: 1.5.1
-Description: Setup, deployment, privacy, security, owner administration, presence, and trail-retention notes.
+Revision: 1.5.3
+Description: Setup, deployment, privacy, security, membership, PWA, and appearance notes.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
 Modified: 2026-07-11
@@ -10,9 +10,9 @@ Modified: 2026-07-11
 
 # Family GPS Tracker
 
-Current Project Revision: **1.5.1**
+Current Project Revision: **1.5.3**
 
-A PHP + JSON consent-based family and friend-circle location-sharing app for shared hosting. It includes browser GPS, multiple groups, persistent sessions, mobile map fallbacks, account security, member management, owner administration, check-ins, trip sharing, and trail retention.
+A PHP + JSON consent-based family and friend-circle location-sharing app for shared hosting. It includes browser GPS, multiple groups, persistent sessions, mobile map fallbacks, account security, member management, owner administration, check-ins, trip sharing, trail retention, and installable PWA support.
 
 ## Location permission behavior
 
@@ -22,31 +22,33 @@ The app intentionally keeps the automatic location request after login/page laun
 
 - Multiple family, friend, trip, or other circles per account.
 - Active-group map, members, managed invites, notices, and location sharing.
-- Quick check-ins: I'm OK, On My Way, Arrived, and Need Help.
-- Manual destination and ETA sharing with end-trip control.
-- Owner dashboard, ownership transfer, group export, audit history, and activity.
-- Owner member management with nicknames, relationships, colors, joined dates, and remove-from-group.
+- Owner dashboard, membership disable/restore, ownership transfer, and safe leave-group controls.
+- Quick check-ins and manual destination/ETA sharing.
 - Password changes, remembered-device revocation, privacy details, and guarded account deletion.
-- Last-known member details, trail preview, history map, map preferences, and external map links.
+- Last-known member details, trail preview, map preferences, location health, and trail retention.
 - Diagnostics and `health.php` deployment checks.
+
+## Installable web app and appearance
+
+Rev 1.5.3 adds:
+
+- `manifest.webmanifest`;
+- service-worker app-shell caching;
+- online/offline status messaging;
+- home-screen install guidance;
+- Dark, Light, and High Contrast appearance choices;
+- Comfortable and Compact layout density choices;
+- a manual cached-app update check.
+
+Appearance and density choices are stored in browser local storage for that device.
+
+The service worker intentionally does not cache authenticated API responses or queue offline location/account writes. When offline, cached pages may open, but updates require a network connection.
+
+On iPhone or iPad, use **Share → Add to Home Screen**. Android and desktop browsers may expose an **Install App** option. The current icon is SVG; adding PNG icons later may improve compatibility with older iOS versions.
 
 ## Trail retention and location health
 
-Rev 1.5.1 adds a main-page Location Health panel.
-
-Owners can choose active-group trail retention of:
-
-- 24 hours;
-- 7 days;
-- 30 days;
-- 90 days.
-
-Owners can run cleanup immediately. Signed-in users also trim their own matching active-group trail during periodic status monitoring.
-
-The page checks active-group member location state approximately once per minute while open. It can create group notices when:
-
-- a previously live location becomes stale;
-- a stale or missing member starts sharing a current location again.
+Owners can choose active-group trail retention of 24 hours, 7 days, 30 days, or 90 days and run cleanup immediately. The open app periodically checks live, stale, and missing location states and can create group notices for stale/restored transitions.
 
 This monitoring is browser-driven; it does not run when nobody has the app open.
 
@@ -63,12 +65,12 @@ Runtime data uses the existing folders:
 - `data/locks/`
 - `data/audit/`
 
-Rev 1.5.1 adds no new live-data folder.
+Rev 1.5.3 adds no new live-data folder.
 
 ## Requirements
 
 - PHP 8.0 or newer recommended.
-- HTTPS for browser geolocation and secure cookies.
+- HTTPS for browser geolocation, secure cookies, service workers, and installation behavior.
 - Apache-compatible hosting for the included `.htaccess` protections.
 - A browser supporting `navigator.geolocation`.
 
@@ -91,16 +93,15 @@ define('DATA_DIR', '/home/youruser/private-family-tracker-data');
 
 ## Revision history summary
 
-- Rev 1.5.1 = trail retention, cleanup, and stale/restored location notices
+- Rev 1.5.3 = PWA install, offline messaging, caching, and appearance modes
+- Rev 1.5.2 = membership disable/restore and leave-group controls
+- Rev 1.5.1 = trail retention, cleanup, and stale/restored notices
 - Rev 1.5.0 = check-ins and manual trip/ETA sharing
 - Rev 1.4.9 = privacy and account lifecycle
 - Rev 1.4.8 = managed invites and guarded group deletion
 - Rev 1.4.7 = owner dashboard and group administration
-- Rev 1.4.6 = map modes and center controls
-- Rev 1.4.5 = member detail and active-group trail tools
-- Rev 1.4.4 = owner member management and member metadata
 - Rev 1.4.0 = multi-group/circle support
 
 ## Revision
 
-Rev 1.5.1 - Trail retention and location-health release.
+Rev 1.5.3 - Installable PWA and saved appearance release.
