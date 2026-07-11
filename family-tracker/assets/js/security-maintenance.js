@@ -17,6 +17,15 @@
         if (node) node.textContent = text;
     }
 
+    function loadStyles() {
+        if (document.getElementById('securityMaintenanceStyles')) return;
+        var link = document.createElement('link');
+        link.id = 'securityMaintenanceStyles';
+        link.rel = 'stylesheet';
+        link.href = 'assets/css/security-maintenance.css?v=1.5.4';
+        document.head.appendChild(link);
+    }
+
     function request(payload) {
         var options = { credentials: 'same-origin' };
         if (payload) {
@@ -92,12 +101,13 @@
         if (text.indexOf('not a member of that group') >= 0 || text.indexOf('Active group not found') >= 0) {
             node.textContent = 'You no longer have access to the selected group. Choose another group, rejoin with an invite, or contact the group owner.';
         }
-        if (text.indexOf('account is inactive') >= 0) {
+        if (text.indexOf('account is inactive') >= 0 || text.indexOf('account is inactive') >= 0) {
             node.textContent = 'This account is inactive. Contact the account administrator before trying again.';
         }
     }
 
     function boot() {
+        loadStyles();
         request(null).then(function (data) {
             addCleanupButton(data);
             showConsentOverlay(data);
