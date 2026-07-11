@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.5.2
+Revision: 1.5.3
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,32 +10,31 @@ Modified: 2026-07-11
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.5.2**
+Current Project Revision: **1.5.3**
+
+## Rev 1.5.3 - 2026-07-11
+
+- Kept the automatic location-permission request on launch.
+- Added `manifest.webmanifest` and an installable app icon.
+- Added a conservative service worker for same-origin app-shell caching.
+- Added online/offline status messaging.
+- Added install guidance for iPhone, Android, and desktop browsers.
+- Added saved Dark, Light, and High Contrast appearance modes.
+- Added saved Comfortable and Compact layout-density modes.
+- Added a manual cached-app update check.
+- Restored the main-page Location Health controls and leave-group card in the consolidated layout.
+- Added no new live-data folder.
 
 ## Rev 1.5.2 - 2026-07-11
 
-- Kept the automatic location-permission request on launch.
-- Added owner-controlled temporary member disable and restore for the active group.
-- Temporarily disabled members lose active-group membership until restored, while their account remains intact.
-- Added a distinct Disabled state in owner member-management cards.
-- Added permanent remove-from-group as a separate action from temporary disable.
+- Added owner-controlled temporary member disable and restore.
+- Added a separate permanent remove-from-group action.
 - Added a safe Leave Active Group control for non-owner members.
-- Leaving removes active-group membership, profile, check-in, trip, and location-state metadata while preserving the account and other groups.
-- Added audit and group-notice events for disable, restore, removal, and voluntary leave actions.
-- Added no new live-data folder.
+- Added audit and group-notice events for membership lifecycle changes.
 
 ## Rev 1.5.1 - 2026-07-11
 
-- Kept the automatic location-permission request on launch.
-- Added configurable active-group trail retention: 24 hours, 7 days, 30 days, or 90 days.
-- Added owner-controlled cleanup of trail points older than the selected retention period.
-- Added per-user automatic trail trimming when location status is checked.
-- Added once-per-minute active-group live, stale, and no-location monitoring while the page is open.
-- Added group notices when a previously live location becomes stale.
-- Added group notices when a stale or missing member starts sharing a current location again.
-- Added a main-page Location Health panel with live/stale/missing counts and stored trail-point totals.
-- Added `trail-status.php` and `assets/js/trail-status.js`.
-- Added no new live-data folder.
+- Added configurable trail retention, owner cleanup, and stale/restored location notices.
 
 ## Rev 1.5.0 - 2026-07-11
 
