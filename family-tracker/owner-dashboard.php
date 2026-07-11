@@ -2,8 +2,8 @@
 /**
  * Project: Family GPS Tracker
  * File: owner-dashboard.php
- * Revision: 1.4.7
- * Description: Owner-only active-group dashboard for settings, ownership, activity, audit, and export.
+ * Revision: 1.4.8
+ * Description: Owner-only active-group dashboard for settings, invites, ownership, activity, audit, export, and guarded deletion.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-11
  * Modified: 2026-07-11
@@ -47,6 +47,21 @@ if (!$family || family_member_role($family, $user) !== 'owner') {
     </section>
 
     <section class="card profile-edit">
+        <div><p class="eyebrow">Invite Management</p><h2>Managed Invites</h2><p class="muted">Create expiring or limited-use invite codes. Full codes appear only once.</p></div>
+        <form id="ownerInviteForm" class="profile-edit">
+            <div class="settings-grid">
+                <label>Invite label<input id="ownerInviteLabel" maxlength="80" placeholder="Road trip, babysitter, grandparents"></label>
+                <label>Expires<select id="ownerInviteExpiry"><option value="1h">1 hour</option><option value="24h">24 hours</option><option value="7d">7 days</option><option value="never">Never</option></select></label>
+            </div>
+            <label>Maximum uses<select id="ownerInviteUses"><option value="1">1 use</option><option value="5">5 uses</option><option value="0">Unlimited</option></select></label>
+            <button type="submit">Create Managed Invite</button>
+        </form>
+        <div id="ownerInviteCodeBox" class="card hidden"><strong>Copy this code now:</strong> <code id="ownerInviteFullCode"></code></div>
+        <div class="section-header"><h3>Invite List</h3><button id="ownerInviteRefreshBtn" type="button" class="secondary">Refresh Invites</button></div>
+        <div id="ownerInviteList" class="member-list">Loading invites…</div>
+    </section>
+
+    <section class="card profile-edit">
         <div><p class="eyebrow">Ownership</p><h2>Transfer Ownership</h2><p class="muted">This immediately makes the selected member the owner and changes your role to member.</p></div>
         <div class="settings-grid"><label>New owner<select id="ownerTransferMember"></select></label><div class="settings-row"><button id="ownerTransferBtn" type="button" class="danger-button">Transfer Ownership</button></div></div>
     </section>
@@ -67,7 +82,14 @@ if (!$family || family_member_role($family, $user) !== 'owner') {
     </section>
 
     <section class="card"><div class="section-header"><div><p class="eyebrow">Data</p><h2>Export Active Group</h2><p class="muted">Downloads group settings, members, matching locations, trails, activity, and audit records.</p></div><button id="ownerExportBtn" type="button" class="secondary">Download Group Export</button></div></section>
+
+    <section class="card danger-zone profile-edit">
+        <div><p class="eyebrow">Danger Zone</p><h2>Delete Active Group</h2><p class="muted">You must belong to another group first. Deletion removes this group from all members and deletes matching saved locations and trails.</p></div>
+        <label>Type the exact group name<input id="ownerDeleteConfirmation" autocomplete="off"></label>
+        <button id="ownerDeleteGroupBtn" type="button" class="danger-button">Delete Active Group</button>
+    </section>
 </div>
+<script src="assets/js/invite-management.js?v=<?= urlencode(APP_REVISION) ?>"></script>
 <script src="assets/js/owner-dashboard.js?v=<?= urlencode(APP_REVISION) ?>"></script>
 </body>
 </html>
