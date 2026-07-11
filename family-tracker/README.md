@@ -1,8 +1,8 @@
 <!--
 Project: Family GPS Tracker
 File: README.md
-Revision: 1.5.4
-Description: Setup, deployment, privacy, security, membership, PWA, and appearance notes.
+Revision: 1.5.5
+Description: Setup, deployment, privacy, security, membership, PWA, appearance, and geofence notes.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
 Modified: 2026-07-11
@@ -10,38 +10,40 @@ Modified: 2026-07-11
 
 # Family GPS Tracker
 
-Current Project Revision: **1.5.4**
+Current Project Revision: **1.5.5**
 
-A PHP + JSON consent-based family and friend-circle location-sharing app for shared hosting. It includes browser GPS, multiple groups, persistent sessions, mobile map fallbacks, account security, member management, owner administration, check-ins, trip sharing, trail retention, and installable PWA support.
+A PHP + JSON consent-based family and friend-circle location-sharing app for shared hosting. It includes browser GPS, multiple groups, persistent sessions, mobile map fallbacks, account security, member management, owner administration, check-ins, trip sharing, trail retention, geofence places, and installable PWA support.
 
 ## Location permission behavior
 
 The app intentionally keeps the automatic location request after login/page launch. The browser or operating system controls the native permission prompt text and buttons.
 
-Existing users are prompted once to review the current privacy/location-sharing consent version. New accounts record the current consent version during registration or join.
+## Geofence places
+
+Rev 1.5.5 adds owner-managed places such as Home, School, Work, Church, or Grandma's House.
+
+Each place stores:
+
+- name;
+- latitude and longitude;
+- radius from 100 meters to 2 kilometers;
+- creation metadata;
+- per-member inside/outside state.
+
+Owners can enter coordinates manually or copy their latest saved active-group location into the place form. The open app evaluates the latest saved locations approximately once per minute and creates group notices and audit events when a member arrives at or leaves a place.
+
+Geofence evaluation is browser-driven. It runs while at least one signed-in page for the active group is open; it is not a server background service.
 
 ## Security hardening
 
-Rev 1.5.4 adds file-backed login throttling:
-
-- attempts are grouped by normalized username plus a hashed client IP;
-- five failed attempts within 15 minutes trigger a 15-minute block;
-- raw IP addresses are not stored in the throttle record or audit event;
-- successful login clears the matching throttle record.
-
-The Privacy & Account Lifecycle area also gains a cleanup action for:
-
-- expired remembered-device records;
-- stale login-throttle records;
-- audit JSON files older than 90 days.
-
-Cleanup is manual and requires an authenticated session.
+The app includes file-backed login throttling, versioned consent review, clearer disabled-access messaging, remembered-device cleanup, and 90-day audit cleanup.
 
 ## Current capabilities
 
 - Multiple family, friend, trip, or other circles per account.
 - Active-group map, members, managed invites, notices, and location sharing.
 - Owner dashboard, membership disable/restore, ownership transfer, and safe leave-group controls.
+- Owner-managed geofence places with arrival/departure notices.
 - Quick check-ins and manual destination/ETA sharing.
 - Password changes, remembered-device revocation, privacy details, consent review, login throttling, and guarded account deletion.
 - Last-known member details, trail preview, map preferences, location health, and trail retention.
@@ -49,17 +51,9 @@ Cleanup is manual and requires an authenticated session.
 
 ## Installable web app and appearance
 
-The app includes:
+The app includes a web app manifest, service-worker app-shell caching, online/offline status, home-screen guidance, Dark/Light/High Contrast appearance choices, and Comfortable/Compact layout density choices.
 
-- `manifest.webmanifest`;
-- service-worker app-shell caching;
-- online/offline status messaging;
-- home-screen install guidance;
-- Dark, Light, and High Contrast appearance choices;
-- Comfortable and Compact layout density choices;
-- a manual cached-app update check.
-
-Appearance and density choices are stored in browser local storage for that device. The service worker does not cache authenticated API responses or queue offline location/account writes.
+Authenticated API responses and offline location/account writes are not cached or queued.
 
 ## Data storage
 
@@ -74,7 +68,7 @@ Runtime data uses the existing folders:
 - `data/locks/`
 - `data/audit/`
 
-Rev 1.5.4 adds no new live-data folder. Login throttle records use `data/locks/`.
+Rev 1.5.5 adds no new live-data folder. Geofence definitions and state are stored in the existing active-group JSON record under `data/families/`.
 
 ## Requirements
 
@@ -102,16 +96,14 @@ define('DATA_DIR', '/home/youruser/private-family-tracker-data');
 
 ## Revision history summary
 
+- Rev 1.5.5 = geofence places and arrival/departure notices
 - Rev 1.5.4 = login throttling, consent review, access messaging, and security/audit cleanup
 - Rev 1.5.3 = PWA install, offline messaging, caching, and appearance modes
 - Rev 1.5.2 = membership disable/restore and leave-group controls
 - Rev 1.5.1 = trail retention, cleanup, and stale/restored notices
 - Rev 1.5.0 = check-ins and manual trip/ETA sharing
-- Rev 1.4.9 = privacy and account lifecycle
-- Rev 1.4.8 = managed invites and guarded group deletion
-- Rev 1.4.7 = owner dashboard and group administration
 - Rev 1.4.0 = multi-group/circle support
 
 ## Revision
 
-Rev 1.5.4 - Security hardening and consent review release.
+Rev 1.5.5 - Geofence places and arrival/departure release.
