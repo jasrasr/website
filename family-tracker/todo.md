@@ -1,8 +1,8 @@
 <!--
 Project: Family GPS Tracker
 File: todo.md
-Revision: 1.5.0
-Project Revision Reference: 1.5.0
+Revision: 1.5.1
+Project Revision Reference: 1.5.1
 Description: Feature backlog and improvement ideas for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -11,29 +11,23 @@ Modified: 2026-07-11
 
 # Family GPS Tracker TODO
 
-Current App Revision Context: **1.5.0**
+Current App Revision Context: **1.5.1**
 
-## Completed in Rev 1.5.0
+## Completed in Rev 1.5.1
 
 - [x] Keep automatic location permission request on launch.
-- [x] Add quick check-ins: I'm OK, On My Way, Arrived, and Need Help.
-- [x] Add optional check-in notes.
-- [x] Add manual trip mode with destination and ETA sharing.
-- [x] Add end-trip control.
-- [x] Add active-group check-in and trip summary.
-- [x] Add a lightweight recent check-in/trip activity panel on the main page.
-
-## Completed in Rev 1.4.8–1.4.9
-
-- [x] Add expiring and maximum-use managed invites.
-- [x] Add invite listing and revoke controls.
-- [x] Add guarded active-group deletion.
-- [x] Add privacy details and background-browser disclosure.
-- [x] Add expired remembered-device cleanup.
-- [x] Add guarded permanent account deletion.
+- [x] Add notices when a member becomes stale.
+- [x] Add notices when a stale or missing member starts sharing again.
+- [x] Add configurable trail retention.
+- [x] Add owner-controlled cleanup of old active-group trail points.
+- [x] Add a Location Health panel with live, stale, missing, and trail-point counts.
 
 ## Completed previously
 
+- [x] Quick check-ins and manual trip/ETA sharing.
+- [x] Expiring and maximum-use managed invites.
+- [x] Guarded group and account deletion.
+- [x] Privacy details and remembered-device cleanup.
 - [x] Multi-group/circle support.
 - [x] Owner dashboard, ownership transfer, audit history, activity, and group export.
 - [x] Owner member management and remove-from-group.
@@ -54,9 +48,8 @@ Current App Revision Context: **1.5.0**
 ### Location features
 
 - [ ] Add geofence zones and arrival/departure notices.
-- [ ] Add notices when a member becomes stale or starts sharing again.
-- [ ] Add configurable trail retention and owner trail cleanup.
 - [ ] Add calculated routing/ETA through an external routing provider.
+- [ ] Add owner audit-log retention and cleanup.
 
 ### Security and privacy
 
@@ -65,7 +58,6 @@ Current App Revision Context: **1.5.0**
 - [ ] Add optional TOTP MFA.
 - [ ] Move runtime data outside the public web root.
 - [ ] Add consent review after major privacy-related changes.
-- [ ] Add old audit-log cleanup.
 
 ### PWA and UI
 
