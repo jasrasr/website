@@ -1,8 +1,8 @@
 <!--
 Project: Family GPS Tracker
 File: todo.md
-Revision: 1.4.7
-Project Revision Reference: 1.4.7
+Revision: 1.5.0
+Project Revision Reference: 1.5.0
 Description: Feature backlog and improvement ideas for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -11,22 +11,31 @@ Modified: 2026-07-11
 
 # Family GPS Tracker TODO
 
-Current App Revision Context: **1.4.7**
+Current App Revision Context: **1.5.0**
 
-## Completed in Rev 1.4.7
+## Completed in Rev 1.5.0
 
 - [x] Keep automatic location permission request on launch.
-- [x] Add an owner dashboard for the active group.
-- [x] Add centralized group settings for name, color, and description.
-- [x] Let owners transfer ownership to another active-group member.
-- [x] Add a permanent recent activity feed.
-- [x] Add owner-filtered audit history.
-- [x] Add owner-controlled active-group data export.
-- [x] Add a member summary to the owner dashboard.
+- [x] Add quick check-ins: I'm OK, On My Way, Arrived, and Need Help.
+- [x] Add optional check-in notes.
+- [x] Add manual trip mode with destination and ETA sharing.
+- [x] Add end-trip control.
+- [x] Add active-group check-in and trip summary.
+- [x] Add a lightweight recent check-in/trip activity panel on the main page.
+
+## Completed in Rev 1.4.8–1.4.9
+
+- [x] Add expiring and maximum-use managed invites.
+- [x] Add invite listing and revoke controls.
+- [x] Add guarded active-group deletion.
+- [x] Add privacy details and background-browser disclosure.
+- [x] Add expired remembered-device cleanup.
+- [x] Add guarded permanent account deletion.
 
 ## Completed previously
 
 - [x] Multi-group/circle support.
+- [x] Owner dashboard, ownership transfer, audit history, activity, and group export.
 - [x] Owner member management and remove-from-group.
 - [x] Member nicknames, relationship labels, colors, joined dates, and duplicate warnings.
 - [x] Password change, remembered-device controls, and user export.
@@ -36,26 +45,18 @@ Current App Revision Context: **1.4.7**
 
 ## Next reasonable batches
 
-### Invite management
-
-- [ ] Add invite expiration: 1 hour, 24 hours, 7 days, or never.
-- [ ] Add invite maximum-use limits.
-- [ ] Add a list of active and disabled invites.
-- [ ] Allow owners to disable an invite without generating a replacement.
-
 ### Membership lifecycle
 
 - [ ] Add temporary member disable/restore for an active group.
-- [ ] Add safe delete-group workflow.
-- [ ] Add delete-my-account with ownership-transfer safeguards.
 - [ ] Add optional member profile pictures.
+- [ ] Add leave-group control for non-owners.
 
 ### Location features
 
 - [ ] Add geofence zones and arrival/departure notices.
 - [ ] Add notices when a member becomes stale or starts sharing again.
 - [ ] Add configurable trail retention and owner trail cleanup.
-- [ ] Add trip mode with ETA sharing.
+- [ ] Add calculated routing/ETA through an external routing provider.
 
 ### Security and privacy
 
@@ -63,8 +64,8 @@ Current App Revision Context: **1.4.7**
 - [ ] Add password reset.
 - [ ] Add optional TOTP MFA.
 - [ ] Move runtime data outside the public web root.
-- [ ] Add privacy and consent review pages.
-- [ ] Add cleanup for expired persistent-login records and old audit logs.
+- [ ] Add consent review after major privacy-related changes.
+- [ ] Add old audit-log cleanup.
 
 ### PWA and UI
 
