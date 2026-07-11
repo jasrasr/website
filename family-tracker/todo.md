@@ -1,8 +1,8 @@
 <!--
 Project: Family GPS Tracker
 File: todo.md
-Revision: 1.4.4
-Project Revision Reference: 1.4.4
+Revision: 1.4.5
+Project Revision Reference: 1.4.5
 Description: Feature backlog and improvement ideas for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -11,9 +11,18 @@ Modified: 2026-07-09
 
 # Family GPS Tracker TODO
 
-Current App Revision Context: **1.4.4**
+Current App Revision Context: **1.4.5**
 
 This file is the feature backlog for future improvements. Checked items are implemented or materially covered in the current app.
+
+## Completed in Rev 1.4.5
+
+- [x] Add a member detail page showing current status, last update, trail summary, and map links.
+- [x] Add a **last known location** panel for each selected member on the main page.
+- [x] Add per-member Details links from the member list.
+- [x] Add a trail-history preview on the member detail page.
+- [x] Fix trail history to use the active group instead of the older primary-family field.
+- [x] Add quick external map links for the selected member.
 
 ## Completed in Rev 1.4.4
 
@@ -56,7 +65,7 @@ This file is the feature backlog for future improvements. Checked items are impl
 - [x] Add member nicknames separate from login username and display name.
 - [x] Add optional member colors or icons for map labels/cards.
 - [x] Add relationship labels such as Dad, Mom, Child, Grandparent, Friend, or Other.
-- [ ] Add a member detail page showing current status, last update, trail summary, and map links.
+- [x] Add a member detail page showing current status, last update, trail summary, and map links.
 - [x] Add a visible **Joined At** date for each family member.
 - [x] Add a warning if two members have the same display name.
 
@@ -67,8 +76,8 @@ This file is the feature backlog for future improvements. Checked items are impl
 - [ ] Add a button to center the map on each family member.
 - [ ] Show all live family members on the mobile fallback map when possible.
 - [x] Add a list of stale members separate from live members.
-- [ ] Add a **last known location** panel for each member.
-- [ ] Add a trail-history preview on the main page.
+- [x] Add a **last known location** panel for each selected member.
+- [x] Add a trail-history preview on the member detail page.
 - [ ] Add configurable trail retention, such as 24 hours, 7 days, or manual cleanup.
 - [ ] Add an owner-only option to clear old trails for the whole family.
 - [ ] Add optional geofence zones, such as Home, School, Work, Church, or Grandma's House.
