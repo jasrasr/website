@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.4.4
+Revision: 1.4.5
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,19 @@ Modified: 2026-07-09
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.4.4**
+Current Project Revision: **1.4.5**
+
+## Rev 1.4.5 - 2026-07-09
+
+- Added a main-page Last Known Location quick-detail card.
+- Added member selector for quick detail.
+- Added per-member Details links in the member list.
+- Added `member-detail.php`, a signed-in member detail page.
+- Added `assets/js/member-detail.js` for last-known metrics, static OpenStreetMap preview, external map links, and trail preview.
+- Added `assets/js/member-detail-links.js` for quick-detail rendering and per-card detail links.
+- Updated `trails.php` to use the active group instead of the older primary-family field.
+- Added an Open History Map link near the group map.
+- Added no new live-data folder.
 
 ## Rev 1.4.4 - 2026-07-09
 
