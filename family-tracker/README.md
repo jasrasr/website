@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: README.md
-Revision: 1.5.3
+Revision: 1.5.4
 Description: Setup, deployment, privacy, security, membership, PWA, and appearance notes.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,7 @@ Modified: 2026-07-11
 
 # Family GPS Tracker
 
-Current Project Revision: **1.5.3**
+Current Project Revision: **1.5.4**
 
 A PHP + JSON consent-based family and friend-circle location-sharing app for shared hosting. It includes browser GPS, multiple groups, persistent sessions, mobile map fallbacks, account security, member management, owner administration, check-ins, trip sharing, trail retention, and installable PWA support.
 
@@ -18,19 +18,38 @@ A PHP + JSON consent-based family and friend-circle location-sharing app for sha
 
 The app intentionally keeps the automatic location request after login/page launch. The browser or operating system controls the native permission prompt text and buttons.
 
+Existing users are prompted once to review the current privacy/location-sharing consent version. New accounts record the current consent version during registration or join.
+
+## Security hardening
+
+Rev 1.5.4 adds file-backed login throttling:
+
+- attempts are grouped by normalized username plus a hashed client IP;
+- five failed attempts within 15 minutes trigger a 15-minute block;
+- raw IP addresses are not stored in the throttle record or audit event;
+- successful login clears the matching throttle record.
+
+The Privacy & Account Lifecycle area also gains a cleanup action for:
+
+- expired remembered-device records;
+- stale login-throttle records;
+- audit JSON files older than 90 days.
+
+Cleanup is manual and requires an authenticated session.
+
 ## Current capabilities
 
 - Multiple family, friend, trip, or other circles per account.
 - Active-group map, members, managed invites, notices, and location sharing.
 - Owner dashboard, membership disable/restore, ownership transfer, and safe leave-group controls.
 - Quick check-ins and manual destination/ETA sharing.
-- Password changes, remembered-device revocation, privacy details, and guarded account deletion.
+- Password changes, remembered-device revocation, privacy details, consent review, login throttling, and guarded account deletion.
 - Last-known member details, trail preview, map preferences, location health, and trail retention.
 - Diagnostics and `health.php` deployment checks.
 
 ## Installable web app and appearance
 
-Rev 1.5.3 adds:
+The app includes:
 
 - `manifest.webmanifest`;
 - service-worker app-shell caching;
@@ -40,17 +59,7 @@ Rev 1.5.3 adds:
 - Comfortable and Compact layout density choices;
 - a manual cached-app update check.
 
-Appearance and density choices are stored in browser local storage for that device.
-
-The service worker intentionally does not cache authenticated API responses or queue offline location/account writes. When offline, cached pages may open, but updates require a network connection.
-
-On iPhone or iPad, use **Share → Add to Home Screen**. Android and desktop browsers may expose an **Install App** option. The current icon is SVG; adding PNG icons later may improve compatibility with older iOS versions.
-
-## Trail retention and location health
-
-Owners can choose active-group trail retention of 24 hours, 7 days, 30 days, or 90 days and run cleanup immediately. The open app periodically checks live, stale, and missing location states and can create group notices for stale/restored transitions.
-
-This monitoring is browser-driven; it does not run when nobody has the app open.
+Appearance and density choices are stored in browser local storage for that device. The service worker does not cache authenticated API responses or queue offline location/account writes.
 
 ## Data storage
 
@@ -65,7 +74,7 @@ Runtime data uses the existing folders:
 - `data/locks/`
 - `data/audit/`
 
-Rev 1.5.3 adds no new live-data folder.
+Rev 1.5.4 adds no new live-data folder. Login throttle records use `data/locks/`.
 
 ## Requirements
 
@@ -93,6 +102,7 @@ define('DATA_DIR', '/home/youruser/private-family-tracker-data');
 
 ## Revision history summary
 
+- Rev 1.5.4 = login throttling, consent review, access messaging, and security/audit cleanup
 - Rev 1.5.3 = PWA install, offline messaging, caching, and appearance modes
 - Rev 1.5.2 = membership disable/restore and leave-group controls
 - Rev 1.5.1 = trail retention, cleanup, and stale/restored notices
@@ -104,4 +114,4 @@ define('DATA_DIR', '/home/youruser/private-family-tracker-data');
 
 ## Revision
 
-Rev 1.5.3 - Installable PWA and saved appearance release.
+Rev 1.5.4 - Security hardening and consent review release.
