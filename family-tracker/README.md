@@ -1,8 +1,8 @@
 <!--
 Project: Family GPS Tracker
 File: README.md
-Revision: 1.4.7
-Description: Setup, deployment, privacy, account security, owner administration, and maintenance notes for the PHP/JSON family tracker.
+Revision: 1.5.1
+Description: Setup, deployment, privacy, security, owner administration, presence, and trail-retention notes.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
 Modified: 2026-07-11
@@ -10,44 +10,49 @@ Modified: 2026-07-11
 
 # Family GPS Tracker
 
-Current Project Revision: **1.4.7**
+Current Project Revision: **1.5.1**
 
-A PHP + JSON consent-based family and friend-circle location-sharing app for shared hosting. It includes persistent sessions, browser GPS, multiple groups, protected JSON storage, mobile-friendly maps, account security, member management, and owner administration.
+A PHP + JSON consent-based family and friend-circle location-sharing app for shared hosting. It includes browser GPS, multiple groups, persistent sessions, mobile map fallbacks, account security, member management, owner administration, check-ins, trip sharing, and trail retention.
 
 ## Location permission behavior
 
-The app intentionally keeps the existing automatic location request after login/page launch. The browser or operating system controls the native permission prompt text and buttons.
+The app intentionally keeps the automatic location request after login/page launch. The browser or operating system controls the native permission prompt text and buttons.
 
-## Main capabilities
+## Current capabilities
 
 - Multiple family, friend, trip, or other circles per account.
-- Active-group map, member list, invite code, notices, and location sharing.
-- Automatic location request while signed in and periodic updates while the page is open.
-- Display-name editing and active-group rename.
+- Active-group map, members, managed invites, notices, and location sharing.
+- Quick check-ins: I'm OK, On My Way, Arrived, and Need Help.
+- Manual destination and ETA sharing with end-trip control.
+- Owner dashboard, ownership transfer, group export, audit history, and activity.
 - Owner member management with nicknames, relationships, colors, joined dates, and remove-from-group.
-- Password changes, remembered-device revocation, and user-data export.
-- Last-known member detail, trail preview, history map, and external map links.
-- Map mode preferences and center-on-member controls.
+- Password changes, remembered-device revocation, privacy details, and guarded account deletion.
+- Last-known member details, trail preview, history map, map preferences, and external map links.
 - Diagnostics and `health.php` deployment checks.
 
-## Owner dashboard
+## Trail retention and location health
 
-Owners can open `owner-dashboard.php` from the active-group Member Management card.
+Rev 1.5.1 adds a main-page Location Health panel.
 
-The dashboard includes:
+Owners can choose active-group trail retention of:
 
-- centralized group name, description, and color settings;
-- active-group member summary;
-- ownership transfer to another active member;
-- permanent recent activity feed;
-- searchable owner-filtered audit history;
-- owner-controlled active-group JSON export.
+- 24 hours;
+- 7 days;
+- 30 days;
+- 90 days.
 
-Ownership transfer is immediate. The previous owner becomes a regular member, and the selected member becomes owner.
+Owners can run cleanup immediately. Signed-in users also trim their own matching active-group trail during periodic status monitoring.
+
+The page checks active-group member location state approximately once per minute while open. It can create group notices when:
+
+- a previously live location becomes stale;
+- a stale or missing member starts sharing a current location again.
+
+This monitoring is browser-driven; it does not run when nobody has the app open.
 
 ## Data storage
 
-Group records remain under `data/families/` for backward compatibility. Runtime data uses the existing folders:
+Runtime data uses the existing folders:
 
 - `data/users/`
 - `data/families/`
@@ -58,7 +63,7 @@ Group records remain under `data/families/` for backward compatibility. Runtime 
 - `data/locks/`
 - `data/audit/`
 
-Rev 1.4.7 adds no new live-data folder.
+Rev 1.5.1 adds no new live-data folder.
 
 ## Requirements
 
@@ -86,14 +91,16 @@ define('DATA_DIR', '/home/youruser/private-family-tracker-data');
 
 ## Revision history summary
 
-- Rev 1.4.7 = owner dashboard, group settings, ownership transfer, activity, audit, and group export
+- Rev 1.5.1 = trail retention, cleanup, and stale/restored location notices
+- Rev 1.5.0 = check-ins and manual trip/ETA sharing
+- Rev 1.4.9 = privacy and account lifecycle
+- Rev 1.4.8 = managed invites and guarded group deletion
+- Rev 1.4.7 = owner dashboard and group administration
 - Rev 1.4.6 = map modes and center controls
 - Rev 1.4.5 = member detail and active-group trail tools
 - Rev 1.4.4 = owner member management and member metadata
-- Rev 1.4.3 = account security, devices, export, notices, and status sections
-- Rev 1.4.2 = account settings, diagnostics, and health check
 - Rev 1.4.0 = multi-group/circle support
 
 ## Revision
 
-Rev 1.4.7 - Owner administration dashboard release.
+Rev 1.5.1 - Trail retention and location-health release.
