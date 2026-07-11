@@ -1,8 +1,8 @@
-/*
+/**
  * Project: Family GPS Tracker
  * File: assets/js/pwa-ui.js
- * Revision: 1.5.4
- * Description: PWA registration, install guidance, offline banner, appearance preferences, and security UI loading.
+ * Revision: 1.5.5
+ * Description: PWA registration, install guidance, offline banner, saved appearance preferences, and feature-module loading.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-11
  * Modified: 2026-07-11
@@ -67,8 +67,12 @@
         if (settings && settings.nextSibling) settings.parentNode.insertBefore(card, settings.nextSibling);
         else main.insertBefore(card, main.firstChild);
 
-        $('appearanceModeSelect').addEventListener('change', function (event) { savePreference('family-tracker-appearance', event.target.value); });
-        $('densityModeSelect').addEventListener('change', function (event) { savePreference('family-tracker-density', event.target.value); });
+        $('appearanceModeSelect').addEventListener('change', function (event) {
+            savePreference('family-tracker-appearance', event.target.value);
+        });
+        $('densityModeSelect').addEventListener('change', function (event) {
+            savePreference('family-tracker-density', event.target.value);
+        });
         $('installAppBtn').addEventListener('click', installApp);
         $('refreshAppCacheBtn').addEventListener('click', refreshCache);
         applyPreferences();
@@ -104,7 +108,10 @@
             return;
         }
         installPrompt.prompt();
-        installPrompt.userChoice.finally(function () { installPrompt = null; updateInstallButton(); });
+        installPrompt.userChoice.finally(function () {
+            installPrompt = null;
+            updateInstallButton();
+        });
     }
 
     function refreshCache() {
@@ -122,14 +129,6 @@
         });
     }
 
-    function loadSecurityUi() {
-        if (document.getElementById('securityMaintenanceScript')) return;
-        var script = document.createElement('script');
-        script.id = 'securityMaintenanceScript';
-        script.src = 'assets/js/security-maintenance.js?v=1.5.4';
-        document.body.appendChild(script);
-    }
-
     function registerPwa() {
         var manifest = document.createElement('link');
         manifest.rel = 'manifest';
@@ -142,12 +141,30 @@
         document.head.appendChild(icon);
 
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function () { navigator.serviceWorker.register('service-worker.js').catch(function () { }); });
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('service-worker.js').catch(function () { });
+            });
         }
     }
 
-    window.addEventListener('beforeinstallprompt', function (event) { event.preventDefault(); installPrompt = event; updateInstallButton(); });
-    window.addEventListener('appinstalled', function () { installPrompt = null; updateInstallButton(); });
+    function loadFeatureModule() {
+        if (document.getElementById('family-tracker-geofences-script')) return;
+        var script = document.createElement('script');
+        script.id = 'family-tracker-geofences-script';
+        script.src = 'assets/js/geofences.js?v=1.5.5';
+        script.defer = true;
+        document.body.appendChild(script);
+    }
+
+    window.addEventListener('beforeinstallprompt', function (event) {
+        event.preventDefault();
+        installPrompt = event;
+        updateInstallButton();
+    });
+    window.addEventListener('appinstalled', function () {
+        installPrompt = null;
+        updateInstallButton();
+    });
     window.addEventListener('online', updateOfflineBanner);
     window.addEventListener('offline', updateOfflineBanner);
 
@@ -155,7 +172,7 @@
         registerPwa();
         applyPreferences();
         createUi();
-        loadSecurityUi();
+        loadFeatureModule();
         window.setInterval(createUi, 3000);
     }
 
