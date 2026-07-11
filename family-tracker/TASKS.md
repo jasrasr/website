@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: TASKS.md
-Revision: 1.4.8
+Revision: 1.5.0
 Description: Restart-friendly task list and maintenance backlog for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -25,20 +25,22 @@ Modified: 2026-07-11
 - [x] Rev 1.4.6 - Map modes and center controls.
 - [x] Rev 1.4.7 - Owner dashboard, group settings, ownership transfer, activity feed, audit history, and group export.
 - [x] Rev 1.4.8 - Expiring/limited-use invites, invite revocation, and guarded group deletion.
+- [x] Rev 1.4.9 - Privacy details, cleanup, and guarded account deletion.
+- [x] Rev 1.5.0 - Quick check-ins, manual trip/ETA sharing, group status, and presence activity.
 
 ## Live data folder rule
 
 - [x] Existing runtime folders retain `.placeholder` files.
-- [x] Rev 1.4.8 added no new live-data folder.
+- [x] Rev 1.5.0 added no new live-data folder.
 
 ## Next practical improvements
 
 - Add temporary member disable/restore controls.
-- Add delete-my-account controls.
-- Add owner/member invitation activity details.
+- Add leave-group control for non-owners.
 - Add configurable trail retention and cleanup.
 - Add optional geofence zones.
-- Add trip mode with ETA sharing.
+- Add stale/recovered-sharing notices.
+- Add routing-provider ETA calculations.
 
 ## Security hardening
 
@@ -51,6 +53,7 @@ Modified: 2026-07-11
 
 ## Known limitations
 
+- Trip ETA is entered manually and does not calculate a route.
 - Location storage is still one latest point per user, tagged with the active group at the time of update.
 - Browser GPS pauses or becomes unreliable when the phone sleeps, locks, or the browser is backgrounded.
 - iOS Safari and Android browsers may behave differently for long-running location watches.
