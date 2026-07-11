@@ -1,8 +1,8 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/owner-dashboard.js
- * Revision: 1.4.7
- * Description: Owner dashboard behavior for group settings, ownership transfer, activity, audit filtering, and export.
+ * Revision: 1.4.8
+ * Description: Owner dashboard behavior for settings, ownership transfer, activity, audit filtering, export, and guarded deletion.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-11
  * Modified: 2026-07-11
@@ -69,6 +69,8 @@
         $('ownerGroupName').value = family.name || '';
         $('ownerGroupDescription').value = family.description || '';
         $('ownerGroupColor').value = family.color || '#4ADE80';
+        $('ownerDeleteConfirmation').placeholder = family.name || 'Exact group name';
+        $('ownerDeleteGroupBtn').disabled = !data.canDeleteGroup;
     }
 
     function renderMembers() {
@@ -181,12 +183,25 @@
         }).catch(function (error) { status(error.message || 'Group export failed.'); });
     }
 
+    function deleteGroup() {
+        if (!data || !data.canDeleteGroup) return status('Create or join another group before deleting this one.');
+        var confirmation = $('ownerDeleteConfirmation').value.trim();
+        if (confirmation !== data.family.name) return status('Type the exact group name to confirm deletion.');
+        if (!window.confirm('Permanently delete this group and its matching saved locations and trails?')) return;
+        status('Deleting active group...');
+        post({ action: 'delete_group', confirmation: confirmation }).then(function (result) {
+            status(result.message || 'Group deleted.');
+            window.setTimeout(function () { window.location.href = result.redirect || 'index.php'; }, 700);
+        }).catch(function (error) { status(error.message || 'Group deletion failed.'); });
+    }
+
     function boot() {
         $('ownerGroupSettingsForm').addEventListener('submit', saveSettings);
         $('ownerTransferBtn').addEventListener('click', transferOwnership);
         $('ownerRefreshBtn').addEventListener('click', load);
         $('ownerAuditFilter').addEventListener('input', renderAudit);
         $('ownerExportBtn').addEventListener('click', exportGroup);
+        $('ownerDeleteGroupBtn').addEventListener('click', deleteGroup);
         load();
     }
 
