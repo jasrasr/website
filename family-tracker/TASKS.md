@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: TASKS.md
-Revision: 1.5.4
+Revision: 1.5.5
 Description: Restart-friendly task list and maintenance backlog for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -31,19 +31,20 @@ Modified: 2026-07-11
 - [x] Rev 1.5.2 - Temporary member disable/restore and safe leave-group control.
 - [x] Rev 1.5.3 - PWA install support, offline messaging, app-shell caching, and appearance modes.
 - [x] Rev 1.5.4 - Login throttling, consent review, access messaging, and security/audit cleanup.
+- [x] Rev 1.5.5 - Owner-managed geofence places with arrival/departure notices.
 
 ## Live data folder rule
 
 - [x] Existing runtime folders retain `.placeholder` files.
-- [x] Rev 1.5.4 added no new live-data folder.
+- [x] Rev 1.5.5 added no new live-data folder.
 
 ## Next practical improvements
 
-- Add optional geofence zones.
 - Add routing-provider ETA calculations.
 - Add loading skeletons and clearer success/error banners.
 - Add optional profile pictures or avatars.
 - Add a dedicated account/profile page.
+- Add member-controlled profile preferences.
 
 ## Security hardening
 
@@ -54,10 +55,10 @@ Modified: 2026-07-11
 
 ## Known limitations
 
+- Geofence evaluation runs while at least one signed-in active-group page is open.
+- Geofence status uses the latest saved location and does not run as a server background job.
 - Login throttling uses shared-hosting JSON/lock files rather than a centralized cache.
 - Audit cleanup runs only when a signed-in user explicitly starts cleanup.
 - Service-worker caching covers the app shell, not authenticated API responses or offline writes.
-- SVG home-screen icons may not be honored by every iOS version; a PNG icon set remains useful.
-- Stale/restored monitoring runs while at least one signed-in group page is open.
 - Trip ETA remains manually entered.
 - Browser GPS may pause when the phone sleeps, locks, or the browser is backgrounded.
