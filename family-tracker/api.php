@@ -2,17 +2,18 @@
 /**
  * Project: Family GPS Tracker
  * File: api.php
- * Revision: 1.4.4
- * Description: JSON API for auth, persistent login, multi-group membership, invite codes, location updates, member metadata, and group notices.
+ * Revision: 1.5.4
+ * Description: JSON API for authentication, throttling, groups, locations, member metadata, invites, and notices.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
- * Modified: 2026-07-09
+ * Modified: 2026-07-11
  */
 
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/security.php';
 require_once __DIR__ . '/includes/notice-store.php';
+require_once __DIR__ . '/includes/login-throttle.php';
 
 init_app_storage();
 
@@ -21,40 +22,16 @@ $action = is_string($action) ? trim($action) : '';
 
 try {
     switch ($action) {
-        case 'me':
-            ok(build_me_payload(current_user()));
-            break;
-        case 'register_family':
-            handle_register_family(request_input());
-            break;
-        case 'join_family':
-            handle_join_family(request_input());
-            break;
-        case 'login':
-            handle_login(request_input());
-            break;
-        case 'logout':
-            require_csrf();
-            logout_current_session();
-            ok(['message' => 'Logged out.']);
-            break;
-        case 'family_locations':
-            handle_family_locations();
-            break;
-        case 'update_location':
-            require_csrf();
-            handle_update_location(request_input());
-            break;
-        case 'delete_my_location':
-            require_csrf();
-            handle_delete_my_location();
-            break;
-        case 'regenerate_invite':
-            require_csrf();
-            handle_regenerate_invite();
-            break;
-        default:
-            fail('Unknown API action.', 404);
+        case 'me': ok(build_me_payload(current_user()));
+        case 'register_family': handle_register_family(request_input());
+        case 'join_family': handle_join_family(request_input());
+        case 'login': handle_login(request_input());
+        case 'logout': require_csrf(); logout_current_session(); ok(['message' => 'Logged out.']);
+        case 'family_locations': handle_family_locations();
+        case 'update_location': require_csrf(); handle_update_location(request_input());
+        case 'delete_my_location': require_csrf(); handle_delete_my_location();
+        case 'regenerate_invite': require_csrf(); handle_regenerate_invite();
+        default: fail('Unknown API action.', 404);
     }
 } catch (Throwable $ex) {
     error_log('Family Tracker API error: ' . $ex->getMessage());
@@ -69,77 +46,45 @@ function handle_register_family(array $input): void
     $familyName = str_field($input, 'familyName', 80);
     $consent = bool_field($input, 'consentAccepted');
     $rememberMe = bool_field($input, 'rememberMe');
-
-    if ($displayName === '' || $familyName === '') {
-        fail('Display name and family/group name are required.', 400);
-    }
+    if ($displayName === '' || $familyName === '') fail('Display name and family/group name are required.', 400);
     validate_username_or_fail($username);
     validate_password_or_fail($password);
-    if (!$consent) {
-        fail('Consent is required. This app is not for stealth tracking.', 400);
-    }
+    if (!$consent) fail('Consent is required. This app is not for stealth tracking.', 400);
 
     $result = with_named_lock('registration', function () use ($displayName, $username, $password, $familyName): array {
         $indexPath = username_index_path();
         $index = read_json_file($indexPath, ['usernames' => []]);
-        if (!empty($index['usernames'][$username])) {
-            fail('Username already exists.', 409);
-        }
-
+        if (!empty($index['usernames'][$username])) fail('Username already exists.', 409);
         $familyId = new_id('fam');
         $userId = new_id('usr');
         $inviteCode = generate_invite_code();
         $inviteNormalized = normalize_invite_code($inviteCode);
         $createdAt = now_iso();
-
         $family = [
-            'id' => $familyId,
-            'name' => $familyName,
-            'type' => 'group',
-            'ownerUserId' => $userId,
-            'memberIds' => [$userId],
-            'memberRoles' => [$userId => 'owner'],
+            'id' => $familyId, 'name' => $familyName, 'type' => 'group', 'ownerUserId' => $userId,
+            'memberIds' => [$userId], 'memberRoles' => [$userId => 'owner'],
             'memberJoinedAt' => [$userId => $createdAt],
             'memberProfiles' => [$userId => ['nickname' => '', 'relationship' => '', 'color' => '']],
             'inviteCodeHash' => password_hash($inviteNormalized, PASSWORD_DEFAULT),
-            'inviteCodeLast4' => substr($inviteNormalized, -4),
-            'inviteCodeCreatedAt' => $createdAt,
-            'createdAt' => $createdAt,
-            'updatedAt' => $createdAt,
+            'inviteCodeLast4' => substr($inviteNormalized, -4), 'inviteCodeCreatedAt' => $createdAt,
+            'createdAt' => $createdAt, 'updatedAt' => $createdAt,
         ];
-
         $user = [
-            'id' => $userId,
-            'displayName' => $displayName,
-            'username' => $username,
-            'passwordHash' => password_hash($password, PASSWORD_DEFAULT),
-            'familyId' => $familyId,
-            'activeFamilyId' => $familyId,
-            'groupIds' => [$familyId],
-            'role' => 'owner',
-            'isActive' => true,
-            'consentAcceptedAt' => $createdAt,
-            'createdAt' => $createdAt,
-            'lastLoginAt' => $createdAt,
+            'id' => $userId, 'displayName' => $displayName, 'username' => $username,
+            'passwordHash' => password_hash($password, PASSWORD_DEFAULT), 'familyId' => $familyId,
+            'activeFamilyId' => $familyId, 'groupIds' => [$familyId], 'role' => 'owner', 'isActive' => true,
+            'consentAcceptedAt' => $createdAt, 'consentVersion' => CONSENT_VERSION,
+            'createdAt' => $createdAt, 'lastLoginAt' => $createdAt,
         ];
-
-        write_family($family);
-        write_user($user);
-        $index['usernames'][$username] = $userId;
-        write_json_file($indexPath, $index);
-
+        write_family($family); write_user($user);
+        $index['usernames'][$username] = $userId; write_json_file($indexPath, $index);
         audit_event('register_family', ['userId' => $userId, 'familyId' => $familyId]);
         add_group_notice($familyId, 'group_created', $displayName . ' created the group ' . $familyName . '.', $userId);
-        return [$user, $family, $inviteCode];
+        return [$user, $inviteCode];
     });
-
-    [$user, $family, $inviteCode] = $result;
+    [$user, $inviteCode] = $result;
     start_authenticated_session($user, $rememberMe);
-
-    ok(build_me_payload($user) + [
-        'oneTimeInviteCode' => $inviteCode,
-        'message' => 'Group created. Save the invite code now.',
-    ]);
+    ok(build_me_payload($user) + ['oneTimeInviteCode' => $inviteCode, 'message' => 'Group created. Save the invite code now.']);
 }
 
 function handle_join_family(array $input): void
@@ -150,63 +95,37 @@ function handle_join_family(array $input): void
     $inviteCode = str_field($input, 'inviteCode', 40);
     $consent = bool_field($input, 'consentAccepted');
     $rememberMe = bool_field($input, 'rememberMe');
-
-    if ($displayName === '') {
-        fail('Display name is required.', 400);
-    }
-    validate_username_or_fail($username);
-    validate_password_or_fail($password);
-    if (!$consent) {
-        fail('Consent is required. This app is not for stealth tracking.', 400);
-    }
+    if ($displayName === '') fail('Display name is required.', 400);
+    validate_username_or_fail($username); validate_password_or_fail($password);
+    if (!$consent) fail('Consent is required. This app is not for stealth tracking.', 400);
 
     $result = with_named_lock('registration', function () use ($displayName, $username, $password, $inviteCode): array {
         $family = find_family_by_invite_code($inviteCode);
-        if (!$family) {
-            fail('Invite code not found.', 404);
-        }
-
+        if (!$family) fail('Invite code not found.', 404);
         $indexPath = username_index_path();
         $index = read_json_file($indexPath, ['usernames' => []]);
-        if (!empty($index['usernames'][$username])) {
-            fail('Username already exists.', 409);
-        }
-
-        $createdAt = now_iso();
-        $userId = new_id('usr');
+        if (!empty($index['usernames'][$username])) fail('Username already exists.', 409);
+        $createdAt = now_iso(); $userId = new_id('usr');
         $user = [
-            'id' => $userId,
-            'displayName' => $displayName,
-            'username' => $username,
-            'passwordHash' => password_hash($password, PASSWORD_DEFAULT),
-            'familyId' => $family['id'],
-            'activeFamilyId' => $family['id'],
-            'groupIds' => [$family['id']],
-            'role' => 'member',
-            'isActive' => true,
-            'consentAcceptedAt' => $createdAt,
-            'createdAt' => $createdAt,
-            'lastLoginAt' => $createdAt,
+            'id' => $userId, 'displayName' => $displayName, 'username' => $username,
+            'passwordHash' => password_hash($password, PASSWORD_DEFAULT), 'familyId' => $family['id'],
+            'activeFamilyId' => $family['id'], 'groupIds' => [$family['id']], 'role' => 'member', 'isActive' => true,
+            'consentAcceptedAt' => $createdAt, 'consentVersion' => CONSENT_VERSION,
+            'createdAt' => $createdAt, 'lastLoginAt' => $createdAt,
         ];
-
         $family = ensure_family_membership($family, $user, 'member');
         $family['memberJoinedAt'] = is_array($family['memberJoinedAt'] ?? null) ? $family['memberJoinedAt'] : [];
         $family['memberJoinedAt'][$userId] = $createdAt;
         $family['memberProfiles'] = is_array($family['memberProfiles'] ?? null) ? $family['memberProfiles'] : [];
         $family['memberProfiles'][$userId] = ['nickname' => '', 'relationship' => '', 'color' => ''];
-        write_family($family);
-        write_user($user);
-        $index['usernames'][$username] = $userId;
-        write_json_file($indexPath, $index);
-
+        write_family($family); write_user($user);
+        $index['usernames'][$username] = $userId; write_json_file($indexPath, $index);
         audit_event('join_family', ['userId' => $userId, 'familyId' => $family['id']]);
         add_group_notice((string)$family['id'], 'member_joined_group', $displayName . ' joined ' . $family['name'] . '.', $userId);
-        return [$user, $family];
+        return $user;
     });
-
-    [$user] = $result;
-    start_authenticated_session($user, $rememberMe);
-    ok(build_me_payload($user) + ['message' => 'Joined group.']);
+    start_authenticated_session($result, $rememberMe);
+    ok(build_me_payload($result) + ['message' => 'Joined group.']);
 }
 
 function handle_login(array $input): void
@@ -214,23 +133,20 @@ function handle_login(array $input): void
     $username = normalize_username(str_field($input, 'username', 120));
     $password = (string)($input['password'] ?? '');
     $rememberMe = bool_field($input, 'rememberMe');
-
+    enforce_login_throttle($username);
     $index = read_json_file(username_index_path(), ['usernames' => []]);
     $userId = $index['usernames'][$username] ?? '';
     $user = is_string($userId) && $userId !== '' ? read_user($userId) : null;
-
     if (!$user || empty($user['passwordHash']) || !password_verify($password, (string)$user['passwordHash'])) {
+        record_login_failure($username);
+        audit_event('login_failed', ['usernameHash' => substr(hash('sha256', $username), 0, 16), 'ipHash' => substr(hash('sha256', login_client_ip()), 0, 16)]);
         fail('Invalid username or password.', 401);
     }
-    if (empty($user['isActive'])) {
-        fail('Account is inactive.', 403);
-    }
-
+    if (empty($user['isActive'])) fail('This account is inactive. Contact the account administrator.', 403);
+    clear_login_throttle($username);
     $user['lastLoginAt'] = now_iso();
     $user = add_user_group_id($user, (string)($user['familyId'] ?? ''));
-    write_user($user);
-    start_authenticated_session($user, $rememberMe);
-
+    write_user($user); start_authenticated_session($user, $rememberMe);
     audit_event('login', ['userId' => $user['id'], 'rememberMe' => $rememberMe]);
     ok(build_me_payload($user) + ['message' => 'Logged in.']);
 }
@@ -239,128 +155,68 @@ function group_profile_for_member(array $family, string $userId): array
 {
     $profiles = is_array($family['memberProfiles'] ?? null) ? $family['memberProfiles'] : [];
     $profile = is_array($profiles[$userId] ?? null) ? $profiles[$userId] : [];
-    $nickname = trim((string)($profile['nickname'] ?? ''));
-    $relationship = trim((string)($profile['relationship'] ?? ''));
     $color = trim((string)($profile['color'] ?? ''));
-    if ($color !== '' && !preg_match('/^#[0-9a-fA-F]{6}$/', $color)) {
-        $color = '';
-    }
-    return ['nickname' => $nickname, 'relationship' => $relationship, 'color' => $color];
+    if ($color !== '' && !preg_match('/^#[0-9a-fA-F]{6}$/', $color)) $color = '';
+    return ['nickname' => trim((string)($profile['nickname'] ?? '')), 'relationship' => trim((string)($profile['relationship'] ?? '')), 'color' => $color];
 }
 
 function member_joined_at(array $family, array $member): ?string
 {
     $joined = is_array($family['memberJoinedAt'] ?? null) ? $family['memberJoinedAt'] : [];
-    $userId = (string)($member['id'] ?? '');
-    return $joined[$userId] ?? ($member['createdAt'] ?? null);
+    return $joined[(string)($member['id'] ?? '')] ?? ($member['createdAt'] ?? null);
 }
 
 function handle_family_locations(): void
 {
-    $user = require_user();
-    $family = current_family_for_user($user);
-    if (!$family) {
-        fail('Active group not found.', 404);
-    }
-    $familyId = (string)$family['id'];
-
-    $members = [];
-    $displayCounts = [];
-    $now = time();
+    $user = require_user(); $family = current_family_for_user($user);
+    if (!$family) fail('Active group not found.', 404);
+    $familyId = (string)$family['id']; $members = []; $displayCounts = []; $now = time();
     foreach (list_json_records('users') as $member) {
-        if (empty($member['isActive']) || family_member_role($family, $member) === null) {
-            continue;
-        }
-
+        if (empty($member['isActive']) || family_member_role($family, $member) === null) continue;
         $public = public_user_for_family($member, $family);
         $profile = group_profile_for_member($family, (string)$member['id']);
         $displayLabel = $profile['nickname'] !== '' ? $profile['nickname'] : (string)($public['displayName'] ?: $public['username']);
-        $public['groupProfile'] = $profile;
-        $public['displayLabel'] = $displayLabel;
-        $public['joinedAt'] = member_joined_at($family, $member);
+        $public['groupProfile'] = $profile; $public['displayLabel'] = $displayLabel; $public['joinedAt'] = member_joined_at($family, $member);
         $displayCounts[strtolower($displayLabel)] = ($displayCounts[strtolower($displayLabel)] ?? 0) + 1;
-
         $location = read_json_file(location_path((string)$member['id']), []);
         if ($location && (($location['familyId'] ?? '') === $familyId || empty($location['familyId']))) {
             $serverTime = isset($location['serverTime']) ? strtotime((string)$location['serverTime']) : false;
             $ageSeconds = $serverTime ? max(0, $now - $serverTime) : null;
-            $location['ageSeconds'] = $ageSeconds;
-            $location['isStale'] = $ageSeconds === null || $ageSeconds > LOCATION_STALE_SECONDS;
+            $location['ageSeconds'] = $ageSeconds; $location['isStale'] = $ageSeconds === null || $ageSeconds > LOCATION_STALE_SECONDS;
             $public['location'] = $location;
-        } else {
-            $public['location'] = null;
-        }
+        } else $public['location'] = null;
         $members[] = $public;
     }
-
     foreach ($members as &$member) {
         $key = strtolower((string)($member['displayLabel'] ?? $member['displayName'] ?? ''));
         $member['hasDuplicateDisplayLabel'] = ($displayCounts[$key] ?? 0) > 1;
     }
     unset($member);
-
     usort($members, fn($a, $b) => strcasecmp((string)($a['displayLabel'] ?? $a['displayName']), (string)($b['displayLabel'] ?? $b['displayName'])));
-
-    ok([
-        'family' => public_family($family, true),
-        'members' => $members,
-        'serverTime' => now_iso(),
-        'staleAfterSeconds' => LOCATION_STALE_SECONDS,
-    ]);
+    ok(['family' => public_family($family, true), 'members' => $members, 'serverTime' => now_iso(), 'staleAfterSeconds' => LOCATION_STALE_SECONDS]);
 }
 
 function handle_update_location(array $input): void
 {
-    $user = require_user();
-    $family = current_family_for_user($user);
-    if (!$family) {
-        fail('Active group not found.', 404);
-    }
+    $user = require_user(); $family = current_family_for_user($user);
+    if (!$family) fail('Active group not found.', 404);
     $familyId = (string)$family['id'];
-    $lat = float_field($input, 'latitude', -90, 90);
-    $lon = float_field($input, 'longitude', -180, 180);
-
-    if ($lat === null || $lon === null) {
-        fail('Latitude and longitude are required.', 400);
-    }
-
-    $accuracy = float_field($input, 'accuracy', 0, 100000);
-    $speedMps = float_field($input, 'speedMps', 0, 200);
-    $heading = float_field($input, 'heading', 0, 360);
-    $altitude = float_field($input, 'altitude', -500, 10000);
-    $clientTime = str_field($input, 'clientTime', 40);
-
+    $lat = float_field($input, 'latitude', -90, 90); $lon = float_field($input, 'longitude', -180, 180);
+    if ($lat === null || $lon === null) fail('Latitude and longitude are required.', 400);
     $location = [
-        'userId' => $user['id'],
-        'familyId' => $familyId,
-        'latitude' => $lat,
-        'longitude' => $lon,
-        'accuracy' => $accuracy,
-        'speedMps' => $speedMps,
-        'heading' => $heading,
-        'altitude' => $altitude,
-        'clientTime' => $clientTime ?: null,
-        'serverTime' => now_iso(),
-        'source' => 'browser-geolocation',
+        'userId' => $user['id'], 'familyId' => $familyId, 'latitude' => $lat, 'longitude' => $lon,
+        'accuracy' => float_field($input, 'accuracy', 0, 100000), 'speedMps' => float_field($input, 'speedMps', 0, 200),
+        'heading' => float_field($input, 'heading', 0, 360), 'altitude' => float_field($input, 'altitude', -500, 10000),
+        'clientTime' => str_field($input, 'clientTime', 40) ?: null, 'serverTime' => now_iso(), 'source' => 'browser-geolocation',
     ];
-
     with_named_lock('location_' . $user['id'], function () use ($user, $location, $familyId): void {
         write_json_file(location_path((string)$user['id']), $location);
-        $trailPath = trail_path((string)$user['id']);
-        $trail = read_json_file($trailPath, ['points' => []]);
-        $trail['userId'] = $user['id'];
-        $trail['familyId'] = $familyId;
-        $trail['updatedAt'] = $location['serverTime'];
-        $trail['points'][] = $location;
-        if (count($trail['points']) > MAX_TRAIL_POINTS) {
-            $trail['points'] = array_slice($trail['points'], -MAX_TRAIL_POINTS);
-        }
+        $trailPath = trail_path((string)$user['id']); $trail = read_json_file($trailPath, ['points' => []]);
+        $trail['userId'] = $user['id']; $trail['familyId'] = $familyId; $trail['updatedAt'] = $location['serverTime']; $trail['points'][] = $location;
+        if (count($trail['points']) > MAX_TRAIL_POINTS) $trail['points'] = array_slice($trail['points'], -MAX_TRAIL_POINTS);
         write_json_file($trailPath, $trail);
     });
-
-    $user['lastLocationAt'] = $location['serverTime'];
-    write_user($user);
-
+    $user['lastLocationAt'] = $location['serverTime']; write_user($user);
     ok(['location' => $location, 'message' => 'Location updated.']);
 }
 
@@ -368,8 +224,7 @@ function handle_delete_my_location(): void
 {
     $user = require_user();
     with_named_lock('location_' . $user['id'], function () use ($user): void {
-        delete_json_file(location_path((string)$user['id']));
-        delete_json_file(trail_path((string)$user['id']));
+        delete_json_file(location_path((string)$user['id'])); delete_json_file(trail_path((string)$user['id']));
     });
     audit_event('delete_my_location', ['userId' => $user['id']]);
     ok(['message' => 'Your stored location and trail were deleted.']);
@@ -377,21 +232,12 @@ function handle_delete_my_location(): void
 
 function handle_regenerate_invite(): void
 {
-    $user = require_user();
-    require_owner($user);
-    $family = current_family_for_user($user);
-    if (!$family) {
-        fail('Active group not found.', 404);
-    }
-
-    $code = generate_invite_code();
-    $normalized = normalize_invite_code($code);
+    $user = require_user(); require_owner($user); $family = current_family_for_user($user);
+    if (!$family) fail('Active group not found.', 404);
+    $code = generate_invite_code(); $normalized = normalize_invite_code($code);
     $family['inviteCodeHash'] = password_hash($normalized, PASSWORD_DEFAULT);
-    $family['inviteCodeLast4'] = substr($normalized, -4);
-    $family['inviteCodeCreatedAt'] = now_iso();
-    $family['updatedAt'] = now_iso();
+    $family['inviteCodeLast4'] = substr($normalized, -4); $family['inviteCodeCreatedAt'] = now_iso(); $family['updatedAt'] = now_iso();
     write_family($family);
-
     audit_event('regenerate_invite', ['userId' => $user['id'], 'familyId' => $family['id']]);
     add_group_notice((string)$family['id'], 'invite_regenerated', $user['displayName'] . ' regenerated the invite code for ' . $family['name'] . '.', (string)$user['id']);
     ok(['inviteCode' => $code, 'family' => public_family($family, true)]);
