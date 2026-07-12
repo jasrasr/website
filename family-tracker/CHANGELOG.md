@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.5.7
+Revision: 1.5.8
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,17 @@ Modified: 2026-07-12
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.5.7**
+Current Project Revision: **1.5.8**
+
+## Rev 1.5.8 - 2026-07-12
+
+- Fixed repeated screen flicker caused by member-section polling that cleared and rebuilt the member list every three seconds.
+- Replaced member-section polling with mutation-driven updates that only reorder cards when member status actually changes.
+- Reduced member-card enhancement polling from every two seconds to every thirty seconds.
+- Prevented repeated badge teardown/recreation when badge content has not changed.
+- Removed repeated current-user card movement from the enhancement loop.
+- Updated the PWA cache to include the corrected member UI scripts.
+- Added no new live-data folder.
 
 ## Rev 1.5.7 - 2026-07-12
 
@@ -39,11 +49,3 @@ Current Project Revision: **1.5.7**
 - Added group notices and audit events when members arrive at or leave a configured place.
 - Added current inside/outside and distance status for each member with a saved active-group location.
 - Added no new live-data folder.
-
-## Rev 1.5.4 - 2026-07-11
-
-- Added login throttling, clearer access messages, versioned consent review, and security/audit cleanup.
-
-## Rev 1.5.3 - 2026-07-11
-
-- Added PWA installation, offline app-shell support, appearance modes, and compact layout.
