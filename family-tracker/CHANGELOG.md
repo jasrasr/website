@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.5.5
+Revision: 1.5.6
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,16 @@ Modified: 2026-07-11
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.5.5**
+Current Project Revision: **1.5.6**
+
+## Rev 1.5.6 - 2026-07-11
+
+- Fixed iPhone/browser validation errors after using **Use My Latest Location** in the geofence form.
+- Changed latitude and longitude inputs to accept any valid decimal step.
+- Rounded copied GPS coordinates to six decimal places before inserting them into the form.
+- Added explicit form validation before creating a place.
+- Updated the PWA cache revision so the corrected geofence script is fetched.
+- Added no new live-data folder.
 
 ## Rev 1.5.5 - 2026-07-11
 
