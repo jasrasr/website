@@ -1,16 +1,24 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.5.6
+Revision: 1.5.7
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
-Modified: 2026-07-11
+Modified: 2026-07-12
 -->
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.5.6**
+Current Project Revision: **1.5.7**
+
+## Rev 1.5.7 - 2026-07-12
+
+- Fixed geofence module cache busting so the current app revision is used instead of a hardcoded older revision.
+- Fixed the Refresh Cached App action so it clears Family Tracker app-shell caches before reloading.
+- Added revision query strings to the service worker, manifest, icon, and dynamically loaded geofence script.
+- Preserved the Rev 1.5.6 coordinate fix: decimal inputs use `step="any"` and copied coordinates are rounded to six decimals.
+- Added no new live-data folder.
 
 ## Rev 1.5.6 - 2026-07-11
 
@@ -30,7 +38,6 @@ Current Project Revision: **1.5.6**
 - Added once-per-minute browser-driven arrival/departure evaluation while a signed-in group page is open.
 - Added group notices and audit events when members arrive at or leave a configured place.
 - Added current inside/outside and distance status for each member with a saved active-group location.
-- Updated the PWA service-worker cache for the geofence UI module.
 - Added no new live-data folder.
 
 ## Rev 1.5.4 - 2026-07-11
@@ -40,15 +47,3 @@ Current Project Revision: **1.5.6**
 ## Rev 1.5.3 - 2026-07-11
 
 - Added PWA installation, offline app-shell support, appearance modes, and compact layout.
-
-## Rev 1.5.2 - 2026-07-11
-
-- Added temporary member disable/restore, permanent removal, and leave-group controls.
-
-## Rev 1.5.1 - 2026-07-11
-
-- Added configurable trail retention, owner cleanup, and stale/restored location notices.
-
-## Rev 1.5.0 - 2026-07-11
-
-- Added quick check-ins, manual trip/ETA sharing, group status, and presence activity.
