@@ -1,11 +1,11 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/pwa-ui.js
- * Revision: 1.5.5
- * Description: PWA registration, install guidance, offline banner, saved appearance preferences, and feature-module loading.
+ * Revision: 1.5.7
+ * Description: PWA registration, install guidance, offline banner, saved appearance preferences, and revision-aware feature-module loading.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-11
- * Modified: 2026-07-11
+ * Modified: 2026-07-12
  */
 (function () {
     'use strict';
@@ -13,6 +13,11 @@
     var installPrompt = null;
 
     function $(id) { return document.getElementById(id); }
+
+    function appRevision() {
+        var shell = document.querySelector('.app-shell');
+        return (shell && shell.dataset && shell.dataset.appRevision) ? shell.dataset.appRevision : String(Date.now());
+    }
 
     function savedAppearance() {
         try { return window.localStorage.getItem('family-tracker-appearance') || 'dark'; }
@@ -118,31 +123,40 @@
         var status = $('statusText');
         if (!('serviceWorker' in navigator)) {
             if (status) status.textContent = 'Service workers are not supported by this browser.';
+            window.location.reload();
             return;
         }
-        navigator.serviceWorker.getRegistrations().then(function (registrations) {
-            return Promise.all(registrations.map(function (registration) { return registration.update(); }));
-        }).then(function () {
-            if (status) status.textContent = 'Cached app files checked for updates.';
+
+        Promise.all([
+            navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                return Promise.all(registrations.map(function (registration) { return registration.update(); }));
+            }),
+            ('caches' in window) ? caches.keys().then(function (keys) {
+                return Promise.all(keys.filter(function (key) { return key.indexOf('family-tracker-shell-') === 0; }).map(function (key) { return caches.delete(key); }));
+            }) : Promise.resolve()
+        ]).then(function () {
+            if (status) status.textContent = 'Cached app files cleared. Reloading...';
+            window.setTimeout(function () { window.location.reload(); }, 300);
         }).catch(function () {
-            if (status) status.textContent = 'Could not refresh cached app files.';
+            if (status) status.textContent = 'Could not clear cached app files. Reloading...';
+            window.setTimeout(function () { window.location.reload(); }, 300);
         });
     }
 
     function registerPwa() {
         var manifest = document.createElement('link');
         manifest.rel = 'manifest';
-        manifest.href = 'manifest.webmanifest';
+        manifest.href = 'manifest.webmanifest?v=' + encodeURIComponent(appRevision());
         document.head.appendChild(manifest);
 
         var icon = document.createElement('link');
         icon.rel = 'apple-touch-icon';
-        icon.href = 'assets/icons/family-tracker.svg';
+        icon.href = 'assets/icons/family-tracker.svg?v=' + encodeURIComponent(appRevision());
         document.head.appendChild(icon);
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function () {
-                navigator.serviceWorker.register('service-worker.js').catch(function () { });
+                navigator.serviceWorker.register('service-worker.js?v=' + encodeURIComponent(appRevision())).catch(function () { });
             });
         }
     }
@@ -151,8 +165,8 @@
         if (document.getElementById('family-tracker-geofences-script')) return;
         var script = document.createElement('script');
         script.id = 'family-tracker-geofences-script';
-        script.src = 'assets/js/geofences.js?v=1.5.5';
-        script.defer = true;
+        script.src = 'assets/js/geofences.js?v=' + encodeURIComponent(appRevision());
+        script.async = false;
         document.body.appendChild(script);
     }
 
