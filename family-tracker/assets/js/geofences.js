@@ -1,7 +1,7 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/geofences.js
- * Revision: 1.5.5
+ * Revision: 1.5.6
  * Description: Geofence place management, current-member status, and periodic arrival/departure evaluation.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-11
@@ -47,7 +47,7 @@
         var card = document.createElement('section');
         card.id = 'geofenceCard';
         card.className = 'card profile-edit';
-        card.innerHTML = '<div class="section-header"><div><p class="eyebrow">Places</p><h2>Arrival & Departure Zones</h2><p class="muted">Owners define places. The app evaluates saved member locations while at least one signed-in group page is open.</p></div><button id="refreshGeofencesBtn" type="button" class="secondary">Refresh</button></div><form id="geofenceForm" class="profile-edit hidden"><div class="settings-grid"><label>Place name<input id="geofenceName" maxlength="80" placeholder="Home, School, Work" required></label><label>Radius<select id="geofenceRadius"><option value="100">100 meters</option><option value="250" selected>250 meters</option><option value="500">500 meters</option><option value="1000">1 kilometer</option><option value="2000">2 kilometers</option></select></label></div><div class="settings-grid"><label>Latitude<input id="geofenceLatitude" type="number" step="0.000001" min="-90" max="90" required></label><label>Longitude<input id="geofenceLongitude" type="number" step="0.000001" min="-180" max="180" required></label></div><div class="button-row"><button type="submit">Create Place</button><button id="useMyLocationForZoneBtn" type="button" class="secondary">Use My Latest Location</button></div></form><div id="geofenceList" class="member-list">Loading places…</div>';
+        card.innerHTML = '<div class="section-header"><div><p class="eyebrow">Places</p><h2>Arrival & Departure Zones</h2><p class="muted">Owners define places. The app evaluates saved member locations while at least one signed-in group page is open.</p></div><button id="refreshGeofencesBtn" type="button" class="secondary">Refresh</button></div><form id="geofenceForm" class="profile-edit hidden"><div class="settings-grid"><label>Place name<input id="geofenceName" maxlength="80" placeholder="Home, School, Work" required></label><label>Radius<select id="geofenceRadius"><option value="100">100 meters</option><option value="250" selected>250 meters</option><option value="500">500 meters</option><option value="1000">1 kilometer</option><option value="2000">2 kilometers</option></select></label></div><div class="settings-grid"><label>Latitude<input id="geofenceLatitude" type="number" step="any" inputmode="decimal" min="-90" max="90" required></label><label>Longitude<input id="geofenceLongitude" type="number" step="any" inputmode="decimal" min="-180" max="180" required></label></div><div class="button-row"><button type="submit">Create Place</button><button id="useMyLocationForZoneBtn" type="button" class="secondary">Use My Latest Location</button></div></form><div id="geofenceList" class="member-list">Loading places…</div>';
         var mapTools = $('mapToolsCard');
         if (mapTools && mapTools.nextSibling) mapTools.parentNode.insertBefore(card, mapTools.nextSibling);
         else main.appendChild(card);
@@ -118,19 +118,23 @@
             return String(item.displayName || item.displayLabel || '').trim().toLowerCase() === name;
         });
         if (!member || !member.location) return status('No saved location is available for this account yet.');
-        $('geofenceLatitude').value = member.location.latitude;
-        $('geofenceLongitude').value = member.location.longitude;
+        $('geofenceLatitude').value = Number(member.location.latitude).toFixed(6);
+        $('geofenceLongitude').value = Number(member.location.longitude).toFixed(6);
+        $('geofenceLatitude').setCustomValidity('');
+        $('geofenceLongitude').setCustomValidity('');
         status('Latest saved location copied into the place form.');
     }
 
     function createZone(event) {
         event.preventDefault();
+        var form = $('geofenceForm');
+        if (!form || !form.reportValidity()) return;
         var payload = {
             action: 'create_zone',
             name: $('geofenceName').value.trim(),
-            latitude: $('geofenceLatitude').value,
-            longitude: $('geofenceLongitude').value,
-            radiusMeters: $('geofenceRadius').value
+            latitude: Number($('geofenceLatitude').value),
+            longitude: Number($('geofenceLongitude').value),
+            radiusMeters: Number($('geofenceRadius').value)
         };
         request(payload).then(function (data) {
             $('geofenceName').value = '';
