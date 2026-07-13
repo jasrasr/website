@@ -1,11 +1,11 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/pwa-ui.js
- * Revision: 1.5.9
- * Description: PWA registration, install guidance, offline banner, saved appearance preferences, and revision-aware feature-module loading.
+ * Revision: 1.6.0
+ * Description: PWA registration, install guidance, offline banner, appearance preferences, and revision-aware feature-module loading.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-11
- * Modified: 2026-07-12
+ * Modified: 2026-07-13
  */
 (function () {
     'use strict';
@@ -72,12 +72,8 @@
         if (settings && settings.nextSibling) settings.parentNode.insertBefore(card, settings.nextSibling);
         else main.insertBefore(card, main.firstChild);
 
-        $('appearanceModeSelect').addEventListener('change', function (event) {
-            savePreference('family-tracker-appearance', event.target.value);
-        });
-        $('densityModeSelect').addEventListener('change', function (event) {
-            savePreference('family-tracker-density', event.target.value);
-        });
+        $('appearanceModeSelect').addEventListener('change', function (event) { savePreference('family-tracker-appearance', event.target.value); });
+        $('densityModeSelect').addEventListener('change', function (event) { savePreference('family-tracker-density', event.target.value); });
         $('installAppBtn').addEventListener('click', installApp);
         $('refreshAppCacheBtn').addEventListener('click', refreshCache);
         applyPreferences();
@@ -126,7 +122,6 @@
             window.location.reload();
             return;
         }
-
         Promise.all([
             navigator.serviceWorker.getRegistrations().then(function (registrations) {
                 return Promise.all(registrations.map(function (registration) { return registration.update(); }));
@@ -163,6 +158,7 @@
 
     function loadFeatureModules() {
         [
+            { id: 'family-tracker-dashboard-layout-script', src: 'assets/js/dashboard-layout.js' },
             { id: 'family-tracker-geofences-script', src: 'assets/js/geofences.js' },
             { id: 'family-tracker-status-banners-script', src: 'assets/js/status-banners.js' }
         ].forEach(function (module) {
