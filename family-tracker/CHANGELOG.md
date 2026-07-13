@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.6.0
+Revision: 1.6.1
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,20 @@ Modified: 2026-07-13
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.6.0**
+Current Project Revision: **1.6.1**
+
+## Rev 1.6.1 - 2026-07-13
+
+- Added editing for existing geofence places instead of requiring delete and recreate.
+- Owners can update place name, coordinates, radius, and notification preferences.
+- Added per-place arrival-notice and departure-notice toggles.
+- Existing places default to both notification types enabled for backward compatibility.
+- Place cards now show their current notification mode.
+- Geofence transitions remain audited even when the corresponding group notice is disabled.
+- Added group notices and audit records when a place is edited.
+- Updated the PWA cache for the revised geofence module.
+- Kept launch-time location permission unchanged.
+- Added no new live-data folder.
 
 ## Rev 1.6.0 - 2026-07-13
 
@@ -47,15 +60,3 @@ Current Project Revision: **1.6.0**
 - Removed repeated current-user card movement from the enhancement loop.
 - Updated the PWA cache to include the corrected member UI scripts.
 - Added no new live-data folder.
-
-## Rev 1.5.7 - 2026-07-12
-
-- Fixed geofence module cache busting and improved Refresh Cached App.
-
-## Rev 1.5.6 - 2026-07-11
-
-- Fixed geofence coordinate input validation and rounded copied coordinates.
-
-## Rev 1.5.5 - 2026-07-11
-
-- Added owner-managed geofence places and arrival/departure notices.
