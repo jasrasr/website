@@ -2,8 +2,8 @@
 /**
  * Project: Family GPS Tracker
  * File: includes/config.php
- * Revision: 1.6.1
- * Description: Central application configuration.
+ * Revision: 1.6.2
+ * Description: Central application configuration with deployment-derived Eastern Time update labeling.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-13
@@ -12,9 +12,8 @@
 declare(strict_types=1);
 
 const APP_NAME = 'Family GPS Tracker';
-const APP_REVISION = '1.6.1';
+const APP_REVISION = '1.6.2';
 const APP_UPDATED = '2026-07-13';
-const APP_BUILD_LABEL = '2026-07-13 09:30 ET';
 const CONSENT_VERSION = '2026-07-11';
 const LOGIN_THROTTLE_MAX_FAILURES = 5;
 const LOGIN_THROTTLE_WINDOW_SECONDS = 900;
@@ -34,6 +33,48 @@ const REMEMBER_COOKIE_NAME = 'family_tracker_remember';
 const REMEMBER_ME_LIFETIME_SECONDS = 7776000;
 const MIN_PASSWORD_LENGTH = 8;
 const SESSION_NAME = 'family_tracker_session';
+
+/**
+ * Returns the newest deployed modification time among revision-defining files.
+ * This avoids manually entered build clocks and reflects the deployed copy.
+ */
+function app_latest_update_timestamp(): int
+{
+    $root = dirname(__DIR__);
+    $paths = [
+        __FILE__,
+        $root . '/index.php',
+        $root . '/service-worker.js',
+        $root . '/CHANGELOG.md',
+    ];
+
+    $timestamps = [];
+    foreach ($paths as $path) {
+        if (is_file($path)) {
+            $modified = filemtime($path);
+            if ($modified !== false) {
+                $timestamps[] = $modified;
+            }
+        }
+    }
+
+    return $timestamps ? max($timestamps) : time();
+}
+
+/**
+ * Formats a timestamp in Eastern Time. America/New_York automatically applies
+ * EST or EDT while the interface consistently labels the zone as ET.
+ */
+function app_update_label_et(?int $timestamp = null): string
+{
+    $timestamp ??= app_latest_update_timestamp();
+    $date = (new DateTimeImmutable('@' . $timestamp))
+        ->setTimezone(new DateTimeZone('America/New_York'));
+
+    return $date->format('M j, Y \a\t g:i A') . ' ET';
+}
+
+define('APP_BUILD_LABEL', app_update_label_et());
 
 $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
     || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
