@@ -2,19 +2,19 @@
 /**
  * Project: Family GPS Tracker
  * File: includes/config.php
- * Revision: 1.5.9
+ * Revision: 1.6.0
  * Description: Central application configuration.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
- * Modified: 2026-07-12
+ * Modified: 2026-07-13
  */
 
 declare(strict_types=1);
 
 const APP_NAME = 'Family GPS Tracker';
-const APP_REVISION = '1.5.9';
-const APP_UPDATED = '2026-07-12';
-const APP_BUILD_LABEL = '2026-07-12 05:35 ET';
+const APP_REVISION = '1.6.0';
+const APP_UPDATED = '2026-07-13';
+const APP_BUILD_LABEL = '2026-07-13 08:45 ET';
 const CONSENT_VERSION = '2026-07-11';
 const LOGIN_THROTTLE_MAX_FAILURES = 5;
 const LOGIN_THROTTLE_WINDOW_SECONDS = 900;
