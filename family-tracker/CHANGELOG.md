@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.6.1
+Revision: 1.6.2
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,18 @@ Modified: 2026-07-13
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.6.1**
+Current Project Revision: **1.6.2**
+
+## Rev 1.6.2 - 2026-07-13
+
+- Removed the manually entered build clock from application configuration.
+- Added automatic latest-update timestamp detection from deployed revision files.
+- Latest-update time is now formatted with the `America/New_York` time zone and always labeled ET.
+- Daylight-saving changes are handled automatically by the time-zone database.
+- The header, diagnostics, and health page continue using the shared `APP_BUILD_LABEL`, now generated dynamically.
+- Updated the PWA cache revision.
+- Kept launch-time location permission unchanged.
+- Added no new live-data folder.
 
 ## Rev 1.6.1 - 2026-07-13
 
