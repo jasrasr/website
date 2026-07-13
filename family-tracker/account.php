@@ -2,15 +2,16 @@
 /**
  * Project: Family GPS Tracker
  * File: account.php
- * Revision: 1.4.3
- * Description: Signed-in account utilities for password changes, persistent-login device management, and data export.
+ * Revision: 1.5.9
+ * Description: Signed-in account utilities for password changes, persistent-login management, exports, privacy summary, and guarded account deletion.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-09
- * Modified: 2026-07-09
+ * Modified: 2026-07-12
  */
 
 declare(strict_types=1);
 require_once __DIR__ . '/includes/security.php';
+require_once __DIR__ . '/includes/notice-store.php';
 
 init_app_storage();
 
@@ -24,7 +25,11 @@ try {
         if ($action === 'export_my_data') {
             ok(['export' => export_user_data($user)]);
         }
-        ok(['csrfToken' => ensure_csrf_token(), 'devices' => persistent_login_devices($user)]);
+        ok([
+            'csrfToken' => ensure_csrf_token(),
+            'devices' => persistent_login_devices($user),
+            'privacy' => privacy_summary($user),
+        ]);
     }
 
     require_csrf();
@@ -40,6 +45,9 @@ try {
             break;
         case 'revoke_all_devices':
             revoke_all_devices($user);
+            break;
+        case 'delete_account':
+            delete_account($user, $input);
             break;
         default:
             fail('Unknown account action.', 404);
@@ -87,14 +95,20 @@ function persistent_login_devices(array $user): array
 
 function revoke_all_devices(array $user): void
 {
+    $count = revoke_all_user_tokens($user);
+    audit_event('revoke_all_devices', ['userId' => $user['id'], 'count' => $count]);
+    ok(['csrfToken' => ensure_csrf_token(), 'devices' => [], 'message' => 'All remembered devices were revoked.']);
+}
+
+function revoke_all_user_tokens(array $user): int
+{
     $count = 0;
     foreach (persistent_login_devices($user) as $device) {
         delete_json_file(remember_token_path((string)$device['selector']));
         $count++;
     }
     clear_persistent_login_cookie();
-    audit_event('revoke_all_devices', ['userId' => $user['id'], 'count' => $count]);
-    ok(['csrfToken' => ensure_csrf_token(), 'devices' => [], 'message' => 'All remembered devices were revoked.']);
+    return $count;
 }
 
 function revoke_device(array $user, array $input): void
@@ -134,15 +148,32 @@ function change_password(array $user, array $input): void
     $user['updatedAt'] = now_iso();
     write_user($user);
 
-    $revoked = 0;
-    foreach (persistent_login_devices($user) as $device) {
-        delete_json_file(remember_token_path((string)$device['selector']));
-        $revoked++;
-    }
-    clear_persistent_login_cookie();
-
+    $revoked = revoke_all_user_tokens($user);
     audit_event('change_password', ['userId' => $user['id'], 'rememberedDevicesRevoked' => $revoked]);
     ok(['csrfToken' => ensure_csrf_token(), 'devices' => [], 'message' => 'Password changed. Remembered devices were revoked.']);
+}
+
+function privacy_summary(array $user): array
+{
+    $groupIds = user_group_ids($user);
+    $ownedGroups = [];
+    foreach ($groupIds as $groupId) {
+        $family = read_family($groupId);
+        if ($family && (($family['ownerUserId'] ?? '') === ($user['id'] ?? ''))) {
+            $ownedGroups[] = ['id' => $family['id'], 'name' => $family['name'] ?? 'Unnamed group'];
+        }
+    }
+    $trail = read_json_file(trail_path((string)$user['id']), ['points' => []]);
+    return [
+        'username' => $user['username'] ?? '',
+        'groupCount' => count($groupIds),
+        'ownedGroups' => $ownedGroups,
+        'hasLatestLocation' => (bool)read_json_file(location_path((string)$user['id']), []),
+        'trailPointCount' => count($trail['points'] ?? []),
+        'rememberedDeviceCount' => count(persistent_login_devices($user)),
+        'consentVersion' => $user['consentVersion'] ?? null,
+        'backgroundLocationGuaranteed' => false,
+    ];
 }
 
 function export_user_data(array $user): array
@@ -165,4 +196,74 @@ function export_user_data(array $user): array
         'trail' => read_json_file(trail_path((string)$user['id']), ['points' => []]),
         'rememberedDevices' => persistent_login_devices($user),
     ];
+}
+
+function delete_account(array $user, array $input): void
+{
+    $password = (string)($input['currentPassword'] ?? '');
+    $confirmation = normalize_username(str_field($input, 'confirmation', 120));
+    $username = normalize_username((string)($user['username'] ?? ''));
+
+    if (!password_verify($password, (string)($user['passwordHash'] ?? ''))) {
+        fail('Current password is incorrect.', 401);
+    }
+    if ($confirmation === '' || !hash_equals($username, $confirmation)) {
+        fail('Type your exact username to confirm account deletion.', 400);
+    }
+
+    $owned = [];
+    foreach (user_group_ids($user) as $groupId) {
+        $family = read_family($groupId);
+        if ($family && (($family['ownerUserId'] ?? '') === ($user['id'] ?? ''))) {
+            $owned[] = (string)($family['name'] ?? 'Unnamed group');
+        }
+    }
+    if ($owned) {
+        fail('Transfer ownership or delete these owned groups first: ' . implode(', ', $owned) . '.', 409);
+    }
+
+    $userId = (string)$user['id'];
+    $displayName = (string)($user['displayName'] ?? $username);
+
+    with_named_lock('delete_account_' . $userId, function () use ($userId, $username, $displayName): void {
+        foreach (list_json_records('families') as $family) {
+            $familyId = (string)($family['id'] ?? '');
+            $changed = false;
+            foreach (['memberIds', 'suspendedMemberIds'] as $key) {
+                $values = is_array($family[$key] ?? null) ? $family[$key] : [];
+                $filtered = array_values(array_filter($values, fn($id) => (string)$id !== $userId));
+                if ($filtered !== $values) {
+                    $family[$key] = $filtered;
+                    $changed = true;
+                }
+            }
+            foreach (['memberRoles', 'memberProfiles', 'memberJoinedAt', 'memberCheckIns', 'memberTrips', 'memberLocationStates', 'geofenceStates'] as $key) {
+                if (is_array($family[$key] ?? null) && array_key_exists($userId, $family[$key])) {
+                    unset($family[$key][$userId]);
+                    $changed = true;
+                }
+            }
+            if ($changed && $familyId !== '') {
+                $family['updatedAt'] = now_iso();
+                write_family($family);
+                add_group_notice($familyId, 'account_deleted', $displayName . ' deleted their account.', $userId);
+            }
+        }
+
+        $indexPath = username_index_path();
+        $index = read_json_file($indexPath, ['usernames' => []]);
+        if (($index['usernames'][$username] ?? '') === $userId) {
+            unset($index['usernames'][$username]);
+            write_json_file($indexPath, $index);
+        }
+
+        delete_json_file(location_path($userId));
+        delete_json_file(trail_path($userId));
+        delete_json_file(user_path($userId));
+    });
+
+    revoke_all_user_tokens($user);
+    audit_event('delete_account', ['userId' => $userId, 'usernameHash' => substr(hash('sha256', $username), 0, 12)]);
+    logout_current_session();
+    ok(['message' => 'Account deleted.', 'redirect' => 'index.php']);
 }
