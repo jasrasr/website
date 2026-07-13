@@ -1,37 +1,37 @@
 <!--
 Project: Family GPS Tracker
 File: todo.md
-Revision: 1.5.5
-Project Revision Reference: 1.5.5
+Revision: 1.5.9
+Project Revision Reference: 1.5.9
 Description: Feature backlog and improvement ideas for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
-Modified: 2026-07-11
+Modified: 2026-07-12
 -->
 
 # Family GPS Tracker TODO
 
-Current App Revision Context: **1.5.5**
+Current App Revision Context: **1.5.9**
 
-## Completed in Rev 1.5.5
+## Completed in Rev 1.5.9
 
-- [x] Add owner-managed geofence zones.
-- [x] Add place name, coordinates, and configurable radius.
-- [x] Add Use My Latest Location helper when creating a place.
-- [x] Add arrival/departure group notices.
-- [x] Add current inside/outside and distance status.
-- [x] Keep automatic location permission request on launch.
+- [x] Add delete-my-account with password and exact-username confirmation.
+- [x] Block account deletion while the account still owns a group.
+- [x] Remove account membership, location, trail, username index, and remembered-device records during deletion.
+- [x] Add owner-controlled active-group export from the main app.
+- [x] Add privacy text explaining stored account, location, trail, device, and consent data.
+- [x] Add a clear indication that browser background location is not guaranteed.
+- [x] Add clearer success/error/progress status banners.
 
 ## Completed previously
 
-- [x] Login throttling, versioned consent review, access messaging, and security/audit cleanup.
-- [x] PWA install support, service-worker app shell, offline status, and appearance modes.
-- [x] Temporary member disable/restore and leave-group controls.
-- [x] Stale/recovered-sharing notices and configurable trail retention.
-- [x] Quick check-ins and manual trip/ETA sharing.
-- [x] Expiring and maximum-use managed invites.
-- [x] Guarded group and account deletion.
 - [x] Multi-group support, owner dashboard, member management, maps, diagnostics, and account security.
+- [x] Expiring and maximum-use managed invites.
+- [x] Guarded group deletion.
+- [x] PWA install support, offline status, appearance modes, and service-worker caching.
+- [x] Login throttling, consent review, and security/audit cleanup.
+- [x] Geofence zones and arrival/departure notices.
+- [x] Member-list flicker fix and reduced background UI polling.
 
 ## Next reasonable batches
 
@@ -58,7 +58,6 @@ Current App Revision Context: **1.5.5**
 ### PWA and UI
 
 - [ ] Add loading skeletons.
-- [ ] Add clearer success/error banners instead of relying mainly on the sticky status line.
 - [ ] Add a PNG icon set for broader home-screen compatibility.
 - [ ] Evaluate offline location-update queuing; do not queue sensitive writes without conflict handling.
 
