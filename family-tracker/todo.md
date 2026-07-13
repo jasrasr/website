@@ -1,30 +1,35 @@
 <!--
 Project: Family GPS Tracker
 File: todo.md
-Revision: 1.5.9
-Project Revision Reference: 1.5.9
+Revision: 1.6.1
+Project Revision Reference: 1.6.1
 Description: Feature backlog and improvement ideas for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
-Modified: 2026-07-12
+Modified: 2026-07-13
 -->
 
 # Family GPS Tracker TODO
 
-Current App Revision Context: **1.5.9**
+Current App Revision Context: **1.6.1**
 
-## Completed in Rev 1.5.9
+## Completed in Rev 1.6.1
 
-- [x] Add delete-my-account with password and exact-username confirmation.
-- [x] Block account deletion while the account still owns a group.
-- [x] Remove account membership, location, trail, username index, and remembered-device records during deletion.
-- [x] Add owner-controlled active-group export from the main app.
-- [x] Add privacy text explaining stored account, location, trail, device, and consent data.
-- [x] Add a clear indication that browser background location is not guaranteed.
-- [x] Add clearer success/error/progress status banners.
+- [x] Add geofence editing rather than delete/recreate only.
+- [x] Add per-place arrival-notification toggles.
+- [x] Add per-place departure-notification toggles.
+- [x] Keep geofence transitions in the audit trail even when notices are disabled.
+- [x] Show the notification mode on each place card.
+
+## Completed in Rev 1.6.0
+
+- [x] Move the map and live member information to the top of the tracker.
+- [x] Add compact navigation for Map, Members, Sharing, Groups, Account, More, History, and Owner tools.
+- [x] Move secondary tools into collapsed sections.
 
 ## Completed previously
 
+- [x] Delete-my-account safeguards, active-group export, privacy summary, and status banners.
 - [x] Multi-group support, owner dashboard, member management, maps, diagnostics, and account security.
 - [x] Expiring and maximum-use managed invites.
 - [x] Guarded group deletion.
@@ -37,7 +42,7 @@ Current App Revision Context: **1.5.9**
 
 ### Member experience
 
-- [ ] Add optional member profile pictures or generated avatars.
+- [ ] Add optional generated avatars or profile pictures.
 - [ ] Add member-controlled nickname/profile preferences.
 - [ ] Add a dedicated account/profile page.
 
@@ -45,8 +50,7 @@ Current App Revision Context: **1.5.9**
 
 - [ ] Add calculated routing/ETA through an external routing provider.
 - [ ] Add richer background/offline location guidance.
-- [ ] Add geofence editing rather than delete/recreate only.
-- [ ] Add per-place notification toggles.
+- [ ] Add a map overlay showing configured geofence circles.
 
 ### Security and privacy
 
