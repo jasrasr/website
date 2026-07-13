@@ -1,16 +1,29 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.5.9
+Revision: 1.6.0
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
-Modified: 2026-07-12
+Modified: 2026-07-13
 -->
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.5.9**
+Current Project Revision: **1.6.0**
+
+## Rev 1.6.0 - 2026-07-13
+
+- Reorganized the main tracker around the map and live member data.
+- Moved the group map directly below the signed-in account and primary navigation.
+- Placed GPS metrics, sharing controls, and group members immediately after the map.
+- Added a sticky compact navigation bar for Map, Members, Sharing, Groups, Account, More, History, and Owner tools.
+- Grouped secondary features into collapsed sections: Groups / Check-ins / Trips, Account / Privacy / App Settings, and Owner / Advanced Tools.
+- Preserved all existing element IDs and behaviors so existing JavaScript features continue to work inside the collapsed panels.
+- Reduced mobile hero height and increased the primary mobile map height.
+- Added the layout module to revision-aware loading and the PWA app-shell cache.
+- Kept launch-time location permission unchanged.
+- Added no new live-data folder.
 
 ## Rev 1.5.9 - 2026-07-12
 
