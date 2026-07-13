@@ -2,7 +2,7 @@
  * Project: Family GPS Tracker
  * File: assets/js/status-banners.js
  * Revision: 1.5.9
- * Description: Applies visible success, error, and progress styling to the shared status card.
+ * Description: Applies visible status styling and keeps owner-only export visibility synchronized with the signed-in role.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-12
  * Modified: 2026-07-12
@@ -18,7 +18,22 @@
         document.head.appendChild(style);
     }
 
-    function boot() { installStyles(); }
+    function syncOwnerExport() {
+        var title = document.getElementById('accountTitle');
+        var button = document.getElementById('privacyExportGroupBtn');
+        if (!title || !button) return;
+        var isOwner = /\(owner\)\s*$/i.test(title.textContent || '');
+        button.classList.toggle('hidden', !isOwner);
+    }
+
+    function boot() {
+        installStyles();
+        syncOwnerExport();
+        var title = document.getElementById('accountTitle');
+        if (title) new MutationObserver(syncOwnerExport).observe(title, { childList: true, characterData: true, subtree: true });
+        new MutationObserver(syncOwnerExport).observe(document.body, { childList: true, subtree: true });
+    }
+
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
     else boot();
 }());
