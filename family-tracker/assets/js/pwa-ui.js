@@ -1,7 +1,7 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/pwa-ui.js
- * Revision: 1.5.7
+ * Revision: 1.5.9
  * Description: PWA registration, install guidance, offline banner, saved appearance preferences, and revision-aware feature-module loading.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-11
@@ -161,13 +161,18 @@
         }
     }
 
-    function loadFeatureModule() {
-        if (document.getElementById('family-tracker-geofences-script')) return;
-        var script = document.createElement('script');
-        script.id = 'family-tracker-geofences-script';
-        script.src = 'assets/js/geofences.js?v=' + encodeURIComponent(appRevision());
-        script.async = false;
-        document.body.appendChild(script);
+    function loadFeatureModules() {
+        [
+            { id: 'family-tracker-geofences-script', src: 'assets/js/geofences.js' },
+            { id: 'family-tracker-status-banners-script', src: 'assets/js/status-banners.js' }
+        ].forEach(function (module) {
+            if (document.getElementById(module.id)) return;
+            var script = document.createElement('script');
+            script.id = module.id;
+            script.src = module.src + '?v=' + encodeURIComponent(appRevision());
+            script.async = false;
+            document.body.appendChild(script);
+        });
     }
 
     window.addEventListener('beforeinstallprompt', function (event) {
@@ -186,7 +191,7 @@
         registerPwa();
         applyPreferences();
         createUi();
-        loadFeatureModule();
+        loadFeatureModules();
         window.setInterval(createUi, 3000);
     }
 
