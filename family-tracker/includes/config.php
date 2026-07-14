@@ -2,17 +2,17 @@
 /**
  * Project: Family GPS Tracker
  * File: includes/config.php
- * Revision: 1.6.4
+ * Revision: 1.6.5
  * Description: Central application configuration with deployment-derived Eastern Time update labeling.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
- * Modified: 2026-07-13
+ * Modified: 2026-07-14
  */
 
 declare(strict_types=1);
 
 const APP_NAME = 'Friends & Family GPS Tracker';
-const APP_REVISION = '1.6.4';
+const APP_REVISION = '1.6.5';
 const APP_UPDATED = '2026-07-14';
 const CONSENT_VERSION = '2026-07-11';
 const LOGIN_THROTTLE_MAX_FAILURES = 5;
@@ -94,4 +94,5 @@ session_set_cookie_params([
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
+
 

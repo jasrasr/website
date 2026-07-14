@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.6.4
+Revision: 1.6.5
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -9,6 +9,12 @@ Modified: 2026-07-14
 -->
 
 # Family GPS Tracker Changelog
+
+## Rev 1.6.5 - 2026-07-14
+
+- Added the missing release note for the app title rename to `Friends & Family GPS Tracker`.
+- Bumped the app revision and service-worker cache after the title metadata change was missed.
+
 
 ## Rev 1.6.4 - 2026-07-14
 
@@ -26,7 +32,7 @@ Modified: 2026-07-14
 - Bumped the service-worker cache name for the updated app shell.
 
 
-Current Project Revision: **1.6.4**
+Current Project Revision: **1.6.5**
 
 ## Rev 1.6.2 - 2026-07-13
 
@@ -87,5 +93,6 @@ Current Project Revision: **1.6.4**
 - Removed repeated current-user card movement from the enhancement loop.
 - Updated the PWA cache to include the corrected member UI scripts.
 - Added no new live-data folder.
+
 
 
