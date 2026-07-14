@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-const APP_NAME = 'Family GPS Tracker';
+const APP_NAME = 'Friends & Family GPS Tracker';
 const APP_REVISION = '1.6.2';
 const APP_UPDATED = '2026-07-13';
 const CONSENT_VERSION = '2026-07-11';
