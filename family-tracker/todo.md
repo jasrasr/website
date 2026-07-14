@@ -1,8 +1,8 @@
 <!--
 Project: Family GPS Tracker
 File: todo.md
-Revision: 1.6.3
-Project Revision Reference: 1.6.3
+Revision: 1.6.4
+Project Revision Reference: 1.6.4
 Description: Feature backlog and improvement ideas for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -11,7 +11,13 @@ Modified: 2026-07-14
 
 # Family GPS Tracker TODO
 
-Current App Revision Context: **1.6.3**
+Current App Revision Context: **1.6.4**
+
+## Completed in Rev 1.6.4
+
+- [x] Add calculated routing/ETA through an external routing provider.
+- [x] Add richer background/offline location guidance.
+- [x] Add a map overlay showing configured geofence circles.
 
 ## Completed in Rev 1.6.3
 
@@ -46,12 +52,6 @@ Current App Revision Context: **1.6.3**
 
 ## Next reasonable batches
 
-### Location features
-
-- [ ] Add calculated routing/ETA through an external routing provider.
-- [ ] Add richer background/offline location guidance.
-- [ ] Add a map overlay showing configured geofence circles.
-
 ### Security and privacy
 
 - [ ] Add password reset.
@@ -73,4 +73,5 @@ Current App Revision Context: **1.6.3**
 - Avoid hardcoded administrator credentials.
 - Keep the automatic location-permission request on launch unless explicitly changed later.
 - Preserve the mobile map fallback because iPhone browser map behavior remains fragile.
+
 

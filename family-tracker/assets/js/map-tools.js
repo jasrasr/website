@@ -1,11 +1,11 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/map-tools.js
- * Revision: 1.4.6
- * Description: Map mode preference, center controls, and external map links for active-group locations.
+ * Revision: 1.6.4
+ * Description: Map mode preference, center controls, external map links, and OSRM routing ETA for active-group locations.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-09
- * Modified: 2026-07-09
+ * Modified: 2026-07-14
  */
 (function () {
     'use strict';
@@ -16,6 +16,7 @@
     function $(id) { return document.getElementById(id); }
     function status(text) { var node = $('statusText'); if (node) node.textContent = text; }
     function label(member) { return member.displayLabel || member.displayName || member.username || 'Unknown'; }
+    function routeTools() { return window.FamilyTrackerLocationFeatures || {}; }
     function activeLocationMembers() { return members.filter(function (m) { return m.location && typeof m.location.latitude === 'number' && typeof m.location.longitude === 'number'; }); }
     function currentUserName() {
         var text = ($('accountTitle') || {}).textContent || '';
@@ -116,6 +117,34 @@
         a.textContent = text;
         return a;
     }
+    function calculateEta(member) {
+        var mine = ownMember();
+        var tools = routeTools();
+        if (!mine || !mine.location) return status('Your saved location is needed before ETA can be calculated.');
+        if (!member || !member.location) return status('Select a member with a saved location first.');
+        if (mine.id === member.id) return status('Choose another member to calculate an ETA.');
+        var url = tools.osrmRouteUrl ? tools.osrmRouteUrl(mine.location, member.location) : '';
+        if (!url) return status('Could not build a route request for those locations.');
+        status('Calculating route ETA with OSRM...');
+        fetch(url).then(function (response) { return response.json(); }).then(function (data) {
+            var summary = tools.routeSummaryFromOsrm ? tools.routeSummaryFromOsrm(data) : null;
+            if (!summary) throw new Error('No route found.');
+            status('Estimated drive to ' + label(member) + ': ' + summary.etaText + ' / ' + summary.distanceText + '.');
+            renderEtaSummary(member, summary);
+        }).catch(function (error) { status(error.message || 'Route ETA failed.'); });
+    }
+
+    function renderEtaSummary(member, summary) {
+        var out = $('mapToolsOutput');
+        if (!out) return;
+        var note = document.createElement('article');
+        note.className = 'member-card';
+        note.innerHTML = '<div><div class="member-name"></div><div class="member-meta"></div><div class="member-ident"></div></div>';
+        note.querySelector('.member-name').textContent = 'Route ETA to ' + label(member);
+        note.querySelector('.member-meta').textContent = summary.etaText + ' drive • ' + summary.distanceText;
+        note.querySelector('.member-ident').textContent = 'Calculated by the public OSRM routing service from your latest saved point.';
+        out.insertBefore(note, out.firstChild);
+    }
     function renderMemberPreview(member) {
         var out = $('mapToolsOutput');
         if (!out) return;
@@ -138,6 +167,12 @@
         linksFor(member).forEach(function (pair) { actions.appendChild(buttonLink(pair[0], pair[1])); });
         var group = groupOsmLink();
         if (group) actions.appendChild(buttonLink('Open Group Area', group));
+        var eta = document.createElement('button');
+        eta.type = 'button';
+        eta.className = 'secondary';
+        eta.textContent = 'Calculate ETA From Me';
+        eta.addEventListener('click', function () { calculateEta(member); });
+        actions.appendChild(eta);
         main.append(title, meta, actions);
         card.appendChild(main);
         out.appendChild(card);
@@ -196,3 +231,4 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
     else boot();
 }());
+

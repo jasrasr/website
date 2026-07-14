@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.6.3
+Revision: 1.6.4
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -9,6 +9,14 @@ Modified: 2026-07-14
 -->
 
 # Family GPS Tracker Changelog
+
+## Rev 1.6.4 - 2026-07-14
+
+- Added OSRM-powered route ETA calculation from the signed-in user's latest point to a selected member.
+- Added clearer background/offline location guidance and live online/offline guidance text.
+- Added Leaflet geofence circle overlays for configured places on the group map.
+- Added shared location feature helpers with Node coverage for route and geofence normalization.
+
 
 ## Rev 1.6.3 - 2026-07-14
 
@@ -18,7 +26,7 @@ Modified: 2026-07-14
 - Bumped the service-worker cache name for the updated app shell.
 
 
-Current Project Revision: **1.6.3**
+Current Project Revision: **1.6.4**
 
 ## Rev 1.6.2 - 2026-07-13
 
@@ -79,4 +87,5 @@ Current Project Revision: **1.6.3**
 - Removed repeated current-user card movement from the enhancement loop.
 - Updated the PWA cache to include the corrected member UI scripts.
 - Added no new live-data folder.
+
 

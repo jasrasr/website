@@ -1,8 +1,8 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/app.js
- * Revision: 1.6.3
- * Description: Front-end auth, profile avatars, invite-code copy, notices, persistent-login GPS updates, mobile map fallback, family refresh, and Leaflet desktop rendering.
+ * Revision: 1.6.4
+ * Description: Front-end auth, profile avatars, geofence overlays, location guidance, notices, persistent-login GPS updates, mobile map fallback, family refresh, and Leaflet desktop rendering.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
  * Modified: 2026-07-14
@@ -25,6 +25,7 @@
         mapResizeObserver: null,
         markers: new Map(),
         circles: new Map(),
+        geofenceCircles: new Map(),
         refreshTimer: null,
         notices: [],
     };
@@ -57,10 +58,18 @@
         heading: $('headingValue'),
         lastUpdate: $('lastUpdateValue'),
         members: $('memberList'),
+        guidanceStatus: $('locationGuidanceStatus'),
     };
 
     function setStatus(message) {
         els.status.textContent = message;
+    }
+
+    function updateLocationGuidanceStatus() {
+        if (!els.guidanceStatus) return;
+        els.guidanceStatus.textContent = navigator.onLine
+            ? 'Online now. Location updates can be sent while this page is open and browser permission remains granted.'
+            : 'Offline now. New location writes are paused and will not be queued.';
     }
 
     function installMapLayoutFix() {
@@ -437,6 +446,7 @@
             const members = data.members || [];
             renderMembers(members);
             renderMap(members);
+            refreshGeofenceOverlays();
             await refreshFamilyNotices();
         } catch (error) {
             setStatus(error.message);
@@ -580,6 +590,47 @@
         mapEl.appendChild(iframe);
     }
 
+    function locationFeatures() {
+        return window.FamilyTrackerLocationFeatures || {};
+    }
+
+    function renderGeofenceOverlays(zones) {
+        if (state.mobileMap || !state.map || !window.L) return;
+        const tools = locationFeatures();
+        const activeIds = new Set();
+        for (const rawZone of zones || []) {
+            const zone = tools.normalizeGeofenceZone ? tools.normalizeGeofenceZone(rawZone) : null;
+            if (!zone) continue;
+            activeIds.add(zone.id);
+            const latLng = [zone.latitude, zone.longitude];
+            let circle = state.geofenceCircles.get(zone.id);
+            const options = { radius: zone.radiusMeters, color: '#facc15', weight: 2, dashArray: '6 6', fillOpacity: 0.06 };
+            if (!circle) {
+                circle = L.circle(latLng, options).addTo(state.map);
+                state.geofenceCircles.set(zone.id, circle);
+            } else {
+                circle.setLatLng(latLng);
+                circle.setRadius(zone.radiusMeters);
+                circle.setStyle(options);
+            }
+            circle.bindPopup('<strong>' + escapeHtml(zone.name) + '</strong><br>Geofence radius ' + Math.round(zone.radiusMeters) + ' m');
+        }
+        for (const [id, circle] of state.geofenceCircles.entries()) {
+            if (!activeIds.has(id)) {
+                circle.remove();
+                state.geofenceCircles.delete(id);
+            }
+        }
+    }
+
+    async function refreshGeofenceOverlays() {
+        if (state.mobileMap || !state.map) return;
+        try {
+            const response = await fetch('geofences.php', { credentials: 'same-origin' });
+            const data = await response.json();
+            if (response.ok && data.ok) renderGeofenceOverlays(data.zones || []);
+        } catch (ignore) { }
+    }
     function renderMap(members) {
         if (state.mobileMap) {
             renderMobileMap(members);
@@ -706,4 +757,9 @@
     wireForms();
     loadMe();
 })();
+
+
+
+
+
 
