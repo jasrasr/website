@@ -1,17 +1,23 @@
 <!--
 Project: Family GPS Tracker
 File: todo.md
-Revision: 1.6.1
-Project Revision Reference: 1.6.1
+Revision: 1.6.3
+Project Revision Reference: 1.6.3
 Description: Feature backlog and improvement ideas for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
-Modified: 2026-07-13
+Modified: 2026-07-14
 -->
 
 # Family GPS Tracker TODO
 
-Current App Revision Context: **1.6.1**
+Current App Revision Context: **1.6.3**
+
+## Completed in Rev 1.6.3
+
+- [x] Add optional generated avatars or profile pictures.
+- [x] Add member-controlled nickname/profile preferences.
+- [x] Add a dedicated account/profile page.
 
 ## Completed in Rev 1.6.1
 
@@ -40,12 +46,6 @@ Current App Revision Context: **1.6.1**
 
 ## Next reasonable batches
 
-### Member experience
-
-- [ ] Add optional generated avatars or profile pictures.
-- [ ] Add member-controlled nickname/profile preferences.
-- [ ] Add a dedicated account/profile page.
-
 ### Location features
 
 - [ ] Add calculated routing/ETA through an external routing provider.
@@ -73,3 +73,4 @@ Current App Revision Context: **1.6.1**
 - Avoid hardcoded administrator credentials.
 - Keep the automatic location-permission request on launch unless explicitly changed later.
 - Preserve the mobile map fallback because iPhone browser map behavior remains fragile.
+

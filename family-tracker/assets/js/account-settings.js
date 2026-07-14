@@ -1,17 +1,18 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/account-settings.js
- * Revision: 1.4.2
- * Description: Account settings, group rename, member-location display preferences, and diagnostics panel behavior.
+ * Revision: 1.6.3
+ * Description: Account profile settings, group rename, member-location display preferences, and diagnostics panel behavior.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-09
- * Modified: 2026-07-09
+ * Modified: 2026-07-14
  */
 (function () {
     'use strict';
 
     var csrfToken = '';
     var currentGroups = [];
+    var currentUser = null;
 
     function setStatus(text) {
         var node = document.getElementById('statusText');
@@ -19,6 +20,7 @@
     }
 
     function account() {
+        if (currentUser) return { name: currentUser.displayName || currentUser.username || 'Account', role: currentUser.role || 'member' };
         var text = (document.getElementById('accountTitle') || {}).textContent || '';
         var open = text.lastIndexOf('(');
         var close = text.lastIndexOf(')');
@@ -67,10 +69,29 @@
         });
     }
 
-    function hydrateDisplayNameForm() {
+    function hydrateProfile(data) {
+        if (data && data.user) currentUser = data.user;
         var info = account();
-        var input = document.getElementById('displayNameInput');
-        if (info && input && !input.value) input.value = info.name;
+        var displayName = document.getElementById('displayNameInput');
+        var nickname = document.getElementById('nicknameInput');
+        var avatarMode = document.getElementById('avatarModeSelect');
+        var avatarUrl = document.getElementById('avatarUrlInput');
+        var title = document.getElementById('accountTitle');
+        var familyTitle = document.getElementById('familyTitle');
+        var profile = (currentUser && currentUser.profile) || {};
+        if (displayName && currentUser) displayName.value = currentUser.displayName || '';
+        else if (displayName && info && !displayName.value) displayName.value = info.name;
+        if (nickname) nickname.value = profile.nickname || '';
+        if (avatarMode) avatarMode.value = profile.avatarMode || 'generated';
+        if (avatarUrl) avatarUrl.value = profile.avatarUrl || '';
+        if (title && info) title.textContent = info.name + ' (' + info.role + ')';
+        if (familyTitle && data && data.family) familyTitle.textContent = data.family.name || 'Active group';
+    }
+
+    function hydrateDisplayNameForm() {
+        apiGet('profile.php').then(hydrateProfile).catch(function () {
+            hydrateProfile(null);
+        });
     }
 
     function hydrateGroupForm() {
@@ -86,22 +107,26 @@
     function saveDisplayName(event) {
         event.preventDefault();
         var input = document.getElementById('displayNameInput');
-        var info = account();
-        if (!input || !info) return;
+        var nickname = document.getElementById('nicknameInput');
+        var avatarMode = document.getElementById('avatarModeSelect');
+        var avatarUrl = document.getElementById('avatarUrlInput');
+        if (!input) return;
         var value = input.value.trim();
         if (!value) return setStatus('Display name is required.');
-        setStatus('Saving display name...');
-        apiGet('profile.php').then(function () {
-            return apiPost('profile.php', { displayName: value });
-        }).then(function () {
-            var title = document.getElementById('accountTitle');
-            if (title) title.textContent = value + ' (' + info.role + ')';
+        setStatus('Saving profile...');
+        apiPost('profile.php', {
+            displayName: value,
+            nickname: nickname ? nickname.value.trim() : '',
+            avatarMode: avatarMode ? avatarMode.value : 'generated',
+            avatarUrl: avatarUrl ? avatarUrl.value.trim() : ''
+        }).then(function (data) {
+            hydrateProfile(data);
             var refresh = document.getElementById('refreshBtn');
             if (refresh) refresh.click();
             window.dispatchEvent(new CustomEvent('familyTrackerMemberUiRefresh'));
-            setStatus('Display name updated.');
+            setStatus('Profile updated.');
         }).catch(function (error) {
-            setStatus(error.message || 'Display name update failed.');
+            setStatus(error.message || 'Profile update failed.');
         });
     }
 

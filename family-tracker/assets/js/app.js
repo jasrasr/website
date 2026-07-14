@@ -1,11 +1,11 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/app.js
- * Revision: 1.3.4
- * Description: Front-end auth, invite-code copy, update notices, server notices, persistent-login GPS updates, mobile map fallback, family refresh, and Leaflet desktop rendering.
+ * Revision: 1.6.3
+ * Description: Front-end auth, profile avatars, invite-code copy, notices, persistent-login GPS updates, mobile map fallback, family refresh, and Leaflet desktop rendering.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
- * Modified: 2026-07-06
+ * Modified: 2026-07-14
  */
 (() => {
     'use strict';
@@ -452,6 +452,29 @@
         };
     }
 
+    function memberLabel(member) {
+        return member.displayLabel || member.displayName || member.username || 'Unknown';
+    }
+
+    function avatarNode(member) {
+        const profile = member.profile || {};
+        const label = memberLabel(member);
+        if (profile.avatarMode === 'picture' && profile.avatarUrl) {
+            const image = document.createElement('img');
+            image.className = 'profile-avatar';
+            image.src = profile.avatarUrl;
+            image.alt = `${label} profile picture`;
+            image.loading = 'lazy';
+            return image;
+        }
+        const avatar = document.createElement('span');
+        avatar.className = 'profile-avatar generated-avatar';
+        avatar.style.backgroundColor = profile.avatarColor || '#2563EB';
+        avatar.textContent = profile.avatarInitials || label.slice(0, 2).toUpperCase();
+        avatar.setAttribute('aria-hidden', 'true');
+        return avatar;
+    }
+
     function renderMembers(members) {
         if (!members.length) {
             els.members.textContent = 'No family members found.';
@@ -464,7 +487,7 @@
             const main = document.createElement('div');
             const name = document.createElement('div');
             name.className = 'member-name';
-            name.textContent = member.displayName || member.username || 'Unknown';
+            name.textContent = memberLabel(member);
             const meta = document.createElement('div');
             meta.className = 'member-meta';
             const loc = member.location;
@@ -473,7 +496,7 @@
                 meta.textContent = `${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)} • ${formatAge(loc.ageSeconds)} • accuracy ${Number.isFinite(accuracyFeet) ? accuracyFeet.toFixed(0) + ' ft' : 'unknown'}`;
                 const actions = document.createElement('div');
                 actions.className = 'member-actions';
-                const links = mapLinks(loc.latitude, loc.longitude, member.displayName || member.username || 'Location');
+                const links = mapLinks(loc.latitude, loc.longitude, memberLabel(member));
                 for (const [label, href] of [['Apple Maps', links.apple], ['Google Maps', links.google], ['OSM', links.osm]]) {
                     const a = document.createElement('a');
                     a.href = href;
@@ -482,10 +505,10 @@
                     a.textContent = label;
                     actions.appendChild(a);
                 }
-                main.append(name, meta, actions);
+                main.append(avatarNode(member), name, meta, actions);
             } else {
                 meta.textContent = 'No shared location yet.';
-                main.append(name, meta);
+                main.append(avatarNode(member), name, meta);
             }
             const badge = document.createElement('span');
             badge.className = 'badge';
@@ -503,8 +526,8 @@
 
     function markerLabel(member) {
         const loc = member.location;
-        if (!loc) return escapeHtml(member.displayName || 'Unknown');
-        return `<strong>${escapeHtml(member.displayName || 'Unknown')}</strong><br>${formatAge(loc.ageSeconds)}<br>${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}`;
+        if (!loc) return escapeHtml(memberLabel(member));
+        return `<strong>${escapeHtml(memberLabel(member))}</strong><br>${formatAge(loc.ageSeconds)}<br>${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}`;
     }
 
     function validLocations(members) {
@@ -683,3 +706,4 @@
     wireForms();
     loadMe();
 })();
+

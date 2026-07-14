@@ -12,6 +12,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/includes/security.php';
 require_once __DIR__ . '/includes/notice-store.php';
+require_once __DIR__ . '/includes/profile-helpers.php';
 
 init_app_storage();
 
@@ -32,6 +33,7 @@ try {
 
     $oldDisplayName = (string)($user['displayName'] ?? $user['username'] ?? 'A member');
     $user['displayName'] = $displayName;
+    $user = apply_user_profile_preferences($user, $input);
     $user['updatedAt'] = now_iso();
     write_user($user);
 
@@ -40,8 +42,8 @@ try {
         add_group_notice((string)$family['id'], 'display_name_changed', $oldDisplayName . ' changed display name to ' . $displayName . '.', (string)$user['id']);
     }
 
-    audit_event('update_display_name', ['userId' => $user['id']]);
-    ok(build_me_payload($user) + ['message' => 'Display name updated.']);
+    audit_event('update_profile', ['userId' => $user['id']]);
+    ok(build_me_payload($user) + ['message' => 'Profile updated.']);
 } catch (Throwable $ex) {
     error_log('Family Tracker profile error: ' . $ex->getMessage());
     fail('Server error. Check PHP error logs.', 500);

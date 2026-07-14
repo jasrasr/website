@@ -1,16 +1,24 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.6.2
+Revision: 1.6.3
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
-Modified: 2026-07-13
+Modified: 2026-07-14
 -->
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.6.2**
+## Rev 1.6.3 - 2026-07-14
+
+- Added member-controlled profile preferences for nickname, generated avatar, and optional profile picture URL.
+- Added a dedicated profile page linked from the tracker account card.
+- Added profile avatar metadata to public member payloads and rendered avatars in group member cards.
+- Bumped the service-worker cache name for the updated app shell.
+
+
+Current Project Revision: **1.6.3**
 
 ## Rev 1.6.2 - 2026-07-13
 
@@ -71,3 +79,4 @@ Current Project Revision: **1.6.2**
 - Removed repeated current-user card movement from the enhancement loop.
 - Updated the PWA cache to include the corrected member UI scripts.
 - Added no new live-data folder.
+

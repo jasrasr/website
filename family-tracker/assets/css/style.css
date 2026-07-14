@@ -1,11 +1,11 @@
 /*
  * Project: Family GPS Tracker
  * File: assets/css/style.css
- * Revision: 1.5.3
- * Description: Mobile-first tracker styling with saved appearance and compact-density modes.
+ * Revision: 1.6.3
+ * Description: Mobile-first tracker styling with profile avatars, saved appearance, and compact-density modes.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
- * Modified: 2026-07-11
+ * Modified: 2026-07-14
  */
 
 :root { color-scheme: dark; --bg: #0b1020; --panel: #111827; --panel-soft: #162033; --text: #f8fafc; --muted: #aeb8c8; --border: rgba(255, 255, 255, 0.12); --accent: #4ade80; --danger: #fb7185; --warning: #facc15; --shadow: 0 24px 70px rgba(0, 0, 0, 0.35); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
@@ -56,6 +56,8 @@ code { display: inline-block; padding: 0.7rem 0.8rem; border-radius: 0.8rem; bac
 .member-card { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; padding: 0.85rem; border-radius: 1rem; background: rgba(255, 255, 255, 0.055); border: 1px solid var(--border); }
 .member-management-card { align-items: start; }
 .member-name { font-weight: 850; }
+.profile-avatar { width: 2.4rem; height: 2.4rem; border-radius: 999px; object-fit: cover; display: inline-grid; place-items: center; color: #ffffff; font-weight: 950; letter-spacing: 0.04em; border: 2px solid rgba(255, 255, 255, 0.2); box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22); }
+.generated-avatar { background: #2563eb; }
 .member-meta { color: var(--muted); font-size: 0.92rem; }
 .member-ident { color: var(--muted); font-size: 0.78rem; margin-top: 0.15rem; }
 .member-header { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }

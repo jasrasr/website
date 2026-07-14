@@ -12,6 +12,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/profile-helpers.php';
 
 function now_iso(): string
 {
@@ -210,6 +211,7 @@ function public_user(array $user): array
         'lastLoginAt' => $user['lastLoginAt'] ?? null,
         'lastLocationAt' => $user['lastLocationAt'] ?? null,
         'isActive' => $user['isActive'] ?? true,
+        'profile' => public_profile_preferences($user),
     ];
 }
 
