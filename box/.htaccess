@@ -1,0 +1,26 @@
+# box/.htaccess
+# Route pretty URLs like /box/BOXABC123 (or /github/box/BOXABC123) to index.php.
+# FallbackResource sends any request that doesn't map to a real file/dir here
+# to index.php, which extracts the box code from the last path segment.
+
+DirectoryIndex index.php
+
+<IfModule mod_dir.c>
+    # Only used when the request maps to this directory itself.
+    DirectoryIndex index.php
+</IfModule>
+
+# Preferred: hand unmatched requests under this folder to index.php.
+# (Apache resolves this relative to the folder's URL path automatically.)
+FallbackResource index.php
+
+# Fallback for servers where FallbackResource is unavailable.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Don't rewrite requests that point at real files or directories.
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+    # Everything else -> index.php
+    RewriteRule ^ index.php [L]
+</IfModule>

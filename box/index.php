@@ -13,33 +13,27 @@
 ===========================================================
 */
 
-require __DIR__ . '/box.php';
+// Accept either a query string (?c=BOXxxxxxx) or a pretty URL whose LAST
+// path segment is the box code. Prefix-agnostic so it works whether deployed
+// at /box/ or /github/box/.
+$boxCode = $_GET['c'] ?? '';
 
-
-$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$path = trim($path, '/');
-
-// Break into segments
-$segments = explode('/', $path);
-
-// Expect exactly: box/BOXxxxxxx
-if (count($segments) === 2 && $segments[0] === 'box') {
-
-    $boxCode = $segments[1];
-
-    // Validate box code format
-    if (preg_match('/^BOX[A-Z0-9]{6}$/', $boxCode)) {
-        $_GET['c'] = $boxCode;
-        require __DIR__ . '/box.php';
-        exit;
+if ($boxCode === '') {
+    $path     = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
+    $segments = $path === '' ? [] : explode('/', $path);
+    $last     = end($segments);
+    if ($last !== false && $last !== 'box' && $last !== 'index.php') {
+        $boxCode = $last;
     }
+}
 
-    // Invalid-looking code
-    http_response_code(404);
-    echo 'Invalid or unknown box code.';
+// A valid box code -> render the box view
+if (preg_match('/^BOX[A-Z0-9]{6}$/', $boxCode)) {
+    $_GET['c'] = $boxCode;
+    require __DIR__ . '/box.php';
     exit;
 }
 
-// Otherwise: do nothing (let Apache handle it)
+// Bare /box/ with no code, or a malformed code
 http_response_code(404);
-echo 'Page not found.';
+echo 'Invalid or unknown box code.';
