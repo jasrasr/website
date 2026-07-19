@@ -19,7 +19,8 @@ function ensure_storage(): void {
 
 function start_session(): void {
     if (session_status() !== PHP_SESSION_ACTIVE) {
-        session_name('quiz_web_interactive');
+        // PHP session names must contain only letters and numbers on some hosts.
+        session_name('QuizWebInteractive');
         session_start();
     }
 }
