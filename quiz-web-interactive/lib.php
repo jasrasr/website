@@ -40,7 +40,7 @@ function request_json(): array {
 }
 
 function clean_code(string $code): string {
-    return strtoupper(preg_replace('/[^A-Z0-9]/', '', $code) ?? '');
+    return preg_replace('/\D/', '', $code) ?? '';
 }
 
 function clean_id(string $id): string {
@@ -149,10 +149,8 @@ function new_id(string $prefix): string { return $prefix . '-' . gmdate('YmdHis'
 
 function create_game_session(array $quiz): array {
     return with_lock('code-allocation', LOCK_EX, function() use ($quiz) {
-        $alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
         do {
-            $code = '';
-            for ($i = 0; $i < 6; $i++) $code .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+            $code = (string)random_int(100000, 999999);
         } while (is_file(game_path($code)));
 
         $game = [
