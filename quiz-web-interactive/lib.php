@@ -90,6 +90,21 @@ function read_game(string $code): ?array {
     return with_lock('game:' . $code, LOCK_SH, fn() => decode_file(game_path($code)));
 }
 
+function read_game_finalized(string $code): ?array {
+    $code = clean_code($code);
+    return with_lock('game:' . $code, LOCK_EX, function() use ($code) {
+        $game = decode_file(game_path($code));
+        if (!$game) return null;
+        $updated = finalize_if_expired($game);
+        if ($updated !== $game) {
+            $updated['revision'] = (int)($game['revision'] ?? 0) + 1;
+            $updated['updated_at'] = gmdate('c');
+            atomic_write(game_path($code), $updated);
+        }
+        return $updated;
+    });
+}
+
 function write_game(string $code, array $game): void {
     $code = clean_code($code);
     with_lock('game:' . $code, LOCK_EX, fn() => atomic_write(game_path($code), $game));
@@ -131,14 +146,30 @@ function list_quizzes(): array {
 
 function new_id(string $prefix): string { return $prefix . '-' . gmdate('YmdHis') . '-' . bin2hex(random_bytes(3)); }
 
-function random_code(int $length = 6): string {
-    return with_lock('code-allocation', LOCK_EX, function() use ($length) {
+function create_game_session(array $quiz): array {
+    return with_lock('code-allocation', LOCK_EX, function() use ($quiz) {
         $alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
         do {
             $code = '';
-            for ($i = 0; $i < $length; $i++) $code .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+            for ($i = 0; $i < 6; $i++) $code .= $alphabet[random_int(0, strlen($alphabet) - 1)];
         } while (is_file(game_path($code)));
-        return $code;
+
+        $game = [
+            'code' => $code,
+            'quiz_id' => $quiz['id'],
+            'title' => $quiz['title'],
+            'created_at' => gmdate('c'),
+            'updated_at' => gmdate('c'),
+            'revision' => 1,
+            'question_seconds' => (int)config('question_seconds'),
+            'starting_points' => (int)config('starting_points'),
+            'questions' => $quiz['questions'],
+            'players' => [],
+            'answers' => [],
+            'state' => ['phase' => 'lobby', 'question_index' => -1, 'started_at' => null, 'ends_at' => null],
+        ];
+        atomic_write(game_path($code), $game);
+        return $game;
     });
 }
 
