@@ -54,7 +54,8 @@ try {
             if ($team === '' || mb_strlen($team) > 30) json_response(['ok'=>false,'error'=>'Enter a team name up to 30 characters.'],422);
             $pid = player_id();
             $game = mutate_game($code, function(array $game) use ($pid,$team,$color) {
-                if (($game['state']['phase'] ?? 'lobby') !== 'lobby') throw new RuntimeException('This game has already started.');
+                $phase = (string)($game['state']['phase'] ?? 'lobby');
+                if ($phase === 'finished') throw new RuntimeException('This game has finished.');
                 if (count($game['players'] ?? []) >= (int)config('max_players') && !isset($game['players'][$pid])) throw new RuntimeException('This game is full.');
                 foreach ($game['players'] as $existing) if (strcasecmp($existing['team_name'],$team)===0 && $existing['id']!==$pid) throw new RuntimeException('That team name is already in use.');
                 $game['players'][$pid] = ['id'=>$pid,'team_name'=>$team,'color'=>$color,'avatar'=>null,'score'=>(int)($game['players'][$pid]['score'] ?? 0),'answered_question'=>null,'last_correct'=>null,'last_points'=>0];
