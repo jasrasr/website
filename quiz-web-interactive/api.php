@@ -97,6 +97,17 @@ try {
             $game = mutate_game(clean_code((string)($data['code'] ?? '')), function(array $game) {$game['state']['phase']='finished';$game['state']['ends_at']=null;return $game;});
             json_response(['ok'=>true,'game'=>public_game($game)]);
 
+        case 'reset_game':
+            require_admin_api();
+            $code = clean_code((string)($data['code'] ?? ''));
+            $game = mutate_game($code, function(array $game) {
+                $game['players'] = [];
+                $game['answers'] = [];
+                $game['state'] = ['phase'=>'lobby','question_index'=>-1,'started_at'=>null,'ends_at'=>null];
+                return $game;
+            });
+            json_response(['ok'=>true,'game'=>public_game($game)]);
+
         case 'answer':
             $code = clean_code((string)($data['code'] ?? ''));
             $choice = (int)($data['choice'] ?? -1);
