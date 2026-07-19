@@ -2,7 +2,7 @@
 $config = require __DIR__ . '/config.php';
 $versionPath = __DIR__ . '/VERSION.txt';
 $revision = is_file($versionPath) ? trim((string)file_get_contents($versionPath)) : 'unknown';
-$modifiedDate = 'Jul 19, 2026 3:11:47 PM EDT';
+$modifiedDate = 'Jul 19, 2026 3:19:53 PM EDT';
 ?>
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title><?=htmlspecialchars($config['app_name'])?></title><link rel="stylesheet" href="assets/app.css"></head>
 <body><main class="shell"><div class="card"><div class="brand"><?=htmlspecialchars($config['app_name'])?></div><p class="muted">Live team trivia with synchronized questions, countdowns, and speed-based scoring.</p></div>
