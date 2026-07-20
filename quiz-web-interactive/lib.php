@@ -9,7 +9,7 @@ function config(?string $key = null): mixed {
 }
 
 function ensure_storage(): void {
-    foreach (['games', 'quizzes', 'locks'] as $dir) {
+    foreach (['games', 'quizzes', 'questions', 'locks'] as $dir) {
         $path = config('data_dir') . '/' . $dir;
         if (!is_dir($path) && !mkdir($path, 0775, true) && !is_dir($path)) {
             throw new RuntimeException('Unable to initialize storage.');
@@ -19,7 +19,6 @@ function ensure_storage(): void {
 
 function start_session(): void {
     if (session_status() !== PHP_SESSION_ACTIVE) {
-        // PHP session names must contain only letters and numbers on some hosts.
         session_name('QuizWebInteractive');
         session_start();
     }
@@ -39,16 +38,11 @@ function request_json(): array {
     return is_array($data) ? $data : $_POST;
 }
 
-function clean_code(string $code): string {
-    return preg_replace('/\D/', '', $code) ?? '';
-}
-
-function clean_id(string $id): string {
-    return strtolower(preg_replace('/[^a-z0-9-]/i', '', $id) ?? '');
-}
-
+function clean_code(string $code): string { return preg_replace('/\D/', '', $code) ?? ''; }
+function clean_id(string $id): string { return strtolower(preg_replace('/[^a-z0-9-]/i', '', $id) ?? ''); }
 function game_path(string $code): string { return config('data_dir') . '/games/' . clean_code($code) . '.json'; }
 function quiz_path(string $id): string { return config('data_dir') . '/quizzes/' . clean_id($id) . '.json'; }
+function question_path(string $id): string { return config('data_dir') . '/questions/' . clean_id($id) . '.json'; }
 function lock_path(string $scope): string { return config('data_dir') . '/locks/' . hash('sha256', $scope) . '.lock'; }
 
 function with_lock(string $scope, int $operation, callable $callback): mixed {
@@ -145,14 +139,85 @@ function list_quizzes(): array {
     return $items;
 }
 
+function normalize_question_text(string $value): string {
+    $value = mb_strtolower(trim($value));
+    return preg_replace('/\s+/u', ' ', $value) ?? $value;
+}
+
+function question_fingerprint(string $text, array $choices): string {
+    $parts = [normalize_question_text($text)];
+    foreach ($choices as $choice) $parts[] = normalize_question_text((string)$choice);
+    return hash('sha256', implode('|', $parts));
+}
+
+function read_bank_question(string $id): ?array {
+    $id = clean_id($id);
+    return with_lock('question:' . $id, LOCK_SH, fn() => decode_file(question_path($id)));
+}
+
+function list_bank_questions(string $search = ''): array {
+    ensure_storage();
+    $needle = normalize_question_text($search);
+    $items = [];
+    foreach (glob(config('data_dir') . '/questions/*.json') ?: [] as $path) {
+        $question = decode_file($path);
+        if (!$question) continue;
+        if ($needle !== '') {
+            $haystack = normalize_question_text((string)($question['text'] ?? '') . ' ' . implode(' ', $question['choices'] ?? []));
+            if (mb_strpos($haystack, $needle) === false) continue;
+        }
+        $items[] = $question;
+    }
+    usort($items, fn($a, $b) => strcmp((string)($b['updated_at'] ?? ''), (string)($a['updated_at'] ?? '')));
+    return $items;
+}
+
+function save_bank_question(array $question): array {
+    $text = trim((string)($question['text'] ?? ''));
+    $choices = array_map(fn($v) => trim((string)$v), $question['choices'] ?? []);
+    $correct = (int)($question['correct_index'] ?? -1);
+    if ($text === '' || count($choices) !== 4 || in_array('', $choices, true) || $correct < 0 || $correct > 3) {
+        throw new RuntimeException('Question Bank entries require question text, four answers, and one correct answer.');
+    }
+    $fingerprint = question_fingerprint($text, $choices);
+    return with_lock('question-bank', LOCK_EX, function() use ($question, $text, $choices, $correct, $fingerprint) {
+        foreach (glob(config('data_dir') . '/questions/*.json') ?: [] as $path) {
+            $existing = decode_file($path);
+            if (($existing['fingerprint'] ?? '') === $fingerprint) return $existing;
+        }
+        $id = clean_id((string)($question['id'] ?? '')) ?: new_id('question');
+        $saved = [
+            'id' => $id,
+            'text' => $text,
+            'choices' => $choices,
+            'correct_index' => $correct,
+            'fingerprint' => $fingerprint,
+            'created_at' => gmdate('c'),
+            'updated_at' => gmdate('c'),
+            'times_used' => 0,
+        ];
+        atomic_write(question_path($id), $saved);
+        return $saved;
+    });
+}
+
+function increment_bank_question_usage(string $id): void {
+    $id = clean_id($id);
+    if ($id === '') return;
+    with_lock('question:' . $id, LOCK_EX, function() use ($id) {
+        $question = decode_file(question_path($id));
+        if (!$question) return;
+        $question['times_used'] = (int)($question['times_used'] ?? 0) + 1;
+        $question['updated_at'] = gmdate('c');
+        atomic_write(question_path($id), $question);
+    });
+}
+
 function new_id(string $prefix): string { return $prefix . '-' . gmdate('YmdHis') . '-' . bin2hex(random_bytes(3)); }
 
 function create_game_session(array $quiz): array {
     return with_lock('code-allocation', LOCK_EX, function() use ($quiz) {
-        do {
-            $code = (string)random_int(100000, 999999);
-        } while (is_file(game_path($code)));
-
+        do { $code = (string)random_int(100000, 999999); } while (is_file(game_path($code)));
         $game = [
             'code' => $code,
             'quiz_id' => $quiz['id'],
