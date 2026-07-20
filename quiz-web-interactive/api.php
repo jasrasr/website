@@ -27,7 +27,15 @@ try {
                 $choices = array_map(fn($v)=>trim((string)$v), $q['choices'] ?? []);
                 $correct = (int)($q['correct_index'] ?? -1);
                 if ($text === '' || count($choices) !== 4 || in_array('', $choices, true) || $correct < 0 || $correct > 3) json_response(['ok'=>false,'error'=>'Every question needs text, four answers, and one correct answer.'],422);
-                $normalized[] = ['id'=>'q'.($i+1),'text'=>$text,'choices'=>$choices,'correct_index'=>$correct];
+                $sourceId = clean_id((string)($q['source_question_id'] ?? ''));
+                if (!empty($q['add_to_bank'])) {
+                    $bankQuestion = save_bank_question(['text'=>$text,'choices'=>$choices,'correct_index'=>$correct]);
+                    $sourceId = $bankQuestion['id'];
+                }
+                if ($sourceId !== '') increment_bank_question_usage($sourceId);
+                $item = ['id'=>'q'.($i+1),'text'=>$text,'choices'=>$choices,'correct_index'=>$correct];
+                if ($sourceId !== '') $item['source_question_id'] = $sourceId;
+                $normalized[] = $item;
             }
             $id = clean_id((string)($data['id'] ?? '')) ?: new_id('quiz');
             $existing = read_quiz($id);
@@ -39,6 +47,24 @@ try {
             require_admin_api();
             $items = array_map(fn($q)=>['id'=>$q['id'],'title'=>$q['title'],'question_count'=>count($q['questions'] ?? []),'updated_at'=>$q['updated_at'] ?? null], list_quizzes());
             json_response(['ok'=>true,'quizzes'=>$items]);
+
+        case 'list_question_bank':
+            require_admin_api();
+            $search = trim((string)($_GET['search'] ?? $data['search'] ?? ''));
+            $items = array_map(fn($q)=>[
+                'id'=>$q['id'],
+                'text'=>$q['text'],
+                'choices'=>$q['choices'],
+                'correct_index'=>(int)$q['correct_index'],
+                'times_used'=>(int)($q['times_used'] ?? 0),
+                'updated_at'=>$q['updated_at'] ?? null,
+            ], list_bank_questions($search));
+            json_response(['ok'=>true,'questions'=>$items]);
+
+        case 'save_question_bank':
+            require_admin_api();
+            $question = save_bank_question($data);
+            json_response(['ok'=>true,'question'=>$question]);
 
         case 'launch_quiz':
             require_admin_api();
