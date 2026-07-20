@@ -51,20 +51,24 @@ try {
         case 'list_question_bank':
             require_admin_api();
             $search = trim((string)($_GET['search'] ?? $data['search'] ?? ''));
-            $items = array_map(fn($q)=>[
-                'id'=>$q['id'],
-                'text'=>$q['text'],
-                'choices'=>$q['choices'],
-                'correct_index'=>(int)$q['correct_index'],
-                'times_used'=>(int)($q['times_used'] ?? 0),
-                'updated_at'=>$q['updated_at'] ?? null,
-            ], list_bank_questions($search));
+            $items = array_map(fn($q)=>['id'=>$q['id'],'text'=>$q['text'],'choices'=>$q['choices'],'correct_index'=>(int)$q['correct_index'],'times_used'=>(int)($q['times_used'] ?? 0),'updated_at'=>$q['updated_at'] ?? null], list_bank_questions($search));
             json_response(['ok'=>true,'questions'=>$items]);
 
         case 'save_question_bank':
             require_admin_api();
             $question = save_bank_question($data);
             json_response(['ok'=>true,'question'=>$question]);
+
+        case 'list_game_history':
+            require_admin_api();
+            $search = trim((string)($_GET['search'] ?? $data['search'] ?? ''));
+            $history = list_game_history($search);
+            json_response(['ok'=>true,'history'=>$history]);
+
+        case 'game_statistics':
+            require_admin_api();
+            $history = list_game_history();
+            json_response(['ok'=>true,'statistics'=>game_statistics($history)]);
 
         case 'launch_quiz':
             require_admin_api();
@@ -105,6 +109,7 @@ try {
                 foreach ($game['players'] as &$p) {$p['answered_question']=null;$p['last_correct']=null;$p['last_points']=0;} unset($p);
                 $now = microtime(true);
                 $duration = (int)($game['question_seconds'] ?? config('question_seconds'));
+                if (empty($game['started_at'])) $game['started_at'] = gmdate('c');
                 $game['state']=['phase'=>'question','question_index'=>$next,'started_at'=>$now,'ends_at'=>$now+$duration];
                 return $game;
             });
@@ -120,19 +125,27 @@ try {
 
         case 'finish_game':
             require_admin_api();
-            $game = mutate_game(clean_code((string)($data['code'] ?? '')), function(array $game) {$game['state']['phase']='finished';$game['state']['ends_at']=null;return $game;});
-            json_response(['ok'=>true,'game'=>public_game($game)]);
+            $game = mutate_game(clean_code((string)($data['code'] ?? '')), function(array $game) {
+                $game['state']['phase']='finished';
+                $game['state']['ends_at']=null;
+                $game['finished_at']=gmdate('c');
+                return archive_game($game);
+            });
+            json_response(['ok'=>true,'game'=>public_game($game),'archive_id'=>$game['archive_id'] ?? null]);
 
         case 'reset_game':
+        case 'replay_game':
             require_admin_api();
             $code = clean_code((string)($data['code'] ?? ''));
-            $game = mutate_game($code, function(array $game) {
-                $game['players'] = [];
-                $game['answers'] = [];
-                $game['state'] = ['phase'=>'lobby','question_index'=>-1,'started_at'=>null,'ends_at'=>null];
-                return $game;
+            $game = mutate_game($code, function(array $game) use ($code) {
+                if (!empty($game['players']) || (int)($game['state']['question_index'] ?? -1) >= 0) {
+                    if (empty($game['finished_at'])) $game['finished_at'] = gmdate('c');
+                    $game = archive_game($game);
+                }
+                $quiz = ['id'=>$game['quiz_id'],'title'=>$game['title'],'questions'=>$game['questions']];
+                return create_game_data($quiz, $code);
             });
-            json_response(['ok'=>true,'game'=>public_game($game)]);
+            json_response(['ok'=>true,'game'=>public_game($game),'code'=>$code]);
 
         case 'answer':
             $code = clean_code((string)($data['code'] ?? ''));
@@ -150,12 +163,13 @@ try {
                 $correct=$choice===(int)$q['correct_index'];
                 $duration=(int)($game['question_seconds'] ?? config('question_seconds'));
                 $remaining=max(0.0,(float)$game['state']['ends_at']-$now);
+                $responseTime=max(0.0,$now-(float)($game['state']['started_at'] ?? $now));
                 $points=$correct ? max(1,(int)round((int)($game['starting_points'] ?? config('starting_points'))*($remaining/$duration))) : 0;
                 $game['players'][$pid]['answered_question']=$q['id'];
                 $game['players'][$pid]['last_correct']=$correct;
                 $game['players'][$pid]['last_points']=$points;
                 $game['players'][$pid]['score']+=$points;
-                $game['answers'][$q['id']][$pid]=['choice'=>$choice,'correct'=>$correct,'points'=>$points,'answered_at'=>$now];
+                $game['answers'][$q['id']][$pid]=['choice'=>$choice,'correct'=>$correct,'points'=>$points,'answered_at'=>$now,'response_time'=>round($responseTime,3),'team_name'=>$game['players'][$pid]['team_name']];
                 $result=['correct'=>$correct,'points'=>$points];
                 return $game;
             });
