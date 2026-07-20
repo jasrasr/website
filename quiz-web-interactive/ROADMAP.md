@@ -6,13 +6,14 @@ This file is the working backlog for planned improvements. Items can be reordere
 
 ## Next Up
 
+- [ ] Add completed-game history with final points, placements, rankings, and ties.
+- [ ] Allow a new game to start with the same six-digit code after archiving the previous game.
 - [ ] Add a visible team-color preview beside the color selector and selected hex value.
 - [ ] Add avatar selection with simple built-in icons.
 - [ ] Add a host lobby showing connected teams before a game starts.
 - [ ] Allow the host to remove or rename a team from the lobby.
 - [ ] Add configurable question duration instead of a fixed 30-second timer.
 - [ ] Add configurable scoring options, including fixed points and speed-based points.
-- [ ] Add a game reset/replay button that preserves the selected quiz.
 - [ ] Add confirmation prompts before destructive host actions.
 
 ## Quiz Management
@@ -24,7 +25,9 @@ This file is the working backlog for planned improvements. Items can be reordere
 - [ ] Add optional question images.
 - [ ] Add optional explanation text shown after revealing the correct answer.
 - [ ] Import and export quizzes as JSON.
-- [ ] Add categories and tags for filtering saved quizzes.
+- [ ] Add categories and tags for filtering saved quizzes and Question Bank entries.
+- [ ] Edit and delete Question Bank entries.
+- [ ] Import and export the Question Bank as JSON.
 
 ## Gameplay and Display
 
@@ -61,7 +64,7 @@ This file is the working backlog for planned improvements. Items can be reordere
 - [ ] Add `CHANGELOG.md` with an entry for every released revision.
 - [ ] Centralize revision and Eastern Time modified timestamp so all pages display identical values.
 - [ ] Add deployment and Hostinger setup instructions.
-- [ ] Document the JSON file formats for quizzes and active games.
+- [ ] Document the JSON file formats for quizzes, Question Bank entries, and active games.
 - [ ] Add a release checklist for revision bump, modified timestamp, testing, and deployment verification.
 
 ## Completed
@@ -79,3 +82,9 @@ This file is the working backlog for planned improvements. Items can be reordere
 - [x] Example game using join code `123456`.
 - [x] Visible revision and Eastern Time modified timestamp on the front page.
 - [x] iPhone team-color selector display fix.
+- [x] Reusable Question Bank stored separately from quizzes.
+- [x] Optional **Add to Question Bank** checkbox for newly created questions.
+- [x] Add existing Question Bank questions to a quiz as snapshot copies.
+- [x] Search Question Bank entries by question text or any answer choice.
+- [x] Preserve the correct answer when reusing a Question Bank entry.
+- [x] Duplicate prevention for identical question-and-answer combinations.
