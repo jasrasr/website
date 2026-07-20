@@ -6,8 +6,6 @@ This file is the working backlog for planned improvements. Items can be reordere
 
 ## Next Up
 
-- [ ] Add completed-game history with final points, placements, rankings, and ties.
-- [ ] Allow a new game to start with the same six-digit code after archiving the previous game.
 - [ ] Add a visible team-color preview beside the color selector and selected hex value.
 - [ ] Add avatar selection with simple built-in icons.
 - [ ] Add a host lobby showing connected teams before a game starts.
@@ -37,12 +35,12 @@ This file is the working backlog for planned improvements. Items can be reordere
 - [ ] Add a fullscreen projector mode.
 - [ ] Add animated correct-answer and leaderboard transitions.
 - [ ] Show each team's selected color consistently on player, host, and display screens.
-- [ ] Add tie handling and a tie-breaker question mode.
+- [ ] Add a tie-breaker question mode.
 - [ ] Add a final results screen with podium positions.
 
 ## Reliability and Administration
 
-- [ ] Add automatic cleanup or archiving of stale game files.
+- [ ] Add automatic cleanup of stale active-game files.
 - [ ] Add a game activity log for joins, answers, scoring, and host actions.
 - [ ] Add stronger admin authentication and configurable credentials.
 - [ ] Add CSRF protection to administrative actions.
@@ -64,7 +62,7 @@ This file is the working backlog for planned improvements. Items can be reordere
 - [ ] Add `CHANGELOG.md` with an entry for every released revision.
 - [ ] Centralize revision and Eastern Time modified timestamp so all pages display identical values.
 - [ ] Add deployment and Hostinger setup instructions.
-- [ ] Document the JSON file formats for quizzes, Question Bank entries, and active games.
+- [ ] Document the JSON file formats for quizzes, Question Bank entries, active games, and archived games.
 - [ ] Add a release checklist for revision bump, modified timestamp, testing, and deployment verification.
 
 ## Completed
@@ -88,3 +86,9 @@ This file is the working backlog for planned improvements. Items can be reordere
 - [x] Search Question Bank entries by question text or any answer choice.
 - [x] Preserve the correct answer when reusing a Question Bank entry.
 - [x] Duplicate prevention for identical question-and-answer combinations.
+- [x] Archive completed games with code, quiz, timestamps, rankings, scores, answers, and response times.
+- [x] Search game history by quiz, team, invite code, or date.
+- [x] Start a fresh game with the same six-digit invite code after archiving the previous session.
+- [x] Preserve tied placements in archived rankings.
+- [x] Show cumulative team statistics including games, wins, average score, and average placement.
+- [x] Show cumulative question statistics including usage, accuracy, and average response time.
