@@ -70,14 +70,35 @@ if ($duplicateFile) {
     $target = UPLOAD_DIR . '/' . ($existingFileEntry['stored_file'] ?? '');
 }
 
-$scan = $duplicateFile
+$existingPlate = normalizePlateText((string)($existingFileEntry['plate'] ?? ''));
+$canReuseExistingScan = $duplicateFile && $existingPlate !== '';
+
+$scan = $canReuseExistingScan
     ? [
-        'plate' => (string)($existingFileEntry['plate'] ?? ''),
+        'plate' => $existingPlate,
         'confidence' => (int)($existingFileEntry['confidence'] ?? 0),
         'raw_text' => '',
         'error' => '',
     ]
     : scanImage($target, $mimeType);
+
+$scanError = trim((string)($scan['error'] ?? ''));
+if ($scanError !== '') {
+    // A failed scan is not a successful log entry. Remove a newly uploaded file,
+    // return a non-success response, and leave the log/hash index unchanged.
+    if (!$duplicateFile && is_file($target)) {
+        @unlink($target);
+    }
+
+    http_response_code(422);
+    echo json_encode([
+        'error' => $scanError,
+        'plate' => normalizePlateText((string)($scan['plate'] ?? '')),
+        'confidence' => (int)($scan['confidence'] ?? 0),
+        'duplicate_file' => $duplicateFile,
+    ]);
+    exit;
+}
 
 $plate = normalizePlateText((string)($scan['plate'] ?? ''));
 $countsBefore = plateCounts($entries);
@@ -98,7 +119,7 @@ $entry = [
     'duplicate_of' => $existingFileEntry['id'] ?? '',
     'duplicate_plate' => $duplicatePlate,
     'raw_text' => (string)($scan['raw_text'] ?? ''),
-    'error' => (string)($scan['error'] ?? ''),
+    'error' => '',
 ];
 
 $entries[] = $entry;
@@ -120,7 +141,7 @@ echo json_encode([
     'id' => $entry['id'],
     'plate' => $plate,
     'confidence' => $entry['confidence'],
-    'status' => $entry['error'] !== '' ? $entry['error'] : 'Logged',
+    'status' => 'Logged',
     'duplicate_file' => $duplicateFile,
     'duplicate_plate' => $duplicatePlate,
     'plate_count' => $plateCount,
