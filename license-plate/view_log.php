@@ -5,6 +5,7 @@ $entries = readLogEntries();
 $counts = plateCounts($entries);
 $duplicateFiles = array_filter($entries, fn($e) => !empty($e['duplicate_file']));
 $duplicatePlates = array_filter($counts, fn($count) => $count > 1);
+$pendingEntries = array_filter($entries, fn($e) => ($e['scan_status'] ?? '') === 'pending');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -24,6 +25,7 @@ $duplicatePlates = array_filter($counts, fn($count) => $count > 1);
 
     <section class="stats-grid">
         <div class="card"><strong>Total entries</strong><span><?= count($entries) ?></span></div>
+        <div class="card"><strong>Pending AI</strong><span><?= count($pendingEntries) ?></span></div>
         <div class="card"><strong>Unique plates</strong><span><?= count($counts) ?></span></div>
         <div class="card"><strong>Duplicate files</strong><span><?= count($duplicateFiles) ?></span></div>
         <div class="card"><strong>Repeated plates</strong><span><?= count($duplicatePlates) ?></span></div>
@@ -48,19 +50,23 @@ $duplicatePlates = array_filter($counts, fn($count) => $count > 1);
         <table>
             <thead>
                 <tr>
-                    <th>Processed</th>
+                    <th>Uploaded</th>
+                    <th>Status</th>
                     <th>Plate</th>
                     <th>Confidence</th>
                     <th>Original File</th>
                     <th>Photo</th>
                     <th>Duplicate</th>
                     <th>Mode</th>
+                    <th>Message</th>
                 </tr>
             </thead>
             <tbody>
             <?php foreach ($entries as $entry): ?>
+                <?php $status = $entry['scan_status'] ?? (empty($entry['error']) ? 'complete' : 'pending'); ?>
                 <tr>
                     <td><?= h($entry['processed_at'] ?? '') ?></td>
+                    <td><?= h($status === 'pending' ? 'Pending AI' : 'Complete') ?></td>
                     <td><?= h($entry['plate'] ?? '') ?></td>
                     <td><?= h((string)($entry['confidence'] ?? '')) ?></td>
                     <td><?= h($entry['original_file'] ?? '') ?></td>
@@ -78,6 +84,7 @@ $duplicatePlates = array_filter($counts, fn($count) => $count > 1);
                         ?>
                     </td>
                     <td><?= h($entry['scan_mode'] ?? '') ?></td>
+                    <td><?= h($entry['error'] ?? '') ?></td>
                 </tr>
             <?php endforeach; ?>
             </tbody>
