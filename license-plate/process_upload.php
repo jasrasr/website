@@ -49,6 +49,7 @@ if (!is_string($hash) || $hash === '') {
     echo json_encode(['error' => 'Could not hash uploaded file.']);
     exit;
 }
+
 $hashIndex = readHashIndex();
 $entries = readLogEntries();
 $existingFileEntry = $hashIndex[$hash] ?? null;
@@ -83,24 +84,8 @@ $scan = $canReuseExistingScan
     : scanImage($target, $mimeType);
 
 $scanError = trim((string)($scan['error'] ?? ''));
-if ($scanError !== '') {
-    // A failed scan is not a successful log entry. Remove a newly uploaded file,
-    // return a non-success response, and leave the log/hash index unchanged.
-    if (!$duplicateFile && is_file($target)) {
-        @unlink($target);
-    }
-
-    http_response_code(422);
-    echo json_encode([
-        'error' => $scanError,
-        'plate' => normalizePlateText((string)($scan['plate'] ?? '')),
-        'confidence' => (int)($scan['confidence'] ?? 0),
-        'duplicate_file' => $duplicateFile,
-    ]);
-    exit;
-}
-
 $plate = normalizePlateText((string)($scan['plate'] ?? ''));
+$scanStatus = $scanError !== '' ? 'pending' : 'complete';
 $countsBefore = plateCounts($entries);
 $duplicatePlate = $plate !== '' && isset($countsBefore[$plate]);
 $plateCount = ($countsBefore[$plate] ?? 0) + ($plate !== '' ? 1 : 0);
@@ -115,11 +100,12 @@ $entry = [
     'plate_normalized' => $plate,
     'confidence' => (int)($scan['confidence'] ?? 0),
     'scan_mode' => SCAN_MODE,
+    'scan_status' => $scanStatus,
     'duplicate_file' => $duplicateFile,
     'duplicate_of' => $existingFileEntry['id'] ?? '',
     'duplicate_plate' => $duplicatePlate,
     'raw_text' => (string)($scan['raw_text'] ?? ''),
-    'error' => '',
+    'error' => $scanError,
 ];
 
 $entries[] = $entry;
@@ -133,6 +119,8 @@ if (!$duplicateFile) {
         'plate' => $plate,
         'confidence' => $entry['confidence'],
         'processed_at' => $entry['processed_at'],
+        'scan_status' => $scanStatus,
+        'error' => $scanError,
     ];
     writeJsonFile(HASH_INDEX_FILE, $hashIndex);
 }
@@ -141,7 +129,9 @@ echo json_encode([
     'id' => $entry['id'],
     'plate' => $plate,
     'confidence' => $entry['confidence'],
-    'status' => 'Logged',
+    'status' => $scanStatus === 'pending' ? 'Uploaded - pending AI processing' : 'Logged',
+    'pending' => $scanStatus === 'pending',
+    'scan_error' => $scanError,
     'duplicate_file' => $duplicateFile,
     'duplicate_plate' => $duplicatePlate,
     'plate_count' => $plateCount,
