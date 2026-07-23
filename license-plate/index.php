@@ -3,6 +3,7 @@ require_once __DIR__ . '/config.php';
 ensureAppFolders();
 $entries = readLogEntries();
 $counts = plateCounts($entries);
+$pendingEntries = array_filter($entries, fn($entry) => ($entry['scan_status'] ?? '') === 'pending');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -22,11 +23,12 @@ $counts = plateCounts($entries);
     <header class="page-header">
         <div>
             <h1><?= h(APP_NAME) ?></h1>
-            <p class="small">Batch upload plate photos. Each file is hashed, scanned, logged, and checked for duplicate files and repeated plate values.</p>
+            <p class="small">Batch upload plate photos. Each file is hashed, saved, scanned when available, and checked for duplicate files and repeated plate values.</p>
         </div>
         <div class="status-box">
             <strong>Mode:</strong> <?= h(SCAN_MODE) ?><br>
             <strong>Entries:</strong> <?= count($entries) ?><br>
+            <strong>Pending:</strong> <?= count($pendingEntries) ?><br>
             <strong>Unique plates:</strong> <?= count($counts) ?>
         </div>
     </header>
@@ -94,7 +96,8 @@ startBtn.addEventListener('click', async () => {
     startBtn.disabled = true;
     results.innerHTML = '';
     progress.hidden = false;
-    let ok = 0;
+    let logged = 0;
+    let pending = 0;
     let dupes = 0;
     let failed = 0;
 
@@ -111,9 +114,16 @@ startBtn.addEventListener('click', async () => {
                 failed++;
                 updateRow(row, file.name, data.plate || '', data.confidence || '', data.error || `HTTP ${resp.status}`, '');
             } else {
-                ok++;
+                if (data.pending) {
+                    pending++;
+                } else {
+                    logged++;
+                }
                 if (data.duplicate_file || data.duplicate_plate) dupes++;
-                updateRow(row, file.name, data.plate || '', data.confidence || '', data.status || 'Logged', duplicateText(data));
+                const status = data.pending && data.scan_error
+                    ? `${data.status}: ${data.scan_error}`
+                    : (data.status || 'Logged');
+                updateRow(row, file.name, data.plate || '', data.confidence || '', status, duplicateText(data));
             }
         } catch (e) {
             failed++;
@@ -122,7 +132,7 @@ startBtn.addEventListener('click', async () => {
 
         const pct = Math.round(((i + 1) / queue.length) * 100);
         progressBar.style.width = pct + '%';
-        summary.textContent = `${i + 1} of ${queue.length} processed. Logged: ${ok}. Duplicates flagged: ${dupes}. Failed: ${failed}.`;
+        summary.textContent = `${i + 1} of ${queue.length} processed. Logged: ${logged}. Pending AI: ${pending}. Duplicates flagged: ${dupes}. Failed uploads: ${failed}.`;
     }
 
     startBtn.disabled = false;
