@@ -2,9 +2,19 @@
 
 ## Current Revision
 
-**Version:** 1.2.24  
+**Version:** 1.2.25  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.25 — Local Server Launcher For License Plate
+
+Replaced the copied HumidorHQ local launcher with a repo-specific PHP server script that works for the flat `license-plate` application.
+
+Key implementation changes:
+
+- `start-local-server.ps1` now validates the local app files instead of HumidorHQ runtime JSON collections.
+- `start-local-server.ps1` starts PHP with the repository root as the document root for this app.
+- `start-local-server.ps1` reports the local URL and can skip opening Chrome with `-NoBrowser`.
 
 ## Revision 1.2.24 — Cache-Busted Stylesheet Loading
 

@@ -2,6 +2,11 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.25] - 2026-07-25
+
+### Fixed
+- `start-local-server.ps1` was adapted from the copied HumidorHQ version to work for the `license-plate` PHP app locally.
+
 ## [1.2.24] - 2026-07-25
 
 ### Fixed
