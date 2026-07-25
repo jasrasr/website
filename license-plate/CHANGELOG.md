@@ -2,6 +2,11 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.23] - 2026-07-25
+
+### Fixed
+- The log table columns were rebalanced after becoming too wide on desktop; long-text columns now wrap sooner and the overall table width is reduced.
+
 ## [1.2.22] - 2026-07-25
 
 ### Fixed

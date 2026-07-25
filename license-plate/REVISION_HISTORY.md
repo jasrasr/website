@@ -2,9 +2,19 @@
 
 ## Current Revision
 
-**Version:** 1.2.22  
+**Version:** 1.2.23  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.23 — Rebalanced Log Column Widths
+
+Reduced the oversized desktop log table widths so the table still stays readable without stretching far wider than necessary.
+
+Key implementation changes:
+
+- `style.css` reduces the overall log-table minimum width.
+- `style.css` trims several individual desktop column minimum widths.
+- `style.css` allows more wrapping in long-text columns so the table uses width more efficiently.
 
 ## Revision 1.2.22 — Wider Desktop Layout And Larger Table Columns
 
