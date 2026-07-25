@@ -2,6 +2,12 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.26] - 2026-07-25
+
+### Fixed
+- `view_log.php` overlays no longer show up stacked on page load or conflict with each other when opening photo preview, edit, or delete dialogs.
+- `style.css` now keeps hidden overlays truly hidden until JavaScript opens them.
+
 ## [1.2.25] - 2026-07-25
 
 ### Fixed

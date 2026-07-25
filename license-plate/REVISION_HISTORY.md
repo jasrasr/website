@@ -2,9 +2,19 @@
 
 ## Current Revision
 
-**Version:** 1.2.25  
+**Version:** 1.2.26  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.26 — Overlay Visibility And Photo Preview Fix
+
+Fixed the log page overlays so hidden dialogs stay hidden until opened, and ensured the photo preview does not conflict with edit or delete dialogs.
+
+Key implementation changes:
+
+- `style.css` now forces hidden overlays to remain hidden even though `.photo-overlay` uses `display: flex`.
+- `view_log.php` now closes any currently open overlay before opening another one.
+- `view_log.php` now uses a single JavaScript photo-preview handler instead of mixing inline and attached click handlers.
 
 ## Revision 1.2.25 — Local Server Launcher For License Plate
 

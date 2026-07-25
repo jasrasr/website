@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.24
-    Description: Log viewer with visible stat filters, Eastern timestamp display, uploaded-date deep links, project revision badge, cache-busted stylesheet loading, manual correction tools, quick delete reasons, multi-delete actions, favorites/ranking, and reliable photo link fallback behavior.
+    Revision: 1.2.26
+    Description: Log viewer with visible stat filters, Eastern timestamp display, uploaded-date deep links, project revision badge, cache-busted stylesheet loading, stable overlay behavior, manual correction tools, quick delete reasons, multi-delete actions, favorites/ranking, and reliable photo preview behavior.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -194,7 +194,6 @@ $styleVersion = rawurlencode($projectRevision);
                                 data-photo-label="<?= h($entry['original_file'] ?? ($entry['plate'] ?? 'Photo preview')) ?>"
                                 target="_blank"
                                 rel="noopener"
-                                onclick="return openPhotoPreviewFromLink(this);"
                             >photo</a>
                         <?php endif; ?>
                     </td>
@@ -368,8 +367,21 @@ let activeEditRow = null;
 let activeDeleteRow = null;
 let activeDeleteRows = [];
 
+function closeAllOverlays() {
+    if (photoOverlay && !photoOverlay.hidden) {
+        closePhotoOverlay();
+    }
+    if (entryEditorOverlay && !entryEditorOverlay.hidden) {
+        closeEntryEditor();
+    }
+    if (deleteEntryOverlay && !deleteEntryOverlay.hidden) {
+        closeDeleteEntry();
+    }
+}
+
 function openPhotoOverlay(src, label) {
     if (!photoOverlay || !photoOverlayImage) return;
+    closeAllOverlays();
     photoOverlayImage.src = src;
     photoOverlayImage.alt = label || 'Photo preview';
     if (photoOverlayTitle) photoOverlayTitle.textContent = label || 'Photo Preview';
@@ -401,6 +413,7 @@ function openPhotoPreviewFromLink(link) {
 function openEntryEditor(button) {
     const row = button.closest('tr');
     if (!row || !entryEditorOverlay || !entryEditorId || !entryEditorPlate || !entryEditorState || !entryEditorFavorite || !entryEditorRank) return;
+    closeAllOverlays();
     activeEditRow = row;
     entryEditorId.value = button.dataset.id || '';
     entryEditorPlate.value = button.dataset.plate || '';
@@ -425,6 +438,7 @@ function closeEntryEditor() {
 function openDeleteEntry(button) {
     const row = button.closest('tr');
     if (!row || !deleteEntryOverlay || !deleteEntryId || !deleteEntryReason) return;
+    closeAllOverlays();
     activeDeleteRow = row;
     activeDeleteRows = [row];
     deleteEntryId.value = button.dataset.id || '';
@@ -444,6 +458,7 @@ function openDeleteEntry(button) {
 
 function openBulkDeleteEntries(rows) {
     if (!rows.length || !deleteEntryOverlay || !deleteEntryId || !deleteEntryReason) return;
+    closeAllOverlays();
     activeDeleteRow = rows[0];
     activeDeleteRows = rows;
     deleteEntryId.value = rows.map(row => row.dataset.entryId || '').filter(Boolean).join(',');
@@ -885,6 +900,7 @@ duplicatePlateFilters.forEach(button => {
 
 photoPreviewLinks.forEach(link => {
     link.addEventListener('click', event => {
+        event.stopPropagation();
         if (openPhotoPreviewFromLink(link) === false) {
             event.preventDefault();
         }
@@ -892,11 +908,17 @@ photoPreviewLinks.forEach(link => {
 });
 
 editEntryButtons.forEach(button => {
-    button.addEventListener('click', () => openEntryEditor(button));
+    button.addEventListener('click', event => {
+        event.stopPropagation();
+        openEntryEditor(button);
+    });
 });
 
 deleteEntryButtons.forEach(button => {
-    button.addEventListener('click', () => openDeleteEntry(button));
+    button.addEventListener('click', event => {
+        event.stopPropagation();
+        openDeleteEntry(button);
+    });
 });
 
 if (selectVisibleDeletesButton) {

@@ -505,6 +505,10 @@ th {
     padding: 24px;
 }
 
+.photo-overlay[hidden] {
+    display: none !important;
+}
+
 .photo-overlay-backdrop {
     position: absolute;
     inset: 0;
