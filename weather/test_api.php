@@ -18,7 +18,21 @@ if ($apiKey === '' || $apiKey === 'ENTER-API-HERE') {
     exit;
 }
 
-$url = "https://api.openweathermap.org/data/2.5/weather?q=Newhall,California,US&units=imperial&appid=" . urlencode($apiKey);
+$city = $config['cities']['newhall_ca'] ?? null;
+
+if (!$city || !isset($city['lat'], $city['lon'])) {
+    http_response_code(500);
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'Test city newhall_ca is not configured with lat/lon.']);
+    exit;
+}
+
+$url = sprintf(
+    'https://api.openweathermap.org/data/2.5/weather?lat=%s&lon=%s&units=imperial&appid=%s',
+    $city['lat'],
+    $city['lon'],
+    urlencode($apiKey)
+);
 
 $error = null;
 set_error_handler(function ($severity, $message) use (&$error) {
