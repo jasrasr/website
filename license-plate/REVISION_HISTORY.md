@@ -2,9 +2,19 @@
 
 ## Current Revision
 
-**Version:** 1.2.12  
+**Version:** 1.2.13  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.13 — Case-Safe Changelog Source
+
+Fixed the project changelog source path so case-sensitive servers read the tracked `CHANGELOG.md` file correctly and the front-page modified timestamp resolves again.
+
+Key implementation changes:
+
+- `config.php` now points to `CHANGELOG.md`, which matches the tracked filename in Git.
+- `config.php` also falls back to `changelog.md` so the app remains tolerant if a lowercase copy exists in another environment.
+- `changelog.php` now labels the rendered source file using the tracked uppercase filename.
 
 ## Revision 1.2.12 — Deleted Audit Workflow
 

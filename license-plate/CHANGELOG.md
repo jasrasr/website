@@ -2,6 +2,11 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.13] - 2026-07-25
+
+### Fixed
+- The app now reads the tracked `CHANGELOG.md` filename correctly on case-sensitive servers, restoring the visible changelog content and modified timestamp.
+
 ## [1.2.12] - 2026-07-25
 
 ### Added

@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.12
-    Description: Shared configuration for batch license plate photo uploads, metadata/state extraction, changelog helpers, duplicate cleanup, manual entry updates, and deleted-item audit handling.
+    Revision: 1.2.13
+    Description: Shared configuration for batch license plate photo uploads, metadata/state extraction, changelog helpers, duplicate cleanup, manual entry updates, deleted-item audit handling, and case-safe changelog path resolution.
 */
 
 declare(strict_types=1);
@@ -10,7 +10,7 @@ declare(strict_types=1);
 date_default_timezone_set('America/New_York');
 
 const APP_NAME = 'License Plate Photo Logger';
-const APP_REVISION = '1.2.12';
+const APP_REVISION = '1.2.13';
 const APP_UPDATED = '2026-07-25';
 
 const DATA_DIR = __DIR__ . '/data';
@@ -19,7 +19,7 @@ const DELETED_DIR = __DIR__ . '/deleted';
 const LOG_FILE = DATA_DIR . '/plate-log.json';
 const HASH_INDEX_FILE = DATA_DIR . '/file-hashes.json';
 const DELETED_AUDIT_FILE = DATA_DIR . '/deleted-audit.json';
-const CHANGELOG_FILE = __DIR__ . '/changelog.md';
+const CHANGELOG_FILE = __DIR__ . '/CHANGELOG.md';
 const MAX_UPLOAD_BYTES = 12 * 1024 * 1024;
 
 // ai = OpenAI vision parser, ocrspace = OCR.Space text extraction plus local plate cleanup,
@@ -117,20 +117,22 @@ function readProjectRevision(): string
 
 function readProjectModifiedAt(): string
 {
-    if (!is_file(CHANGELOG_FILE)) {
+    $changelogPath = resolveChangelogPath();
+    if ($changelogPath === null) {
         return '';
     }
-    $timestamp = filemtime(CHANGELOG_FILE);
+    $timestamp = filemtime($changelogPath);
     return $timestamp ? date('Y-m-d H:i:s T', $timestamp) : '';
 }
 
 function changelogHtml(): string
 {
-    if (!is_file(CHANGELOG_FILE)) {
+    $changelogPath = resolveChangelogPath();
+    if ($changelogPath === null) {
         return '<p class="small">No changelog is available.</p>';
     }
 
-    $lines = preg_split("/\r\n|\n|\r/", (string)file_get_contents(CHANGELOG_FILE)) ?: [];
+    $lines = preg_split("/\r\n|\n|\r/", (string)file_get_contents($changelogPath)) ?: [];
     $html = [];
     $inList = false;
 
@@ -183,6 +185,22 @@ function changelogHtml(): string
     }
 
     return implode("\n", $html);
+}
+
+function resolveChangelogPath(): ?string
+{
+    $candidates = [
+        CHANGELOG_FILE,
+        __DIR__ . '/changelog.md',
+    ];
+
+    foreach ($candidates as $candidate) {
+        if (is_file($candidate)) {
+            return $candidate;
+        }
+    }
+
+    return null;
 }
 
 function normalizePlateText(string $value): string
