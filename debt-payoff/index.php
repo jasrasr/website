@@ -1,8 +1,8 @@
 <?php
 /*
     Debt Payoff Planner
-    Revision: 1.0.1
-    Description: Main dashboard with login, registration, shared viewer/editor debt access, payoff modeling, and strategy summaries.
+    Revision: 1.0.2
+    Description: Main dashboard with login, registration, shared viewer/editor debt access, reversible audit history, daily backup and recovery controls, payoff modeling, and strategy summaries.
 */
 
 declare(strict_types=1);
@@ -78,6 +78,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 revokeSharedAccess($username, (string)($_POST['shared_username'] ?? ''));
                 $flash = 'Shared access removed.';
+            }
+        } elseif ($action === 'create_backup') {
+            if ($targetDatasetOwner !== $username) {
+                $error = 'Only the owner can create backups for this dataset.';
+            } else {
+                createBackupSnapshot($username, $username, 'manual', 'Manual backup created from the dashboard.');
+                $flash = 'Backup created.';
+            }
+        } elseif ($action === 'restore_backup') {
+            if ($targetDatasetOwner !== $username) {
+                $error = 'Only the owner can recover backups for this dataset.';
+            } else {
+                $result = restoreBackupSnapshot($username, (string)($_POST['backup_filename'] ?? ''), $username);
+                if ($result['ok']) {
+                    $flash = 'Backup recovered.';
+                } else {
+                    $error = $result['error'] ?? 'Unable to recover backup.';
+                }
+            }
+        } elseif ($action === 'revert_audit') {
+            if ($targetDatasetOwner !== $username) {
+                $error = 'Only the owner can revert audit entries for this dataset.';
+            } else {
+                $result = revertAuditEntry($username, (string)($_POST['audit_entry_id'] ?? ''), $username);
+                if ($result['ok']) {
+                    $flash = 'Audit entry reverted.';
+                } else {
+                    $error = $result['error'] ?? 'Unable to revert audit entry.';
+                }
             }
         }
     }
@@ -180,6 +209,8 @@ $metrics = overallMetrics($loans, $loanSummaries);
 $strategyBudget = (float)($userData['profile']['strategy_extra_budget'] ?? 0);
 $snowball = simulateStrategy($loans, $strategyBudget, 'snowball');
 $avalanche = simulateStrategy($loans, $strategyBudget, 'avalanche');
+$backupSnapshots = $isOwnDataset ? array_slice(readBackupSnapshots($datasetOwner), 0, 20) : [];
+$auditEntries = $isOwnDataset ? array_slice(readAuditEntries($datasetOwner), 0, 20) : [];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -344,6 +375,93 @@ $avalanche = simulateStrategy($loans, $strategyBudget, 'avalanche');
             </ul>
         </div>
     </section>
+
+    <?php if ($isOwnDataset): ?>
+    <section class="two-column">
+        <div class="card">
+            <h2>Backups</h2>
+            <form method="post" class="actions">
+                <input type="hidden" name="action" value="create_backup">
+                <input type="hidden" name="dataset_owner" value="<?= h($datasetOwner) ?>">
+                <button type="submit">Create Backup Now</button>
+            </form>
+            <p class="small">A daily backup is created automatically on the first successful login of the day for this user. The newest 99 backups are retained.</p>
+            <?php if (!empty($backupSnapshots)): ?>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Created</th>
+                            <th>Reason</th>
+                            <th>Actor</th>
+                            <th>Recover</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($backupSnapshots as $backup): ?>
+                        <tr>
+                            <td><?= h(formatTimestamp((string)($backup['created_at'] ?? ''))) ?></td>
+                            <td><?= h((string)($backup['reason'] ?? '')) ?></td>
+                            <td><?= h((string)($backup['actor_username'] ?? '')) ?></td>
+                            <td>
+                                <form method="post" class="inline-form">
+                                    <input type="hidden" name="action" value="restore_backup">
+                                    <input type="hidden" name="dataset_owner" value="<?= h($datasetOwner) ?>">
+                                    <input type="hidden" name="backup_filename" value="<?= h((string)($backup['filename'] ?? '')) ?>">
+                                    <button type="submit" onclick="return confirm('Recover this backup and replace current data?');">Recover</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php else: ?>
+            <p class="small">No backups are available yet.</p>
+            <?php endif; ?>
+        </div>
+
+        <div class="card">
+            <h2>Audit History</h2>
+            <p class="small">Each saved loan change, delete, strategy update, share grant, share revoke, backup recovery, and audit revert is captured here with a full before/after snapshot so it can be rolled back.</p>
+            <?php if (!empty($auditEntries)): ?>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>When</th>
+                            <th>Action</th>
+                            <th>Actor</th>
+                            <th>Summary</th>
+                            <th>Revert</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($auditEntries as $entry): ?>
+                        <tr>
+                            <td><?= h(formatTimestamp((string)($entry['recorded_at'] ?? ''))) ?></td>
+                            <td><?= h((string)($entry['action'] ?? '')) ?></td>
+                            <td><?= h((string)($entry['actor_username'] ?? '')) ?></td>
+                            <td><?= h((string)($entry['summary'] ?? '')) ?></td>
+                            <td>
+                                <form method="post" class="inline-form">
+                                    <input type="hidden" name="action" value="revert_audit">
+                                    <input type="hidden" name="dataset_owner" value="<?= h($datasetOwner) ?>">
+                                    <input type="hidden" name="audit_entry_id" value="<?= h((string)($entry['id'] ?? '')) ?>">
+                                    <button type="submit" onclick="return confirm('Revert this audited change by restoring its previous dataset state?');">Revert</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php else: ?>
+            <p class="small">No audit entries are available yet.</p>
+            <?php endif; ?>
+        </div>
+    </section>
+    <?php endif; ?>
 
     <section class="two-column">
         <div class="card">

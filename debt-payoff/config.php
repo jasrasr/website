@@ -1,8 +1,8 @@
 <?php
 /*
     Debt Payoff Planner
-    Revision: 1.0.1
-    Description: Shared configuration, authentication, private per-user storage, shared viewer/editor access, payoff calculations, strategy simulations, changelog rendering, and admin helpers.
+    Revision: 1.0.2
+    Description: Shared configuration, authentication, private per-user storage, shared viewer/editor access, per-user audit logs, daily backups with recovery, payoff calculations, strategy simulations, changelog rendering, and admin helpers.
 */
 
 declare(strict_types=1);
@@ -18,20 +18,24 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 const APP_NAME = 'Debt Payoff Planner';
-const APP_REVISION = '1.0.1';
+const APP_REVISION = '1.0.2';
 const APP_UPDATED = '2026-07-25';
 const DATA_DIR = __DIR__ . '/data';
 const USER_DATA_DIR = DATA_DIR . '/users';
+const BACKUP_DATA_DIR = DATA_DIR . '/backups';
+const AUDIT_DATA_DIR = DATA_DIR . '/audit';
 const ACCOUNTS_FILE = DATA_DIR . '/accounts.json';
 const CHANGELOG_FILE = __DIR__ . '/CHANGELOG.md';
 const TODO_FILE = __DIR__ . '/TODO.md';
 const VERSION_FILE = __DIR__ . '/VERSION.txt';
 const DEFAULT_TEST_USERNAME = 'user';
 const DEFAULT_TEST_PASSWORD = 'test';
+const MAX_BACKUPS_PER_USER = 99;
+const MAX_AUDIT_ENTRIES_PER_USER = 250;
 
 function ensureAppFolders(): void
 {
-    foreach ([DATA_DIR, USER_DATA_DIR] as $dir) {
+    foreach ([DATA_DIR, USER_DATA_DIR, BACKUP_DATA_DIR, AUDIT_DATA_DIR] as $dir) {
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
         }
@@ -91,6 +95,20 @@ function cleanUsername(string $username): string
 function userDataPath(string $username): string
 {
     return USER_DATA_DIR . '/' . cleanUsername($username) . '.json';
+}
+
+function backupUserDir(string $username): string
+{
+    $path = BACKUP_DATA_DIR . '/' . cleanUsername($username);
+    if (!is_dir($path)) {
+        mkdir($path, 0755, true);
+    }
+    return $path;
+}
+
+function auditLogPath(string $username): string
+{
+    return AUDIT_DATA_DIR . '/' . cleanUsername($username) . '.json';
 }
 
 function readAccounts(): array
@@ -259,6 +277,172 @@ function writeUserData(string $username, array $data): void
     writeJsonFile(userDataPath($username), $data);
 }
 
+function readAuditEntries(string $username): array
+{
+    return readJsonFile(auditLogPath($username), []);
+}
+
+function writeAuditEntries(string $username, array $entries): void
+{
+    writeJsonFile(auditLogPath($username), array_slice($entries, 0, MAX_AUDIT_ENTRIES_PER_USER));
+}
+
+function appendAuditEntry(
+    string $username,
+    string $actorUsername,
+    string $action,
+    string $summary,
+    array $beforeState,
+    array $afterState,
+    array $meta = []
+): array {
+    $entries = readAuditEntries($username);
+    array_unshift($entries, [
+        'id' => bin2hex(random_bytes(8)),
+        'recorded_at' => nowIso(),
+        'actor_username' => cleanUsername($actorUsername),
+        'action' => $action,
+        'summary' => $summary,
+        'meta' => $meta,
+        'before_state' => $beforeState,
+        'after_state' => $afterState,
+    ]);
+    writeAuditEntries($username, $entries);
+    return $entries[0];
+}
+
+function replaceUserDataWithAudit(
+    string $username,
+    array $newData,
+    string $actorUsername,
+    string $action,
+    string $summary,
+    array $meta = []
+): array {
+    $beforeState = readUserData($username);
+    writeUserData($username, $newData);
+    $afterState = readUserData($username);
+    return appendAuditEntry($username, $actorUsername, $action, $summary, $beforeState, $afterState, $meta);
+}
+
+function pruneBackups(string $username): void
+{
+    $files = glob(backupUserDir($username) . '/*.json') ?: [];
+    rsort($files, SORT_STRING);
+    $filesToDelete = array_slice($files, MAX_BACKUPS_PER_USER);
+    foreach ($filesToDelete as $file) {
+        if (is_file($file)) {
+            unlink($file);
+        }
+    }
+}
+
+function createBackupSnapshot(string $username, string $actorUsername, string $reason = 'manual', string $note = ''): array
+{
+    $timestamp = nowIso();
+    $fileSlug = preg_replace('/[^a-z0-9_-]/', '-', strtolower($reason)) ?: 'manual';
+    $filename = date('Ymd-His') . '-' . $fileSlug . '.json';
+    $path = backupUserDir($username) . '/' . $filename;
+    $payload = [
+        'meta' => [
+            'username' => cleanUsername($username),
+            'actor_username' => cleanUsername($actorUsername),
+            'reason' => $reason,
+            'note' => $note,
+            'created_at' => $timestamp,
+            'filename' => $filename,
+        ],
+        'data' => readUserData($username),
+    ];
+    writeJsonFile($path, $payload);
+    pruneBackups($username);
+    return $payload['meta'];
+}
+
+function ensureDailyLoginBackup(string $username): void
+{
+    $todayPrefix = date('Ymd') . '-';
+    $files = glob(backupUserDir($username) . '/' . $todayPrefix . '*-daily-login.json') ?: [];
+    if (!empty($files)) {
+        return;
+    }
+    createBackupSnapshot($username, $username, 'daily-login', 'Automatic backup from first login of the day.');
+}
+
+function readBackupSnapshots(string $username): array
+{
+    $files = glob(backupUserDir($username) . '/*.json') ?: [];
+    rsort($files, SORT_STRING);
+    $snapshots = [];
+    foreach ($files as $file) {
+        $payload = readJsonFile($file, []);
+        if (empty($payload['meta']) || empty($payload['data'])) {
+            continue;
+        }
+        $snapshots[] = $payload['meta'];
+    }
+    return $snapshots;
+}
+
+function restoreBackupSnapshot(string $username, string $filename, string $actorUsername): array
+{
+    $safeFilename = basename($filename);
+    $path = backupUserDir($username) . '/' . $safeFilename;
+    if (!is_file($path)) {
+        return ['ok' => false, 'error' => 'Backup file not found.'];
+    }
+
+    $payload = readJsonFile($path, []);
+    if (!is_array($payload['data'] ?? null)) {
+        return ['ok' => false, 'error' => 'Backup file is invalid.'];
+    }
+
+    $beforeState = readUserData($username);
+    writeUserData($username, $payload['data']);
+    $afterState = readUserData($username);
+    appendAuditEntry(
+        $username,
+        $actorUsername,
+        'backup_restore',
+        'Recovered dataset from backup.',
+        $beforeState,
+        $afterState,
+        ['backup_filename' => $safeFilename, 'backup_reason' => (string)($payload['meta']['reason'] ?? '')]
+    );
+
+    return ['ok' => true];
+}
+
+function revertAuditEntry(string $username, string $entryId, string $actorUsername): array
+{
+    $entries = readAuditEntries($username);
+    foreach ($entries as $entry) {
+        if (($entry['id'] ?? '') !== $entryId) {
+            continue;
+        }
+        if (!is_array($entry['before_state'] ?? null)) {
+            return ['ok' => false, 'error' => 'This audit entry cannot be reverted.'];
+        }
+
+        $beforeState = readUserData($username);
+        writeUserData($username, $entry['before_state']);
+        $afterState = readUserData($username);
+        appendAuditEntry(
+            $username,
+            $actorUsername,
+            'audit_revert',
+            'Reverted a prior audited change.',
+            $beforeState,
+            $afterState,
+            ['reverted_entry_id' => $entryId, 'reverted_action' => (string)($entry['action'] ?? '')]
+        );
+
+        return ['ok' => true];
+    }
+
+    return ['ok' => false, 'error' => 'Audit entry not found.'];
+}
+
 function sanitizeShareEntries(array $entries, string $ownerUsername): array
 {
     $sanitized = [];
@@ -380,7 +564,14 @@ function grantSharedAccess(string $ownerUsername, string $sharedUsername, string
         'granted_at' => nowIso(),
     ];
     $data['sharing'] = sanitizeShareEntries($data['sharing'], $ownerUsername);
-    writeUserData($ownerUsername, $data);
+    replaceUserDataWithAudit(
+        $ownerUsername,
+        $data,
+        $ownerUsername,
+        'share_grant',
+        'Granted shared dataset access.',
+        ['shared_username' => $sharedUsername, 'permission' => $permission]
+    );
 
     return ['ok' => true];
 }
@@ -394,7 +585,14 @@ function revokeSharedAccess(string $ownerUsername, string $sharedUsername): void
         $data['sharing'] ?? [],
         fn(array $entry) => ($entry['username'] ?? '') !== $sharedUsername
     ));
-    writeUserData($ownerUsername, $data);
+    replaceUserDataWithAudit(
+        $ownerUsername,
+        $data,
+        $ownerUsername,
+        'share_revoke',
+        'Revoked shared dataset access.',
+        ['shared_username' => $sharedUsername]
+    );
 }
 
 function renameSharedAccessReferences(string $oldUsername, string $newUsername): void
@@ -485,6 +683,7 @@ function authenticateUser(string $username, string $password): bool
 
     session_regenerate_id(true);
     $_SESSION['debt_payoff_user'] = $account['username'];
+    ensureDailyLoginBackup($account['username']);
     return true;
 }
 
@@ -646,6 +845,7 @@ function saveLoan(string $username, array $payload): void
     $data = readUserData($username);
     $loanId = (string)($payload['loan_id'] ?? '');
     $updated = false;
+    $loanName = trim((string)($payload['name'] ?? 'Loan'));
 
     foreach ($data['loans'] as $index => $loan) {
         if (($loan['id'] ?? '') === $loanId && $loanId !== '') {
@@ -659,24 +859,52 @@ function saveLoan(string $username, array $payload): void
         $data['loans'][] = normalizeLoanPayload($payload);
     }
 
-    writeUserData($username, $data);
+    replaceUserDataWithAudit(
+        $username,
+        $data,
+        cleanUsername((string)($_SESSION['debt_payoff_user'] ?? $username)),
+        $updated ? 'loan_update' : 'loan_add',
+        $updated ? 'Updated loan details.' : 'Added a new loan.',
+        ['loan_name' => $loanName]
+    );
 }
 
 function deleteLoan(string $username, string $loanId): void
 {
     $data = readUserData($username);
+    $loanName = '';
+    foreach ($data['loans'] as $loan) {
+        if (($loan['id'] ?? '') === $loanId) {
+            $loanName = (string)($loan['name'] ?? '');
+            break;
+        }
+    }
     $data['loans'] = array_values(array_filter(
         $data['loans'],
         fn(array $loan) => ($loan['id'] ?? '') !== $loanId
     ));
-    writeUserData($username, $data);
+    replaceUserDataWithAudit(
+        $username,
+        $data,
+        cleanUsername((string)($_SESSION['debt_payoff_user'] ?? $username)),
+        'loan_delete',
+        'Deleted a loan.',
+        ['loan_id' => $loanId, 'loan_name' => $loanName]
+    );
 }
 
 function updateStrategyBudget(string $username, float $budget): void
 {
     $data = readUserData($username);
     $data['profile']['strategy_extra_budget'] = max(0, round($budget, 2));
-    writeUserData($username, $data);
+    replaceUserDataWithAudit(
+        $username,
+        $data,
+        cleanUsername((string)($_SESSION['debt_payoff_user'] ?? $username)),
+        'strategy_budget_update',
+        'Updated the strategy extra budget.',
+        ['strategy_extra_budget' => $data['profile']['strategy_extra_budget']]
+    );
 }
 
 function currency(float $amount): string
