@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.5
-    Description: Log viewer with wider desktop layout, active stat filters, and clearer multi-retry controls.
+    Revision: 1.2.6
+    Description: Log viewer with wider desktop layout, active stat filters, multi-retry controls, and photo overlay preview.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -148,7 +148,12 @@ $metadataEntries = array_filter($entries, fn($e) => !empty($e['date_taken']) || 
                     <td><?= h($entry['original_file'] ?? '') ?></td>
                     <td>
                         <?php if (!empty($entry['stored_file'])): ?>
-                            <a href="uploads/<?= h($entry['stored_file']) ?>">photo</a>
+                            <a
+                                href="uploads/<?= h($entry['stored_file']) ?>"
+                                class="photo-preview-link"
+                                data-photo-src="uploads/<?= h($entry['stored_file']) ?>"
+                                data-photo-label="<?= h($entry['original_file'] ?? ($entry['plate'] ?? 'Photo preview')) ?>"
+                            >photo</a>
                         <?php endif; ?>
                     </td>
                     <td class="entry-duplicate">
@@ -174,6 +179,18 @@ $metadataEntries = array_filter($entries, fn($e) => !empty($e['date_taken']) || 
         </div>
     </section>
 </main>
+<div id="photoOverlay" class="photo-overlay" hidden>
+    <div class="photo-overlay-backdrop" data-close-photo-overlay="true"></div>
+    <div class="photo-overlay-panel" role="dialog" aria-modal="true" aria-labelledby="photoOverlayTitle">
+        <div class="photo-overlay-header">
+            <strong id="photoOverlayTitle">Photo Preview</strong>
+            <button type="button" id="closePhotoOverlay" class="photo-overlay-close" aria-label="Close photo preview">X</button>
+        </div>
+        <div class="photo-overlay-body">
+            <img id="photoOverlayImage" src="" alt="Photo preview">
+        </div>
+    </div>
+</div>
 <script>
 const retryButtons = Array.from(document.querySelectorAll('.retry-pending'));
 const processAllButton = document.getElementById('processAllPending');
@@ -189,8 +206,31 @@ const entriesTableBody = document.getElementById('entriesTableBody');
 const sortButtons = Array.from(document.querySelectorAll('.sort-button'));
 const statCards = Array.from(document.querySelectorAll('.stat-card'));
 const duplicatePlateFilters = Array.from(document.querySelectorAll('.duplicate-plate-filter'));
+const photoPreviewLinks = Array.from(document.querySelectorAll('.photo-preview-link'));
+const photoOverlay = document.getElementById('photoOverlay');
+const photoOverlayImage = document.getElementById('photoOverlayImage');
+const photoOverlayTitle = document.getElementById('photoOverlayTitle');
+const closePhotoOverlayButton = document.getElementById('closePhotoOverlay');
 let activeFilterMode = 'all';
 let activePlateFilter = '';
+
+function openPhotoOverlay(src, label) {
+    if (!photoOverlay || !photoOverlayImage) return;
+    photoOverlayImage.src = src;
+    photoOverlayImage.alt = label || 'Photo preview';
+    if (photoOverlayTitle) photoOverlayTitle.textContent = label || 'Photo Preview';
+    photoOverlay.hidden = false;
+    document.body.classList.add('overlay-open');
+}
+
+function closePhotoOverlay() {
+    if (!photoOverlay || !photoOverlayImage) return;
+    photoOverlay.hidden = true;
+    photoOverlayImage.src = '';
+    photoOverlayImage.alt = 'Photo preview';
+    if (photoOverlayTitle) photoOverlayTitle.textContent = 'Photo Preview';
+    document.body.classList.remove('overlay-open');
+}
 
 function getSelectedFailedButtons() {
     return selectionBoxes
@@ -422,6 +462,32 @@ duplicatePlateFilters.forEach(button => {
         applyEntrySearch();
         document.getElementById('entriesTable')?.scrollIntoView({behavior: 'smooth', block: 'start'});
     });
+});
+
+photoPreviewLinks.forEach(link => {
+    link.addEventListener('click', event => {
+        event.preventDefault();
+        openPhotoOverlay(link.dataset.photoSrc || link.getAttribute('href') || '', link.dataset.photoLabel || 'Photo Preview');
+    });
+});
+
+if (closePhotoOverlayButton) {
+    closePhotoOverlayButton.addEventListener('click', closePhotoOverlay);
+}
+
+if (photoOverlay) {
+    photoOverlay.addEventListener('click', event => {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.dataset.closePhotoOverlay === 'true') {
+            closePhotoOverlay();
+        }
+    });
+}
+
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && photoOverlay && !photoOverlay.hidden) {
+        closePhotoOverlay();
+    }
 });
 
 retryButtons.forEach(button => {

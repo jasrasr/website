@@ -1,4 +1,4 @@
-/* Revision: 1.2.5 */
+/* Revision: 1.2.6 */
 :root {
     --bg: #f5f6f8;
     --surface: #ffffff;
@@ -16,6 +16,10 @@ body {
     background: var(--bg);
     color: var(--text);
     font-family: Arial, sans-serif;
+}
+
+body.overlay-open {
+    overflow: hidden;
 }
 
 .container {
@@ -256,6 +260,67 @@ th {
     margin: 8px 0 0;
 }
 
+.photo-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.photo-overlay-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(16, 24, 40, 0.78);
+}
+
+.photo-overlay-panel {
+    position: relative;
+    z-index: 1;
+    width: min(1100px, 96vw);
+    max-height: 92vh;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 24px 90px rgba(16, 24, 40, 0.32);
+    overflow: hidden;
+}
+
+.photo-overlay-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: #f7f9fc;
+}
+
+.photo-overlay-close {
+    min-width: 44px;
+    padding: 8px 12px;
+    background: #4b5563;
+}
+
+.photo-overlay-body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: #111827;
+}
+
+.photo-overlay-body img {
+    display: block;
+    max-width: 100%;
+    max-height: calc(92vh - 86px);
+    border-radius: 8px;
+    object-fit: contain;
+    background: #fff;
+}
+
 .sortable-table th {
     padding: 0;
 }
@@ -328,4 +393,9 @@ th {
     table { font-size: 13px; }
     .actions { flex-direction: column; }
     .actions button { width: 100%; }
+    .photo-overlay { padding: 10px; }
+    .photo-overlay-panel { width: 100%; max-height: 94vh; }
+    .photo-overlay-header { padding: 12px; }
+    .photo-overlay-body { padding: 10px; }
+    .photo-overlay-body img { max-height: calc(94vh - 72px); }
 }

@@ -2,6 +2,14 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.6] - 2026-07-25
+
+### Changed
+- Photo links in the log now open a large in-page overlay preview instead of navigating directly to the image file.
+
+### Added
+- The image preview can be dismissed with the `X` button, by clicking outside the image, or by pressing `Escape`.
+
 ## [1.2.5] - 2026-07-25
 
 ### Fixed

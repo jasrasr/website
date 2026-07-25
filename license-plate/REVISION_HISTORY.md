@@ -2,9 +2,19 @@
 
 ## Current Revision
 
-**Version:** 1.2.5  
+**Version:** 1.2.6  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.6 — In-Page Photo Overlay Preview
+
+Changed the log photo links so they open a large overlay preview instead of navigating away from the log page.
+
+Key implementation changes:
+
+- `view_log.php` now opens photo links inside an in-page overlay dialog.
+- `style.css` adds the large centered preview layout, backdrop, and close controls.
+- The preview can be closed with the `X`, the dark backdrop, or the `Escape` key.
 
 ## Revision 1.2.5 — Active Log Filters and Changelog Page Alignment
 
