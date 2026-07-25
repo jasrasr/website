@@ -1,8 +1,8 @@
 <?php
 /*
     Debt Payoff Planner
-    Revision: 1.0.2
-    Description: Main dashboard with login, registration, shared viewer/editor debt access, reversible audit history, daily backup and recovery controls, payoff modeling, and strategy summaries.
+    Revision: 1.0.3
+    Description: Main dashboard with login, registration, shared viewer/editor debt access, reversible audit history, daily backup and recovery controls, and per-loan amortization tables for standard and adjusted payoff scenarios.
 */
 
 declare(strict_types=1);
@@ -565,10 +565,31 @@ $auditEntries = $isOwnDataset ? array_slice(readAuditEntries($datasetOwner), 0, 
         </div>
 
         <div class="stats-grid loan-metrics">
-            <div class="card stat-card"><strong>Baseline payoff</strong><span><?= h(payoffDateLabel($summary['baseline']['payoff_date'])) ?></span></div>
-            <div class="card stat-card"><strong>Accelerated payoff</strong><span><?= h(payoffDateLabel($summary['accelerated']['payoff_date'])) ?></span></div>
+            <div class="card stat-card"><strong>Standard payoff</strong><span><?= h(payoffDateLabel($summary['baseline']['payoff_date'])) ?></span></div>
+            <div class="card stat-card"><strong>Adjusted payoff</strong><span><?= h(payoffDateLabel($summary['accelerated']['payoff_date'])) ?></span></div>
             <div class="card stat-card"><strong>Months saved</strong><span><?= h((string)$summary['months_saved']) ?></span></div>
             <div class="card stat-card"><strong>Interest saved</strong><span><?= h(currency($summary['interest_saved'])) ?></span></div>
+        </div>
+
+        <div class="two-column amortization-summary-grid">
+            <div class="card">
+                <h3>Standard Amortization</h3>
+                <div class="summary-grid">
+                    <div><strong>Months</strong><span><?= h((string)$summary['baseline']['months']) ?></span></div>
+                    <div><strong>Total interest</strong><span><?= h(currency($summary['baseline']['interest_total'])) ?></span></div>
+                    <div><strong>Total principal</strong><span><?= h(currency($summary['baseline']['principal_total'])) ?></span></div>
+                    <div><strong>Total paid</strong><span><?= h(currency($summary['baseline']['interest_total'] + $summary['baseline']['principal_total'])) ?></span></div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Adjusted Amortization</h3>
+                <div class="summary-grid">
+                    <div><strong>Months</strong><span><?= h((string)$summary['accelerated']['months']) ?></span></div>
+                    <div><strong>Total interest</strong><span><?= h(currency($summary['accelerated']['interest_total'])) ?></span></div>
+                    <div><strong>Total principal</strong><span><?= h(currency($summary['accelerated']['principal_total'])) ?></span></div>
+                    <div><strong>Total paid</strong><span><?= h(currency($summary['accelerated']['interest_total'] + $summary['accelerated']['principal_total'])) ?></span></div>
+                </div>
+            </div>
         </div>
 
         <?php if ($summary['baseline']['negative_amortization'] || $summary['accelerated']['negative_amortization']): ?>
@@ -637,7 +658,7 @@ $auditEntries = $isOwnDataset ? array_slice(readAuditEntries($datasetOwner), 0, 
         <?php endif; ?>
 
         <details class="schedule-block" open>
-            <summary>Accelerated payoff table</summary>
+            <summary>Adjusted amortization table</summary>
             <div class="table-wrap">
                 <table class="schedule-table">
                     <thead>
@@ -654,6 +675,40 @@ $auditEntries = $isOwnDataset ? array_slice(readAuditEntries($datasetOwner), 0, 
                     </thead>
                     <tbody>
                     <?php foreach ($summary['accelerated']['rows'] as $row): ?>
+                        <tr>
+                            <td><?= h((string)$row['payment_number']) ?></td>
+                            <td><?= h($row['period']) ?></td>
+                            <td><?= h(currency($row['starting_balance'])) ?></td>
+                            <td><?= h(currency($row['payment'])) ?></td>
+                            <td><?= h(currency($row['principal'])) ?></td>
+                            <td><?= h(currency($row['interest'])) ?></td>
+                            <td><?= h(currency($row['extra'])) ?></td>
+                            <td><?= h(currency($row['ending_balance'])) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </details>
+
+        <details class="schedule-block">
+            <summary>Standard amortization table</summary>
+            <div class="table-wrap">
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Month</th>
+                            <th>Start Balance</th>
+                            <th>Payment</th>
+                            <th>Principal</th>
+                            <th>Interest</th>
+                            <th>Extra</th>
+                            <th>End Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($summary['baseline']['rows'] as $row): ?>
                         <tr>
                             <td><?= h((string)$row['payment_number']) ?></td>
                             <td><?= h($row['period']) ?></td>

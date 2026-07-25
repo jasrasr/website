@@ -1,6 +1,11 @@
 # Changelog
 
 ## 2026-07-25
+- Revision 1.0.3 clarified each loan's schedule as an amortization table.
+- Added side-by-side standard and adjusted amortization summaries per loan.
+- Added a separate standard amortization table so early payoff comparisons can be reviewed against the adjusted scenario.
+
+## 2026-07-25
 - Revision 1.0.2 added per-user audit logs with revert support for normal dashboard data changes.
 - Added per-user backup snapshots with manual recover controls and automatic first-login daily backups.
 - Added backup retention pruning to keep the newest 99 snapshots per user.

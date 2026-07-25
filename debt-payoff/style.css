@@ -1,4 +1,4 @@
-/* Debt Payoff Planner | Revision: 1.0.1 | Description: Shared layout, dashboard, forms, admin, sharing, topbar metadata, and payoff schedule styling. */
+/* Debt Payoff Planner | Revision: 1.0.3 | Description: Shared layout, dashboard, forms, admin, sharing, topbar metadata, and amortization schedule styling. */
 :root {
     --bg: #f3f5f8;
     --surface: #ffffff;
@@ -188,6 +188,10 @@ h1, h2, h3 { margin-top: 0; }
 }
 
 .loan-metrics {
+    margin-bottom: 16px;
+}
+
+.amortization-summary-grid {
     margin-bottom: 16px;
 }
 
