@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.7
-    Description: Log viewer with wider desktop layout, active stat filters, multi-retry controls, photo overlay preview, and daily upload chart.
+    Revision: 1.2.8
+    Description: Log viewer with wider desktop layout, active stat filters, manual correction tools, favorites/ranking, photo overlay preview, and daily upload chart.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -122,6 +122,8 @@ $maxUploadsPerDay = empty($uploadsByDay) ? 0 : max($uploadsByDay);
                     <th class="col-status"><button type="button" class="sort-button" data-sort-type="text">Status</button></th>
                     <th class="col-plate"><button type="button" class="sort-button" data-sort-type="text">Plate</button></th>
                     <th class="col-confidence"><button type="button" class="sort-button" data-sort-type="number">Confidence</button></th>
+                    <th class="col-favorite"><button type="button" class="sort-button" data-sort-type="text">Fav</button></th>
+                    <th class="col-rank"><button type="button" class="sort-button" data-sort-type="number">Rank</button></th>
                     <th class="col-clarity"><button type="button" class="sort-button" data-sort-type="number">Clarity</button></th>
                     <th class="col-state"><button type="button" class="sort-button" data-sort-type="text">State</button></th>
                     <th class="col-date"><button type="button" class="sort-button" data-sort-type="date">Date Taken</button></th>
@@ -163,6 +165,8 @@ $maxUploadsPerDay = empty($uploadsByDay) ? 0 : max($uploadsByDay);
                     data-duplicate-plate="<?= !empty($entry['duplicate_plate']) ? 'true' : 'false' ?>"
                     data-has-metadata="<?= (!empty($entry['date_taken']) || !empty($entry['gps_display']) || $stateDisplay !== '') ? 'true' : 'false' ?>"
                     data-plate-value="<?= h(strtolower((string)($entry['plate'] ?? ''))) ?>"
+                    data-favorite="<?= !empty($entry['favorite']) ? 'true' : 'false' ?>"
+                    data-rank="<?= h((string)($entry['preference_rank'] ?? '')) ?>"
                     data-search="<?= h($searchBlob) ?>"
                 >
                     <td>
@@ -174,6 +178,8 @@ $maxUploadsPerDay = empty($uploadsByDay) ? 0 : max($uploadsByDay);
                     <td class="entry-status"><?= h($status === 'pending' ? 'Pending Processing' : 'Complete') ?></td>
                     <td class="entry-plate"><?= h($entry['plate'] ?? '') ?></td>
                     <td class="entry-confidence"><?= h(isset($entry['confidence']) && $entry['confidence'] !== '' ? ((string)$entry['confidence'] . '%') : '') ?></td>
+                    <td class="entry-favorite"><?= !empty($entry['favorite']) ? '★' : '' ?></td>
+                    <td class="entry-rank"><?= h(isset($entry['preference_rank']) && $entry['preference_rank'] !== null ? (string)$entry['preference_rank'] : '') ?></td>
                     <td class="entry-clarity"><?= h((string)($entry['clarity_score'] ?? '')) ?></td>
                     <td class="entry-state"><?= h($stateDisplay) ?></td>
                     <td class="entry-date-taken"><?= h($dateTakenDisplay) ?></td>
@@ -198,12 +204,23 @@ $maxUploadsPerDay = empty($uploadsByDay) ? 0 : max($uploadsByDay);
                         echo h(implode(', ', $parts));
                         ?>
                     </td>
-                    <td><?= h(scanModeLabel((string)($entry['scan_mode'] ?? ''))) ?></td>
+                    <td class="entry-scanner"><?= h(entryScannerLabel($entry)) ?></td>
                     <td class="entry-message"><?= h($entry['error'] ?? '') ?></td>
                     <td>
-                        <?php if ($status === 'pending'): ?>
-                            <button type="button" class="retry-pending" data-id="<?= h($entry['id'] ?? '') ?>">Retry</button>
-                        <?php endif; ?>
+                        <div class="inline-actions">
+                            <?php if ($status === 'pending'): ?>
+                                <button type="button" class="retry-pending" data-id="<?= h($entry['id'] ?? '') ?>">Retry</button>
+                            <?php endif; ?>
+                            <button
+                                type="button"
+                                class="secondary edit-entry"
+                                data-id="<?= h($entry['id'] ?? '') ?>"
+                                data-plate="<?= h((string)($entry['plate'] ?? '')) ?>"
+                                data-state="<?= h($stateDisplay) ?>"
+                                data-favorite="<?= !empty($entry['favorite']) ? 'true' : 'false' ?>"
+                                data-rank="<?= h((string)($entry['preference_rank'] ?? '')) ?>"
+                            >Edit</button>
+                        </div>
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -224,6 +241,41 @@ $maxUploadsPerDay = empty($uploadsByDay) ? 0 : max($uploadsByDay);
         </div>
     </div>
 </div>
+<div id="entryEditorOverlay" class="photo-overlay" hidden>
+    <div class="photo-overlay-backdrop" data-close-entry-editor="true"></div>
+    <div class="photo-overlay-panel entry-editor-panel" role="dialog" aria-modal="true" aria-labelledby="entryEditorTitle">
+        <form id="entryEditorForm">
+            <div class="photo-overlay-header">
+                <strong id="entryEditorTitle">Edit Plate Entry</strong>
+                <button type="button" id="closeEntryEditor" class="photo-overlay-close" aria-label="Close entry editor">X</button>
+            </div>
+            <div class="entry-editor-body">
+                <input type="hidden" id="editorEntryId">
+                <label for="editorPlate">Plate</label>
+                <input type="text" id="editorPlate" maxlength="16" placeholder="Enter or correct plate text">
+                <label for="editorState">State</label>
+                <input type="text" id="editorState" maxlength="32" placeholder="State name or abbreviation">
+                <label class="entry-editor-check">
+                    <input type="checkbox" id="editorFavorite">
+                    <span>Favorite this plate</span>
+                </label>
+                <label for="editorRank">Preference Rank</label>
+                <select id="editorRank">
+                    <option value="">None</option>
+                    <?php for ($rank = 1; $rank <= 10; $rank++): ?>
+                        <option value="<?= $rank ?>"><?= $rank ?></option>
+                    <?php endfor; ?>
+                </select>
+                <p class="small">Use this editor to manually enter a missed plate, correct a wrong parse, or tag favorites and personal rankings.</p>
+                <p id="entryEditorStatus" class="small filter-status"></p>
+            </div>
+            <div class="entry-editor-actions">
+                <button type="submit" id="saveEntryEditor">Save Changes</button>
+                <button type="button" id="cancelEntryEditor" class="secondary">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
 <script>
 const retryButtons = Array.from(document.querySelectorAll('.retry-pending'));
 const processAllButton = document.getElementById('processAllPending');
@@ -240,12 +292,25 @@ const sortButtons = Array.from(document.querySelectorAll('.sort-button'));
 const statCards = Array.from(document.querySelectorAll('.stat-card'));
 const duplicatePlateFilters = Array.from(document.querySelectorAll('.duplicate-plate-filter'));
 const photoPreviewLinks = Array.from(document.querySelectorAll('.photo-preview-link'));
+const editEntryButtons = Array.from(document.querySelectorAll('.edit-entry'));
 const photoOverlay = document.getElementById('photoOverlay');
 const photoOverlayImage = document.getElementById('photoOverlayImage');
 const photoOverlayTitle = document.getElementById('photoOverlayTitle');
 const closePhotoOverlayButton = document.getElementById('closePhotoOverlay');
+const entryEditorOverlay = document.getElementById('entryEditorOverlay');
+const entryEditorForm = document.getElementById('entryEditorForm');
+const entryEditorId = document.getElementById('editorEntryId');
+const entryEditorPlate = document.getElementById('editorPlate');
+const entryEditorState = document.getElementById('editorState');
+const entryEditorFavorite = document.getElementById('editorFavorite');
+const entryEditorRank = document.getElementById('editorRank');
+const entryEditorStatus = document.getElementById('entryEditorStatus');
+const saveEntryEditorButton = document.getElementById('saveEntryEditor');
+const closeEntryEditorButton = document.getElementById('closeEntryEditor');
+const cancelEntryEditorButton = document.getElementById('cancelEntryEditor');
 let activeFilterMode = 'all';
 let activePlateFilter = '';
+let activeEditRow = null;
 
 function openPhotoOverlay(src, label) {
     if (!photoOverlay || !photoOverlayImage) return;
@@ -262,6 +327,30 @@ function closePhotoOverlay() {
     photoOverlayImage.src = '';
     photoOverlayImage.alt = 'Photo preview';
     if (photoOverlayTitle) photoOverlayTitle.textContent = 'Photo Preview';
+    document.body.classList.remove('overlay-open');
+}
+
+function openEntryEditor(button) {
+    const row = button.closest('tr');
+    if (!row || !entryEditorOverlay || !entryEditorId || !entryEditorPlate || !entryEditorState || !entryEditorFavorite || !entryEditorRank) return;
+    activeEditRow = row;
+    entryEditorId.value = button.dataset.id || '';
+    entryEditorPlate.value = button.dataset.plate || '';
+    entryEditorState.value = button.dataset.state || '';
+    entryEditorFavorite.checked = (button.dataset.favorite || '') === 'true';
+    entryEditorRank.value = button.dataset.rank || '';
+    if (entryEditorStatus) entryEditorStatus.textContent = '';
+    entryEditorOverlay.hidden = false;
+    document.body.classList.add('overlay-open');
+    entryEditorPlate.focus();
+}
+
+function closeEntryEditor() {
+    if (!entryEditorOverlay || !entryEditorForm) return;
+    entryEditorOverlay.hidden = true;
+    entryEditorForm.reset();
+    if (entryEditorStatus) entryEditorStatus.textContent = '';
+    activeEditRow = null;
     document.body.classList.remove('overlay-open');
 }
 
@@ -305,12 +394,14 @@ function updatePendingCount() {
 function refreshRowSearch(row) {
     row.dataset.search = [
         row.querySelector('.entry-plate')?.textContent || '',
+        row.querySelector('.entry-favorite')?.textContent || '',
+        row.querySelector('.entry-rank')?.textContent || '',
         row.querySelector('.entry-clarity')?.textContent || '',
         row.querySelector('.entry-state')?.textContent || '',
         row.querySelector('.entry-date-taken')?.textContent || '',
         row.querySelector('.entry-gps')?.textContent || '',
-        row.cells[9]?.textContent || '',
-        row.cells[12]?.textContent || '',
+        row.cells[11]?.textContent || '',
+        row.cells[14]?.textContent || '',
         row.querySelector('.entry-message')?.textContent || ''
     ].join(' ').toLowerCase();
 }
@@ -353,6 +444,96 @@ function updateStatCardState() {
         card.classList.toggle('is-active', isActive);
         card.setAttribute('aria-pressed', isActive ? 'true' : 'false');
     });
+}
+
+function syncEditButtonFromRow(row) {
+    const editButton = row.querySelector('.edit-entry');
+    if (!editButton) return;
+    editButton.dataset.plate = row.querySelector('.entry-plate')?.textContent || '';
+    editButton.dataset.state = row.querySelector('.entry-state')?.textContent || '';
+    editButton.dataset.favorite = row.dataset.favorite === 'true' ? 'true' : 'false';
+    editButton.dataset.rank = row.dataset.rank || '';
+}
+
+async function saveEntryEditor(event) {
+    event.preventDefault();
+    if (!activeEditRow || !entryEditorId || !saveEntryEditorButton) return;
+
+    saveEntryEditorButton.disabled = true;
+    if (entryEditorStatus) entryEditorStatus.textContent = 'Saving changes...';
+
+    try {
+        const response = await fetch('update_entry.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                id: entryEditorId.value,
+                plate: entryEditorPlate?.value || '',
+                plate_state: entryEditorState?.value || '',
+                favorite: !!entryEditorFavorite?.checked,
+                preference_rank: entryEditorRank?.value || ''
+            })
+        });
+        const data = await response.json();
+
+        if (!response.ok || data.error) {
+            if (entryEditorStatus) entryEditorStatus.textContent = data.error || `HTTP ${response.status}`;
+            saveEntryEditorButton.disabled = false;
+            return;
+        }
+
+        activeEditRow.dataset.status = data.status || activeEditRow.dataset.status;
+        activeEditRow.dataset.failedPending = data.status === 'pending' && data.error ? 'true' : 'false';
+        activeEditRow.dataset.duplicatePlate = data.duplicate_plate ? 'true' : 'false';
+        activeEditRow.dataset.favorite = data.favorite ? 'true' : 'false';
+        activeEditRow.dataset.rank = data.preference_rank ? String(data.preference_rank) : '';
+        activeEditRow.dataset.plateValue = (data.plate || '').toLowerCase();
+
+        const plateCell = activeEditRow.querySelector('.entry-plate');
+        const stateCell = activeEditRow.querySelector('.entry-state');
+        const favoriteCell = activeEditRow.querySelector('.entry-favorite');
+        const rankCell = activeEditRow.querySelector('.entry-rank');
+        const statusCell = activeEditRow.querySelector('.entry-status');
+        const duplicateCell = activeEditRow.querySelector('.entry-duplicate');
+        const scannerCell = activeEditRow.querySelector('.entry-scanner');
+        const messageCell = activeEditRow.querySelector('.entry-message');
+
+        if (plateCell) plateCell.textContent = data.plate || '';
+        if (stateCell) stateCell.textContent = data.plate_state || '';
+        if (favoriteCell) favoriteCell.textContent = data.favorite ? '★' : '';
+        if (rankCell) rankCell.textContent = data.preference_rank ? String(data.preference_rank) : '';
+        if (statusCell) statusCell.textContent = data.status === 'pending' ? 'Pending Processing' : 'Complete';
+        if (scannerCell) scannerCell.textContent = data.scanner_label || scannerCell.textContent || '';
+        if (messageCell) messageCell.textContent = data.error || '';
+        if (duplicateCell) {
+            const duplicateParts = [];
+            if (data.duplicate_file) duplicateParts.push('same file');
+            if (data.duplicate_plate) duplicateParts.push('same plate');
+            if (data.duplicate_plate && data.best_plate_photo) duplicateParts.push('clearest photo');
+            duplicateCell.textContent = duplicateParts.join(', ');
+        }
+
+        if (data.status !== 'pending') {
+            const retryButton = activeEditRow.querySelector('.retry-pending');
+            if (retryButton) retryButton.remove();
+            const retrySelect = activeEditRow.querySelector('.retry-select');
+            if (retrySelect) {
+                retrySelect.checked = false;
+                retrySelect.disabled = true;
+            }
+        }
+
+        syncEditButtonFromRow(activeEditRow);
+        refreshRowSearch(activeEditRow);
+        updatePendingCount();
+        updateFailedSelectionState();
+        applyEntrySearch();
+        closeEntryEditor();
+        saveEntryEditorButton.disabled = false;
+    } catch (error) {
+        if (entryEditorStatus) entryEditorStatus.textContent = 'Request failed: ' + error.message;
+        saveEntryEditorButton.disabled = false;
+    }
 }
 
 async function retryEntry(id, button) {
@@ -504,8 +685,20 @@ photoPreviewLinks.forEach(link => {
     });
 });
 
+editEntryButtons.forEach(button => {
+    button.addEventListener('click', () => openEntryEditor(button));
+});
+
 if (closePhotoOverlayButton) {
     closePhotoOverlayButton.addEventListener('click', closePhotoOverlay);
+}
+
+if (closeEntryEditorButton) {
+    closeEntryEditorButton.addEventListener('click', closeEntryEditor);
+}
+
+if (cancelEntryEditorButton) {
+    cancelEntryEditorButton.addEventListener('click', closeEntryEditor);
 }
 
 if (photoOverlay) {
@@ -517,9 +710,26 @@ if (photoOverlay) {
     });
 }
 
+if (entryEditorOverlay) {
+    entryEditorOverlay.addEventListener('click', event => {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.dataset.closeEntryEditor === 'true') {
+            closeEntryEditor();
+        }
+    });
+}
+
+if (entryEditorForm) {
+    entryEditorForm.addEventListener('submit', saveEntryEditor);
+}
+
 document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && photoOverlay && !photoOverlay.hidden) {
         closePhotoOverlay();
+        return;
+    }
+    if (event.key === 'Escape' && entryEditorOverlay && !entryEditorOverlay.hidden) {
+        closeEntryEditor();
     }
 });
 

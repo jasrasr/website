@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.2
-    Description: Upload processor with metadata extraction, duplicate reuse, and image clarity scoring.
+    Revision: 1.2.8
+    Description: Upload processor with metadata extraction, duplicate reuse, image clarity scoring, and preference field defaults.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -111,6 +111,7 @@ $entry = [
     'confidence' => normalizeConfidenceValue($scan['confidence'] ?? 0),
     'scan_mode' => $canReuseExistingScan ? (string)($existingFileEntry['scan_mode'] ?? SCAN_MODE) : SCAN_MODE,
     'scan_status' => $scanStatus,
+    'manual_corrected' => $canReuseExistingScan ? !empty($existingFileEntry['manual_corrected']) : false,
     'duplicate_file' => $duplicateFile,
     'duplicate_of' => $existingFileEntry['id'] ?? '',
     'duplicate_plate' => $duplicatePlate,
@@ -123,6 +124,8 @@ $entry = [
     'gps_latitude' => $imageMetadata['gps_latitude'] ?? null,
     'gps_longitude' => $imageMetadata['gps_longitude'] ?? null,
     'gps_display' => (string)($imageMetadata['gps_display'] ?? ''),
+    'favorite' => false,
+    'preference_rank' => null,
 ];
 
 $entries[] = $entry;

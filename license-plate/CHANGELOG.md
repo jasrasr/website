@@ -2,6 +2,15 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.8] - 2026-07-25
+
+### Added
+- Log entries can now be edited in place for manual plate/state correction.
+- Plates can now be marked as favorites and assigned a personal preference rank from 1 to 10.
+
+### Changed
+- Corrected entries now show the original scanner plus `Manual` in the scanner column.
+
 ## [1.2.7] - 2026-07-25
 
 ### Added

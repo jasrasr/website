@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.4
-    Description: Shared configuration for batch license plate photo uploads, metadata/state extraction, changelog helpers, duplicate cleanup, and clarity scoring.
+    Revision: 1.2.8
+    Description: Shared configuration for batch license plate photo uploads, metadata/state extraction, changelog helpers, duplicate cleanup, clarity scoring, and manual entry updates.
 */
 
 declare(strict_types=1);
@@ -10,7 +10,7 @@ declare(strict_types=1);
 date_default_timezone_set('America/New_York');
 
 const APP_NAME = 'License Plate Photo Logger';
-const APP_REVISION = '1.2.4';
+const APP_REVISION = '1.2.8';
 const APP_UPDATED = '2026-07-25';
 
 const DATA_DIR = __DIR__ . '/data';
@@ -193,6 +193,27 @@ function normalizeConfidenceValue(float|int|string|null $value): int
     return max(0, min(100, $normalized));
 }
 
+function normalizePreferenceRank(mixed $value): ?int
+{
+    if ($value === null || $value === '') {
+        return null;
+    }
+    $rank = (int)$value;
+    if ($rank < 1 || $rank > 10) {
+        return null;
+    }
+    return $rank;
+}
+
+function normalizeBooleanFlag(mixed $value): bool
+{
+    if (is_bool($value)) {
+        return $value;
+    }
+    $normalized = strtolower(trim((string)$value));
+    return in_array($normalized, ['1', 'true', 'yes', 'on'], true);
+}
+
 function scanModeLabel(string $mode): string
 {
     return match($mode) {
@@ -202,6 +223,15 @@ function scanModeLabel(string $mode): string
         'manual' => 'Manual',
         default => $mode,
     };
+}
+
+function entryScannerLabel(array $entry): string
+{
+    $label = scanModeLabel((string)($entry['scan_mode'] ?? ''));
+    if (!empty($entry['manual_corrected'])) {
+        $label .= ' + Manual';
+    }
+    return $label;
 }
 
 function usStateMap(): array
@@ -560,6 +590,7 @@ function rebuildHashIndexFromEntries(array $entries): array
             'error' => $entry['error'] ?? '',
             'clarity_score' => $entry['clarity_score'] ?? 0,
             'best_plate_photo' => $entry['best_plate_photo'] ?? false,
+            'manual_corrected' => $entry['manual_corrected'] ?? false,
             'photo_state' => $entry['photo_state'] ?? '',
             'date_taken' => $entry['date_taken'] ?? '',
             'gps_latitude' => $entry['gps_latitude'] ?? null,
@@ -568,6 +599,75 @@ function rebuildHashIndexFromEntries(array $entries): array
         ];
     }
     return $index;
+}
+
+function updateLogEntry(string $id, array $changes): ?array
+{
+    $entries = readLogEntries();
+    $entryIndex = null;
+    foreach ($entries as $index => $entry) {
+        if ((string)($entry['id'] ?? '') === $id) {
+            $entryIndex = $index;
+            break;
+        }
+    }
+
+    if ($entryIndex === null) {
+        return null;
+    }
+
+    $entry = $entries[$entryIndex];
+
+    $manualFieldsChanged = false;
+
+    if (array_key_exists('plate', $changes)) {
+        $plate = normalizePlateText((string)$changes['plate']);
+        $existingPlate = normalizePlateText((string)($entry['plate_normalized'] ?? $entry['plate'] ?? ''));
+        if ($plate !== $existingPlate) {
+            $entry['plate'] = $plate;
+            $entry['plate_normalized'] = $plate;
+            if ($plate !== '') {
+                $entry['scan_status'] = 'complete';
+                $entry['error'] = '';
+            }
+            $manualFieldsChanged = true;
+        }
+    }
+
+    if (array_key_exists('plate_state', $changes)) {
+        $plateState = normalizeUsStateName((string)$changes['plate_state']);
+        if ($plateState !== (string)($entry['plate_state'] ?? '')) {
+            $entry['plate_state'] = $plateState;
+            $manualFieldsChanged = true;
+        }
+    }
+
+    if ($manualFieldsChanged) {
+        $entry['manual_corrected'] = true;
+        $entry['manual_corrected_at'] = date('c');
+    }
+
+    if (array_key_exists('favorite', $changes)) {
+        $entry['favorite'] = normalizeBooleanFlag($changes['favorite']);
+    }
+
+    if (array_key_exists('preference_rank', $changes)) {
+        $entry['preference_rank'] = normalizePreferenceRank($changes['preference_rank']);
+    }
+
+    $entries[$entryIndex] = $entry;
+    refreshDuplicatePlateFlags($entries);
+    recalculatePlateClarityFlags($entries);
+    writeJsonFile(LOG_FILE, $entries);
+    writeJsonFile(HASH_INDEX_FILE, rebuildHashIndexFromEntries($entries));
+
+    foreach ($entries as $updatedEntry) {
+        if ((string)($updatedEntry['id'] ?? '') === $id) {
+            return $updatedEntry;
+        }
+    }
+
+    return null;
 }
 
 function deleteLogEntries(array $ids): array

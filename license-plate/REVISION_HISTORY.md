@@ -2,9 +2,20 @@
 
 ## Current Revision
 
-**Version:** 1.2.7  
+**Version:** 1.2.8  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.8 — Manual Correction, Favorites, and Preference Ranking
+
+Added an in-place log editor so missed or incorrect plate values can be corrected manually, and plates can now be marked as favorites with a 1-10 personal ranking.
+
+Key implementation changes:
+
+- `update_entry.php` updates existing log rows with manual plate/state corrections, favorite status, and preference rank.
+- `view_log.php` adds visible `Fav` and `Rank` columns plus an edit dialog for every row.
+- `config.php` now supports manual update normalization and scanner labels that show `+ Manual` after a correction.
+- `process_upload.php` initializes new entries with favorite and rank defaults.
 
 ## Revision 1.2.7 — Daily Upload Volume Chart
 

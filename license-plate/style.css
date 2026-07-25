@@ -1,4 +1,4 @@
-/* Revision: 1.2.7 */
+/* Revision: 1.2.8 */
 :root {
     --bg: #f5f6f8;
     --surface: #ffffff;
@@ -245,6 +245,8 @@ th {
 .log-table .col-status { min-width: 140px; }
 .log-table .col-plate { min-width: 110px; }
 .log-table .col-confidence { min-width: 110px; }
+.log-table .col-favorite { min-width: 64px; }
+.log-table .col-rank { min-width: 72px; }
 .log-table .col-clarity { min-width: 90px; }
 .log-table .col-state { min-width: 110px; }
 .log-table .col-date { min-width: 160px; }
@@ -258,6 +260,55 @@ th {
 
 .filter-status {
     margin: 8px 0 0;
+}
+
+.inline-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.entry-favorite,
+.entry-rank {
+    text-align: center;
+}
+
+.entry-editor-panel {
+    width: min(560px, 96vw);
+}
+
+.entry-editor-body {
+    padding: 16px;
+}
+
+.entry-editor-body input[type="text"],
+.entry-editor-body select {
+    width: 100%;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fbfcfd;
+    font: inherit;
+}
+
+.entry-editor-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 4px 0 12px;
+}
+
+.entry-editor-check input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+.entry-editor-actions {
+    display: flex;
+    justify-content: end;
+    gap: 10px;
+    padding: 0 16px 16px;
 }
 
 .daily-chart {
