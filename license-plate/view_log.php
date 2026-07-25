@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.29
-    Description: Log viewer with a denser desktop table, `More Info` metadata overlay, live duplicate summary refresh, bulk reprocessing, visible stat filters, Eastern timestamp display, uploaded-date deep links, project revision badge, cache-busted stylesheet loading, stable overlay behavior, manual correction tools, quick delete reasons, multi-delete actions, favorites/ranking, and reliable photo preview behavior.
+    Revision: 1.2.30
+    Description: Log viewer with immediate live search updates, a denser desktop table, `More Info` metadata overlay, live duplicate summary refresh, bulk reprocessing, visible stat filters, Eastern timestamp display, uploaded-date deep links, project revision badge, cache-busted stylesheet loading, stable overlay behavior, manual correction tools, quick delete reasons, multi-delete actions, favorites/ranking, and reliable photo preview behavior.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -1455,6 +1455,9 @@ document.addEventListener('keydown', event => {
 
 if (entrySearch) {
     entrySearch.addEventListener('input', applyEntrySearch);
+    entrySearch.addEventListener('search', applyEntrySearch);
+    entrySearch.addEventListener('keyup', applyEntrySearch);
+    entrySearch.addEventListener('change', applyEntrySearch);
 }
 
 if (selectAllFailedButton) {

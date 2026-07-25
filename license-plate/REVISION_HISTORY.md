@@ -2,9 +2,17 @@
 
 ## Current Revision
 
-**Version:** 1.2.29  
+**Version:** 1.2.30  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.30 — Immediate Search Refresh
+
+Hardened the log-page search input so filtering reacts immediately while typing, clearing, or using the browser search-field controls.
+
+Key implementation changes:
+
+- `view_log.php` now listens for `input`, `search`, `keyup`, and `change` events on the entry search field.
 
 ## Revision 1.2.29 — Denser Log Table And Last Upload Preview
 

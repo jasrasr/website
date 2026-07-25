@@ -2,6 +2,11 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.30] - 2026-07-25
+
+### Changed
+- `view_log.php` search filtering now refreshes immediately while typing, clearing the search field, or using browser search-input controls.
+
 ## [1.2.29] - 2026-07-25
 
 ### Changed
