@@ -16,3 +16,6 @@ Baseline PHP app for private, per-user loan tracking and payoff planning.
 - Per-loan amortization and accelerated payoff tables
 - Snowball and avalanche strategy comparisons
 - Admin-only user management with storage-usage visibility only
+
+## Revisioning Rule
+- Initial baseline starts at `1.0.0`

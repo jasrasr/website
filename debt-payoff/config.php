@@ -1,7 +1,7 @@
 <?php
 /*
     Debt Payoff Planner
-    Revision: 0.1.0
+    Revision: 1.0.0
     Description: Shared configuration, authentication, private per-user storage, payoff calculations, strategy simulations, changelog rendering, and admin helpers.
 */
 
@@ -18,7 +18,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 const APP_NAME = 'Debt Payoff Planner';
-const APP_REVISION = '0.1.0';
+const APP_REVISION = '1.0.0';
 const APP_UPDATED = '2026-07-25';
 const DATA_DIR = __DIR__ . '/data';
 const USER_DATA_DIR = DATA_DIR . '/users';
@@ -779,7 +779,7 @@ function simulateStrategy(array $loans, float $extraBudget, string $method): arr
     ];
 }
 
-function overallMetrics(array $loans): array
+function overallMetrics(array $loans, ?array $loanSummaries = null): array
 {
     $totalDebt = 0.0;
     $totalOriginalBalance = 0.0;
@@ -798,7 +798,10 @@ function overallMetrics(array $loans): array
         $totalMinimums += (float)($loan['monthly_payment'] ?? 0);
         $weightedAprNumerator += $balance * (float)($loan['apr'] ?? 0);
 
-        $summary = summarizeLoan($loan);
+        $loanId = (string)($loan['id'] ?? '');
+        $summary = ($loanSummaries !== null && isset($loanSummaries[$loanId]) && is_array($loanSummaries[$loanId]))
+            ? $loanSummaries[$loanId]
+            : summarizeLoan($loan);
         $baselineInterest += $summary['baseline']['interest_total'];
         $acceleratedInterest += $summary['accelerated']['interest_total'];
 

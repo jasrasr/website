@@ -1,7 +1,7 @@
 <?php
 /*
     Debt Payoff Planner
-    Revision: 0.1.0
+    Revision: 1.0.0
     Description: Project changelog page rendered from CHANGELOG.md with shared project revision display and navigation.
 */
 
@@ -36,7 +36,7 @@ $changelog = changelogHtml();
         <a href="changelog.php">Changelog</a>
         <a href="todo.php">Todo</a>
         <?php if ($currentAccount !== null): ?>
-        <a href="index.php?logout=1">Logout</a>
+        <a href="index.php?logout=1" class="nav-button">Logout</a>
         <?php endif; ?>
     </nav>
 

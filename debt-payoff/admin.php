@@ -1,7 +1,7 @@
 <?php
 /*
     Debt Payoff Planner
-    Revision: 0.1.0
+    Revision: 1.0.0
     Description: Admin-only user management for adding, editing, deleting, and resetting users while exposing only storage usage and account metadata.
 */
 
@@ -82,7 +82,7 @@ $projectModifiedAt = readProjectModifiedAt();
         <a href="admin.php">Admin</a>
         <a href="changelog.php">Changelog</a>
         <a href="todo.php">Todo</a>
-        <a href="index.php?logout=1">Logout</a>
+        <a href="index.php?logout=1" class="nav-button">Logout</a>
     </nav>
 
     <header class="page-header">

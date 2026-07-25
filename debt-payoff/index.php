@@ -1,7 +1,7 @@
 <?php
 /*
     Debt Payoff Planner
-    Revision: 0.1.0
+    Revision: 1.0.0
     Description: Main dashboard with login, registration, private debt tracking, payoff modeling, and strategy summaries.
 */
 
@@ -133,7 +133,11 @@ endif;
 
 $userData = readUserData((string)$currentAccount['username']);
 $loans = $userData['loans'];
-$metrics = overallMetrics($loans);
+$loanSummaries = [];
+foreach ($loans as $loan) {
+    $loanSummaries[(string)($loan['id'] ?? '')] = summarizeLoan($loan);
+}
+$metrics = overallMetrics($loans, $loanSummaries);
 $strategyBudget = (float)($userData['profile']['strategy_extra_budget'] ?? 0);
 $snowball = simulateStrategy($loans, $strategyBudget, 'snowball');
 $avalanche = simulateStrategy($loans, $strategyBudget, 'avalanche');
@@ -159,7 +163,7 @@ $avalanche = simulateStrategy($loans, $strategyBudget, 'avalanche');
         <?php endif; ?>
         <a href="changelog.php">Changelog</a>
         <a href="todo.php">Todo</a>
-        <a href="index.php?logout=1">Logout</a>
+        <a href="index.php?logout=1" class="nav-button">Logout</a>
     </nav>
 
     <header class="page-header">
@@ -298,7 +302,7 @@ $avalanche = simulateStrategy($loans, $strategyBudget, 'avalanche');
     <?php endif; ?>
 
     <?php foreach ($loans as $loan): ?>
-    <?php $summary = summarizeLoan($loan); ?>
+    <?php $summary = $loanSummaries[(string)($loan['id'] ?? '')] ?? summarizeLoan($loan); ?>
     <section class="card loan-card">
         <div class="loan-card-header">
             <div>

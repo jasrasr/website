@@ -1,4 +1,4 @@
-/* Debt Payoff Planner | Revision: 0.1.0 | Description: Shared layout, dashboard, forms, admin, badge, and payoff schedule styling. */
+/* Debt Payoff Planner | Revision: 1.0.0 | Description: Shared layout, dashboard, forms, admin, badge, and payoff schedule styling. */
 :root {
     --bg: #f3f5f8;
     --surface: #ffffff;
@@ -57,6 +57,23 @@ h1, h2, h3 { margin-top: 0; }
     flex-wrap: wrap;
     gap: 14px;
     margin-bottom: 18px;
+}
+
+.nav-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 14px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.nav-button:hover {
+    background: var(--accent-dark);
+    color: #fff;
 }
 
 .page-header {
