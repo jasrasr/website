@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.10
-    Description: Log viewer with wider desktop layout, visible stat filters, manual correction tools, favorites/ranking, and resilient photo overlay preview.
+    Revision: 1.2.11
+    Description: Log viewer with wider desktop layout, visible stat filters, uploaded-date deep links, manual correction tools, favorites/ranking, and resilient photo overlay preview.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -13,6 +13,10 @@ $duplicatePlates = array_filter($counts, fn($count) => $count > 1);
 $pendingEntries = array_filter($entries, fn($e) => ($e['scan_status'] ?? '') === 'pending');
 $failedPendingEntries = array_filter($pendingEntries, fn($e) => !empty($e['error']));
 $metadataEntries = array_filter($entries, fn($e) => !empty($e['date_taken']) || !empty($e['gps_display']) || !empty($e['plate_state']) || !empty($e['photo_state']));
+$uploadedDateFilter = trim((string)($_GET['uploaded'] ?? ''));
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $uploadedDateFilter)) {
+    $uploadedDateFilter = '';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -79,6 +83,12 @@ $metadataEntries = array_filter($entries, fn($e) => !empty($e['date_taken']) || 
         <div class="filters">
             <label class="filter-field" for="entrySearch">Search Entries</label>
             <input type="search" id="entrySearch" placeholder="Search plate, state, GPS, date taken, file, message">
+            <?php if ($uploadedDateFilter !== ''): ?>
+                <div class="filter-chip-row">
+                    <span class="filter-chip">Uploaded date: <?= h($uploadedDateFilter) ?></span>
+                    <a href="view_log.php" class="chip-link">Clear Date Filter</a>
+                </div>
+            <?php endif; ?>
             <p id="entryFilterStatus" class="small filter-status">Showing all entries.</p>
         </div>
         <div class="table-wrap">
@@ -135,6 +145,7 @@ $metadataEntries = array_filter($entries, fn($e) => !empty($e['date_taken']) || 
                     data-plate-value="<?= h(strtolower((string)($entry['plate'] ?? ''))) ?>"
                     data-favorite="<?= !empty($entry['favorite']) ? 'true' : 'false' ?>"
                     data-rank="<?= h((string)($entry['preference_rank'] ?? '')) ?>"
+                    data-uploaded-date="<?= h(substr((string)($entry['processed_at'] ?? ''), 0, 10)) ?>"
                     data-search="<?= h($searchBlob) ?>"
                 >
                     <td>
@@ -279,6 +290,7 @@ const closeEntryEditorButton = document.getElementById('closeEntryEditor');
 const cancelEntryEditorButton = document.getElementById('cancelEntryEditor');
 let activeFilterMode = 'all';
 let activePlateFilter = '';
+let activeUploadedDateFilter = <?= json_encode($uploadedDateFilter, JSON_UNESCAPED_SLASHES) ?>;
 let activeEditRow = null;
 
 function openPhotoOverlay(src, label) {
@@ -396,8 +408,9 @@ function applyEntrySearch() {
             (activeFilterMode === 'metadata' && row.dataset.hasMetadata === 'true') ||
             (activeFilterMode === 'unique' && row.dataset.status === 'complete' && row.dataset.duplicatePlate !== 'true');
         const plateMatch = activePlateFilter === '' || row.dataset.plateValue === activePlateFilter;
+        const uploadedDateMatch = activeUploadedDateFilter === '' || row.dataset.uploadedDate === activeUploadedDateFilter;
         const searchMatch = term === '' || (row.dataset.search || '').includes(term);
-        row.style.display = modeMatch && plateMatch && searchMatch ? '' : 'none';
+        row.style.display = modeMatch && plateMatch && uploadedDateMatch && searchMatch ? '' : 'none';
     });
 
     const labels = [];
@@ -405,6 +418,7 @@ function applyEntrySearch() {
         labels.push(activeFilterMode === 'duplicate-plate' ? 'duplicate plates' : activeFilterMode.replace('-', ' '));
     }
     if (activePlateFilter) labels.push(`plate ${activePlateFilter.toUpperCase()}`);
+    if (activeUploadedDateFilter) labels.push(`uploaded ${activeUploadedDateFilter}`);
     if (term) labels.push(`search "${term}"`);
     if (entryFilterStatus) entryFilterStatus.textContent = labels.length ? `Filtered by ${labels.join(', ')}.` : 'Showing all entries.';
     updatePendingCount();

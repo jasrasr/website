@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.9
-    Description: Stats dashboard with daily upload volume chart and summary counts.
+    Revision: 1.2.11
+    Description: Stats dashboard with daily upload volume chart, summary counts, and clickable date drill-down links into the log.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -58,17 +58,20 @@ $maxUploadsPerDay = empty($uploadsByDay) ? 0 : max($uploadsByDay);
 
     <section class="card stats-chart-card">
         <h2>Uploads Per Day</h2>
-        <p class="small">Daily count of logged plate uploads based on the `Uploaded` timestamp.</p>
+        <p class="small">Daily count of logged plate uploads based on the `Uploaded` timestamp. Click a day to open the log filtered to that upload date.</p>
         <div class="daily-chart daily-chart-compact" role="img" aria-label="Bar chart of uploaded plates per day">
             <?php foreach ($uploadsByDay as $day => $count): ?>
                 <?php
                 $barHeight = $maxUploadsPerDay > 0 ? max(10, (int)round(($count / $maxUploadsPerDay) * 120)) : 10;
+                $targetHref = $day === 'Unknown' ? 'view_log.php' : ('view_log.php?uploaded=' . rawurlencode($day));
                 ?>
                 <div class="daily-chart-item" title="<?= h($day . ': ' . $count) ?>">
                     <span class="daily-chart-count"><?= h((string)$count) ?></span>
-                    <div class="daily-chart-bar-wrap daily-chart-bar-wrap-compact">
-                        <div class="daily-chart-bar" style="height: <?= $barHeight ?>px"></div>
-                    </div>
+                    <a href="<?= h($targetHref) ?>" class="daily-chart-link" aria-label="Open log for <?= h($day) ?> with <?= h((string)$count) ?> uploads">
+                        <div class="daily-chart-bar-wrap daily-chart-bar-wrap-compact">
+                            <div class="daily-chart-bar" style="height: <?= $barHeight ?>px"></div>
+                        </div>
+                    </a>
                     <span class="daily-chart-label"><?= h($day) ?></span>
                 </div>
             <?php endforeach; ?>

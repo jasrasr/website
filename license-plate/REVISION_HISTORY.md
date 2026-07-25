@@ -2,9 +2,19 @@
 
 ## Current Revision
 
-**Version:** 1.2.10  
+**Version:** 1.2.11  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.11 — Stats Chart Drill-Down Links
+
+Made the stats-page daily upload bars clickable so they open the log page already filtered to the selected uploaded date.
+
+Key implementation changes:
+
+- `stats.php` now links each daily upload bar to `view_log.php?uploaded=YYYY-MM-DD`.
+- `view_log.php` now accepts an uploaded-date filter and shows a clear-filter chip when active.
+- `style.css` adds the date-filter chip styling and hover treatment for clickable chart bars.
 
 ## Revision 1.2.10 — Reliable Photo Preview Trigger
 

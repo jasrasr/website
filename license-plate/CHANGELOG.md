@@ -2,6 +2,11 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.11] - 2026-07-25
+
+### Added
+- Clicking a day bar on the stats page now opens the log already filtered to that uploaded date.
+
 ## [1.2.10] - 2026-07-25
 
 ### Fixed

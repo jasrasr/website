@@ -1,4 +1,4 @@
-/* Revision: 1.2.9 */
+/* Revision: 1.2.11 */
 :root {
     --bg: #f5f6f8;
     --surface: #ffffff;
@@ -273,6 +273,31 @@ th {
     margin: 8px 0 0;
 }
 
+.filter-chip-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border: 1px solid #b8c8ea;
+    border-radius: 999px;
+    background: #eef4ff;
+    color: #24406f;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.chip-link {
+    font-size: 13px;
+    font-weight: 700;
+}
+
 .inline-actions {
     display: flex;
     flex-wrap: wrap;
@@ -344,6 +369,12 @@ th {
     gap: 8px;
 }
 
+.daily-chart-link {
+    display: block;
+    width: 100%;
+    text-decoration: none;
+}
+
 .daily-chart-count {
     font-size: 13px;
     font-weight: 700;
@@ -371,6 +402,11 @@ th {
     min-height: 12px;
     border-radius: 10px 10px 0 0;
     background: linear-gradient(180deg, #7da6ff 0%, #155dfc 100%);
+}
+
+.daily-chart-link:hover .daily-chart-bar,
+.daily-chart-link:focus-visible .daily-chart-bar {
+    background: linear-gradient(180deg, #99b8ff 0%, #0f46be 100%);
 }
 
 .daily-chart-label {
