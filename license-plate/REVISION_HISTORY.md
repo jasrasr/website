@@ -2,9 +2,18 @@
 
 ## Current Revision
 
-**Version:** 1.2.26  
+**Version:** 1.2.27  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.27 — Deleted Audit Photo Overlay
+
+Changed deleted-audit photo links to use the same in-page large overlay preview as the main log instead of opening the raw image in a separate browser tab.
+
+Key implementation changes:
+
+- `deleted_audit.php` now renders the shared photo overlay structure used elsewhere in the app.
+- `deleted_audit.php` now intercepts deleted-photo links and opens them inside the overlay with `X`, backdrop, and `Escape` close behavior.
 
 ## Revision 1.2.26 — Overlay Visibility And Photo Preview Fix
 

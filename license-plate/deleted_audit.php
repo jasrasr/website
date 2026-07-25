@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.24
-    Description: Deleted-item audit page with Eastern timestamp display, retention age, permanent delete actions, purge logging, purge controls, a project revision badge, and cache-busted stylesheet loading.
+    Revision: 1.2.27
+    Description: Deleted-item audit page with Eastern timestamp display, retention age, permanent delete actions, purge logging, purge controls, a project revision badge, cache-busted stylesheet loading, and overlay-based photo preview.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -142,7 +142,14 @@ $purgeLogEntries = readDeletedPurgeLogEntries();
                             <td><?= h((string)($entry['plate_state'] ?? '')) ?></td>
                             <td>
                                 <?php if ($deletedPath !== ''): ?>
-                                    <a href="<?= h($deletedPath) ?>" target="_blank" rel="noopener">photo</a>
+                                    <a
+                                        href="<?= h($deletedPath) ?>"
+                                        class="photo-preview-link"
+                                        data-photo-src="<?= h($deletedPath) ?>"
+                                        data-photo-label="<?= h((string)($entry['original_file'] ?? ($entry['plate'] ?? 'Deleted photo preview'))) ?>"
+                                        target="_blank"
+                                        rel="noopener"
+                                    >photo</a>
                                 <?php endif; ?>
                             </td>
                             <td><?= h((string)($entry['file_note'] ?? '')) ?></td>
@@ -164,10 +171,63 @@ $purgeLogEntries = readDeletedPurgeLogEntries();
         <?php endif; ?>
     </section>
 </main>
+<div id="photoOverlay" class="photo-overlay" hidden>
+    <div class="photo-overlay-backdrop" data-close-photo-overlay="true"></div>
+    <div class="photo-overlay-panel" role="dialog" aria-modal="true" aria-labelledby="photoOverlayTitle">
+        <div class="photo-overlay-header">
+            <strong id="photoOverlayTitle">Photo Preview</strong>
+            <button type="button" id="closePhotoOverlay" class="photo-overlay-close" aria-label="Close photo preview">X</button>
+        </div>
+        <div class="photo-overlay-body">
+            <img id="photoOverlayImage" src="" alt="Photo preview">
+        </div>
+    </div>
+</div>
 <script>
 const selectAllDeletedAuditButton = document.getElementById('selectAllDeletedAudit');
 const deletedAuditCheckboxes = Array.from(document.querySelectorAll('.deleted-audit-select'));
 const deletedAuditForm = document.getElementById('deletedAuditForm');
+const photoPreviewLinks = Array.from(document.querySelectorAll('.photo-preview-link'));
+const photoOverlay = document.getElementById('photoOverlay');
+const photoOverlayImage = document.getElementById('photoOverlayImage');
+const photoOverlayTitle = document.getElementById('photoOverlayTitle');
+const closePhotoOverlayButton = document.getElementById('closePhotoOverlay');
+
+function openPhotoOverlay(src, label) {
+    if (!photoOverlay || !photoOverlayImage) return;
+    photoOverlayImage.src = src;
+    photoOverlayImage.alt = label || 'Photo preview';
+    if (photoOverlayTitle) {
+        photoOverlayTitle.textContent = label || 'Photo Preview';
+    }
+    photoOverlay.hidden = false;
+    document.body.classList.add('overlay-open');
+}
+
+function closePhotoOverlay() {
+    if (!photoOverlay || !photoOverlayImage) return;
+    photoOverlay.hidden = true;
+    photoOverlayImage.src = '';
+    photoOverlayImage.alt = 'Photo preview';
+    if (photoOverlayTitle) {
+        photoOverlayTitle.textContent = 'Photo Preview';
+    }
+    document.body.classList.remove('overlay-open');
+}
+
+function openPhotoPreviewFromLink(link) {
+    if (!link || !photoOverlay || !photoOverlayImage) {
+        return true;
+    }
+    const src = (link.dataset && link.dataset.photoSrc) || link.getAttribute('href') || '';
+    const label = (link.dataset && link.dataset.photoLabel) || 'Photo Preview';
+    if (!src) {
+        return true;
+    }
+
+    openPhotoOverlay(src, label);
+    return false;
+}
 
 if (selectAllDeletedAuditButton) {
     selectAllDeletedAuditButton.addEventListener('click', () => {
@@ -176,6 +236,28 @@ if (selectAllDeletedAuditButton) {
             box.checked = !allSelected;
         });
         selectAllDeletedAuditButton.textContent = allSelected ? 'Select All' : 'Clear Selection';
+    });
+}
+
+photoPreviewLinks.forEach(link => {
+    link.addEventListener('click', event => {
+        event.stopPropagation();
+        if (openPhotoPreviewFromLink(link) === false) {
+            event.preventDefault();
+        }
+    });
+});
+
+if (closePhotoOverlayButton) {
+    closePhotoOverlayButton.addEventListener('click', closePhotoOverlay);
+}
+
+if (photoOverlay) {
+    photoOverlay.addEventListener('click', event => {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.dataset.closePhotoOverlay === 'true') {
+            closePhotoOverlay();
+        }
     });
 }
 
@@ -196,6 +278,12 @@ function confirmPermanentDelete(event) {
 function confirmPurge(event) {
     return confirm('Purge all deleted audit items and remove all archived deleted photos?');
 }
+
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && photoOverlay && !photoOverlay.hidden) {
+        closePhotoOverlay();
+    }
+});
 </script>
 </body>
 </html>

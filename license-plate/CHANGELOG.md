@@ -2,6 +2,11 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.27] - 2026-07-25
+
+### Fixed
+- `deleted_audit.php` photo links now open in the same large closable overlay used by the log page instead of navigating away to the raw image file.
+
 ## [1.2.26] - 2026-07-25
 
 ### Fixed
