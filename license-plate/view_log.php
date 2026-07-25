@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.9
-    Description: Log viewer with wider desktop layout, visible stat filters, manual correction tools, favorites/ranking, and photo overlay preview.
+    Revision: 1.2.10
+    Description: Log viewer with wider desktop layout, visible stat filters, manual correction tools, favorites/ranking, and resilient photo overlay preview.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -160,6 +160,7 @@ $metadataEntries = array_filter($entries, fn($e) => !empty($e['date_taken']) || 
                                 class="photo-preview-link"
                                 data-photo-src="uploads/<?= h($entry['stored_file']) ?>"
                                 data-photo-label="<?= h($entry['original_file'] ?? ($entry['plate'] ?? 'Photo preview')) ?>"
+                                onclick="return openPhotoPreviewFromLink(this);"
                             >photo</a>
                         <?php endif; ?>
                     </td>
@@ -296,6 +297,16 @@ function closePhotoOverlay() {
     photoOverlayImage.alt = 'Photo preview';
     if (photoOverlayTitle) photoOverlayTitle.textContent = 'Photo Preview';
     document.body.classList.remove('overlay-open');
+}
+
+function openPhotoPreviewFromLink(link) {
+    const src = link?.dataset?.photoSrc || link?.getAttribute?.('href') || '';
+    const label = link?.dataset?.photoLabel || 'Photo Preview';
+    if (!src) {
+        return true;
+    }
+    openPhotoOverlay(src, label);
+    return false;
 }
 
 function openEntryEditor(button) {
@@ -650,7 +661,7 @@ duplicatePlateFilters.forEach(button => {
 photoPreviewLinks.forEach(link => {
     link.addEventListener('click', event => {
         event.preventDefault();
-        openPhotoOverlay(link.dataset.photoSrc || link.getAttribute('href') || '', link.dataset.photoLabel || 'Photo Preview');
+        openPhotoPreviewFromLink(link);
     });
 });
 

@@ -2,9 +2,18 @@
 
 ## Current Revision
 
-**Version:** 1.2.9  
+**Version:** 1.2.10  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.10 — Reliable Photo Preview Trigger
+
+Hardened the log photo preview so clicking the `photo` link still opens the overlay even if later page scripts fail to bind the delegated click listener.
+
+Key implementation changes:
+
+- `view_log.php` now gives photo links an inline preview handler with the image URL as a normal fallback target.
+- The shared photo preview function is reused by both the inline handler and the JS event binding.
 
 ## Revision 1.2.9 — Dedicated Stats Page and Visible Log Filters
 

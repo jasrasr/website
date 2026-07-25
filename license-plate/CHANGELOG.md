@@ -2,6 +2,11 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.10] - 2026-07-25
+
+### Fixed
+- Clicking `photo` in the log now reliably opens the in-page preview overlay again.
+
 ## [1.2.9] - 2026-07-25
 
 ### Fixed
