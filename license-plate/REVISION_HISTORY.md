@@ -2,9 +2,18 @@
 
 ## Current Revision
 
-**Version:** 1.2.6  
+**Version:** 1.2.7  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.7 — Daily Upload Volume Chart
+
+Added a per-day upload chart to the log page so activity can be reviewed visually instead of only through the raw table.
+
+Key implementation changes:
+
+- `view_log.php` now groups log entries by uploaded date and renders a daily bar chart.
+- `style.css` adds the chart layout and horizontal scrolling for days that exceed the viewport width.
 
 ## Revision 1.2.6 — In-Page Photo Overlay Preview
 

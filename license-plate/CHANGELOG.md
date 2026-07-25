@@ -2,6 +2,11 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.7] - 2026-07-25
+
+### Added
+- The log page now shows a bar chart of how many plates were uploaded per day, based on the stored upload timestamp.
+
 ## [1.2.6] - 2026-07-25
 
 ### Changed
