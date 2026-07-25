@@ -1,4 +1,4 @@
-/* Debt Payoff Planner | Revision: 1.0.0 | Description: Shared layout, dashboard, forms, admin, badge, and payoff schedule styling. */
+/* Debt Payoff Planner | Revision: 1.0.1 | Description: Shared layout, dashboard, forms, admin, sharing, topbar metadata, and payoff schedule styling. */
 :root {
     --bg: #f3f5f8;
     --surface: #ffffff;
@@ -30,7 +30,6 @@ h1, h2, h3 { margin-top: 0; }
 .container {
     max-width: 1440px;
     margin: 0 auto;
-    position: relative;
 }
 
 .container-wide {
@@ -38,25 +37,19 @@ h1, h2, h3 { margin-top: 0; }
     width: min(100%, calc(100vw - 32px));
 }
 
-.project-badge {
-    position: absolute;
-    top: 0;
-    right: 0;
-    max-width: 260px;
-    padding: 10px 12px;
-    background: #eef4ff;
-    border: 1px solid #c8d8fb;
-    border-radius: 8px;
-    color: var(--muted);
-    font-size: 13px;
-    line-height: 1.5;
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
 }
 
 .nav {
     display: flex;
     flex-wrap: wrap;
     gap: 14px;
-    margin-bottom: 18px;
+    margin-bottom: 0;
 }
 
 .nav-button {
@@ -74,6 +67,16 @@ h1, h2, h3 { margin-top: 0; }
 .nav-button:hover {
     background: var(--accent-dark);
     color: #fff;
+}
+
+.top-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 16px;
+    color: var(--muted);
+    font-size: 13px;
+    white-space: nowrap;
 }
 
 .page-header {
@@ -309,10 +312,13 @@ th {
     .loan-form-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-
-    .project-badge {
-        position: static;
-        margin-bottom: 16px;
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .top-meta {
+        justify-content: flex-start;
+        white-space: normal;
     }
 }
 

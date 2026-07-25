@@ -1,8 +1,8 @@
 <?php
 /*
     Debt Payoff Planner
-    Revision: 1.0.0
-    Description: Main dashboard with login, registration, private debt tracking, payoff modeling, and strategy summaries.
+    Revision: 1.0.1
+    Description: Main dashboard with login, registration, shared viewer/editor debt access, payoff modeling, and strategy summaries.
 */
 
 declare(strict_types=1);
@@ -38,16 +38,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $account = requireLogin();
         $username = (string)$account['username'];
+        $targetDatasetOwner = resolveDatasetOwner($username, (string)($_POST['dataset_owner'] ?? $_GET['dataset'] ?? $username));
 
         if ($action === 'save_loan') {
-            saveLoan($username, $_POST);
-            $flash = 'Loan saved.';
+            if (!canEditDataset($username, $targetDatasetOwner)) {
+                $error = 'You do not have edit access to that dataset.';
+            } else {
+                saveLoan($targetDatasetOwner, $_POST);
+                $flash = 'Loan saved.';
+            }
         } elseif ($action === 'delete_loan') {
-            deleteLoan($username, (string)($_POST['loan_id'] ?? ''));
-            $flash = 'Loan deleted.';
+            if (!canEditDataset($username, $targetDatasetOwner)) {
+                $error = 'You do not have edit access to that dataset.';
+            } else {
+                deleteLoan($targetDatasetOwner, (string)($_POST['loan_id'] ?? ''));
+                $flash = 'Loan deleted.';
+            }
         } elseif ($action === 'save_strategy') {
-            updateStrategyBudget($username, (float)($_POST['strategy_extra_budget'] ?? 0));
-            $flash = 'Strategy budget updated.';
+            if (!canEditDataset($username, $targetDatasetOwner)) {
+                $error = 'You do not have edit access to that dataset.';
+            } else {
+                updateStrategyBudget($targetDatasetOwner, (float)($_POST['strategy_extra_budget'] ?? 0));
+                $flash = 'Strategy budget updated.';
+            }
+        } elseif ($action === 'grant_share') {
+            if ($targetDatasetOwner !== $username) {
+                $error = 'Only the owner can manage sharing.';
+            } else {
+                $result = grantSharedAccess($username, (string)($_POST['shared_username'] ?? ''), (string)($_POST['share_permission'] ?? 'viewer'));
+                if ($result['ok']) {
+                    $flash = 'Shared access saved.';
+                } else {
+                    $error = $result['error'] ?? 'Unable to save shared access.';
+                }
+            }
+        } elseif ($action === 'revoke_share') {
+            if ($targetDatasetOwner !== $username) {
+                $error = 'Only the owner can manage sharing.';
+            } else {
+                revokeSharedAccess($username, (string)($_POST['shared_username'] ?? ''));
+                $flash = 'Shared access removed.';
+            }
         }
     }
 }
@@ -68,15 +99,17 @@ if ($currentAccount === null):
 </head>
 <body>
 <main class="container">
-    <aside class="project-badge">
-        <strong>Project Rev:</strong> <?= h($projectRevision) ?><br>
-        <strong>Modified:</strong> <?= h($projectModifiedAt) ?>
-    </aside>
-    <nav class="nav">
-        <a href="index.php">Home</a>
-        <a href="changelog.php">Changelog</a>
-        <a href="todo.php">Todo</a>
-    </nav>
+    <div class="topbar">
+        <nav class="nav">
+            <a href="index.php">Home</a>
+            <a href="changelog.php">Changelog</a>
+            <a href="todo.php">Todo</a>
+        </nav>
+        <div class="top-meta">
+            <span><strong>Rev:</strong> <?= h($projectRevision) ?></span>
+            <span><strong>Modified:</strong> <?= h($projectModifiedAt) ?></span>
+        </div>
+    </div>
 
     <header class="page-header">
         <div>
@@ -121,7 +154,7 @@ if ($currentAccount === null):
             <div class="actions">
                 <button type="submit">Create Account</button>
             </div>
-            <p class="small">If no admin exists yet, the first new account created here will receive admin access.</p>
+            <p class="small">Registration is active. If no admin exists yet, the first new account created here will receive admin access.</p>
         </form>
     </section>
 </main>
@@ -131,7 +164,13 @@ if ($currentAccount === null):
 exit;
 endif;
 
-$userData = readUserData((string)$currentAccount['username']);
+$currentUsername = (string)$currentAccount['username'];
+$accessibleDatasets = accessibleDatasetsForUser($currentUsername);
+$datasetOwner = resolveDatasetOwner($currentUsername, (string)($_GET['dataset'] ?? $currentUsername));
+$datasetPermission = getSharePermission($datasetOwner, $currentUsername) ?? 'owner';
+$canEditCurrentDataset = canEditDataset($currentUsername, $datasetOwner);
+$isOwnDataset = $datasetOwner === $currentUsername;
+$userData = readUserData($datasetOwner);
 $loans = $userData['loans'];
 $loanSummaries = [];
 foreach ($loans as $loan) {
@@ -152,24 +191,29 @@ $avalanche = simulateStrategy($loans, $strategyBudget, 'avalanche');
 </head>
 <body>
 <main class="container container-wide">
-    <aside class="project-badge">
-        <strong>Project Rev:</strong> <?= h($projectRevision) ?><br>
-        <strong>Modified:</strong> <?= h($projectModifiedAt) ?>
-    </aside>
-    <nav class="nav">
-        <a href="index.php">Dashboard</a>
-        <?php if (($currentAccount['role'] ?? 'user') === 'admin'): ?>
-        <a href="admin.php">Admin</a>
-        <?php endif; ?>
-        <a href="changelog.php">Changelog</a>
-        <a href="todo.php">Todo</a>
-        <a href="index.php?logout=1" class="nav-button">Logout</a>
-    </nav>
+    <div class="topbar">
+        <nav class="nav">
+            <a href="index.php">Dashboard</a>
+            <?php if (($currentAccount['role'] ?? 'user') === 'admin'): ?>
+            <a href="admin.php">Admin</a>
+            <?php endif; ?>
+            <a href="changelog.php">Changelog</a>
+            <a href="todo.php">Todo</a>
+            <a href="index.php?logout=1" class="nav-button">Logout</a>
+        </nav>
+        <div class="top-meta">
+            <span><strong>Rev:</strong> <?= h($projectRevision) ?></span>
+            <span><strong>Modified:</strong> <?= h($projectModifiedAt) ?></span>
+        </div>
+    </div>
 
     <header class="page-header">
         <div>
             <h1><?= h(APP_NAME) ?></h1>
-            <p class="small">Signed in as <strong><?= h((string)$currentAccount['username']) ?></strong>. Loan data is private to this account.</p>
+            <p class="small">
+                Signed in as <strong><?= h($currentUsername) ?></strong>.
+                Viewing <strong><?= h($datasetOwner) ?></strong>'s data as <strong><?= h(ucfirst($datasetPermission)) ?></strong>.
+            </p>
         </div>
         <div class="status-box">
             <strong>Loans:</strong> <?= count($loans) ?><br>
@@ -178,9 +222,90 @@ $avalanche = simulateStrategy($loans, $strategyBudget, 'avalanche');
         </div>
     </header>
 
+    <?php if ($error !== ''): ?>
+    <section class="card alert alert-error"><?= h($error) ?></section>
+    <?php endif; ?>
     <?php if ($flash !== ''): ?>
     <section class="card alert alert-success"><?= h($flash) ?></section>
     <?php endif; ?>
+    <?php if (!$canEditCurrentDataset): ?>
+    <section class="card">
+        <p class="small">This dataset is shared with you as view-only. You can review the numbers but cannot change them.</p>
+    </section>
+    <?php endif; ?>
+
+    <section class="two-column">
+        <form method="get" class="card">
+            <h2>Dataset Access</h2>
+            <label>Select which user's debt data to open
+                <select name="dataset">
+                    <?php foreach ($accessibleDatasets as $dataset): ?>
+                    <option value="<?= h((string)$dataset['owner_username']) ?>"<?= (string)$dataset['owner_username'] === $datasetOwner ? ' selected' : '' ?>><?= h((string)$dataset['label']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <div class="actions">
+                <button type="submit">Open Dataset</button>
+            </div>
+        </form>
+
+        <?php if ($isOwnDataset): ?>
+        <div class="card">
+            <h2>Share This Data</h2>
+            <form method="post" class="loan-form-grid">
+                <input type="hidden" name="action" value="grant_share">
+                <input type="hidden" name="dataset_owner" value="<?= h($datasetOwner) ?>">
+                <label>Username
+                    <input type="text" name="shared_username" required>
+                </label>
+                <label>Access
+                    <select name="share_permission"><?= renderPermissionOptions('viewer') ?></select>
+                </label>
+                <div class="actions full-width">
+                    <button type="submit">Grant Access</button>
+                </div>
+            </form>
+            <?php if (!empty($userData['sharing'])): ?>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Access</th>
+                            <th>Granted</th>
+                            <th>Revoke</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($userData['sharing'] as $share): ?>
+                        <tr>
+                            <td><?= h((string)$share['username']) ?></td>
+                            <td><?= h(ucfirst((string)$share['permission'])) ?></td>
+                            <td><?= h(formatTimestamp((string)($share['granted_at'] ?? ''))) ?></td>
+                            <td>
+                                <form method="post" class="inline-form">
+                                    <input type="hidden" name="action" value="revoke_share">
+                                    <input type="hidden" name="dataset_owner" value="<?= h($datasetOwner) ?>">
+                                    <input type="hidden" name="shared_username" value="<?= h((string)$share['username']) ?>">
+                                    <button type="submit" class="danger">Revoke</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php else: ?>
+            <p class="small">No shared users yet.</p>
+            <?php endif; ?>
+        </div>
+        <?php else: ?>
+        <div class="card">
+            <h2>Shared Access</h2>
+            <p class="small">This dataset belongs to <strong><?= h($datasetOwner) ?></strong>. Only the owner can add or remove sharing entries.</p>
+        </div>
+        <?php endif; ?>
+    </section>
 
     <section class="stats-grid">
         <div class="card stat-card"><strong>Total debt</strong><span><?= h(currency($metrics['total_debt'])) ?></span></div>
@@ -197,11 +322,12 @@ $avalanche = simulateStrategy($loans, $strategyBudget, 'avalanche');
         <form method="post" class="card">
             <h2>Strategy Budget</h2>
             <input type="hidden" name="action" value="save_strategy">
+            <input type="hidden" name="dataset_owner" value="<?= h($datasetOwner) ?>">
             <label>Monthly extra budget available for strategy comparison
                 <input type="number" step="0.01" min="0" name="strategy_extra_budget" value="<?= h((string)$strategyBudget) ?>">
             </label>
             <div class="actions">
-                <button type="submit">Save Strategy Budget</button>
+                <button type="submit"<?= $canEditCurrentDataset ? '' : ' disabled' ?>>Save Strategy Budget</button>
             </div>
             <p class="small">This compares the debt snowball method against the highest-APR avalanche method using the same extra monthly payoff budget.</p>
         </form>
@@ -214,6 +340,7 @@ $avalanche = simulateStrategy($loans, $strategyBudget, 'avalanche');
                 <li>Per-loan payoff modeling with extra monthly, annual blue moon, and lump-sum payments</li>
                 <li>Snowball and avalanche strategy comparisons</li>
                 <li>Admin-only user management that does not reveal loan contents</li>
+                <li>Owner-controlled sharing with viewer or editor access</li>
             </ul>
         </div>
     </section>
@@ -242,10 +369,12 @@ $avalanche = simulateStrategy($loans, $strategyBudget, 'avalanche');
         </div>
     </section>
 
+    <?php if ($canEditCurrentDataset): ?>
     <section class="card">
         <h2>Add Loan</h2>
         <form method="post" class="loan-form-grid">
             <input type="hidden" name="action" value="save_loan">
+            <input type="hidden" name="dataset_owner" value="<?= h($datasetOwner) ?>">
             <label>Loan name
                 <input type="text" name="name" required>
             </label>
@@ -294,6 +423,7 @@ $avalanche = simulateStrategy($loans, $strategyBudget, 'avalanche');
             </div>
         </form>
     </section>
+    <?php endif; ?>
 
     <?php if (empty($loans)): ?>
     <section class="card">
@@ -329,6 +459,7 @@ $avalanche = simulateStrategy($loans, $strategyBudget, 'avalanche');
 
         <form method="post" class="loan-form-grid">
             <input type="hidden" name="action" value="save_loan">
+            <input type="hidden" name="dataset_owner" value="<?= h($datasetOwner) ?>">
             <input type="hidden" name="loan_id" value="<?= h((string)$loan['id']) ?>">
             <label>Loan name
                 <input type="text" name="name" value="<?= h((string)$loan['name']) ?>" required>
@@ -374,15 +505,18 @@ $avalanche = simulateStrategy($loans, $strategyBudget, 'avalanche');
                 <textarea name="notes" rows="2"><?= h((string)$loan['notes']) ?></textarea>
             </label>
             <div class="actions full-width">
-                <button type="submit">Save Loan</button>
+                <button type="submit"<?= $canEditCurrentDataset ? '' : ' disabled' ?>>Save Loan</button>
             </div>
         </form>
 
+        <?php if ($canEditCurrentDataset): ?>
         <form method="post" class="inline-form">
             <input type="hidden" name="action" value="delete_loan">
+            <input type="hidden" name="dataset_owner" value="<?= h($datasetOwner) ?>">
             <input type="hidden" name="loan_id" value="<?= h((string)$loan['id']) ?>">
             <button type="submit" class="danger" onclick="return confirm('Delete this loan?');">Delete Loan</button>
         </form>
+        <?php endif; ?>
 
         <details class="schedule-block" open>
             <summary>Accelerated payoff table</summary>

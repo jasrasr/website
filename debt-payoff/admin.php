@@ -1,8 +1,8 @@
 <?php
 /*
     Debt Payoff Planner
-    Revision: 1.0.0
-    Description: Admin-only user management for adding, editing, deleting, and resetting users while exposing only storage usage and account metadata.
+    Revision: 1.0.1
+    Description: Admin-only user management for adding, promoting, demoting, deleting, and resetting users while exposing only storage usage and account metadata.
 */
 
 declare(strict_types=1);
@@ -56,6 +56,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = $result['error'] ?? 'Unable to delete user.';
             }
         }
+    } elseif ($action === 'admin_toggle_role') {
+        $username = (string)($_POST['username'] ?? '');
+        $account = findAccount($username);
+        if ($account === null) {
+            $error = 'User not found.';
+        } else {
+            $newRole = ($account['role'] ?? 'user') === 'admin' ? 'user' : 'admin';
+            $result = updateAccount($username, $username, $newRole);
+            if ($result['ok']) {
+                $flash = $newRole === 'admin' ? 'User promoted to admin.' : 'User demoted to user.';
+            } else {
+                $error = $result['error'] ?? 'Unable to change role.';
+            }
+        }
     }
 }
 
@@ -73,17 +87,19 @@ $projectModifiedAt = readProjectModifiedAt();
 </head>
 <body>
 <main class="container container-wide">
-    <aside class="project-badge">
-        <strong>Project Rev:</strong> <?= h($projectRevision) ?><br>
-        <strong>Modified:</strong> <?= h($projectModifiedAt) ?>
-    </aside>
-    <nav class="nav">
-        <a href="index.php">Dashboard</a>
-        <a href="admin.php">Admin</a>
-        <a href="changelog.php">Changelog</a>
-        <a href="todo.php">Todo</a>
-        <a href="index.php?logout=1" class="nav-button">Logout</a>
-    </nav>
+    <div class="topbar">
+        <nav class="nav">
+            <a href="index.php">Dashboard</a>
+            <a href="admin.php">Admin</a>
+            <a href="changelog.php">Changelog</a>
+            <a href="todo.php">Todo</a>
+            <a href="index.php?logout=1" class="nav-button">Logout</a>
+        </nav>
+        <div class="top-meta">
+            <span><strong>Rev:</strong> <?= h($projectRevision) ?></span>
+            <span><strong>Modified:</strong> <?= h($projectModifiedAt) ?></span>
+        </div>
+    </div>
 
     <header class="page-header">
         <div>
@@ -138,6 +154,7 @@ $projectModifiedAt = readProjectModifiedAt();
                         <th>Updated</th>
                         <th>Storage Used</th>
                         <th>Edit</th>
+                        <th>Role</th>
                         <th>Password Reset</th>
                         <th>Delete</th>
                     </tr>
@@ -160,6 +177,13 @@ $projectModifiedAt = readProjectModifiedAt();
                                     <option value="admin"<?= ($account['role'] ?? '') === 'admin' ? ' selected' : '' ?>>Admin</option>
                                 </select>
                                 <button type="submit">Save</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form method="post" class="inline-form">
+                                <input type="hidden" name="action" value="admin_toggle_role">
+                                <input type="hidden" name="username" value="<?= h((string)$account['username']) ?>">
+                                <button type="submit"><?= ($account['role'] ?? 'user') === 'admin' ? 'Demote' : 'Promote' ?></button>
                             </form>
                         </td>
                         <td>

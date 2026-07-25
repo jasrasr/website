@@ -1,8 +1,8 @@
 <?php
 /*
     Debt Payoff Planner
-    Revision: 1.0.0
-    Description: Shared configuration, authentication, private per-user storage, payoff calculations, strategy simulations, changelog rendering, and admin helpers.
+    Revision: 1.0.1
+    Description: Shared configuration, authentication, private per-user storage, shared viewer/editor access, payoff calculations, strategy simulations, changelog rendering, and admin helpers.
 */
 
 declare(strict_types=1);
@@ -18,7 +18,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 const APP_NAME = 'Debt Payoff Planner';
-const APP_REVISION = '1.0.0';
+const APP_REVISION = '1.0.1';
 const APP_UPDATED = '2026-07-25';
 const DATA_DIR = __DIR__ . '/data';
 const USER_DATA_DIR = DATA_DIR . '/users';
@@ -179,11 +179,13 @@ function defaultUserData(string $username, bool $withSampleData = false): array
     $base = [
         'profile' => [
             'username' => $username,
+            'owner_username' => $username,
             'created_at' => $timestamp,
             'updated_at' => $timestamp,
             'strategy_extra_budget' => $withSampleData ? 400 : 250,
         ],
         'loans' => [],
+        'sharing' => [],
     ];
 
     if (!$withSampleData) {
@@ -235,7 +237,9 @@ function readUserData(string $username): array
     $data = readJsonFile($path, defaultUserData($username, false));
     $data['profile'] ??= [];
     $data['loans'] ??= [];
+    $data['sharing'] ??= [];
     $data['profile']['username'] = $username;
+    $data['profile']['owner_username'] ??= $username;
     $data['profile']['updated_at'] ??= nowIso();
     $data['profile']['created_at'] ??= nowIso();
     $data['profile']['strategy_extra_budget'] = (float)($data['profile']['strategy_extra_budget'] ?? 0);
@@ -247,10 +251,191 @@ function writeUserData(string $username, array $data): void
 {
     $data['profile'] ??= [];
     $data['loans'] ??= [];
+    $data['sharing'] ??= [];
     $data['profile']['username'] = $username;
+    $data['profile']['owner_username'] = $username;
     $data['profile']['updated_at'] = nowIso();
     $data['profile']['created_at'] ??= nowIso();
     writeJsonFile(userDataPath($username), $data);
+}
+
+function sanitizeShareEntries(array $entries, string $ownerUsername): array
+{
+    $sanitized = [];
+    foreach ($entries as $entry) {
+        $sharedUsername = cleanUsername((string)($entry['username'] ?? ''));
+        $permission = (string)($entry['permission'] ?? 'viewer');
+        if ($sharedUsername === '' || $sharedUsername === $ownerUsername) {
+            continue;
+        }
+        if (!in_array($permission, ['viewer', 'editor'], true)) {
+            $permission = 'viewer';
+        }
+        $sanitized[$sharedUsername] = [
+            'username' => $sharedUsername,
+            'permission' => $permission,
+            'granted_at' => (string)($entry['granted_at'] ?? nowIso()),
+        ];
+    }
+
+    ksort($sanitized);
+    return array_values($sanitized);
+}
+
+function getSharePermission(string $ownerUsername, string $viewerUsername): ?string
+{
+    $ownerUsername = cleanUsername($ownerUsername);
+    $viewerUsername = cleanUsername($viewerUsername);
+
+    if ($ownerUsername === '' || $viewerUsername === '') {
+        return null;
+    }
+    if ($ownerUsername === $viewerUsername) {
+        return 'owner';
+    }
+
+    $data = readUserData($ownerUsername);
+    foreach ($data['sharing'] ?? [] as $entry) {
+        if (($entry['username'] ?? '') === $viewerUsername) {
+            $permission = (string)($entry['permission'] ?? 'viewer');
+            return in_array($permission, ['viewer', 'editor'], true) ? $permission : 'viewer';
+        }
+    }
+
+    return null;
+}
+
+function canAccessDataset(string $viewerUsername, string $ownerUsername): bool
+{
+    return getSharePermission($ownerUsername, $viewerUsername) !== null;
+}
+
+function canEditDataset(string $viewerUsername, string $ownerUsername): bool
+{
+    $permission = getSharePermission($ownerUsername, $viewerUsername);
+    return in_array($permission, ['owner', 'editor'], true);
+}
+
+function accessibleDatasetsForUser(string $viewerUsername): array
+{
+    $viewerUsername = cleanUsername($viewerUsername);
+    $datasets = [];
+
+    foreach (readAccounts()['users'] ?? [] as $account) {
+        $ownerUsername = cleanUsername((string)($account['username'] ?? ''));
+        if ($ownerUsername === '') {
+            continue;
+        }
+        $permission = getSharePermission($ownerUsername, $viewerUsername);
+        if ($permission === null) {
+            continue;
+        }
+
+        $datasets[$ownerUsername] = [
+            'owner_username' => $ownerUsername,
+            'permission' => $permission,
+            'label' => $ownerUsername === $viewerUsername
+                ? $ownerUsername . ' (My Data)'
+                : $ownerUsername . ' (' . ucfirst($permission) . ')',
+        ];
+    }
+
+    ksort($datasets);
+    return $datasets;
+}
+
+function resolveDatasetOwner(string $viewerUsername, ?string $requestedOwner): string
+{
+    $viewerUsername = cleanUsername($viewerUsername);
+    $requestedOwner = cleanUsername((string)$requestedOwner);
+    if ($requestedOwner !== '' && canAccessDataset($viewerUsername, $requestedOwner)) {
+        return $requestedOwner;
+    }
+
+    return $viewerUsername;
+}
+
+function grantSharedAccess(string $ownerUsername, string $sharedUsername, string $permission): array
+{
+    $ownerUsername = cleanUsername($ownerUsername);
+    $sharedUsername = cleanUsername($sharedUsername);
+
+    if ($sharedUsername === '') {
+        return ['ok' => false, 'error' => 'Shared username is required.'];
+    }
+    if ($sharedUsername === $ownerUsername) {
+        return ['ok' => false, 'error' => 'You already own this dataset.'];
+    }
+    if (findAccount($sharedUsername) === null) {
+        return ['ok' => false, 'error' => 'The selected user does not exist.'];
+    }
+    if (!in_array($permission, ['viewer', 'editor'], true)) {
+        return ['ok' => false, 'error' => 'Invalid share permission.'];
+    }
+
+    $data = readUserData($ownerUsername);
+    $data['sharing'][] = [
+        'username' => $sharedUsername,
+        'permission' => $permission,
+        'granted_at' => nowIso(),
+    ];
+    $data['sharing'] = sanitizeShareEntries($data['sharing'], $ownerUsername);
+    writeUserData($ownerUsername, $data);
+
+    return ['ok' => true];
+}
+
+function revokeSharedAccess(string $ownerUsername, string $sharedUsername): void
+{
+    $ownerUsername = cleanUsername($ownerUsername);
+    $sharedUsername = cleanUsername($sharedUsername);
+    $data = readUserData($ownerUsername);
+    $data['sharing'] = array_values(array_filter(
+        $data['sharing'] ?? [],
+        fn(array $entry) => ($entry['username'] ?? '') !== $sharedUsername
+    ));
+    writeUserData($ownerUsername, $data);
+}
+
+function renameSharedAccessReferences(string $oldUsername, string $newUsername): void
+{
+    foreach (readAccounts()['users'] ?? [] as $account) {
+        $ownerUsername = cleanUsername((string)($account['username'] ?? ''));
+        if ($ownerUsername === '') {
+            continue;
+        }
+        $data = readUserData($ownerUsername);
+        $changed = false;
+        foreach ($data['sharing'] ?? [] as $index => $entry) {
+            if (($entry['username'] ?? '') === $oldUsername) {
+                $data['sharing'][$index]['username'] = $newUsername;
+                $changed = true;
+            }
+        }
+        if ($changed) {
+            $data['sharing'] = sanitizeShareEntries($data['sharing'], $ownerUsername);
+            writeUserData($ownerUsername, $data);
+        }
+    }
+}
+
+function removeSharedAccessReferences(string $deletedUsername): void
+{
+    foreach (readAccounts()['users'] ?? [] as $account) {
+        $ownerUsername = cleanUsername((string)($account['username'] ?? ''));
+        if ($ownerUsername === '' || $ownerUsername === $deletedUsername) {
+            continue;
+        }
+        $data = readUserData($ownerUsername);
+        $originalCount = count($data['sharing'] ?? []);
+        $data['sharing'] = array_values(array_filter(
+            $data['sharing'] ?? [],
+            fn(array $entry) => ($entry['username'] ?? '') !== $deletedUsername
+        ));
+        if (count($data['sharing']) !== $originalCount) {
+            writeUserData($ownerUsername, $data);
+        }
+    }
 }
 
 function currentUser(): ?array
@@ -383,6 +568,7 @@ function updateAccount(string $existingUsername, string $newUsername, string $ro
         $data = readUserData($newUsername);
         $data['profile']['username'] = $newUsername;
         writeUserData($newUsername, $data);
+        renameSharedAccessReferences($existingUsername, $newUsername);
     }
 
     upsertAccount($account);
@@ -403,6 +589,7 @@ function deleteUserAccount(string $username): array
     }
 
     removeAccount($username);
+    removeSharedAccessReferences($username);
     $path = userDataPath($username);
     if (is_file($path)) {
         unlink($path);
@@ -526,6 +713,11 @@ function renderOptions(array $values, string $selected): string
     }
 
     return $html;
+}
+
+function renderPermissionOptions(string $selected): string
+{
+    return renderOptions(['viewer', 'editor'], $selected);
 }
 
 function payoffDateLabel(?string $isoDate): string
