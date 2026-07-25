@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.14
-    Description: Front-page upload queue with project revision badge, stats and deleted-audit navigation, mobile batch-layout fixes, and automatic queue reset after processing.
+    Revision: 1.2.22
+    Description: Front-page upload queue with project revision badge, wider desktop layout, stats and deleted-audit navigation, mobile batch-layout fixes, and automatic queue reset after processing.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -21,7 +21,7 @@ $projectModifiedAt = readProjectModifiedAt();
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<main class="container">
+<main class="container container-wide">
     <aside class="project-badge">
         <strong>Project Rev:</strong> <?= h($projectRevision) ?><br>
         <strong>Modified:</strong> <?= h($projectModifiedAt) ?>

@@ -2,6 +2,12 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.22] - 2026-07-25
+
+### Fixed
+- The upload page now uses the wider desktop layout instead of the narrower centered container.
+- The upload results and log tables now use larger minimum column widths so headers and values do not feel cramped.
+
 ## [1.2.21] - 2026-07-25
 
 ### Fixed

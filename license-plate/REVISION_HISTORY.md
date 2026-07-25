@@ -2,9 +2,20 @@
 
 ## Current Revision
 
-**Version:** 1.2.21  
+**Version:** 1.2.22  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.22 — Wider Desktop Layout And Larger Table Columns
+
+Expanded the upload page to use the full desktop width and increased the minimum widths on both the upload results table and the log table so columns stay readable.
+
+Key implementation changes:
+
+- `index.php` now uses the wide desktop container instead of the narrower centered layout.
+- `style.css` increases the base desktop container width and widens the upload results table columns.
+- `style.css` increases the log table minimum width and individual log column minimum widths.
+- `style.css` also widens the top stat-card grid so summary cards have more room on desktop.
 
 ## Revision 1.2.21 — Reliable Photo Link Fallback
 
