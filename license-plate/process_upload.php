@@ -1,4 +1,9 @@
 <?php
+/*
+    License Plate Photo Logger
+    Revision: 1.2.2
+    Description: Upload processor with metadata extraction, duplicate reuse, and image clarity scoring.
+*/
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
 header('Content-Type: application/json');
@@ -71,6 +76,8 @@ if ($duplicateFile) {
     $target = UPLOAD_DIR . '/' . ($existingFileEntry['stored_file'] ?? '');
 }
 
+$imageMetadata = extractImageMetadata($target);
+$clarityScore = $duplicateFile ? (int)($existingFileEntry['clarity_score'] ?? 0) : computeImageClarityScore($target, $mimeType);
 $existingPlate = normalizePlateText((string)($existingFileEntry['plate'] ?? ''));
 $canReuseExistingScan = $duplicateFile && $existingPlate !== '';
 
@@ -78,6 +85,7 @@ $scan = $canReuseExistingScan
     ? [
         'plate' => $existingPlate,
         'confidence' => (int)($existingFileEntry['confidence'] ?? 0),
+        'state' => (string)($existingFileEntry['plate_state'] ?? ''),
         'raw_text' => '',
         'error' => '',
     ]
@@ -85,6 +93,7 @@ $scan = $canReuseExistingScan
 
 $scanError = trim((string)($scan['error'] ?? ''));
 $plate = normalizePlateText((string)($scan['plate'] ?? ''));
+$plateState = normalizeUsStateName((string)($scan['state'] ?? ''));
 $scanStatus = $scanError !== '' ? 'pending' : 'complete';
 $countsBefore = plateCounts($entries);
 $duplicatePlate = $plate !== '' && isset($countsBefore[$plate]);
@@ -98,17 +107,27 @@ $entry = [
     'sha256' => $hash,
     'plate' => $plate,
     'plate_normalized' => $plate,
-    'confidence' => (int)($scan['confidence'] ?? 0),
-    'scan_mode' => SCAN_MODE,
+    'plate_state' => $plateState,
+    'confidence' => normalizeConfidenceValue($scan['confidence'] ?? 0),
+    'scan_mode' => $canReuseExistingScan ? (string)($existingFileEntry['scan_mode'] ?? SCAN_MODE) : SCAN_MODE,
     'scan_status' => $scanStatus,
     'duplicate_file' => $duplicateFile,
     'duplicate_of' => $existingFileEntry['id'] ?? '',
     'duplicate_plate' => $duplicatePlate,
     'raw_text' => (string)($scan['raw_text'] ?? ''),
     'error' => $scanError,
+    'clarity_score' => $clarityScore,
+    'best_plate_photo' => false,
+    'photo_state' => (string)($imageMetadata['photo_state'] ?? ''),
+    'date_taken' => (string)($imageMetadata['date_taken'] ?? ''),
+    'gps_latitude' => $imageMetadata['gps_latitude'] ?? null,
+    'gps_longitude' => $imageMetadata['gps_longitude'] ?? null,
+    'gps_display' => (string)($imageMetadata['gps_display'] ?? ''),
 ];
 
 $entries[] = $entry;
+recalculatePlateClarityFlags($entries);
+$entry = $entries[array_key_last($entries)];
 writeJsonFile(LOG_FILE, $entries);
 
 if (!$duplicateFile) {
@@ -117,10 +136,19 @@ if (!$duplicateFile) {
         'stored_file' => $entry['stored_file'],
         'original_file' => $entry['original_file'],
         'plate' => $plate,
+        'plate_state' => $entry['plate_state'],
         'confidence' => $entry['confidence'],
         'processed_at' => $entry['processed_at'],
+        'scan_mode' => $entry['scan_mode'],
         'scan_status' => $scanStatus,
         'error' => $scanError,
+        'clarity_score' => $entry['clarity_score'],
+        'best_plate_photo' => $entry['best_plate_photo'],
+        'photo_state' => $entry['photo_state'],
+        'date_taken' => $entry['date_taken'],
+        'gps_latitude' => $entry['gps_latitude'],
+        'gps_longitude' => $entry['gps_longitude'],
+        'gps_display' => $entry['gps_display'],
     ];
     writeJsonFile(HASH_INDEX_FILE, $hashIndex);
 }
@@ -128,12 +156,18 @@ if (!$duplicateFile) {
 echo json_encode([
     'id' => $entry['id'],
     'plate' => $plate,
+    'plate_state' => $entry['plate_state'],
     'confidence' => $entry['confidence'],
-    'status' => $scanStatus === 'pending' ? 'Uploaded - pending AI processing' : 'Logged',
+    'clarity_score' => $entry['clarity_score'],
+    'best_plate_photo' => $entry['best_plate_photo'],
+    'status' => $scanStatus === 'pending' ? 'Uploaded - pending processing' : 'Logged',
     'pending' => $scanStatus === 'pending',
     'scan_error' => $scanError,
     'duplicate_file' => $duplicateFile,
     'duplicate_plate' => $duplicatePlate,
     'plate_count' => $plateCount,
     'stored_file' => $entry['stored_file'],
+    'photo_state' => $entry['photo_state'],
+    'date_taken' => $entry['date_taken'],
+    'gps_display' => $entry['gps_display'],
 ]);

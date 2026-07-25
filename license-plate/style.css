@@ -1,3 +1,4 @@
+/* Revision: 1.2.3 */
 :root {
     --bg: #f5f6f8;
     --surface: #ffffff;
@@ -20,6 +21,7 @@ body {
 .container {
     max-width: 1180px;
     margin: 0 auto;
+    position: relative;
 }
 
 .nav {
@@ -30,6 +32,21 @@ body {
 
 a { color: var(--accent-dark); }
 h1, h2 { margin-top: 0; }
+h3 { margin-bottom: 8px; }
+
+.project-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    max-width: 260px;
+    padding: 10px 12px;
+    background: #eef4ff;
+    border: 1px solid #c9d8f7;
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
 
 .page-header {
     display: grid;
@@ -82,11 +99,30 @@ input[type="file"] {
     background: #fbfcfd;
 }
 
+input[type="search"] {
+    width: 100%;
+    max-width: 420px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fbfcfd;
+    font: inherit;
+}
+
 .actions {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     margin-top: 12px;
+}
+
+.filters {
+    margin-top: 8px;
+    margin-bottom: 12px;
+}
+
+.filter-field {
+    margin-bottom: 6px;
 }
 
 button {
@@ -119,7 +155,8 @@ button.secondary { background: #4b5563; }
 }
 
 table {
-    width: 100%;
+    width: max-content;
+    min-width: 100%;
     border-collapse: collapse;
     margin-top: 10px;
     background: #fff;
@@ -135,11 +172,82 @@ th, td {
 
 th {
     background: #eef1f5;
+    white-space: nowrap;
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+.sortable-table th {
+    padding: 0;
+}
+
+.sort-button {
+    display: block;
+    width: 100%;
+    border: 0;
+    border-radius: 0;
+    padding: 9px;
+    color: inherit;
+    background: transparent;
+    font: inherit;
+    font-weight: 700;
+    text-align: left;
+}
+
+.sort-button:hover {
+    background: #dde5ee;
+}
+
+.sort-button::after {
+    content: " <>"; 
+    color: var(--muted);
+    font-weight: 400;
+}
+
+.sort-button.sort-asc::after {
+    content: " ^";
+}
+
+.sort-button.sort-desc::after {
+    content: " v";
+}
+
+.changelog-content ul {
+    margin-top: 0;
+    padding-left: 20px;
+}
+
+.changelog-content p {
+    margin-top: 0;
+}
+
+.results-table {
+    min-width: 720px;
+}
+
+.results-table th:nth-child(1),
+.results-table td:nth-child(1) {
+    min-width: 180px;
+}
+
+.results-table th:nth-child(4),
+.results-table td:nth-child(4) {
+    min-width: 150px;
+}
+
+.results-table th:nth-child(5),
+.results-table td:nth-child(5) {
+    min-width: 220px;
 }
 
 @media (max-width: 760px) {
     body { padding: 14px; }
+    .project-badge { position: static; margin-bottom: 14px; max-width: none; }
     .page-header { grid-template-columns: 1fr; }
     .stats-grid { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
     table { font-size: 13px; }
+    .actions { flex-direction: column; }
+    .actions button { width: 100%; }
 }

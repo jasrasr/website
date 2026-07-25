@@ -1,9 +1,16 @@
 <?php
+/*
+    License Plate Photo Logger
+    Revision: 1.2.3
+    Description: Front-page upload queue with project revision badge, mobile batch-layout fixes, and automatic queue reset after processing.
+*/
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
 $entries = readLogEntries();
 $counts = plateCounts($entries);
 $pendingEntries = array_filter($entries, fn($entry) => ($entry['scan_status'] ?? '') === 'pending');
+$projectRevision = readProjectRevision();
+$projectModifiedAt = readProjectModifiedAt();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -15,9 +22,14 @@ $pendingEntries = array_filter($entries, fn($entry) => ($entry['scan_status'] ??
 </head>
 <body>
 <main class="container">
+    <aside class="project-badge">
+        <strong>Project Rev:</strong> <?= h($projectRevision) ?><br>
+        <strong>Modified:</strong> <?= h($projectModifiedAt) ?>
+    </aside>
     <nav class="nav">
         <a href="index.php">Upload</a>
         <a href="view_log.php">View Log</a>
+        <a href="changelog.php">Changelog</a>
     </nav>
 
     <header class="page-header">
@@ -26,7 +38,7 @@ $pendingEntries = array_filter($entries, fn($entry) => ($entry['scan_status'] ??
             <p class="small">Batch upload plate photos. Each file is hashed, saved, scanned when available, and checked for duplicate files and repeated plate values.</p>
         </div>
         <div class="status-box">
-            <strong>Mode:</strong> <?= h(SCAN_MODE) ?><br>
+            <strong>Mode:</strong> <?= h(scanModeLabel(SCAN_MODE)) ?><br>
             <strong>Entries:</strong> <?= count($entries) ?><br>
             <strong>Pending:</strong> <?= count($pendingEntries) ?><br>
             <strong>Unique plates:</strong> <?= count($counts) ?>
@@ -48,7 +60,8 @@ $pendingEntries = array_filter($entries, fn($entry) => ($entry['scan_status'] ??
 
     <section class="card">
         <h2>Batch Results</h2>
-        <table>
+        <div class="table-wrap">
+        <table class="results-table">
             <thead>
                 <tr>
                     <th>File</th>
@@ -62,6 +75,7 @@ $pendingEntries = array_filter($entries, fn($entry) => ($entry['scan_status'] ??
                 <tr><td colspan="5" class="small">Results will appear as each photo finishes.</td></tr>
             </tbody>
         </table>
+        </div>
     </section>
 </main>
 
@@ -94,6 +108,7 @@ clearBtn.addEventListener('click', () => {
 startBtn.addEventListener('click', async () => {
     if (!queue.length) return;
     startBtn.disabled = true;
+    clearBtn.disabled = true;
     results.innerHTML = '';
     progress.hidden = false;
     let logged = 0;
@@ -132,10 +147,15 @@ startBtn.addEventListener('click', async () => {
 
         const pct = Math.round(((i + 1) / queue.length) * 100);
         progressBar.style.width = pct + '%';
-        summary.textContent = `${i + 1} of ${queue.length} processed. Logged: ${logged}. Pending AI: ${pending}. Duplicates flagged: ${dupes}. Failed uploads: ${failed}.`;
+        summary.textContent = `${i + 1} of ${queue.length} processed. Logged: ${logged}. Pending processing: ${pending}. Duplicates flagged: ${dupes}. Failed uploads: ${failed}.`;
     }
 
-    startBtn.disabled = false;
+    input.value = '';
+    queue = [];
+    startBtn.disabled = true;
+    clearBtn.disabled = false;
+    startBtn.textContent = 'Process Selected Photos';
+    summary.textContent = `Batch complete. Logged: ${logged}. Pending processing: ${pending}. Duplicates flagged: ${dupes}. Failed uploads: ${failed}. Choose new files to process another batch.`;
 });
 
 function addRow(file, plate, confidence, status, duplicate) {
@@ -158,6 +178,7 @@ function duplicateText(data) {
     const parts = [];
     if (data.duplicate_file) parts.push('same file');
     if (data.duplicate_plate) parts.push(`plate seen ${data.plate_count} times`);
+    if (data.best_plate_photo && data.duplicate_plate) parts.push('clearest photo');
     return parts.join(', ');
 }
 </script>
