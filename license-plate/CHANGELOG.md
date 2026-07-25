@@ -2,6 +2,15 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.9] - 2026-07-25
+
+### Fixed
+- The log summary counters now show their text and counts without requiring hover.
+- Clicking a log summary counter now visibly acts as a filter and jumps to the entries table.
+
+### Changed
+- The daily upload graph was moved off the log page and into a separate `Stats` page.
+
 ## [1.2.8] - 2026-07-25
 
 ### Added

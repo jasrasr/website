@@ -1,4 +1,4 @@
-/* Revision: 1.2.8 */
+/* Revision: 1.2.9 */
 :root {
     --bg: #f5f6f8;
     --surface: #ffffff;
@@ -91,19 +91,26 @@ h3 { margin-bottom: 8px; }
 .stat-card {
     margin-bottom: 0;
     padding: 12px 14px;
-    color: var(--text);
-    background: var(--surface);
     text-align: left;
 }
 
-.stat-card:hover {
+.stat-card,
+.stat-card:hover,
+.stat-card:focus-visible {
+    color: var(--text);
+    background: var(--surface);
+}
+
+.stat-card:hover,
+.stat-card:focus-visible {
     background: #f3f7ff;
 }
 
 .stat-card.is-active {
+    color: #fff;
     border-color: #7da6ff;
-    background: #eaf1ff;
-    box-shadow: inset 0 0 0 1px #a8c2ff;
+    background: #234fbc;
+    box-shadow: inset 0 0 0 1px #3e6ee6;
 }
 
 .stat-card strong {
@@ -120,6 +127,10 @@ h3 { margin-bottom: 8px; }
 .stats-grid-compact .card span {
     font-size: 18px;
     margin-top: 6px;
+}
+
+.stat-card-static {
+    cursor: default;
 }
 
 .small {
@@ -320,6 +331,11 @@ th {
     overflow-x: auto;
 }
 
+.daily-chart-compact {
+    min-height: 170px;
+    padding-top: 10px;
+}
+
 .daily-chart-item {
     display: flex;
     flex: 0 0 72px;
@@ -340,6 +356,14 @@ th {
     justify-content: center;
     width: 100%;
     height: 190px;
+}
+
+.daily-chart-bar-wrap-compact {
+    height: 130px;
+}
+
+.stats-chart-card {
+    max-width: 960px;
 }
 
 .daily-chart-bar {

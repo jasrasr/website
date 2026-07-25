@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.8
-    Description: Log viewer with wider desktop layout, active stat filters, manual correction tools, favorites/ranking, photo overlay preview, and daily upload chart.
+    Revision: 1.2.9
+    Description: Log viewer with wider desktop layout, visible stat filters, manual correction tools, favorites/ranking, and photo overlay preview.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -13,17 +13,6 @@ $duplicatePlates = array_filter($counts, fn($count) => $count > 1);
 $pendingEntries = array_filter($entries, fn($e) => ($e['scan_status'] ?? '') === 'pending');
 $failedPendingEntries = array_filter($pendingEntries, fn($e) => !empty($e['error']));
 $metadataEntries = array_filter($entries, fn($e) => !empty($e['date_taken']) || !empty($e['gps_display']) || !empty($e['plate_state']) || !empty($e['photo_state']));
-$uploadsByDay = [];
-foreach ($entries as $entry) {
-    $processedAt = (string)($entry['processed_at'] ?? '');
-    $dayKey = substr($processedAt, 0, 10);
-    if ($dayKey === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dayKey)) {
-        $dayKey = 'Unknown';
-    }
-    $uploadsByDay[$dayKey] = ($uploadsByDay[$dayKey] ?? 0) + 1;
-}
-ksort($uploadsByDay);
-$maxUploadsPerDay = empty($uploadsByDay) ? 0 : max($uploadsByDay);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -38,6 +27,7 @@ $maxUploadsPerDay = empty($uploadsByDay) ? 0 : max($uploadsByDay);
     <nav class="nav">
         <a href="index.php">Upload</a>
         <a href="view_log.php">View Log</a>
+        <a href="stats.php">Stats</a>
         <a href="changelog.php">Changelog</a>
     </nav>
     <h1>Plate Log</h1>
@@ -63,28 +53,6 @@ $maxUploadsPerDay = empty($uploadsByDay) ? 0 : max($uploadsByDay);
             <button id="processAllPending" type="button">Process All Pending</button>
         </div>
         <p id="pendingSummary" class="small"><?= count($pendingEntries) ?> file<?= count($pendingEntries) === 1 ? '' : 's' ?> waiting.<?php if (!empty($failedPendingEntries)): ?> <?= count($failedPendingEntries) ?> previously failed.<?php endif; ?></p>
-    </section>
-    <?php endif; ?>
-
-    <?php if (!empty($uploadsByDay)): ?>
-    <section class="card">
-        <h2>Uploads Per Day</h2>
-        <p class="small">Daily count of logged plate uploads based on the `Uploaded` timestamp.</p>
-        <div class="daily-chart" role="img" aria-label="Bar chart of uploaded plates per day">
-            <?php foreach ($uploadsByDay as $day => $count): ?>
-                <?php
-                $barHeight = $maxUploadsPerDay > 0 ? max(12, (int)round(($count / $maxUploadsPerDay) * 180)) : 12;
-                $dayLabel = $day === 'Unknown' ? 'Unknown' : displayDateTime($day . 'T00:00:00');
-                ?>
-                <div class="daily-chart-item" title="<?= h($day . ': ' . $count) ?>">
-                    <span class="daily-chart-count"><?= h((string)$count) ?></span>
-                    <div class="daily-chart-bar-wrap">
-                        <div class="daily-chart-bar" style="height: <?= $barHeight ?>px"></div>
-                    </div>
-                    <span class="daily-chart-label"><?= h($dayLabel === '' ? $day : substr($dayLabel, 0, 10)) ?></span>
-                </div>
-            <?php endforeach; ?>
-        </div>
     </section>
     <?php endif; ?>
 
@@ -436,6 +404,7 @@ function setFilterMode(mode) {
     if (mode !== 'duplicate-plate') activePlateFilter = '';
     updateStatCardState();
     applyEntrySearch();
+    document.getElementById('entriesTable')?.scrollIntoView({behavior: 'smooth', block: 'start'});
 }
 
 function updateStatCardState() {

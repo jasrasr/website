@@ -2,9 +2,20 @@
 
 ## Current Revision
 
-**Version:** 1.2.8  
+**Version:** 1.2.9  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.9 — Dedicated Stats Page and Visible Log Filters
+
+Moved the daily upload chart off the log page into its own stats dashboard and fixed the log summary cards so their counts are visible without hover and clearly filter the entries list.
+
+Key implementation changes:
+
+- `stats.php` now holds the daily uploads chart and summary counters.
+- `view_log.php` removes the chart and scrolls to the entries table when a summary card filter is clicked.
+- `style.css` fixes stat-card text visibility and active-state styling.
+- Navigation now includes a `Stats` link on the main pages.
 
 ## Revision 1.2.8 — Manual Correction, Favorites, and Preference Ranking
 
