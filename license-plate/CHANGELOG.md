@@ -2,6 +2,16 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.4] - 2026-07-25
+
+### Changed
+- The log page now uses the full desktop content width instead of the narrower centered container.
+- The count widgets are now smaller, denser, and better suited for dashboard-style filtering.
+- The log table columns now have minimum widths so headers no longer wrap into unreadable narrow stacks.
+
+### Clarified
+- Failed pending items are still selected with the first-column checkboxes, and the pending section keeps `Select All Failed` plus `Retry Selected Failed` for bulk retry.
+
 ## [1.2.3] - 2026-07-25
 
 ### Fixed

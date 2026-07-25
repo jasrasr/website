@@ -2,9 +2,20 @@
 
 ## Current Revision
 
-**Version:** 1.2.3  
+**Version:** 1.2.4  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.4 — Full-Width Log Layout and Clearer Retry Selection
+
+Expanded the log page to use the full desktop width, tightened the count widgets, and sized the log columns so the headers stay readable.
+
+Key implementation changes:
+
+- `style.css` adds a `container-wide` layout for full-width desktop pages.
+- `style.css` shrinks the stat cards into a denser clickable grid.
+- `style.css` gives the log table explicit minimum widths so headers like `Confidence`, `Date Taken`, and `Original File` no longer collapse.
+- The failed-entry retry flow remains checkbox-based in the first column, with `Select All Failed` and `Retry Selected Failed` controls in the pending section.
 
 ## Revision 1.2.3 — Mobile Batch Layout and Queue Reset
 

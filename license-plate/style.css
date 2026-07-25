@@ -1,4 +1,4 @@
-/* Revision: 1.2.3 */
+/* Revision: 1.2.4 */
 :root {
     --bg: #f5f6f8;
     --surface: #ffffff;
@@ -22,6 +22,11 @@ body {
     max-width: 1180px;
     margin: 0 auto;
     position: relative;
+}
+
+.container-wide {
+    max-width: none;
+    width: 100%;
 }
 
 .nav {
@@ -74,10 +79,37 @@ h3 { margin-bottom: 8px; }
     gap: 12px;
 }
 
+.stats-grid-compact {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 180px));
+    justify-content: start;
+}
+
+.stat-card {
+    margin-bottom: 0;
+    padding: 12px 14px;
+    color: var(--text);
+    background: var(--surface);
+    text-align: left;
+}
+
+.stat-card:hover {
+    background: #f3f7ff;
+}
+
+.stat-card strong {
+    display: block;
+    font-size: 14px;
+}
+
 .stats-grid .card span {
     display: block;
     font-size: 28px;
     margin-top: 8px;
+}
+
+.stats-grid-compact .card span {
+    font-size: 18px;
+    margin-top: 6px;
 }
 
 .small {
@@ -139,6 +171,21 @@ button:hover { background: var(--accent-dark); }
 button:disabled { background: #89909a; cursor: not-allowed; }
 button.secondary { background: #4b5563; }
 
+.link-button {
+    padding: 0;
+    border: 0;
+    color: var(--accent-dark);
+    background: transparent;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.link-button:hover {
+    background: transparent;
+    color: var(--accent);
+}
+
 .progress {
     height: 12px;
     overflow: hidden;
@@ -177,6 +224,30 @@ th {
 
 .table-wrap {
     overflow-x: auto;
+}
+
+.log-table {
+    min-width: 1750px;
+}
+
+.log-table .col-select { min-width: 86px; }
+.log-table .col-uploaded { min-width: 170px; }
+.log-table .col-status { min-width: 140px; }
+.log-table .col-plate { min-width: 110px; }
+.log-table .col-confidence { min-width: 110px; }
+.log-table .col-clarity { min-width: 90px; }
+.log-table .col-state { min-width: 110px; }
+.log-table .col-date { min-width: 160px; }
+.log-table .col-gps { min-width: 220px; }
+.log-table .col-file { min-width: 180px; }
+.log-table .col-photo { min-width: 90px; }
+.log-table .col-duplicate { min-width: 160px; }
+.log-table .col-scanner { min-width: 110px; }
+.log-table .col-message { min-width: 220px; }
+.log-table .col-action { min-width: 90px; }
+
+.filter-status {
+    margin: 8px 0 0;
 }
 
 .sortable-table th {
@@ -247,6 +318,7 @@ th {
     .project-badge { position: static; margin-bottom: 14px; max-width: none; }
     .page-header { grid-template-columns: 1fr; }
     .stats-grid { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+    .stats-grid-compact { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
     table { font-size: 13px; }
     .actions { flex-direction: column; }
     .actions button { width: 100%; }

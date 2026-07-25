@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.2
-    Description: Log viewer with searchable metadata columns, retry controls, clarity scores, and changelog navigation.
+    Revision: 1.2.4
+    Description: Log viewer with wider desktop layout, clickable stat filters, and clearer multi-retry controls.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -23,7 +23,7 @@ $metadataEntries = array_filter($entries, fn($e) => !empty($e['date_taken']) || 
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<main class="container">
+<main class="container container-wide">
     <nav class="nav">
         <a href="index.php">Upload</a>
         <a href="view_log.php">View Log</a>
@@ -31,19 +31,19 @@ $metadataEntries = array_filter($entries, fn($e) => !empty($e['date_taken']) || 
     </nav>
     <h1>Plate Log</h1>
 
-    <section class="stats-grid">
-        <div class="card"><strong>Total entries</strong><span><?= count($entries) ?></span></div>
-        <div class="card"><strong>Pending Processing</strong><span id="pendingCount"><?= count($pendingEntries) ?></span></div>
-        <div class="card"><strong>Unique plates</strong><span><?= count($counts) ?></span></div>
-        <div class="card"><strong>Duplicate files</strong><span><?= count($duplicateFiles) ?></span></div>
-        <div class="card"><strong>Repeated plates</strong><span><?= count($duplicatePlates) ?></span></div>
-        <div class="card"><strong>With Metadata</strong><span id="metadataCount"><?= count($metadataEntries) ?></span></div>
+    <section class="stats-grid stats-grid-compact">
+        <button type="button" class="card stat-card" data-filter-mode="all"><strong>Total entries</strong><span><?= count($entries) ?></span></button>
+        <button type="button" class="card stat-card" data-filter-mode="pending"><strong>Pending Processing</strong><span id="pendingCount"><?= count($pendingEntries) ?></span></button>
+        <button type="button" class="card stat-card" data-filter-mode="unique"><strong>Unique plates</strong><span><?= count($counts) ?></span></button>
+        <button type="button" class="card stat-card" data-filter-mode="duplicate-file"><strong>Duplicate files</strong><span><?= count($duplicateFiles) ?></span></button>
+        <button type="button" class="card stat-card" data-filter-mode="duplicate-plate"><strong>Duplicate Plates</strong><span><?= count($duplicatePlates) ?></span></button>
+        <button type="button" class="card stat-card" data-filter-mode="metadata"><strong>With Metadata</strong><span id="metadataCount"><?= count($metadataEntries) ?></span></button>
     </section>
 
     <?php if (!empty($pendingEntries)): ?>
-    <section class="card">
+    <section class="card" id="pendingSection">
         <h2>Pending Processing</h2>
-        <p class="small">Retry saved photos after the configured scanner and API key are available. Files are processed one at a time to avoid web-server timeouts.</p>
+        <p class="small">Use the first-column checkboxes to pick several failed rows, or click <strong>Select All Failed</strong> to retry every prior error in one click. Files are retried one at a time to avoid web-server timeouts.</p>
         <div class="actions">
             <?php if (!empty($failedPendingEntries)): ?>
                 <button id="retrySelectedPending" type="button" class="secondary">Retry Selected Failed</button>
@@ -56,13 +56,17 @@ $metadataEntries = array_filter($entries, fn($e) => !empty($e['date_taken']) || 
     <?php endif; ?>
 
     <?php if (!empty($duplicatePlates)): ?>
-    <section class="card">
-        <h2>Repeated Plate Values</h2>
+    <section class="card" id="duplicatePlatesSection">
+        <h2>Duplicate Plates</h2>
+        <p class="small">Click a plate value to filter the entry table to that plate.</p>
         <table>
             <thead><tr><th>Plate</th><th>Count</th></tr></thead>
             <tbody>
             <?php foreach ($duplicatePlates as $plate => $count): ?>
-                <tr><td><?= h($plate) ?></td><td><?= h((string)$count) ?></td></tr>
+                <tr>
+                    <td><button type="button" class="link-button duplicate-plate-filter" data-plate="<?= h(strtolower($plate)) ?>"><?= h($plate) ?></button></td>
+                    <td><?= h((string)$count) ?></td>
+                </tr>
             <?php endforeach; ?>
             </tbody>
         </table>
@@ -74,26 +78,27 @@ $metadataEntries = array_filter($entries, fn($e) => !empty($e['date_taken']) || 
         <div class="filters">
             <label class="filter-field" for="entrySearch">Search Entries</label>
             <input type="search" id="entrySearch" placeholder="Search plate, state, GPS, date taken, file, message">
+            <p id="entryFilterStatus" class="small filter-status">Showing all entries.</p>
         </div>
         <div class="table-wrap">
-        <table id="entriesTable" class="sortable-table">
+        <table id="entriesTable" class="sortable-table log-table">
             <thead>
                 <tr>
-                    <th><button type="button" class="sort-button" data-sort-type="text">Select</button></th>
-                    <th><button type="button" class="sort-button" data-sort-type="date">Uploaded</button></th>
-                    <th><button type="button" class="sort-button" data-sort-type="text">Status</button></th>
-                    <th><button type="button" class="sort-button" data-sort-type="text">Plate</button></th>
-                    <th><button type="button" class="sort-button" data-sort-type="number">Confidence</button></th>
-                    <th><button type="button" class="sort-button" data-sort-type="number">Clarity</button></th>
-                    <th><button type="button" class="sort-button" data-sort-type="text">State</button></th>
-                    <th><button type="button" class="sort-button" data-sort-type="date">Date Taken</button></th>
-                    <th><button type="button" class="sort-button" data-sort-type="text">GPS</button></th>
-                    <th><button type="button" class="sort-button" data-sort-type="text">Original File</button></th>
-                    <th><button type="button" class="sort-button" data-sort-type="text">Photo</button></th>
-                    <th><button type="button" class="sort-button" data-sort-type="text">Duplicate</button></th>
-                    <th><button type="button" class="sort-button" data-sort-type="text">Scanner</button></th>
-                    <th><button type="button" class="sort-button" data-sort-type="text">Message</button></th>
-                    <th><button type="button" class="sort-button" data-sort-type="text">Action</button></th>
+                    <th class="col-select"><button type="button" class="sort-button" data-sort-type="text">Select</button></th>
+                    <th class="col-uploaded"><button type="button" class="sort-button" data-sort-type="date">Uploaded</button></th>
+                    <th class="col-status"><button type="button" class="sort-button" data-sort-type="text">Status</button></th>
+                    <th class="col-plate"><button type="button" class="sort-button" data-sort-type="text">Plate</button></th>
+                    <th class="col-confidence"><button type="button" class="sort-button" data-sort-type="number">Confidence</button></th>
+                    <th class="col-clarity"><button type="button" class="sort-button" data-sort-type="number">Clarity</button></th>
+                    <th class="col-state"><button type="button" class="sort-button" data-sort-type="text">State</button></th>
+                    <th class="col-date"><button type="button" class="sort-button" data-sort-type="date">Date Taken</button></th>
+                    <th class="col-gps"><button type="button" class="sort-button" data-sort-type="text">GPS</button></th>
+                    <th class="col-file"><button type="button" class="sort-button" data-sort-type="text">Original File</button></th>
+                    <th class="col-photo"><button type="button" class="sort-button" data-sort-type="text">Photo</button></th>
+                    <th class="col-duplicate"><button type="button" class="sort-button" data-sort-type="text">Duplicate</button></th>
+                    <th class="col-scanner"><button type="button" class="sort-button" data-sort-type="text">Scanner</button></th>
+                    <th class="col-message"><button type="button" class="sort-button" data-sort-type="text">Message</button></th>
+                    <th class="col-action"><button type="button" class="sort-button" data-sort-type="text">Action</button></th>
                 </tr>
             </thead>
             <tbody id="entriesTableBody">
@@ -117,7 +122,16 @@ $metadataEntries = array_filter($entries, fn($e) => !empty($e['date_taken']) || 
                     scanModeLabel((string)($entry['scan_mode'] ?? '')),
                 ])));
                 ?>
-                <tr data-entry-id="<?= h($entry['id'] ?? '') ?>" data-status="<?= h($status) ?>" data-failed-pending="<?= $isFailedPending ? 'true' : 'false' ?>" data-search="<?= h($searchBlob) ?>">
+                <tr
+                    data-entry-id="<?= h($entry['id'] ?? '') ?>"
+                    data-status="<?= h($status) ?>"
+                    data-failed-pending="<?= $isFailedPending ? 'true' : 'false' ?>"
+                    data-duplicate-file="<?= !empty($entry['duplicate_file']) ? 'true' : 'false' ?>"
+                    data-duplicate-plate="<?= !empty($entry['duplicate_plate']) ? 'true' : 'false' ?>"
+                    data-has-metadata="<?= (!empty($entry['date_taken']) || !empty($entry['gps_display']) || $stateDisplay !== '') ? 'true' : 'false' ?>"
+                    data-plate-value="<?= h(strtolower((string)($entry['plate'] ?? ''))) ?>"
+                    data-search="<?= h($searchBlob) ?>"
+                >
                     <td>
                         <?php if ($isFailedPending): ?>
                             <input type="checkbox" class="retry-select" data-id="<?= h($entry['id'] ?? '') ?>" aria-label="Select failed entry <?= h($entry['original_file'] ?? ($entry['id'] ?? '')) ?>">
@@ -169,9 +183,14 @@ const pendingSummary = document.getElementById('pendingSummary');
 const pendingCount = document.getElementById('pendingCount');
 const metadataCount = document.getElementById('metadataCount');
 const entrySearch = document.getElementById('entrySearch');
+const entryFilterStatus = document.getElementById('entryFilterStatus');
 const selectionBoxes = Array.from(document.querySelectorAll('.retry-select'));
 const entriesTableBody = document.getElementById('entriesTableBody');
 const sortButtons = Array.from(document.querySelectorAll('.sort-button'));
+const statCards = Array.from(document.querySelectorAll('.stat-card'));
+const duplicatePlateFilters = Array.from(document.querySelectorAll('.duplicate-plate-filter'));
+let activeFilterMode = 'all';
+let activePlateFilter = '';
 
 function getSelectedFailedButtons() {
     return selectionBoxes
@@ -202,9 +221,7 @@ function updatePendingCount() {
     const rows = visibleRows();
     const remaining = rows.filter(row => row.dataset.status === 'pending').length;
     const failedRemaining = rows.filter(row => row.dataset.status === 'pending' && row.dataset.failedPending === 'true').length;
-    const visibleMetadata = rows.filter(row =>
-        ['.entry-state', '.entry-date-taken', '.entry-gps'].some(selector => (row.querySelector(selector)?.textContent || '').trim() !== '')
-    ).length;
+    const visibleMetadata = rows.filter(row => row.dataset.hasMetadata === 'true').length;
 
     if (pendingCount) pendingCount.textContent = remaining;
     if (metadataCount) metadataCount.textContent = visibleMetadata;
@@ -219,8 +236,8 @@ function refreshRowSearch(row) {
         row.querySelector('.entry-state')?.textContent || '',
         row.querySelector('.entry-date-taken')?.textContent || '',
         row.querySelector('.entry-gps')?.textContent || '',
-        row.cells[8]?.textContent || '',
-        row.cells[11]?.textContent || '',
+        row.cells[9]?.textContent || '',
+        row.cells[12]?.textContent || '',
         row.querySelector('.entry-message')?.textContent || ''
     ].join(' ').toLowerCase();
 }
@@ -228,9 +245,32 @@ function refreshRowSearch(row) {
 function applyEntrySearch() {
     const term = (entrySearch?.value || '').trim().toLowerCase();
     Array.from(entriesTableBody.querySelectorAll('tr')).forEach(row => {
-        row.style.display = term === '' || (row.dataset.search || '').includes(term) ? '' : 'none';
+        const modeMatch =
+            activeFilterMode === 'all' ||
+            (activeFilterMode === 'pending' && row.dataset.status === 'pending') ||
+            (activeFilterMode === 'duplicate-file' && row.dataset.duplicateFile === 'true') ||
+            (activeFilterMode === 'duplicate-plate' && row.dataset.duplicatePlate === 'true') ||
+            (activeFilterMode === 'metadata' && row.dataset.hasMetadata === 'true') ||
+            (activeFilterMode === 'unique' && row.dataset.status === 'complete' && row.dataset.duplicatePlate !== 'true');
+        const plateMatch = activePlateFilter === '' || row.dataset.plateValue === activePlateFilter;
+        const searchMatch = term === '' || (row.dataset.search || '').includes(term);
+        row.style.display = modeMatch && plateMatch && searchMatch ? '' : 'none';
     });
+
+    const labels = [];
+    if (activeFilterMode !== 'all') {
+        labels.push(activeFilterMode === 'duplicate-plate' ? 'duplicate plates' : activeFilterMode.replace('-', ' '));
+    }
+    if (activePlateFilter) labels.push(`plate ${activePlateFilter.toUpperCase()}`);
+    if (term) labels.push(`search "${term}"`);
+    if (entryFilterStatus) entryFilterStatus.textContent = labels.length ? `Filtered by ${labels.join(', ')}.` : 'Showing all entries.';
     updatePendingCount();
+}
+
+function setFilterMode(mode) {
+    activeFilterMode = mode;
+    if (mode !== 'duplicate-plate') activePlateFilter = '';
+    applyEntrySearch();
 }
 
 async function retryEntry(id, button) {
@@ -358,6 +398,19 @@ sortButtons.forEach(button => {
         const headerCell = button.closest('th');
         if (!headerCell) return;
         sortEntries(headerCell.cellIndex, button.dataset.sortType || 'text', button);
+    });
+});
+
+statCards.forEach(card => {
+    card.addEventListener('click', () => setFilterMode(card.dataset.filterMode || 'all'));
+});
+
+duplicatePlateFilters.forEach(button => {
+    button.addEventListener('click', () => {
+        activeFilterMode = 'duplicate-plate';
+        activePlateFilter = button.dataset.plate || '';
+        applyEntrySearch();
+        document.getElementById('entriesTable')?.scrollIntoView({behavior: 'smooth', block: 'start'});
     });
 });
 
