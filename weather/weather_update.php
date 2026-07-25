@@ -3,8 +3,8 @@
 // File Name    : weather_update.php
 // Author       : Jason Lamb (with help from ChatGPT)
 // Created Date : 2026-01-24
-// Modified Date: 2026-01-29
-// Revision     : 2.7
+// Modified Date: 2026-07-25
+// Revision     : 2.8
 // Description : Weather fetch and cache engine using authoritative lat/lon
 //               for config cities, ZIP/manual override support, and
 //               distance-based sorting.
@@ -17,9 +17,40 @@
 //   Rev 2.5 - Enforced combined City,ST manual entry
 //   Rev 2.6 - Switched base cities to lat/lon authoritative lookups
 //   Rev 2.7 - Enforced lat/lon-only lookups for config cities (bug fix)
+//   Rev 2.8 - Added controlled error for missing or placeholder config
 // ============================================================================
 
-$config = require __DIR__ . '/config.php';
+$configFile = __DIR__ . '/config.php';
+
+if (!is_file($configFile)) {
+    return [
+        'updated_epoch' => time(),
+        'updated_iso'   => gmdate('c'),
+        'ui_revision'   => '2.8',
+        'cities'        => [
+            [
+                'name'  => 'Configuration',
+                'error' => 'Missing config.php. Copy config.example.php to config.php and add the OpenWeather API key.'
+            ]
+        ]
+    ];
+}
+
+$config = require $configFile;
+
+if (($config['api_key'] ?? '') === '' || ($config['api_key'] ?? '') === 'ENTER-API-HERE') {
+    return [
+        'updated_epoch' => time(),
+        'updated_iso'   => gmdate('c'),
+        'ui_revision'   => '2.8',
+        'cities'        => [
+            [
+                'name'  => 'Configuration',
+                'error' => 'OpenWeather API key is not configured in config.php.'
+            ]
+        ]
+    ];
+}
 
 $dataDir    = __DIR__ . '/data';
 $historyDir = $dataDir . '/history';
@@ -93,7 +124,7 @@ function distanceMiles($lat1, $lon1, $lat2, $lon2) {
 $result = [
     'updated_epoch' => $now,
     'updated_iso'   => gmdate('c'),
-    'ui_revision'   => '2.7',
+    'ui_revision'   => '2.8',
     'cities'        => []
 ];
 

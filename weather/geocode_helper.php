@@ -3,18 +3,31 @@
 // File Name    : geocode_helper.php
 // Author       : Jason Lamb (with help from ChatGPT)
 // Created Date : 2026-01-29
-// Modified Date: 2026-01-29
-// Revision     : 1.1
+// Modified Date: 2026-07-25
+// Revision     : 1.2
 // Description : Utility to convert City,ST or ZIP into authoritative
 //               lat/lon + ZIP using OpenWeather Geocoding APIs.
 //               Intended for config.php generation only.
 // Changelog    :
 //   Rev 1.0 - Initial helper for generating lat/lon config entries
 //   Rev 1.1 - Added ZIP resolution and country/state validation
+//   Rev 1.2 - Added controlled error for missing or placeholder config
 // ============================================================================
 
-$config = require __DIR__ . '/config.php';
-$apiKey = $config['api_key'];
+$configFile = __DIR__ . '/config.php';
+
+if (!is_file($configFile)) {
+    echo "Missing config.php. Copy config.example.php to config.php and add the OpenWeather API key.\n";
+    exit;
+}
+
+$config = require $configFile;
+$apiKey = $config['api_key'] ?? '';
+
+if ($apiKey === '' || $apiKey === 'ENTER-API-HERE') {
+    echo "OpenWeather API key is not configured in config.php.\n";
+    exit;
+}
 
 $input = $_GET['q'] ?? null;
 
