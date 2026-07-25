@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.21
-    Description: Log viewer with visible stat filters, Eastern timestamp display, uploaded-date deep links, project revision badge, manual correction tools, quick delete reasons, multi-delete actions, favorites/ranking, and reliable photo link fallback behavior.
+    Revision: 1.2.24
+    Description: Log viewer with visible stat filters, Eastern timestamp display, uploaded-date deep links, project revision badge, cache-busted stylesheet loading, manual correction tools, quick delete reasons, multi-delete actions, favorites/ranking, and reliable photo link fallback behavior.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -19,6 +19,7 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $uploadedDateFilter)) {
 }
 $projectRevision = readProjectRevision();
 $projectModifiedAt = readProjectModifiedAt();
+$styleVersion = rawurlencode($projectRevision);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -26,7 +27,7 @@ $projectModifiedAt = readProjectModifiedAt();
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Plate Log</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=<?= h($styleVersion) ?>">
 </head>
 <body>
 <main class="container container-wide">

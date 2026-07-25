@@ -2,6 +2,11 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.24] - 2026-07-25
+
+### Fixed
+- Main pages now load `style.css` with a revision query string so stale cached CSS does not hide newer layout and photo-preview changes on the live site.
+
 ## [1.2.23] - 2026-07-25
 
 ### Fixed

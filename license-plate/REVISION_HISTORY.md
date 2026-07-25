@@ -2,9 +2,18 @@
 
 ## Current Revision
 
-**Version:** 1.2.23  
+**Version:** 1.2.24  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.24 — Cache-Busted Stylesheet Loading
+
+Added revision-based query strings to the main stylesheet links so the live site stops serving stale cached CSS after layout and UI updates.
+
+Key implementation changes:
+
+- `index.php`, `view_log.php`, `stats.php`, `deleted_audit.php`, and `changelog.php` now load `style.css?v=<project revision>`.
+- This forces browsers and intermediate caches to request the correct stylesheet after each visible UI revision bump.
 
 ## Revision 1.2.23 — Rebalanced Log Column Widths
 

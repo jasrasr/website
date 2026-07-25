@@ -1,13 +1,14 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.14
-    Description: Project changelog page rendered from CHANGELOG.md with current project revision details, deleted-audit navigation, and a corner revision badge.
+    Revision: 1.2.24
+    Description: Project changelog page rendered from CHANGELOG.md with current project revision details, deleted-audit navigation, a corner revision badge, and cache-busted stylesheet loading.
 */
 require_once __DIR__ . '/config.php';
 $projectRevision = readProjectRevision();
 $projectModifiedAt = readProjectModifiedAt();
 $changelogHtml = changelogHtml();
+$styleVersion = rawurlencode($projectRevision);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -15,7 +16,7 @@ $changelogHtml = changelogHtml();
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Changelog</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=<?= h($styleVersion) ?>">
 </head>
 <body>
 <main class="container container-wide">

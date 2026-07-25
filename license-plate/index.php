@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.22
-    Description: Front-page upload queue with project revision badge, wider desktop layout, stats and deleted-audit navigation, mobile batch-layout fixes, and automatic queue reset after processing.
+    Revision: 1.2.24
+    Description: Front-page upload queue with project revision badge, cache-busted stylesheet loading, wider desktop layout, stats and deleted-audit navigation, mobile batch-layout fixes, and automatic queue reset after processing.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -11,6 +11,7 @@ $counts = plateCounts($entries);
 $pendingEntries = array_filter($entries, fn($entry) => ($entry['scan_status'] ?? '') === 'pending');
 $projectRevision = readProjectRevision();
 $projectModifiedAt = readProjectModifiedAt();
+$styleVersion = rawurlencode($projectRevision);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -18,7 +19,7 @@ $projectModifiedAt = readProjectModifiedAt();
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= h(APP_NAME) ?></title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=<?= h($styleVersion) ?>">
 </head>
 <body>
 <main class="container container-wide">

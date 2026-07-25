@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.20
-    Description: Stats dashboard with visible daily upload bars, Eastern upload-date grouping, summary counts, clickable date drill-down links into the log, deleted-audit navigation, and a project revision badge.
+    Revision: 1.2.24
+    Description: Stats dashboard with visible daily upload bars, Eastern upload-date grouping, summary counts, clickable date drill-down links into the log, deleted-audit navigation, a project revision badge, and cache-busted stylesheet loading.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -16,6 +16,7 @@ $favoriteEntries = array_filter($entries, fn($e) => !empty($e['favorite']));
 $rankedEntries = array_filter($entries, fn($e) => isset($e['preference_rank']) && $e['preference_rank'] !== null && $e['preference_rank'] !== '');
 $projectRevision = readProjectRevision();
 $projectModifiedAt = readProjectModifiedAt();
+$styleVersion = rawurlencode($projectRevision);
 
 $uploadsByDay = [];
 foreach ($entries as $entry) {
@@ -34,7 +35,7 @@ $maxUploadsPerDay = empty($uploadsByDay) ? 0 : max($uploadsByDay);
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stats</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=<?= h($styleVersion) ?>">
 </head>
 <body>
 <main class="container container-wide">

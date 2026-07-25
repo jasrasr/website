@@ -1,13 +1,14 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.19
-    Description: Deleted-item audit page with Eastern timestamp display, retention age, permanent delete actions, purge logging, purge controls, and a project revision badge.
+    Revision: 1.2.24
+    Description: Deleted-item audit page with Eastern timestamp display, retention age, permanent delete actions, purge logging, purge controls, a project revision badge, and cache-busted stylesheet loading.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
 $projectRevision = readProjectRevision();
 $projectModifiedAt = readProjectModifiedAt();
+$styleVersion = rawurlencode($projectRevision);
 
 $flash = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -35,7 +36,7 @@ $purgeLogEntries = readDeletedPurgeLogEntries();
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Deleted Audit</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=<?= h($styleVersion) ?>">
 </head>
 <body>
 <main class="container container-wide">
