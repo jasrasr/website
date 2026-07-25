@@ -2,7 +2,7 @@
 /*
     Debt Payoff Planner
     Revision: 1.0.4
-    Description: Project changelog page rendered from CHANGELOG.md with shared project revision display and navigation.
+    Description: Project readme page rendered from README.md with shared top navigation and project metadata.
 */
 
 declare(strict_types=1);
@@ -12,14 +12,14 @@ require_once __DIR__ . '/config.php';
 $projectRevision = readProjectRevision();
 $projectModifiedAt = readProjectModifiedAt();
 $currentAccount = currentUser();
-$changelog = changelogHtml();
+$readmeHtml = markdownFileToHtml(__DIR__ . '/README.md', 'No readme is available.');
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Changelog - <?= h(APP_NAME) ?></title>
+<title>Readme - <?= h(APP_NAME) ?></title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -44,8 +44,8 @@ $changelog = changelogHtml();
     </div>
 
     <section class="card prose-block">
-        <h1>Changelog</h1>
-        <?= $changelog ?>
+        <h1>Readme</h1>
+        <?= $readmeHtml ?>
     </section>
 </main>
 </body>

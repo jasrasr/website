@@ -1,8 +1,8 @@
 <?php
 /*
     Debt Payoff Planner
-    Revision: 1.0.1
-    Description: Admin-only user management for adding, promoting, demoting, deleting, and resetting users while exposing only storage usage and account metadata.
+    Revision: 1.0.4
+    Description: Admin-only user management for adding, promoting, demoting, deleting, and resetting users while exposing only storage usage and account metadata, plus top-nav access to the rendered readme.
 */
 
 declare(strict_types=1);
@@ -91,6 +91,7 @@ $projectModifiedAt = readProjectModifiedAt();
         <nav class="nav">
             <a href="index.php">Dashboard</a>
             <a href="admin.php">Admin</a>
+            <a href="readme.php">Readme</a>
             <a href="changelog.php">Changelog</a>
             <a href="todo.php">Todo</a>
             <a href="index.php?logout=1" class="nav-button">Logout</a>

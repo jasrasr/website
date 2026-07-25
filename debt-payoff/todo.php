@@ -1,7 +1,7 @@
 <?php
 /*
     Debt Payoff Planner
-    Revision: 1.0.1
+    Revision: 1.0.4
     Description: Project todo page rendered from TODO.md for future upgrades, features, and options.
 */
 
@@ -30,6 +30,7 @@ $todo = todoHtml();
             <?php if ($currentAccount !== null && ($currentAccount['role'] ?? 'user') === 'admin'): ?>
             <a href="admin.php">Admin</a>
             <?php endif; ?>
+            <a href="readme.php">Readme</a>
             <a href="changelog.php">Changelog</a>
             <a href="todo.php">Todo</a>
             <?php if ($currentAccount !== null): ?>

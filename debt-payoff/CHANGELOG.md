@@ -1,6 +1,10 @@
 # Changelog
 
 ## 2026-07-25
+- Revision 1.0.4 added a top-menu Readme link across the debt-payoff app.
+- Added `readme.php` to render `README.md` in-browser.
+
+## 2026-07-25
 - Revision 1.0.3 clarified each loan's schedule as an amortization table.
 - Added side-by-side standard and adjusted amortization summaries per loan.
 - Added a separate standard amortization table so early payoff comparisons can be reviewed against the adjusted scenario.

@@ -1,8 +1,8 @@
 <?php
 /*
     Debt Payoff Planner
-    Revision: 1.0.3
-    Description: Main dashboard with login, registration, shared viewer/editor debt access, reversible audit history, daily backup and recovery controls, and per-loan amortization tables for standard and adjusted payoff scenarios.
+    Revision: 1.0.4
+    Description: Main dashboard with login, registration, shared viewer/editor debt access, reversible audit history, daily backup and recovery controls, per-loan amortization tables, and top-nav access to the rendered readme.
 */
 
 declare(strict_types=1);
@@ -131,6 +131,7 @@ if ($currentAccount === null):
     <div class="topbar">
         <nav class="nav">
             <a href="index.php">Home</a>
+            <a href="readme.php">Readme</a>
             <a href="changelog.php">Changelog</a>
             <a href="todo.php">Todo</a>
         </nav>
@@ -228,6 +229,7 @@ $auditEntries = $isOwnDataset ? array_slice(readAuditEntries($datasetOwner), 0, 
             <?php if (($currentAccount['role'] ?? 'user') === 'admin'): ?>
             <a href="admin.php">Admin</a>
             <?php endif; ?>
+            <a href="readme.php">Readme</a>
             <a href="changelog.php">Changelog</a>
             <a href="todo.php">Todo</a>
             <a href="index.php?logout=1" class="nav-button">Logout</a>
