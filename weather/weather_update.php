@@ -4,7 +4,7 @@
 // Author       : Jason Lamb (with help from ChatGPT)
 // Created Date : 2026-01-24
 // Modified Date: 2026-07-25
-// Revision     : 2.8
+// Revision     : 2.9
 // Description : Weather fetch and cache engine using authoritative lat/lon
 //               for config cities, ZIP/manual override support, and
 //               distance-based sorting.
@@ -18,6 +18,7 @@
 //   Rev 2.6 - Switched base cities to lat/lon authoritative lookups
 //   Rev 2.7 - Enforced lat/lon-only lookups for config cities (bug fix)
 //   Rev 2.8 - Added controlled error for missing or placeholder config
+//   Rev 2.9 - Show API error details and avoid caching failed fetches
 // ============================================================================
 
 $configFile = __DIR__ . '/config.php';
@@ -26,7 +27,7 @@ if (!is_file($configFile)) {
     return [
         'updated_epoch' => time(),
         'updated_iso'   => gmdate('c'),
-        'ui_revision'   => '2.8',
+        'ui_revision'   => '2.9',
         'cities'        => [
             [
                 'name'  => 'Configuration',
@@ -42,7 +43,7 @@ if (($config['api_key'] ?? '') === '' || ($config['api_key'] ?? '') === 'ENTER-A
     return [
         'updated_epoch' => time(),
         'updated_iso'   => gmdate('c'),
-        'ui_revision'   => '2.8',
+        'ui_revision'   => '2.9',
         'cities'        => [
             [
                 'name'  => 'Configuration',
@@ -98,7 +99,15 @@ if ($location && preg_match('/^(.+),\s*([A-Z]{2})$/i', $location, $m)) {
 
 if (file_exists($dataFile) && !$zip && !$location) {
     $cached = json_decode(file_get_contents($dataFile), true);
-    if (($now - $cached['updated_epoch']) < $config['update_interval_seconds']) {
+    $cachedHasErrors = false;
+    foreach (($cached['cities'] ?? []) as $cachedCity) {
+        if (!empty($cachedCity['error'])) {
+            $cachedHasErrors = true;
+            break;
+        }
+    }
+
+    if (!$cachedHasErrors && (($now - $cached['updated_epoch']) < $config['update_interval_seconds'])) {
         return $cached;
     }
 }
@@ -117,6 +126,28 @@ function distanceMiles($lat1, $lon1, $lat2, $lon2) {
     return round(2 * $earth * asin(sqrt($a)), 1);
 }
 
+function fetchJsonUrl($url) {
+    $error = null;
+    set_error_handler(function ($severity, $message) use (&$error) {
+        $error = $message;
+    });
+
+    $context = stream_context_create(['http' => ['ignore_errors' => true]]);
+    $body = file_get_contents($url, false, $context);
+    restore_error_handler();
+
+    $status = null;
+    if (isset($http_response_header[0]) && preg_match('/\s(\d{3})\s/', $http_response_header[0], $m)) {
+        $status = (int)$m[1];
+    }
+
+    return [
+        'body'   => $body,
+        'status' => $status,
+        'error'  => $error
+    ];
+}
+
 // --------------------------------------------------------------------------
 // Fetch weather data
 // --------------------------------------------------------------------------
@@ -124,9 +155,11 @@ function distanceMiles($lat1, $lon1, $lat2, $lon2) {
 $result = [
     'updated_epoch' => $now,
     'updated_iso'   => gmdate('c'),
-    'ui_revision'   => '2.8',
+    'ui_revision'   => '2.9',
     'cities'        => []
 ];
+
+$hasError = false;
 
 foreach ($cities as $key => $entry) {
 
@@ -137,38 +170,47 @@ foreach ($cities as $key => $entry) {
             'https://api.openweathermap.org/data/2.5/weather?lat=%s&lon=%s&units=imperial&appid=%s',
             $entry['lat'],
             $entry['lon'],
-            $config['api_key']
+            urlencode($config['api_key'])
         );
     } elseif (isset($entry['zip'])) {
         // ZIP lookup
         $url = sprintf(
             'https://api.openweathermap.org/data/2.5/weather?zip=%s,US&units=imperial&appid=%s',
             $entry['zip'],
-            $config['api_key']
+            urlencode($config['api_key'])
         );
     } else {
         // Manual lookup (temporary only)
         $url = sprintf(
             'https://api.openweathermap.org/data/2.5/weather?q=%s&units=imperial&appid=%s',
             urlencode($entry['query']),
-            $config['api_key']
+            urlencode($config['api_key'])
         );
     }
 
-    $resp = @file_get_contents($url);
+    $fetch = fetchJsonUrl($url);
+    $resp = $fetch['body'];
+
     if (!$resp) {
+        $hasError = true;
         $result['cities'][$key] = [
             'name'  => $entry['label'] ?? 'Unknown',
-            'error' => 'API fetch failed'
+            'error' => $fetch['error'] ?: 'API fetch failed'
         ];
         continue;
     }
 
     $w = json_decode($resp, true);
     if (!isset($w['main'])) {
+        $hasError = true;
+        $message = $w['message'] ?? 'Malformed API response';
+        if ($fetch['status']) {
+            $message = "OpenWeather HTTP {$fetch['status']}: {$message}";
+        }
+
         $result['cities'][$key] = [
             'name'  => $entry['label'] ?? 'Unknown',
-            'error' => 'Malformed API response'
+            'error' => $message
         ];
         continue;
     }
@@ -195,6 +237,9 @@ foreach ($cities as $key => $entry) {
     $result['cities'][$key] = $cityData;
 }
 
-file_put_contents($dataFile, json_encode($result, JSON_PRETTY_PRINT));
+if (!$hasError) {
+    file_put_contents($dataFile, json_encode($result, JSON_PRETTY_PRINT));
+}
+
 return $result;
 
