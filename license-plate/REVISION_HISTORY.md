@@ -2,9 +2,19 @@
 
 ## Current Revision
 
-**Version:** 1.2.27  
+**Version:** 1.2.28  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.28 — Live Duplicate Refresh And Bulk Reprocess
+
+Fixed the log page so duplicate counts and duplicate-plate groups refresh after in-page deletes or edits, and added a re-process flow for existing saved entries that need another scan pass.
+
+Key implementation changes:
+
+- `config.php` now exposes a shared saved-entry processing helper used by both pending retries and full reprocessing.
+- `reprocess_entry.php` was added so any existing log row can be rescanned from its saved uploaded photo.
+- `view_log.php` now offers `Re-process` per row, `Re-process Selected` in bulk, `Select Missing Plate`, and live duplicate summary recalculation after row changes.
 
 ## Revision 1.2.27 — Deleted Audit Photo Overlay
 

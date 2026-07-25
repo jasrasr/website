@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.21
-    Description: Shared configuration for batch license plate photo uploads, metadata/state extraction, changelog helpers, duplicate cleanup, manual entry updates, deleted-item audit handling, deleted purge logging, and case-safe changelog path resolution.
+    Revision: 1.2.28
+    Description: Shared configuration for batch license plate photo uploads, metadata/state extraction, changelog helpers, duplicate cleanup, live reprocessing, manual entry updates, deleted-item audit handling, deleted purge logging, and case-safe changelog path resolution.
 */
 
 declare(strict_types=1);
@@ -666,6 +666,111 @@ function rebuildHashIndexFromEntries(array $entries): array
         ];
     }
     return $index;
+}
+
+function processSavedLogEntry(string $id, bool $requirePending = false): array
+{
+    $entries = readLogEntries();
+    $entryIndex = null;
+
+    foreach ($entries as $index => $entry) {
+        if ((string)($entry['id'] ?? '') === $id) {
+            $entryIndex = $index;
+            break;
+        }
+    }
+
+    if ($entryIndex === null) {
+        return ['http_status' => 404, 'error' => 'Entry not found.'];
+    }
+
+    $entry = $entries[$entryIndex];
+    $status = $entry['scan_status'] ?? (empty($entry['error']) ? 'complete' : 'pending');
+    if ($requirePending && $status !== 'pending') {
+        return ['http_status' => 409, 'error' => 'Entry is not pending.'];
+    }
+
+    $storedFile = basename((string)($entry['stored_file'] ?? ''));
+    $imagePath = UPLOAD_DIR . '/' . $storedFile;
+    if ($storedFile === '' || !is_file($imagePath)) {
+        return ['http_status' => 404, 'error' => 'Stored image not found.'];
+    }
+
+    $mimeType = mime_content_type($imagePath) ?: 'application/octet-stream';
+    $scan = scanImage($imagePath, $mimeType);
+    $scanError = trim((string)($scan['error'] ?? ''));
+    $attempts = (int)($entry['scan_attempts'] ?? 1) + 1;
+
+    $entries[$entryIndex]['scan_attempts'] = $attempts;
+    $entries[$entryIndex]['last_scan_attempt_at'] = date('c');
+    $entries[$entryIndex]['scan_mode'] = SCAN_MODE;
+
+    if ($scanError !== '') {
+        $entries[$entryIndex]['scan_status'] = 'pending';
+        $entries[$entryIndex]['error'] = $scanError;
+        refreshDuplicatePlateFlags($entries);
+        recalculatePlateClarityFlags($entries);
+        writeJsonFile(LOG_FILE, $entries);
+        writeJsonFile(HASH_INDEX_FILE, rebuildHashIndexFromEntries($entries));
+
+        return [
+            'http_status' => 422,
+            'id' => $id,
+            'status' => 'pending',
+            'error' => $scanError,
+            'scan_attempts' => $attempts,
+            'scanner_label' => entryScannerLabel($entries[$entryIndex]),
+        ];
+    }
+
+    $value = normalizePlateText((string)($scan['plate'] ?? ''));
+    $plateState = normalizeUsStateName((string)($scan['state'] ?? ''));
+    $entries[$entryIndex]['plate'] = $value;
+    $entries[$entryIndex]['plate_normalized'] = $value;
+    $entries[$entryIndex]['plate_state'] = $plateState;
+    $entries[$entryIndex]['confidence'] = normalizeConfidenceValue($scan['confidence'] ?? 0);
+    $entries[$entryIndex]['raw_text'] = (string)($scan['raw_text'] ?? '');
+    $entries[$entryIndex]['error'] = '';
+    $entries[$entryIndex]['scan_status'] = 'complete';
+    $entries[$entryIndex]['processed_at'] = date('c');
+    $entries[$entryIndex]['manual_corrected'] = false;
+    unset($entries[$entryIndex]['manual_corrected_at']);
+    if (!isset($entries[$entryIndex]['clarity_score'])) {
+        $entries[$entryIndex]['clarity_score'] = computeImageClarityScore($imagePath, $mimeType);
+    }
+
+    refreshDuplicatePlateFlags($entries);
+    recalculatePlateClarityFlags($entries);
+    writeJsonFile(LOG_FILE, $entries);
+    writeJsonFile(HASH_INDEX_FILE, rebuildHashIndexFromEntries($entries));
+
+    $plateCount = 0;
+    if ($value !== '') {
+        foreach ($entries as $candidate) {
+            $candidateStatus = $candidate['scan_status'] ?? (empty($candidate['error']) ? 'complete' : 'pending');
+            $candidateValue = normalizePlateText((string)($candidate['plate_normalized'] ?? $candidate['plate'] ?? ''));
+            if ($candidateStatus === 'complete' && $candidateValue === $value) {
+                $plateCount++;
+            }
+        }
+    }
+
+    return [
+        'http_status' => 200,
+        'id' => $id,
+        'status' => 'complete',
+        'plate' => $value,
+        'plate_state' => $entries[$entryIndex]['plate_state'] ?? '',
+        'confidence' => $entries[$entryIndex]['confidence'] ?? 0,
+        'clarity_score' => $entries[$entryIndex]['clarity_score'] ?? 0,
+        'best_plate_photo' => !empty($entries[$entryIndex]['best_plate_photo']),
+        'duplicate_plate' => !empty($entries[$entryIndex]['duplicate_plate']),
+        'duplicate_file' => !empty($entries[$entryIndex]['duplicate_file']),
+        'plate_count' => $plateCount,
+        'scan_attempts' => $attempts,
+        'scanner_label' => entryScannerLabel($entries[$entryIndex]),
+        'error' => '',
+    ];
 }
 
 function updateLogEntry(string $id, array $changes): ?array

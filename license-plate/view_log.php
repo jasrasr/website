@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.26
-    Description: Log viewer with visible stat filters, Eastern timestamp display, uploaded-date deep links, project revision badge, cache-busted stylesheet loading, stable overlay behavior, manual correction tools, quick delete reasons, multi-delete actions, favorites/ranking, and reliable photo preview behavior.
+    Revision: 1.2.28
+    Description: Log viewer with live duplicate summary refresh, bulk reprocessing, visible stat filters, Eastern timestamp display, uploaded-date deep links, project revision badge, cache-busted stylesheet loading, stable overlay behavior, manual correction tools, quick delete reasons, multi-delete actions, favorites/ranking, and reliable photo preview behavior.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -45,36 +45,31 @@ $styleVersion = rawurlencode($projectRevision);
     <h1>Plate Log</h1>
 
     <section class="stats-grid stats-grid-compact">
-        <button type="button" class="card stat-card is-active" data-filter-mode="all" onclick="setFilterMode('all')"><strong>Total entries</strong><span><?= count($entries) ?></span></button>
+        <button type="button" class="card stat-card is-active" data-filter-mode="all" onclick="setFilterMode('all')"><strong>Total entries</strong><span id="totalEntriesCount"><?= count($entries) ?></span></button>
         <button type="button" class="card stat-card" data-filter-mode="pending" onclick="setFilterMode('pending')"><strong>Pending Processing</strong><span id="pendingCount"><?= count($pendingEntries) ?></span></button>
-        <button type="button" class="card stat-card" data-filter-mode="unique" onclick="setFilterMode('unique')"><strong>Unique plates</strong><span><?= count($counts) ?></span></button>
-        <button type="button" class="card stat-card" data-filter-mode="duplicate-file" onclick="setFilterMode('duplicate-file')"><strong>Duplicate files</strong><span><?= count($duplicateFiles) ?></span></button>
-        <button type="button" class="card stat-card" data-filter-mode="duplicate-plate" onclick="setFilterMode('duplicate-plate')"><strong>Duplicate Plates</strong><span><?= count($duplicatePlates) ?></span></button>
+        <button type="button" class="card stat-card" data-filter-mode="unique" onclick="setFilterMode('unique')"><strong>Unique plates</strong><span id="uniquePlatesCount"><?= count($counts) ?></span></button>
+        <button type="button" class="card stat-card" data-filter-mode="duplicate-file" onclick="setFilterMode('duplicate-file')"><strong>Duplicate files</strong><span id="duplicateFilesCount"><?= count($duplicateFiles) ?></span></button>
+        <button type="button" class="card stat-card" data-filter-mode="duplicate-plate" onclick="setFilterMode('duplicate-plate')"><strong>Duplicate Plates</strong><span id="duplicatePlatesCount"><?= count($duplicatePlates) ?></span></button>
         <button type="button" class="card stat-card" data-filter-mode="metadata" onclick="setFilterMode('metadata')"><strong>With Metadata</strong><span id="metadataCount"><?= count($metadataEntries) ?></span></button>
     </section>
 
-    <?php if (!empty($pendingEntries)): ?>
-    <section class="card" id="pendingSection">
+    <section class="card" id="pendingSection"<?= empty($pendingEntries) ? ' hidden' : '' ?>>
         <h2>Pending Processing</h2>
         <p class="small">Use the first-column checkboxes to pick several failed rows, or click <strong>Select All Failed</strong> to retry every prior error in one click. Files are retried one at a time to avoid web-server timeouts.</p>
         <div class="actions">
-            <?php if (!empty($failedPendingEntries)): ?>
-                <button id="retrySelectedPending" type="button" class="secondary">Retry Selected Failed</button>
-                <button id="selectAllFailedPending" type="button" class="secondary">Select All Failed</button>
-            <?php endif; ?>
+            <button id="retrySelectedPending" type="button" class="secondary">Retry Selected Failed</button>
+            <button id="selectAllFailedPending" type="button" class="secondary">Select All Failed</button>
             <button id="processAllPending" type="button">Process All Pending</button>
         </div>
         <p id="pendingSummary" class="small"><?= count($pendingEntries) ?> file<?= count($pendingEntries) === 1 ? '' : 's' ?> waiting.<?php if (!empty($failedPendingEntries)): ?> <?= count($failedPendingEntries) ?> previously failed.<?php endif; ?></p>
     </section>
-    <?php endif; ?>
 
-    <?php if (!empty($duplicatePlates)): ?>
-    <section class="card" id="duplicatePlatesSection">
+    <section class="card" id="duplicatePlatesSection"<?= empty($duplicatePlates) ? ' hidden' : '' ?>>
         <h2>Duplicate Plates</h2>
         <p class="small">Click a plate value to filter the entry table to that plate.</p>
         <table>
             <thead><tr><th>Plate</th><th>Count</th></tr></thead>
-            <tbody>
+            <tbody id="duplicatePlatesTableBody">
             <?php foreach ($duplicatePlates as $plate => $count): ?>
                 <tr>
                     <td><button type="button" class="link-button duplicate-plate-filter" data-plate="<?= h(strtolower($plate)) ?>"><?= h($plate) ?></button></td>
@@ -84,7 +79,6 @@ $styleVersion = rawurlencode($projectRevision);
             </tbody>
         </table>
     </section>
-    <?php endif; ?>
 
     <section class="card">
         <h2>Entries</h2>
@@ -100,7 +94,9 @@ $styleVersion = rawurlencode($projectRevision);
             <p id="entryFilterStatus" class="small filter-status">Showing all entries.</p>
             <div class="bulk-actions">
                 <button type="button" id="selectVisibleDeletes" class="secondary">Select Visible</button>
+                <button type="button" id="selectMissingPlate" class="secondary">Select Missing Plate</button>
                 <button type="button" id="clearDeleteSelection" class="secondary">Clear Selection</button>
+                <button type="button" id="reprocessSelectedEntries" class="secondary" disabled>Re-process Selected</button>
                 <button type="button" id="deleteSelectedEntries" class="danger" disabled>Delete Selected</button>
             </div>
         </div>
@@ -157,15 +153,18 @@ $styleVersion = rawurlencode($projectRevision);
                     data-duplicate-plate="<?= !empty($entry['duplicate_plate']) ? 'true' : 'false' ?>"
                     data-has-metadata="<?= (!empty($entry['date_taken']) || !empty($entry['gps_display']) || $stateDisplay !== '') ? 'true' : 'false' ?>"
                     data-plate-value="<?= h(strtolower((string)($entry['plate'] ?? ''))) ?>"
+                    data-stored-file="<?= h((string)($entry['stored_file'] ?? '')) ?>"
+                    data-best-plate-photo="<?= !empty($entry['best_plate_photo']) ? 'true' : 'false' ?>"
                     data-favorite="<?= !empty($entry['favorite']) ? 'true' : 'false' ?>"
                     data-rank="<?= h((string)($entry['preference_rank'] ?? '')) ?>"
                     data-uploaded-date="<?= h(displayEasternDate((string)($entry['processed_at'] ?? ''))) ?>"
+                    data-scanner-label="<?= h(entryScannerLabel($entry)) ?>"
                     data-search="<?= h($searchBlob) ?>"
                 >
                     <td>
                         <label class="row-select-option">
-                            <input type="checkbox" class="delete-select" data-id="<?= h($entry['id'] ?? '') ?>" aria-label="Select <?= h($entry['original_file'] ?? ($entry['id'] ?? 'entry')) ?> for deletion">
-                            <span>Delete</span>
+                            <input type="checkbox" class="delete-select" data-id="<?= h($entry['id'] ?? '') ?>" aria-label="Select <?= h($entry['original_file'] ?? ($entry['id'] ?? 'entry')) ?>">
+                            <span>Select</span>
                         </label>
                         <?php if ($isFailedPending): ?>
                             <label class="row-select-option">
@@ -210,6 +209,7 @@ $styleVersion = rawurlencode($projectRevision);
                     <td class="entry-message"><?= h($entry['error'] ?? '') ?></td>
                     <td>
                         <div class="inline-actions">
+                            <button type="button" class="secondary reprocess-entry" data-id="<?= h($entry['id'] ?? '') ?>">Re-process</button>
                             <?php if ($status === 'pending'): ?>
                                 <button type="button" class="retry-pending" data-id="<?= h($entry['id'] ?? '') ?>">Retry</button>
                             <?php endif; ?>
@@ -319,19 +319,20 @@ const processAllButton = document.getElementById('processAllPending');
 const retrySelectedButton = document.getElementById('retrySelectedPending');
 const selectAllFailedButton = document.getElementById('selectAllFailedPending');
 const pendingSummary = document.getElementById('pendingSummary');
+const pendingSection = document.getElementById('pendingSection');
+const totalEntriesCount = document.getElementById('totalEntriesCount');
 const pendingCount = document.getElementById('pendingCount');
+const uniquePlatesCount = document.getElementById('uniquePlatesCount');
+const duplicateFilesCount = document.getElementById('duplicateFilesCount');
+const duplicatePlatesCount = document.getElementById('duplicatePlatesCount');
 const metadataCount = document.getElementById('metadataCount');
 const entrySearch = document.getElementById('entrySearch');
 const entryFilterStatus = document.getElementById('entryFilterStatus');
-const selectionBoxes = Array.from(document.querySelectorAll('.retry-select'));
-const deleteSelectionBoxes = Array.from(document.querySelectorAll('.delete-select'));
 const entriesTableBody = document.getElementById('entriesTableBody');
 const sortButtons = Array.from(document.querySelectorAll('.sort-button'));
 const statCards = Array.from(document.querySelectorAll('.stat-card'));
-const duplicatePlateFilters = Array.from(document.querySelectorAll('.duplicate-plate-filter'));
-const photoPreviewLinks = Array.from(document.querySelectorAll('.photo-preview-link'));
-const editEntryButtons = Array.from(document.querySelectorAll('.edit-entry'));
-const deleteEntryButtons = Array.from(document.querySelectorAll('.delete-entry'));
+const duplicatePlatesSection = document.getElementById('duplicatePlatesSection');
+const duplicatePlatesTableBody = document.getElementById('duplicatePlatesTableBody');
 const quickReasonButtons = Array.from(document.querySelectorAll('.quick-reason'));
 const photoOverlay = document.getElementById('photoOverlay');
 const photoOverlayImage = document.getElementById('photoOverlayImage');
@@ -358,7 +359,9 @@ const closeDeleteEntryButton = document.getElementById('closeDeleteEntry');
 const cancelDeleteEntryButton = document.getElementById('cancelDeleteEntry');
 const confirmDeleteEntryButton = document.getElementById('confirmDeleteEntry');
 const selectVisibleDeletesButton = document.getElementById('selectVisibleDeletes');
+const selectMissingPlateButton = document.getElementById('selectMissingPlate');
 const clearDeleteSelectionButton = document.getElementById('clearDeleteSelection');
+const reprocessSelectedEntriesButton = document.getElementById('reprocessSelectedEntries');
 const deleteSelectedEntriesButton = document.getElementById('deleteSelectedEntries');
 let activeFilterMode = 'all';
 let activePlateFilter = '';
@@ -366,6 +369,18 @@ let activeUploadedDateFilter = <?= json_encode($uploadedDateFilter, JSON_UNESCAP
 let activeEditRow = null;
 let activeDeleteRow = null;
 let activeDeleteRows = [];
+
+function allRows() {
+    return Array.from(entriesTableBody.querySelectorAll('tr'));
+}
+
+function getRetrySelectionBoxes() {
+    return Array.from(document.querySelectorAll('.retry-select'));
+}
+
+function getDeleteSelectionBoxes() {
+    return Array.from(document.querySelectorAll('.delete-select'));
+}
 
 function closeAllOverlays() {
     if (photoOverlay && !photoOverlay.hidden) {
@@ -488,7 +503,7 @@ function closeDeleteEntry() {
 }
 
 function getSelectedFailedButtons() {
-    return selectionBoxes
+    return getRetrySelectionBoxes()
         .filter(box => box.checked)
         .map(box => document.querySelector(`.retry-pending[data-id="${CSS.escape(box.dataset.id)}"]`))
         .filter(Boolean);
@@ -496,6 +511,7 @@ function getSelectedFailedButtons() {
 
 function updateFailedSelectionState() {
     if (!retrySelectedButton) return;
+    const selectionBoxes = getRetrySelectionBoxes();
     const selectedCount = selectionBoxes.filter(box => box.checked).length;
     retrySelectedButton.disabled = selectedCount === 0;
     retrySelectedButton.textContent = selectedCount > 0 ? `Retry Selected Failed (${selectedCount})` : 'Retry Selected Failed';
@@ -509,7 +525,7 @@ function updateFailedSelectionState() {
 }
 
 function selectedDeleteRows() {
-    return deleteSelectionBoxes
+    return getDeleteSelectionBoxes()
         .filter(box => box.checked && !box.disabled)
         .map(box => box.closest('tr'))
         .filter(row => row && row.isConnected);
@@ -521,22 +537,146 @@ function updateDeleteSelectionState() {
         deleteSelectedEntriesButton.disabled = selectedCount === 0;
         deleteSelectedEntriesButton.textContent = selectedCount > 0 ? `Delete Selected (${selectedCount})` : 'Delete Selected';
     }
+    if (reprocessSelectedEntriesButton) {
+        reprocessSelectedEntriesButton.disabled = selectedCount === 0;
+        reprocessSelectedEntriesButton.textContent = selectedCount > 0 ? `Re-process Selected (${selectedCount})` : 'Re-process Selected';
+    }
 }
 
 function visibleRows() {
-    return Array.from(entriesTableBody.querySelectorAll('tr')).filter(row => row.style.display !== 'none');
+    return allRows().filter(row => row.style.display !== 'none');
+}
+
+function rowPlateValue(row) {
+    return (row.dataset.plateValue || '').trim().toUpperCase();
+}
+
+function computeTableStats() {
+    const rows = allRows();
+    const plateCounts = new Map();
+
+    let pending = 0;
+    let failedPending = 0;
+    let metadata = 0;
+    let duplicateFiles = 0;
+
+    rows.forEach(row => {
+        const plate = rowPlateValue(row);
+        if (plate !== '') {
+            plateCounts.set(plate, (plateCounts.get(plate) || 0) + 1);
+        }
+        if (row.dataset.status === 'pending') pending++;
+        if (row.dataset.status === 'pending' && row.dataset.failedPending === 'true') failedPending++;
+        if (row.dataset.hasMetadata === 'true') metadata++;
+        if (row.dataset.duplicateFile === 'true') duplicateFiles++;
+    });
+
+    const duplicatePlateGroups = Array.from(plateCounts.entries())
+        .filter(([, count]) => count > 1)
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+
+    return {
+        rows,
+        pending,
+        failedPending,
+        metadata,
+        duplicateFiles,
+        uniquePlates: plateCounts.size,
+        duplicatePlateGroups,
+    };
+}
+
+function recalculateRowDuplicateFlags() {
+    const rows = allRows();
+    const plateGroups = new Map();
+    const fileGroups = new Map();
+
+    rows.forEach(row => {
+        row.dataset.duplicatePlate = 'false';
+        row.dataset.duplicateFile = 'false';
+        row.dataset.bestPlatePhoto = 'false';
+
+        const plate = rowPlateValue(row);
+        if (plate !== '') {
+            const group = plateGroups.get(plate) || [];
+            group.push(row);
+            plateGroups.set(plate, group);
+        }
+
+        const storedFile = (row.dataset.storedFile || '').trim();
+        if (storedFile !== '') {
+            const group = fileGroups.get(storedFile) || [];
+            group.push(row);
+            fileGroups.set(storedFile, group);
+        }
+    });
+
+    fileGroups.forEach(group => {
+        if (group.length < 2) return;
+        group.forEach(row => {
+            row.dataset.duplicateFile = 'true';
+        });
+    });
+
+    plateGroups.forEach(group => {
+        if (group.length < 2) return;
+        let bestScore = Number.NEGATIVE_INFINITY;
+        group.forEach(row => {
+            row.dataset.duplicatePlate = 'true';
+            const score = Number.parseFloat(row.querySelector('.entry-clarity')?.textContent || '');
+            if (!Number.isNaN(score) && score > bestScore) {
+                bestScore = score;
+            }
+        });
+        group.forEach(row => {
+            const score = Number.parseFloat(row.querySelector('.entry-clarity')?.textContent || '');
+            row.dataset.bestPlatePhoto = !Number.isNaN(score) && score === bestScore ? 'true' : 'false';
+        });
+    });
+
+    rows.forEach(row => {
+        const duplicateCell = row.querySelector('.entry-duplicate');
+        if (!duplicateCell) return;
+        duplicateCell.textContent = rowDuplicateText({
+            duplicate_file: row.dataset.duplicateFile === 'true',
+            duplicate_plate: row.dataset.duplicatePlate === 'true',
+            best_plate_photo: row.dataset.bestPlatePhoto === 'true',
+            plate_count: plateGroups.get(rowPlateValue(row))?.length || 0,
+        });
+    });
+}
+
+function renderDuplicatePlateSection(duplicatePlateGroups) {
+    if (!duplicatePlatesSection || !duplicatePlatesTableBody) return;
+
+    duplicatePlatesTableBody.innerHTML = '';
+    duplicatePlateGroups.forEach(([plate, count]) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td><button type="button" class="link-button duplicate-plate-filter" data-plate="${plate.toLowerCase()}">${plate}</button></td><td>${count}</td>`;
+        duplicatePlatesTableBody.appendChild(row);
+    });
+
+    duplicatePlatesSection.hidden = duplicatePlateGroups.length === 0;
+}
+
+function updateSummaryCards() {
+    recalculateRowDuplicateFlags();
+    const stats = computeTableStats();
+    if (totalEntriesCount) totalEntriesCount.textContent = String(stats.rows.length);
+    if (pendingCount) pendingCount.textContent = String(stats.pending);
+    if (uniquePlatesCount) uniquePlatesCount.textContent = String(stats.uniquePlates);
+    if (duplicateFilesCount) duplicateFilesCount.textContent = String(stats.duplicateFiles);
+    if (duplicatePlatesCount) duplicatePlatesCount.textContent = String(stats.duplicatePlateGroups.length);
+    if (metadataCount) metadataCount.textContent = String(stats.metadata);
+    if (pendingSummary) pendingSummary.textContent = `${stats.pending} file${stats.pending === 1 ? '' : 's'} waiting.${stats.failedPending ? ` ${stats.failedPending} previously failed.` : ''}`;
+    if (processAllButton) processAllButton.disabled = stats.pending === 0;
+    if (retrySelectedButton) retrySelectedButton.disabled = getRetrySelectionBoxes().filter(box => box.checked).length === 0;
+    if (pendingSection) pendingSection.hidden = stats.pending === 0;
+    renderDuplicatePlateSection(stats.duplicatePlateGroups);
 }
 
 function updatePendingCount() {
-    const rows = visibleRows();
-    const remaining = rows.filter(row => row.dataset.status === 'pending').length;
-    const failedRemaining = rows.filter(row => row.dataset.status === 'pending' && row.dataset.failedPending === 'true').length;
-    const visibleMetadata = rows.filter(row => row.dataset.hasMetadata === 'true').length;
-
-    if (pendingCount) pendingCount.textContent = remaining;
-    if (metadataCount) metadataCount.textContent = visibleMetadata;
-    if (pendingSummary) pendingSummary.textContent = `${remaining} file${remaining === 1 ? '' : 's'} waiting.${failedRemaining ? ` ${failedRemaining} previously failed.` : ''}`;
-    if (processAllButton) processAllButton.disabled = remaining === 0;
+    updateSummaryCards();
 }
 
 function refreshVisibleSelectionControls() {
@@ -612,6 +752,89 @@ function syncEditButtonFromRow(row) {
     editButton.dataset.rank = row.dataset.rank || '';
 }
 
+function rowDuplicateText(data) {
+    const duplicateParts = [];
+    if (data.duplicate_file) duplicateParts.push('same file');
+    if (data.duplicate_plate) duplicateParts.push(data.plate_count ? `same plate (${data.plate_count})` : 'same plate');
+    if (data.duplicate_plate && data.best_plate_photo) duplicateParts.push('clearest photo');
+    return duplicateParts.join(', ');
+}
+
+function ensureRetrySelection(row) {
+    const firstCell = row.cells[0];
+    if (!firstCell || row.querySelector('.retry-select')) return;
+
+    const label = document.createElement('label');
+    label.className = 'row-select-option';
+    label.innerHTML = `<input type="checkbox" class="retry-select" data-id="${row.dataset.entryId || ''}"><span>Retry</span>`;
+    firstCell.appendChild(label);
+    label.querySelector('.retry-select')?.addEventListener('change', updateFailedSelectionState);
+}
+
+function ensureRetryButton(row) {
+    const actions = row.querySelector('.inline-actions');
+    if (!actions || row.querySelector('.retry-pending')) return;
+
+    const reprocessButton = row.querySelector('.reprocess-entry');
+    const retryButton = document.createElement('button');
+    retryButton.type = 'button';
+    retryButton.className = 'retry-pending';
+    retryButton.dataset.id = row.dataset.entryId || '';
+    retryButton.textContent = 'Retry';
+    retryButton.addEventListener('click', () => retryEntry(retryButton.dataset.id || '', retryButton));
+    if (reprocessButton && reprocessButton.nextSibling) {
+        actions.insertBefore(retryButton, reprocessButton.nextSibling);
+    } else {
+        actions.appendChild(retryButton);
+    }
+}
+
+function clearRetryControls(row) {
+    const retrySelect = row.querySelector('.retry-select');
+    if (retrySelect) {
+        retrySelect.closest('.row-select-option')?.remove();
+    }
+    row.querySelector('.retry-pending')?.remove();
+}
+
+function applyProcessedEntryToRow(row, data) {
+    row.dataset.status = data.status || 'complete';
+    row.dataset.failedPending = data.status === 'pending' && data.error ? 'true' : 'false';
+    row.dataset.duplicatePlate = data.duplicate_plate ? 'true' : 'false';
+    row.dataset.duplicateFile = data.duplicate_file ? 'true' : row.dataset.duplicateFile || 'false';
+    row.dataset.bestPlatePhoto = data.best_plate_photo ? 'true' : 'false';
+    row.dataset.plateValue = (data.plate || '').toLowerCase();
+    row.dataset.scannerLabel = data.scanner_label || row.dataset.scannerLabel || '';
+
+    const statusCell = row.querySelector('.entry-status');
+    const plateCell = row.querySelector('.entry-plate');
+    const confidenceCell = row.querySelector('.entry-confidence');
+    const clarityCell = row.querySelector('.entry-clarity');
+    const stateCell = row.querySelector('.entry-state');
+    const duplicateCell = row.querySelector('.entry-duplicate');
+    const scannerCell = row.querySelector('.entry-scanner');
+    const messageCell = row.querySelector('.entry-message');
+
+    if (statusCell) statusCell.textContent = data.status === 'pending' ? 'Pending Processing' : 'Complete';
+    if (plateCell) plateCell.textContent = data.plate || '';
+    if (confidenceCell) confidenceCell.textContent = data.confidence !== undefined && data.confidence !== null && data.confidence !== '' ? `${data.confidence}%` : '';
+    if (clarityCell) clarityCell.textContent = data.clarity_score ?? clarityCell.textContent ?? '';
+    if (stateCell) stateCell.textContent = data.plate_state || '';
+    if (duplicateCell) duplicateCell.textContent = rowDuplicateText(data);
+    if (scannerCell && data.scanner_label) scannerCell.textContent = data.scanner_label;
+    if (messageCell) messageCell.textContent = data.error || '';
+
+    if (data.status === 'pending' && data.error) {
+        ensureRetrySelection(row);
+        ensureRetryButton(row);
+    } else {
+        clearRetryControls(row);
+    }
+
+    refreshRowSearch(row);
+    syncEditButtonFromRow(row);
+}
+
 async function saveEntryEditor(event) {
     event.preventDefault();
     if (!activeEditRow || !entryEditorId || !saveEntryEditorButton) return;
@@ -662,28 +885,16 @@ async function saveEntryEditor(event) {
         if (statusCell) statusCell.textContent = data.status === 'pending' ? 'Pending Processing' : 'Complete';
         if (scannerCell) scannerCell.textContent = data.scanner_label || scannerCell.textContent || '';
         if (messageCell) messageCell.textContent = data.error || '';
-        if (duplicateCell) {
-            const duplicateParts = [];
-            if (data.duplicate_file) duplicateParts.push('same file');
-            if (data.duplicate_plate) duplicateParts.push('same plate');
-            if (data.duplicate_plate && data.best_plate_photo) duplicateParts.push('clearest photo');
-            duplicateCell.textContent = duplicateParts.join(', ');
-        }
+        if (duplicateCell) duplicateCell.textContent = rowDuplicateText(data);
 
-        if (data.status !== 'pending') {
-            const retryButton = activeEditRow.querySelector('.retry-pending');
-            if (retryButton) retryButton.remove();
-            const retrySelect = activeEditRow.querySelector('.retry-select');
-            if (retrySelect) {
-                retrySelect.checked = false;
-                retrySelect.disabled = true;
-            }
-        }
-
-        syncEditButtonFromRow(activeEditRow);
-        refreshRowSearch(activeEditRow);
+        applyProcessedEntryToRow(activeEditRow, {
+            ...data,
+            status: data.status || 'complete',
+            error: data.error || '',
+        });
         updatePendingCount();
         updateFailedSelectionState();
+        updateDeleteSelectionState();
         applyEntrySearch();
         closeEntryEditor();
         saveEntryEditorButton.disabled = false;
@@ -742,6 +953,7 @@ async function submitDeleteEntry(event) {
         closeDeleteEntry();
         applyEntrySearch();
         refreshVisibleSelectionControls();
+        updateSummaryCards();
         if (entryFilterStatus) {
             entryFilterStatus.textContent += ` Deleted ${deletedCount} entr${deletedCount === 1 ? 'y' : 'ies'}.`;
         }
@@ -771,37 +983,34 @@ async function retryEntry(id, button) {
         const data = await response.json();
 
         if (!response.ok || data.error) {
-            row.querySelector('.entry-status').textContent = 'Pending Processing';
-            row.querySelector('.entry-message').textContent = data.error || `HTTP ${response.status}`;
+            applyProcessedEntryToRow(row, {
+                status: data.status || 'pending',
+                plate: row.querySelector('.entry-plate')?.textContent || '',
+                plate_state: row.querySelector('.entry-state')?.textContent || '',
+                confidence: row.querySelector('.entry-confidence')?.textContent.replace('%', '') || '',
+                clarity_score: row.querySelector('.entry-clarity')?.textContent || '',
+                duplicate_plate: row.dataset.duplicatePlate === 'true',
+                duplicate_file: row.dataset.duplicateFile === 'true',
+                best_plate_photo: row.querySelector('.entry-duplicate')?.textContent.includes('clearest photo') || false,
+                plate_count: 0,
+                scanner_label: data.scanner_label || row.querySelector('.entry-scanner')?.textContent || '',
+                error: data.error || `HTTP ${response.status}`,
+            });
             button.disabled = false;
             button.textContent = 'Retry';
             if (selectionBox) selectionBox.disabled = false;
-            refreshRowSearch(row);
+            updateSummaryCards();
             updateFailedSelectionState();
             return false;
         }
 
-        row.dataset.status = 'complete';
-        row.dataset.failedPending = 'false';
-        row.querySelector('.entry-status').textContent = 'Complete';
-        row.querySelector('.entry-plate').textContent = data.plate || '';
-        row.querySelector('.entry-confidence').textContent = data.confidence !== undefined && data.confidence !== null && data.confidence !== '' ? `${data.confidence}%` : '';
-        const clarityCell = row.querySelector('.entry-clarity');
-        if (clarityCell) clarityCell.textContent = data.clarity_score ?? clarityCell.textContent ?? '';
-        const stateCell = row.querySelector('.entry-state');
-        if (stateCell) stateCell.textContent = data.plate_state || stateCell.textContent || '';
-        row.querySelector('.entry-message').textContent = '';
-        row.querySelector('.entry-duplicate').textContent = data.duplicate_plate
-            ? `same plate (${data.plate_count})${data.best_plate_photo ? ', clearest photo' : ''}`
-            : '';
-        refreshRowSearch(row);
+        applyProcessedEntryToRow(row, data);
         if (selectionBox) {
             selectionBox.checked = false;
-            selectionBox.disabled = true;
         }
-        button.remove();
         updatePendingCount();
         updateFailedSelectionState();
+        updateDeleteSelectionState();
         return true;
     } catch (error) {
         row.querySelector('.entry-message').textContent = 'Request failed: ' + error.message;
@@ -810,6 +1019,64 @@ async function retryEntry(id, button) {
         if (selectionBox) selectionBox.disabled = false;
         refreshRowSearch(row);
         updateFailedSelectionState();
+        return false;
+    }
+}
+
+async function reprocessEntry(id, button) {
+    const row = document.querySelector(`tr[data-entry-id="${CSS.escape(id)}"]`);
+    if (!row) return false;
+
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Re-processing...';
+    row.querySelector('.entry-message').textContent = 'Re-processing saved photo...';
+
+    try {
+        const response = await fetch('reprocess_entry.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id})
+        });
+        const data = await response.json();
+
+        if (!response.ok || data.error) {
+            if (data.status === 'pending') {
+                applyProcessedEntryToRow(row, {
+                    status: 'pending',
+                    plate: row.querySelector('.entry-plate')?.textContent || '',
+                    plate_state: row.querySelector('.entry-state')?.textContent || '',
+                    confidence: row.querySelector('.entry-confidence')?.textContent.replace('%', '') || '',
+                    clarity_score: row.querySelector('.entry-clarity')?.textContent || '',
+                    duplicate_plate: row.dataset.duplicatePlate === 'true',
+                    duplicate_file: row.dataset.duplicateFile === 'true',
+                    best_plate_photo: row.querySelector('.entry-duplicate')?.textContent.includes('clearest photo') || false,
+                    plate_count: 0,
+                    scanner_label: data.scanner_label || row.querySelector('.entry-scanner')?.textContent || '',
+                    error: data.error || `HTTP ${response.status}`,
+                });
+            } else {
+                row.querySelector('.entry-message').textContent = data.error || `HTTP ${response.status}`;
+            }
+            button.disabled = false;
+            button.textContent = originalText;
+            updateSummaryCards();
+            updateFailedSelectionState();
+            return false;
+        }
+
+        applyProcessedEntryToRow(row, data);
+        button.disabled = false;
+        button.textContent = originalText;
+        updateSummaryCards();
+        updateFailedSelectionState();
+        updateDeleteSelectionState();
+        return true;
+    } catch (error) {
+        row.querySelector('.entry-message').textContent = 'Request failed: ' + error.message;
+        button.disabled = false;
+        button.textContent = originalText;
+        refreshRowSearch(row);
         return false;
     }
 }
@@ -868,11 +1135,11 @@ function sortEntries(columnIndex, type, headerButton) {
     headerButton.classList.add(currentDirection === 'asc' ? 'sort-asc' : 'sort-desc');
 }
 
-selectionBoxes.forEach(box => {
+getRetrySelectionBoxes().forEach(box => {
     box.addEventListener('change', updateFailedSelectionState);
 });
 
-deleteSelectionBoxes.forEach(box => {
+getDeleteSelectionBoxes().forEach(box => {
     box.addEventListener('change', updateDeleteSelectionState);
 });
 
@@ -888,37 +1155,55 @@ statCards.forEach(card => {
     card.addEventListener('click', () => setFilterMode(card.dataset.filterMode || 'all'));
 });
 
-duplicatePlateFilters.forEach(button => {
-    button.addEventListener('click', () => {
+document.addEventListener('click', event => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+
+    const duplicateButton = target.closest('.duplicate-plate-filter');
+    if (duplicateButton instanceof HTMLElement) {
         activeFilterMode = 'duplicate-plate';
-        activePlateFilter = button.dataset.plate || '';
+        activePlateFilter = duplicateButton.dataset.plate || '';
         updateStatCardState();
         applyEntrySearch();
         document.getElementById('entriesTable')?.scrollIntoView({behavior: 'smooth', block: 'start'});
-    });
-});
+        return;
+    }
 
-photoPreviewLinks.forEach(link => {
-    link.addEventListener('click', event => {
+    const photoLink = target.closest('.photo-preview-link');
+    if (photoLink instanceof HTMLAnchorElement) {
         event.stopPropagation();
-        if (openPhotoPreviewFromLink(link) === false) {
+        if (openPhotoPreviewFromLink(photoLink) === false) {
             event.preventDefault();
         }
-    });
-});
+        return;
+    }
 
-editEntryButtons.forEach(button => {
-    button.addEventListener('click', event => {
+    const editButton = target.closest('.edit-entry');
+    if (editButton instanceof HTMLButtonElement) {
         event.stopPropagation();
-        openEntryEditor(button);
-    });
-});
+        openEntryEditor(editButton);
+        return;
+    }
 
-deleteEntryButtons.forEach(button => {
-    button.addEventListener('click', event => {
+    const deleteButton = target.closest('.delete-entry');
+    if (deleteButton instanceof HTMLButtonElement) {
         event.stopPropagation();
-        openDeleteEntry(button);
-    });
+        openDeleteEntry(deleteButton);
+        return;
+    }
+
+    const retryButton = target.closest('.retry-pending');
+    if (retryButton instanceof HTMLButtonElement) {
+        event.stopPropagation();
+        retryEntry(retryButton.dataset.id || '', retryButton);
+        return;
+    }
+
+    const reprocessButton = target.closest('.reprocess-entry');
+    if (reprocessButton instanceof HTMLButtonElement) {
+        event.stopPropagation();
+        reprocessEntry(reprocessButton.dataset.id || '', reprocessButton);
+    }
 });
 
 if (selectVisibleDeletesButton) {
@@ -931,9 +1216,22 @@ if (selectVisibleDeletesButton) {
     });
 }
 
+if (selectMissingPlateButton) {
+    selectMissingPlateButton.addEventListener('click', () => {
+        allRows().forEach(row => {
+            const box = row.querySelector('.delete-select');
+            const hasNoPlate = rowPlateValue(row) === '';
+            if (box && !box.disabled) {
+                box.checked = hasNoPlate;
+            }
+        });
+        updateDeleteSelectionState();
+    });
+}
+
 if (clearDeleteSelectionButton) {
     clearDeleteSelectionButton.addEventListener('click', () => {
-        deleteSelectionBoxes.forEach(box => {
+        getDeleteSelectionBoxes().forEach(box => {
             box.checked = false;
         });
         updateDeleteSelectionState();
@@ -943,6 +1241,38 @@ if (clearDeleteSelectionButton) {
 if (deleteSelectedEntriesButton) {
     deleteSelectedEntriesButton.addEventListener('click', () => {
         openBulkDeleteEntries(selectedDeleteRows());
+    });
+}
+
+if (reprocessSelectedEntriesButton) {
+    reprocessSelectedEntriesButton.addEventListener('click', async () => {
+        const rows = selectedDeleteRows();
+        if (!rows.length) {
+            updateDeleteSelectionState();
+            return;
+        }
+
+        reprocessSelectedEntriesButton.disabled = true;
+        let completed = 0;
+        let stillPending = 0;
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const button = row.querySelector('.reprocess-entry');
+            if (!(button instanceof HTMLButtonElement)) continue;
+            if (entryFilterStatus) {
+                entryFilterStatus.textContent = `Re-processing ${i + 1} of ${rows.length} selected entries...`;
+            }
+            const success = await reprocessEntry(button.dataset.id || '', button);
+            success ? completed++ : stillPending++;
+        }
+
+        if (entryFilterStatus) {
+            entryFilterStatus.textContent = `Re-processed ${completed} selected entr${completed === 1 ? 'y' : 'ies'}. ${stillPending} still need attention.`;
+        }
+        updateDeleteSelectionState();
+        updateFailedSelectionState();
+        applyEntrySearch();
     });
 }
 
@@ -1023,17 +1353,13 @@ document.addEventListener('keydown', event => {
     }
 });
 
-retryButtons.forEach(button => {
-    button.addEventListener('click', () => retryEntry(button.dataset.id, button));
-});
-
 if (entrySearch) {
     entrySearch.addEventListener('input', applyEntrySearch);
 }
 
 if (selectAllFailedButton) {
     selectAllFailedButton.addEventListener('click', () => {
-        const activeBoxes = selectionBoxes.filter(box => !box.disabled);
+        const activeBoxes = getRetrySelectionBoxes().filter(box => !box.disabled);
         const allSelected = activeBoxes.length > 0 && activeBoxes.every(box => box.checked);
         activeBoxes.forEach(box => {
             box.checked = !allSelected;

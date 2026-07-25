@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.28
-    Description: Pending-photo reprocessor backed by the shared saved-entry scan helper.
+    Revision: 1.0.0
+    Description: Reprocess any saved log entry photo using the current scanner mode and update duplicate plate flags.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -15,8 +15,18 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $payload = json_decode(file_get_contents('php://input') ?: '', true);
-$id = trim((string)($payload['id'] ?? $_POST['id'] ?? ''));
-$result = processSavedLogEntry($id, true);
+if (!is_array($payload)) {
+    $payload = $_POST;
+}
+
+$id = trim((string)($payload['id'] ?? ''));
+if ($id === '') {
+    http_response_code(400);
+    echo json_encode(['error' => 'Entry id is required.']);
+    exit;
+}
+
+$result = processSavedLogEntry($id, false);
 $httpStatus = (int)($result['http_status'] ?? 500);
 unset($result['http_status']);
 

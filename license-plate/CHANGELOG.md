@@ -2,6 +2,15 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.28] - 2026-07-25
+
+### Fixed
+- `view_log.php` now refreshes duplicate cards and duplicate-plate group listings after in-page deletes or edits instead of leaving stale counts visible until a reload.
+
+### Added
+- `view_log.php` now supports per-row and bulk `Re-process` actions for existing saved photos, including a quick `Select Missing Plate` helper.
+- `reprocess_entry.php` was added to rescan any saved log entry with the current scanner mode.
+
 ## [1.2.27] - 2026-07-25
 
 ### Fixed
