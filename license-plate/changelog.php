@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.9
-    Description: Project changelog page rendered from changelog.md with current project revision details and stats navigation.
+    Revision: 1.2.12
+    Description: Project changelog page rendered from changelog.md with current project revision details and deleted-audit navigation.
 */
 require_once __DIR__ . '/config.php';
 $projectRevision = readProjectRevision();
@@ -23,6 +23,7 @@ $changelogHtml = changelogHtml();
         <a href="index.php">Upload</a>
         <a href="view_log.php">View Log</a>
         <a href="stats.php">Stats</a>
+        <a href="deleted_audit.php">Deleted</a>
         <a href="changelog.php">Changelog</a>
     </nav>
 

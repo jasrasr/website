@@ -2,6 +2,16 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.12] - 2026-07-25
+
+### Added
+- Active log entries can now be deleted with a required reason.
+- Deleted items are now tracked on a dedicated deleted-audit page with deleted date/time, age in days, and permanent-delete actions.
+- A purge button can now clear the deleted audit and archived deleted photos after confirmation.
+
+### Changed
+- Deleted photos are moved into a `deleted/` folder when they are no longer referenced by another active entry.
+
 ## [1.2.11] - 2026-07-25
 
 ### Added

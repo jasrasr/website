@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.11
-    Description: Log viewer with wider desktop layout, visible stat filters, uploaded-date deep links, manual correction tools, favorites/ranking, and resilient photo overlay preview.
+    Revision: 1.2.12
+    Description: Log viewer with visible stat filters, uploaded-date deep links, manual correction tools, soft-delete actions, favorites/ranking, and resilient photo overlay preview.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -32,6 +32,7 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $uploadedDateFilter)) {
         <a href="index.php">Upload</a>
         <a href="view_log.php">View Log</a>
         <a href="stats.php">Stats</a>
+        <a href="deleted_audit.php">Deleted</a>
         <a href="changelog.php">Changelog</a>
     </nav>
     <h1>Plate Log</h1>
@@ -200,6 +201,13 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $uploadedDateFilter)) {
                                 data-favorite="<?= !empty($entry['favorite']) ? 'true' : 'false' ?>"
                                 data-rank="<?= h((string)($entry['preference_rank'] ?? '')) ?>"
                             >Edit</button>
+                            <button
+                                type="button"
+                                class="danger delete-entry"
+                                data-id="<?= h($entry['id'] ?? '') ?>"
+                                data-file="<?= h((string)($entry['original_file'] ?? '')) ?>"
+                                data-plate="<?= h((string)($entry['plate'] ?? '')) ?>"
+                            >Delete</button>
                         </div>
                     </td>
                 </tr>
@@ -256,6 +264,29 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $uploadedDateFilter)) {
         </form>
     </div>
 </div>
+<div id="deleteEntryOverlay" class="photo-overlay" hidden>
+    <div class="photo-overlay-backdrop" data-close-delete-entry="true"></div>
+    <div class="photo-overlay-panel entry-editor-panel" role="dialog" aria-modal="true" aria-labelledby="deleteEntryTitle">
+        <form id="deleteEntryForm">
+            <div class="photo-overlay-header">
+                <strong id="deleteEntryTitle">Delete Log Entry</strong>
+                <button type="button" id="closeDeleteEntry" class="photo-overlay-close" aria-label="Close delete dialog">X</button>
+            </div>
+            <div class="entry-editor-body">
+                <input type="hidden" id="deleteEntryId">
+                <p id="deleteEntrySummary" class="small"></p>
+                <label for="deleteEntryReason">Reason For Deletion</label>
+                <textarea id="deleteEntryReason" rows="4" placeholder="Why is this item being deleted?" required></textarea>
+                <p class="small">The log entry will be removed from the active list. Its photo will be moved into `deleted/` when possible and the action will be written to the deleted audit log.</p>
+                <p id="deleteEntryStatus" class="small filter-status"></p>
+            </div>
+            <div class="entry-editor-actions">
+                <button type="submit" id="confirmDeleteEntry" class="danger">Delete Entry</button>
+                <button type="button" id="cancelDeleteEntry" class="secondary">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
 <script>
 const retryButtons = Array.from(document.querySelectorAll('.retry-pending'));
 const processAllButton = document.getElementById('processAllPending');
@@ -273,6 +304,7 @@ const statCards = Array.from(document.querySelectorAll('.stat-card'));
 const duplicatePlateFilters = Array.from(document.querySelectorAll('.duplicate-plate-filter'));
 const photoPreviewLinks = Array.from(document.querySelectorAll('.photo-preview-link'));
 const editEntryButtons = Array.from(document.querySelectorAll('.edit-entry'));
+const deleteEntryButtons = Array.from(document.querySelectorAll('.delete-entry'));
 const photoOverlay = document.getElementById('photoOverlay');
 const photoOverlayImage = document.getElementById('photoOverlayImage');
 const photoOverlayTitle = document.getElementById('photoOverlayTitle');
@@ -288,10 +320,20 @@ const entryEditorStatus = document.getElementById('entryEditorStatus');
 const saveEntryEditorButton = document.getElementById('saveEntryEditor');
 const closeEntryEditorButton = document.getElementById('closeEntryEditor');
 const cancelEntryEditorButton = document.getElementById('cancelEntryEditor');
+const deleteEntryOverlay = document.getElementById('deleteEntryOverlay');
+const deleteEntryForm = document.getElementById('deleteEntryForm');
+const deleteEntryId = document.getElementById('deleteEntryId');
+const deleteEntryReason = document.getElementById('deleteEntryReason');
+const deleteEntrySummary = document.getElementById('deleteEntrySummary');
+const deleteEntryStatus = document.getElementById('deleteEntryStatus');
+const closeDeleteEntryButton = document.getElementById('closeDeleteEntry');
+const cancelDeleteEntryButton = document.getElementById('cancelDeleteEntry');
+const confirmDeleteEntryButton = document.getElementById('confirmDeleteEntry');
 let activeFilterMode = 'all';
 let activePlateFilter = '';
 let activeUploadedDateFilter = <?= json_encode($uploadedDateFilter, JSON_UNESCAPED_SLASHES) ?>;
 let activeEditRow = null;
+let activeDeleteRow = null;
 
 function openPhotoOverlay(src, label) {
     if (!photoOverlay || !photoOverlayImage) return;
@@ -342,6 +384,33 @@ function closeEntryEditor() {
     entryEditorForm.reset();
     if (entryEditorStatus) entryEditorStatus.textContent = '';
     activeEditRow = null;
+    document.body.classList.remove('overlay-open');
+}
+
+function openDeleteEntry(button) {
+    const row = button.closest('tr');
+    if (!row || !deleteEntryOverlay || !deleteEntryId || !deleteEntryReason) return;
+    activeDeleteRow = row;
+    deleteEntryId.value = button.dataset.id || '';
+    deleteEntryReason.value = '';
+    if (deleteEntrySummary) {
+        const parts = [];
+        if (button.dataset.file) parts.push(`File: ${button.dataset.file}`);
+        if (button.dataset.plate) parts.push(`Plate: ${button.dataset.plate}`);
+        deleteEntrySummary.textContent = parts.join(' | ');
+    }
+    if (deleteEntryStatus) deleteEntryStatus.textContent = '';
+    deleteEntryOverlay.hidden = false;
+    document.body.classList.add('overlay-open');
+    deleteEntryReason.focus();
+}
+
+function closeDeleteEntry() {
+    if (!deleteEntryOverlay || !deleteEntryForm) return;
+    deleteEntryOverlay.hidden = true;
+    deleteEntryForm.reset();
+    if (deleteEntryStatus) deleteEntryStatus.textContent = '';
+    activeDeleteRow = null;
     document.body.classList.remove('overlay-open');
 }
 
@@ -530,6 +599,42 @@ async function saveEntryEditor(event) {
     }
 }
 
+async function submitDeleteEntry(event) {
+    event.preventDefault();
+    if (!activeDeleteRow || !deleteEntryId || !deleteEntryReason || !confirmDeleteEntryButton) return;
+
+    const reason = deleteEntryReason.value.trim();
+    if (reason === '') {
+        if (deleteEntryStatus) deleteEntryStatus.textContent = 'Delete reason is required.';
+        return;
+    }
+
+    confirmDeleteEntryButton.disabled = true;
+    if (deleteEntryStatus) deleteEntryStatus.textContent = 'Deleting entry...';
+
+    try {
+        const response = await fetch('delete_entry.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                id: deleteEntryId.value,
+                reason
+            })
+        });
+        const data = await response.json();
+        if (!response.ok || data.error) {
+            if (deleteEntryStatus) deleteEntryStatus.textContent = data.error || `HTTP ${response.status}`;
+            confirmDeleteEntryButton.disabled = false;
+            return;
+        }
+
+        window.location.reload();
+    } catch (error) {
+        if (deleteEntryStatus) deleteEntryStatus.textContent = 'Request failed: ' + error.message;
+        confirmDeleteEntryButton.disabled = false;
+    }
+}
+
 async function retryEntry(id, button) {
     const row = document.querySelector(`tr[data-entry-id="${CSS.escape(id)}"]`);
     if (!row) return false;
@@ -683,6 +788,10 @@ editEntryButtons.forEach(button => {
     button.addEventListener('click', () => openEntryEditor(button));
 });
 
+deleteEntryButtons.forEach(button => {
+    button.addEventListener('click', () => openDeleteEntry(button));
+});
+
 if (closePhotoOverlayButton) {
     closePhotoOverlayButton.addEventListener('click', closePhotoOverlay);
 }
@@ -693,6 +802,14 @@ if (closeEntryEditorButton) {
 
 if (cancelEntryEditorButton) {
     cancelEntryEditorButton.addEventListener('click', closeEntryEditor);
+}
+
+if (closeDeleteEntryButton) {
+    closeDeleteEntryButton.addEventListener('click', closeDeleteEntry);
+}
+
+if (cancelDeleteEntryButton) {
+    cancelDeleteEntryButton.addEventListener('click', closeDeleteEntry);
 }
 
 if (photoOverlay) {
@@ -713,8 +830,21 @@ if (entryEditorOverlay) {
     });
 }
 
+if (deleteEntryOverlay) {
+    deleteEntryOverlay.addEventListener('click', event => {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.dataset.closeDeleteEntry === 'true') {
+            closeDeleteEntry();
+        }
+    });
+}
+
 if (entryEditorForm) {
     entryEditorForm.addEventListener('submit', saveEntryEditor);
+}
+
+if (deleteEntryForm) {
+    deleteEntryForm.addEventListener('submit', submitDeleteEntry);
 }
 
 document.addEventListener('keydown', event => {
@@ -724,6 +854,10 @@ document.addEventListener('keydown', event => {
     }
     if (event.key === 'Escape' && entryEditorOverlay && !entryEditorOverlay.hidden) {
         closeEntryEditor();
+        return;
+    }
+    if (event.key === 'Escape' && deleteEntryOverlay && !deleteEntryOverlay.hidden) {
+        closeDeleteEntry();
     }
 });
 

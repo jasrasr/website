@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.11
-    Description: Stats dashboard with daily upload volume chart, summary counts, and clickable date drill-down links into the log.
+    Revision: 1.2.12
+    Description: Stats dashboard with daily upload volume chart, summary counts, clickable date drill-down links into the log, and deleted-audit navigation.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -41,6 +41,7 @@ $maxUploadsPerDay = empty($uploadsByDay) ? 0 : max($uploadsByDay);
         <a href="index.php">Upload</a>
         <a href="view_log.php">View Log</a>
         <a href="stats.php">Stats</a>
+        <a href="deleted_audit.php">Deleted</a>
         <a href="changelog.php">Changelog</a>
     </nav>
     <h1>Stats</h1>

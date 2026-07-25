@@ -1,4 +1,4 @@
-/* Revision: 1.2.11 */
+/* Revision: 1.2.12 */
 :root {
     --bg: #f5f6f8;
     --surface: #ffffff;
@@ -191,6 +191,8 @@ button {
 button:hover { background: var(--accent-dark); }
 button:disabled { background: #89909a; cursor: not-allowed; }
 button.secondary { background: #4b5563; }
+button.danger { background: #b42318; }
+button.danger:hover { background: #912018; }
 
 .link-button {
     padding: 0;
@@ -318,7 +320,8 @@ th {
 }
 
 .entry-editor-body input[type="text"],
-.entry-editor-body select {
+.entry-editor-body select,
+.entry-editor-body textarea {
     width: 100%;
     margin-bottom: 12px;
     padding: 10px 12px;
@@ -326,6 +329,11 @@ th {
     border-radius: 8px;
     background: #fbfcfd;
     font: inherit;
+}
+
+.entry-editor-body textarea {
+    resize: vertical;
+    min-height: 90px;
 }
 
 .entry-editor-check {
@@ -395,6 +403,15 @@ th {
 
 .stats-chart-card {
     max-width: 960px;
+}
+
+.audit-table {
+    min-width: 1250px;
+}
+
+.audit-flash {
+    margin: 0;
+    font-weight: 700;
 }
 
 .daily-chart-bar {

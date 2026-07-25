@@ -2,9 +2,21 @@
 
 ## Current Revision
 
-**Version:** 1.2.11  
+**Version:** 1.2.12  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.12 — Deleted Audit Workflow
+
+Added a soft-delete workflow that removes entries from the active log, moves photos into a deleted archive when possible, records delete reasons in an audit log, and allows permanent delete or full purge from a dedicated deleted-items page.
+
+Key implementation changes:
+
+- `delete_entry.php` now soft-deletes active log entries and records audit metadata.
+- `deleted_audit.php` shows deleted items, delete reasons, deleted age in days, permanent-delete actions, and a purge control.
+- `config.php` now manages the `deleted/` folder plus the deleted-audit JSON log and permanent-delete helpers.
+- `view_log.php` adds a required delete-reason prompt before removing an active entry.
+- Main navigation now includes a `Deleted` page link.
 
 ## Revision 1.2.11 — Stats Chart Drill-Down Links
 

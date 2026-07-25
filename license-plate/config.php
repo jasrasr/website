@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.8
-    Description: Shared configuration for batch license plate photo uploads, metadata/state extraction, changelog helpers, duplicate cleanup, clarity scoring, and manual entry updates.
+    Revision: 1.2.12
+    Description: Shared configuration for batch license plate photo uploads, metadata/state extraction, changelog helpers, duplicate cleanup, manual entry updates, and deleted-item audit handling.
 */
 
 declare(strict_types=1);
@@ -10,13 +10,15 @@ declare(strict_types=1);
 date_default_timezone_set('America/New_York');
 
 const APP_NAME = 'License Plate Photo Logger';
-const APP_REVISION = '1.2.8';
+const APP_REVISION = '1.2.12';
 const APP_UPDATED = '2026-07-25';
 
 const DATA_DIR = __DIR__ . '/data';
 const UPLOAD_DIR = __DIR__ . '/uploads';
+const DELETED_DIR = __DIR__ . '/deleted';
 const LOG_FILE = DATA_DIR . '/plate-log.json';
 const HASH_INDEX_FILE = DATA_DIR . '/file-hashes.json';
+const DELETED_AUDIT_FILE = DATA_DIR . '/deleted-audit.json';
 const CHANGELOG_FILE = __DIR__ . '/changelog.md';
 const MAX_UPLOAD_BYTES = 12 * 1024 * 1024;
 
@@ -52,7 +54,7 @@ $allowedMimeTypes = [
 
 function ensureAppFolders(): void
 {
-    foreach ([DATA_DIR, UPLOAD_DIR] as $dir) {
+    foreach ([DATA_DIR, UPLOAD_DIR, DELETED_DIR] as $dir) {
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
         }
@@ -92,6 +94,13 @@ function readLogEntries(): array
 function readHashIndex(): array
 {
     return readJsonFile(HASH_INDEX_FILE);
+}
+
+function readDeletedAuditEntries(): array
+{
+    $entries = readJsonFile(DELETED_AUDIT_FILE);
+    usort($entries, fn($a, $b) => strcmp((string)($b['deleted_at'] ?? ''), (string)($a['deleted_at'] ?? '')));
+    return $entries;
 }
 
 function readProjectRevision(): string
@@ -232,6 +241,20 @@ function entryScannerLabel(array $entry): string
         $label .= ' + Manual';
     }
     return $label;
+}
+
+function daysSinceIsoTimestamp(string $timestamp): ?int
+{
+    if ($timestamp === '') {
+        return null;
+    }
+    try {
+        $deletedAt = new DateTimeImmutable($timestamp);
+        $now = new DateTimeImmutable('now');
+        return max(0, (int)$deletedAt->diff($now)->days);
+    } catch (Exception) {
+        return null;
+    }
 }
 
 function usStateMap(): array
@@ -670,52 +693,162 @@ function updateLogEntry(string $id, array $changes): ?array
     return null;
 }
 
-function deleteLogEntries(array $ids): array
+function uniqueDeletedFilename(string $storedFile): string
 {
-    $ids = array_values(array_unique(array_filter(array_map('strval', $ids), fn($id) => trim($id) !== '')));
-    if ($ids === []) {
-        return ['deleted' => 0, 'missing' => [], 'removed_files' => []];
+    $storedFile = basename($storedFile);
+    $info = pathinfo($storedFile);
+    $name = preg_replace('/[^A-Za-z0-9._-]+/', '_', (string)($info['filename'] ?? 'deleted'));
+    $ext = isset($info['extension']) && $info['extension'] !== '' ? '.' . $info['extension'] : '';
+    return date('Ymd-His') . '-' . bin2hex(random_bytes(4)) . '-' . substr((string)$name, 0, 80) . $ext;
+}
+
+function softDeleteLogEntry(string $id, string $reason): ?array
+{
+    $reason = trim($reason);
+    if ($id === '' || $reason === '') {
+        return null;
     }
 
     $entries = readLogEntries();
-    $byId = [];
-    foreach ($entries as $entry) {
-        $byId[(string)($entry['id'] ?? '')] = $entry;
+    $entryIndex = null;
+    foreach ($entries as $index => $entry) {
+        if ((string)($entry['id'] ?? '') === $id) {
+            $entryIndex = $index;
+            break;
+        }
     }
 
-    $missing = array_values(array_filter($ids, fn($id) => !isset($byId[$id])));
-    $remaining = array_values(array_filter($entries, fn($entry) => !in_array((string)($entry['id'] ?? ''), $ids, true)));
+    if ($entryIndex === null) {
+        return null;
+    }
 
-    $removedStoredFiles = [];
-    foreach ($ids as $id) {
-        if (isset($byId[$id])) {
-            $storedFile = basename((string)($byId[$id]['stored_file'] ?? ''));
-            if ($storedFile !== '') {
-                $removedStoredFiles[] = $storedFile;
+    $entry = $entries[$entryIndex];
+    $remaining = $entries;
+    array_splice($remaining, $entryIndex, 1);
+
+    $storedFile = basename((string)($entry['stored_file'] ?? ''));
+    $fileMoved = false;
+    $deletedStoredFile = '';
+    $deletedRelativePath = '';
+    $fileNote = '';
+
+    if ($storedFile !== '') {
+        $stillReferenced = false;
+        foreach ($remaining as $candidate) {
+            if (basename((string)($candidate['stored_file'] ?? '')) === $storedFile) {
+                $stillReferenced = true;
+                break;
             }
+        }
+
+        $sourcePath = UPLOAD_DIR . '/' . $storedFile;
+        if ($stillReferenced) {
+            $fileNote = 'Photo retained because it is still referenced by another active log entry.';
+        } elseif (is_file($sourcePath)) {
+            $deletedStoredFile = uniqueDeletedFilename($storedFile);
+            $targetPath = DELETED_DIR . '/' . $deletedStoredFile;
+            if (@rename($sourcePath, $targetPath)) {
+                $fileMoved = true;
+                $deletedRelativePath = 'deleted/' . $deletedStoredFile;
+            } else {
+                $fileNote = 'Photo could not be moved into the deleted folder.';
+            }
+        } else {
+            $fileNote = 'Photo file was not present in uploads at delete time.';
         }
     }
 
     refreshDuplicatePlateFlags($remaining);
     recalculatePlateClarityFlags($remaining);
-    writeJsonFile(LOG_FILE, $remaining);
+    writeJsonFile(LOG_FILE, array_values($remaining));
     writeJsonFile(HASH_INDEX_FILE, rebuildHashIndexFromEntries($remaining));
 
-    $remainingFiles = array_map(fn($entry) => basename((string)($entry['stored_file'] ?? '')), $remaining);
+    $auditEntries = readDeletedAuditEntries();
+    $auditId = bin2hex(random_bytes(8));
+    $deletedAt = date('c');
+    $auditEntry = [
+        'audit_id' => $auditId,
+        'source_entry_id' => (string)($entry['id'] ?? ''),
+        'deleted_at' => $deletedAt,
+        'deleted_reason' => $reason,
+        'days_deleted' => 0,
+        'original_file' => (string)($entry['original_file'] ?? ''),
+        'stored_file' => $storedFile,
+        'deleted_stored_file' => $deletedStoredFile,
+        'deleted_relative_path' => $deletedRelativePath,
+        'plate' => (string)($entry['plate'] ?? ''),
+        'plate_state' => (string)($entry['plate_state'] ?? ''),
+        'confidence' => $entry['confidence'] ?? 0,
+        'clarity_score' => $entry['clarity_score'] ?? 0,
+        'favorite' => !empty($entry['favorite']),
+        'preference_rank' => $entry['preference_rank'] ?? null,
+        'scan_mode' => (string)($entry['scan_mode'] ?? ''),
+        'file_moved' => $fileMoved,
+        'file_note' => $fileNote,
+    ];
+    $auditEntries[] = $auditEntry;
+    writeJsonFile(DELETED_AUDIT_FILE, $auditEntries);
+
+    return $auditEntry;
+}
+
+function permanentlyDeleteAuditItems(array $auditIds): array
+{
+    $auditIds = array_values(array_unique(array_filter(array_map('strval', $auditIds), fn($id) => trim($id) !== '')));
+    if ($auditIds === []) {
+        return ['deleted' => 0, 'missing' => [], 'removed_files' => []];
+    }
+
+    $auditEntries = readDeletedAuditEntries();
+    $kept = [];
     $removedFiles = [];
-    foreach (array_unique($removedStoredFiles) as $storedFile) {
-        if ($storedFile === '' || in_array($storedFile, $remainingFiles, true)) {
+    $deleted = 0;
+    $missing = $auditIds;
+
+    foreach ($auditEntries as $entry) {
+        $auditId = (string)($entry['audit_id'] ?? '');
+        if (!in_array($auditId, $auditIds, true)) {
+            $kept[] = $entry;
             continue;
         }
-        $path = UPLOAD_DIR . '/' . $storedFile;
-        if (is_file($path) && @unlink($path)) {
-            $removedFiles[] = $storedFile;
+
+        $missing = array_values(array_filter($missing, fn($id) => $id !== $auditId));
+        $deleted++;
+        $deletedStoredFile = basename((string)($entry['deleted_stored_file'] ?? ''));
+        if ($deletedStoredFile !== '') {
+            $path = DELETED_DIR . '/' . $deletedStoredFile;
+            if (is_file($path) && @unlink($path)) {
+                $removedFiles[] = $deletedStoredFile;
+            }
         }
     }
 
+    writeJsonFile(DELETED_AUDIT_FILE, array_values($kept));
+
     return [
-        'deleted' => count($ids) - count($missing),
+        'deleted' => $deleted,
         'missing' => $missing,
+        'removed_files' => $removedFiles,
+    ];
+}
+
+function purgeDeletedAudit(): array
+{
+    $auditEntries = readDeletedAuditEntries();
+    $removedFiles = [];
+    foreach ($auditEntries as $entry) {
+        $deletedStoredFile = basename((string)($entry['deleted_stored_file'] ?? ''));
+        if ($deletedStoredFile === '') {
+            continue;
+        }
+        $path = DELETED_DIR . '/' . $deletedStoredFile;
+        if (is_file($path) && @unlink($path)) {
+            $removedFiles[] = $deletedStoredFile;
+        }
+    }
+    writeJsonFile(DELETED_AUDIT_FILE, []);
+    return [
+        'purged' => count($auditEntries),
         'removed_files' => $removedFiles,
     ];
 }
