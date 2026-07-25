@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.14
-    Description: Log viewer with visible stat filters, uploaded-date deep links, project revision badge, manual correction tools, soft-delete actions, favorites/ranking, and resilient photo overlay preview.
+    Revision: 1.2.21
+    Description: Log viewer with visible stat filters, Eastern timestamp display, uploaded-date deep links, project revision badge, manual correction tools, quick delete reasons, multi-delete actions, favorites/ranking, and reliable photo link fallback behavior.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -97,6 +97,11 @@ $projectModifiedAt = readProjectModifiedAt();
                 </div>
             <?php endif; ?>
             <p id="entryFilterStatus" class="small filter-status">Showing all entries.</p>
+            <div class="bulk-actions">
+                <button type="button" id="selectVisibleDeletes" class="secondary">Select Visible</button>
+                <button type="button" id="clearDeleteSelection" class="secondary">Clear Selection</button>
+                <button type="button" id="deleteSelectedEntries" class="danger" disabled>Delete Selected</button>
+            </div>
         </div>
         <div class="table-wrap">
         <table id="entriesTable" class="sortable-table log-table">
@@ -131,6 +136,7 @@ $projectModifiedAt = readProjectModifiedAt();
                     $stateDisplay = (string)($entry['photo_state'] ?? '');
                 }
                 $dateTakenDisplay = displayDateTime((string)($entry['date_taken'] ?? ''));
+                $processedAtDisplay = displayEasternDateTime((string)($entry['processed_at'] ?? ''));
                 $searchBlob = strtolower(implode(' ', array_filter([
                     (string)($entry['plate'] ?? ''),
                     $stateDisplay,
@@ -152,15 +158,22 @@ $projectModifiedAt = readProjectModifiedAt();
                     data-plate-value="<?= h(strtolower((string)($entry['plate'] ?? ''))) ?>"
                     data-favorite="<?= !empty($entry['favorite']) ? 'true' : 'false' ?>"
                     data-rank="<?= h((string)($entry['preference_rank'] ?? '')) ?>"
-                    data-uploaded-date="<?= h(substr((string)($entry['processed_at'] ?? ''), 0, 10)) ?>"
+                    data-uploaded-date="<?= h(displayEasternDate((string)($entry['processed_at'] ?? ''))) ?>"
                     data-search="<?= h($searchBlob) ?>"
                 >
                     <td>
+                        <label class="row-select-option">
+                            <input type="checkbox" class="delete-select" data-id="<?= h($entry['id'] ?? '') ?>" aria-label="Select <?= h($entry['original_file'] ?? ($entry['id'] ?? 'entry')) ?> for deletion">
+                            <span>Delete</span>
+                        </label>
                         <?php if ($isFailedPending): ?>
-                            <input type="checkbox" class="retry-select" data-id="<?= h($entry['id'] ?? '') ?>" aria-label="Select failed entry <?= h($entry['original_file'] ?? ($entry['id'] ?? '')) ?>">
+                            <label class="row-select-option">
+                                <input type="checkbox" class="retry-select" data-id="<?= h($entry['id'] ?? '') ?>" aria-label="Select failed entry <?= h($entry['original_file'] ?? ($entry['id'] ?? '')) ?>">
+                                <span>Retry</span>
+                            </label>
                         <?php endif; ?>
                     </td>
-                    <td><?= h($entry['processed_at'] ?? '') ?></td>
+                    <td><?= h($processedAtDisplay) ?></td>
                     <td class="entry-status"><?= h($status === 'pending' ? 'Pending Processing' : 'Complete') ?></td>
                     <td class="entry-plate"><?= h($entry['plate'] ?? '') ?></td>
                     <td class="entry-confidence"><?= h(isset($entry['confidence']) && $entry['confidence'] !== '' ? ((string)$entry['confidence'] . '%') : '') ?></td>
@@ -178,6 +191,8 @@ $projectModifiedAt = readProjectModifiedAt();
                                 class="photo-preview-link"
                                 data-photo-src="uploads/<?= h($entry['stored_file']) ?>"
                                 data-photo-label="<?= h($entry['original_file'] ?? ($entry['plate'] ?? 'Photo preview')) ?>"
+                                target="_blank"
+                                rel="noopener"
                                 onclick="return openPhotoPreviewFromLink(this);"
                             >photo</a>
                         <?php endif; ?>
@@ -282,6 +297,11 @@ $projectModifiedAt = readProjectModifiedAt();
                 <input type="hidden" id="deleteEntryId">
                 <p id="deleteEntrySummary" class="small"></p>
                 <label for="deleteEntryReason">Reason For Deletion</label>
+                <div class="quick-reasons" aria-label="Quick delete reasons">
+                    <button type="button" class="secondary quick-reason" data-reason="Duplicate upload">Duplicate</button>
+                    <button type="button" class="secondary quick-reason" data-reason="Wrong upload">Wrong Upload</button>
+                    <button type="button" class="secondary quick-reason" data-reason="Bad plate read">Bad Read</button>
+                </div>
                 <textarea id="deleteEntryReason" rows="4" placeholder="Why is this item being deleted?" required></textarea>
                 <p class="small">The log entry will be removed from the active list. Its photo will be moved into `deleted/` when possible and the action will be written to the deleted audit log.</p>
                 <p id="deleteEntryStatus" class="small filter-status"></p>
@@ -304,6 +324,7 @@ const metadataCount = document.getElementById('metadataCount');
 const entrySearch = document.getElementById('entrySearch');
 const entryFilterStatus = document.getElementById('entryFilterStatus');
 const selectionBoxes = Array.from(document.querySelectorAll('.retry-select'));
+const deleteSelectionBoxes = Array.from(document.querySelectorAll('.delete-select'));
 const entriesTableBody = document.getElementById('entriesTableBody');
 const sortButtons = Array.from(document.querySelectorAll('.sort-button'));
 const statCards = Array.from(document.querySelectorAll('.stat-card'));
@@ -311,6 +332,7 @@ const duplicatePlateFilters = Array.from(document.querySelectorAll('.duplicate-p
 const photoPreviewLinks = Array.from(document.querySelectorAll('.photo-preview-link'));
 const editEntryButtons = Array.from(document.querySelectorAll('.edit-entry'));
 const deleteEntryButtons = Array.from(document.querySelectorAll('.delete-entry'));
+const quickReasonButtons = Array.from(document.querySelectorAll('.quick-reason'));
 const photoOverlay = document.getElementById('photoOverlay');
 const photoOverlayImage = document.getElementById('photoOverlayImage');
 const photoOverlayTitle = document.getElementById('photoOverlayTitle');
@@ -335,11 +357,15 @@ const deleteEntryStatus = document.getElementById('deleteEntryStatus');
 const closeDeleteEntryButton = document.getElementById('closeDeleteEntry');
 const cancelDeleteEntryButton = document.getElementById('cancelDeleteEntry');
 const confirmDeleteEntryButton = document.getElementById('confirmDeleteEntry');
+const selectVisibleDeletesButton = document.getElementById('selectVisibleDeletes');
+const clearDeleteSelectionButton = document.getElementById('clearDeleteSelection');
+const deleteSelectedEntriesButton = document.getElementById('deleteSelectedEntries');
 let activeFilterMode = 'all';
 let activePlateFilter = '';
 let activeUploadedDateFilter = <?= json_encode($uploadedDateFilter, JSON_UNESCAPED_SLASHES) ?>;
 let activeEditRow = null;
 let activeDeleteRow = null;
+let activeDeleteRows = [];
 
 function openPhotoOverlay(src, label) {
     if (!photoOverlay || !photoOverlayImage) return;
@@ -360,11 +386,13 @@ function closePhotoOverlay() {
 }
 
 function openPhotoPreviewFromLink(link) {
-    const src = link?.dataset?.photoSrc || link?.getAttribute?.('href') || '';
-    const label = link?.dataset?.photoLabel || 'Photo Preview';
-    if (!src) {
+    if (!link || !photoOverlay || !photoOverlayImage) {
         return true;
     }
+    const src = (link.dataset && link.dataset.photoSrc) || link.getAttribute('href') || '';
+    const label = (link.dataset && link.dataset.photoLabel) || 'Photo Preview';
+    if (!src) return true;
+
     openPhotoOverlay(src, label);
     return false;
 }
@@ -397,6 +425,7 @@ function openDeleteEntry(button) {
     const row = button.closest('tr');
     if (!row || !deleteEntryOverlay || !deleteEntryId || !deleteEntryReason) return;
     activeDeleteRow = row;
+    activeDeleteRows = [row];
     deleteEntryId.value = button.dataset.id || '';
     deleteEntryReason.value = '';
     if (deleteEntrySummary) {
@@ -406,6 +435,23 @@ function openDeleteEntry(button) {
         deleteEntrySummary.textContent = parts.join(' | ');
     }
     if (deleteEntryStatus) deleteEntryStatus.textContent = '';
+    if (confirmDeleteEntryButton) confirmDeleteEntryButton.textContent = 'Delete Entry';
+    deleteEntryOverlay.hidden = false;
+    document.body.classList.add('overlay-open');
+    deleteEntryReason.focus();
+}
+
+function openBulkDeleteEntries(rows) {
+    if (!rows.length || !deleteEntryOverlay || !deleteEntryId || !deleteEntryReason) return;
+    activeDeleteRow = rows[0];
+    activeDeleteRows = rows;
+    deleteEntryId.value = rows.map(row => row.dataset.entryId || '').filter(Boolean).join(',');
+    deleteEntryReason.value = '';
+    if (deleteEntrySummary) {
+        deleteEntrySummary.textContent = `${rows.length} selected entr${rows.length === 1 ? 'y' : 'ies'} will be deleted with the same reason.`;
+    }
+    if (deleteEntryStatus) deleteEntryStatus.textContent = '';
+    if (confirmDeleteEntryButton) confirmDeleteEntryButton.textContent = `Delete ${rows.length} Entr${rows.length === 1 ? 'y' : 'ies'}`;
     deleteEntryOverlay.hidden = false;
     document.body.classList.add('overlay-open');
     deleteEntryReason.focus();
@@ -417,6 +463,11 @@ function closeDeleteEntry() {
     deleteEntryForm.reset();
     if (deleteEntryStatus) deleteEntryStatus.textContent = '';
     activeDeleteRow = null;
+    activeDeleteRows = [];
+    if (confirmDeleteEntryButton) {
+        confirmDeleteEntryButton.disabled = false;
+        confirmDeleteEntryButton.textContent = 'Delete Entry';
+    }
     document.body.classList.remove('overlay-open');
 }
 
@@ -441,6 +492,21 @@ function updateFailedSelectionState() {
     }
 }
 
+function selectedDeleteRows() {
+    return deleteSelectionBoxes
+        .filter(box => box.checked && !box.disabled)
+        .map(box => box.closest('tr'))
+        .filter(row => row && row.isConnected);
+}
+
+function updateDeleteSelectionState() {
+    const selectedCount = selectedDeleteRows().length;
+    if (deleteSelectedEntriesButton) {
+        deleteSelectedEntriesButton.disabled = selectedCount === 0;
+        deleteSelectedEntriesButton.textContent = selectedCount > 0 ? `Delete Selected (${selectedCount})` : 'Delete Selected';
+    }
+}
+
 function visibleRows() {
     return Array.from(entriesTableBody.querySelectorAll('tr')).filter(row => row.style.display !== 'none');
 }
@@ -455,6 +521,11 @@ function updatePendingCount() {
     if (metadataCount) metadataCount.textContent = visibleMetadata;
     if (pendingSummary) pendingSummary.textContent = `${remaining} file${remaining === 1 ? '' : 's'} waiting.${failedRemaining ? ` ${failedRemaining} previously failed.` : ''}`;
     if (processAllButton) processAllButton.disabled = remaining === 0;
+}
+
+function refreshVisibleSelectionControls() {
+    updateDeleteSelectionState();
+    updateFailedSelectionState();
 }
 
 function refreshRowSearch(row) {
@@ -497,6 +568,7 @@ function applyEntrySearch() {
     if (term) labels.push(`search "${term}"`);
     if (entryFilterStatus) entryFilterStatus.textContent = labels.length ? `Filtered by ${labels.join(', ')}.` : 'Showing all entries.';
     updatePendingCount();
+    updateDeleteSelectionState();
 }
 
 function setFilterMode(mode) {
@@ -607,7 +679,7 @@ async function saveEntryEditor(event) {
 
 async function submitDeleteEntry(event) {
     event.preventDefault();
-    if (!activeDeleteRow || !deleteEntryId || !deleteEntryReason || !confirmDeleteEntryButton) return;
+    if (!activeDeleteRows.length || !deleteEntryReason || !confirmDeleteEntryButton) return;
 
     const reason = deleteEntryReason.value.trim();
     if (reason === '') {
@@ -616,28 +688,51 @@ async function submitDeleteEntry(event) {
     }
 
     confirmDeleteEntryButton.disabled = true;
-    if (deleteEntryStatus) deleteEntryStatus.textContent = 'Deleting entry...';
+    const rowsToDelete = [...activeDeleteRows];
+    if (deleteEntryStatus) deleteEntryStatus.textContent = rowsToDelete.length === 1 ? 'Deleting entry...' : `Deleting 1 of ${rowsToDelete.length}...`;
+    confirmDeleteEntryButton.textContent = 'Deleting...';
 
     try {
-        const response = await fetch('delete_entry.php', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                id: deleteEntryId.value,
-                reason
-            })
-        });
-        const data = await response.json();
-        if (!response.ok || data.error) {
-            if (deleteEntryStatus) deleteEntryStatus.textContent = data.error || `HTTP ${response.status}`;
-            confirmDeleteEntryButton.disabled = false;
-            return;
+        let deletedCount = 0;
+        for (let i = 0; i < rowsToDelete.length; i++) {
+            const row = rowsToDelete[i];
+            const id = row.dataset.entryId || '';
+            if (!id) continue;
+
+            if (deleteEntryStatus && rowsToDelete.length > 1) {
+                deleteEntryStatus.textContent = `Deleting ${i + 1} of ${rowsToDelete.length}...`;
+            }
+
+            const response = await fetch('delete_entry.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    id,
+                    reason
+                })
+            });
+            const data = await response.json();
+            if (!response.ok || data.error) {
+                if (deleteEntryStatus) deleteEntryStatus.textContent = data.error || `HTTP ${response.status}`;
+                confirmDeleteEntryButton.disabled = false;
+                confirmDeleteEntryButton.textContent = 'Delete Entry';
+                return;
+            }
+
+            row.remove();
+            deletedCount++;
         }
 
-        window.location.reload();
+        closeDeleteEntry();
+        applyEntrySearch();
+        refreshVisibleSelectionControls();
+        if (entryFilterStatus) {
+            entryFilterStatus.textContent += ` Deleted ${deletedCount} entr${deletedCount === 1 ? 'y' : 'ies'}.`;
+        }
     } catch (error) {
         if (deleteEntryStatus) deleteEntryStatus.textContent = 'Request failed: ' + error.message;
         confirmDeleteEntryButton.disabled = false;
+        confirmDeleteEntryButton.textContent = 'Delete Entry';
     }
 }
 
@@ -761,6 +856,10 @@ selectionBoxes.forEach(box => {
     box.addEventListener('change', updateFailedSelectionState);
 });
 
+deleteSelectionBoxes.forEach(box => {
+    box.addEventListener('change', updateDeleteSelectionState);
+});
+
 sortButtons.forEach(button => {
     button.addEventListener('click', () => {
         const headerCell = button.closest('th');
@@ -785,8 +884,9 @@ duplicatePlateFilters.forEach(button => {
 
 photoPreviewLinks.forEach(link => {
     link.addEventListener('click', event => {
-        event.preventDefault();
-        openPhotoPreviewFromLink(link);
+        if (openPhotoPreviewFromLink(link) === false) {
+            event.preventDefault();
+        }
     });
 });
 
@@ -796,6 +896,39 @@ editEntryButtons.forEach(button => {
 
 deleteEntryButtons.forEach(button => {
     button.addEventListener('click', () => openDeleteEntry(button));
+});
+
+if (selectVisibleDeletesButton) {
+    selectVisibleDeletesButton.addEventListener('click', () => {
+        visibleRows().forEach(row => {
+            const box = row.querySelector('.delete-select');
+            if (box && !box.disabled) box.checked = true;
+        });
+        updateDeleteSelectionState();
+    });
+}
+
+if (clearDeleteSelectionButton) {
+    clearDeleteSelectionButton.addEventListener('click', () => {
+        deleteSelectionBoxes.forEach(box => {
+            box.checked = false;
+        });
+        updateDeleteSelectionState();
+    });
+}
+
+if (deleteSelectedEntriesButton) {
+    deleteSelectedEntriesButton.addEventListener('click', () => {
+        openBulkDeleteEntries(selectedDeleteRows());
+    });
+}
+
+quickReasonButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        if (!deleteEntryReason) return;
+        deleteEntryReason.value = button.dataset.reason || '';
+        deleteEntryReason.focus();
+    });
 });
 
 if (closePhotoOverlayButton) {

@@ -45,7 +45,8 @@ Go to https://home.openweathermap.org/api_keys to create a free account and API 
 /weather
 ├── index.php                    # UI (mobile friendly)
 ├── weather_update.php           # Weather fetch and cache engine
-├── config.php                   # Authoritative city configuration (lat/lon)
+├── config.php                   # Tracked fallback configuration
+├── config.local.example.php     # Copy to config.local.php for private API key
 ├── geocode_helper.php           # Setup-time helper for lat/lon + ZIP resolution
 ├── data/
 ├── ├── README.md
@@ -60,7 +61,31 @@ Go to https://home.openweathermap.org/api_keys to create a free account and API 
 
 ---
 
-## Configuration (`config.php`)
+## Configuration
+
+Put the real OpenWeather API key in:
+
+```
+/weather/config.local.php
+```
+
+Create it by copying:
+
+```
+/weather/config.local.example.php
+```
+
+Then replace:
+
+```php
+'api_key' => 'ENTER-API-HERE',
+```
+
+with your real API key.
+
+`config.local.php` is ignored by Git and should exist only on the server or local machine that needs the private key. GitHub updates can replace tracked files like `config.php`, but they should not overwrite `config.local.php`.
+
+The tracked `config.php` file loads `config.local.php` when it exists, otherwise it falls back to the placeholder configuration.
 
 All base cities **must** be defined using latitude and longitude.
 
@@ -126,7 +151,7 @@ Only proceed if:
 
 ---
 
-### Step 3: Paste into `config.php`
+### Step 3: Paste into `config.local.php`
 
 Copy the generated block directly into the `cities` array.
 
@@ -145,7 +170,7 @@ These entries are:
 
 * Temporary
 * Session-only
-* Not written to `config.php`
+* Not written to `config.local.php`
 * Intended for quick checks or comparisons
 
 They never override configured base cities.
@@ -221,7 +246,7 @@ If location access is denied:
 * No sessions
 * No cookies
 * No user data stored
-* API key exists only in `config.php`
+* API key exists only in `config.local.php`
 * `geocode_helper.php` is intended for admin/setup use
 
 ---

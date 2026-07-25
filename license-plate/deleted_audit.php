@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.14
-    Description: Deleted-item audit page with retention age, permanent delete actions, purge controls, and a project revision badge.
+    Revision: 1.2.19
+    Description: Deleted-item audit page with Eastern timestamp display, retention age, permanent delete actions, purge logging, purge controls, and a project revision badge.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -21,12 +21,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = permanentlyDeleteAuditItems([$auditId]);
         $flash = 'Permanently deleted ' . $result['deleted'] . ' audit item' . ($result['deleted'] === 1 ? '' : 's') . '.';
     } elseif ($action === 'purge_all') {
-        $result = purgeDeletedAudit();
+        $result = purgeDeletedAudit('manual');
         $flash = 'Purged ' . $result['purged'] . ' deleted audit item' . ($result['purged'] === 1 ? '' : 's') . '.';
     }
 }
 
 $auditEntries = readDeletedAuditEntries();
+$purgeLogEntries = readDeletedPurgeLogEntries();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -67,6 +68,36 @@ $auditEntries = readDeletedAuditEntries();
     </section>
 
     <section class="card">
+        <h2>Purge Log</h2>
+        <?php if (empty($purgeLogEntries)): ?>
+            <p class="small">No deleted-audit purges have been logged.</p>
+        <?php else: ?>
+            <div class="table-wrap">
+            <table class="sortable-table purge-log-table">
+                <thead>
+                    <tr>
+                        <th>Purged</th>
+                        <th>Trigger</th>
+                        <th>Items</th>
+                        <th>Archived Photos Removed</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($purgeLogEntries as $entry): ?>
+                    <tr>
+                        <td><?= h(displayEasternDateTime((string)($entry['purged_at'] ?? ''))) ?></td>
+                        <td><?= h((string)($entry['trigger'] ?? '')) ?></td>
+                        <td><?= h((string)($entry['purged_items'] ?? '')) ?></td>
+                        <td><?= h((string)($entry['removed_files_count'] ?? '')) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+            </div>
+        <?php endif; ?>
+    </section>
+
+    <section class="card">
         <h2>Deleted Items</h2>
         <?php if (empty($auditEntries)): ?>
             <p class="small">No deleted items are in the audit log.</p>
@@ -97,11 +128,12 @@ $auditEntries = readDeletedAuditEntries();
                     <?php foreach ($auditEntries as $entry): ?>
                         <?php
                         $daysDeleted = daysSinceIsoTimestamp((string)($entry['deleted_at'] ?? ''));
+                        $deletedAtDisplay = displayEasternDateTime((string)($entry['deleted_at'] ?? ''));
                         $deletedPath = (string)($entry['deleted_relative_path'] ?? '');
                         ?>
                         <tr>
                             <td><input type="checkbox" name="audit_ids[]" value="<?= h((string)($entry['audit_id'] ?? '')) ?>" class="deleted-audit-select"></td>
-                            <td><?= h((string)($entry['deleted_at'] ?? '')) ?></td>
+                            <td><?= h($deletedAtDisplay) ?></td>
                             <td><?= h($daysDeleted === null ? '' : (string)$daysDeleted) ?></td>
                             <td><?= h((string)($entry['deleted_reason'] ?? '')) ?></td>
                             <td><?= h((string)($entry['original_file'] ?? '')) ?></td>

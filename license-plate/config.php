@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.13
-    Description: Shared configuration for batch license plate photo uploads, metadata/state extraction, changelog helpers, duplicate cleanup, manual entry updates, deleted-item audit handling, and case-safe changelog path resolution.
+    Revision: 1.2.21
+    Description: Shared configuration for batch license plate photo uploads, metadata/state extraction, changelog helpers, duplicate cleanup, manual entry updates, deleted-item audit handling, deleted purge logging, and case-safe changelog path resolution.
 */
 
 declare(strict_types=1);
@@ -10,7 +10,7 @@ declare(strict_types=1);
 date_default_timezone_set('America/New_York');
 
 const APP_NAME = 'License Plate Photo Logger';
-const APP_REVISION = '1.2.13';
+const APP_REVISION = '1.2.21';
 const APP_UPDATED = '2026-07-25';
 
 const DATA_DIR = __DIR__ . '/data';
@@ -19,6 +19,7 @@ const DELETED_DIR = __DIR__ . '/deleted';
 const LOG_FILE = DATA_DIR . '/plate-log.json';
 const HASH_INDEX_FILE = DATA_DIR . '/file-hashes.json';
 const DELETED_AUDIT_FILE = DATA_DIR . '/deleted-audit.json';
+const DELETED_PURGE_LOG_FILE = DATA_DIR . '/deleted-purge-log.json';
 const CHANGELOG_FILE = __DIR__ . '/CHANGELOG.md';
 const MAX_UPLOAD_BYTES = 12 * 1024 * 1024;
 
@@ -103,6 +104,13 @@ function readDeletedAuditEntries(): array
     return $entries;
 }
 
+function readDeletedPurgeLogEntries(): array
+{
+    $entries = readJsonFile(DELETED_PURGE_LOG_FILE);
+    usort($entries, fn($a, $b) => strcmp((string)($b['purged_at'] ?? ''), (string)($a['purged_at'] ?? '')));
+    return $entries;
+}
+
 function readProjectRevision(): string
 {
     $versionFile = __DIR__ . '/VERSION.txt';
@@ -122,7 +130,7 @@ function readProjectModifiedAt(): string
         return '';
     }
     $timestamp = filemtime($changelogPath);
-    return $timestamp ? date('Y-m-d H:i:s T', $timestamp) : '';
+    return $timestamp ? date('Y-m-d H:i:s', $timestamp) : '';
 }
 
 function changelogHtml(): string
@@ -402,14 +410,32 @@ function normalizeDateTaken(string|null $value): string
     return $timestamp ? date('c', $timestamp) : '';
 }
 
+function displayEasternDateTime(string|null $value): string
+{
+    $value = trim((string)$value);
+    if ($value === '') {
+        return '';
+    }
+
+    try {
+        $date = new DateTimeImmutable($value);
+        return $date->setTimezone(new DateTimeZone('America/New_York'))->format('Y-m-d H:i:s');
+    } catch (Exception) {
+        $timestamp = strtotime($value);
+        return $timestamp ? date('Y-m-d H:i:s', $timestamp) : '';
+    }
+}
+
+function displayEasternDate(string|null $value): string
+{
+    $display = displayEasternDateTime($value);
+    return $display === '' ? '' : substr($display, 0, 10);
+}
+
 function displayDateTime(string|null $value): string
 {
     $normalized = normalizeDateTaken($value);
-    if ($normalized === '') {
-        return '';
-    }
-    $timestamp = strtotime($normalized);
-    return $timestamp ? date('Y-m-d H:i:s T', $timestamp) : '';
+    return $normalized === '' ? '' : displayEasternDateTime($normalized);
 }
 
 function formatGpsDisplay(?float $latitude, ?float $longitude): string
@@ -850,7 +876,24 @@ function permanentlyDeleteAuditItems(array $auditIds): array
     ];
 }
 
-function purgeDeletedAudit(): array
+function logDeletedAuditPurge(string $trigger, int $purged, array $removedFiles): array
+{
+    $trigger = trim($trigger) === '' ? 'manual' : trim($trigger);
+    $entries = readDeletedPurgeLogEntries();
+    $entry = [
+        'purge_id' => bin2hex(random_bytes(8)),
+        'purged_at' => date('c'),
+        'trigger' => $trigger,
+        'purged_items' => $purged,
+        'removed_files_count' => count($removedFiles),
+        'removed_files' => array_values($removedFiles),
+    ];
+    $entries[] = $entry;
+    writeJsonFile(DELETED_PURGE_LOG_FILE, $entries);
+    return $entry;
+}
+
+function purgeDeletedAudit(string $trigger = 'manual'): array
 {
     $auditEntries = readDeletedAuditEntries();
     $removedFiles = [];
@@ -865,9 +908,11 @@ function purgeDeletedAudit(): array
         }
     }
     writeJsonFile(DELETED_AUDIT_FILE, []);
+    $purgeLogEntry = logDeletedAuditPurge($trigger, count($auditEntries), $removedFiles);
     return [
         'purged' => count($auditEntries),
         'removed_files' => $removedFiles,
+        'purge_log' => $purgeLogEntry,
     ];
 }
 

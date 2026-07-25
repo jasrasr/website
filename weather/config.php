@@ -3,8 +3,8 @@
 // File Name    : config.php
 // Author       : Jason Lamb (with help from ChatGPT)
 // Created Date : 2026-01-24
-// Modified Date: 2026-01-29
-// Revision     : 1.6
+// Modified Date: 2026-07-25
+// Revision     : 1.7
 // Description : Central configuration for the PHP weather dashboard.
 //               Uses lat/lon as authoritative location identifiers.
 // Changelog    :
@@ -15,7 +15,14 @@
 //   Rev 1.4 - Finalized config for UI Rev 2.x
 //   Rev 1.5 - Corrected city format to City,STATE,US
 //   Rev 1.6 - Migrated base cities to lat/lon to eliminate ambiguity
+//   Rev 1.7 - Added local config override for private API keys
 // ============================================================================
+
+$localConfig = __DIR__ . '/config.local.php';
+
+if (is_file($localConfig)) {
+    return require $localConfig;
+}
 
 return [
     'api_key' => 'ENTER-API-HERE',

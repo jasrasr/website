@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.14
-    Description: Stats dashboard with daily upload volume chart, summary counts, clickable date drill-down links into the log, deleted-audit navigation, and a project revision badge.
+    Revision: 1.2.20
+    Description: Stats dashboard with visible daily upload bars, Eastern upload-date grouping, summary counts, clickable date drill-down links into the log, deleted-audit navigation, and a project revision badge.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -19,8 +19,7 @@ $projectModifiedAt = readProjectModifiedAt();
 
 $uploadsByDay = [];
 foreach ($entries as $entry) {
-    $processedAt = (string)($entry['processed_at'] ?? '');
-    $dayKey = substr($processedAt, 0, 10);
+    $dayKey = displayEasternDate((string)($entry['processed_at'] ?? ''));
     if ($dayKey === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dayKey)) {
         $dayKey = 'Unknown';
     }
@@ -66,23 +65,27 @@ $maxUploadsPerDay = empty($uploadsByDay) ? 0 : max($uploadsByDay);
     <section class="card stats-chart-card">
         <h2>Uploads Per Day</h2>
         <p class="small">Daily count of logged plate uploads based on the `Uploaded` timestamp. Click a day to open the log filtered to that upload date.</p>
-        <div class="daily-chart daily-chart-compact" role="img" aria-label="Bar chart of uploaded plates per day">
-            <?php foreach ($uploadsByDay as $day => $count): ?>
-                <?php
-                $barHeight = $maxUploadsPerDay > 0 ? max(10, (int)round(($count / $maxUploadsPerDay) * 120)) : 10;
-                $targetHref = $day === 'Unknown' ? 'view_log.php' : ('view_log.php?uploaded=' . rawurlencode($day));
-                ?>
-                <div class="daily-chart-item" title="<?= h($day . ': ' . $count) ?>">
-                    <span class="daily-chart-count"><?= h((string)$count) ?></span>
-                    <a href="<?= h($targetHref) ?>" class="daily-chart-link" aria-label="Open log for <?= h($day) ?> with <?= h((string)$count) ?> uploads">
-                        <div class="daily-chart-bar-wrap daily-chart-bar-wrap-compact">
-                            <div class="daily-chart-bar" style="height: <?= $barHeight ?>px"></div>
-                        </div>
-                    </a>
-                    <span class="daily-chart-label"><?= h($day) ?></span>
-                </div>
-            <?php endforeach; ?>
-        </div>
+        <?php if (empty($uploadsByDay)): ?>
+            <p class="small">No uploaded plate entries are available for the chart.</p>
+        <?php else: ?>
+            <div class="daily-chart daily-chart-compact" role="img" aria-label="Bar chart of uploaded plates per day">
+                <?php foreach ($uploadsByDay as $day => $count): ?>
+                    <?php
+                    $barHeight = $maxUploadsPerDay > 0 ? max(18, (int)round(($count / $maxUploadsPerDay) * 150)) : 18;
+                    $targetHref = $day === 'Unknown' ? 'view_log.php' : ('view_log.php?uploaded=' . rawurlencode($day));
+                    ?>
+                    <div class="daily-chart-item" title="<?= h($day . ': ' . $count) ?>">
+                        <span class="daily-chart-count"><?= h((string)$count) ?></span>
+                        <a href="<?= h($targetHref) ?>" class="daily-chart-link" aria-label="Open log for <?= h($day) ?> with <?= h((string)$count) ?> uploads">
+                            <div class="daily-chart-bar-wrap daily-chart-bar-wrap-compact">
+                                <div class="daily-chart-bar" style="height: <?= $barHeight ?>px"></div>
+                            </div>
+                        </a>
+                        <span class="daily-chart-label"><?= h($day) ?></span>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </section>
 </main>
 </body>

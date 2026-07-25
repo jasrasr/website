@@ -2,9 +2,87 @@
 
 ## Current Revision
 
-**Version:** 1.2.14  
+**Version:** 1.2.21  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.21 — Reliable Photo Link Fallback
+
+Fixed log photo links so they can still open the uploaded image directly if the JavaScript preview overlay is unavailable.
+
+Key implementation changes:
+
+- `view_log.php` adds `target="_blank"` and `rel="noopener"` to photo links for a direct browser fallback.
+- `view_log.php` makes `openPhotoPreviewFromLink()` return normal navigation when the overlay elements are not available.
+- `view_log.php` changes the click listener so it only calls `preventDefault()` after the overlay successfully takes over.
+
+## Revision 1.2.20 — Visible Stats Chart Bars
+
+Fixed the stats upload chart so the daily bars are visually obvious and the chart uses the available page width.
+
+Key implementation changes:
+
+- `stats.php` raises the minimum bar height and adds an explicit empty state when there are no uploads to graph.
+- `style.css` expands the chart card to full width.
+- `style.css` gives the chart bars fixed visible width, stronger color, border, shadow, and a baseline/grid background.
+- `style.css` increases chart row and item dimensions for desktop and mobile.
+
+## Revision 1.2.19 — Deleted Audit Purge Log
+
+Added a separate purge log so clearing the deleted-item audit still leaves a record of when the purge happened and how much it removed.
+
+Key implementation changes:
+
+- `config.php` adds `DELETED_PURGE_LOG_FILE` for purge history separate from `deleted-audit.json`.
+- `config.php` logs every `purgeDeletedAudit()` call with purge time, trigger, purged item count, and removed archived-photo count.
+- `deleted_audit.php` marks user-triggered purges as `manual`.
+- `deleted_audit.php` displays a Purge Log table above the deleted items table.
+- `style.css` adds a minimum width for the purge log table.
+
+## Revision 1.2.18 — Eastern Timestamp Display
+
+Standardized displayed timestamps so pages show Eastern time in `YYYY-MM-DD HH:MM:SS` format instead of raw ISO strings.
+
+Key implementation changes:
+
+- `config.php` adds shared Eastern date/time display helpers.
+- `deleted_audit.php` renders deleted dates through the shared Eastern display helper.
+- `view_log.php` renders uploaded and date-taken values through Eastern display helpers and uses Eastern dates for uploaded-date filters.
+- `stats.php` groups upload counts by Eastern date.
+- Project modified timestamps now render without the timezone suffix for a consistent page display format.
+
+## Revision 1.2.17 — Persistent Filter Deletes And Multi-Delete
+
+Changed log deletion so the current filter/search context stays visible after a delete, and added multi-select deletion with one shared reason for all selected entries.
+
+Key implementation changes:
+
+- `view_log.php` adds delete-selection checkboxes to the Select column for every row.
+- `view_log.php` adds Select Visible, Clear Selection, and Delete Selected controls above the entries table.
+- `view_log.php` reuses the existing delete dialog for single and multi-delete workflows, sending the same reason to each selected deletion request.
+- `view_log.php` removes successfully deleted rows from the current table without reloading the page, preserving active filter/search state.
+- `style.css` adds compact layout styles for the bulk delete controls and Select column labels.
+
+## Revision 1.2.16 — Quick Delete Reasons
+
+Added preset delete reasons to the log entry delete dialog so common cleanup cases can be selected without typing.
+
+Key implementation changes:
+
+- `view_log.php` adds quick reason buttons for duplicate uploads, wrong uploads, and bad plate reads above the required delete-reason textarea.
+- `view_log.php` fills the existing delete-reason textarea from the selected preset, preserving the existing required-reason validation and audit storage.
+- `style.css` adds compact button spacing for the quick reason row.
+
+## Revision 1.2.15 — Wider Log Layout And Visible Summary Widgets
+
+Fixed the log page dashboard widgets so their labels and counts remain visible without hover, and widened the entry table so dense values rely on horizontal scrolling instead of cramped column wrapping.
+
+Key implementation changes:
+
+- `style.css` moves the stat-card button styling after the generic button rules so the widget text, count, background, and active state are not overridden.
+- `style.css` expands the compact stats grid across the available page width.
+- `style.css` increases log table minimum width and per-column widths for uploaded time, status, metadata, original file, duplicate, scanner, message, and actions.
+- `style.css` reduces outer page padding on desktop so full-width pages have more usable space.
 
 ## Revision 1.2.14 — Corner Revision Badge On Main Pages
 

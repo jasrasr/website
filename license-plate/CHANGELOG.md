@@ -2,6 +2,50 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.21] - 2026-07-25
+
+### Fixed
+- Photo links in the log now keep a direct browser fallback to the uploaded image if the preview overlay cannot open.
+- The photo preview click handler now only prevents normal link navigation after the overlay is available.
+
+## [1.2.20] - 2026-07-25
+
+### Fixed
+- The stats upload chart now renders visible colored bars instead of only counts and date labels.
+- The chart now uses the full page width and shows an empty-state message when there are no uploads to graph.
+
+## [1.2.19] - 2026-07-25
+
+### Added
+- Deleted-audit purges are now written to a separate purge log with purge time, trigger, item count, and removed archived-photo count.
+- The deleted audit page now displays purge history so manual or future automatic purges remain visible after the deleted audit is cleared.
+
+## [1.2.18] - 2026-07-25
+
+### Fixed
+- Deleted audit dates now display as `YYYY-MM-DD HH:MM:SS` in Eastern time instead of raw ISO timestamps.
+- Uploaded, date-taken, stats date grouping, and project modified timestamps now use shared Eastern display helpers.
+
+## [1.2.17] - 2026-07-25
+
+### Added
+- The log page now supports selecting multiple entries and deleting them with one shared reason.
+
+### Fixed
+- Deleting entries no longer reloads the page, so the active log filter and search stay in place.
+
+## [1.2.16] - 2026-07-25
+
+### Added
+- The delete confirmation dialog now includes quick reason buttons for duplicate uploads, wrong uploads, and bad plate reads.
+
+## [1.2.15] - 2026-07-25
+
+### Fixed
+- The log summary widgets now keep visible text and counts without requiring hover.
+- The log page uses more of the available browser width.
+- Log table columns are wider so values wrap less awkwardly and rely on horizontal scrolling for dense data.
+
 ## [1.2.14] - 2026-07-25
 
 ### Added
