@@ -1,7 +1,7 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.12
+    Revision: 1.2.14
     Description: Front-page upload queue with project revision badge, stats and deleted-audit navigation, mobile batch-layout fixes, and automatic queue reset after processing.
 */
 require_once __DIR__ . '/config.php';

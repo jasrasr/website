@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.12
-    Description: Stats dashboard with daily upload volume chart, summary counts, clickable date drill-down links into the log, and deleted-audit navigation.
+    Revision: 1.2.14
+    Description: Stats dashboard with daily upload volume chart, summary counts, clickable date drill-down links into the log, deleted-audit navigation, and a project revision badge.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -14,6 +14,8 @@ $pendingEntries = array_filter($entries, fn($e) => ($e['scan_status'] ?? '') ===
 $metadataEntries = array_filter($entries, fn($e) => !empty($e['date_taken']) || !empty($e['gps_display']) || !empty($e['plate_state']) || !empty($e['photo_state']));
 $favoriteEntries = array_filter($entries, fn($e) => !empty($e['favorite']));
 $rankedEntries = array_filter($entries, fn($e) => isset($e['preference_rank']) && $e['preference_rank'] !== null && $e['preference_rank'] !== '');
+$projectRevision = readProjectRevision();
+$projectModifiedAt = readProjectModifiedAt();
 
 $uploadsByDay = [];
 foreach ($entries as $entry) {
@@ -37,6 +39,10 @@ $maxUploadsPerDay = empty($uploadsByDay) ? 0 : max($uploadsByDay);
 </head>
 <body>
 <main class="container container-wide">
+    <aside class="project-badge">
+        <strong>Project Rev:</strong> <?= h($projectRevision) ?><br>
+        <strong>Modified:</strong> <?= h($projectModifiedAt) ?>
+    </aside>
     <nav class="nav">
         <a href="index.php">Upload</a>
         <a href="view_log.php">View Log</a>

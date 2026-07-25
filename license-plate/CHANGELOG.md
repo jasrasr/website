@@ -2,6 +2,11 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.14] - 2026-07-25
+
+### Added
+- The project revision and modified timestamp badge now appears in the corner of the main app pages, not just the upload page.
+
 ## [1.2.13] - 2026-07-25
 
 ### Fixed

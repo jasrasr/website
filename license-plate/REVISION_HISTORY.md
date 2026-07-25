@@ -2,9 +2,18 @@
 
 ## Current Revision
 
-**Version:** 1.2.13  
+**Version:** 1.2.14  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.14 — Corner Revision Badge On Main Pages
+
+Added the project revision and modified timestamp badge to the main app pages so the same corner status is visible outside the upload page.
+
+Key implementation changes:
+
+- `view_log.php`, `stats.php`, `deleted_audit.php`, and `changelog.php` now render the `project-badge` corner block.
+- `changelog.php` removes the duplicate revision box from the page header and relies on the shared corner badge.
 
 ## Revision 1.2.13 — Case-Safe Changelog Source
 

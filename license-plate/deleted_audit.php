@@ -1,11 +1,13 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.12
-    Description: Deleted-item audit page with retention age, permanent delete actions, and purge controls.
+    Revision: 1.2.14
+    Description: Deleted-item audit page with retention age, permanent delete actions, purge controls, and a project revision badge.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
+$projectRevision = readProjectRevision();
+$projectModifiedAt = readProjectModifiedAt();
 
 $flash = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -36,6 +38,10 @@ $auditEntries = readDeletedAuditEntries();
 </head>
 <body>
 <main class="container container-wide">
+    <aside class="project-badge">
+        <strong>Project Rev:</strong> <?= h($projectRevision) ?><br>
+        <strong>Modified:</strong> <?= h($projectModifiedAt) ?>
+    </aside>
     <nav class="nav">
         <a href="index.php">Upload</a>
         <a href="view_log.php">View Log</a>
