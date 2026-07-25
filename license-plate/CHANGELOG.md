@@ -2,6 +2,12 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.5] - 2026-07-25
+
+### Fixed
+- The top log summary cards now trigger filtering more explicitly and show which filter is active.
+- `changelog.php` now reflects the current revision and uses the wider page layout.
+
 ## [1.2.4] - 2026-07-25
 
 ### Changed

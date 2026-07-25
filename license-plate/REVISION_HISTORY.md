@@ -2,9 +2,19 @@
 
 ## Current Revision
 
-**Version:** 1.2.4  
+**Version:** 1.2.5  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.5 — Active Log Filters and Changelog Page Alignment
+
+Made the top dashboard cards visibly active when filtering the log and aligned the changelog page with the current revision and full-width layout.
+
+Key implementation changes:
+
+- `view_log.php` now wires the top stat cards directly to filter actions and shows an active selected state.
+- `style.css` adds active-card styling so the current filter is obvious.
+- `changelog.php` now carries the current file revision and uses the full-width page container.
 
 ## Revision 1.2.4 — Full-Width Log Layout and Clearer Retry Selection
 

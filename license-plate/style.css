@@ -1,4 +1,4 @@
-/* Revision: 1.2.4 */
+/* Revision: 1.2.5 */
 :root {
     --bg: #f5f6f8;
     --surface: #ffffff;
@@ -94,6 +94,12 @@ h3 { margin-bottom: 8px; }
 
 .stat-card:hover {
     background: #f3f7ff;
+}
+
+.stat-card.is-active {
+    border-color: #7da6ff;
+    background: #eaf1ff;
+    box-shadow: inset 0 0 0 1px #a8c2ff;
 }
 
 .stat-card strong {

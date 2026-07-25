@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.4
-    Description: Log viewer with wider desktop layout, clickable stat filters, and clearer multi-retry controls.
+    Revision: 1.2.5
+    Description: Log viewer with wider desktop layout, active stat filters, and clearer multi-retry controls.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -32,12 +32,12 @@ $metadataEntries = array_filter($entries, fn($e) => !empty($e['date_taken']) || 
     <h1>Plate Log</h1>
 
     <section class="stats-grid stats-grid-compact">
-        <button type="button" class="card stat-card" data-filter-mode="all"><strong>Total entries</strong><span><?= count($entries) ?></span></button>
-        <button type="button" class="card stat-card" data-filter-mode="pending"><strong>Pending Processing</strong><span id="pendingCount"><?= count($pendingEntries) ?></span></button>
-        <button type="button" class="card stat-card" data-filter-mode="unique"><strong>Unique plates</strong><span><?= count($counts) ?></span></button>
-        <button type="button" class="card stat-card" data-filter-mode="duplicate-file"><strong>Duplicate files</strong><span><?= count($duplicateFiles) ?></span></button>
-        <button type="button" class="card stat-card" data-filter-mode="duplicate-plate"><strong>Duplicate Plates</strong><span><?= count($duplicatePlates) ?></span></button>
-        <button type="button" class="card stat-card" data-filter-mode="metadata"><strong>With Metadata</strong><span id="metadataCount"><?= count($metadataEntries) ?></span></button>
+        <button type="button" class="card stat-card is-active" data-filter-mode="all" onclick="setFilterMode('all')"><strong>Total entries</strong><span><?= count($entries) ?></span></button>
+        <button type="button" class="card stat-card" data-filter-mode="pending" onclick="setFilterMode('pending')"><strong>Pending Processing</strong><span id="pendingCount"><?= count($pendingEntries) ?></span></button>
+        <button type="button" class="card stat-card" data-filter-mode="unique" onclick="setFilterMode('unique')"><strong>Unique plates</strong><span><?= count($counts) ?></span></button>
+        <button type="button" class="card stat-card" data-filter-mode="duplicate-file" onclick="setFilterMode('duplicate-file')"><strong>Duplicate files</strong><span><?= count($duplicateFiles) ?></span></button>
+        <button type="button" class="card stat-card" data-filter-mode="duplicate-plate" onclick="setFilterMode('duplicate-plate')"><strong>Duplicate Plates</strong><span><?= count($duplicatePlates) ?></span></button>
+        <button type="button" class="card stat-card" data-filter-mode="metadata" onclick="setFilterMode('metadata')"><strong>With Metadata</strong><span id="metadataCount"><?= count($metadataEntries) ?></span></button>
     </section>
 
     <?php if (!empty($pendingEntries)): ?>
@@ -270,7 +270,16 @@ function applyEntrySearch() {
 function setFilterMode(mode) {
     activeFilterMode = mode;
     if (mode !== 'duplicate-plate') activePlateFilter = '';
+    updateStatCardState();
     applyEntrySearch();
+}
+
+function updateStatCardState() {
+    statCards.forEach(card => {
+        const isActive = (card.dataset.filterMode || 'all') === activeFilterMode && activePlateFilter === '';
+        card.classList.toggle('is-active', isActive);
+        card.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
 }
 
 async function retryEntry(id, button) {
@@ -409,6 +418,7 @@ duplicatePlateFilters.forEach(button => {
     button.addEventListener('click', () => {
         activeFilterMode = 'duplicate-plate';
         activePlateFilter = button.dataset.plate || '';
+        updateStatCardState();
         applyEntrySearch();
         document.getElementById('entriesTable')?.scrollIntoView({behavior: 'smooth', block: 'start'});
     });
@@ -483,6 +493,7 @@ if (processAllButton) {
 
 updatePendingCount();
 updateFailedSelectionState();
+updateStatCardState();
 applyEntrySearch();
 </script>
 </body>
