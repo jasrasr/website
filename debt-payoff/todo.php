@@ -1,7 +1,7 @@
 <?php
 /*
     Debt Payoff Planner
-    Revision: 1.0.4
+    Revision: 1.0.5
     Description: Project todo page rendered from TODO.md for future upgrades, features, and options.
 */
 
@@ -45,6 +45,7 @@ $todo = todoHtml();
 
     <section class="card prose-block">
         <h1>Todo</h1>
+        <?= renderUpdateNotice($projectRevision) ?>
         <?= $todo ?>
     </section>
 </main>

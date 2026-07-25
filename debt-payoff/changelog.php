@@ -1,7 +1,7 @@
 <?php
 /*
     Debt Payoff Planner
-    Revision: 1.0.4
+    Revision: 1.0.5
     Description: Project changelog page rendered from CHANGELOG.md with shared project revision display and navigation.
 */
 
@@ -45,6 +45,7 @@ $changelog = changelogHtml();
 
     <section class="card prose-block">
         <h1>Changelog</h1>
+        <?= renderUpdateNotice($projectRevision) ?>
         <?= $changelog ?>
     </section>
 </main>

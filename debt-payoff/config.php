@@ -1,8 +1,8 @@
 <?php
 /*
     Debt Payoff Planner
-    Revision: 1.0.2
-    Description: Shared configuration, authentication, private per-user storage, shared viewer/editor access, per-user audit logs, daily backups with recovery, payoff calculations, strategy simulations, changelog rendering, and admin helpers.
+    Revision: 1.0.5
+    Description: Shared configuration, authentication, private per-user storage, shared viewer/editor access, per-user audit logs, daily backups with recovery, revision-aware update notices, payoff calculations, strategy simulations, changelog rendering, and admin helpers.
 */
 
 declare(strict_types=1);
@@ -18,7 +18,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 const APP_NAME = 'Debt Payoff Planner';
-const APP_REVISION = '1.0.2';
+const APP_REVISION = '1.0.5';
 const APP_UPDATED = '2026-07-25';
 const DATA_DIR = __DIR__ . '/data';
 const USER_DATA_DIR = DATA_DIR . '/users';
@@ -1346,6 +1346,51 @@ function changelogHtml(): string
 function todoHtml(): string
 {
     return markdownFileToHtml(TODO_FILE, 'No project todo list is available.');
+}
+
+function renderUpdateNotice(string $revision): string
+{
+    $message = 'A new update has been applied.';
+    $revisionText = 'Revision ' . $revision;
+    $revisionKey = 'debt-payoff-update-notice-' . $revision;
+    $revisionKeyJson = json_encode($revisionKey, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
+
+    return <<<HTML
+<section class="card update-notice" id="updateNotice" hidden>
+    <div>
+        <strong>{$message}</strong>
+        <span class="small update-meta">{$revisionText}</span>
+    </div>
+    <div class="actions">
+        <a href="changelog.php" class="nav-button">View Changelog</a>
+        <button type="button" class="secondary" id="dismissUpdateNotice">Dismiss</button>
+    </div>
+</section>
+<script>
+(function () {
+    const revisionKey = {$revisionKeyJson};
+    const notice = document.getElementById('updateNotice');
+    const dismiss = document.getElementById('dismissUpdateNotice');
+    if (!notice || !dismiss) {
+        return;
+    }
+    try {
+        if (window.localStorage.getItem(revisionKey) === 'dismissed') {
+            return;
+        }
+    } catch (error) {
+    }
+    notice.hidden = false;
+    dismiss.addEventListener('click', function () {
+        notice.hidden = true;
+        try {
+            window.localStorage.setItem(revisionKey, 'dismissed');
+        } catch (error) {
+        }
+    });
+})();
+</script>
+HTML;
 }
 
 function userStorageSize(string $username): int

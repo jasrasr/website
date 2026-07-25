@@ -1,8 +1,8 @@
 <?php
 /*
     Debt Payoff Planner
-    Revision: 1.0.4
-    Description: Project readme page rendered from README.md with shared top navigation and project metadata.
+    Revision: 1.0.5
+    Description: Project readme page rendered from README.md with shared top navigation, project metadata, and a once-per-update notice.
 */
 
 declare(strict_types=1);
@@ -45,6 +45,7 @@ $readmeHtml = markdownFileToHtml(__DIR__ . '/README.md', 'No readme is available
 
     <section class="card prose-block">
         <h1>Readme</h1>
+        <?= renderUpdateNotice($projectRevision) ?>
         <?= $readmeHtml ?>
     </section>
 </main>

@@ -1,6 +1,10 @@
 # Changelog
 
 ## 2026-07-25
+- Revision 1.0.5 added a once-per-update notice that appears after a new page version is loaded.
+- The notice includes a dismiss option and a direct link to the changelog.
+
+## 2026-07-25
 - Revision 1.0.4 added a top-menu Readme link across the debt-payoff app.
 - Added `readme.php` to render `README.md` in-browser.
 

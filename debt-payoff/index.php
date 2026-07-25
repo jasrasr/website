@@ -1,8 +1,8 @@
 <?php
 /*
     Debt Payoff Planner
-    Revision: 1.0.4
-    Description: Main dashboard with login, registration, shared viewer/editor debt access, reversible audit history, daily backup and recovery controls, per-loan amortization tables, and top-nav access to the rendered readme.
+    Revision: 1.0.5
+    Description: Main dashboard with login, registration, shared viewer/editor debt access, reversible audit history, daily backup and recovery controls, per-loan amortization tables, top-nav access to the rendered readme, and a once-per-update notice.
 */
 
 declare(strict_types=1);
@@ -156,6 +156,7 @@ if ($currentAccount === null):
     <?php if ($error !== ''): ?>
     <section class="card alert alert-error"><?= h($error) ?></section>
     <?php endif; ?>
+    <?= renderUpdateNotice($projectRevision) ?>
 
     <section class="two-column">
         <form method="post" class="card">
@@ -261,6 +262,7 @@ $auditEntries = $isOwnDataset ? array_slice(readAuditEntries($datasetOwner), 0, 
     <?php if ($flash !== ''): ?>
     <section class="card alert alert-success"><?= h($flash) ?></section>
     <?php endif; ?>
+    <?= renderUpdateNotice($projectRevision) ?>
     <?php if (!$canEditCurrentDataset): ?>
     <section class="card">
         <p class="small">This dataset is shared with you as view-only. You can review the numbers but cannot change them.</p>
