@@ -2,9 +2,19 @@
 
 ## Current Revision
 
-**Version:** 1.2.28  
+**Version:** 1.2.29  
 **Updated:** 2026-07-25  
 **Status:** Active development
+
+## Revision 1.2.29 — Denser Log Table And Last Upload Preview
+
+Tightened the desktop log-table layout, reduced visible GPS noise, added a full metadata details overlay, and exposed the most recently uploaded image on the upload page.
+
+Key implementation changes:
+
+- `view_log.php` now shows `Yes` for GPS in the main table and provides a `More Info` overlay with full metadata including GPS coordinates.
+- `style.css` reduces several log-table column widths and stacks action buttons vertically so the desktop table stays closer to the viewport width.
+- `index.php` now shows the latest uploaded plate image and basic metadata near the top of the upload page.
 
 ## Revision 1.2.28 — Live Duplicate Refresh And Bulk Reprocess
 

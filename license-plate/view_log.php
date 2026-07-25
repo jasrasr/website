@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.28
-    Description: Log viewer with live duplicate summary refresh, bulk reprocessing, visible stat filters, Eastern timestamp display, uploaded-date deep links, project revision badge, cache-busted stylesheet loading, stable overlay behavior, manual correction tools, quick delete reasons, multi-delete actions, favorites/ranking, and reliable photo preview behavior.
+    Revision: 1.2.29
+    Description: Log viewer with a denser desktop table, `More Info` metadata overlay, live duplicate summary refresh, bulk reprocessing, visible stat filters, Eastern timestamp display, uploaded-date deep links, project revision badge, cache-busted stylesheet loading, stable overlay behavior, manual correction tools, quick delete reasons, multi-delete actions, favorites/ranking, and reliable photo preview behavior.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -159,6 +159,16 @@ $styleVersion = rawurlencode($projectRevision);
                     data-rank="<?= h((string)($entry['preference_rank'] ?? '')) ?>"
                     data-uploaded-date="<?= h(displayEasternDate((string)($entry['processed_at'] ?? ''))) ?>"
                     data-scanner-label="<?= h(entryScannerLabel($entry)) ?>"
+                    data-original-file="<?= h((string)($entry['original_file'] ?? '')) ?>"
+                    data-gps-display="<?= h((string)($entry['gps_display'] ?? '')) ?>"
+                    data-date-taken-display="<?= h($dateTakenDisplay) ?>"
+                    data-confidence-display="<?= h(isset($entry['confidence']) && $entry['confidence'] !== '' ? ((string)$entry['confidence'] . '%') : '') ?>"
+                    data-clarity-display="<?= h((string)($entry['clarity_score'] ?? '')) ?>"
+                    data-duplicate-display="<?= h(implode(', ', array_filter([
+                        !empty($entry['duplicate_file']) ? 'same file' : '',
+                        !empty($entry['duplicate_plate']) ? 'same plate' : '',
+                        !empty($entry['duplicate_plate']) && !empty($entry['best_plate_photo']) ? 'clearest photo' : '',
+                    ]))) ?>"
                     data-search="<?= h($searchBlob) ?>"
                 >
                     <td>
@@ -182,8 +192,8 @@ $styleVersion = rawurlencode($projectRevision);
                     <td class="entry-clarity"><?= h((string)($entry['clarity_score'] ?? '')) ?></td>
                     <td class="entry-state"><?= h($stateDisplay) ?></td>
                     <td class="entry-date-taken"><?= h($dateTakenDisplay) ?></td>
-                    <td class="entry-gps"><?= h((string)($entry['gps_display'] ?? '')) ?></td>
-                    <td><?= h($entry['original_file'] ?? '') ?></td>
+                    <td class="entry-gps"><?= !empty($entry['gps_display']) ? 'Yes' : '' ?></td>
+                    <td class="entry-file" title="<?= h((string)($entry['original_file'] ?? '')) ?>"><?= h($entry['original_file'] ?? '') ?></td>
                     <td>
                         <?php if (!empty($entry['stored_file'])): ?>
                             <a
@@ -209,6 +219,7 @@ $styleVersion = rawurlencode($projectRevision);
                     <td class="entry-message"><?= h($entry['error'] ?? '') ?></td>
                     <td>
                         <div class="inline-actions">
+                            <button type="button" class="secondary more-info-entry" data-id="<?= h($entry['id'] ?? '') ?>">More Info</button>
                             <button type="button" class="secondary reprocess-entry" data-id="<?= h($entry['id'] ?? '') ?>">Re-process</button>
                             <?php if ($status === 'pending'): ?>
                                 <button type="button" class="retry-pending" data-id="<?= h($entry['id'] ?? '') ?>">Retry</button>
@@ -313,8 +324,19 @@ $styleVersion = rawurlencode($projectRevision);
         </form>
     </div>
 </div>
+<div id="entryDetailsOverlay" class="photo-overlay" hidden>
+    <div class="photo-overlay-backdrop" data-close-entry-details="true"></div>
+    <div class="photo-overlay-panel entry-editor-panel" role="dialog" aria-modal="true" aria-labelledby="entryDetailsTitle">
+        <div class="photo-overlay-header">
+            <strong id="entryDetailsTitle">Plate Details</strong>
+            <button type="button" id="closeEntryDetails" class="photo-overlay-close" aria-label="Close plate details">X</button>
+        </div>
+        <div class="entry-editor-body">
+            <div id="entryDetailsGrid" class="entry-details-grid"></div>
+        </div>
+    </div>
+</div>
 <script>
-const retryButtons = Array.from(document.querySelectorAll('.retry-pending'));
 const processAllButton = document.getElementById('processAllPending');
 const retrySelectedButton = document.getElementById('retrySelectedPending');
 const selectAllFailedButton = document.getElementById('selectAllFailedPending');
@@ -338,6 +360,9 @@ const photoOverlay = document.getElementById('photoOverlay');
 const photoOverlayImage = document.getElementById('photoOverlayImage');
 const photoOverlayTitle = document.getElementById('photoOverlayTitle');
 const closePhotoOverlayButton = document.getElementById('closePhotoOverlay');
+const entryDetailsOverlay = document.getElementById('entryDetailsOverlay');
+const entryDetailsGrid = document.getElementById('entryDetailsGrid');
+const closeEntryDetailsButton = document.getElementById('closeEntryDetails');
 const entryEditorOverlay = document.getElementById('entryEditorOverlay');
 const entryEditorForm = document.getElementById('entryEditorForm');
 const entryEditorId = document.getElementById('editorEntryId');
@@ -386,6 +411,9 @@ function closeAllOverlays() {
     if (photoOverlay && !photoOverlay.hidden) {
         closePhotoOverlay();
     }
+    if (entryDetailsOverlay && !entryDetailsOverlay.hidden) {
+        closeEntryDetails();
+    }
     if (entryEditorOverlay && !entryEditorOverlay.hidden) {
         closeEntryEditor();
     }
@@ -423,6 +451,46 @@ function openPhotoPreviewFromLink(link) {
 
     openPhotoOverlay(src, label);
     return false;
+}
+
+function openEntryDetails(button) {
+    const row = button.closest('tr');
+    if (!row || !entryDetailsOverlay || !entryDetailsGrid) return;
+    closeAllOverlays();
+
+    const details = [
+        ['Plate', row.querySelector('.entry-plate')?.textContent || ''],
+        ['Original File', row.dataset.originalFile || ''],
+        ['Uploaded', row.cells[1]?.textContent || ''],
+        ['Status', row.querySelector('.entry-status')?.textContent || ''],
+        ['Scanner', row.querySelector('.entry-scanner')?.textContent || row.dataset.scannerLabel || ''],
+        ['Confidence', row.dataset.confidenceDisplay || row.querySelector('.entry-confidence')?.textContent || ''],
+        ['Clarity', row.dataset.clarityDisplay || row.querySelector('.entry-clarity')?.textContent || ''],
+        ['State', row.querySelector('.entry-state')?.textContent || ''],
+        ['Date Taken', row.dataset.dateTakenDisplay || row.querySelector('.entry-date-taken')?.textContent || ''],
+        ['GPS', row.dataset.gpsDisplay || ''],
+        ['Duplicate', row.dataset.duplicateDisplay || row.querySelector('.entry-duplicate')?.textContent || ''],
+        ['Message', row.querySelector('.entry-message')?.textContent || ''],
+    ];
+
+    entryDetailsGrid.innerHTML = '';
+    details.forEach(([label, value]) => {
+        const labelNode = document.createElement('strong');
+        labelNode.textContent = label;
+        const valueNode = document.createElement('span');
+        valueNode.textContent = value || '';
+        entryDetailsGrid.appendChild(labelNode);
+        entryDetailsGrid.appendChild(valueNode);
+    });
+    entryDetailsOverlay.hidden = false;
+    document.body.classList.add('overlay-open');
+}
+
+function closeEntryDetails() {
+    if (!entryDetailsOverlay || !entryDetailsGrid) return;
+    entryDetailsOverlay.hidden = true;
+    entryDetailsGrid.innerHTML = '';
+    document.body.classList.remove('overlay-open');
 }
 
 function openEntryEditor(button) {
@@ -637,12 +705,14 @@ function recalculateRowDuplicateFlags() {
     rows.forEach(row => {
         const duplicateCell = row.querySelector('.entry-duplicate');
         if (!duplicateCell) return;
-        duplicateCell.textContent = rowDuplicateText({
+        const duplicateText = rowDuplicateText({
             duplicate_file: row.dataset.duplicateFile === 'true',
             duplicate_plate: row.dataset.duplicatePlate === 'true',
             best_plate_photo: row.dataset.bestPlatePhoto === 'true',
             plate_count: plateGroups.get(rowPlateValue(row))?.length || 0,
         });
+        duplicateCell.textContent = duplicateText;
+        row.dataset.duplicateDisplay = duplicateText;
     });
 }
 
@@ -692,7 +762,7 @@ function refreshRowSearch(row) {
         row.querySelector('.entry-clarity')?.textContent || '',
         row.querySelector('.entry-state')?.textContent || '',
         row.querySelector('.entry-date-taken')?.textContent || '',
-        row.querySelector('.entry-gps')?.textContent || '',
+        row.dataset.gpsDisplay || '',
         row.cells[11]?.textContent || '',
         row.cells[14]?.textContent || '',
         row.querySelector('.entry-message')?.textContent || ''
@@ -805,6 +875,8 @@ function applyProcessedEntryToRow(row, data) {
     row.dataset.bestPlatePhoto = data.best_plate_photo ? 'true' : 'false';
     row.dataset.plateValue = (data.plate || '').toLowerCase();
     row.dataset.scannerLabel = data.scanner_label || row.dataset.scannerLabel || '';
+    row.dataset.confidenceDisplay = data.confidence !== undefined && data.confidence !== null && data.confidence !== '' ? `${data.confidence}%` : '';
+    row.dataset.clarityDisplay = data.clarity_score !== undefined && data.clarity_score !== null ? String(data.clarity_score) : row.dataset.clarityDisplay || '';
 
     const statusCell = row.querySelector('.entry-status');
     const plateCell = row.querySelector('.entry-plate');
@@ -820,7 +892,11 @@ function applyProcessedEntryToRow(row, data) {
     if (confidenceCell) confidenceCell.textContent = data.confidence !== undefined && data.confidence !== null && data.confidence !== '' ? `${data.confidence}%` : '';
     if (clarityCell) clarityCell.textContent = data.clarity_score ?? clarityCell.textContent ?? '';
     if (stateCell) stateCell.textContent = data.plate_state || '';
-    if (duplicateCell) duplicateCell.textContent = rowDuplicateText(data);
+    if (duplicateCell) {
+        const duplicateText = rowDuplicateText(data);
+        duplicateCell.textContent = duplicateText;
+        row.dataset.duplicateDisplay = duplicateText;
+    }
     if (scannerCell && data.scanner_label) scannerCell.textContent = data.scanner_label;
     if (messageCell) messageCell.textContent = data.error || '';
 
@@ -1192,6 +1268,13 @@ document.addEventListener('click', event => {
         return;
     }
 
+    const detailsButton = target.closest('.more-info-entry');
+    if (detailsButton instanceof HTMLButtonElement) {
+        event.stopPropagation();
+        openEntryDetails(detailsButton);
+        return;
+    }
+
     const retryButton = target.closest('.retry-pending');
     if (retryButton instanceof HTMLButtonElement) {
         event.stopPropagation();
@@ -1288,6 +1371,10 @@ if (closePhotoOverlayButton) {
     closePhotoOverlayButton.addEventListener('click', closePhotoOverlay);
 }
 
+if (closeEntryDetailsButton) {
+    closeEntryDetailsButton.addEventListener('click', closeEntryDetails);
+}
+
 if (closeEntryEditorButton) {
     closeEntryEditorButton.addEventListener('click', closeEntryEditor);
 }
@@ -1322,6 +1409,15 @@ if (entryEditorOverlay) {
     });
 }
 
+if (entryDetailsOverlay) {
+    entryDetailsOverlay.addEventListener('click', event => {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.dataset.closeEntryDetails === 'true') {
+            closeEntryDetails();
+        }
+    });
+}
+
 if (deleteEntryOverlay) {
     deleteEntryOverlay.addEventListener('click', event => {
         const target = event.target;
@@ -1346,6 +1442,10 @@ document.addEventListener('keydown', event => {
     }
     if (event.key === 'Escape' && entryEditorOverlay && !entryEditorOverlay.hidden) {
         closeEntryEditor();
+        return;
+    }
+    if (event.key === 'Escape' && entryDetailsOverlay && !entryDetailsOverlay.hidden) {
+        closeEntryDetails();
         return;
     }
     if (event.key === 'Escape' && deleteEntryOverlay && !deleteEntryOverlay.hidden) {

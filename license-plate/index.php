@@ -1,14 +1,21 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.24
-    Description: Front-page upload queue with project revision badge, cache-busted stylesheet loading, wider desktop layout, stats and deleted-audit navigation, mobile batch-layout fixes, and automatic queue reset after processing.
+    Revision: 1.2.29
+    Description: Front-page upload queue with a latest-upload preview card, project revision badge, cache-busted stylesheet loading, wider desktop layout, stats and deleted-audit navigation, mobile batch-layout fixes, and automatic queue reset after processing.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
 $entries = readLogEntries();
 $counts = plateCounts($entries);
 $pendingEntries = array_filter($entries, fn($entry) => ($entry['scan_status'] ?? '') === 'pending');
+$latestUploadEntry = null;
+foreach ($entries as $entry) {
+    if (!empty($entry['stored_file'])) {
+        $latestUploadEntry = $entry;
+        break;
+    }
+}
 $projectRevision = readProjectRevision();
 $projectModifiedAt = readProjectModifiedAt();
 $styleVersion = rawurlencode($projectRevision);
@@ -47,6 +54,32 @@ $styleVersion = rawurlencode($projectRevision);
             <strong>Unique plates:</strong> <?= count($counts) ?>
         </div>
     </header>
+
+    <?php if ($latestUploadEntry !== null): ?>
+    <section class="card latest-upload-card">
+        <div class="latest-upload-preview">
+            <img
+                src="uploads/<?= h((string)$latestUploadEntry['stored_file']) ?>"
+                alt="<?= h((string)($latestUploadEntry['original_file'] ?? 'Latest uploaded plate photo')) ?>"
+            >
+        </div>
+        <div>
+            <h2>Last Uploaded Photo</h2>
+            <div class="latest-upload-meta">
+                <strong>Uploaded</strong>
+                <span><?= h(displayEasternDateTime((string)($latestUploadEntry['processed_at'] ?? ''))) ?></span>
+                <strong>Plate</strong>
+                <span><?= h((string)($latestUploadEntry['plate'] ?? '')) ?: 'Not yet read' ?></span>
+                <strong>Original File</strong>
+                <span><?= h((string)($latestUploadEntry['original_file'] ?? '')) ?></span>
+                <strong>Scanner</strong>
+                <span><?= h(entryScannerLabel($latestUploadEntry)) ?></span>
+                <strong>Status</strong>
+                <span><?= h((string)($latestUploadEntry['scan_status'] ?? 'complete')) ?></span>
+            </div>
+        </div>
+    </section>
+    <?php endif; ?>
 
     <section class="card">
         <label for="photos">License plate photos</label>

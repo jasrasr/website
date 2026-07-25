@@ -2,6 +2,16 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.29] - 2026-07-25
+
+### Changed
+- `view_log.php` now uses a denser desktop table layout with narrower status, confidence, favorite, scanner, GPS, and original-file columns.
+- The main log table now shows `Yes` for GPS presence instead of full coordinates.
+
+### Added
+- `view_log.php` now includes a `More Info` overlay for full per-plate metadata, including GPS coordinates and other hidden table details.
+- `index.php` now shows the most recently uploaded image so the next upload batch has a visible starting reference.
+
 ## [1.2.28] - 2026-07-25
 
 ### Fixed
