@@ -1,1 +1,0 @@
-a collection of license plates and a searchale index databse

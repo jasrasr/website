@@ -1,0 +1,2 @@
+data/locks/*.lock
+!data/locks/.gitkeep
