@@ -1,0 +1,49 @@
+<?php
+/*
+    Debt Payoff Planner
+    Revision: 0.1.0
+    Description: Project changelog page rendered from CHANGELOG.md with shared project revision display and navigation.
+*/
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/config.php';
+
+$projectRevision = readProjectRevision();
+$projectModifiedAt = readProjectModifiedAt();
+$currentAccount = currentUser();
+$changelog = changelogHtml();
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Changelog - <?= h(APP_NAME) ?></title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="container">
+    <aside class="project-badge">
+        <strong>Project Rev:</strong> <?= h($projectRevision) ?><br>
+        <strong>Modified:</strong> <?= h($projectModifiedAt) ?>
+    </aside>
+    <nav class="nav">
+        <a href="index.php">Dashboard</a>
+        <?php if ($currentAccount !== null && ($currentAccount['role'] ?? 'user') === 'admin'): ?>
+        <a href="admin.php">Admin</a>
+        <?php endif; ?>
+        <a href="changelog.php">Changelog</a>
+        <a href="todo.php">Todo</a>
+        <?php if ($currentAccount !== null): ?>
+        <a href="index.php?logout=1">Logout</a>
+        <?php endif; ?>
+    </nav>
+
+    <section class="card prose-block">
+        <h1>Changelog</h1>
+        <?= $changelog ?>
+    </section>
+</main>
+</body>
+</html>

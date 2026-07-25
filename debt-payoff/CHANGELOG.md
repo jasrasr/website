@@ -1,0 +1,9 @@
+# Changelog
+
+## 2026-07-25
+- Revision 0.1.0 created the baseline Debt Payoff Planner app.
+- Added private user registration and login with JSON-backed per-user storage files.
+- Seeded the `user` / `test` sample account with sample debt data for testing.
+- Added private loan tracking fields for loan type, category, APR, monthly payment, current principal, payoff projection, original date, and original balance.
+- Added per-loan payoff calculations for baseline payoff, extra monthly principal, annual blue moon payment, and one-time lump-sum acceleration.
+- Added snowball and avalanche strategy modeling, overall debt metrics, a rendered changelog page, a rendered todo page, and an admin-only user-management page that shows only storage usage per user.
