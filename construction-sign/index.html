@@ -7,29 +7,38 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="app-shell">
-    <header class="page-header">
-      <p class="eyebrow">Online Builder</p>
-      <h1>Construction Sign Text Generator</h1>
-      <p class="intro">Enter a message, preview it as an amber highway construction sign, then copy the generated code for use on another website.</p>
+  <main class="page-shell">
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">ONLINE BUILDER</p>
+        <h1>Construction Sign Text Generator</h1>
+        <p class="subtitle">Enter a message, preview it as an amber highway construction sign, then copy the generated code or save the sign as an image.</p>
+      </div>
+      <div class="revision">
+        <span>Revision 1.1.0</span>
+        <span>Updated July 30, 2026</span>
+      </div>
     </header>
 
-    <section class="panel controls-panel" aria-labelledby="builder-heading">
+    <section class="panel" aria-labelledby="builder-heading">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">Step 1</p>
+          <p class="step">STEP 1</p>
           <h2 id="builder-heading">Build your message</h2>
         </div>
-        <span id="characterCount" class="character-count">0 characters</span>
+        <span id="characterCount" class="status-chip">0 characters</span>
       </div>
 
-      <label for="messageInput">Sign text</label>
-      <textarea id="messageInput" rows="5" maxlength="140" placeholder="ROAD WORK AHEAD">ROAD WORK
-AHEAD</textarea>
-
       <div class="control-grid">
-        <label>
-          Number of lines
+        <label class="field field-wide" for="messageInput">
+          <span>Sign text</span>
+          <textarea id="messageInput" rows="5" maxlength="140" placeholder="ROAD WORK AHEAD">ROAD WORK
+AHEAD</textarea>
+          <small>Use Enter to force a new line. Unsupported symbols are removed automatically.</small>
+        </label>
+
+        <label class="field">
+          <span>Number of lines</span>
           <select id="lineCount">
             <option value="1">1 line</option>
             <option value="2" selected>2 lines</option>
@@ -38,8 +47,8 @@ AHEAD</textarea>
           </select>
         </label>
 
-        <label>
-          Text alignment
+        <label class="field">
+          <span>Text alignment</span>
           <select id="textAlign">
             <option value="center" selected>Center</option>
             <option value="left">Left</option>
@@ -47,8 +56,8 @@ AHEAD</textarea>
           </select>
         </label>
 
-        <label>
-          LED color
+        <label class="field">
+          <span>LED color</span>
           <select id="ledColor">
             <option value="#ffb000" selected>Amber</option>
             <option value="#ffd54a">Yellow</option>
@@ -57,66 +66,74 @@ AHEAD</textarea>
           </select>
         </label>
 
-        <label>
-          Bulb size
+        <label class="field">
+          <span>Bulb size</span>
           <input id="bulbSize" type="range" min="4" max="10" value="7">
         </label>
 
-        <label>
-          Bulb spacing
+        <label class="field">
+          <span>Bulb spacing</span>
           <input id="bulbGap" type="range" min="1" max="6" value="3">
         </label>
 
-        <label class="checkbox-label">
+        <label class="field checkbox-field">
           <input id="glowToggle" type="checkbox" checked>
-          Enable LED glow
+          <span>Enable LED glow</span>
         </label>
 
-        <label class="checkbox-label">
+        <label class="field checkbox-field">
           <input id="frameToggle" type="checkbox" checked>
-          Show metal frame
+          <span>Show metal frame</span>
         </label>
       </div>
     </section>
 
-    <section class="panel preview-panel" aria-labelledby="preview-heading">
+    <section class="panel" aria-labelledby="preview-heading">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">Step 2</p>
+          <p class="step">STEP 2</p>
           <h2 id="preview-heading">Live preview</h2>
         </div>
       </div>
-
-      <div id="signFrame" class="sign-frame">
-        <div id="signPreview" class="sign-preview" aria-label="Construction sign preview"></div>
+      <div class="sign-stage">
+        <div id="signFrame" class="sign-frame">
+          <div id="signPreview" aria-label="Construction sign preview"></div>
+        </div>
       </div>
     </section>
 
-    <section class="panel export-panel" aria-labelledby="export-heading">
+    <section class="panel" aria-labelledby="export-heading">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">Step 3</p>
+          <p class="step">STEP 3</p>
           <h2 id="export-heading">Copy or download</h2>
         </div>
       </div>
 
-      <div class="button-row">
-        <button id="copyEmbedButton" type="button">Copy embed code</button>
-        <button id="copyStandaloneButton" type="button" class="secondary">Copy standalone HTML</button>
-        <button id="downloadPngButton" type="button" class="secondary">Download PNG</button>
+      <div class="export-actions">
+        <button id="copyEmbedButton" type="button" class="button button-primary">Copy embed code</button>
+        <button id="copyStandaloneButton" type="button" class="button button-secondary">Copy standalone HTML</button>
+        <button id="downloadPngButton" type="button" class="button button-secondary">Download PNG</button>
       </div>
 
-      <label for="codeOutput">Generated code</label>
-      <textarea id="codeOutput" rows="12" readonly></textarea>
-      <p id="statusMessage" class="status-message" role="status" aria-live="polite"></p>
+      <p class="help-text">Embed code is intended for pages that permit inline JavaScript. The standalone HTML option creates a complete webpage. On iPhone or iPad, the PNG may open in a new tab so it can be saved to Photos or Files.</p>
+
+      <label class="field code-field" for="codeOutput">
+        <span>Generated embed code</span>
+        <textarea id="codeOutput" rows="12" readonly spellcheck="false"></textarea>
+      </label>
+      <p id="statusMessage" class="notice" role="status" aria-live="polite"></p>
     </section>
 
-    <footer class="page-footer">
-      <span>Revision 1.0.0</span>
-      <span>Updated July 30, 2026</span>
+    <footer class="site-footer">
+      <span>Construction Sign Text Generator</span>
+      <span>No data is uploaded or stored.</span>
     </footer>
   </main>
 
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
   <script src="script.js"></script>
+  <script src="fixes.js"></script>
 </body>
 </html>
