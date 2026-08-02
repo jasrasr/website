@@ -1,11 +1,11 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/member-badges.js
- * Revision: 1.5.8
- * Description: Enhances member cards without high-frequency polling or repeated DOM teardown.
+ * Revision: 1.6.7
+ * Description: Enhances member cards with readable city labels, age, distance, roles, and profile metadata.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
- * Modified: 2026-07-12
+ * Modified: 2026-08-02
  */
 (function () {
     'use strict';
@@ -69,12 +69,35 @@
             }).catch(function () { callback(gpsLabel(lat, lon)); });
     }
 
+    function formatAgeSeconds(seconds) {
+        seconds = Math.max(0, Math.floor(Number(seconds) || 0));
+        if (seconds < 60) return seconds + 's ago';
+        var minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return minutes + 'm ago';
+        var hours = Math.floor(minutes / 60);
+        if (hours < 24) {
+            var remainingMinutes = minutes % 60;
+            return hours + 'h' + (remainingMinutes ? ' ' + remainingMinutes + 'm' : '') + ' ago';
+        }
+        var days = Math.floor(hours / 24);
+        var remainingHours = hours % 24;
+        if (days < 30) return days + 'd' + (remainingHours ? ' ' + remainingHours + 'h' : '') + ' ago';
+        var months = Math.floor(days / 30);
+        var remainingDays = days % 30;
+        if (months < 12) return months + 'mo' + (remainingDays ? ' ' + remainingDays + 'd' : '') + ' ago';
+        var years = Math.floor(months / 12);
+        var remainingMonths = months % 12;
+        return years + 'y' + (remainingMonths ? ' ' + remainingMonths + 'mo' : '') + ' ago';
+    }
+
     function normalizeAge(text) {
-        var match = String(text || '').trim().match(/^(\d+)\s*([smhd])\s*ago$/i);
-        if (!match) return String(text || '').trim();
-        var value = Number(match[1]), unit = match[2].toLowerCase();
-        if (unit === 'h' && value >= 24) return Math.floor(value / 24) + 'd ago';
-        return value + unit + ' ago';
+        var value = String(text || '').trim();
+        var match = value.match(/^(\d+)\s*([smhd])\s*ago$/i);
+        if (!match) return value;
+        var amount = Number(match[1]);
+        var unit = match[2].toLowerCase();
+        var multiplier = unit === 'd' ? 86400 : unit === 'h' ? 3600 : unit === 'm' ? 60 : 1;
+        return formatAgeSeconds(amount * multiplier);
     }
 
     function parseMeta(meta) {
@@ -126,6 +149,53 @@
         }) || null;
     }
 
+    function currentMember(info) {
+        if (!info) return null;
+        return latestMembers.find(function (member) {
+            return norm(member.displayName) === norm(info.name) || norm(member.displayLabel) === norm(info.name);
+        }) || null;
+    }
+
+    function distanceMiles(lat1, lon1, lat2, lon2) {
+        var toRad = function (value) { return value * Math.PI / 180; };
+        var earthMiles = 3958.7613;
+        var dLat = toRad(lat2 - lat1);
+        var dLon = toRad(lon2 - lon1);
+        var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return earthMiles * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function formatDistance(miles) {
+        if (!Number.isFinite(miles)) return '';
+        if (miles < 0.1) return 'Nearby';
+        if (miles < 10) return miles.toFixed(1) + ' mi away';
+        return Math.round(miles) + ' mi away';
+    }
+
+    function updateDistance(card, member, info) {
+        var main = card.firstElementChild;
+        if (!main) return;
+        var node = main.querySelector('.member-distance');
+        var me = currentMember(info);
+        var memberLoc = member && member.location;
+        var myLoc = me && me.location;
+        if (!memberLoc || !myLoc || !Number.isFinite(Number(memberLoc.latitude)) || !Number.isFinite(Number(memberLoc.longitude)) || !Number.isFinite(Number(myLoc.latitude)) || !Number.isFinite(Number(myLoc.longitude))) {
+            if (node) node.remove();
+            return;
+        }
+        if (!node) {
+            node = document.createElement('div');
+            node.className = 'member-distance member-ident';
+            var meta = main.querySelector('.member-meta');
+            if (meta) meta.insertAdjacentElement('afterend', node);
+            else main.appendChild(node);
+        }
+        if (member.id === me.id) node.textContent = 'Your current location';
+        else node.textContent = formatDistance(distanceMiles(Number(myLoc.latitude), Number(myLoc.longitude), Number(memberLoc.latitude), Number(memberLoc.longitude)));
+    }
+
     function desiredBadges(info, member) {
         var values = [];
         var profile = (member && member.groupProfile) || {};
@@ -147,7 +217,7 @@
         name.style.color = /^#[0-9a-fA-F]{6}$/.test(profile.color || '') ? profile.color : '';
 
         var main = card.firstElementChild;
-        var ident = main && main.querySelector('.member-ident');
+        var ident = main && main.querySelector('.member-ident:not(.member-distance)');
         if (!ident && main) {
             ident = document.createElement('div');
             ident.className = 'member-ident';
@@ -161,6 +231,8 @@
             var identText = parts.join(' • ');
             if (ident.textContent !== identText) ident.textContent = identText;
         }
+
+        updateDistance(card, member, info);
 
         var header = name.parentNode.querySelector('.member-header');
         if (!header) {
@@ -181,6 +253,11 @@
                 values.forEach(function (item) { container.appendChild(badge(item[0], item[1])); });
                 header.appendChild(container);
             }
+        }
+
+        var staleBadge = card.querySelector('.badge.stale');
+        if (staleBadge && member.location && Number.isFinite(Number(member.location.ageSeconds))) {
+            staleBadge.textContent = 'Last seen ' + formatAgeSeconds(member.location.ageSeconds);
         }
     }
 
