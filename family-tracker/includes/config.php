@@ -2,18 +2,18 @@
 /**
  * Project: Family GPS Tracker
  * File: includes/config.php
- * Revision: 1.6.5
+ * Revision: 1.6.6
  * Description: Central application configuration with deployment-derived Eastern Time update labeling.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
- * Modified: 2026-07-14
+ * Modified: 2026-08-02
  */
 
 declare(strict_types=1);
 
 const APP_NAME = 'Friends & Family GPS Tracker';
-const APP_REVISION = '1.6.5';
-const APP_UPDATED = '2026-07-14';
+const APP_REVISION = '1.6.6';
+const APP_UPDATED = '2026-08-02';
 const CONSENT_VERSION = '2026-07-11';
 const LOGIN_THROTTLE_MAX_FAILURES = 5;
 const LOGIN_THROTTLE_WINDOW_SECONDS = 900;
@@ -34,10 +34,6 @@ const REMEMBER_ME_LIFETIME_SECONDS = 7776000;
 const MIN_PASSWORD_LENGTH = 8;
 const SESSION_NAME = 'family_tracker_session';
 
-/**
- * Returns the newest deployed modification time among revision-defining files.
- * This avoids manually entered build clocks and reflects the deployed copy.
- */
 function app_latest_update_timestamp(): int
 {
     $root = dirname(__DIR__);
@@ -61,10 +57,6 @@ function app_latest_update_timestamp(): int
     return $timestamps ? max($timestamps) : time();
 }
 
-/**
- * Formats a timestamp in Eastern Time. America/New_York automatically applies
- * EST or EDT while the interface consistently labels the zone as ET.
- */
 function app_update_label_et(?int $timestamp = null): string
 {
     $timestamp ??= app_latest_update_timestamp();
@@ -94,5 +86,3 @@ session_set_cookie_params([
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
-
-
