@@ -2,23 +2,51 @@
 /**
  * Project: Family GPS Tracker
  * File: includes/security.php
- * Revision: 1.4.0
- * Description: Request, validation, session, persistent-login, multi-group, and response helpers.
+ * Revision: 1.6.6
+ * Description: Session, CSRF, authentication, persistent login, active-group membership, and owner-scoped payload helpers.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
- * Modified: 2026-07-06
+ * Modified: 2026-08-02
  */
 
 declare(strict_types=1);
 
 require_once __DIR__ . '/json-store.php';
 
+function is_https_request(): bool
+{
+    return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+}
+
+function client_ip_hash(): string
+{
+    $raw = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    return hash('sha256', (string)$raw);
+}
+
+function user_agent_hash(): string
+{
+    return hash('sha256', (string)($_SERVER['HTTP_USER_AGENT'] ?? 'unknown'));
+}
+
+function request_input(): array
+{
+    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+    if (stripos($contentType, 'application/json') !== false) {
+        $raw = file_get_contents('php://input');
+        $decoded = json_decode($raw ?: '{}', true);
+        return is_array($decoded) ? $decoded : [];
+    }
+    return $_POST;
+}
+
 function json_response(array $payload, int $status = 200): never
 {
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
-    header('Cache-Control: no-store');
-    echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    echo json_encode($payload, JSON_UNESCAPED_SLASHES);
     exit;
 }
 
@@ -27,58 +55,9 @@ function ok(array $payload = []): never
     json_response(['ok' => true] + $payload);
 }
 
-function fail(string $message, int $status = 400, array $extra = []): never
+function fail(string $message, int $status = 400): never
 {
-    json_response(['ok' => false, 'error' => $message] + $extra, $status);
-}
-
-function request_input(): array
-{
-    $raw = file_get_contents('php://input');
-    if ($raw === false || trim($raw) === '') {
-        return $_POST ?: [];
-    }
-
-    $decoded = json_decode($raw, true);
-    if (!is_array($decoded)) {
-        fail('Invalid JSON request body.', 400);
-    }
-    return $decoded;
-}
-
-function str_field(array $input, string $key, int $maxLength = 120): string
-{
-    $value = isset($input[$key]) ? trim((string)$input[$key]) : '';
-    $value = preg_replace('/[\x00-\x1F\x7F]/u', '', $value) ?? '';
-    if (strlen($value) > $maxLength) {
-        $value = substr($value, 0, $maxLength);
-    }
-    return $value;
-}
-
-function bool_field(array $input, string $key): bool
-{
-    return filter_var($input[$key] ?? false, FILTER_VALIDATE_BOOL);
-}
-
-function float_field(array $input, string $key, ?float $min = null, ?float $max = null): ?float
-{
-    if (!isset($input[$key]) || $input[$key] === '' || $input[$key] === null) {
-        return null;
-    }
-
-    if (!is_numeric($input[$key])) {
-        fail("Invalid numeric value for {$key}.", 400);
-    }
-
-    $value = (float)$input[$key];
-    if ($min !== null && $value < $min) {
-        fail("{$key} is below the allowed range.", 400);
-    }
-    if ($max !== null && $value > $max) {
-        fail("{$key} is above the allowed range.", 400);
-    }
-    return $value;
+    json_response(['ok' => false, 'error' => $message], $status);
 }
 
 function ensure_csrf_token(): string
@@ -91,81 +70,94 @@ function ensure_csrf_token(): string
 
 function require_csrf(): void
 {
-    $expected = ensure_csrf_token();
     $provided = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-    if (!is_string($provided) || !hash_equals($expected, $provided)) {
-        fail('Invalid or missing CSRF token.', 403);
+    $expected = $_SESSION['csrf_token'] ?? '';
+    if (!is_string($provided) || !is_string($expected) || $expected === '' || !hash_equals($expected, $provided)) {
+        fail('Invalid CSRF token.', 403);
     }
 }
 
-function is_https_request(): bool
+function str_field(array $input, string $key, int $maxLength = 255): string
 {
-    return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-        || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+    $value = $input[$key] ?? '';
+    if (!is_scalar($value)) {
+        return '';
+    }
+    return substr(trim((string)$value), 0, $maxLength);
 }
 
-function app_cookie_options(int $expires): array
+function bool_field(array $input, string $key): bool
+{
+    $value = $input[$key] ?? false;
+    return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+}
+
+function float_field(array $input, string $key, float $min, float $max): ?float
+{
+    $value = $input[$key] ?? null;
+    if ($value === null || $value === '') {
+        return null;
+    }
+    if (!is_numeric($value)) {
+        return null;
+    }
+    $float = (float)$value;
+    return ($float >= $min && $float <= $max) ? $float : null;
+}
+
+function clear_session_cookie(): void
+{
+    if (ini_get('session.use_cookies')) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], (bool)$params['secure'], (bool)$params['httponly']);
+    }
+}
+
+function persistent_login_cookie_options(int $expires): array
 {
     return [
         'expires' => $expires,
         'path' => '/',
-        'domain' => '',
         'secure' => is_https_request(),
         'httponly' => true,
         'samesite' => 'Lax',
     ];
 }
 
-function set_persistent_login_cookie(string $selector, string $token, int $expires): void
+function create_persistent_login(array $user): void
 {
-    setcookie(REMEMBER_COOKIE_NAME, $selector . ':' . $token, app_cookie_options($expires));
+    $selector = bin2hex(random_bytes(9));
+    $validator = bin2hex(random_bytes(32));
+    $expires = time() + REMEMBER_ME_LIFETIME_SECONDS;
+    write_json_file(remember_token_path($selector), [
+        'selector' => $selector,
+        'validatorHash' => hash('sha256', $validator),
+        'userId' => $user['id'],
+        'createdAt' => now_iso(),
+        'lastUsedAt' => now_iso(),
+        'expiresAt' => gmdate('c', $expires),
+        'userAgentHash' => user_agent_hash(),
+    ]);
+    setcookie(REMEMBER_COOKIE_NAME, $selector . ':' . $validator, persistent_login_cookie_options($expires));
 }
 
 function clear_persistent_login_cookie(): void
 {
-    setcookie(REMEMBER_COOKIE_NAME, '', app_cookie_options(time() - 3600));
+    setcookie(REMEMBER_COOKIE_NAME, '', persistent_login_cookie_options(time() - 3600));
 }
 
 function parse_persistent_login_cookie(): ?array
 {
-    $raw = $_COOKIE[REMEMBER_COOKIE_NAME] ?? '';
-    if (!is_string($raw) || !str_contains($raw, ':')) {
+    $cookie = $_COOKIE[REMEMBER_COOKIE_NAME] ?? '';
+    if (!is_string($cookie) || !str_contains($cookie, ':')) {
         return null;
     }
-    [$selector, $token] = explode(':', $raw, 2);
+    [$selector, $validator] = explode(':', $cookie, 2);
     $selector = safe_id($selector);
-    if ($selector === '' || $token === '') {
+    if ($selector === '' || $validator === '') {
         return null;
     }
-    return [$selector, $token];
-}
-
-function issue_persistent_login(array $user): void
-{
-    $selector = bin2hex(random_bytes(9));
-    $token = bin2hex(random_bytes(32));
-    $expires = time() + REMEMBER_ME_LIFETIME_SECONDS;
-    $record = [
-        'selector' => $selector,
-        'userId' => $user['id'],
-        'tokenHash' => hash('sha256', $token),
-        'createdAt' => now_iso(),
-        'lastUsedAt' => now_iso(),
-        'expiresAt' => gmdate('c', $expires),
-        'userAgentHash' => hash('sha256', (string)($_SERVER['HTTP_USER_AGENT'] ?? '')),
-    ];
-    write_json_file(remember_token_path($selector), $record);
-    set_persistent_login_cookie($selector, $token, $expires);
-}
-
-function revoke_current_persistent_login(): void
-{
-    $parsed = parse_persistent_login_cookie();
-    if ($parsed) {
-        [$selector] = $parsed;
-        delete_json_file(remember_token_path($selector));
-    }
-    clear_persistent_login_cookie();
+    return [$selector, $validator];
 }
 
 function consume_persistent_login(): ?array
@@ -174,68 +166,55 @@ function consume_persistent_login(): ?array
     if (!$parsed) {
         return null;
     }
-
-    [$selector, $token] = $parsed;
+    [$selector, $validator] = $parsed;
     $path = remember_token_path($selector);
     $record = read_json_file($path, []);
-    if (!$record) {
-        clear_persistent_login_cookie();
-        return null;
-    }
-
     $expiresAt = isset($record['expiresAt']) ? strtotime((string)$record['expiresAt']) : false;
-    if (!$expiresAt || $expiresAt < time()) {
+    if (!$record || !$expiresAt || $expiresAt < time()) {
         delete_json_file($path);
         clear_persistent_login_cookie();
         return null;
     }
-
-    $expectedHash = (string)($record['tokenHash'] ?? '');
-    if ($expectedHash === '' || !hash_equals($expectedHash, hash('sha256', $token))) {
+    if (!hash_equals((string)($record['validatorHash'] ?? ''), hash('sha256', $validator))) {
         delete_json_file($path);
         clear_persistent_login_cookie();
         return null;
     }
-
+    if (!hash_equals((string)($record['userAgentHash'] ?? ''), user_agent_hash())) {
+        return null;
+    }
     $user = read_user((string)($record['userId'] ?? ''));
     if (!$user || empty($user['isActive'])) {
         delete_json_file($path);
         clear_persistent_login_cookie();
         return null;
     }
-
-    session_regenerate_id(true);
     $_SESSION['user_id'] = $user['id'];
-    ensure_csrf_token();
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(24));
     $record['lastUsedAt'] = now_iso();
     write_json_file($path, $record);
     return $user;
+}
+
+function revoke_current_persistent_login(): void
+{
+    $parsed = parse_persistent_login_cookie();
+    if ($parsed) {
+        delete_json_file(remember_token_path((string)$parsed[0]));
+    }
+    clear_persistent_login_cookie();
 }
 
 function start_authenticated_session(array $user, bool $rememberMe = false): void
 {
     session_regenerate_id(true);
     $_SESSION['user_id'] = $user['id'];
-    if (!empty($user['familyId'])) {
-        $_SESSION['active_family_id'] = (string)$user['familyId'];
-    }
-    ensure_csrf_token();
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(24));
     if ($rememberMe) {
-        issue_persistent_login($user);
+        create_persistent_login($user);
+    } else {
+        revoke_current_persistent_login();
     }
-}
-
-function clear_session_cookie(): void
-{
-    $params = session_get_cookie_params();
-    setcookie(session_name(), '', [
-        'expires' => time() - 3600,
-        'path' => $params['path'] ?? '/',
-        'domain' => $params['domain'] ?? '',
-        'secure' => (bool)($params['secure'] ?? is_https_request()),
-        'httponly' => (bool)($params['httponly'] ?? true),
-        'samesite' => $params['samesite'] ?? 'Lax',
-    ]);
 }
 
 function logout_current_session(): void
@@ -252,7 +231,6 @@ function current_user(): ?array
     if (!is_string($userId) || $userId === '') {
         return consume_persistent_login();
     }
-
     $user = read_user($userId);
     if (!$user || empty($user['isActive'])) {
         return null;
@@ -420,7 +398,6 @@ function find_family_by_invite_code(string $inputCode): ?array
     if ($normalized === '') {
         return null;
     }
-
     foreach (list_json_records('families') as $family) {
         $hash = $family['inviteCodeHash'] ?? '';
         if (is_string($hash) && $hash !== '' && password_verify($normalized, $hash)) {
@@ -460,10 +437,11 @@ function build_me_payload(?array $user): array
     }
 
     $family = current_family_for_user($user);
+    $isOwner = $family && family_member_role($family, $user) === 'owner';
     return [
         'authenticated' => true,
         'csrfToken' => $csrf,
         'user' => $family ? public_user_for_family($user, $family) : public_user($user),
-        'family' => $family ? public_family($family, true) : null,
+        'family' => $family ? public_family($family, true, $isOwner) : null,
     ];
 }
