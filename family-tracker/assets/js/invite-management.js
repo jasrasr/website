@@ -1,14 +1,275 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/invite-management.js
- * Revision: 1.4.8
- * Description: Owner invite management plus invite-aware join interception for new and existing accounts.
+ * Revision: 1.6.8
+ * Description: Owner invite management, invite-aware joins, and per-device battery-aware GPS scheduling loaded before the main tracker.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-11
- * Modified: 2026-07-11
+ * Modified: 2026-08-02
  */
 (function () {
     'use strict';
+
+    var STORAGE_KEY = 'family-tracker-gps-mode';
+    var DEFAULT_MODE = 'balanced';
+    var previousScheduledMode = null;
+    var lastActualRequestAt = 0;
+    var latestRequest = null;
+    var liveWatchIds = {};
+    var modeSelect = null;
+    var modeSummary = null;
+    var nextUpdateNode = null;
+
+    var modes = {
+        live: {
+            label: 'Live',
+            intervalMs: 0,
+            highAccuracy: true,
+            maximumAge: 0,
+            description: 'Continuous GPS watch. Highest battery use; intended for active travel.'
+        },
+        frequent: {
+            label: 'Frequent',
+            intervalMs: 60000,
+            highAccuracy: true,
+            maximumAge: 0,
+            description: 'Fresh high-accuracy location about every minute.'
+        },
+        balanced: {
+            label: 'Balanced',
+            intervalMs: 300000,
+            highAccuracy: true,
+            maximumAge: 60000,
+            description: 'Recommended. Fresh location about every 5 minutes with moderate battery use.'
+        },
+        battery: {
+            label: 'Battery Saver',
+            intervalMs: 900000,
+            highAccuracy: false,
+            maximumAge: 300000,
+            description: 'Location about every 15 minutes using lower-power positioning when available.'
+        },
+        maximum: {
+            label: 'Maximum Saver',
+            intervalMs: 1800000,
+            highAccuracy: false,
+            maximumAge: 600000,
+            description: 'Location about every 30 minutes. Best for basic last-known-location sharing.'
+        },
+        manual: {
+            label: 'Manual',
+            intervalMs: Infinity,
+            highAccuracy: false,
+            maximumAge: 600000,
+            description: 'Captures once on page load, then only when Update Once is pressed.'
+        }
+    };
+
+    function getStoredMode() {
+        try {
+            var value = window.localStorage.getItem(STORAGE_KEY) || DEFAULT_MODE;
+            return modes[value] ? value : DEFAULT_MODE;
+        } catch (ignore) {
+            return DEFAULT_MODE;
+        }
+    }
+
+    function setStoredMode(value) {
+        if (!modes[value]) value = DEFAULT_MODE;
+        try { window.localStorage.setItem(STORAGE_KEY, value); } catch (ignore) { }
+        if (modeSelect) modeSelect.value = value;
+        renderModeStatus();
+    }
+
+    function currentMode() {
+        return getStoredMode();
+    }
+
+    function profile() {
+        return modes[currentMode()] || modes[DEFAULT_MODE];
+    }
+
+    function isDue(now) {
+        var selected = profile();
+        if (!lastActualRequestAt) return true;
+        if (!Number.isFinite(selected.intervalMs)) return false;
+        if (selected.intervalMs === 0) return false;
+        return now - lastActualRequestAt >= selected.intervalMs;
+    }
+
+    function governedOptions(originalOptions) {
+        var selected = profile();
+        return Object.assign({}, originalOptions || {}, {
+            enableHighAccuracy: selected.highAccuracy,
+            maximumAge: selected.maximumAge,
+            timeout: selected.highAccuracy ? 15000 : 10000
+        });
+    }
+
+    function formatDuration(milliseconds) {
+        if (!Number.isFinite(milliseconds)) return 'manual updates only';
+        var seconds = Math.max(0, Math.ceil(milliseconds / 1000));
+        if (seconds < 60) return seconds + 's';
+        var minutes = Math.ceil(seconds / 60);
+        if (minutes < 60) return minutes + 'm';
+        var hours = Math.floor(minutes / 60);
+        var remaining = minutes % 60;
+        return remaining ? hours + 'h ' + remaining + 'm' : hours + 'h';
+    }
+
+    function renderModeStatus() {
+        var selected = profile();
+        if (modeSummary) modeSummary.textContent = selected.description;
+        if (!nextUpdateNode) return;
+
+        if (currentMode() === 'live') {
+            nextUpdateNode.textContent = 'Live mode uses continuous browser location updates while sharing is active.';
+            return;
+        }
+        if (!Number.isFinite(selected.intervalMs)) {
+            nextUpdateNode.textContent = 'Next automatic update: none after the initial page-load location.';
+            return;
+        }
+        if (!lastActualRequestAt) {
+            nextUpdateNode.textContent = 'Next automatic update: initial location is due now.';
+            return;
+        }
+        var remaining = selected.intervalMs - (Date.now() - lastActualRequestAt);
+        nextUpdateNode.textContent = remaining <= 0
+            ? 'Next automatic update: due now.'
+            : 'Next automatic update in about ' + formatDuration(remaining) + '.';
+    }
+
+    function installGeolocationGovernor() {
+        if (!navigator.geolocation || navigator.geolocation.__familyTrackerGoverned) return;
+
+        var geo = navigator.geolocation;
+        var originalGet = geo.getCurrentPosition.bind(geo);
+        var originalWatch = geo.watchPosition.bind(geo);
+        var originalClear = geo.clearWatch.bind(geo);
+
+        function governedGet(success, error, options) {
+            latestRequest = { success: success, error: error, options: options };
+            var now = Date.now();
+            var mode = currentMode();
+
+            if (document.hidden) return;
+            if (mode === 'live' && lastActualRequestAt) return;
+            if (!isDue(now)) return;
+
+            lastActualRequestAt = now;
+            renderModeStatus();
+            return originalGet(success, error, governedOptions(options));
+        }
+
+        function governedWatch(success, error, options) {
+            var mode = currentMode();
+            if (mode !== 'live') {
+                previousScheduledMode = mode;
+                setStoredMode('live');
+            }
+            lastActualRequestAt = Date.now();
+            var id = originalWatch(success, error, {
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 15000
+            });
+            liveWatchIds[id] = true;
+            renderModeStatus();
+            return id;
+        }
+
+        function governedClear(id) {
+            originalClear(id);
+            if (liveWatchIds[id]) {
+                delete liveWatchIds[id];
+                if (!Object.keys(liveWatchIds).length && previousScheduledMode && modes[previousScheduledMode]) {
+                    setStoredMode(previousScheduledMode);
+                    previousScheduledMode = null;
+                }
+            }
+        }
+
+        try {
+            geo.getCurrentPosition = governedGet;
+            geo.watchPosition = governedWatch;
+            geo.clearWatch = governedClear;
+            geo.__familyTrackerGoverned = true;
+        } catch (error) {
+            try {
+                Object.defineProperties(geo, {
+                    getCurrentPosition: { configurable: true, value: governedGet },
+                    watchPosition: { configurable: true, value: governedWatch },
+                    clearWatch: { configurable: true, value: governedClear },
+                    __familyTrackerGoverned: { configurable: true, value: true }
+                });
+            } catch (ignore) { }
+        }
+
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden || !latestRequest) return;
+            if (currentMode() === 'live') return;
+            if (!isDue(Date.now())) return;
+            governedGet(latestRequest.success, latestRequest.error, latestRequest.options);
+        });
+    }
+
+    function createBatteryCard() {
+        if (document.getElementById('gpsBatteryModeCard')) return;
+        var sharing = document.querySelector('.controls-card');
+        if (!sharing) return;
+
+        var card = document.createElement('section');
+        card.id = 'gpsBatteryModeCard';
+        card.className = 'card profile-edit';
+
+        var heading = document.createElement('div');
+        var eyebrow = document.createElement('p');
+        eyebrow.className = 'eyebrow';
+        eyebrow.textContent = 'Battery & GPS';
+        var title = document.createElement('h2');
+        title.textContent = 'Location Update Mode';
+        var intro = document.createElement('p');
+        intro.className = 'muted';
+        intro.textContent = 'The first location is always requested on page load. This setting controls later GPS requests on this device.';
+        heading.append(eyebrow, title, intro);
+
+        var label = document.createElement('label');
+        label.textContent = 'Update frequency';
+        modeSelect = document.createElement('select');
+        modeSelect.id = 'gpsUpdateModeSelect';
+        Object.keys(modes).forEach(function (key) {
+            var option = document.createElement('option');
+            option.value = key;
+            option.textContent = modes[key].label + (key === 'balanced' ? ' — Recommended' : '');
+            modeSelect.appendChild(option);
+        });
+        modeSelect.value = currentMode();
+        label.appendChild(modeSelect);
+
+        modeSummary = document.createElement('div');
+        modeSummary.className = 'profile-edit-note';
+        nextUpdateNode = document.createElement('div');
+        nextUpdateNode.className = 'member-ident';
+
+        modeSelect.addEventListener('change', function () {
+            var oldMode = currentMode();
+            setStoredMode(modeSelect.value);
+            if (oldMode === 'live' && modeSelect.value !== 'live') {
+                var stop = document.getElementById('stopSharingBtn');
+                if (stop && !stop.disabled) stop.click();
+            }
+            var statusNode = document.getElementById('statusText');
+            if (statusNode) statusNode.textContent = modes[modeSelect.value].label + ' GPS mode selected for this device.';
+        });
+
+        card.append(heading, label, modeSummary, nextUpdateNode);
+        sharing.insertAdjacentElement('beforebegin', card);
+        renderModeStatus();
+        window.setInterval(renderModeStatus, 15000);
+    }
+
+    installGeolocationGovernor();
 
     var csrfToken = '';
 
@@ -149,6 +410,7 @@
     }
 
     function boot() {
+        createBatteryCard();
         document.addEventListener('submit', guestJoin, true);
         document.addEventListener('click', existingJoin, true);
         var form = $('ownerInviteForm');
