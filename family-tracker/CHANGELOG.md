@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.6.6
+Revision: 1.6.7
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,19 @@ Modified: 2026-08-02
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.6.6**
+Current Project Revision: **1.6.7**
+
+## Rev 1.6.7 - 2026-08-02
+
+- Replaced large hour counts with readable elapsed time such as `20d 2h ago`.
+- Added minutes to recent hour-based ages when available.
+- Added month/year formatting for very old location records.
+- Kept closest city and state as the default member-card location text.
+- Removed accuracy and full coordinates from the default member-card summary; technical details remain available through Details and map links.
+- Added straight-line distance from the signed-in user's latest location to each member.
+- Changed stale badges to show readable `Last seen` time.
+- Updated the PWA app-shell cache.
+- Added no new live-data folder.
 
 ## Rev 1.6.6 - 2026-08-02
 
