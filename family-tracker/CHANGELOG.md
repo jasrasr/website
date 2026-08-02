@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.6.7
+Revision: 1.6.8
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,24 @@ Modified: 2026-08-02
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.6.7**
+Current Project Revision: **1.6.8**
+
+## Rev 1.6.8 - 2026-08-02
+
+- Added a per-device Location Update Mode control near the Sharing section.
+- The first location request still runs immediately on page load for every mode.
+- Added Live, Frequent, Balanced, Battery Saver, Maximum Saver, and Manual modes.
+- Balanced is the recommended default and requests location about every five minutes.
+- Battery Saver requests about every fifteen minutes with standard accuracy and reusable cached positions.
+- Maximum Saver requests about every thirty minutes with lower-power settings.
+- Manual captures the initial page-load location and then waits for Update Once.
+- Saved the selected mode in browser local storage so each device can use a different setting.
+- Paused scheduled GPS requests while the page is hidden and requested an overdue update when it becomes visible again.
+- Prevented the scheduled timer from making additional requests while Live continuous sharing is active.
+- Starting continuous sharing temporarily selects Live mode; stopping restores the previous scheduled mode.
+- Added a visible description and next-update estimate for the selected mode.
+- Added the GPS controller to the PWA app-shell cache.
+- Added no new live-data folder.
 
 ## Rev 1.6.7 - 2026-08-02
 
