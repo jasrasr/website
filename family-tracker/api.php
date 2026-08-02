@@ -2,11 +2,11 @@
 /**
  * Project: Family GPS Tracker
  * File: api.php
- * Revision: 1.5.4
- * Description: JSON API for authentication, throttling, groups, locations, member metadata, invites, and notices.
+ * Revision: 1.6.6
+ * Description: JSON API for authentication, throttling, groups, locations, member metadata, persistent owner-visible invite codes, and notices.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
- * Modified: 2026-07-11
+ * Modified: 2026-08-02
  */
 
 declare(strict_types=1);
@@ -31,11 +31,17 @@ try {
         case 'update_location': require_csrf(); handle_update_location(request_input());
         case 'delete_my_location': require_csrf(); handle_delete_my_location();
         case 'regenerate_invite': require_csrf(); handle_regenerate_invite();
+        case 'set_invite_visibility': require_csrf(); handle_set_invite_visibility(request_input());
         default: fail('Unknown API action.', 404);
     }
 } catch (Throwable $ex) {
     error_log('Family Tracker API error: ' . $ex->getMessage());
     fail('Server error. Check PHP error logs.', 500);
+}
+
+function owner_family_payload(array $family): array
+{
+    return public_family($family, true, true);
 }
 
 function handle_register_family(array $input): void
@@ -66,6 +72,8 @@ function handle_register_family(array $input): void
             'memberJoinedAt' => [$userId => $createdAt],
             'memberProfiles' => [$userId => ['nickname' => '', 'relationship' => '', 'color' => '']],
             'inviteCodeHash' => password_hash($inviteNormalized, PASSWORD_DEFAULT),
+            'inviteCodePlain' => $inviteCode,
+            'inviteCodeHidden' => false,
             'inviteCodeLast4' => substr($inviteNormalized, -4), 'inviteCodeCreatedAt' => $createdAt,
             'createdAt' => $createdAt, 'updatedAt' => $createdAt,
         ];
@@ -84,7 +92,7 @@ function handle_register_family(array $input): void
     });
     [$user, $inviteCode] = $result;
     start_authenticated_session($user, $rememberMe);
-    ok(build_me_payload($user) + ['oneTimeInviteCode' => $inviteCode, 'message' => 'Group created. Save the invite code now.']);
+    ok(build_me_payload($user) + ['oneTimeInviteCode' => $inviteCode, 'message' => 'Group created. The owner can keep viewing this active share code.']);
 }
 
 function handle_join_family(array $input): void
@@ -236,9 +244,25 @@ function handle_regenerate_invite(): void
     if (!$family) fail('Active group not found.', 404);
     $code = generate_invite_code(); $normalized = normalize_invite_code($code);
     $family['inviteCodeHash'] = password_hash($normalized, PASSWORD_DEFAULT);
-    $family['inviteCodeLast4'] = substr($normalized, -4); $family['inviteCodeCreatedAt'] = now_iso(); $family['updatedAt'] = now_iso();
+    $family['inviteCodePlain'] = $code;
+    $family['inviteCodeHidden'] = false;
+    $family['inviteCodeLast4'] = substr($normalized, -4);
+    $family['inviteCodeCreatedAt'] = now_iso();
+    $family['updatedAt'] = now_iso();
     write_family($family);
     audit_event('regenerate_invite', ['userId' => $user['id'], 'familyId' => $family['id']]);
-    add_group_notice((string)$family['id'], 'invite_regenerated', $user['displayName'] . ' regenerated the invite code for ' . $family['name'] . '.', (string)$user['id']);
-    ok(['inviteCode' => $code, 'family' => public_family($family, true)]);
+    add_group_notice((string)$family['id'], 'invite_regenerated', $user['displayName'] . ' reset the share code for ' . $family['name'] . '.', (string)$user['id']);
+    ok(['inviteCode' => $code, 'family' => owner_family_payload($family), 'message' => 'Share code reset. The previous code no longer works.']);
+}
+
+function handle_set_invite_visibility(array $input): void
+{
+    $user = require_user(); require_owner($user); $family = current_family_for_user($user);
+    if (!$family) fail('Active group not found.', 404);
+    $hidden = bool_field($input, 'hidden');
+    $family['inviteCodeHidden'] = $hidden;
+    $family['updatedAt'] = now_iso();
+    write_family($family);
+    audit_event($hidden ? 'hide_invite_code' : 'show_invite_code', ['userId' => $user['id'], 'familyId' => $family['id']]);
+    ok(['family' => owner_family_payload($family), 'message' => $hidden ? 'Share code hidden on this page.' : 'Share code shown.']);
 }
