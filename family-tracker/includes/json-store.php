@@ -2,11 +2,11 @@
 /**
  * Project: Family GPS Tracker
  * File: includes/json-store.php
- * Revision: 1.3.0
- * Description: JSON read/write helpers with simple file locking.
+ * Revision: 1.6.6
+ * Description: JSON read/write helpers, public payload shaping, and owner-visible active invite metadata.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
- * Modified: 2026-07-06
+ * Modified: 2026-08-02
  */
 
 declare(strict_types=1);
@@ -215,7 +215,7 @@ function public_user(array $user): array
     ];
 }
 
-function public_family(array $family, bool $includeInviteMeta = false): array
+function public_family(array $family, bool $includeInviteMeta = false, bool $includeOwnerInviteCode = false): array
 {
     $out = [
         'id' => $family['id'] ?? '',
@@ -227,6 +227,11 @@ function public_family(array $family, bool $includeInviteMeta = false): array
     if ($includeInviteMeta) {
         $out['inviteCodeLast4'] = $family['inviteCodeLast4'] ?? null;
         $out['inviteCodeCreatedAt'] = $family['inviteCodeCreatedAt'] ?? null;
+        $out['inviteCodeHidden'] = !empty($family['inviteCodeHidden']);
+    }
+
+    if ($includeOwnerInviteCode) {
+        $out['inviteCode'] = (string)($family['inviteCodePlain'] ?? '');
     }
 
     return $out;
