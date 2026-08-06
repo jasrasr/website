@@ -1,11 +1,11 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/dashboard-layout.js
- * Revision: 1.6.0
- * Description: Reorders the tracker around the map and groups secondary tools into collapsed navigation sections.
+ * Revision: 1.6.10
+ * Description: Reorders the tracker around the map, groups secondary tools into collapsed sections, and keeps compact navigation items consistently sized.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-13
- * Modified: 2026-07-13
+ * Modified: 2026-08-06
  */
 (function () {
     'use strict';
@@ -21,8 +21,8 @@
         style.id = 'family-tracker-dashboard-layout-style';
         style.textContent = [
             '#trackerApp{display:flex;flex-direction:column}',
-            '#trackerPrimaryNav{position:sticky;top:5.4rem;z-index:420;padding:.65rem;margin:.65rem 0;display:flex;gap:.5rem;overflow-x:auto;background:rgba(11,16,32,.94);backdrop-filter:blur(14px)}',
-            '#trackerPrimaryNav a,#trackerPrimaryNav button{flex:0 0 auto;white-space:nowrap;border:1px solid var(--border);border-radius:999px;padding:.55rem .8rem;background:var(--panel);color:var(--text);text-decoration:none;font-weight:800;box-shadow:none}',
+            '#trackerPrimaryNav{position:sticky;top:5.4rem;z-index:420;padding:.65rem;margin:.65rem 0;display:flex;align-items:center;gap:.5rem;overflow-x:auto;background:rgba(11,16,32,.94);backdrop-filter:blur(14px)}',
+            '#trackerPrimaryNav a,#trackerPrimaryNav button{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto!important;width:auto!important;min-width:max-content;max-width:none;white-space:nowrap;border:1px solid var(--border);border-radius:999px;padding:.55rem .8rem;background:var(--panel);color:var(--text);text-decoration:none;font-weight:800;box-shadow:none}',
             '.tracker-section-group{padding:0;overflow:hidden}',
             '.tracker-section-group>summary{cursor:pointer;list-style:none;padding:1rem;font-size:1.1rem;font-weight:900;display:flex;align-items:center;justify-content:space-between;gap:.75rem}',
             '.tracker-section-group>summary::-webkit-details-marker{display:none}',
