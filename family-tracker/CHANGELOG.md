@@ -1,7 +1,7 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.6.9
+Revision: 1.6.10
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
@@ -10,7 +10,16 @@ Modified: 2026-08-06
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.6.9**
+Current Project Revision: **1.6.10**
+
+## Rev 1.6.10 - 2026-08-06
+
+- Fixed inconsistent compact-navigation widths on mobile.
+- Prevented global full-width button styling from stretching Groups, Account, or More.
+- Set every navigation link and button to intrinsic content width with consistent padding.
+- Kept the navigation horizontally scrollable when all items do not fit.
+- Updated the PWA app-shell cache.
+- Added no new live-data folder.
 
 ## Rev 1.6.9 - 2026-08-06
 
