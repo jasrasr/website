@@ -1,14 +1,14 @@
 /*
  * Project: Family GPS Tracker
  * File: service-worker.js
- * Revision: 1.6.9
+ * Revision: 1.6.10
  * Description: Conservative app-shell caching and offline fallback for static tracker assets.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-11
  * Modified: 2026-08-06
  */
 
-const CACHE_NAME = 'family-tracker-shell-v1.6.9';
+const CACHE_NAME = 'family-tracker-shell-v1.6.10';
 const APP_SHELL = [
   './',
   './index.php',
