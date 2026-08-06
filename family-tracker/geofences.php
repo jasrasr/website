@@ -2,11 +2,11 @@
 /**
  * Project: Family GPS Tracker
  * File: geofences.php
- * Revision: 1.6.1
- * Description: Active-group geofence management with editing, notification controls, and browser-driven evaluation.
+ * Revision: 1.6.9
+ * Description: Active-group geofence management with address persistence, editing, notification controls, and browser-driven evaluation.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-11
- * Modified: 2026-07-13
+ * Modified: 2026-08-06
  */
 
 declare(strict_types=1);
@@ -48,6 +48,7 @@ function normalized_zones(array $family): array
         if (!is_array($zone) || empty($zone['id'])) continue;
         $zone['notifyArrival'] = array_key_exists('notifyArrival', $zone) ? (bool)$zone['notifyArrival'] : true;
         $zone['notifyDeparture'] = array_key_exists('notifyDeparture', $zone) ? (bool)$zone['notifyDeparture'] : true;
+        $zone['address'] = trim((string)($zone['address'] ?? ''));
         $normalized[] = $zone;
     }
     return $normalized;
@@ -138,14 +139,16 @@ function geofence_payload(array $user, array $family, bool $evaluate): array
 function zone_fields(array $input): array
 {
     $name = str_field($input, 'name', 80);
+    $address = str_field($input, 'address', 180);
     $latitude = float_field($input, 'latitude', -90, 90);
     $longitude = float_field($input, 'longitude', -180, 180);
     $radius = float_field($input, 'radiusMeters', 50, 5000);
     if ($name === '' || $latitude === null || $longitude === null || $radius === null) {
-        fail('Name, latitude, longitude, and radius are required.', 400);
+        fail('Name, resolved location, and radius are required.', 400);
     }
     return [
         'name' => $name,
+        'address' => $address,
         'latitude' => $latitude,
         'longitude' => $longitude,
         'radiusMeters' => round($radius),
