@@ -145,29 +145,12 @@
 
     .history.visible { display: block; }
 
-    .history-heading {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 12px;
-    }
+    .history-heading { margin-bottom: 12px; }
 
     .history h2 {
       margin: 0;
       font-size: 17px;
     }
-
-    .clear-history {
-      min-height: auto;
-      padding: 5px 0;
-      color: var(--muted);
-      background: transparent;
-      font-size: 13px;
-      font-weight: 650;
-    }
-
-    .clear-history:hover { color: var(--danger); background: transparent; }
 
     .history-list {
       display: grid;
@@ -255,13 +238,12 @@
 
     <section id="history" class="history" aria-labelledby="history-title">
       <div class="history-heading">
-        <h2 id="history-title">Recent service tags</h2>
-        <button id="clear-history" class="clear-history" type="button">Clear history</button>
+        <h2 id="history-title">Shared recent service tags</h2>
       </div>
       <ul id="history-list" class="history-list"></ul>
     </section>
 
-    <footer>This independent shortcut sends the tag directly to Dell’s official support website. Recent tags are saved only in this browser so you can reopen them later.</footer>
+    <footer>This independent shortcut sends the tag directly to Dell’s official support website. Recent tags are shared with everyone who uses this page.</footer>
   </main>
 
   <script>
@@ -270,20 +252,22 @@
     const message = document.querySelector('#message');
     const historySection = document.querySelector('#history');
     const historyList = document.querySelector('#history-list');
-    const clearHistoryButton = document.querySelector('#clear-history');
-    const storageKey = 'dellServiceTagHistory';
 
-    function getHistory() {
+    async function getHistory() {
       try {
-        const saved = JSON.parse(localStorage.getItem(storageKey));
-        return Array.isArray(saved) ? saved.filter(tag => /^[A-Z0-9]{5,20}$/.test(tag)) : [];
+        const response = await fetch('api.php', { cache: 'no-store' });
+        if (!response.ok) throw new Error('History request failed');
+        const data = await response.json();
+        return Array.isArray(data.tags)
+          ? data.tags.map(item => item.tag).filter(tag => /^[A-Z0-9]{5,20}$/.test(tag))
+          : [];
       } catch {
         return [];
       }
     }
 
-    function renderHistory() {
-      const tags = getHistory();
+    async function renderHistory() {
+      const tags = await getHistory();
       historyList.replaceChildren();
       historySection.classList.toggle('visible', tags.length > 0);
 
@@ -301,9 +285,19 @@
     }
 
     function rememberTag(tag) {
-      const tags = getHistory().filter(savedTag => savedTag !== tag);
-      tags.unshift(tag);
-      localStorage.setItem(storageKey, JSON.stringify(tags.slice(0, 20)));
+      const payload = JSON.stringify({ tag });
+
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('api.php', new Blob([payload], { type: 'application/json' }));
+        return;
+      }
+
+      fetch('api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        keepalive: true
+      }).catch(() => {});
     }
 
     input.addEventListener('input', () => {
@@ -326,12 +320,6 @@
       rememberTag(serviceTag.toUpperCase());
       const supportUrl = `https://www.dell.com/support/product-details/en-us/servicetag/${encodeURIComponent(serviceTag)}`;
       window.location.assign(supportUrl);
-    });
-
-    clearHistoryButton.addEventListener('click', () => {
-      localStorage.removeItem(storageKey);
-      renderHistory();
-      input.focus();
     });
 
     renderHistory();
