@@ -127,6 +127,60 @@
     .hint { color: var(--muted); }
     .error { color: var(--danger); font-weight: 650; }
 
+    .scan-actions { margin-top: 12px; }
+
+    .scan-button {
+      width: 100%;
+      border: 1px solid var(--blue);
+      color: var(--blue);
+      background: transparent;
+    }
+
+    .scan-button:hover {
+      color: white;
+      background: var(--blue);
+    }
+
+    .scan-button:disabled {
+      opacity: 0.65;
+      cursor: wait;
+    }
+
+    .ocr-panel {
+      display: none;
+      margin-top: 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(6, 114, 206, 0.04);
+    }
+
+    .ocr-panel.visible { display: block; }
+
+    .ocr-preview {
+      display: block;
+      width: 100%;
+      max-height: 220px;
+      border-radius: 8px;
+      object-fit: contain;
+      background: #101820;
+    }
+
+    .ocr-progress {
+      width: 100%;
+      height: 8px;
+      margin-top: 12px;
+      accent-color: var(--blue);
+    }
+
+    .ocr-status {
+      min-height: 22px;
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
     footer {
       margin-top: 32px;
       padding-top: 20px;
@@ -234,6 +288,17 @@
         <button type="submit">Open Dell Support</button>
       </div>
       <p id="message" class="hint" aria-live="polite">Letters and numbers only. Press Enter to continue.</p>
+
+      <div class="scan-actions">
+        <button id="scan-button" class="scan-button" type="button">📷 Scan service tag from photo</button>
+        <input id="photo-input" type="file" accept="image/*" capture="environment" hidden>
+      </div>
+
+      <div id="ocr-panel" class="ocr-panel">
+        <img id="ocr-preview" class="ocr-preview" alt="Selected service tag photo">
+        <progress id="ocr-progress" class="ocr-progress" max="1" value="0"></progress>
+        <p id="ocr-status" class="ocr-status" aria-live="polite"></p>
+      </div>
     </form>
 
     <section id="history" class="history" aria-labelledby="history-title">
@@ -252,6 +317,77 @@
     const message = document.querySelector('#message');
     const historySection = document.querySelector('#history');
     const historyList = document.querySelector('#history-list');
+    const scanButton = document.querySelector('#scan-button');
+    const photoInput = document.querySelector('#photo-input');
+    const ocrPanel = document.querySelector('#ocr-panel');
+    const ocrPreview = document.querySelector('#ocr-preview');
+    const ocrProgress = document.querySelector('#ocr-progress');
+    const ocrStatus = document.querySelector('#ocr-status');
+    let ocrLibraryPromise;
+
+    function loadOcrLibrary() {
+      if (window.Tesseract) return Promise.resolve(window.Tesseract);
+      if (ocrLibraryPromise) return ocrLibraryPromise;
+
+      ocrLibraryPromise = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js';
+        script.crossOrigin = 'anonymous';
+        script.onload = () => resolve(window.Tesseract);
+        script.onerror = () => reject(new Error('Unable to load the OCR engine.'));
+        document.head.append(script);
+      });
+
+      return ocrLibraryPromise;
+    }
+
+    function findServiceTag(text) {
+      const normalized = text.toUpperCase().replace(/[^A-Z0-9:#\n ]/g, ' ');
+      const labeledMatch = normalized.match(/(?:SERVICE\s*TAG|SVC\s*TAG|ST)\s*[:#]?\s*([A-Z0-9]{7})\b/);
+      if (labeledMatch) return labeledMatch[1];
+
+      const ignoredWords = new Set(['SERVICE', 'SUPPORT', 'PRODUCT', 'EXPRESS', 'WARRANTY']);
+      const candidates = normalized.match(/\b[A-Z0-9]{7}\b/g) || [];
+      return candidates.find(candidate => !ignoredWords.has(candidate)) || null;
+    }
+
+    async function scanPhoto(file) {
+      const previewUrl = URL.createObjectURL(file);
+      ocrPreview.src = previewUrl;
+      ocrPanel.classList.add('visible');
+      ocrProgress.value = 0;
+      ocrStatus.textContent = 'Loading the OCR engine… The first scan can take a few seconds.';
+      scanButton.disabled = true;
+
+      try {
+        const Tesseract = await loadOcrLibrary();
+        const result = await Tesseract.recognize(file, 'eng', {
+          logger: update => {
+            if (typeof update.progress === 'number') ocrProgress.value = update.progress;
+            if (update.status) ocrStatus.textContent = `${update.status}…`;
+          }
+        });
+
+        const detectedTag = findServiceTag(result.data.text || '');
+        if (!detectedTag) {
+          ocrStatus.textContent = 'I could not confidently find a seven-character service tag. Try a closer, well-lit photo or enter it manually.';
+          return;
+        }
+
+        input.value = detectedTag;
+        message.className = 'hint';
+        message.textContent = `Detected ${detectedTag}. Verify it, then select Open Dell Support.`;
+        ocrStatus.textContent = `Possible service tag: ${detectedTag}. Please verify it before continuing.`;
+        input.focus();
+        input.select();
+      } catch (error) {
+        ocrStatus.textContent = 'The photo could not be processed. Check your connection or enter the tag manually.';
+      } finally {
+        scanButton.disabled = false;
+        photoInput.value = '';
+        URL.revokeObjectURL(previewUrl);
+      }
+    }
 
     async function getHistory() {
       try {
@@ -304,6 +440,21 @@
       input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
       message.className = 'hint';
       message.textContent = 'Letters and numbers only. Press Enter to continue.';
+    });
+
+    scanButton.addEventListener('click', () => photoInput.click());
+
+    photoInput.addEventListener('change', () => {
+      const file = photoInput.files?.[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        message.className = 'error';
+        message.textContent = 'Choose a photo or image file.';
+        return;
+      }
+
+      scanPhoto(file);
     });
 
     form.addEventListener('submit', (event) => {
