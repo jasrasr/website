@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Open the Dell Support page for a service tag.">
+  <title>Dell Service Tag Lookup</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --blue: #0672ce;
+      --blue-dark: #005da6;
+      --ink: #18212b;
+      --muted: #5b6672;
+      --surface: rgba(255, 255, 255, 0.94);
+      --line: #ccd5dd;
+      --danger: #b42318;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 15%, rgba(6, 114, 206, 0.19), transparent 32rem),
+        linear-gradient(135deg, #f7fafc 0%, #e8f2f9 100%);
+    }
+
+    main {
+      width: min(100%, 560px);
+      padding: clamp(28px, 6vw, 48px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 22px;
+      background: var(--surface);
+      box-shadow: 0 24px 70px rgba(12, 52, 80, 0.16);
+    }
+
+    .mark {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 24px;
+      border-radius: 15px;
+      color: white;
+      background: var(--blue);
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: -1px;
+      box-shadow: 0 10px 24px rgba(6, 114, 206, 0.26);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 6vw, 40px);
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+    }
+
+    .intro {
+      margin: 14px 0 30px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 9px;
+      font-weight: 700;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+    }
+
+    input, button {
+      min-height: 52px;
+      border-radius: 10px;
+      font: inherit;
+    }
+
+    input {
+      width: 100%;
+      padding: 0 16px;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      background: white;
+      text-transform: uppercase;
+      font-weight: 650;
+      letter-spacing: 0.08em;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(6, 114, 206, 0.14);
+    }
+
+    button {
+      padding: 0 22px;
+      border: 0;
+      color: white;
+      background: var(--blue);
+      font-weight: 750;
+      cursor: pointer;
+      transition: background 150ms ease, transform 150ms ease;
+    }
+
+    button:hover { background: var(--blue-dark); }
+    button:active { transform: translateY(1px); }
+    button:focus-visible { outline: 3px solid rgba(6, 114, 206, 0.3); outline-offset: 3px; }
+
+    .hint, .error {
+      min-height: 22px;
+      margin: 10px 0 0;
+      font-size: 14px;
+    }
+
+    .hint { color: var(--muted); }
+    .error { color: var(--danger); font-weight: 650; }
+
+    footer {
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid #e1e7ec;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .history {
+      display: none;
+      margin-top: 30px;
+      padding-top: 22px;
+      border-top: 1px solid #e1e7ec;
+    }
+
+    .history.visible { display: block; }
+
+    .history-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .history h2 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .clear-history {
+      min-height: auto;
+      padding: 5px 0;
+      color: var(--muted);
+      background: transparent;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .clear-history:hover { color: var(--danger); background: transparent; }
+
+    .history-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .history-list a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--blue);
+      background: rgba(6, 114, 206, 0.04);
+      font-weight: 750;
+      letter-spacing: 0.06em;
+      text-decoration: none;
+    }
+
+    .history-list a:hover {
+      border-color: var(--blue);
+      background: rgba(6, 114, 206, 0.09);
+    }
+
+    .history-list a::after {
+      content: "Open support ↗";
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    @media (max-width: 520px) {
+      body { padding: 16px; }
+      main { border-radius: 18px; }
+      .controls { grid-template-columns: 1fr; }
+      button { width: 100%; }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #f1f5f8;
+        --muted: #b6c2cc;
+        --surface: rgba(22, 31, 39, 0.96);
+        --line: #52616d;
+      }
+      body { background: radial-gradient(circle at 15% 15%, #083d63, transparent 34rem), #0b1117; }
+      input { background: #111a22; }
+      footer { border-color: #34414b; }
+      .history { border-color: #34414b; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="mark" aria-hidden="true">DELL</div>
+    <h1>Dell Service Tag Lookup</h1>
+    <p class="intro">Enter a Dell service tag to open that device’s product support page.</p>
+
+    <form id="lookup-form" novalidate>
+      <label for="service-tag">Service tag</label>
+      <div class="controls">
+        <input
+          id="service-tag"
+          name="service-tag"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          minlength="5"
+          maxlength="20"
+          placeholder="ABCD123"
+          aria-describedby="message"
+          autofocus>
+        <button type="submit">Open Dell Support</button>
+      </div>
+      <p id="message" class="hint" aria-live="polite">Letters and numbers only. Press Enter to continue.</p>
+    </form>
+
+    <section id="history" class="history" aria-labelledby="history-title">
+      <div class="history-heading">
+        <h2 id="history-title">Recent service tags</h2>
+        <button id="clear-history" class="clear-history" type="button">Clear history</button>
+      </div>
+      <ul id="history-list" class="history-list"></ul>
+    </section>
+
+    <footer>This independent shortcut sends the tag directly to Dell’s official support website. Recent tags are saved only in this browser so you can reopen them later.</footer>
+  </main>
+
+  <script>
+    const form = document.querySelector('#lookup-form');
+    const input = document.querySelector('#service-tag');
+    const message = document.querySelector('#message');
+    const historySection = document.querySelector('#history');
+    const historyList = document.querySelector('#history-list');
+    const clearHistoryButton = document.querySelector('#clear-history');
+    const storageKey = 'dellServiceTagHistory';
+
+    function getHistory() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey));
+        return Array.isArray(saved) ? saved.filter(tag => /^[A-Z0-9]{5,20}$/.test(tag)) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function renderHistory() {
+      const tags = getHistory();
+      historyList.replaceChildren();
+      historySection.classList.toggle('visible', tags.length > 0);
+
+      tags.forEach(tag => {
+        const item = document.createElement('li');
+        const link = document.createElement('a');
+        link.href = `https://www.dell.com/support/product-details/en-us/servicetag/${encodeURIComponent(tag.toLowerCase())}`;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = tag;
+        link.setAttribute('aria-label', `Open Dell support page for service tag ${tag}`);
+        item.append(link);
+        historyList.append(item);
+      });
+    }
+
+    function rememberTag(tag) {
+      const tags = getHistory().filter(savedTag => savedTag !== tag);
+      tags.unshift(tag);
+      localStorage.setItem(storageKey, JSON.stringify(tags.slice(0, 20)));
+    }
+
+    input.addEventListener('input', () => {
+      input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      message.className = 'hint';
+      message.textContent = 'Letters and numbers only. Press Enter to continue.';
+    });
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const serviceTag = input.value.trim().toLowerCase();
+
+      if (!/^[a-z0-9]{5,20}$/.test(serviceTag)) {
+        message.className = 'error';
+        message.textContent = 'Enter a valid Dell service tag using 5–20 letters or numbers.';
+        input.focus();
+        return;
+      }
+
+      rememberTag(serviceTag.toUpperCase());
+      const supportUrl = `https://www.dell.com/support/product-details/en-us/servicetag/${encodeURIComponent(serviceTag)}`;
+      window.location.assign(supportUrl);
+    });
+
+    clearHistoryButton.addEventListener('click', () => {
+      localStorage.removeItem(storageKey);
+      renderHistory();
+      input.focus();
+    });
+
+    renderHistory();
+  </script>
+</body>
+</html>
