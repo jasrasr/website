@@ -1,11 +1,11 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/invite-management.js
- * Revision: 1.6.8
- * Description: Owner invite management, invite-aware joins, and per-device battery-aware GPS scheduling loaded before the main tracker.
+ * Revision: 1.6.11
+ * Description: Owner invite management, invite-aware joins, and unified per-device battery-aware GPS sharing controls.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-11
- * Modified: 2026-08-02
+ * Modified: 2026-08-08
  */
 (function () {
     'use strict';
@@ -80,7 +80,9 @@
         if (modeSummary) modeSummary.textContent = selected.description;
         if (!nextUpdateNode) return;
         if (currentMode() === 'live') {
-            nextUpdateNode.textContent = 'Live mode uses continuous browser location updates while sharing is active.';
+            nextUpdateNode.textContent = Object.keys(liveWatchIds).length
+                ? 'Live sharing is active while this page remains available to the browser.'
+                : 'Live sharing is starting…';
             return;
         }
         if (!Number.isFinite(selected.intervalMs)) {
@@ -118,10 +120,7 @@
 
         function governedWatch(success, error, options) {
             var mode = currentMode();
-            if (mode !== 'live') {
-                previousScheduledMode = mode;
-                setStoredMode('live');
-            }
+            if (mode !== 'live') setStoredMode('live');
             lastActualRequestAt = Date.now();
             var id = originalWatch(success, error, { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
             liveWatchIds[id] = true;
@@ -133,10 +132,7 @@
             originalClear(id);
             if (liveWatchIds[id]) {
                 delete liveWatchIds[id];
-                if (!Object.keys(liveWatchIds).length && previousScheduledMode && modes[previousScheduledMode]) {
-                    setStoredMode(previousScheduledMode);
-                    previousScheduledMode = null;
-                }
+                renderModeStatus();
             }
         }
 
@@ -162,26 +158,61 @@
         });
     }
 
+    function setLegacySharingButtonsHidden() {
+        var start = document.getElementById('startSharingBtn');
+        var stop = document.getElementById('stopSharingBtn');
+        if (start) {
+            start.hidden = true;
+            start.setAttribute('aria-hidden', 'true');
+            start.tabIndex = -1;
+        }
+        if (stop) {
+            stop.hidden = true;
+            stop.setAttribute('aria-hidden', 'true');
+            stop.tabIndex = -1;
+        }
+    }
+
+    function activateSelectedMode() {
+        var mode = currentMode();
+        var start = document.getElementById('startSharingBtn');
+        var stop = document.getElementById('stopSharingBtn');
+        if (mode === 'live') {
+            if (start && !start.disabled) start.click();
+        } else if (stop && !stop.disabled) {
+            stop.click();
+        }
+        renderModeStatus();
+    }
+
+    function scheduleModeActivation() {
+        [150, 500, 1200].forEach(function (delay) {
+            window.setTimeout(function () {
+                setLegacySharingButtonsHidden();
+                activateSelectedMode();
+            }, delay);
+        });
+    }
+
     function createBatteryCard() {
         if (document.getElementById('gpsBatteryModeCard')) return;
         var sharing = document.querySelector('.controls-card');
         if (!sharing) return;
-        var sharingDescription = sharing.querySelector('p.muted');
-        if (sharingDescription) sharingDescription.textContent = 'A location is requested on page load. Later updates follow the mode selected below. Start Sharing temporarily enables continuous Live mode.';
 
-        var card = document.createElement('section');
-        card.id = 'gpsBatteryModeCard';
-        card.className = 'card profile-edit';
-        var heading = document.createElement('div');
+        var sharingTitle = sharing.querySelector('h2');
+        if (sharingTitle) sharingTitle.textContent = 'Location Sharing';
+        var sharingDescription = sharing.querySelector('p.muted');
+        if (sharingDescription) sharingDescription.textContent = 'Choose how often this device shares its location. A location is always requested when the page first loads.';
+
+        setLegacySharingButtonsHidden();
+
+        var controls = document.createElement('div');
+        controls.id = 'gpsBatteryModeCard';
+        controls.className = 'profile-edit';
+
         var eyebrow = document.createElement('p');
         eyebrow.className = 'eyebrow';
         eyebrow.textContent = 'Battery & GPS';
-        var title = document.createElement('h2');
-        title.textContent = 'Location Update Mode';
-        var intro = document.createElement('p');
-        intro.className = 'muted';
-        intro.textContent = 'The first location is always requested on page load. This setting controls later GPS requests on this device.';
-        heading.append(eyebrow, title, intro);
 
         var label = document.createElement('label');
         label.textContent = 'Update frequency';
@@ -195,6 +226,7 @@
         });
         modeSelect.value = currentMode();
         label.appendChild(modeSelect);
+
         modeSummary = document.createElement('div');
         modeSummary.className = 'profile-edit-note';
         nextUpdateNode = document.createElement('div');
@@ -203,23 +235,21 @@
         modeSelect.addEventListener('change', function () {
             var oldMode = currentMode();
             var newMode = modeSelect.value;
-            if (newMode === 'live' && oldMode !== 'live') previousScheduledMode = oldMode;
+            if (oldMode === newMode) return;
             setStoredMode(newMode);
-            if (oldMode === 'live' && newMode !== 'live') {
-                var stop = document.getElementById('stopSharingBtn');
-                if (stop && !stop.disabled) stop.click();
-            } else if (newMode === 'live') {
-                var start = document.getElementById('startSharingBtn');
-                if (start && !start.disabled) start.click();
-            }
+            activateSelectedMode();
             var statusNode = document.getElementById('statusText');
-            if (statusNode) statusNode.textContent = modes[newMode].label + ' GPS mode selected for this device.';
+            if (statusNode) statusNode.textContent = modes[newMode].label + ' location mode selected for this device.';
         });
 
-        card.append(heading, label, modeSummary, nextUpdateNode);
-        sharing.insertAdjacentElement('beforebegin', card);
+        controls.append(eyebrow, label, modeSummary, nextUpdateNode);
+
+        if (sharingDescription) sharingDescription.insertAdjacentElement('afterend', controls);
+        else sharing.insertBefore(controls, sharing.firstChild);
+
         renderModeStatus();
         window.setInterval(renderModeStatus, 15000);
+        scheduleModeActivation();
     }
 
     document.addEventListener('click', function (event) {
