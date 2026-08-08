@@ -1,16 +1,28 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.6.10
+Revision: 1.6.11
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
-Modified: 2026-08-06
+Modified: 2026-08-08
 -->
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.6.10**
+Current Project Revision: **1.6.11**
+
+## Rev 1.6.11 - 2026-08-08
+
+- Consolidated Battery & GPS settings directly into the Location Sharing card.
+- Removed the visible Start Sharing and Stop Sharing controls so the Location Update Mode selector is the single source of truth.
+- Selecting Live now automatically starts the existing continuous browser location watch.
+- Switching away from Live automatically stops the continuous watch and returns to the selected scheduled interval.
+- Kept Update Once as an immediate manual override in every mode.
+- Kept Refresh Group as a data refresh that does not change GPS mode.
+- Updated sharing text to describe the unified mode behavior.
+- Updated the PWA app-shell cache.
+- Added no new live-data folder.
 
 ## Rev 1.6.10 - 2026-08-06
 
