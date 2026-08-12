@@ -36,9 +36,10 @@ This roadmap tracks planned features and design work for the `/mpg` project. Com
 - [x] Add reusable station-location profiles.
 - [x] Support station brand/name, city, street/address, intersection, latitude, longitude, and optional nickname in the profile schema.
 - [x] Allow a saved station to be selected when entering a fill later from another location.
+- [x] Add a station-management page for editing or deleting saved profiles.
 - [ ] Show recently used stations near the top of the selector.
 - [ ] Make saved-station selection searchable as the list grows.
-- [ ] Add a station-management page for editing, merging, or manually creating profiles.
+- [ ] Add explicit duplicate-profile merge tooling.
 
 ### GPS-assisted station selection
 
@@ -65,11 +66,11 @@ This roadmap tracks planned features and design work for the `/mpg` project. Com
 
 - [x] Add an interactive map showing fill-up locations.
 - [x] Make map pins clickable with date, station, gallons, price, total cost, fill type, MPG when applicable, and comments.
-- [ ] Add map filtering by date range, station brand, and station location.
+- [x] Add map filtering by date range, station brand, and fill type.
 - [x] Compare average and median price per gallon by station brand.
-- [ ] Compare price per gallon by specific station profile.
-- [ ] Compare price by city/area.
-- [x] Show fill counts and total spend by station brand.
+- [x] Compare price per gallon by specific station profile.
+- [x] Compare price by city/area.
+- [x] Show fill counts and total spend by station brand and saved location.
 - [ ] Consider trip/context tags such as work, vacation, towing, or road trip.
 
 ## Data quality and confidence
