@@ -2,7 +2,7 @@
 // ============================================================================
 // File: menu.php
 // Purpose: Navigation menu + compact stats summary (mobile friendly)
-// Revision: 1.8
+// Revision: 1.9
 // ============================================================================
 
 require_once __DIR__ . '/device_init.php';
@@ -16,19 +16,28 @@ if ($plate) {
         $data = json_decode(file_get_contents($logFile), true);
         $weightedMiles = 0;
         $weightedGallons = 0;
-        $totalCost = 0;
+        $completedCost = 0;
+        $previousFullIndex = null;
+
         if (is_array($data)) {
-            foreach ($data as $entry) {
-                $totalCost += (float)($entry['total_cost'] ?? 0);
+            foreach ($data as $i => $entry) {
+                $isFull = strtolower((string)($entry['fill_type'] ?? 'full')) !== 'partial';
                 if (($entry['mpg_miles'] ?? 0) > 0 && ($entry['mpg_gallons'] ?? 0) > 0) {
                     $weightedMiles += (float)$entry['mpg_miles'];
                     $weightedGallons += (float)$entry['mpg_gallons'];
+                    if ($previousFullIndex !== null) {
+                        for ($j = $previousFullIndex + 1; $j <= $i; $j++) {
+                            $completedCost += (float)($data[$j]['total_cost'] ?? 0);
+                        }
+                    }
                 }
+                if ($isFull) $previousFullIndex = $i;
             }
         }
+
         if ($weightedGallons > 0) {
             $avgMPG = round($weightedMiles / $weightedGallons, 2);
-            $costPerMile = $weightedMiles > 0 ? round($totalCost / $weightedMiles, 3) : 0;
+            $costPerMile = $weightedMiles > 0 ? round($completedCost / $weightedMiles, 3) : 0;
             $summaryText = "MPG: {$avgMPG} | Miles: {$weightedMiles} | CPM: \${$costPerMile}";
         }
     }
