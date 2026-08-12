@@ -13,10 +13,8 @@ The project uses a lightweight semantic-versioning approach:
 ### Planned
 
 - Search/recent ordering for saved station profiles
-- Station profile management page
+- Explicit duplicate-profile merge tooling
 - Explicit photo-brand vs. nearby-station mismatch warning
-- Map filters by date/station
-- Price comparison by exact station profile and city/area
 - Formal station-identification confidence indicator
 
 ## [2.4.0] - 2026-08-12
@@ -28,24 +26,27 @@ The project uses a lightweight semantic-versioning approach:
 - `mpg_miles` and `mpg_gallons` fields to expose the MPG calculation span
 - Optional 500-character comments
 - Self-learning station-brand list backed by `stations.json`
-- Reusable station-location profiles
+- Reusable station-location profiles with brand/name, city, street/intersection, nickname, and coordinates
 - Saved-station selection for later/off-site data entry
 - GPS-powered nearby fuel-station lookup with explicit station confirmation
 - Confirmed nearby stations automatically saved as reusable profiles
+- Station profile admin editor (`manage_stations.php`)
 - Browser GPS location capture
 - JPEG EXIF GPS extraction and end-to-end use in the photo review flow
 - Optional station sign/logo recognition in the fourth scan photo
 - Per-vehicle median fill-volume baseline and low-volume partial-fill prompt
 - Interactive Leaflet/OpenStreetMap fuel-stop map
-- Station-brand price analytics including average/median price, fill count, gallons, and spend
+- Map filters for date range, station brand, and fill type
+- Station-brand, specific-station, and city/area price analytics
 - Expanded CSV export with fill type, MPG span, station, location, source, and comments
 
 ### Changed
 
 - Legacy JSON entries without `fill_type` are treated as full fills for backward compatibility
 - Partial fills remain visible in history and charts but do not generate standalone MPG
-- Entry edit/delete/raw-JSON operations now rebuild all dependent full-to-full MPG calculations
-- Stats and menu summary use completed full-to-full intervals rather than treating partial fills as standalone MPG events
+- Entry edit/delete/raw-JSON operations rebuild all dependent full-to-full MPG calculations
+- Stats and menu summary use completed full-to-full intervals
+- Cost-per-mile excludes baseline and trailing incomplete fuel intervals
 
 ### Fixed
 
