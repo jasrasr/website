@@ -10,40 +10,47 @@ The project uses a lightweight semantic-versioning approach:
 
 ## [Unreleased]
 
+### Planned
+
+- Search/recent ordering for saved station profiles
+- Station profile management page
+- Explicit photo-brand vs. nearby-station mismatch warning
+- Map filters by date/station
+- Price comparison by exact station profile and city/area
+- Formal station-identification confidence indicator
+
+## [2.4.0] - 2026-08-12
+
 ### Added
 
 - Full vs. partial fill-up selection on manual and photo-assisted entry flows
 - Full-to-full MPG calculation that rolls intervening partial-fill gallons into the next full fill
-- `mpg_miles` and `mpg_gallons` fields to make the MPG calculation span explicit
-- Optional 500-character comments on fuel entries
-- Self-learning station-brand dropdown backed by `stations.json`
-- Case-insensitive station-brand de-duplication
-- Optional browser GPS capture on manual and photo-reviewed entries
-- Optional location-source metadata
-- Photo workflow increased from 3 to 4 images
-- Station sign/logo recognition as an optional fourth photo type
-- JPEG EXIF GPS extraction support in `process_photos.php` (UI/save wiring remains on the roadmap)
-- Partial-fill chart markers and full-to-full calculation details in chart tooltips
-- `ROADMAP.md`
-- `CHANGELOG.md`
-- `CONTRIBUTING.md`
-- `docs/ARCHITECTURE.md`
+- `mpg_miles` and `mpg_gallons` fields to expose the MPG calculation span
+- Optional 500-character comments
+- Self-learning station-brand list backed by `stations.json`
+- Reusable station-location profiles
+- Saved-station selection for later/off-site data entry
+- GPS-powered nearby fuel-station lookup with explicit station confirmation
+- Confirmed nearby stations automatically saved as reusable profiles
+- Browser GPS location capture
+- JPEG EXIF GPS extraction and end-to-end use in the photo review flow
+- Optional station sign/logo recognition in the fourth scan photo
+- Per-vehicle median fill-volume baseline and low-volume partial-fill prompt
+- Interactive Leaflet/OpenStreetMap fuel-stop map
+- Station-brand price analytics including average/median price, fill count, gallons, and spend
+- Expanded CSV export with fill type, MPG span, station, location, source, and comments
 
 ### Changed
 
-- Legacy JSON entries without `fill_type` are treated as full fills for backward-compatible calculations
-- The first full fill remains a baseline event rather than becoming a false `0 MPG` measurement
-- Partial fills remain in history instead of being dropped merely because they cannot produce standalone MPG
+- Legacy JSON entries without `fill_type` are treated as full fills for backward compatibility
+- Partial fills remain visible in history and charts but do not generate standalone MPG
+- Entry edit/delete/raw-JSON operations now rebuild all dependent full-to-full MPG calculations
+- Stats and menu summary use completed full-to-full intervals rather than treating partial fills as standalone MPG events
 
-### Planned
+### Fixed
 
-- Historical median-based fill-volume anomaly prompts after historical JSON data is supplied
-- Reusable station-location profiles with city, street/intersection, and coordinates
-- Nearby-station suggestions from GPS with explicit user confirmation
-- End-to-end automatic use of photo EXIF GPS in the review/save flow
-- GPS + station-logo cross-checking
-- Interactive fill-up map
-- Station/location price analytics
+- Corrected `.009` handling when price per gallon is calculated from total/gallons; the adjustment now applies only to a user-entered two-decimal pump price
+- Added contradictory fuel-value validation when price, gallons, and total are all supplied
 
 ## [2.3] - 2026-04-21
 
@@ -53,13 +60,11 @@ The project uses a lightweight semantic-versioning approach:
 - AI-assisted extraction of odometer, price per gallon, pump total, and gallons
 - Scan-to-entry prefill support
 - Entry editing and deletion
-- Automatic recalculation after entry changes
 - Device trust/management features
 - Additional stats and entry-management pages
 
 ### Fixed
 
-- Corrected the `.009` fuel-price adjustment so it applies only when appropriate
 - Improved fuel-entry calculation behavior
 - Updated chart filtering so invalid/zero MPG entries are not graphed as real MPG values
 
