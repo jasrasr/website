@@ -6,16 +6,59 @@ This is a lightweight PHP-based fuel tracking web application designed for quick
 
 - ✅ Per-vehicle fuel logs stored in JSON format
 - ✅ Odometer-based mileage tracking
-- ✅ MPG calculation when a valid prior measurement exists
+- ✅ Full-to-full MPG calculation
+- ✅ Partial fill-up tracking without misleading standalone MPG
 - ✅ Manual fuel entry
 - ✅ Multi-photo AI-assisted fuel entry
+- ✅ Optional comments
+- ✅ Self-learning fuel-station brand list
+- ✅ Optional browser GPS capture
+- ✅ Up to 4 fuel-stop photos, including an optional station sign/logo photo
+- ✅ Station-brand suggestion from uploaded signage
+- ✅ Partial-fill markers on the MPG chart
 - ✅ Entry editing and deletion
 - ✅ Export to CSV
 - ✅ Admin dashboard with plate summaries
-- ✅ MPG trend chart using Chart.js
 - ✅ Device/IP trust features
 - ✅ All timestamps recorded in Eastern Time (ET)
 - ✅ Reusable navigation and mobile-friendly pages
+
+## Full and partial fills
+
+Every entry can be marked as either **Full** or **Partial**. Full is the default.
+
+A partial fill remains a real fuel event and is retained for gallons, cost, station, location, and history. It does not receive a standalone MPG value.
+
+When the next full fill occurs, MPG is calculated over the complete full-to-full interval:
+
+```text
+MPG = miles since previous full fill / all gallons added since previous full fill
+```
+
+This means one or more partial fills can occur between full fills without corrupting the MPG calculation.
+
+Legacy JSON entries that do not contain `fill_type` are treated as full fills for backward compatibility.
+
+## Station and location data
+
+Fuel entries may optionally include a station brand and GPS coordinates.
+
+Station brands are stored in `stations.json`. If **Other / Add new** is selected and a new brand is entered, the application adds it to the saved brand list for future use. Duplicate brand detection is case-insensitive.
+
+GPS capture is optional. Coordinates are supporting metadata only; GPS does not automatically decide which physical station was used.
+
+The roadmap includes reusable physical station profiles, nearby-station suggestions, intersection/city information, and an interactive fill-up map.
+
+## Photo workflow
+
+The photo workflow accepts up to four images per entry. Images can include:
+
+1. odometer
+2. price per gallon
+3. pump total and gallons
+4. optional station sign, canopy, or logo
+
+Image analysis can suggest the station brand when signage is clear. JPEG EXIF GPS extraction support also exists in `process_photos.php`; end-to-end automatic use of that EXIF location in the review/save workflow remains on the roadmap.
 
 ## Project documentation
 
@@ -24,18 +67,15 @@ This is a lightweight PHP-based fuel tracking web application designed for quick
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution workflow, compatibility rules, testing expectations, and AI-assisted development guidance
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — design principles, data-model decisions, fuel-calculation rules, location strategy, and guardrails
 
-## Current roadmap themes
+## Next major roadmap items
 
-The next major areas of work include:
-
-- explicit full vs. partial fill-up tracking
-- correct full-to-full MPG calculation across partial fills
-- optional comments
-- self-learning fuel-station brands
-- reusable station-location profiles
-- optional GPS and photo-EXIF location assistance
-- station-logo/photo identification
-- fill-up map visualization and location-based price analytics
+- historical median-based fill-volume prompts for likely partial fills
+- reusable station-location profiles with city and street/intersection
+- nearby station suggestions based on GPS with explicit user confirmation
+- complete photo-EXIF GPS wiring into the save workflow
+- GPS + station-logo cross-checking
+- interactive fill-up map
+- location and station price analytics
 
 See [`ROADMAP.md`](ROADMAP.md) for the detailed checklist.
 
@@ -46,11 +86,12 @@ See [`ROADMAP.md`](ROADMAP.md) for the detailed checklist.
 | `index.php` | MPG application landing page |
 | `fuel_form.php` | Manual fuel-entry form |
 | `scan_photos.php` | Multi-photo AI-assisted entry workflow |
-| `process_photos.php` | Extracts fuel values from uploaded photos |
-| `auto_save.php` | Shared JSON save/calculation endpoint used by current entry flows |
+| `process_photos.php` | Extracts fuel values, station branding, and available JPEG EXIF GPS |
+| `auto_save.php` | Shared JSON save endpoint and full/partial MPG calculation logic |
+| `stations.json` | Learned station-brand data and future station-location profiles |
 | `manage_entries.php` | Edit/delete fuel entries |
 | `view_latest.php` | Shows the latest log entry for a plate |
-| `view_chart.php` | Displays MPG trend chart using Chart.js |
+| `view_chart.php` | Displays MPG trend and partial-fill events using Chart.js |
 | `view_stats.php` | Fuel statistics view |
 | `export_csv.php` | Exports logs as CSV per plate |
 | `admin.php` | Admin dashboard |
@@ -65,9 +106,10 @@ See [`ROADMAP.md`](ROADMAP.md) for the detailed checklist.
 
 1. Upload the `/mpg/` files to a PHP-capable web host.
 2. Ensure the `logs/` directory exists and is writable by PHP.
-3. Configure any required local secrets such as the OpenAI API key outside source control.
-4. Use PHP 8.2 or newer where possible.
-5. Visit the MPG application in a browser and create the first vehicle entry.
+3. Ensure `stations.json` is writable if you want new station brands to be learned automatically.
+4. Configure required local secrets such as the OpenAI API key outside source control.
+5. Use PHP 8.2 or newer where possible.
+6. Visit the MPG application in a browser and create the first vehicle entry.
 
 ## Data and privacy
 
