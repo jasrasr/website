@@ -178,6 +178,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'load') 
     sendJson(['ok' => true, 'data' => loadTextCopyData()]);
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'watch') {
+    ensureTextCopyDataFile();
+    header('Content-Type: text/event-stream; charset=utf-8');
+    header('Cache-Control: no-cache');
+    header('Connection: keep-alive');
+    header('X-Accel-Buffering: no');
+
+    $lastModified = filemtime(TEXT_COPY_DATA_FILE) ?: 0;
+    $checkInterval = 2;
+    $maxDuration = 300;
+    $startTime = time();
+
+    while (true) {
+        if (time() - $startTime > $maxDuration) {
+            echo "data: {\"action\":\"heartbeat\"}\n\n";
+            flush();
+            break;
+        }
+
+        $currentModified = filemtime(TEXT_COPY_DATA_FILE) ?: 0;
+        if ($currentModified > $lastModified) {
+            $data = loadTextCopyData();
+            echo "data: " . json_encode(['action' => 'update', 'data' => $data]) . "\n\n";
+            flush();
+            $lastModified = $currentModified;
+        }
+
+        echo ": keep-alive\n";
+        flush();
+        sleep($checkInterval);
+    }
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'raw_json') {
     sendRawJsonFile((string)($_POST['password'] ?? ''));
 }
@@ -343,6 +377,15 @@ $initialData = loadTextCopyData();
             color: var(--muted);
             font: 700 0.86rem/1.3 Arial, sans-serif;
             text-align: right;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .sync-indicator {
+            font-size: 1.2em;
+            line-height: 1;
         }
 
         textarea {
@@ -475,12 +518,60 @@ $initialData = loadTextCopyData();
 
         let toastTimer = null;
         let lastSavedAt = initialData.updated_at || null;
+        let eventSource = null;
 
         function showToast(message) {
             clearTimeout(toastTimer);
             toast.textContent = message;
             toast.classList.add('show');
             toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+        }
+
+        function updateStatusIndicator(isConnected) {
+            const indicator = status.querySelector('.sync-indicator') || document.createElement('span');
+            if (!status.contains(indicator)) {
+                indicator.className = 'sync-indicator';
+                status.insertBefore(indicator, status.firstChild);
+            }
+
+            if (isConnected) {
+                indicator.textContent = '● ';
+                indicator.style.color = 'var(--primary)';
+                indicator.title = 'Auto-sync enabled';
+            } else {
+                indicator.textContent = '◯ ';
+                indicator.style.color = 'var(--muted)';
+                indicator.title = 'Reconnecting...';
+            }
+        }
+
+        function connectToUpdates() {
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            eventSource = new EventSource(`${window.location.pathname}?action=watch`);
+            updateStatusIndicator(true);
+
+            eventSource.addEventListener('message', async (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+                    if (message.action === 'update') {
+                        textInput.value = message.data.text || '';
+                        lastSavedAt = message.data.updated_at || null;
+                        updateStatus();
+                        showToast('Updated from another device');
+                    }
+                } catch (error) {
+                    console.error('Failed to parse update:', error);
+                }
+            });
+
+            eventSource.addEventListener('error', () => {
+                updateStatusIndicator(false);
+                eventSource.close();
+                setTimeout(connectToUpdates, 3000);
+            });
         }
 
         function formatSavedAt(value) {
@@ -547,6 +638,7 @@ $initialData = loadTextCopyData();
         }
 
         updateStatus();
+        connectToUpdates();
 
         textInput.addEventListener('input', updateStatus);
         saveBtn.addEventListener('click', () => saveText().catch(error => showToast(error.message)));
