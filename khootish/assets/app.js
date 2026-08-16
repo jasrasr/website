@@ -52,14 +52,71 @@ function installActiveGamesDashboard(){
   refreshActiveGames();
   setInterval(refreshActiveGames,3000);
 }
-function installGoLivePasswordReminder(){
-  const loginCard=document.getElementById('loginCard');
-  if(!loginCard||loginCard.querySelector('.go-live-password-note'))return;
-  const note=document.createElement('p');
-  note.className='muted go-live-password-note';
-  note.style.fontSize='.82rem';
-  note.style.marginBottom='0';
-  note.textContent='Go-live reminder: replace the temporary host password before production use.';
-  loginCard.appendChild(note);
+function installAdminPasswordReminder(){
+  const card=document.getElementById('loginCard');
+  if(!card||document.getElementById('goLivePasswordReminder'))return;
+  const note=document.createElement('p');note.id='goLivePasswordReminder';note.className='muted login-reminder';note.textContent='Go-live reminder: replace the temporary host password before production use.';card.appendChild(note);
 }
-document.addEventListener('DOMContentLoaded',()=>{runKhootishMaintenance();installActiveGamesDashboard();installGoLivePasswordReminder();setInterval(runKhootishMaintenance,60000);});
+async function editQuiz(id){
+  try{
+    const response=await fetch(`quiz-detail.php?id=${encodeURIComponent(id)}`,{cache:'no-store'});
+    const result=await response.json();
+    if(!result.ok)throw new Error(result.error||'Unable to load quiz.');
+    const quiz=result.quiz;
+    const form=document.getElementById('quizForm');
+    const builder=document.getElementById('builder');
+    const questions=document.getElementById('questions');
+    if(!form||!builder||!questions)throw new Error('Quiz editor is unavailable.');
+    qCount=0;
+    questions.innerHTML='';
+    form.reset();
+    form.elements.quiz_id.value=quiz.id;
+    form.elements.title.value=quiz.title;
+    builder.querySelector('h2').textContent='Edit quiz';
+    (quiz.questions||[]).forEach(q=>addQuestion(q));
+    builder.classList.remove('hidden');
+    builder.scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(err){alert(err.message);}
+}
+function addQuizEditButtons(){
+  const list=document.getElementById('quizList');
+  if(!list)return;
+  list.querySelectorAll('[data-launch]').forEach(launch=>{
+    if(launch.parentElement.querySelector(`[data-edit="${CSS.escape(launch.dataset.launch)}"]`))return;
+    const edit=document.createElement('button');
+    edit.type='button';edit.className='secondary';edit.dataset.edit=launch.dataset.launch;edit.textContent='Edit';
+    edit.onclick=()=>editQuiz(edit.dataset.edit);
+    launch.before(edit);
+  });
+}
+function installQuizEditing(){
+  const list=document.getElementById('quizList');
+  const form=document.getElementById('quizForm');
+  const newQuiz=document.getElementById('newQuiz');
+  if(!list||!form)return;
+  new MutationObserver(addQuizEditButtons).observe(list,{childList:true,subtree:true});
+  addQuizEditButtons();
+  if(newQuiz)newQuiz.addEventListener('click',()=>{
+    form.elements.quiz_id.value='';
+    const heading=document.querySelector('#builder h2');if(heading)heading.textContent='Create quiz';
+  });
+  form.onsubmit=async e=>{
+    e.preventDefault();
+    const questions=[...document.querySelectorAll('.question-editor')].map(el=>({
+      text:el.querySelector('[data-field="text"]').value,
+      choices:[...el.querySelectorAll('[data-choice]')].map(x=>x.value),
+      correct_index:+el.querySelector('input[type=radio]:checked').value,
+      add_to_bank:el.querySelector('[data-field="add_to_bank"]').checked,
+      source_question_id:el.dataset.sourceQuestionId||null
+    }));
+    try{
+      await api('save_quiz',{id:e.target.elements.quiz_id.value||null,title:e.target.elements.title.value,questions});
+      document.getElementById('builder').classList.add('hidden');
+      document.getElementById('questionBank').classList.add('hidden');
+      await loadQuizzes();
+    }catch(err){
+      const box=document.getElementById('buildError');box.textContent=err.message;box.classList.remove('hidden');
+    }
+  };
+}
+document.addEventListener('DOMContentLoaded',()=>{runKhootishMaintenance();installActiveGamesDashboard();installAdminPasswordReminder();installQuizEditing();setInterval(runKhootishMaintenance,60000);});
