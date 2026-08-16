@@ -14,7 +14,6 @@ This file is the working backlog for planned improvements. Items can be reordere
 
 ## Quiz Management
 
-- [ ] Edit existing quizzes from the admin interface.
 - [ ] Duplicate a quiz as a starting template.
 - [ ] Delete quizzes with confirmation.
 - [ ] Reorder questions with move-up/move-down controls or drag-and-drop.
@@ -53,7 +52,6 @@ This file is the working backlog for planned improvements. Items can be reordere
 
 ## Documentation and Versioning
 
-- [ ] Add `CHANGELOG.md` with an entry for every released revision.
 - [ ] Centralize revision and Eastern Time modified timestamp so all pages display identical values.
 - [ ] Add deployment and Hostinger setup instructions.
 - [ ] Document the JSON file formats for quizzes, Question Bank entries, active games, and archived games.
@@ -97,3 +95,5 @@ This file is the working backlog for planned improvements. Items can be reordere
 - [x] Allow a host to reopen and manage any active game from the dashboard.
 - [x] Automatically close and archive games after 24 hours.
 - [x] Run lightweight stale-game maintenance during normal site activity without requiring cron.
+- [x] Add `CHANGELOG.md` with release entries.
+- [x] Edit existing quizzes from the admin interface without creating duplicate quiz IDs.
