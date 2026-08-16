@@ -111,7 +111,8 @@
     .key-dot.map { background: var(--map); }
     .key-dot.calc { background: var(--calculated); }
     .key-dot.total-key { background: var(--accent-2); }
-    .map-estimate { color: var(--map); }
+    .shared-location { color: var(--map); }
+    .route-estimate { color: var(--warning); }
     .calculated { color: var(--calculated); }
     .total-badge {
       display: inline-block;
@@ -159,11 +160,11 @@
     <section class="summary" aria-label="Trip summary">
       <article class="card">
         <div class="label">Latest checkpoint</div>
-        <div class="value">Saginaw, TX</div>
+        <div class="value shared-location">Saginaw, TX</div>
       </article>
       <article class="card">
         <div class="label">Reported</div>
-        <div class="value">Aug. 16 <small>10:15 AM EDT</small></div>
+        <div class="value shared-location">Aug. 16 <small>10:15 AM EDT</small></div>
       </article>
       <article class="card">
         <div class="label">Estimated distance</div>
@@ -191,10 +192,10 @@
 
     <section class="data-key" aria-labelledby="data-key-title">
       <div class="key-title" id="data-key-title">Data key</div>
-      <span class="key-item"><span class="key-dot"></span>Self-reported checkpoint</span>
+      <span class="key-item"><span class="key-dot"></span>Direct text from Jeremy</span>
+      <span class="key-item"><span class="key-dot map"></span>Google Maps shared-location observation</span>
       <span class="key-item"><span class="key-dot estimate"></span>Estimated or inferred</span>
-      <span class="key-item"><span class="key-dot map"></span>Map-based road estimate</span>
-      <span class="key-item"><span class="key-dot calc"></span>Calculated from reports</span>
+      <span class="key-item"><span class="key-dot calc"></span>Calculated from observations</span>
       <span class="key-item"><span class="key-dot total-key"></span>Trip total</span>
     </section>
 
@@ -216,23 +217,23 @@
             <td>Newhall, CA → Arizona line</td>
             <td class="estimated">Aug. 14, ~6:30–7:30 AM</td>
             <td>Aug. 14, 12:30 PM</td>
-            <td class="map-estimate">~255 mi</td>
+            <td class="route-estimate">~255 mi</td>
             <td class="calculated">~5–6 hr</td>
             <td class="calculated">~43–51 mph</td>
           </tr>
           <tr>
             <td>Arizona line → Estelline, TX</td>
             <td>Aug. 14, 12:30 PM</td>
-            <td>Aug. 15, 7:00 PM</td>
-            <td class="map-estimate">~895 mi</td>
+            <td class="shared-location">Aug. 15, 7:00 PM</td>
+            <td class="route-estimate">~895 mi</td>
             <td class="calculated">30 hr 30 min</td>
             <td class="calculated">~29 mph</td>
           </tr>
           <tr>
             <td>Estelline, TX → Saginaw, TX</td>
-            <td>Aug. 15, 7:00 PM</td>
-            <td>Aug. 16, 10:15 AM</td>
-            <td class="map-estimate">~230 mi</td>
+            <td class="shared-location">Aug. 15, 7:00 PM</td>
+            <td class="shared-location">Aug. 16, 10:15 AM</td>
+            <td class="route-estimate">~230 mi</td>
             <td class="calculated">15 hr 15 min</td>
             <td class="calculated">~15 mph</td>
           </tr>
@@ -253,10 +254,11 @@
     <aside class="notes">
       <h2>Tracking notes</h2>
       <ul>
-        <li><strong>Self-reported:</strong> Jason supplied the checkpoint locations and report times. Times are displayed in Ohio time (EDT), not the checkpoint's local time.</li>
-        <li><strong>Estimated:</strong> Jeremy's Newhall departure time was inferred from the Arizona report and the likely driving time of the bus-and-trailer combination.</li>
-        <li><strong>Map-based:</strong> Road mileage is approximate route mileage. Google Maps should be used to verify future segments when exact roads or addresses are available.</li>
-        <li><strong>Calculated:</strong> Elapsed time, average progress, cumulative mileage, and percent complete are calculated from the reported times and estimated road mileage.</li>
+        <li><strong>Direct report:</strong> The Arizona state-line checkpoint came from a text message Jeremy sent Jason.</li>
+        <li><strong>Google Maps observations:</strong> Jason recorded the later city and time updates while viewing the live location Jeremy shared through Google Maps.</li>
+        <li><strong>Observation time:</strong> A Google Maps timestamp records when Jason checked Jeremy's location; it is not necessarily the exact arrival or departure time. Displayed times are rounded and shown in Ohio time (EDT).</li>
+        <li><strong>Estimated:</strong> Jeremy's Newhall departure time was inferred from the Arizona report and the likely driving time of the bus-and-trailer combination. Segment road mileage is approximate route mileage.</li>
+        <li><strong>Calculated:</strong> Elapsed time, average progress, cumulative mileage, and percent complete are derived from the recorded observations and estimated road mileage.</li>
         <li>Jeremy is driving a short bus and towing a car hauler carrying an SUV.</li>
         <li>Average progress includes fuel, food, sleep, and other stops; it is not driving speed.</li>
         <li>Provisional fuel economy estimate: about 7 MPG, with a likely range of 5–9 MPG depending on the bus and engine.</li>
