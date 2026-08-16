@@ -11,8 +11,8 @@
     body { margin:0; min-height:100vh; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--text); background:radial-gradient(circle at 50% 0,#172554 0,var(--bg) 48%); }
     main { width:min(1180px,94vw); margin:auto; padding:28px 0 40px; }
     h1 { margin:0; font-size:clamp(1.8rem,4vw,3rem); }
-    .subtitle { margin:.35rem 0 1.5rem; color:var(--muted); }
-    .layout { display:grid; grid-template-columns:minmax(280px,390px) 1fr; gap:28px; align-items:start; }
+    .subtitle { margin:1.5rem 0 0; color:var(--muted); text-align:center; }
+    .layout { display:grid; grid-template-columns:minmax(280px,390px) 1fr; gap:28px; align-items:start; margin-top:1rem; }
     .panel { padding:20px; border:1px solid var(--line); border-radius:20px; background:color-mix(in srgb,var(--panel) 94%,transparent); box-shadow:0 20px 50px #0006; }
     .label-row { display:flex; justify-content:space-between; gap:12px; margin-bottom:10px; font-weight:700; }
     #count { color:#86efac; }
@@ -60,7 +60,6 @@
 <body>
   <main>
     <h1>Random Wheel</h1>
-    <p class="subtitle">Add as many choices as you want. Every spin lasts 5 seconds.</p>
     <div class="layout">
       <section class="panel" aria-labelledby="entries-label">
         <div class="label-row"><label id="entries-label" for="entries">Members / choices</label><span id="count">0 total</span></div>
@@ -80,6 +79,7 @@
         <p id="status" aria-live="polite">Ready to spin</p>
       </section>
     </div>
+    <p class="subtitle">Add as many choices as you want. Every spin lasts 5 seconds.</p>
   </main>
   <script>
     const entriesBox = document.querySelector('#entries');
