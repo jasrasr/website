@@ -36,7 +36,7 @@
 <body>
   <main>
     <h1>Random Member Wheel</h1>
-    <p class="subtitle">Add as many choices as you want. Every spin lasts 10 seconds.</p>
+    <p class="subtitle">Add as many choices as you want. Every spin lasts 5 seconds.</p>
     <div class="layout">
       <section class="panel" aria-labelledby="entries-label">
         <div class="label-row"><label id="entries-label" for="entries">Members / choices</label><span id="count">0 total</span></div>
@@ -98,7 +98,7 @@ Caden</textarea>
         ctx.fillStyle = colors[index % colors.length]; ctx.fill(); ctx.strokeStyle = '#ffffff77'; ctx.lineWidth = entries.length > 120 ? .5 : 2; ctx.stroke();
         if (entries.length <= 150) {
           ctx.save(); ctx.translate(center,center); ctx.rotate(start + slice/2); ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.fillStyle='#fff';
-          const fontSize = Math.max(10,Math.min(28,440/entries.length+12));
+          const fontSize = Math.max(13,Math.min(42,650/entries.length+18));
           ctx.shadowColor='#000'; ctx.shadowBlur=4; ctx.font=`700 ${fontSize}px system-ui`;
           ctx.fillText(fitText(name,radius*.62,fontSize),radius-34,0); ctx.restore();
         }
@@ -108,21 +108,21 @@ Caden</textarea>
     function spin() {
       if (spinning || entries.length < 2) return;
       spinning = true; spinButton.disabled = true; entriesBox.disabled = true;
-      status.className=''; status.textContent='Spinning… 10';
+      status.className=''; status.textContent='Spinning… 5';
       const winnerIndex = secureRandom(entries.length);
       const sliceDegrees = 360 / entries.length;
       const current = ((rotation % 360) + 360) % 360;
       const desired = (90 - (winnerIndex + .5) * sliceDegrees + 360) % 360;
       const delta = (desired - current + 360) % 360;
       rotation += 360 * 8 + delta;
-      canvas.style.transition='transform 10s cubic-bezier(.10,.63,.08,1)';
+      canvas.style.transition='transform 5s cubic-bezier(.10,.63,.08,1)';
       canvas.style.transform=`rotate(${rotation}deg)`;
-      let remaining=10;
+      let remaining=5;
       const timer=setInterval(() => { remaining--; if(remaining>0) status.textContent=`Spinning… ${remaining}`; },1000);
       setTimeout(() => {
         clearInterval(timer); spinning=false; entriesBox.disabled=false; spinButton.disabled=false;
         status.className='winner'; status.textContent=`Winner: ${entries[winnerIndex]} 🎉`;
-      },10000);
+      },5000);
     }
     entriesBox.addEventListener('input',() => { if(!spinning) { status.className=''; status.textContent='Ready to spin'; drawWheel(); } });
     spinButton.addEventListener('click',spin);
