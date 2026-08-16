@@ -1,11 +1,11 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/member-management.js
- * Revision: 1.5.2
- * Description: Owner member settings, temporary disable/restore, remove-from-group, and member leave-group controls.
+ * Revision: 1.6.12
+ * Description: Owner member settings, temporary disable/restore, remove-from-group, owner-assisted password reset, permanent account deletion, and member leave-group controls.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-09
- * Modified: 2026-07-11
+ * Modified: 2026-08-16
  */
 (function () {
     'use strict';
@@ -108,6 +108,18 @@
             remove.textContent = 'Remove Permanently';
             remove.addEventListener('click', function () { removeMember(member); });
             actions.appendChild(remove);
+            var resetPassword = document.createElement('button');
+            resetPassword.type = 'button';
+            resetPassword.className = 'secondary';
+            resetPassword.textContent = 'Reset Password';
+            resetPassword.addEventListener('click', function () { resetMemberPassword(member); });
+            actions.appendChild(resetPassword);
+            var deleteAccount = document.createElement('button');
+            deleteAccount.type = 'button';
+            deleteAccount.className = 'danger-button';
+            deleteAccount.textContent = 'Delete Account Permanently';
+            deleteAccount.addEventListener('click', function () { deleteMemberAccount(member); });
+            actions.appendChild(deleteAccount);
         }
         main.append(title, meta, grid, actions);
         var badge = document.createElement('span');
@@ -156,6 +168,34 @@
         status('Removing member from group...');
         api({ action: 'remove_member', memberId: member.id }).then(function (data) { render(data); refreshMainList(); status(data.message || 'Member removed from group.'); })
             .catch(function (error) { status(error.message || 'Could not remove member.'); });
+    }
+
+    function resetMemberPassword(member) {
+        var label = member.displayLabel || member.displayName || member.username || 'this member';
+        if (!window.confirm('Generate a new temporary password for ' + label + '? This revokes their remembered devices and they must change it after logging in.')) return;
+        status('Resetting member password...');
+        api({ action: 'reset_member_password', memberId: member.id }).then(function (data) {
+            render(data);
+            refreshMainList();
+            status(data.message || 'Password reset.');
+            if (data.temporaryPassword) {
+                window.prompt('Temporary password for ' + label + ' (copy this now, it will not be shown again):', data.temporaryPassword);
+            }
+        }).catch(function (error) { status(error.message || 'Could not reset password.'); });
+    }
+
+    function deleteMemberAccount(member) {
+        var label = member.displayLabel || member.displayName || member.username || 'this member';
+        var typed = window.prompt('This permanently deletes ' + label + '\'s entire account: every group membership, saved location, trail history, and login access. Type their username (' + (member.username || '') + ') to confirm:');
+        if (typed === null) return;
+        if (typed.trim().toLowerCase() !== String(member.username || '').toLowerCase()) {
+            status('Username did not match. Account not deleted.');
+            return;
+        }
+        status('Deleting member account...');
+        api({ action: 'delete_member', memberId: member.id, confirmation: typed.trim() })
+            .then(function (data) { render(data); refreshMainList(); status(data.message || 'Member account permanently deleted.'); })
+            .catch(function (error) { status(error.message || 'Could not delete member account.'); });
     }
 
     function leaveGroup() {

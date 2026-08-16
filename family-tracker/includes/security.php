@@ -2,11 +2,11 @@
 /**
  * Project: Family GPS Tracker
  * File: includes/security.php
- * Revision: 1.6.6
+ * Revision: 1.6.12
  * Description: Session, CSRF, authentication, persistent login, active-group membership, and owner-scoped payload helpers.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
- * Modified: 2026-08-02
+ * Modified: 2026-08-16
  */
 
 declare(strict_types=1);
@@ -433,6 +433,7 @@ function build_me_payload(?array $user): array
             'csrfToken' => $csrf,
             'user' => null,
             'family' => null,
+            'mustChangePassword' => false,
         ];
     }
 
@@ -443,5 +444,6 @@ function build_me_payload(?array $user): array
         'csrfToken' => $csrf,
         'user' => $family ? public_user_for_family($user, $family) : public_user($user),
         'family' => $family ? public_family($family, true, $isOwner) : null,
+        'mustChangePassword' => !empty($user['mustChangePassword']),
     ];
 }

@@ -1,11 +1,11 @@
 <!--
 Project: Family GPS Tracker
 File: TASKS.md
-Revision: 1.5.9
+Revision: 1.6.12
 Description: Restart-friendly task list and maintenance backlog for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
-Modified: 2026-07-12
+Modified: 2026-08-16
 -->
 
 # Family GPS Tracker Task List
@@ -23,6 +23,7 @@ Modified: 2026-07-12
 - [x] Rev 1.5.5 - Owner-managed geofence places with arrival/departure notices.
 - [x] Rev 1.5.8 - Member-list flicker and repeated DOM rebuild fix.
 - [x] Rev 1.5.9 - Privacy summary, guarded account deletion, direct owner export, and status banners.
+- [x] Rev 1.6.12 - Owner-only permanent member account deletion and owner-assisted member password reset.
 
 ## Live data folder rule
 
@@ -31,19 +32,11 @@ Modified: 2026-07-12
 
 ## Next practical improvements
 
-- Add routing-provider ETA calculations.
-- Add optional profile pictures or generated avatars.
-- Add member-controlled profile preferences.
-- Add a dedicated account/profile page.
-- Add geofence editing and per-place notification controls.
 - Add loading skeletons.
 - Add a PNG icon set for broader home-screen compatibility.
 
 ## Security hardening
 
-- Move `data/` outside the public web root.
-- Add password reset flow.
-- Add optional TOTP MFA for owner accounts.
 - Add CSP headers after testing CDN and PWA dependencies.
 
 ## Known limitations

@@ -2,11 +2,11 @@
 /**
  * Project: Family GPS Tracker
  * File: account.php
- * Revision: 1.5.9
+ * Revision: 1.6.12
  * Description: Signed-in account utilities for password changes, persistent-login management, exports, privacy summary, and guarded account deletion.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-09
- * Modified: 2026-07-12
+ * Modified: 2026-08-16
  */
 
 declare(strict_types=1);
@@ -129,6 +129,7 @@ function change_password(array $user, array $input): void
     validate_password_or_fail($newPassword);
     $user['passwordHash'] = password_hash($newPassword, PASSWORD_DEFAULT);
     $user['passwordChangedAt'] = now_iso();
+    $user['mustChangePassword'] = false;
     $user['updatedAt'] = now_iso();
     write_user($user);
     $revoked = revoke_all_user_tokens($user);

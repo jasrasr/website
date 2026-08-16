@@ -1,11 +1,11 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/account-security.js
- * Revision: 1.5.9
+ * Revision: 1.6.12
  * Description: Account security, remembered devices, privacy summary, exports, guarded deletion, and status-banner behavior.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-09
- * Modified: 2026-07-12
+ * Modified: 2026-08-16
  */
 (function () {
     'use strict';
@@ -186,6 +186,7 @@
                 confirm.value = '';
                 renderDevices(data.devices || []);
                 status(data.message || 'Password changed.', 'success');
+                window.dispatchEvent(new CustomEvent('familyTrackerPasswordChanged'));
                 loadAccount();
             }).catch(function (error) { status(error.message || 'Password change failed.', 'error'); });
     }

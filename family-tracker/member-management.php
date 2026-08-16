@@ -2,11 +2,11 @@
 /**
  * Project: Family GPS Tracker
  * File: member-management.php
- * Revision: 1.5.2
- * Description: Active-group member metadata, temporary disable/restore, leave-group, and removal endpoint.
+ * Revision: 1.6.12
+ * Description: Active-group member metadata, temporary disable/restore, leave-group, owner-assisted password reset, and removal/permanent-deletion endpoints.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-09
- * Modified: 2026-07-11
+ * Modified: 2026-08-16
  */
 
 declare(strict_types=1);
@@ -43,6 +43,12 @@ try {
             break;
         case 'remove_member':
             remove_member_from_group($user, $family, $input);
+            break;
+        case 'delete_member':
+            delete_member_account($user, $family, $input);
+            break;
+        case 'reset_member_password':
+            reset_member_password($user, $family, $input);
             break;
         case 'leave_group':
             leave_active_group($user, $family);
@@ -256,6 +262,138 @@ function remove_member_from_group(array $user, array $family, array $input): voi
     audit_event('remove_member_from_group', ['userId' => $user['id'], 'memberId' => $memberId, 'familyId' => $familyId]);
     add_group_notice($familyId, 'member_removed', $name . ' was removed from ' . $family['name'] . '.', (string)$user['id']);
     ok(management_payload($user, $family) + ['message' => 'Member removed from active group.']);
+}
+
+function group_member_count(array $family): int
+{
+    $ids = is_array($family['memberIds'] ?? null) ? $family['memberIds'] : [];
+    return count(array_values(array_unique(array_filter(array_map('strval', $ids)))));
+}
+
+function remove_user_from_group_record(array $family, string $userId): array
+{
+    $family['memberIds'] = array_values(array_filter($family['memberIds'] ?? [], fn($id) => (string)$id !== $userId));
+    $family['suspendedMemberIds'] = array_values(array_filter(suspended_member_ids($family), fn($id) => $id !== $userId));
+    foreach (['memberRoles', 'memberProfiles', 'memberJoinedAt', 'memberCheckIns', 'memberTrips', 'memberLocationStates', 'geofenceStates'] as $key) {
+        $values = is_array($family[$key] ?? null) ? $family[$key] : [];
+        unset($values[$userId]);
+        $family[$key] = $values;
+    }
+    $family['updatedAt'] = now_iso();
+    return $family;
+}
+
+function delete_member_account(array $user, array $family, array $input): void
+{
+    require_active_group_owner($user, $family);
+    $memberId = safe_id(str_field($input, 'memberId', 80));
+    if ($memberId === '' || $memberId === (string)$user['id']) {
+        fail('Use Delete My Account in Account settings to delete your own account.', 400);
+    }
+    $member = require_known_group_member($family, $memberId);
+    $username = normalize_username((string)($member['username'] ?? ''));
+    $confirmation = normalize_username(str_field($input, 'confirmation', 120));
+    if ($username === '' || $confirmation === '' || !hash_equals($username, $confirmation)) {
+        fail("Type the member's exact username to confirm permanent account deletion.", 400);
+    }
+
+    $blocking = [];
+    foreach (user_group_ids($member) as $groupId) {
+        $group = read_family($groupId);
+        if (!$group) continue;
+        if (family_member_role($group, $member) === 'owner' && group_member_count($group) > 1) {
+            $blocking[] = (string)($group['name'] ?? 'Unnamed group');
+        }
+    }
+    if ($blocking) {
+        fail('This member owns other groups with other members. They must transfer ownership or delete these groups first: ' . implode(', ', $blocking) . '.', 409);
+    }
+
+    $displayName = (string)($member['displayName'] ?? $member['username'] ?? 'A member');
+    $actorName = (string)($user['displayName'] ?? $user['username'] ?? 'An owner');
+    foreach (user_group_ids($member) as $groupId) {
+        $group = read_family($groupId);
+        if (!$group) continue;
+        if (family_member_role($group, $member) === 'owner') {
+            delete_json_file(family_notices_path($groupId));
+            delete_json_file(family_path($groupId));
+            continue;
+        }
+        $group = remove_user_from_group_record($group, $memberId);
+        write_family($group);
+        add_group_notice($groupId, 'member_account_deleted', $displayName . '\'s account was permanently deleted by ' . $actorName . '.', (string)$user['id']);
+    }
+
+    if (is_suspended_member($family, $memberId) || in_array($memberId, $family['memberIds'] ?? [], true)) {
+        $family = remove_user_from_group_record($family, $memberId);
+        write_family($family);
+    }
+
+    foreach (list_json_records('persistent_logins') as $record) {
+        if (($record['userId'] ?? '') !== $memberId) continue;
+        $selector = safe_id((string)($record['selector'] ?? ''));
+        if ($selector !== '') delete_json_file(remember_token_path($selector));
+    }
+
+    $indexPath = username_index_path();
+    $index = read_json_file($indexPath, ['usernames' => []]);
+    if ($username !== '' && ($index['usernames'][$username] ?? '') === $memberId) {
+        unset($index['usernames'][$username]);
+        write_json_file($indexPath, $index);
+    }
+
+    delete_json_file(location_path($memberId));
+    delete_json_file(trail_path($memberId));
+    delete_json_file(user_path($memberId));
+
+    audit_event('delete_member_account', ['userId' => $user['id'], 'memberId' => $memberId]);
+
+    $refreshedFamily = read_family((string)$family['id']);
+    if (!$refreshedFamily) {
+        ok(['csrfToken' => ensure_csrf_token(), 'message' => $displayName . '\'s account was permanently deleted.', 'reload' => true]);
+    }
+    ok(management_payload($user, $refreshedFamily) + ['message' => $displayName . '\'s account was permanently deleted.']);
+}
+
+function generate_temporary_password(): string
+{
+    $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    $password = '';
+    for ($i = 0; $i < 12; $i++) {
+        $password .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+    }
+    return $password;
+}
+
+function reset_member_password(array $user, array $family, array $input): void
+{
+    require_active_group_owner($user, $family);
+    $memberId = safe_id(str_field($input, 'memberId', 80));
+    if ($memberId === '' || $memberId === (string)$user['id']) {
+        fail('Use Change Password in Account settings to reset your own password.', 400);
+    }
+    $member = require_known_group_member($family, $memberId);
+    $temporaryPassword = generate_temporary_password();
+    $member['passwordHash'] = password_hash($temporaryPassword, PASSWORD_DEFAULT);
+    $member['passwordChangedAt'] = now_iso();
+    $member['mustChangePassword'] = true;
+    $member['updatedAt'] = now_iso();
+    write_user($member);
+
+    foreach (list_json_records('persistent_logins') as $record) {
+        if (($record['userId'] ?? '') !== $memberId) continue;
+        $selector = safe_id((string)($record['selector'] ?? ''));
+        if ($selector !== '') delete_json_file(remember_token_path($selector));
+    }
+
+    $name = (string)($member['displayName'] ?? $member['username'] ?? 'A member');
+    audit_event('reset_member_password', ['userId' => $user['id'], 'memberId' => $memberId, 'familyId' => $family['id']]);
+    add_group_notice((string)$family['id'], 'member_password_reset', $name . '\'s password was reset by an owner.', (string)$user['id']);
+    ok(management_payload($user, $family) + [
+        'message' => 'Temporary password generated for ' . $name . '. Share it off-app; they must change it after logging in.',
+        'temporaryPassword' => $temporaryPassword,
+        'resetMemberId' => $memberId,
+    ]);
 }
 
 function leave_active_group(array $user, array $family): void

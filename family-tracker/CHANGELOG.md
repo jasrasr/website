@@ -1,16 +1,24 @@
 <!--
 Project: Family GPS Tracker
 File: CHANGELOG.md
-Revision: 1.6.11
+Revision: 1.6.12
 Description: Project revision history for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
-Modified: 2026-08-08
+Modified: 2026-08-16
 -->
 
 # Family GPS Tracker Changelog
 
-Current Project Revision: **1.6.11**
+Current Project Revision: **1.6.12**
+
+## Rev 1.6.12 - 2026-08-16
+
+- Added owner-only permanent member account deletion (separate from the existing remove-from-group action, which keeps the account). Removes the member from every group they belong to, deletes their saved location/trail/login records, and frees their username. Blocked if the member owns another group that still has other members.
+- Added owner-assisted password reset for a member. Generates a one-time temporary password shown only to the owner, revokes that member's remembered devices, and flags the account so the member must set a new password after logging in.
+- Added a forced-password-change banner shown to a member after an owner resets their password, pointing them to Account Security & Data.
+- Updated the PWA app-shell cache.
+- Added no new live-data folder.
 
 ## Rev 1.6.11 - 2026-08-08
 

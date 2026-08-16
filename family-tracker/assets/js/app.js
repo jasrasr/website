@@ -1,11 +1,11 @@
 /**
  * Project: Family GPS Tracker
  * File: assets/js/app.js
- * Revision: 1.6.4
- * Description: Front-end auth, profile avatars, geofence overlays, location guidance, notices, persistent-login GPS updates, mobile map fallback, family refresh, and Leaflet desktop rendering.
+ * Revision: 1.6.12
+ * Description: Front-end auth, profile avatars, geofence overlays, location guidance, notices, persistent-login GPS updates, mobile map fallback, family refresh, forced-password-change banner, and Leaflet desktop rendering.
  * Author: Jason Lamb / ChatGPT scaffold
  * Created: 2026-07-06
- * Modified: 2026-07-14
+ * Modified: 2026-08-16
  */
 (() => {
     'use strict';
@@ -163,6 +163,44 @@
         els.statusCard?.insertAdjacentElement('afterend', card);
     }
 
+    function showMustChangePasswordBanner() {
+        if (document.getElementById('mustChangePasswordNotice')) return;
+        const card = document.createElement('section');
+        card.id = 'mustChangePasswordNotice';
+        card.className = 'card danger';
+        card.setAttribute('aria-live', 'polite');
+        card.style.display = 'flex';
+        card.style.alignItems = 'center';
+        card.style.justifyContent = 'space-between';
+        card.style.gap = '0.75rem';
+        card.style.padding = '0.75rem 1rem';
+
+        const text = document.createElement('div');
+        const strong = document.createElement('strong');
+        strong.textContent = 'An owner reset your password. ';
+        text.append(strong, document.createTextNode('Please set a new password now in Account Security & Data.'));
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'secondary';
+        button.style.width = 'auto';
+        button.textContent = 'Go to Change Password';
+        button.addEventListener('click', () => {
+            const target = document.getElementById('accountSecurityCard') || document.getElementById('currentPasswordInput');
+            target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.getElementById('currentPasswordInput')?.focus();
+        });
+
+        card.append(text, button);
+        els.statusCard?.insertAdjacentElement('afterend', card);
+    }
+
+    function hideMustChangePasswordBanner() {
+        document.getElementById('mustChangePasswordNotice')?.remove();
+    }
+
+    window.addEventListener('familyTrackerPasswordChanged', hideMustChangePasswordBanner);
+
     async function api(action, payload = null) {
         const options = { method: payload ? 'POST' : 'GET', headers: {}, credentials: 'same-origin' };
         if (payload) {
@@ -203,6 +241,9 @@
 
         els.account.textContent = `${state.user.displayName} (${state.user.role})`;
         els.family.textContent = state.family ? state.family.name : 'No family loaded';
+
+        if (data.mustChangePassword) showMustChangePasswordBanner();
+        else hideMustChangePasswordBanner();
 
         if (state.user.role === 'owner') {
             els.invite.classList.remove('hidden');

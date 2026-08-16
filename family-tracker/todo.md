@@ -1,17 +1,22 @@
 <!--
 Project: Family GPS Tracker
 File: todo.md
-Revision: 1.6.5
-Project Revision Reference: 1.6.5
+Revision: 1.6.12
+Project Revision Reference: 1.6.12
 Description: Feature backlog and improvement ideas for the PHP/JSON family tracker.
 Author: Jason Lamb / ChatGPT scaffold
 Created: 2026-07-06
-Modified: 2026-07-14
+Modified: 2026-08-16
 -->
 
 # Family GPS Tracker TODO
 
-Current App Revision Context: **1.6.5**
+Current App Revision Context: **1.6.12**
+
+## Completed in Rev 1.6.12
+
+- [x] Add an owner option to permanently delete a member's account (not just remove them from the group).
+- [x] Add owner-assisted password reset for a member.
 
 ## Completed in Rev 1.6.4
 
@@ -54,9 +59,6 @@ Current App Revision Context: **1.6.5**
 
 ### Security and privacy
 
-- [ ] Add password reset.
-- [ ] Add optional TOTP MFA.
-- [ ] Move runtime data outside the public web root.
 - [ ] Add Content Security Policy after CDN and map testing.
 
 ### PWA and UI
