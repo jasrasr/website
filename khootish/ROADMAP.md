@@ -1,4 +1,4 @@
-# Quiz Web Interactive — Future Updates
+# Khootish — Future Updates
 
 Last reviewed: August 16, 2026
 
@@ -93,3 +93,4 @@ This file is the working backlog for planned improvements. Items can be reordere
 - [x] Show answer-submission counts to the host without revealing team choices.
 - [x] Show team colors consistently in the host lobby, leaderboard, history, and final results.
 - [x] Add a final podium/results screen on the host and shared display.
+- [x] Rename the project folder and display name to **Khootish**.
