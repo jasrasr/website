@@ -94,6 +94,35 @@ try {
             start_session(); $_SESSION['game_code']=$code;
             json_response(['ok'=>true,'game'=>public_game($game)]);
 
+        case 'rename_team':
+            require_admin_api();
+            $code = clean_code((string)($data['code'] ?? ''));
+            $pid = (string)($data['player_id'] ?? '');
+            $team = trim((string)($data['team_name'] ?? ''));
+            if ($team === '' || mb_strlen($team) > 30) json_response(['ok'=>false,'error'=>'Enter a team name up to 30 characters.'],422);
+            $game = mutate_game($code, function(array $game) use ($pid,$team) {
+                if (($game['state']['phase'] ?? '') !== 'lobby') throw new RuntimeException('Teams can only be renamed while the game is in the lobby.');
+                if (!isset($game['players'][$pid])) throw new RuntimeException('Team not found.');
+                foreach ($game['players'] as $existing) {
+                    if (($existing['id'] ?? '') !== $pid && strcasecmp((string)$existing['team_name'], $team) === 0) throw new RuntimeException('That team name is already in use.');
+                }
+                $game['players'][$pid]['team_name'] = $team;
+                return $game;
+            });
+            json_response(['ok'=>true,'game'=>public_game($game)]);
+
+        case 'remove_team':
+            require_admin_api();
+            $code = clean_code((string)($data['code'] ?? ''));
+            $pid = (string)($data['player_id'] ?? '');
+            $game = mutate_game($code, function(array $game) use ($pid) {
+                if (($game['state']['phase'] ?? '') !== 'lobby') throw new RuntimeException('Teams can only be removed while the game is in the lobby.');
+                if (!isset($game['players'][$pid])) throw new RuntimeException('Team not found.');
+                unset($game['players'][$pid]);
+                return $game;
+            });
+            json_response(['ok'=>true,'game'=>public_game($game)]);
+
         case 'state':
             $code = clean_code((string)($_GET['code'] ?? $data['code'] ?? ''));
             $game = read_game_finalized($code);
@@ -104,6 +133,7 @@ try {
             require_admin_api();
             $code = clean_code((string)($data['code'] ?? ''));
             $game = mutate_game($code, function(array $game) {
+                if (count($game['players'] ?? []) < 1) throw new RuntimeException('At least one team must join before the game can start.');
                 $next = (int)($game['state']['question_index'] ?? -1)+1;
                 if (!isset($game['questions'][$next])) throw new RuntimeException('There are no more questions.');
                 foreach ($game['players'] as &$p) {$p['answered_question']=null;$p['last_correct']=null;$p['last_points']=0;} unset($p);
