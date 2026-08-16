@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.10.0 - 2026-08-16
+- Added **Edit** controls beside saved quizzes in the host quiz library.
+- Existing quizzes can now be loaded into the quiz builder, including title, questions, answer choices, and correct-answer selections.
+- Saving an edited quiz updates the existing quiz ID instead of creating a duplicate.
+- Existing Question Bank source references are preserved while editing.
+
+## 1.9.1 - 2026-08-16
+- Changed the temporary fallback host password to `changemenow`.
+- Added a subtle go-live reminder on the host login page to replace the temporary password before production use.
+
 ## 1.9.0 - 2026-08-16
 - Added an **Active Games** dashboard to the host/admin console.
 - Shows every launched active game with its six-digit code, phase, team count, question progress, answer count, and remaining lifetime.
