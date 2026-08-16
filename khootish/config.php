@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 return [
-    'app_name' => 'Quiz Web Interactive',
+    'app_name' => 'Khootish',
     'admin_password' => getenv('QUIZ_ADMIN_PASSWORD') ?: 'change-me-now',
     'data_dir' => __DIR__ . '/data',
     'question_seconds' => 30,
