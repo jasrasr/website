@@ -79,7 +79,7 @@
     }
     function fitText(text, maxWidth, startingSize) {
       let output = text, size = startingSize;
-      ctx.font = `700 ${size}px system-ui`;
+      ctx.font = `900 ${size}px system-ui`;
       while (ctx.measureText(output).width > maxWidth && output.length > 3) { output = output.slice(0,-2) + '…'; }
       return output;
     }
@@ -97,8 +97,8 @@
         ctx.fillStyle = colors[index % colors.length]; ctx.fill(); ctx.strokeStyle = '#ffffff77'; ctx.lineWidth = entries.length > 120 ? .5 : 2; ctx.stroke();
         if (entries.length <= 150) {
           ctx.save(); ctx.translate(center,center); ctx.rotate(start + slice/2); ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.fillStyle='#fff';
-          const fontSize = Math.max(13,Math.min(42,650/entries.length+18));
-          ctx.shadowColor='#000'; ctx.shadowBlur=4; ctx.font=`700 ${fontSize}px system-ui`;
+          const fontSize = Math.max(14,Math.min(160,900/entries.length));
+          ctx.shadowColor='#000'; ctx.shadowBlur=6; ctx.font=`900 ${fontSize}px system-ui`;
           ctx.fillText(fitText(name,radius*.62,fontSize),radius-34,0); ctx.restore();
         }
       });
