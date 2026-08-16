@@ -53,6 +53,45 @@
     .label { color: var(--muted); font-size: .78rem; font-weight: 700; text-transform: uppercase; }
     .value { margin-top: .15rem; font-size: clamp(1.35rem, 3vw, 2rem); font-weight: 800; }
     .value small { color: var(--muted); font-size: .85rem; font-weight: 500; }
+    .progress-panel {
+      margin: 0 0 1rem;
+      padding: 1rem 1.15rem;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: color-mix(in srgb, var(--panel) 94%, transparent);
+      box-shadow: 0 18px 50px rgb(0 0 0 / .18);
+    }
+    .progress-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: .65rem;
+    }
+    .progress-heading h2 { margin: 0; font-size: 1rem; }
+    .progress-percent { color: var(--accent-2); font-size: 1.35rem; font-weight: 900; }
+    .progress-track {
+      height: 22px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #07111f;
+    }
+    .progress-fill {
+      width: 53%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      box-shadow: 0 0 18px rgb(85 194 255 / .35);
+    }
+    .progress-details {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-top: .55rem;
+      color: var(--muted);
+      font-size: .82rem;
+    }
     .table-wrap { overflow-x: auto; }
     table { width: 100%; min-width: 920px; border-collapse: collapse; }
     caption { padding: 1rem 1.1rem; text-align: left; font-size: 1.2rem; font-weight: 800; }
@@ -98,6 +137,20 @@
         <div class="label">Overall progress rate</div>
         <div class="value">26.7–27.2 <small>mph</small></div>
       </article>
+    </section>
+
+    <section class="progress-panel" aria-labelledby="trip-progress-title">
+      <div class="progress-heading">
+        <h2 id="trip-progress-title">Estimated trip progress</h2>
+        <div class="progress-percent">53%</div>
+      </div>
+      <div class="progress-track" role="progressbar" aria-label="Estimated trip completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="53">
+        <div class="progress-fill"></div>
+      </div>
+      <div class="progress-details">
+        <span>~1,380 miles traveled</span>
+        <span>~1,200 miles remaining</span>
+      </div>
     </section>
 
     <section class="table-wrap">
