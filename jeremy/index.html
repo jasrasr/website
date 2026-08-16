@@ -17,6 +17,8 @@
       --accent-2: #74e0aa;
       --line: #29405b;
       --warning: #ffd166;
+      --map: #7dd3fc;
+      --calculated: #c4b5fd;
     }
     * { box-sizing: border-box; }
     body {
@@ -92,6 +94,35 @@
       color: var(--muted);
       font-size: .82rem;
     }
+    .data-key {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .65rem 1rem;
+      margin: 0 0 1rem;
+      padding: .85rem 1rem;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: color-mix(in srgb, var(--panel) 94%, transparent);
+    }
+    .key-title { width: 100%; font-weight: 800; }
+    .key-item { display: inline-flex; align-items: center; gap: .4rem; color: var(--muted); font-size: .82rem; }
+    .key-dot { width: .72rem; height: .72rem; flex: 0 0 auto; border-radius: 50%; background: var(--text); }
+    .key-dot.estimate { background: var(--warning); }
+    .key-dot.map { background: var(--map); }
+    .key-dot.calc { background: var(--calculated); }
+    .key-dot.total-key { background: var(--accent-2); }
+    .map-estimate { color: var(--map); }
+    .calculated { color: var(--calculated); }
+    .total-badge {
+      display: inline-block;
+      margin: 0 .45rem .2rem 0;
+      padding: .12rem .42rem;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      font-size: .67rem;
+      letter-spacing: .07em;
+      vertical-align: middle;
+    }
     .table-wrap { overflow-x: auto; }
     table { width: 100%; min-width: 920px; border-collapse: collapse; }
     caption { padding: 1rem 1.1rem; text-align: left; font-size: 1.2rem; font-weight: 800; }
@@ -99,7 +130,12 @@
     th { color: var(--muted); background: var(--panel-2); font-size: .76rem; letter-spacing: .05em; text-transform: uppercase; }
     tbody tr:hover { background: rgb(85 194 255 / .055); }
     td:nth-child(n+4), th:nth-child(n+4) { text-align: right; white-space: nowrap; }
-    .total { color: var(--accent-2); font-weight: 800; }
+    .total {
+      color: var(--accent-2);
+      font-weight: 800;
+      background: rgb(116 224 170 / .075);
+    }
+    tfoot .total td { border-top: 3px double var(--accent-2); }
     .estimated { color: var(--warning); }
     .notes { margin-top: 1rem; padding: 1rem 1.15rem; }
     .notes h2 { margin: 0 0 .5rem; font-size: 1rem; }
@@ -153,6 +189,15 @@
       </div>
     </section>
 
+    <section class="data-key" aria-labelledby="data-key-title">
+      <div class="key-title" id="data-key-title">Data key</div>
+      <span class="key-item"><span class="key-dot"></span>Self-reported checkpoint</span>
+      <span class="key-item"><span class="key-dot estimate"></span>Estimated or inferred</span>
+      <span class="key-item"><span class="key-dot map"></span>Map-based road estimate</span>
+      <span class="key-item"><span class="key-dot calc"></span>Calculated from reports</span>
+      <span class="key-item"><span class="key-dot total-key"></span>Trip total</span>
+    </section>
+
     <section class="table-wrap">
       <table>
         <caption>Trip segments</caption>
@@ -171,45 +216,49 @@
             <td>Newhall, CA → Arizona line</td>
             <td class="estimated">Aug. 14, ~6:30–7:30 AM</td>
             <td>Aug. 14, 12:30 PM</td>
-            <td>~255 mi</td>
-            <td>~5–6 hr</td>
-            <td>~43–51 mph</td>
+            <td class="map-estimate">~255 mi</td>
+            <td class="calculated">~5–6 hr</td>
+            <td class="calculated">~43–51 mph</td>
           </tr>
           <tr>
             <td>Arizona line → Estelline, TX</td>
             <td>Aug. 14, 12:30 PM</td>
             <td>Aug. 15, 7:00 PM</td>
-            <td>~895 mi</td>
-            <td>30 hr 30 min</td>
-            <td>~29 mph</td>
+            <td class="map-estimate">~895 mi</td>
+            <td class="calculated">30 hr 30 min</td>
+            <td class="calculated">~29 mph</td>
           </tr>
           <tr>
             <td>Estelline, TX → Saginaw, TX</td>
             <td>Aug. 15, 7:00 PM</td>
             <td>Aug. 16, 10:15 AM</td>
-            <td>~230 mi</td>
-            <td>15 hr 15 min</td>
-            <td>~15 mph</td>
+            <td class="map-estimate">~230 mi</td>
+            <td class="calculated">15 hr 15 min</td>
+            <td class="calculated">~15 mph</td>
           </tr>
+        </tbody>
+        <tfoot>
           <tr class="total">
-            <td>Newhall, CA → Saginaw, TX total</td>
+            <td><span class="total-badge">TOTAL</span>Newhall, CA → Saginaw, TX</td>
             <td>Aug. 14, ~6:30–7:30 AM</td>
             <td>Aug. 16, 10:15 AM</td>
             <td>~1,380 mi</td>
             <td>~50 hr 45 min–51 hr 45 min</td>
             <td>~26.7–27.2 mph</td>
           </tr>
-        </tbody>
+        </tfoot>
       </table>
     </section>
 
     <aside class="notes">
       <h2>Tracking notes</h2>
       <ul>
-        <li>All displayed times are Ohio time (EDT).</li>
+        <li><strong>Self-reported:</strong> Jason supplied the checkpoint locations and report times. Times are displayed in Ohio time (EDT), not the checkpoint's local time.</li>
+        <li><strong>Estimated:</strong> Jeremy's Newhall departure time was inferred from the Arizona report and the likely driving time of the bus-and-trailer combination.</li>
+        <li><strong>Map-based:</strong> Road mileage is approximate route mileage. Google Maps should be used to verify future segments when exact roads or addresses are available.</li>
+        <li><strong>Calculated:</strong> Elapsed time, average progress, cumulative mileage, and percent complete are calculated from the reported times and estimated road mileage.</li>
         <li>Jeremy is driving a short bus and towing a car hauler carrying an SUV.</li>
         <li>Average progress includes fuel, food, sleep, and other stops; it is not driving speed.</li>
-        <li>Road distances and the Newhall departure time are estimates.</li>
         <li>Provisional fuel economy estimate: about 7 MPG, with a likely range of 5–9 MPG depending on the bus and engine.</li>
       </ul>
     </aside>
