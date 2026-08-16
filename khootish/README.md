@@ -1,4 +1,4 @@
-# Quiz Web Interactive
+# Khootish
 
 A reusable, Hostinger-friendly PHP/JSON multiplayer quiz engine inspired by classroom response games.
 
@@ -6,13 +6,16 @@ A reusable, Hostinger-friendly PHP/JSON multiplayer quiz engine inspired by clas
 
 - Reusable quiz library: create a quiz once and launch it many times.
 - Four choices per question with exactly one correct answer.
-- Six-character invite codes and team registration.
+- Six-digit numeric invite codes and team registration.
 - Team color selection; avatar support is reserved for a future release.
 - Separate admin, projector/display, and mobile answer-pad screens.
 - Server-authoritative synchronized 30-second timer.
 - Correct answers start at 1,000 possible points and decline linearly with elapsed time.
 - Wrong answers receive zero points.
 - Results and leaderboard after each question.
+- Host lobby with live team management.
+- Completed-game history, rankings, statistics, and same-code replay.
+- Reusable Question Bank searchable by question text or any answer.
 - Supports at least 25 simultaneous contestants; configured maximum is 100.
 
 ## Concurrency and data integrity
@@ -29,7 +32,7 @@ This design is appropriate for dozens of contestants on normal shared hosting. H
 
 ## Installation
 
-1. Deploy this folder as `/quiz-web-interactive`.
+1. Deploy this folder as `/khootish`.
 2. Ensure PHP can write beneath `data/`.
 3. Replace the default admin password in `config.php`, or define `QUIZ_ADMIN_PASSWORD` in the hosting environment.
 4. Open `admin.php`, create a reusable quiz, and launch it.
@@ -38,5 +41,7 @@ This design is appropriate for dozens of contestants on normal shared hosting. H
 ## Storage
 
 - `data/quizzes` — reusable quiz definitions
-- `data/games` — active and completed game sessions
+- `data/questions` — reusable Question Bank entries
+- `data/games` — active game sessions
+- `data/history` — archived completed games and rankings
 - `data/locks` — persistent lock files used for concurrency control
