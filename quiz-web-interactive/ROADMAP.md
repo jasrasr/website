@@ -1,6 +1,6 @@
 # Quiz Web Interactive — Future Updates
 
-Last reviewed: July 20, 2026
+Last reviewed: August 16, 2026
 
 This file is the working backlog for planned improvements. Items can be reordered as priorities change.
 
@@ -8,8 +8,6 @@ This file is the working backlog for planned improvements. Items can be reordere
 
 - [ ] Add a visible team-color preview beside the color selector and selected hex value.
 - [ ] Add avatar selection with simple built-in icons.
-- [ ] Add a host lobby showing connected teams before a game starts.
-- [ ] Allow the host to remove or rename a team from the lobby.
 - [ ] Add configurable question duration instead of a fixed 30-second timer.
 - [ ] Add configurable scoring options, including fixed points and speed-based points.
 - [ ] Add confirmation prompts before destructive host actions.
@@ -29,14 +27,11 @@ This file is the working backlog for planned improvements. Items can be reordere
 
 ## Gameplay and Display
 
-- [ ] Show answer-submission counts to the host without revealing team choices.
 - [ ] Automatically advance after all teams have answered, as an optional setting.
 - [ ] Add sound effects for countdown, answer reveal, and leaderboard changes.
 - [ ] Add a fullscreen projector mode.
 - [ ] Add animated correct-answer and leaderboard transitions.
-- [ ] Show each team's selected color consistently on player, host, and display screens.
 - [ ] Add a tie-breaker question mode.
-- [ ] Add a final results screen with podium positions.
 
 ## Reliability and Administration
 
@@ -92,3 +87,9 @@ This file is the working backlog for planned improvements. Items can be reordere
 - [x] Preserve tied placements in archived rankings.
 - [x] Show cumulative team statistics including games, wins, average score, and average placement.
 - [x] Show cumulative question statistics including usage, accuracy, and average response time.
+- [x] Add a host lobby showing connected teams before a game starts.
+- [x] Allow the host to remove or rename a team from the lobby.
+- [x] Prevent starting a game until at least one team has joined.
+- [x] Show answer-submission counts to the host without revealing team choices.
+- [x] Show team colors consistently in the host lobby, leaderboard, history, and final results.
+- [x] Add a final podium/results screen on the host and shared display.
