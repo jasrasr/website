@@ -52,4 +52,14 @@ function installActiveGamesDashboard(){
   refreshActiveGames();
   setInterval(refreshActiveGames,3000);
 }
-document.addEventListener('DOMContentLoaded',()=>{runKhootishMaintenance();installActiveGamesDashboard();setInterval(runKhootishMaintenance,60000);});
+function installGoLivePasswordReminder(){
+  const loginCard=document.getElementById('loginCard');
+  if(!loginCard||loginCard.querySelector('.go-live-password-note'))return;
+  const note=document.createElement('p');
+  note.className='muted go-live-password-note';
+  note.style.fontSize='.82rem';
+  note.style.marginBottom='0';
+  note.textContent='Go-live reminder: replace the temporary host password before production use.';
+  loginCard.appendChild(note);
+}
+document.addEventListener('DOMContentLoaded',()=>{runKhootishMaintenance();installActiveGamesDashboard();installGoLivePasswordReminder();setInterval(runKhootishMaintenance,60000);});
