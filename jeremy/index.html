@@ -80,7 +80,7 @@
       background: #07111f;
     }
     .progress-fill {
-      width: 57%;
+      width: 59%;
       height: 100%;
       border-radius: inherit;
       background: linear-gradient(90deg, var(--accent), var(--accent-2));
@@ -160,33 +160,33 @@
     <section class="summary" aria-label="Trip summary">
       <article class="card">
         <div class="label">Latest checkpoint</div>
-        <div class="value shared-location">Denison, TX</div>
+        <div class="value shared-location">Kenefic, OK</div>
       </article>
       <article class="card">
         <div class="label">Reported</div>
-        <div class="value shared-location">Aug. 16 <small>12:30 PM EDT</small></div>
+        <div class="value shared-location">Aug. 16 <small>~5:53 PM EDT</small></div>
       </article>
       <article class="card">
         <div class="label">Estimated distance</div>
-        <div class="value">1,475 <small>miles</small></div>
+        <div class="value">1,513 <small>miles</small></div>
       </article>
       <article class="card">
         <div class="label">Overall progress rate</div>
-        <div class="value">22.3–22.7 <small>mph</small></div>
+        <div class="value">21.2–21.5 <small>mph</small></div>
       </article>
     </section>
 
     <section class="progress-panel" aria-labelledby="trip-progress-title">
       <div class="progress-heading">
         <h2 id="trip-progress-title">Estimated trip progress</h2>
-        <div class="progress-percent">57%</div>
+        <div class="progress-percent">59%</div>
       </div>
-      <div class="progress-track" role="progressbar" aria-label="Estimated trip completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="57">
+      <div class="progress-track" role="progressbar" aria-label="Estimated trip completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="59">
         <div class="progress-fill"></div>
       </div>
       <div class="progress-details">
-        <span>~1,475 miles traveled</span>
-        <span>~1,105 miles remaining</span>
+        <span>~1,513 miles traveled</span>
+        <span>~1,067 miles remaining</span>
       </div>
     </section>
 
@@ -245,15 +245,23 @@
             <td class="calculated">2 hr 15 min</td>
             <td class="calculated">~42.2 mph</td>
           </tr>
+          <tr>
+            <td>Denison, TX → Kenefic, OK</td>
+            <td class="shared-location">Aug. 16, 12:30 PM</td>
+            <td class="shared-location">Aug. 16, ~5:53 PM</td>
+            <td class="route-estimate">~38 mi</td>
+            <td class="calculated">5 hr 23 min</td>
+            <td class="calculated">~7.1 mph</td>
+          </tr>
         </tbody>
         <tfoot>
           <tr class="total">
-            <td><span class="total-badge">TOTAL</span>Newhall, CA → Denison, TX</td>
+            <td><span class="total-badge">TOTAL</span>Newhall, CA → Kenefic, OK</td>
             <td>Aug. 13, ~6:30–7:30 PM</td>
-            <td>Aug. 16, 12:30 PM</td>
-            <td>~1,475 mi</td>
-            <td>~65–66 hr</td>
-            <td>~22.3–22.7 mph</td>
+            <td>Aug. 16, ~5:53 PM</td>
+            <td>~1,513 mi</td>
+            <td>~70 hr 23 min–71 hr 23 min</td>
+            <td>~21.2–21.5 mph</td>
           </tr>
         </tfoot>
       </table>
@@ -265,6 +273,7 @@
         <li><strong>Direct report:</strong> The Arizona state-line checkpoint came from Jeremy's text message at 12:34 AM EDT on August 14 saying he had “Just entered Arizona.”</li>
         <li><strong>Google Maps observations:</strong> Jason recorded the later city and time updates while viewing the live location Jeremy shared through Google Maps.</li>
         <li><strong>Observation time:</strong> A Google Maps timestamp records when Jason checked Jeremy's location; it is not necessarily the exact arrival or departure time. Displayed times are rounded and shown in Ohio time (EDT).</li>
+        <li><strong>Kenefic timestamp:</strong> The screenshot was taken at 6:31 PM and showed Jeremy's location as 38 minutes old, producing an approximate location time of 5:53 PM EDT.</li>
         <li><strong>Estimated:</strong> Jeremy's Newhall departure time was inferred from the Arizona report and the likely driving time of the bus-and-trailer combination. Segment road mileage is approximate route mileage.</li>
         <li><strong>Calculated:</strong> Elapsed time, average progress, cumulative mileage, and percent complete are derived from the recorded observations and estimated road mileage.</li>
         <li>Jeremy is driving a short bus and towing a car hauler carrying an SUV.</li>
@@ -273,7 +282,7 @@
       </ul>
     </aside>
 
-    <footer>Last updated August 16, 2026 at 12:30 PM EDT</footer>
+    <footer>Latest location approximately 5:53 PM EDT · Observed August 16, 2026 at 6:31 PM EDT</footer>
   </main>
 </body>
 </html>
