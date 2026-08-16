@@ -35,7 +35,6 @@ This file is the working backlog for planned improvements. Items can be reordere
 
 ## Reliability and Administration
 
-- [ ] Add automatic cleanup of stale active-game files.
 - [ ] Add a game activity log for joins, answers, scoring, and host actions.
 - [ ] Add stronger admin authentication and configurable credentials.
 - [ ] Add CSRF protection to administrative actions.
@@ -94,3 +93,7 @@ This file is the working backlog for planned improvements. Items can be reordere
 - [x] Show team colors consistently in the host lobby, leaderboard, history, and final results.
 - [x] Add a final podium/results screen on the host and shared display.
 - [x] Rename the project folder and display name to **Khootish**.
+- [x] Add an **Active Games** dashboard showing every launched game, status, team count, question progress, answer count, and expiration.
+- [x] Allow a host to reopen and manage any active game from the dashboard.
+- [x] Automatically close and archive games after 24 hours.
+- [x] Run lightweight stale-game maintenance during normal site activity without requiring cron.
