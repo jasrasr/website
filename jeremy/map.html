@@ -54,8 +54,7 @@
         { name: "Osceola, MO", time: "Aug. 17, 1:08 PM EDT", lat: 38.046, lon: -93.704 },
         { name: "Richland, MO", time: "Aug. 17, ~5:36 PM EDT", lat: 37.955, lon: -92.437 }
       ];
-      const planned = [
-        recorded[recorded.length - 1],
+      const pending = [
         { name: "St. Louis, MO", time: "Pending checkpoint", lat: 38.627, lon: -90.199 },
         { name: "Evansville, IN", time: "Pending checkpoint", lat: 37.972, lon: -87.571 },
         { name: "Louisville, KY / Sellersburg, IN area", time: "Planned stop", lat: 38.253, lon: -85.759 },
@@ -63,6 +62,9 @@
         { name: "Columbus, OH", time: "Pending checkpoint", lat: 39.961, lon: -82.999 },
         { name: "Cleveland, OH", time: "Destination", lat: 41.499, lon: -81.694 }
       ];
+      const latest = recorded[recorded.length - 1];
+      const upcoming = pending.filter((point) => latest.lon < point.lon);
+      const planned = [latest, ...upcoming];
       const map = L.map("map", { scrollWheelZoom: false });
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 18, attribution: "&copy; OpenStreetMap contributors"
@@ -86,7 +88,6 @@
       const future = L.polyline(planned.map((point) => [point.lat, point.lon]), {
         color: "#ffd166", weight: 4, dashArray: "10 8"
       }).addTo(map);
-      const latest = recorded[recorded.length - 1];
       map.setView([latest.lat, latest.lon], 6);
     })();
   </script>
