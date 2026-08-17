@@ -82,7 +82,8 @@
       const future = L.polyline(planned.map((point) => [point.lat, point.lon]), {
         color: "#ffd166", weight: 4, dashArray: "10 8"
       }).addTo(map);
-      map.fitBounds(traveled.getBounds().extend(future.getBounds()), { padding: [24, 24] });
+      const latest = recorded[recorded.length - 1];
+      map.setView([latest.lat, latest.lon], 6);
     })();
   </script>
 </body>
