@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Jeremy's 2026 trip progress from Newhall, California to Cleveland, Ohio.">
+  <title>Jeremy's Trip to Cleveland</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07111f;
+      --panel: #101d2e;
+      --panel-2: #15263b;
+      --text: #f4f7fb;
+      --muted: #aab8ca;
+      --accent: #55c2ff;
+      --accent-2: #74e0aa;
+      --line: #29405b;
+      --warning: #ffd166;
+      --map: #7dd3fc;
+      --calculated: #c4b5fd;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #132944 0, var(--bg) 45rem);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+    main { width: min(1180px, calc(100% - 2rem)); margin: 0 auto; padding: 2.5rem 0 4rem; }
+    header { margin-bottom: 1.5rem; }
+    .eyebrow {
+      color: var(--accent);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    h1 { margin: .25rem 0 .35rem; font-size: clamp(2rem, 5vw, 4.2rem); line-height: 1.05; }
+    .subtitle { margin: 0; color: var(--muted); font-size: clamp(1rem, 2vw, 1.2rem); }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: .85rem;
+      margin: 1.5rem 0;
+    }
+    .card, .table-wrap, .notes, .map-panel {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: color-mix(in srgb, var(--panel) 94%, transparent);
+      box-shadow: 0 18px 50px rgb(0 0 0 / .18);
+    }
+    .card { padding: 1rem 1.1rem; }
+    .label { color: var(--muted); font-size: .78rem; font-weight: 700; text-transform: uppercase; }
+    .value { margin-top: .15rem; font-size: clamp(1.35rem, 3vw, 2rem); font-weight: 800; }
+    .value small { color: var(--muted); font-size: .85rem; font-weight: 500; }
+    .progress-panel {
+      margin: 0 0 1rem;
+      padding: 1rem 1.15rem;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: color-mix(in srgb, var(--panel) 94%, transparent);
+      box-shadow: 0 18px 50px rgb(0 0 0 / .18);
+    }
+    .progress-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: .65rem;
+    }
+    .progress-heading h2 { margin: 0; font-size: 1rem; }
+    .progress-percent { color: var(--accent-2); font-size: 1.35rem; font-weight: 900; }
+    .progress-track {
+      height: 22px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #07111f;
+    }
+    .progress-fill {
+      width: 71%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      box-shadow: 0 0 18px rgb(85 194 255 / .35);
+    }
+    .progress-details {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: .35rem 1rem;
+      margin-top: .55rem;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+    .data-key {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .65rem 1rem;
+      margin: 0 0 1rem;
+      padding: .85rem 1rem;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: color-mix(in srgb, var(--panel) 94%, transparent);
+    }
+    .key-title { width: 100%; font-weight: 800; }
+    .key-item { display: inline-flex; align-items: center; gap: .4rem; color: var(--muted); font-size: .82rem; }
+    .key-dot { width: .72rem; height: .72rem; flex: 0 0 auto; border-radius: 50%; background: var(--text); }
+    .key-dot.estimate { background: var(--warning); }
+    .key-dot.map { background: var(--map); }
+    .key-dot.calc { background: var(--calculated); }
+    .key-dot.total-key { background: var(--accent-2); }
+    .shared-location { color: var(--map); }
+    .route-estimate { color: var(--warning); }
+    .calculated { color: var(--calculated); }
+    .total-badge {
+      display: inline-block;
+      margin: 0 .45rem .2rem 0;
+      padding: .12rem .42rem;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      font-size: .67rem;
+      letter-spacing: .07em;
+      vertical-align: middle;
+    }
+    .map-panel { margin: 0 0 1rem; overflow: hidden; }
+    .map-header { padding: 1rem 1.1rem .75rem; }
+    .map-header h2 { margin: 0; font-size: 1.2rem; }
+    .map-header p { margin: .2rem 0 0; color: var(--muted); font-size: .82rem; }
+    .trip-map-frame { display: block; width: 100%; height: 520px; border: 0; background: var(--panel-2); }
+    .map-legend { display: flex; flex-wrap: wrap; gap: .5rem 1rem; padding: .75rem 1rem; color: var(--muted); font-size: .82rem; }
+    .map-legend span { display: inline-flex; align-items: center; gap: .4rem; }
+    .route-swatch { width: 1.8rem; height: 0; border-top: 4px solid var(--accent-2); }
+    .route-swatch.planned { border-top-color: var(--warning); border-top-style: dashed; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; min-width: 920px; border-collapse: collapse; }
+    caption { padding: 1rem 1.1rem; text-align: left; font-size: 1.2rem; font-weight: 800; }
+    th, td { padding: .9rem 1rem; border-top: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--muted); background: var(--panel-2); font-size: .76rem; letter-spacing: .05em; text-transform: uppercase; }
+    tbody tr:hover { background: rgb(85 194 255 / .055); }
+    td:nth-child(n+4), th:nth-child(n+4) { text-align: right; white-space: nowrap; }
+    .total {
+      color: var(--accent-2);
+      font-weight: 800;
+      background: rgb(116 224 170 / .075);
+    }
+    tfoot .total td { border-top: 3px double var(--accent-2); }
+    .estimated { color: var(--warning); }
+    .notes { margin-top: 1rem; padding: 1rem 1.15rem; }
+    .notes h2 { margin: 0 0 .5rem; font-size: 1rem; }
+    .notes ul { margin: 0; padding-left: 1.2rem; color: var(--muted); }
+    footer { margin-top: 1.2rem; color: var(--muted); font-size: .82rem; text-align: center; }
+    @media (max-width: 760px) {
+      main { width: min(100% - 1rem, 1180px); padding-top: 1.25rem; }
+      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .card { padding: .85rem; }
+      .trip-map-frame { height: 400px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="eyebrow">West Coast → North Coast</div>
+      <h1>Jeremy's Trip to Cleveland</h1>
+      <p class="subtitle">Newhall, California to Cleveland, Ohio · August 2026</p>
+    </header>
+
+    <section class="summary" aria-label="Trip summary">
+      <article class="card">
+        <div class="label">Latest checkpoint</div>
+        <div class="value shared-location">Osceola, MO</div>
+      </article>
+      <article class="card">
+        <div class="label">Reported</div>
+        <div class="value shared-location">Aug. 17 <small>1:08 PM EDT</small></div>
+      </article>
+      <article class="card">
+        <div class="label">Estimated traveled</div>
+        <div class="value">1,892 <small>miles</small></div>
+      </article>
+      <article class="card">
+        <div class="label">Overall progress rate</div>
+        <div class="value">20.9–21.1 <small>mph</small></div>
+      </article>
+    </section>
+
+    <section class="progress-panel" aria-labelledby="trip-progress-title">
+      <div class="progress-heading">
+        <h2 id="trip-progress-title">Estimated trip progress</h2>
+        <div class="progress-percent">71%</div>
+      </div>
+      <div class="progress-track" role="progressbar" aria-label="Estimated trip completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="71">
+        <div class="progress-fill"></div>
+      </div>
+      <div class="progress-details">
+        <span>~1,892 miles traveled</span>
+        <span>~769 planned miles remaining</span>
+        <span>~2,661-mile planned route</span>
+      </div>
+    </section>
+
+    <section class="data-key" aria-labelledby="data-key-title">
+      <div class="key-title" id="data-key-title">Data key</div>
+      <span class="key-item"><span class="key-dot"></span>Direct text from Jeremy</span>
+      <span class="key-item"><span class="key-dot map"></span>Google Maps shared-location observation</span>
+      <span class="key-item"><span class="key-dot estimate"></span>Estimated or inferred</span>
+      <span class="key-item"><span class="key-dot calc"></span>Calculated from observations</span>
+      <span class="key-item"><span class="key-dot total-key"></span>Trip total</span>
+    </section>
+
+    <section class="map-panel" aria-labelledby="route-map-title">
+      <div class="map-header">
+        <h2 id="route-map-title">Checkpoint map</h2>
+        <p>Markers use approximate checkpoint coordinates. Lines connect observations in order and are not a turn-by-turn GPS trace.</p>
+      </div>
+      <iframe class="trip-map-frame" src="map.html" title="Interactive map of Jeremy's trip checkpoints" loading="lazy"></iframe>
+      <div class="map-legend" aria-label="Map legend">
+        <span><i class="route-swatch"></i>Recorded checkpoint path</span>
+        <span><i class="route-swatch planned"></i>Planned route</span>
+      </div>
+    </section>
+
+    <section class="table-wrap">
+      <table>
+        <caption>Trip segments</caption>
+        <thead>
+          <tr>
+            <th scope="col">Segment</th>
+            <th scope="col">Start — Ohio time</th>
+            <th scope="col">End — Ohio time</th>
+            <th scope="col">Est. distance</th>
+            <th scope="col">Elapsed</th>
+            <th scope="col">Avg. progress</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Newhall, CA → Arizona line</td>
+            <td class="estimated">Aug. 13, ~6:30–7:30 PM</td>
+            <td>Aug. 14, 12:34 AM</td>
+            <td class="route-estimate">~255 mi</td>
+            <td class="calculated">~5–6 hr</td>
+            <td class="calculated">~43–51 mph</td>
+          </tr>
+          <tr>
+            <td>Arizona line → Estelline, TX</td>
+            <td>Aug. 14, 12:34 AM</td>
+            <td class="shared-location">Aug. 15, 7:00 PM</td>
+            <td class="route-estimate">~895 mi</td>
+            <td class="calculated">42 hr 26 min</td>
+            <td class="calculated">~21.1 mph</td>
+          </tr>
+          <tr>
+            <td>Estelline, TX → Saginaw, TX</td>
+            <td class="shared-location">Aug. 15, 7:00 PM</td>
+            <td class="shared-location">Aug. 16, 10:15 AM</td>
+            <td class="route-estimate">~230 mi</td>
+            <td class="calculated">15 hr 15 min</td>
+            <td class="calculated">~15 mph</td>
+          </tr>
+          <tr>
+            <td>Saginaw, TX → Denison, TX</td>
+            <td class="shared-location">Aug. 16, 10:15 AM</td>
+            <td class="shared-location">Aug. 16, 12:30 PM</td>
+            <td class="route-estimate">~95 mi</td>
+            <td class="calculated">2 hr 15 min</td>
+            <td class="calculated">~42.2 mph</td>
+          </tr>
+          <tr>
+            <td>Denison, TX → Kenefic, OK</td>
+            <td class="shared-location">Aug. 16, 12:30 PM</td>
+            <td class="shared-location">Aug. 16, ~5:53 PM</td>
+            <td class="route-estimate">~38 mi</td>
+            <td class="calculated">5 hr 23 min</td>
+            <td class="calculated">~7.1 mph</td>
+          </tr>
+          <tr>
+            <td>Kenefic, OK → Savanna, OK<br><small>TA Express, 9062 US-69</small></td>
+            <td class="shared-location">Aug. 16, ~5:53 PM</td>
+            <td class="shared-location">Aug. 16, 11:32 PM</td>
+            <td class="route-estimate">~72 mi</td>
+            <td class="calculated">5 hr 39 min</td>
+            <td class="calculated">~12.7 mph</td>
+          </tr>
+          <tr>
+            <td>Savanna, OK → Joplin, MO<br><small>Sleep Inn South Joplin</small></td>
+            <td class="shared-location">Aug. 16, 11:32 PM</td>
+            <td class="shared-location">Aug. 17, 5:21 AM</td>
+            <td class="route-estimate">~189 mi</td>
+            <td class="calculated">5 hr 49 min</td>
+            <td class="calculated">~32.5 mph</td>
+          </tr>
+          <tr>
+            <td>Joplin, MO → Osceola, MO<br><small>12780 State Highway TT</small></td>
+            <td class="shared-location">Aug. 17, 5:21 AM</td>
+            <td class="shared-location">Aug. 17, 1:08 PM</td>
+            <td class="route-estimate">~118 mi</td>
+            <td class="calculated">7 hr 47 min</td>
+            <td class="calculated">~15.2 mph</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="total">
+            <td><span class="total-badge">TOTAL</span>Newhall, CA → Osceola, MO</td>
+            <td>Aug. 13, ~6:30–7:30 PM</td>
+            <td>Aug. 17, 1:08 PM</td>
+            <td>~1,892 mi</td>
+            <td>~89 hr 38 min–90 hr 38 min</td>
+            <td>~20.9–21.1 mph</td>
+          </tr>
+        </tfoot>
+      </table>
+    </section>
+
+    <aside class="notes">
+      <h2>Tracking notes</h2>
+      <ul>
+        <li><strong>Direct report:</strong> The Arizona state-line checkpoint came from Jeremy's text message at 12:34 AM EDT on August 14 saying he had “Just entered Arizona.”</li>
+        <li><strong>Google Maps observations:</strong> Jason recorded the later city and time updates while viewing the live location Jeremy shared through Google Maps.</li>
+        <li><strong>Map marker:</strong> The orange-and-white bow-tie avatar shown in the screenshots is Jeremy's Google profile image and identifies his shared position.</li>
+        <li><strong>Observation time:</strong> A Google Maps timestamp records when Jason checked Jeremy's location; it is not necessarily the exact arrival or departure time. Displayed times are rounded and shown in Ohio time (EDT).</li>
+        <li><strong>Kenefic timestamp:</strong> The screenshot was taken at 6:31 PM and showed Jeremy's location as 38 minutes old, producing an approximate location time of 5:53 PM EDT.</li>
+        <li><strong>Planned route:</strong> Google Maps estimates approximately 2,661 total miles for Newhall, California → Dallas area → Joplin, Missouri → Louisville, Kentucky → Cleveland, Ohio. Progress and remaining mileage use that planned-route total.</li>
+        <li><strong>Joplin checkpoint:</strong> Google Maps showed Jeremy at Sleep Inn South Joplin at 5:21 AM EDT (4:21 AM local). Its shared-location view displayed 748 miles from Jason, which appears to be direct geographic separation. Google Maps Directions showed 853 miles via the faster toll route and 916 miles via the selected longer no-toll route. Those direct-route options are informational; trip completion uses the full planned itinerary.</li>
+        <li><strong>Estimated:</strong> Jeremy's Newhall departure time was inferred from the Arizona report and the likely driving time of the bus-and-trailer combination. Segment road mileage is approximate route mileage.</li>
+        <li><strong>Calculated:</strong> Elapsed time, average progress, cumulative mileage, and percent complete are derived from the recorded observations and estimated road mileage.</li>
+        <li>Jeremy is driving a full-size conventional school bus towing a tandem-axle car hauler carrying a midsize SUV.</li>
+        <li>Average progress includes fuel, food, sleep, and other stops; it is not driving speed.</li>
+        <li>Provisional fuel economy estimate: about 6.5 MPG, with a likely range of 5–8 MPG depending on the engine, load, terrain, and speed.</li>
+      </ul>
+    </aside>
+
+    <footer>Last observed August 17, 2026 at 1:08 PM EDT</footer>
+  </main>
+</body>
+</html>
