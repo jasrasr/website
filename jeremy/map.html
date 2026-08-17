@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jeremy's Trip Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    html, body, #map { width: 100%; height: 100%; margin: 0; }
+    body { background: #101d2e; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .marker {
+      display: grid; place-items: center; width: 28px; height: 28px;
+      border: 2px solid #07111f; border-radius: 50%; background: #55c2ff;
+      color: #07111f; font-size: 12px; font-weight: 800; box-shadow: 0 2px 8px rgb(0 0 0 / .4);
+    }
+    .marker.latest { background: #74e0aa; }
+    .marker.planned { background: #ffd166; }
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #101d2e; color: #f4f7fb; }
+    .leaflet-popup-content { line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <div id="map" role="img" aria-label="Map of Jeremy's recorded trip checkpoints and planned route to Cleveland"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    (() => {
+      const recorded = [
+        { name: "Newhall, CA", time: "Aug. 13, ~6:30–7:30 PM EDT", lat: 34.379, lon: -118.540 },
+        { name: "Arizona line near Topock", time: "Aug. 14, 12:34 AM EDT", lat: 34.718, lon: -114.487 },
+        { name: "Estelline, TX", time: "Aug. 15, 7:00 PM EDT", lat: 34.546, lon: -100.437 },
+        { name: "Saginaw, TX", time: "Aug. 16, 10:15 AM EDT", lat: 32.861, lon: -97.364 },
+        { name: "Denison, TX", time: "Aug. 16, 12:30 PM EDT", lat: 33.755, lon: -96.536 },
+        { name: "Kenefic, OK", time: "Aug. 16, ~5:53 PM EDT", lat: 34.156, lon: -96.366 },
+        { name: "Savanna, OK", time: "Aug. 16, 11:32 PM EDT", lat: 34.833, lon: -95.839 },
+        { name: "Joplin, MO", time: "Aug. 17, 5:21 AM EDT", lat: 37.008, lon: -94.516 },
+        { name: "Osceola, MO", time: "Aug. 17, 1:08 PM EDT", lat: 38.046, lon: -93.704 }
+      ];
+      const planned = [
+        recorded[recorded.length - 1],
+        { name: "Louisville, KY", time: "Planned stop", lat: 38.253, lon: -85.759 },
+        { name: "Cleveland, OH", time: "Destination", lat: 41.499, lon: -81.694 }
+      ];
+      const map = L.map("map", { scrollWheelZoom: false });
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 18, attribution: "&copy; OpenStreetMap contributors"
+      }).addTo(map);
+      const icon = (label, type) => L.divIcon({
+        className: "", html: '<span class="marker ' + type + '">' + label + "</span>",
+        iconSize: [28, 28], iconAnchor: [14, 14]
+      });
+      recorded.forEach((point, index) => {
+        const type = index === recorded.length - 1 ? "latest" : "";
+        L.marker([point.lat, point.lon], { icon: icon(String(index + 1), type) })
+          .bindPopup("<strong>" + point.name + "</strong><br>" + point.time).addTo(map);
+      });
+      planned.slice(1).forEach((point) => {
+        L.marker([point.lat, point.lon], { icon: icon("P", "planned") })
+          .bindPopup("<strong>" + point.name + "</strong><br>" + point.time).addTo(map);
+      });
+      const traveled = L.polyline(recorded.map((point) => [point.lat, point.lon]), {
+        color: "#74e0aa", weight: 4
+      }).addTo(map);
+      const future = L.polyline(planned.map((point) => [point.lat, point.lon]), {
+        color: "#ffd166", weight: 4, dashArray: "10 8"
+      }).addTo(map);
+      map.fitBounds(traveled.getBounds().extend(future.getBounds()), { padding: [24, 24] });
+    })();
+  </script>
+</body>
+</html>
