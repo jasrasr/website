@@ -52,6 +52,7 @@
       box-shadow: 0 18px 50px rgb(0 0 0 / .18);
     }
     .card { padding: 1rem 1.1rem; }
+    .eta-card { grid-column: 1 / -1; }
     .label { color: var(--muted); font-size: .78rem; font-weight: 700; text-transform: uppercase; }
     .value { margin-top: .15rem; font-size: clamp(1.35rem, 3vw, 2rem); font-weight: 800; }
     .value small { color: var(--muted); font-size: .85rem; font-weight: 500; }
@@ -217,6 +218,10 @@
         <div class="label">Overall progress rate</div>
         <div class="value">20.8–21.0 <small>mph</small></div>
       </article>
+      <article class="card eta-card">
+        <div class="label">Estimated Cleveland arrival</div>
+        <div class="value estimated">Aug. 18 <small>~11:00 AM–2:00 PM EDT</small></div>
+      </article>
     </section>
 
     <section class="progress-panel" aria-labelledby="trip-progress-title">
@@ -360,6 +365,7 @@
         <li><strong>Observation time:</strong> A Google Maps timestamp records when Jason checked Jeremy's location; it is not necessarily the exact arrival or departure time. Displayed times are rounded and shown in Ohio time (EDT).</li>
         <li><strong>Kenefic timestamp:</strong> The screenshot was taken at 6:31 PM and showed Jeremy's location as 38 minutes old, producing an approximate location time of 5:53 PM EDT.</li>
         <li><strong>Richland timestamp:</strong> The screenshot was taken at 5:38 PM EDT and showed Jeremy’s position as two minutes old, producing an approximate observation time of 5:36 PM EDT near 18941 State Route A.</li>
+        <li><strong>Arrival estimate:</strong> Approximately 11:00 AM–2:00 PM EDT on August 18, based on Google’s roughly 12½-hour passenger-vehicle route from the current area plus additional time for the slower bus-and-trailer combination, fuel, and breaks. A full overnight stop would move the arrival later.</li>
         <li><strong>Planned route:</strong> Google Maps estimates approximately 2,661 total miles for Newhall, California → Dallas area → Joplin, Missouri → Louisville, Kentucky → Cleveland, Ohio. Progress and remaining mileage use that planned-route total.</li>
         <li><strong>Joplin checkpoint:</strong> Google Maps showed Jeremy at Sleep Inn South Joplin at 5:21 AM EDT (4:21 AM local). Its shared-location view displayed 748 miles from Jason, which appears to be direct geographic separation. Google Maps Directions showed 853 miles via the faster toll route and 916 miles via the selected longer no-toll route. Those direct-route options are informational; trip completion uses the full planned itinerary.</li>
         <li><strong>Estimated:</strong> Jeremy's Newhall departure time was inferred from the Arizona report and the likely driving time of the bus-and-trailer combination. Segment road mileage is approximate route mileage.</li>
