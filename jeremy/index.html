@@ -80,7 +80,7 @@
       background: #07111f;
     }
     .progress-fill {
-      width: 68%;
+      width: 67%;
       height: 100%;
       border-radius: inherit;
       background: linear-gradient(90deg, var(--accent), var(--accent-2));
@@ -88,8 +88,9 @@
     }
     .progress-details {
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
-      gap: 1rem;
+      gap: .35rem 1rem;
       margin-top: .55rem;
       color: var(--muted);
       font-size: .82rem;
@@ -167,7 +168,7 @@
         <div class="value shared-location">Aug. 17 <small>5:21 AM EDT</small></div>
       </article>
       <article class="card">
-        <div class="label">Estimated distance</div>
+        <div class="label">Estimated traveled</div>
         <div class="value">1,774 <small>miles</small></div>
       </article>
       <article class="card">
@@ -179,14 +180,15 @@
     <section class="progress-panel" aria-labelledby="trip-progress-title">
       <div class="progress-heading">
         <h2 id="trip-progress-title">Estimated trip progress</h2>
-        <div class="progress-percent">68%</div>
+        <div class="progress-percent">67%</div>
       </div>
-      <div class="progress-track" role="progressbar" aria-label="Estimated trip completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="68">
+      <div class="progress-track" role="progressbar" aria-label="Estimated trip completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="67">
         <div class="progress-fill"></div>
       </div>
       <div class="progress-details">
         <span>~1,774 miles traveled</span>
-        <span>~853 road miles remaining</span>
+        <span>~887 planned miles remaining</span>
+        <span>~2,661-mile planned route</span>
       </div>
     </section>
 
@@ -291,7 +293,8 @@
         <li><strong>Map marker:</strong> The orange-and-white bow-tie avatar shown in the screenshots is Jeremy's Google profile image and identifies his shared position.</li>
         <li><strong>Observation time:</strong> A Google Maps timestamp records when Jason checked Jeremy's location; it is not necessarily the exact arrival or departure time. Displayed times are rounded and shown in Ohio time (EDT).</li>
         <li><strong>Kenefic timestamp:</strong> The screenshot was taken at 6:31 PM and showed Jeremy's location as 38 minutes old, producing an approximate location time of 5:53 PM EDT.</li>
-        <li><strong>Joplin checkpoint:</strong> Google Maps showed Jeremy at Sleep Inn South Joplin at 5:21 AM EDT (4:21 AM local). Its shared-location view displayed 748 miles from Jason, which appears to be direct geographic separation. Google Maps Directions showed 853 miles via the faster toll route and 916 miles via the selected longer no-toll route. The tracker uses 853 road miles remaining.</li>
+        <li><strong>Planned route:</strong> Google Maps estimates approximately 2,661 total miles for Newhall, California → Dallas area → Joplin, Missouri → Louisville, Kentucky → Cleveland, Ohio. Progress and remaining mileage use that planned-route total.</li>
+        <li><strong>Joplin checkpoint:</strong> Google Maps showed Jeremy at Sleep Inn South Joplin at 5:21 AM EDT (4:21 AM local). Its shared-location view displayed 748 miles from Jason, which appears to be direct geographic separation. Google Maps Directions showed 853 miles via the faster toll route and 916 miles via the selected longer no-toll route. Those direct-route options are informational; trip completion uses the full planned itinerary.</li>
         <li><strong>Estimated:</strong> Jeremy's Newhall departure time was inferred from the Arizona report and the likely driving time of the bus-and-trailer combination. Segment road mileage is approximate route mileage.</li>
         <li><strong>Calculated:</strong> Elapsed time, average progress, cumulative mileage, and percent complete are derived from the recorded observations and estimated road mileage.</li>
         <li>Jeremy is driving a short bus and towing a car hauler carrying an SUV.</li>
