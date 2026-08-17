@@ -220,7 +220,7 @@
       </article>
       <article class="card eta-card" id="arrival-estimate" data-observed="2026-08-17T17:36:00-04:00" data-remaining-miles="813">
         <div class="label">Estimated Cleveland arrival</div>
-        <div class="value estimated" id="arrival-estimate-value">Aug. 18 <small>~2:40–6:15 PM EDT</small></div>
+        <div class="value estimated" id="arrival-estimate-value">Aug. 18 <small>~3:40–7:15 PM EDT</small></div>
       </article>
     </section>
 
@@ -365,7 +365,7 @@
         <li><strong>Observation time:</strong> A Google Maps timestamp records when Jason checked Jeremy's location; it is not necessarily the exact arrival or departure time. Displayed times are rounded and shown in Ohio time (EDT).</li>
         <li><strong>Kenefic timestamp:</strong> The screenshot was taken at 6:31 PM and showed Jeremy's location as 38 minutes old, producing an approximate location time of 5:53 PM EDT.</li>
         <li><strong>Richland timestamp:</strong> The screenshot was taken at 5:38 PM EDT and showed Jeremy’s position as two minutes old, producing an approximate observation time of 5:36 PM EDT near 18941 State Route A.</li>
-        <li><strong>Arrival estimate:</strong> Recalculated from the newest confirmed waypoint, its observation time, and planned miles remaining. The projection uses an effective progress range of approximately 34–40 MPH for the slower bus-and-trailer combination, then adds a 15-minute stop for every 250 miles remaining. A full overnight stop would move the arrival later.</li>
+        <li><strong>Arrival estimate:</strong> Recalculated from the newest confirmed waypoint, its observation time, and planned miles remaining. The projection uses an effective progress range of approximately 34–40 MPH for the slower bus-and-trailer combination, adds a 15-minute stop for every 250 miles remaining, and includes a fixed one-hour stop in Sellersburg. A full overnight stop would move the arrival later.</li>
         <li><strong>Planned route:</strong> The revised planning baseline is approximately 2,787 miles: about 1,974 estimated miles traveled through Richland plus Google Maps’ current 813-mile road route to Cleveland via the planned stop. Progress and remaining mileage use this revised baseline.</li>
         <li><strong>Joplin checkpoint:</strong> Google Maps showed Jeremy at Sleep Inn South Joplin at 5:21 AM EDT (4:21 AM local). Its shared-location view displayed 748 miles from Jason, which appears to be direct geographic separation. Google Maps Directions showed 853 miles via the faster toll route and 916 miles via the selected longer no-toll route. Those direct-route options are informational; trip completion uses the full planned itinerary.</li>
         <li><strong>Estimated:</strong> Jeremy's Newhall departure time was inferred from the Arizona report and the likely driving time of the bus-and-trailer combination. Segment road mileage is approximate route mileage.</li>
@@ -390,7 +390,8 @@
 
       const roundFiveMinutes = (date) => new Date(Math.round(date.getTime() / 300000) * 300000);
       const plannedStopMinutes = Math.floor(remaining / 250) * 15;
-      const plannedStopMilliseconds = plannedStopMinutes * 60000;
+      const sellersburgStopMinutes = 60;
+      const plannedStopMilliseconds = (plannedStopMinutes + sellersburgStopMinutes) * 60000;
       const earliest = roundFiveMinutes(new Date(observed.getTime() + (remaining / 40) * 3600000 + plannedStopMilliseconds));
       const latest = roundFiveMinutes(new Date(observed.getTime() + (remaining / 34) * 3600000 + plannedStopMilliseconds));
       const zone = "America/New_York";
