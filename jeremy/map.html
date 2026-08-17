@@ -17,9 +17,21 @@
     .marker.planned { background: #ffd166; }
     .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #101d2e; color: #f4f7fb; }
     .leaflet-popup-content { line-height: 1.4; }
+    .map-nav {
+      position: fixed; top: 12px; left: 50%; z-index: 1000;
+      transform: translateX(-50%);
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 44px; padding: .65rem 1rem;
+      border: 2px solid #55c2ff; border-radius: 999px;
+      background: #07111f; color: #f4f7fb;
+      box-shadow: 0 4px 16px rgb(0 0 0 / .45);
+      font-weight: 800; text-decoration: none; white-space: nowrap;
+    }
+    .map-nav:hover, .map-nav:focus-visible { background: #15263b; }
   </style>
 </head>
 <body>
+  <a class="map-nav" href="index.html">← Back to trip tracker</a>
   <div id="map" role="img" aria-label="Map of Jeremy's recorded trip checkpoints and planned route to Cleveland"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
