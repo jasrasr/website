@@ -81,7 +81,7 @@
       background: #07111f;
     }
     .progress-fill {
-      width: 79%;
+      width: 87%;
       height: 100%;
       border-radius: inherit;
       background: linear-gradient(90deg, var(--accent), var(--accent-2));
@@ -204,37 +204,37 @@
     <section class="summary" aria-label="Trip summary">
       <article class="card">
         <div class="label">Latest checkpoint</div>
-        <div class="value shared-location">New Baden, IL</div>
+        <div class="value shared-location">Sellersburg, IN</div>
       </article>
       <article class="card">
         <div class="label">Reported</div>
-        <div class="value shared-location">Aug. 18 <small>~5:28 AM EDT</small></div>
+        <div class="value shared-location">Aug. 18 <small>~5:07 PM EDT</small></div>
       </article>
       <article class="card">
         <div class="label">Estimated traveled</div>
-        <div class="value">2,204 <small>miles</small></div>
+        <div class="value">2,442 <small>miles</small></div>
       </article>
       <article class="card">
         <div class="label">Overall progress rate</div>
         <div class="value">20.6–20.8 <small>mph</small></div>
       </article>
-      <article class="card eta-card" id="arrival-estimate" data-observed="2026-08-18T05:28:00-04:00" data-remaining-miles="596">
+      <article class="card eta-card" id="arrival-estimate" data-observed="2026-08-18T17:07:00-04:00" data-remaining-miles="358" data-sellersburg-stop-minutes="60">
         <div class="label">Estimated Cleveland arrival</div>
-        <div class="value estimated" id="arrival-estimate-value">Aug. 18 <small>~9:50 PM – Aug. 19, 12:30 AM EDT</small></div>
+        <div class="value estimated" id="arrival-estimate-value">Aug. 19 <small>~3:20–4:55 AM EDT</small></div>
       </article>
     </section>
 
     <section class="progress-panel" aria-labelledby="trip-progress-title">
       <div class="progress-heading">
         <h2 id="trip-progress-title">Estimated trip progress</h2>
-        <div class="progress-percent">79%</div>
+        <div class="progress-percent">87%</div>
       </div>
-      <div class="progress-track" role="progressbar" aria-label="Estimated trip completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="79">
+      <div class="progress-track" role="progressbar" aria-label="Estimated trip completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="87">
         <div class="progress-fill"></div>
       </div>
       <div class="progress-details">
-        <span>~2,204 miles traveled</span>
-        <span>~596 estimated road miles remaining</span>
+        <span>~2,442 miles traveled</span>
+        <span>~358 estimated road miles remaining</span>
         <span>~2,800-mile revised planned route</span>
       </div>
     </section>
@@ -366,14 +366,30 @@
             <td class="calculated">8 hr 25 min</td>
             <td class="calculated">~24.6 mph</td>
           </tr>
+          <tr>
+            <td>New Baden, IL → Santa Claus, IN<br><small>Santa’s Cottages, 1405 W Christmas Boulevard</small></td>
+            <td class="shared-location">Aug. 18, ~5:28 AM</td>
+            <td class="shared-location">Aug. 18, 3:11 PM</td>
+            <td class="route-estimate">~165 mi</td>
+            <td class="calculated">9 hr 43 min</td>
+            <td class="calculated">~17.0 mph</td>
+          </tr>
+          <tr>
+            <td>Santa Claus, IN → Sellersburg, IN<br><small>947 S Indiana Avenue</small></td>
+            <td class="shared-location">Aug. 18, 3:11 PM</td>
+            <td class="shared-location">Aug. 18, ~5:07 PM</td>
+            <td class="route-estimate">~73 mi</td>
+            <td class="calculated">1 hr 56 min</td>
+            <td class="calculated">~37.8 mph</td>
+          </tr>
         </tbody>
         <tfoot>
           <tr class="total">
-            <td><span class="total-badge">TOTAL</span>Newhall, CA → New Baden, IL</td>
+            <td><span class="total-badge">TOTAL</span>Newhall, CA → Sellersburg, IN</td>
             <td>Aug. 13, ~6:30–7:30 PM</td>
-            <td>Aug. 18, ~5:28 AM</td>
-            <td>~2,204 mi</td>
-            <td>~105 hr 58 min–106 hr 58 min</td>
+            <td>Aug. 18, ~5:07 PM</td>
+            <td>~2,442 mi</td>
+            <td>~117 hr 37 min–118 hr 37 min</td>
             <td>~20.6–20.8 mph</td>
           </tr>
         </tfoot>
@@ -393,8 +409,10 @@
         <li><strong>Osage Beach checkpoint:</strong> The screenshot was taken at 9:04 PM EDT and showed Jeremy’s position as one minute old, producing an approximate observation time of 9:03 PM EDT near 4252 US-54. The displayed 618 miles is treated as direct geographic separation rather than road mileage.</li>
         <li><strong>Missouri backtrack:</strong> The confirmed path from Richland west to Linn Creek and then north to Osage Beach added approximately 23 tracked road miles and 3 hr 27 min of elapsed trip time. That detour is included in cumulative mileage, overall progress rate, the revised route total, and the arrival estimate; the elapsed period may also include stopped time.</li>
         <li><strong>New Baden checkpoint:</strong> The screenshot was taken at 5:29 AM EDT on August 18 and showed Jeremy’s position as one minute old, producing an approximate observation time of 5:28 AM EDT at Love’s Travel Stop near New Baden, Illinois. The displayed 466 miles is treated as direct geographic separation rather than road mileage.</li>
+        <li><strong>Santa Claus checkpoint:</strong> Google Maps showed Jeremy at Santa’s Cottages near 1405 W Christmas Boulevard at 3:11 PM EDT on August 18. The displayed 395 miles is treated as direct geographic separation rather than road mileage.</li>
+        <li><strong>Sellersburg checkpoint:</strong> The screenshot was taken at 5:08 PM EDT and showed Jeremy’s position as one minute old, producing an approximate observation time of 5:07 PM EDT near 947 S Indiana Avenue. The displayed 330 miles is treated as direct geographic separation rather than road mileage. The ETA includes the planned one-hour Sellersburg stop beginning from this checkpoint.</li>
         <li><strong>Arrival estimate:</strong> Recalculated from the newest confirmed waypoint, its observation time, and planned miles remaining. The projection uses an effective progress range of approximately 34–40 MPH for the slower bus-and-trailer combination, adds a 15-minute stop for every 250 miles remaining, and includes a fixed one-hour stop in Sellersburg. A full overnight stop would move the arrival later.</li>
-        <li><strong>Planned route:</strong> The revised planning baseline is approximately 2,800 miles: about 2,204 estimated miles traveled through New Baden plus approximately 596 road miles remaining, derived from the prior route estimate minus the estimated Osage Beach-to-New Baden road segment to Cleveland via the planned stop. Progress and remaining mileage use this revised baseline.</li>
+        <li><strong>Planned route:</strong> The revised planning baseline is approximately 2,800 miles: about 2,442 estimated miles traveled through Sellersburg plus approximately 358 road miles remaining along the Cincinnati–Columbus–Cleveland route to Cleveland via the planned stop. Progress and remaining mileage use this revised baseline.</li>
         <li><strong>Joplin checkpoint:</strong> Google Maps showed Jeremy at Sleep Inn South Joplin at 5:21 AM EDT (4:21 AM local). Its shared-location view displayed 748 miles from Jason, which appears to be direct geographic separation. Google Maps Directions showed 853 miles via the faster toll route and 916 miles via the selected longer no-toll route. Those direct-route options are informational; trip completion uses the full planned itinerary.</li>
         <li><strong>Estimated:</strong> Jeremy's Newhall departure time was inferred from the Arizona report and the likely driving time of the bus-and-trailer combination. Segment road mileage is approximate route mileage.</li>
         <li><strong>Calculated:</strong> Elapsed time, average progress, cumulative mileage, and percent complete are derived from the recorded observations and estimated road mileage.</li>
@@ -404,7 +422,7 @@
       </ul>
     </aside>
 
-    <footer>Last observed August 18, 2026 at approximately 5:28 AM EDT</footer>
+    <footer>Last observed August 18, 2026 at approximately 5:07 PM EDT</footer>
   </main>
   <script>
     (() => {
@@ -418,7 +436,7 @@
 
       const roundFiveMinutes = (date) => new Date(Math.round(date.getTime() / 300000) * 300000);
       const plannedStopMinutes = Math.floor(remaining / 250) * 15;
-      const sellersburgStopMinutes = 60;
+      const sellersburgStopMinutes = Number(card.dataset.sellersburgStopMinutes || 0);
       const plannedStopMilliseconds = (plannedStopMinutes + sellersburgStopMinutes) * 60000;
       const earliest = roundFiveMinutes(new Date(observed.getTime() + (remaining / 40) * 3600000 + plannedStopMilliseconds));
       const latest = roundFiveMinutes(new Date(observed.getTime() + (remaining / 34) * 3600000 + plannedStopMilliseconds));
