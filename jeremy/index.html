@@ -170,7 +170,9 @@
       vertical-align: middle;
     }
     .table-wrap { overflow-x: auto; }
-    table { width: 100%; min-width: 920px; border-collapse: collapse; }
+    table { width: 100%; min-width: 780px; border-collapse: collapse; }
+    th:first-child, td:first-child { width: 21%; min-width: 135px; }
+    th:nth-child(2), td:nth-child(2), th:nth-child(3), td:nth-child(3) { min-width: 116px; }
     caption { padding: 1rem 1.1rem; text-align: left; font-size: 1.2rem; font-weight: 800; }
     th, td { padding: .9rem 1rem; border-top: 1px solid var(--line); text-align: left; vertical-align: top; }
     th { color: var(--muted); background: var(--panel-2); font-size: .76rem; letter-spacing: .05em; text-transform: uppercase; }
@@ -191,6 +193,8 @@
       main { width: min(100% - 1rem, 1180px); padding-top: 1.25rem; }
       .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .card { padding: .85rem; }
+      table { min-width: 760px; }
+      th, td { padding: .75rem .65rem; }
     }
   </style>
 </head>
@@ -313,7 +317,7 @@
             <td class="calculated">~7.1 mph</td>
           </tr>
           <tr>
-            <td>Kenefic, OK → Savanna, OK<br><small>TA Express, 9062 US-69</small></td>
+            <td>Kenefic, OK → Savanna, OK</td>
             <td class="shared-location">Aug. 16, ~5:53 PM</td>
             <td class="shared-location">Aug. 16, 11:32 PM</td>
             <td class="route-estimate">~72 mi</td>
@@ -321,7 +325,7 @@
             <td class="calculated">~12.7 mph</td>
           </tr>
           <tr>
-            <td>Savanna, OK → Joplin, MO<br><small>Sleep Inn South Joplin</small></td>
+            <td>Savanna, OK → Joplin, MO</td>
             <td class="shared-location">Aug. 16, 11:32 PM</td>
             <td class="shared-location">Aug. 17, 5:21 AM</td>
             <td class="route-estimate">~189 mi</td>
@@ -329,7 +333,7 @@
             <td class="calculated">~32.5 mph</td>
           </tr>
           <tr>
-            <td>Joplin, MO → Osceola, MO<br><small>12780 State Highway TT</small></td>
+            <td>Joplin, MO → Osceola, MO</td>
             <td class="shared-location">Aug. 17, 5:21 AM</td>
             <td class="shared-location">Aug. 17, 1:08 PM</td>
             <td class="route-estimate">~118 mi</td>
@@ -337,7 +341,7 @@
             <td class="calculated">~15.2 mph</td>
           </tr>
           <tr>
-            <td>Osceola, MO → Richland, MO<br><small>18941 State Route A</small></td>
+            <td>Osceola, MO → Richland, MO</td>
             <td class="shared-location">Aug. 17, 1:08 PM</td>
             <td class="shared-location">Aug. 17, ~5:36 PM</td>
             <td class="route-estimate">~82 mi</td>
@@ -345,7 +349,7 @@
             <td class="calculated">~18.4 mph</td>
           </tr>
           <tr>
-            <td>Richland, MO → Linn Creek, MO<br><small>State Route A near US-54</small></td>
+            <td>Richland, MO → Linn Creek, MO</td>
             <td class="shared-location">Aug. 17, ~5:36 PM</td>
             <td class="shared-location">Aug. 17, 6:19 PM</td>
             <td class="route-estimate">~13 mi</td>
@@ -353,7 +357,7 @@
             <td class="calculated">~18.1 mph</td>
           </tr>
           <tr>
-            <td>Linn Creek, MO → Osage Beach, MO<br><small>4252 US-54</small></td>
+            <td>Linn Creek, MO → Osage Beach, MO</td>
             <td class="shared-location">Aug. 17, 6:19 PM</td>
             <td class="shared-location">Aug. 17, ~9:03 PM</td>
             <td class="route-estimate">~10 mi</td>
@@ -361,7 +365,7 @@
             <td class="calculated">~3.7 mph</td>
           </tr>
           <tr>
-            <td>Osage Beach, MO → New Baden, IL<br><small>Love’s Travel Stop, 8690 Richter School Road</small></td>
+            <td>Osage Beach, MO → New Baden, IL</td>
             <td class="shared-location">Aug. 17, ~9:03 PM</td>
             <td class="shared-location">Aug. 18, ~5:28 AM</td>
             <td class="route-estimate">~207 mi</td>
@@ -369,7 +373,7 @@
             <td class="calculated">~24.6 mph</td>
           </tr>
           <tr>
-            <td>New Baden, IL → Santa Claus, IN<br><small>Santa’s Cottages, 1405 W Christmas Boulevard</small></td>
+            <td>New Baden, IL → Santa Claus, IN</td>
             <td class="shared-location">Aug. 18, ~5:28 AM</td>
             <td class="shared-location">Aug. 18, 3:11 PM</td>
             <td class="route-estimate">~165 mi</td>
@@ -377,7 +381,7 @@
             <td class="calculated">~17.0 mph</td>
           </tr>
           <tr>
-            <td>Santa Claus, IN → Sellersburg, IN<br><small>947 S Indiana Avenue</small></td>
+            <td>Santa Claus, IN → Sellersburg, IN</td>
             <td class="shared-location">Aug. 18, 3:11 PM</td>
             <td class="shared-location">Aug. 18, ~5:07 PM</td>
             <td class="route-estimate">~73 mi</td>
@@ -385,7 +389,7 @@
             <td class="calculated">~37.8 mph</td>
           </tr>
           <tr>
-            <td>Sellersburg arrival → Sellersburg overnight stop<br><small>Lakeside Drive area</small></td>
+            <td>Sellersburg, IN → Sellersburg, IN</td>
             <td class="shared-location">Aug. 18, ~5:07 PM</td>
             <td class="shared-location">Aug. 19, ~6:32 AM</td>
             <td class="route-estimate">~2 mi local movement</td>
