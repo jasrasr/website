@@ -170,14 +170,18 @@
       vertical-align: middle;
     }
     .table-wrap { overflow-x: auto; }
-    table { width: 100%; min-width: 780px; border-collapse: collapse; }
-    th:first-child, td:first-child { width: 21%; min-width: 135px; }
-    th:nth-child(2), td:nth-child(2), th:nth-child(3), td:nth-child(3) { min-width: 116px; }
+    table { width: 100%; min-width: 680px; table-layout: fixed; border-collapse: collapse; }
+    th:first-child, td:first-child { width: 128px; }
+    th:nth-child(2), td:nth-child(2), th:nth-child(3), td:nth-child(3) { width: 110px; }
+    th:nth-child(4), td:nth-child(4) { width: 100px; }
+    th:nth-child(5), td:nth-child(5) { width: 105px; }
+    th:nth-child(6), td:nth-child(6) { width: 115px; }
     caption { padding: 1rem 1.1rem; text-align: left; font-size: 1.2rem; font-weight: 800; }
     th, td { padding: .9rem 1rem; border-top: 1px solid var(--line); text-align: left; vertical-align: top; }
     th { color: var(--muted); background: var(--panel-2); font-size: .76rem; letter-spacing: .05em; text-transform: uppercase; }
     tbody tr:hover { background: rgb(85 194 255 / .055); }
-    td:nth-child(n+4), th:nth-child(n+4) { text-align: right; white-space: nowrap; }
+    td:nth-child(n+4), th:nth-child(n+4) { text-align: right; }
+    td:nth-child(n+4) { white-space: nowrap; }
     .total {
       color: var(--accent-2);
       font-weight: 800;
@@ -193,8 +197,9 @@
       main { width: min(100% - 1rem, 1180px); padding-top: 1.25rem; }
       .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .card { padding: .85rem; }
-      table { min-width: 760px; }
-      th, td { padding: .75rem .65rem; }
+      table { min-width: 668px; }
+      th, td { padding: .5rem .4rem; }
+      th { font-size: .7rem; line-height: 1.25; }
     }
   </style>
 </head>
