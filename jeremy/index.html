@@ -53,6 +53,7 @@
     }
     .card { padding: 1rem 1.1rem; }
     .eta-card { grid-column: 1 / -1; }
+    .eta-basis { margin: .35rem 0 0; color: var(--muted); font-size: .85rem; }
     .label { color: var(--muted); font-size: .78rem; font-weight: 700; text-transform: uppercase; }
     .value { margin-top: .15rem; font-size: clamp(1.35rem, 3vw, 2rem); font-weight: 800; }
     .value small { color: var(--muted); font-size: .85rem; font-weight: 500; }
@@ -218,9 +219,10 @@
         <div class="label">Overall progress rate</div>
         <div class="value">18.5–18.7 <small>mph</small></div>
       </article>
-      <article class="card eta-card" id="arrival-estimate" data-observed="2026-08-19T06:32:00-04:00" data-remaining-miles="356" data-sellersburg-stop-minutes="0">
+      <article class="card eta-card" id="arrival-estimate" data-leave-time="2026-08-19T06:32:00-04:00" data-remaining-miles="356" data-travel-mph="60" data-stop-minutes="15">
         <div class="label">Estimated Cleveland arrival</div>
-        <div class="value estimated" id="arrival-estimate-value">Aug. 19 <small>~3:40–5:15 PM EDT</small></div>
+        <div class="value estimated" id="arrival-estimate-value">Aug. 19 <small>~12:43 PM EDT</small></div>
+        <p class="eta-basis" id="arrival-estimate-basis">Based on an assumed Sellersburg leave time of 6:32 AM EDT, 356 miles at 60 MPH, and one 15-minute stop.</p>
       </article>
     </section>
 
@@ -420,7 +422,7 @@
         <li><strong>Santa Claus checkpoint:</strong> Google Maps showed Jeremy at Santa’s Cottages near 1405 W Christmas Boulevard at 3:11 PM EDT on August 18. The displayed 395 miles is treated as direct geographic separation rather than road mileage.</li>
         <li><strong>Sellersburg checkpoint:</strong> The screenshot was taken at 5:08 PM EDT and showed Jeremy’s position as one minute old, producing an approximate observation time of 5:07 PM EDT near 947 S Indiana Avenue. The displayed 330 miles is treated as direct geographic separation rather than road mileage.</li>
         <li><strong>Sellersburg overnight stop:</strong> A second shared-location observation placed Jeremy near Lakeside Drive at approximately 6:32 AM EDT on August 19, 13 hr 25 min after the first Sellersburg observation. Approximately two miles of local movement is estimated; nearly all of the elapsed period is treated as stopped time. The displayed 297 miles is direct geographic separation.</li>
-        <li><strong>Arrival estimate:</strong> Recalculated from the newest confirmed waypoint, its observation time, and planned miles remaining. The projection uses an effective progress range of approximately 34–40 MPH for the slower bus-and-trailer combination and adds a 15-minute stop for every 250 miles remaining. The completed Sellersburg overnight stop is included in elapsed trip time but is no longer added to the future ETA.</li>
+        <li><strong>Arrival estimate:</strong> Calculated from the Sellersburg leave time, approximately 356 road miles remaining, 60 MPH while traveling, and one 15-minute stop. Until eastbound movement confirms the actual departure, 6:32 AM EDT is an assumed leave time. If Jeremy remains parked, the ETA shifts later minute-for-minute; after departure is confirmed, future updates use the confirmed leave time.</li>
         <li><strong>Planned route:</strong> The revised planning baseline is approximately 2,800 miles: about 2,444 estimated miles traveled through the Sellersburg overnight stop plus approximately 356 road miles remaining along the Cincinnati–Columbus–Cleveland route to Cleveland via the planned stop. Progress and remaining mileage use this revised baseline.</li>
         <li><strong>Joplin checkpoint:</strong> Google Maps showed Jeremy at Sleep Inn South Joplin at 5:21 AM EDT (4:21 AM local). Its shared-location view displayed 748 miles from Jason, which appears to be direct geographic separation. Google Maps Directions showed 853 miles via the faster toll route and 916 miles via the selected longer no-toll route. Those direct-route options are informational; trip completion uses the full planned itinerary.</li>
         <li><strong>Estimated:</strong> Jeremy's Newhall departure time was inferred from the Arizona report and the likely driving time of the bus-and-trailer combination. Segment road mileage is approximate route mileage.</li>
@@ -439,29 +441,21 @@
       const output = document.getElementById("arrival-estimate-value");
       if (!card || !output) return;
 
-      const observed = new Date(card.dataset.observed);
+      const leaveTime = new Date(card.dataset.leaveTime);
       const remaining = Number(card.dataset.remainingMiles);
-      if (Number.isNaN(observed.getTime()) || !Number.isFinite(remaining)) return;
+      const travelMph = Number(card.dataset.travelMph);
+      const stopMinutes = Number(card.dataset.stopMinutes);
+      if (Number.isNaN(leaveTime.getTime()) || !Number.isFinite(remaining) || travelMph <= 0 || !Number.isFinite(stopMinutes)) return;
 
-      const roundFiveMinutes = (date) => new Date(Math.round(date.getTime() / 300000) * 300000);
-      const plannedStopMinutes = Math.floor(remaining / 250) * 15;
-      const sellersburgStopMinutes = Number(card.dataset.sellersburgStopMinutes || 0);
-      const plannedStopMilliseconds = (plannedStopMinutes + sellersburgStopMinutes) * 60000;
-      const earliest = roundFiveMinutes(new Date(observed.getTime() + (remaining / 40) * 3600000 + plannedStopMilliseconds));
-      const latest = roundFiveMinutes(new Date(observed.getTime() + (remaining / 34) * 3600000 + plannedStopMilliseconds));
+      const travelMilliseconds = (remaining / travelMph) * 3600000;
+      const arrival = new Date(leaveTime.getTime() + travelMilliseconds + stopMinutes * 60000);
       const zone = "America/New_York";
       const dateFormat = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: zone });
       const timeFormat = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: zone });
       const zoneFormat = new Intl.DateTimeFormat("en-US", { timeZone: zone, timeZoneName: "short" });
-      const zoneName = zoneFormat.formatToParts(latest).find((part) => part.type === "timeZoneName")?.value || "ET";
-      const firstDate = dateFormat.format(earliest);
-      const lastDate = dateFormat.format(latest);
+      const zoneName = zoneFormat.formatToParts(arrival).find((part) => part.type === "timeZoneName")?.value || "ET";
 
-      if (firstDate === lastDate) {
-        output.innerHTML = firstDate + " <small>~" + timeFormat.format(earliest) + "–" + timeFormat.format(latest) + " " + zoneName + "</small>";
-      } else {
-        output.innerHTML = firstDate + " <small>~" + timeFormat.format(earliest) + " – " + lastDate + ", " + timeFormat.format(latest) + " " + zoneName + "</small>";
-      }
+      output.innerHTML = dateFormat.format(arrival) + " <small>~" + timeFormat.format(arrival) + " " + zoneName + "</small>";
     })();
   </script>
 </body>
