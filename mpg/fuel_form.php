@@ -2,10 +2,12 @@
 // ============================================================================
 // File: fuel_form.php
 // Purpose: Manual fuel entry form with fill, station, and location assistance
-// Revision: 2.7
+// Revision: 2.8
 // Author: Jason Lamb
 //
 // Revision Notes:
+// 2.8 - Fix Price / Total / Gallons auto-calculation so the two most recently
+//       entered values remain authoritative and only the third field is calculated.
 // 2.7 - Add saved station profiles, GPS nearby-station lookup, and data-driven
 //       partial-fill prompting based on historical median fill volume.
 // 2.6 - Add Full/Partial selector, comments, learned station brands, and GPS.
@@ -95,22 +97,41 @@ body{font-family:sans-serif;max-width:900px;margin:auto;padding:2rem 1rem;}label
 <button type="submit" id="submitBtn">Save Entry</button>
 </form>
 <?php include 'menu.php'; ?>
-<div style="margin-top:2rem;padding-top:.5rem;border-top:1px solid #ddd;color:#aaa;font-size:.75rem;text-align:center;">fuel_form.php — Rev 2.7 — Updated: <?php $mt=new DateTime('@'.filemtime(__FILE__));$mt->setTimezone(new DateTimeZone('America/New_York'));echo $mt->format('Y-m-d H:i (g:i A T)');?></div>
+<div style="margin-top:2rem;padding-top:.5rem;border-top:1px solid #ddd;color:#aaa;font-size:.75rem;text-align:center;">fuel_form.php — Rev 2.8 — Updated: <?php $mt=new DateTime('@'.filemtime(__FILE__));$mt->setTimezone(new DateTimeZone('America/New_York'));echo $mt->format('Y-m-d H:i (g:i A T)');?></div>
 <script>
 const price=document.getElementById('price'),total=document.getElementById('total'),gallons=document.getElementById('gallons');
 const stationProfiles=<?=json_encode($stationLocations,JSON_UNESCAPED_SLASHES)?>;
 let nearbyCandidates=[];let lastPromptGallons=null;
-function num(v){return v===''?null:parseFloat(v)}function resetCalc(el){el.readOnly=false;el.classList.remove('calculated')}function setCalc(el,val,dec){el.value=val.toFixed(dec);el.readOnly=true;el.classList.add('calculated')}
+const fuelFields=[price,total,gallons];
+let manualOrder=[];
+function num(v){return v===''?null:parseFloat(v)}
+function resetCalc(el){el.readOnly=false;el.classList.remove('calculated')}
+function setCalc(el,val,dec){el.value=val.toFixed(dec);el.readOnly=true;el.classList.add('calculated')}
 function normalizedPrice(p){if(p===null)return null;const raw=price.value.trim();const decimals=raw.includes('.')?raw.split('.')[1].length:0;return decimals<=2?p+.009:p}
-function calculate(){const p=num(price.value),t=num(total.value),g=num(gallons.value);[price,total,gallons].forEach(resetCalc);const filled=[p,t,g].filter(v=>v!==null).length;if(filled!==2)return;const np=normalizedPrice(p);if(p!==null&&g!==null)setCalc(total,np*g,2);else if(p!==null&&t!==null&&np>0)setCalc(gallons,t/np,3);else if(g!==null&&t!==null&&g>0)setCalc(price,t/g,3)}
-[price,total,gallons].forEach(el=>el.addEventListener('input',calculate));calculate();
+function rememberManual(el){manualOrder=manualOrder.filter(x=>x!==el);manualOrder.push(el);if(manualOrder.length>2)manualOrder.shift()}
+function calculate(){
+    fuelFields.forEach(resetCalc);
+    const usable=manualOrder.filter(el=>num(el.value)!==null);
+    manualOrder=usable.slice(-2);
+    if(manualOrder.length<2)return;
+    const targets=fuelFields.filter(el=>!manualOrder.includes(el));
+    if(targets.length!==1)return;
+    const target=targets[0];
+    const p=num(price.value),t=num(total.value),g=num(gallons.value);
+    const np=normalizedPrice(p);
+    if(target===total&&p!==null&&g!==null)setCalc(total,np*g,2);
+    else if(target===gallons&&p!==null&&t!==null&&np>0)setCalc(gallons,t/np,3);
+    else if(target===price&&g!==null&&t!==null&&g>0)setCalc(price,t/g,3);
+}
+fuelFields.forEach(el=>el.addEventListener('input',()=>{rememberManual(el);calculate()}));
+const prefilled=fuelFields.filter(el=>num(el.value)!==null);if(prefilled.length>=2){manualOrder=prefilled.slice(0,2);calculate()}
 function normalizePlateInput(v){return v.trim().toUpperCase().replace(/[^A-Z0-9]/g,'')}
 function currentPlate(){return normalizePlateInput(document.getElementById('licensePlate').value||document.getElementById('plateDropdown')?.value||'')}
-function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function esc(v){return String(v??'').replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]))}
 const stationBrand=document.getElementById('stationBrand'),otherWrap=document.getElementById('otherStationWrap');stationBrand.addEventListener('change',()=>otherWrap.style.display=stationBrand.value==='other'?'block':'none');
 function setBrand(brand){if(!brand)return;const match=[...stationBrand.options].find(o=>o.value.toLowerCase()===String(brand).toLowerCase());if(match){stationBrand.value=match.value;otherWrap.style.display='none'}else{stationBrand.value='other';document.getElementById('stationBrandOther').value=brand;otherWrap.style.display='block'}}
 const lat=document.getElementById('latitude'),lon=document.getElementById('longitude'),locSource=document.getElementById('locationSource'),locStatus=document.getElementById('locationStatus'),savedStation=document.getElementById('savedStation'),stationLocationId=document.getElementById('stationLocationId'),nearbyWrap=document.getElementById('nearbyWrap'),nearbySelect=document.getElementById('nearbyStation'),clearGpsBtn=document.getElementById('clearGpsBtn');
-function applyProfile(p){if(!p)return;stationLocationId.value=p.id||'';setBrand(p.brand||p.name||'');if(p.latitude!=null)lat.value=Number(p.latitude).toFixed(6);if(p.longitude!=null)lon.value=Number(p.longitude).toFixed(6);locSource.value='saved_station';const place=p.nickname||p.street||p.intersection||'';locStatus.textContent=`Selected ${p.brand||p.name||'station'}${place?' — '+place:''}${p.city?', '+p.city:''}`;clearGpsBtn.style.display='inline-block'}
+function applyProfile(p){if(!p)return;stationLocationId.value=p.id||'';setBrand(p.brand||p.name||'');if(p.latitude!=null)lat.value=Number(p.latitude).toFixed(6);if(p.longitude!=null)lon.value=Number(p.longitude).toFixed(6);locSource.value='saved_station';stationLocationId.value=p.id||'';const place=p.nickname||p.street||p.intersection||'';locStatus.textContent=`Selected ${p.brand||p.name||'station'}${place?' — '+place:''}${p.city?', '+p.city:''}`;clearGpsBtn.style.display='inline-block'}
 savedStation.addEventListener('change',()=>{const p=stationProfiles.find(x=>x.id===savedStation.value);if(p)applyProfile(p)});
 function captureGps(){return new Promise((resolve,reject)=>{if(!navigator.geolocation)return reject(new Error('Geolocation is not supported.'));navigator.geolocation.getCurrentPosition(pos=>{lat.value=pos.coords.latitude.toFixed(6);lon.value=pos.coords.longitude.toFixed(6);locSource.value='gps';stationLocationId.value='';locStatus.textContent=`GPS captured (${lat.value}, ${lon.value})`;clearGpsBtn.style.display='inline-block';resolve()},err=>reject(err),{enableHighAccuracy:true,timeout:10000,maximumAge:60000})})}
 document.getElementById('gpsBtn').addEventListener('click',async()=>{try{locStatus.textContent='Getting current location…';await captureGps()}catch(e){locStatus.textContent='Location not captured: '+e.message}});
@@ -121,7 +142,7 @@ async function maybePromptPartial(){const g=num(gallons.value),plate=currentPlat
 gallons.addEventListener('change',maybePromptPartial);
 document.getElementById('fuelForm').addEventListener('submit',async e=>{e.preventDefault();const submitBtn=document.getElementById('submitBtn');submitBtn.disabled=true;submitBtn.textContent='Saving…';document.getElementById('formError').style.display='none';const f=e.target,plateDropdown=normalizePlateInput(f.plateDropdown?.value??''),licensePlate=normalizePlateInput(f.licensePlate?.value??'');if(f.licensePlate)f.licensePlate.value=licensePlate;const body=new URLSearchParams({plateDropdown,licensePlate,date:f.date?.value??'',odometer:f.odometer?.value??'',pricePerGallon:f.pricePerGallon?.value??'',totalPrice:f.totalPrice?.value??'',gallons:f.gallons?.value??'',fillType:f.fillType?.value??'full',stationBrand:f.stationBrand?.value??'',stationBrandOther:f.stationBrandOther?.value??'',stationLocationId:f.stationLocationId?.value??'',comment:f.comment?.value??'',latitude:f.latitude?.value??'',longitude:f.longitude?.value??'',locationSource:f.locationSource?.value??'',source:'manual'});try{const r=await fetch('auto_save.php',{method:'POST',body});const d=await r.json();if(d.error)showError(d.error);else{const station=d.stationBrand?`<br><b>Station:</b> ${esc(d.stationBrand)}${d.stationLocationLabel?' — '+esc(d.stationLocationLabel):''}`:'';const comment=d.comment?`<br><b>Comment:</b> ${esc(d.comment)}`:'';document.getElementById('successDetails').innerHTML=`<b>Plate:</b> ${esc(d.plate)}<br><b>Date:</b> ${esc(d.date)}<br><b>Odometer:</b> ${d.odometer}<br><b>Miles driven:</b> ${d.miles}<br><b>Gallons:</b> ${d.gallons}<br><b>Price/gal:</b> $${d.price}<br><b>Total:</b> $${d.total}<br><b>Fill type:</b> ${d.fillType==='partial'?'Partial':'Full'}<br><b>MPG:</b> ${esc(d.mpgDisplay)}${station}${comment}<br><b>Submitted:</b> ${esc(d.submitted)}`;document.getElementById('viewLatestLink').href=`view_latest.php?plate=${encodeURIComponent(d.plate)}`;document.getElementById('successCard').style.display='block';f.style.display='none';document.getElementById('successCard').scrollIntoView({behavior:'smooth'})}}catch(err){showError('Save failed: '+err.message)}finally{submitBtn.disabled=false;submitBtn.textContent='Save Entry'}});
 function showError(msg){const el=document.getElementById('formError');el.textContent='⚠️ '+msg;el.style.display='block';el.scrollIntoView({behavior:'smooth'})}
-document.querySelectorAll('.clear-btn').forEach(btn=>btn.addEventListener('click',()=>{const el=document.getElementById(btn.dataset.clear);el.value='';resetCalc(el);[price,total,gallons].forEach(resetCalc);calculate()}));
+document.querySelectorAll('.clear-btn').forEach(btn=>btn.addEventListener('click',()=>{const el=document.getElementById(btn.dataset.clear);el.value='';resetCalc(el);manualOrder=manualOrder.filter(x=>x!==el);fuelFields.forEach(resetCalc);calculate()}));
 </script>
 </body>
 </html>
