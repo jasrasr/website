@@ -2,7 +2,7 @@
 // ============================================================================
 // File: menu.php
 // Purpose: Navigation menu + compact stats summary (mobile friendly)
-// Revision: 1.9
+// Revision: 2.0
 // ============================================================================
 
 require_once __DIR__ . '/device_init.php';
@@ -45,7 +45,8 @@ if ($plate) {
 ?>
 <style>.menu-bar{margin-top:2rem;padding:1rem;border-top:1px solid #ccc;color:#666;font-size:.92rem}.menu-bar a{margin-right:1.2rem;text-decoration:none;color:#007bff;display:inline-block;margin-bottom:.35rem}</style>
 <div class="menu-bar"><strong>Menu:</strong>
-<a href="fuel_form.php">New Entry</a><a href="scan_photos.php">📷 Scan</a>
+<a href="fuel_form.php">New Entry</a><a href="dashboard.php">Dashboard</a><a href="scan_photos.php">📷 Scan</a>
 <?php if ($plate): ?><a href="view_latest.php?plate=<?=urlencode($plate)?>">My Last Entry</a><a href="view_chart.php?plate=<?=urlencode($plate)?>">My MPG Chart</a><a href="view_stats.php?plate=<?=urlencode($plate)?>">My Stats</a><a href="view_map.php?plate=<?=urlencode($plate)?>">🗺 Fuel Map</a><?php if ($summaryText): ?><div style="margin-top:6px;color:#444;"><?=htmlspecialchars($summaryText)?></div><?php endif; ?><?php endif; ?>
 <?php if ($isAdminTrusted): ?><a href="admin.php">Admin</a><a href="devices_admin.php">Devices</a><a href="manage_stations.php">Stations</a><?php endif; ?>
+<?php if (!empty($_SESSION['admin_logged_in'])): ?><a href="dashboard_blocks.php">Lookup Blocks</a><?php endif; ?>
 </div>
