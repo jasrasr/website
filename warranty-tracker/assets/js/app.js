@@ -1,0 +1,28 @@
+const api = 'api.php';
+const state = { records: [] };
+const $ = id => document.getElementById(id);
+const daysLeft = date => Math.ceil((new Date(`${date}T23:59:59`) - new Date()) / 86400000);
+const statusOf = days => days < 0 ? 'expired' : days <= 90 ? 'expiring' : 'active';
+const money = value => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
+const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+
+async function request(options = {}) { const response = await fetch(api, { headers: {'Content-Type':'application/json'}, ...options }); const result = await response.json(); if (!result.success) throw result; return result.data; }
+async function load() { try { state.records = await request(); render(); } catch { showMessage('Could not load warranties.', true); } }
+function render() {
+  const now = state.records.map(r => ({...r, days: daysLeft(r.warrantyEndDate)}));
+  $('activeCount').textContent = now.filter(r => r.days >= 0).length;
+  $('expiringCount').textContent = now.filter(r => r.days >= 0 && r.days <= 90).length;
+  $('expiredCount').textContent = now.filter(r => r.days < 0).length;
+  $('valueTotal').textContent = money(now.reduce((sum, r) => sum + Number(r.cost || 0), 0));
+  const query = $('search').value.toLowerCase(); const filter = $('statusFilter').value;
+  let rows = now.filter(r => JSON.stringify(r).toLowerCase().includes(query) && (filter === 'all' || statusOf(r.days) === filter));
+  const sort = $('sort').value; rows.sort((a,b) => sort === 'endDesc' ? b.warrantyEndDate.localeCompare(a.warrantyEndDate) : sort === 'product' ? a.product.localeCompare(b.product) : sort === 'costDesc' ? b.cost-a.cost : a.warrantyEndDate.localeCompare(b.warrantyEndDate));
+  $('warrantyGrid').innerHTML = rows.length ? rows.map(card).join('') : '<div class="empty"><strong>No warranties found.</strong><span>Add one or adjust the filters.</span></div>';
+}
+function card(r) { const label = r.days < 0 ? `Expired ${Math.abs(r.days)} days ago` : r.days === 0 ? 'Expires today' : `${r.days} days remaining`; const ratio = Math.max(0, Math.min(1, r.days / 365)); const hue = Math.round(ratio * 120); return `<article class="card" style="--status:hsl(${hue} 72% 46%)"><div class="card-top"><span class="category">${escapeHtml(r.category || 'Uncategorized')}</span><span class="countdown ${statusOf(r.days)}">${label}</span></div><h2>${escapeHtml(r.product)}</h2><p class="meta">${escapeHtml([r.manufacturer,r.model].filter(Boolean).join(' · ') || 'No manufacturer/model')}</p><div class="date"><span>Warranty ends</span><strong>${new Date(r.warrantyEndDate+'T00:00:00').toLocaleDateString()}</strong></div><dl><div><dt>Seller</dt><dd>${escapeHtml(r.seller || '—')}</dd></div><div><dt>Provider</dt><dd>${escapeHtml(r.provider || '—')}</dd></div><div><dt>Cost</dt><dd>${money(r.cost)}</dd></div><div><dt>Purchased</dt><dd>${new Date(r.purchaseDate+'T00:00:00').toLocaleDateString()}</dd></div></dl><div class="card-actions">${r.receiptUrl ? `<a href="${escapeHtml(r.receiptUrl)}" target="_blank" rel="noopener">Open receipt/link</a>` : '<span></span>'}<button onclick="editRecord('${r.id}')">Edit</button><button class="danger" onclick="deleteRecord('${r.id}')">Delete</button></div></article>`; }
+function openEditor(record = {}) { $('warrantyForm').reset(); $('formTitle').textContent = record.id ? 'Edit warranty' : 'Add warranty'; Object.entries(record).forEach(([key,value]) => { const field = $('warrantyForm').elements.namedItem(key); if (field) field.value = value ?? ''; }); $('formErrors').textContent=''; $('editor').showModal(); }
+window.editRecord = id => openEditor(state.records.find(r => r.id === id));
+window.deleteRecord = async id => { if (!confirm('Delete this warranty record?')) return; try { await request({method:'DELETE',body:JSON.stringify({id})}); await load(); showMessage('Warranty deleted.'); } catch { showMessage('Could not delete warranty.', true); } };
+function showMessage(text, error=false) { $('message').textContent=text; $('message').className=error?'error-message':'success-message'; setTimeout(()=>{$('message').textContent='';$('message').className='';},3500); }
+$('warrantyForm').addEventListener('submit', async e => { e.preventDefault(); const data=Object.fromEntries(new FormData(e.currentTarget)); try { await request({method:'POST',body:JSON.stringify(data)}); $('editor').close(); await load(); showMessage('Warranty saved.'); } catch (result) { $('formErrors').textContent=(result.errors||[]).map(e=>e.message).join(' '); } });
+$('addButton').onclick=()=>openEditor(); $('closeButton').onclick=$('cancelButton').onclick=()=>$('editor').close(); ['search','statusFilter','sort'].forEach(id=>$(id).addEventListener('input',render)); load();
