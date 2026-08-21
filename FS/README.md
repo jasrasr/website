@@ -2,19 +2,46 @@
 
 Small PHP/JSON dashboard for tracking Jason's aggregate unresolved Freshservice ticket count toward a goal of zero.
 
-## Current update method
+## Tracking methods
 
-1. Upload a Freshservice screenshot in ChatGPT.
-2. Read the unresolved-ticket count and the image's EXIF capture time when available.
-3. Append an entry to `data/ticket-counts.json`.
-4. Commit the updated JSON file.
+Screenshots can still be recorded manually. The preferred method is the server-side API collector in `api/collect.php`. It compares consecutive ticket states and records:
 
-The dashboard reads the JSON file and calculates the latest count, change from the previous snapshot, tickets remaining, and reduction from the initial baseline.
+- new tickets
+- tickets assigned to the configured agent
+- reopened tickets
+- resolved and closed tickets
+- tickets reassigned away
+- entries to and exits from the unresolved queue
+- starting count, ending count, and net change
+
+The dashboard merges the Git-tracked manual history with API snapshots stored on the server and displays both the queue balance and daily activity.
+
+## Setup
+
+1. Copy `config.example.php` to `config.local.php` on the server.
+2. Set `domain` to the full Freshservice hostname, such as `company.freshservice.com`.
+3. Paste the API key into `api_key`.
+4. Set `agent_id` to the Freshservice agent ID whose **My Unresolved** queue is being tracked.
+5. Use `workspace_id` when the account requires a specific workspace; otherwise leave it as `0`.
+6. Replace `collector_token` with a long random secret.
+7. Visit the collector once or run it from cron. The first run creates the API baseline; the second and later runs calculate activity.
+
+Recommended cron request:
+
+```bash
+curl -fsS -H "Authorization: Bearer YOUR_COLLECTOR_TOKEN" https://jasr.me/github/FS/api/collect.php
+```
+
+Running hourly captures tickets that enter and leave the queue during the same day more reliably than one end-of-day snapshot.
 
 ## Privacy and security
 
-Only aggregate ticket counts and timestamps belong in this repository. Do not commit Freshservice API keys, individual ticket data, requester names, subjects, or private screenshots.
+`config.local.php`, `storage/api-state.json`, and `storage/api-snapshots.json` are ignored by Git and denied to web requests. The private state contains only ticket IDs, statuses, assignee IDs, and timestamps—no subjects, descriptions, requester names, or conversations. API snapshots contain aggregate counts only. Keeping runtime snapshots out of tracked files prevents deployment conflicts.
 
-## Future Freshservice API integration
+## How calculation works
 
-A server-side PHP collector can call the Freshservice API on a schedule and append counts to the same JSON structure. Store credentials outside the public web root or in server environment variables—never in this repository or client-side JavaScript.
+```text
+ending unresolved = starting unresolved + entered unresolved - exited unresolved
+```
+
+Because Freshservice only provides the current ticket state in list results, the collector compares each run with its private previous-state file. More frequent runs produce better transition coverage.
