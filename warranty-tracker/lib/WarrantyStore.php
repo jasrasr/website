@@ -37,9 +37,9 @@ final class WarrantyStore
     }
 
     /** @param array<string,mixed> $record */
-    public function save(array $record): array
+    public function save(array $record, string $userId): array
     {
-        return $this->mutate(function (array $data) use ($record): array {
+        return $this->mutate(function (array $data) use ($record, $userId): array {
             $now = gmdate(DATE_ATOM);
             $id = trim((string) ($record['id'] ?? ''));
             $saved = [
@@ -55,6 +55,8 @@ final class WarrantyStore
                 'warrantyEndDate' => (string) $record['warrantyEndDate'],
                 'itemCost' => round((float) ($record['itemCost'] ?? $record['cost'] ?? 0), 2),
                 'warrantyCost' => round((float) ($record['warrantyCost'] ?? 0), 2),
+                'scope' => ($record['scope'] ?? '') === 'shared' ? 'shared' : 'personal',
+                'ownerId' => $userId,
                 'receiptUrl' => trim((string) ($record['receiptUrl'] ?? '')),
                 'notes' => trim((string) ($record['notes'] ?? '')),
                 'createdAt' => $now,
@@ -62,7 +64,9 @@ final class WarrantyStore
             ];
             foreach ($data['records'] as $index => $existing) {
                 if (($existing['id'] ?? '') === $saved['id']) {
+                    if (($existing['scope'] ?? 'personal') !== 'shared' && ($existing['ownerId'] ?? '') !== '' && ($existing['ownerId'] ?? '') !== $userId) throw new RuntimeException('You cannot edit this warranty.');
                     $saved['createdAt'] = $existing['createdAt'] ?? $now;
+                    $saved['ownerId'] = $existing['ownerId'] ?? $userId;
                     $data['records'][$index] = $saved;
                     return [$data, $saved];
                 }
@@ -72,16 +76,22 @@ final class WarrantyStore
         });
     }
 
-    public function delete(string $id): bool
+    public function delete(string $id, string $userId): bool
     {
-        return $this->mutate(function (array $data) use ($id): array {
+        return $this->mutate(function (array $data) use ($id, $userId): array {
             $before = count($data['records']);
             $data['records'] = array_values(array_filter(
                 $data['records'],
-                static fn(array $item): bool => ($item['id'] ?? '') !== $id
+                static fn(array $item): bool => ($item['id'] ?? '') !== $id || (($item['scope'] ?? 'personal') !== 'shared' && ($item['ownerId'] ?? '') !== '' && ($item['ownerId'] ?? '') !== $userId)
             ));
             return [$data, count($data['records']) < $before];
         });
+    }
+
+    /** @return array<int,array<string,mixed>> */
+    public function visibleFor(string $userId): array
+    {
+        return array_values(array_filter($this->all()['records'], static fn(array $item): bool => ($item['scope'] ?? 'personal') === 'shared' || ($item['ownerId'] ?? '') === '' || ($item['ownerId'] ?? '') === $userId));
     }
 
     private function mutate(callable $callback): mixed
