@@ -5,7 +5,7 @@ A PHP and JSON home-warranty portal based on the conventions in `1-Framework`.
 ## Features
 
 - Add, edit, delete, search, filter, and sort warranty records
-- Track product, category, manufacturer, model, serial number, seller, provider, cost, dates, receipt URL, and notes
+- Track product, category, manufacturer, model, serial number, seller, provider, item cost, warranty cost, dates, receipt URL, and notes
 - Dashboard totals for active, expiring, expired, and tracked value
 - Continuous green-to-red expiration cue; warranties within 90 days are considered expiring soon
 - Responsive phone and desktop layout
@@ -27,4 +27,4 @@ Deploy beside `1-Framework` so `../1-Framework/bootstrap.php` resolves. PHP must
 
 ## Version
 
-1.0.0 — 2026-08-21
+1.1.0 — 2026-08-21

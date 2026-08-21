@@ -42,7 +42,11 @@ try {
         if (isset($input[$field]) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $input[$field])) $errors[] = ['code' => 'VALIDATION_FAILED', 'field' => $field, 'message' => 'Use YYYY-MM-DD.'];
     }
     if (($input['warrantyEndDate'] ?? '') < ($input['purchaseDate'] ?? '')) $errors[] = ['code' => 'VALIDATION_FAILED', 'field' => 'warrantyEndDate', 'message' => 'Warranty end date cannot precede purchase date.'];
-    if (isset($input['cost']) && (!is_numeric($input['cost']) || (float) $input['cost'] < 0)) $errors[] = ['code' => 'VALIDATION_FAILED', 'field' => 'cost', 'message' => 'Cost must be zero or greater.'];
+    foreach (['itemCost', 'warrantyCost'] as $field) {
+        if (isset($input[$field]) && $input[$field] !== '' && (!is_numeric($input[$field]) || (float) $input[$field] < 0)) {
+            $errors[] = ['code' => 'VALIDATION_FAILED', 'field' => $field, 'message' => "$field must be zero or greater."];
+        }
+    }
     if ($errors) respond(false, 'Please correct the highlighted fields.', null, $errors, 422);
     respond(true, 'Warranty saved.', $store->save($input));
 } catch (JsonException) {
