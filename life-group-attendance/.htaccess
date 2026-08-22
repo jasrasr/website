@@ -1,0 +1,5 @@
+Options -Indexes
+<FilesMatch "^(config\.php|lib\.php|README\.md|CHANGELOG\.md)$">
+  Require all denied
+</FilesMatch>
+
