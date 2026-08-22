@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.0 — 2026-08-22
+
+- Added Super Admin and Attendance roles.
+- Added Super Admin user management with account activation, role changes, and optional password resets.
+- Attendance users can take attendance and add or edit complete student profiles.
+- Restricted user management, group creation, roster imports, and reports to Super Admin.
+- Added explicit Edit buttons to the student directory.
+- Preserved compatibility with existing legacy `admin` accounts.
+
 ## 1.0.1 — 2026-08-22
 
 - Added an administrator-only Frontlines roster importer.
