@@ -32,5 +32,19 @@ if ($action==='save-attendance') {
     if(!$found){$id=uuid();$rows[]=['id'=>$id,'groupId'=>$groupId,'date'=>$date,'studentIds'=>$present,'recordedBy'=>$me['id'],'createdAt'=>now_iso(),'updatedAt'=>now_iso()];}
     write_store('attendance',$rows); audit($found?'update':'create','attendance',$id,['groupId'=>$groupId,'date'=>$date,'count'=>count($present)]); json_out(['attendance'=>end($rows),'count'=>count($present)]);
 }
+if ($action==='import-frontlines') {
+    if (($me['role'] ?? '') !== 'admin') json_out(['error'=>'Administrator access required.'],403);
+    $students=read_store('students'); $incoming=frontlines_roster_students(); $byName=[];
+    foreach($students as $i=>$s) $byName[strtolower(trim(($s['firstName']??'').' '.($s['lastName']??'')))]=$i;
+    $added=0; $updated=0;
+    foreach($incoming as $row){
+        $key=strtolower(trim($row['firstName'].' '.$row['lastName']));
+        if(!isset($byName[$key])){$students[]=$row;$byName[$key]=array_key_last($students);$added++;continue;}
+        $i=$byName[$key]; $changed=false;
+        foreach(['gender','grade'] as $field) if(($students[$i][$field]??'')===''&&$row[$field]!==''){$students[$i][$field]=$row[$field];$changed=true;}
+        if($changed){$students[$i]['updatedAt']=now_iso();$updated++;}
+    }
+    write_store('students',$students); audit('import','student','frontlines',['added'=>$added,'updated'=>$updated]);
+    json_out(['students'=>$students,'added'=>$added,'updated'=>$updated,'sourceCount'=>count($incoming)]);
+}
 json_out(['error'=>'Unknown action.'],404);
-
