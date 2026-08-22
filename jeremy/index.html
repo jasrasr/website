@@ -82,7 +82,7 @@
       background: #07111f;
     }
     .progress-fill {
-      width: 88%;
+      width: 90%;
       height: 100%;
       border-radius: inherit;
       background: linear-gradient(90deg, var(--accent), var(--accent-2));
@@ -214,39 +214,39 @@
     <section class="summary" aria-label="Trip summary">
       <article class="card">
         <div class="label">Latest checkpoint</div>
-        <div class="value shared-location">Sellersburg, IN</div>
+        <div class="value shared-location">McCordsville, IN</div>
       </article>
       <article class="card">
         <div class="label">Reported</div>
-        <div class="value shared-location">Aug. 21 <small>9:51 AM EDT</small></div>
+        <div class="value shared-location">Aug. 22 <small>~3:49 PM EDT</small></div>
       </article>
       <article class="card">
         <div class="label">Estimated traveled</div>
-        <div class="value">2,444 <small>miles</small></div>
+        <div class="value">2,569 <small>miles</small></div>
       </article>
       <article class="card">
         <div class="label">Overall progress rate</div>
-        <div class="value">13.3–13.4 <small>mph</small></div>
+        <div class="value">12.0–12.1 <small>mph</small></div>
       </article>
-      <article class="card eta-card" id="arrival-estimate" data-leave-time="2026-08-21T09:51:00-04:00" data-remaining-miles="344" data-travel-mph="55" data-stop-minutes="15">
+      <article class="card eta-card" id="arrival-estimate" data-leave-time="2026-08-22T15:49:00-04:00" data-remaining-miles="280" data-travel-mph="55" data-stop-minutes="15">
         <div class="label">Estimated Cleveland arrival</div>
-        <div class="value estimated" id="arrival-estimate-value">Aug. 21 <small>~4:21 PM EDT</small></div>
-        <p class="eta-basis" id="arrival-estimate-basis">Based on an assumed Sellersburg leave time of 9:51 AM EDT on August 21, 344 miles at 55 MPH, and one 15-minute stop.</p>
+        <div class="value estimated" id="arrival-estimate-value">Aug. 22 <small>~9:09 PM EDT</small></div>
+        <p class="eta-basis" id="arrival-estimate-basis">Based on the McCordsville observation time of 3:49 PM EDT on August 22, approximately 280 remaining road miles at 55 MPH, and one 15-minute stop.</p>
       </article>
     </section>
 
     <section class="progress-panel" aria-labelledby="trip-progress-title">
       <div class="progress-heading">
         <h2 id="trip-progress-title">Estimated trip progress</h2>
-        <div class="progress-percent">88%</div>
+        <div class="progress-percent">90%</div>
       </div>
-      <div class="progress-track" role="progressbar" aria-label="Estimated trip completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="88">
+      <div class="progress-track" role="progressbar" aria-label="Estimated trip completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="90">
         <div class="progress-fill"></div>
       </div>
       <div class="progress-details">
-        <span>~2,444 miles traveled</span>
-        <span>344 Waze route miles remaining</span>
-        <span>~2,788-mile revised planned route</span>
+        <span>~2,569 miles traveled</span>
+        <span>~280 estimated road miles remaining</span>
+        <span>~2,849-mile revised projected route</span>
       </div>
     </section>
 
@@ -401,15 +401,23 @@
             <td class="calculated">64 hr 44 min</td>
             <td class="calculated">~0.1 mph</td>
           </tr>
+          <tr>
+            <td>Sellersburg, IN → McCordsville, IN</td>
+            <td class="shared-location">Aug. 21, 9:51 AM</td>
+            <td class="shared-location">Aug. 22, ~3:49 PM</td>
+            <td class="route-estimate">~125 mi</td>
+            <td class="calculated">29 hr 58 min</td>
+            <td class="calculated">~4.2 mph</td>
+          </tr>
         </tbody>
         <tfoot>
           <tr class="total">
-            <td><span class="total-badge">TOTAL</span>Newhall, CA → Sellersburg, IN</td>
+            <td><span class="total-badge">TOTAL</span>Newhall, CA → McCordsville, IN</td>
             <td>Aug. 13, ~6:30–7:30 PM</td>
-            <td>Aug. 21, 9:51 AM</td>
-            <td>~2,444 mi</td>
-            <td>~182 hr 21 min–183 hr 21 min</td>
-            <td>~13.3–13.4 mph</td>
+            <td>Aug. 22, ~3:49 PM</td>
+            <td>~2,569 mi</td>
+            <td>~212 hr 19 min–213 hr 19 min</td>
+            <td>~12.0–12.1 mph</td>
           </tr>
         </tfoot>
       </table>
@@ -431,9 +439,10 @@
         <li><strong>Santa Claus checkpoint:</strong> Google Maps showed Jeremy at Santa’s Cottages near 1405 W Christmas Boulevard at 3:11 PM EDT on August 18. The displayed 395 miles is treated as direct geographic separation rather than road mileage.</li>
         <li><strong>Sellersburg checkpoint:</strong> The screenshot was taken at 5:08 PM EDT and showed Jeremy’s position as one minute old, producing an approximate observation time of 5:07 PM EDT near 947 S Indiana Avenue. The displayed 330 miles is treated as direct geographic separation rather than road mileage.</li>
         <li><strong>Sellersburg overnight stop:</strong> The latest shared-location observation still placed Jeremy near 4215 Lakeside Drive at 9:51 AM EDT on August 21, 64 hr 44 min after the first Sellersburg observation. Approximately two miles of local movement is estimated; nearly all of the elapsed period is treated as stopped time. The displayed 330 miles is direct geographic separation.</li>
-        <li><strong>Waze route reference:</strong> Jason’s August 19 Waze screenshot showed approximately 344 road miles and 5 hours for a normal passenger vehicle between his Cleveland-area location and Sellersburg. The tracker uses the 344-mile distance in the reverse direction, but retains the separate 60 MPH bus-and-trailer model plus one 15-minute stop for ETA.</li>
-        <li><strong>Arrival estimate:</strong> Calculated from the Sellersburg leave time, 344 Waze route miles remaining, 55 MPH while traveling, and one 15-minute stop. Until eastbound movement confirms the actual departure, 9:51 AM EDT on August 21 is the assumed leave time. If Jeremy remains parked, the ETA shifts later minute-for-minute; after departure is confirmed, future updates use the confirmed leave time.</li>
-        <li><strong>Planned route:</strong> The revised planning baseline is approximately 2,788 miles: about 2,444 estimated miles traveled through the Sellersburg overnight stop plus the 344-mile Waze route reference to Jason’s area near Cleveland. Progress and remaining mileage use this revised baseline.</li>
+        <li><strong>Waze route reference:</strong> Jason’s August 19 Waze screenshot showed approximately 344 road miles and 5 hours for a normal passenger vehicle between his Cleveland-area location and Sellersburg. The tracker previously used the 344-mile distance in the reverse direction; the current ETA now uses McCordsville as its starting point and the 55 MPH towing cap.</li>
+        <li><strong>Arrival estimate:</strong> Calculated from the McCordsville observation time, approximately 280 estimated road miles remaining, the 55 MPH towing cap, and one 15-minute stop. The exact Sellersburg departure time is unknown, so the Sellersburg-to-McCordsville segment rate includes stopped time and is not driving speed.</li>
+        <li><strong>McCordsville checkpoint:</strong> Google Maps showed Jeremy near 8630 N Autumnview Drive at approximately 3:49 PM EDT on August 22. The displayed 241 miles is direct geographic separation. Approximately 280 road miles remaining is inferred from that separation and the earlier road-route ratio; it is not a live directions result.</li>
+        <li><strong>Planned route:</strong> The revised projected total is approximately 2,849 miles: about 2,569 estimated miles traveled through McCordsville plus approximately 280 estimated road miles remaining to the Cleveland area. Progress uses this revised projection.</li>
         <li><strong>Joplin checkpoint:</strong> Google Maps showed Jeremy at Sleep Inn South Joplin at 5:21 AM EDT (4:21 AM local). Its shared-location view displayed 748 miles from Jason, which appears to be direct geographic separation. Google Maps Directions showed 853 miles via the faster toll route and 916 miles via the selected longer no-toll route. Those direct-route options are informational; trip completion uses the full planned itinerary.</li>
         <li><strong>Estimated:</strong> Jeremy's Newhall departure time was inferred from the Arizona report and the likely driving time of the bus-and-trailer combination. Segment road mileage is approximate route mileage.</li>
         <li><strong>Calculated:</strong> Elapsed time, average progress, cumulative mileage, and percent complete are derived from the recorded observations and estimated road mileage.</li>
@@ -443,7 +452,7 @@
       </ul>
     </aside>
 
-    <footer>Last observed August 21, 2026 at 9:51 AM EDT</footer>
+    <footer>Last observed August 22, 2026 at approximately 3:49 PM EDT</footer>
   </main>
   <script>
     (() => {
