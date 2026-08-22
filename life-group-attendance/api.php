@@ -7,9 +7,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') require_csrf();
 
 if ($action==='bootstrap') {
     $students=read_store('students'); $groups=read_store('groups'); $attendance=read_store('attendance');
-    json_out(['groups'=>$groups,'students'=>$students,'attendance'=>$attendance,'version'=>APP_VERSION]);
+    $safeStudents=$students;
+    $users=[]; if(is_super_admin($me)) foreach(read_store('users') as $u) $users[]=array_intersect_key($u,array_flip(['id','name','email','role','active','createdAt']));
+    json_out(['groups'=>$groups,'students'=>$safeStudents,'attendance'=>$attendance,'users'=>$users,'version'=>APP_VERSION]);
 }
 if ($action==='save-group') {
+    require_super_admin();
     $b=body(); $groups=read_store('groups'); $id=trim($b['id'] ?? '') ?: uuid();
     $row=['id'=>$id,'name'=>trim($b['name'] ?? ''),'leader'=>trim($b['leader'] ?? ''),'meetingDay'=>trim($b['meetingDay'] ?? ''),'active'=>(bool)($b['active'] ?? true),'createdAt'=>$b['createdAt'] ?? now_iso()];
     if ($row['name']==='') json_out(['error'=>'Group name is required.'],422);
@@ -33,7 +36,7 @@ if ($action==='save-attendance') {
     write_store('attendance',$rows); audit($found?'update':'create','attendance',$id,['groupId'=>$groupId,'date'=>$date,'count'=>count($present)]); json_out(['attendance'=>end($rows),'count'=>count($present)]);
 }
 if ($action==='import-frontlines') {
-    if (($me['role'] ?? '') !== 'admin') json_out(['error'=>'Administrator access required.'],403);
+    require_super_admin();
     $students=read_store('students'); $incoming=frontlines_roster_students(); $byName=[];
     foreach($students as $i=>$s) $byName[strtolower(trim(($s['firstName']??'').' '.($s['lastName']??'')))]=$i;
     $added=0; $updated=0;
@@ -46,5 +49,19 @@ if ($action==='import-frontlines') {
     }
     write_store('students',$students); audit('import','student','frontlines',['added'=>$added,'updated'=>$updated]);
     json_out(['students'=>$students,'added'=>$added,'updated'=>$updated,'sourceCount'=>count($incoming)]);
+}
+if ($action==='save-user') {
+    require_super_admin(); $b=body(); $users=read_store('users'); $id=trim($b['id']??'')?:uuid();
+    $name=trim($b['name']??''); $email=strtolower(trim($b['email']??'')); $role=trim($b['role']??'attendance'); $active=(bool)($b['active']??true); $password=(string)($b['password']??'');
+    if($name===''||!filter_var($email,FILTER_VALIDATE_EMAIL))json_out(['error'=>'Name and a valid email are required.'],422);
+    if(!in_array($role,['super_admin','attendance'],true))json_out(['error'=>'Invalid role.'],422);
+    foreach($users as $u)if($u['id']!==$id&&strcasecmp($u['email'],$email)===0)json_out(['error'=>'That email already has an account.'],422);
+    $found=false; foreach($users as &$u)if($u['id']===$id){
+        if($id===$me['id']&&(!$active||$role!=='super_admin'))json_out(['error'=>'You cannot deactivate or demote your own account.'],422);
+        $u['name']=$name;$u['email']=$email;$u['role']=$role;$u['active']=$active;if($password!==''){if(strlen($password)<12)json_out(['error'=>'Passwords must be at least 12 characters.'],422);$u['passwordHash']=password_hash($password,PASSWORD_DEFAULT);}$found=true;break;
+    } unset($u);
+    if(!$found){if(strlen($password)<12)json_out(['error'=>'A password of at least 12 characters is required for new users.'],422);$users[]=['id'=>$id,'name'=>$name,'email'=>$email,'role'=>$role,'passwordHash'=>password_hash($password,PASSWORD_DEFAULT),'active'=>$active,'createdAt'=>now_iso()];}
+    write_store('users',$users);audit($found?'update':'create','user',$id,['role'=>$role,'active'=>$active]);
+    $safe=[];foreach($users as $u)$safe[]=array_intersect_key($u,array_flip(['id','name','email','role','active','createdAt']));json_out(['users'=>$safe],$found?200:201);
 }
 json_out(['error'=>'Unknown action.'],404);
