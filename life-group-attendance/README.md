@@ -4,6 +4,13 @@ PHP/JSON attendance portal for multiple church life groups. It includes authenti
 
 The optional Frontlines importer reads only youth name, gender, and grade from the sibling `scoreboard/frontlines/team-roster-defaults.csv` file. It does not import teams, leaders, sponsors, colors, or scores. Duplicate names are skipped, and blank gender/grade fields on existing students may be filled.
 
+## Roles
+
+- **Super Admin:** manages users, groups, roster imports, students, reports, and attendance.
+- **Attendance:** takes attendance and can add or edit complete student profiles. It cannot manage users, groups, imports, or administrative reports.
+
+Click any student row—or its explicit **Edit** button—to update the student.
+
 ## Requirements
 
 - PHP 8.1 or newer
@@ -35,4 +42,4 @@ Designed for current Chrome, Safari, Edge, and Firefox. The interface is respons
 
 Back up the complete `data/` folder. It contains users, students, groups, attendance, and the audit log.
 
-Version: 1.0.1
+Version: 1.1.0
