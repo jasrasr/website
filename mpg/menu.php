@@ -2,7 +2,7 @@
 // ============================================================================
 // File: menu.php
 // Purpose: Navigation menu + compact stats summary (mobile friendly)
-// Revision: 2.0
+// Revision: 2.1
 // ============================================================================
 
 require_once __DIR__ . '/device_init.php';
@@ -50,3 +50,6 @@ if ($plate) {
 <?php if ($isAdminTrusted): ?><a href="admin.php">Admin</a><a href="devices_admin.php">Devices</a><a href="manage_stations.php">Stations</a><?php endif; ?>
 <?php if (!empty($_SESSION['admin_logged_in'])): ?><a href="dashboard_blocks.php">Lookup Blocks</a><?php endif; ?>
 </div>
+<?php if (basename($_SERVER['SCRIPT_NAME'] ?? '') === 'scan_photos.php'): ?>
+<script src="scan_countdown.js?v=1"></script>
+<?php endif; ?>
