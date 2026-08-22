@@ -2,6 +2,8 @@
 
 PHP/JSON attendance portal for multiple church life groups. It includes authenticated access, live first/last-name search, grade and gender filters, sibling links, reusable student profiles, serving and baptism fields, attendance check-in, and ministry/group/student history.
 
+The optional Frontlines importer reads only youth name, gender, and grade from the sibling `scoreboard/frontlines/team-roster-defaults.csv` file. It does not import teams, leaders, sponsors, colors, or scores. Duplicate names are skipped, and blank gender/grade fields on existing students may be filled.
+
 ## Requirements
 
 - PHP 8.1 or newer
@@ -33,5 +35,4 @@ Designed for current Chrome, Safari, Edge, and Firefox. The interface is respons
 
 Back up the complete `data/` folder. It contains users, students, groups, attendance, and the audit log.
 
-Version: 1.0.0
-
+Version: 1.0.1
