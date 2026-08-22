@@ -65,3 +65,38 @@ function public_student(array $s): array {
     return $s;
 }
 
+function frontlines_roster_students(): array {
+    $path = dirname(__DIR__) . '/scoreboard/frontlines/team-roster-defaults.csv';
+    if (!is_file($path)) return [];
+    $handle = fopen($path, 'rb');
+    if ($handle === false) return [];
+    $headers = fgetcsv($handle);
+    if (!is_array($headers)) { fclose($handle); return []; }
+    $students = []; $seen = [];
+    while (($values = fgetcsv($handle)) !== false) {
+        if (count($headers) !== count($values)) continue;
+        $row = array_combine($headers, $values);
+        if (!is_array($row) || strcasecmp(trim((string)($row['role'] ?? '')), 'Youth') !== 0) continue;
+        $name = preg_replace('/\s+/', ' ', trim((string)($row['name'] ?? '')));
+        if ($name === '') continue;
+        $key = strtolower($name);
+        if (isset($seen[$key])) continue;
+        $seen[$key] = true;
+        $parts = explode(' ', $name);
+        $lastName = count($parts) > 1 ? (string)array_pop($parts) : '';
+        $firstName = implode(' ', $parts) ?: $name;
+        $gender = strtoupper(trim((string)($row['gender'] ?? '')));
+        $gender = $gender === 'F' ? 'Female' : ($gender === 'M' ? 'Male' : '');
+        $grade = strtoupper(trim((string)($row['grade'] ?? '')));
+        $grade = $grade === 'GRAD' ? 'Graduated' : ($grade === 'N/A' ? '' : $grade);
+        $students[] = [
+            'id'=>uuid(),'firstName'=>$firstName,'lastName'=>$lastName,'preferredName'=>'',
+            'gender'=>$gender,'grade'=>$grade,'groupIds'=>[],'siblingIds'=>[],
+            'serves'=>false,'serveLocations'=>[],'baptized'=>false,'baptismDate'=>'',
+            'guardianName'=>'','guardianPhone'=>'','notes'=>'','active'=>true,
+            'createdAt'=>now_iso(),'updatedAt'=>now_iso()
+        ];
+    }
+    fclose($handle);
+    return $students;
+}
