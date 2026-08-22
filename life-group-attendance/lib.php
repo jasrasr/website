@@ -34,9 +34,18 @@ function body(): array {
     return is_array($data) ? $data : [];
 }
 function user(): ?array { return $_SESSION['user'] ?? null; }
+function is_super_admin(?array $account = null): bool {
+    $role = ($account ?? user())['role'] ?? '';
+    return in_array($role, ['super_admin', 'admin'], true);
+}
 function require_user(): array {
     $u = user();
     if (!$u) json_out(['error' => 'Authentication required.'], 401);
+    return $u;
+}
+function require_super_admin(): array {
+    $u = require_user();
+    if (!is_super_admin($u)) json_out(['error' => 'Super Admin access required.'], 403);
     return $u;
 }
 function csrf(): string {
@@ -63,6 +72,10 @@ function audit(string $action, string $entity, string $entityId, array $detail =
 function public_student(array $s): array {
     unset($s['notes']);
     return $s;
+}
+
+function attendance_student(array $s): array {
+    return array_intersect_key($s, array_flip(['id','firstName','lastName','preferredName','gender','grade','groupIds','active']));
 }
 
 function frontlines_roster_students(): array {
