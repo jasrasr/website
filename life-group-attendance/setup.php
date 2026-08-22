@@ -9,9 +9,9 @@ if (!$done && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$error && ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($password) < 12)) $error = 'Enter a name, valid email, and password of at least 12 characters.';
     if (!$error) {
         $id = uuid();
-        write_store('users', [['id'=>$id,'name'=>$name,'email'=>$email,'role'=>'admin','passwordHash'=>password_hash($password, PASSWORD_DEFAULT),'active'=>true,'createdAt'=>now_iso()]]);
+        write_store('users', [['id'=>$id,'name'=>$name,'email'=>$email,'role'=>'super_admin','passwordHash'=>password_hash($password, PASSWORD_DEFAULT),'active'=>true,'createdAt'=>now_iso()]]);
         write_store('groups', []); write_store('students', frontlines_roster_students()); write_store('attendance', []); write_store('audit', []);
-        $_SESSION['user'] = ['id'=>$id,'name'=>$name,'email'=>$email,'role'=>'admin'];
+        $_SESSION['user'] = ['id'=>$id,'name'=>$name,'email'=>$email,'role'=>'super_admin'];
         header('Location: index.php'); exit;
     }
 }
