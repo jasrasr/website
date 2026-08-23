@@ -82,7 +82,7 @@
       background: #07111f;
     }
     .progress-fill {
-      width: 95%;
+      width: 96%;
       height: 100%;
       border-radius: inherit;
       background: linear-gradient(90deg, var(--accent), var(--accent-2));
@@ -214,38 +214,38 @@
     <section class="summary" aria-label="Trip summary">
       <article class="card">
         <div class="label">Latest checkpoint</div>
-        <div class="value shared-location">Dublin, OH</div>
+        <div class="value shared-location">Marengo, OH</div>
       </article>
       <article class="card">
         <div class="label">Reported</div>
-        <div class="value shared-location">Aug. 23 <small>5:02 PM EDT</small></div>
+        <div class="value shared-location">Aug. 23 <small>5:48 PM EDT</small></div>
       </article>
       <article class="card">
         <div class="label">Estimated traveled</div>
-        <div class="value">2,723 <small>miles</small></div>
+        <div class="value">2,754 <small>miles</small></div>
       </article>
       <article class="card">
         <div class="label">Overall progress rate</div>
-        <div class="value">~11.4 <small>mph</small></div>
+        <div class="value">~11.5 <small>mph</small></div>
       </article>
-      <article class="card eta-card" id="arrival-estimate" data-leave-time="2026-08-23T17:02:00-04:00" data-remaining-miles="139" data-travel-mph="55" data-stop-minutes="0">
+      <article class="card eta-card" id="arrival-estimate" data-leave-time="2026-08-23T17:48:00-04:00" data-remaining-miles="108" data-travel-mph="55" data-stop-minutes="0">
         <div class="label">Estimated Parma Heights arrival</div>
-        <div class="value estimated" id="arrival-estimate-value">Aug. 23 <small>~7:34 PM EDT</small></div>
-        <p class="eta-basis" id="arrival-estimate-basis">Departure-based estimate using the Dublin observation time of 5:02 PM EDT on August 23 and approximately 139 route miles at 55 MPH. The Richmond travel-center stop appears to have satisfied the modeled 15-minute break.</p>
+        <div class="value estimated" id="arrival-estimate-value">Aug. 23 <small>~7:46 PM EDT</small></div>
+        <p class="eta-basis" id="arrival-estimate-basis">Departure-based estimate using the Marengo observation time of 5:48 PM EDT on August 23 and approximately 108 route miles at 55 MPH. The Richmond travel-center stop appears to have satisfied the modeled 15-minute break.</p>
       </article>
     </section>
 
     <section class="progress-panel" aria-labelledby="trip-progress-title">
       <div class="progress-heading">
         <h2 id="trip-progress-title">Estimated trip progress</h2>
-        <div class="progress-percent">95%</div>
+        <div class="progress-percent">96%</div>
       </div>
-      <div class="progress-track" role="progressbar" aria-label="Estimated trip completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="95">
+      <div class="progress-track" role="progressbar" aria-label="Estimated trip completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="96">
         <div class="progress-fill"></div>
       </div>
       <div class="progress-details">
-        <span>~2,723 miles traveled</span>
-        <span>~139 estimated route miles remaining</span>
+        <span>~2,754 miles traveled</span>
+        <span>~108 estimated route miles remaining</span>
         <span>~2,862-mile revised projected route</span>
       </div>
     </section>
@@ -457,15 +457,23 @@
             <td class="calculated">1 hr 25 min</td>
             <td class="calculated">~50.8 mph</td>
           </tr>
+          <tr>
+            <td>Dublin, OH → Marengo, OH</td>
+            <td class="shared-location">Aug. 23, 5:02 PM</td>
+            <td class="shared-location">Aug. 23, 5:48 PM</td>
+            <td class="route-estimate">~31 mi</td>
+            <td class="calculated">46 min</td>
+            <td class="calculated">~40.4 mph</td>
+          </tr>
         </tbody>
         <tfoot>
           <tr class="total">
-            <td><span class="total-badge">TOTAL</span>Newhall, CA → Dublin, OH</td>
+            <td><span class="total-badge">TOTAL</span>Newhall, CA → Marengo, OH</td>
             <td>Aug. 13, ~6:30–7:30 PM</td>
-            <td>Aug. 23, 5:02 PM</td>
-            <td>~2,723 mi</td>
-            <td>~237 hr 32 min–238 hr 32 min</td>
-            <td>~11.4 mph</td>
+            <td>Aug. 23, 5:48 PM</td>
+            <td>~2,754 mi</td>
+            <td>~238 hr 18 min–239 hr 18 min</td>
+            <td>~11.5 mph</td>
           </tr>
         </tfoot>
       </table>
@@ -488,7 +496,7 @@
         <li><strong>Sellersburg checkpoint:</strong> The screenshot was taken at 5:08 PM EDT and showed Jeremy’s position as one minute old, producing an approximate observation time of 5:07 PM EDT near 947 S Indiana Avenue. The displayed 330 miles is treated as direct geographic separation rather than road mileage.</li>
         <li><strong>Sellersburg overnight stop:</strong> The latest shared-location observation still placed Jeremy near 4215 Lakeside Drive at 9:51 AM EDT on August 21, 64 hr 44 min after the first Sellersburg observation. Approximately two miles of local movement is estimated; nearly all of the elapsed period is treated as stopped time. The displayed 330 miles is direct geographic separation.</li>
         <li><strong>Waze route reference:</strong> Jason’s August 19 Waze screenshot showed approximately 344 road miles and 5 hours for a normal passenger vehicle between his Cleveland-area location and Sellersburg. The tracker previously used the 344-mile distance in the reverse direction; the current ETA now uses McCordsville as its starting point and the 55 MPH towing cap.</li>
-        <li><strong>Arrival estimate:</strong> This is a departure-based calculation from the 5:02 PM Dublin observation, approximately 139 route miles remaining through Mansfield, Seville, and Middleburg Heights, and the 55 MPH towing cap. The Richmond travel-center stop appears to have satisfied the modeled 15-minute break, so no additional stop is added before Parma Heights.</li>
+        <li><strong>Arrival estimate:</strong> This is a departure-based calculation from the 5:48 PM Marengo observation, approximately 108 route miles remaining through Mansfield, Seville, and Middleburg Heights, and the 55 MPH towing cap. The Richmond travel-center stop appears to have satisfied the modeled 15-minute break, so no additional stop is added before Parma Heights.</li>
         <li><strong>McCordsville checkpoint:</strong> Google Maps showed Jeremy near 8630 N Autumnview Drive at approximately 3:49 PM EDT on August 22. The displayed 241 miles is direct geographic separation. Approximately 280 road miles remaining is inferred from that separation and the earlier road-route ratio; it is not a live directions result.</li>
         <li><strong>Greenfield checkpoint:</strong> Google Maps showed Jeremy near Mohawk/Greenfield at coordinates 39.820411, -85.832786 at 1:27 PM EDT on August 23. A screenshot four minutes earlier showed the same area near I-70 and the Pilot Travel Center. The displayed 243 miles is direct geographic separation.</li>
         <li><strong>New Lisbon checkpoint:</strong> Google Maps showed Jeremy in New Lisbon, Indiana at 1:58 PM EDT on August 23. The displayed 212 miles is direct geographic separation. Approximately 29 route miles in 31 minutes gives about 56 MPH; location and route rounding account for the small difference from the 55 MPH towing cap.</li>
@@ -496,9 +504,10 @@
         <li><strong>Eaton-area checkpoint:</strong> At 3:28 PM EDT on August 23, Google Maps showed Jeremy’s location as one minute old at coordinates 39.7903063, -84.6644220 near Surface Road and Alexander Road, north of Eaton, Ohio. The tracker records the observation as approximately 3:27 PM. Roughly 10 route miles elapsed from the Richmond travel-center checkpoint; the segment includes the apparent stop there.</li>
         <li><strong>Clayton checkpoint and GPS drift:</strong> Google Maps showed Jeremy near I-70 at Crestway Drive in Clayton, Ohio at 3:37 PM EDT. The immediately preceding pins jumped farther than the bus could physically travel, and each appeared off the highway. The tracker therefore uses approximately nine miles of plausible I-70 progress during this ten-minute interval rather than measuring between the raw GPS pins.</li>
         <li><strong>Dublin checkpoint:</strong> Google Maps showed Jeremy near Upper Metro Place in Dublin, Ohio at 5:02 PM EDT on August 23. This replaces the pending Dayton and Columbus markers because the confirmed route reached the Columbus metro by way of Dublin. Approximately 72 road miles in 1 hour 25 minutes gives about 50.8 MPH of overall progress, consistent with the 55 MPH towing cap.</li>
+        <li><strong>Marengo checkpoint:</strong> Google Maps showed Jeremy on I-71 near Marengo, Ohio at 5:48 PM EDT on August 23. Approximately 31 route miles in 46 minutes gives about 40.4 MPH of overall progress; this may include slower traffic or a brief stop and is not instantaneous driving speed.</li>
         <li><strong>Final destination:</strong> 6856 Anthony Lane, Parma Heights, Ohio 44130 replaces the generic Cleveland-center destination previously shown on the route map. The map coordinate is approximate.</li>
-        <li><strong>Pending arrival estimates:</strong> From the 5:02 PM EDT Dublin observation: Mansfield ~6:11 PM, Seville ~6:58 PM, Middleburg Heights ~7:29 PM, and Parma Heights ~7:34 PM. Seville is geographically between Mansfield and Middleburg Heights. These are departure-based estimates at the 55 MPH towing cap; the Richmond stop is treated as the planned break.</li>
-        <li><strong>Planned route:</strong> The revised projected total is approximately 2,862 miles: about 2,723 estimated miles traveled through Dublin plus approximately 139 route miles through Mansfield, Seville, and Middleburg Heights to Parma Heights. Progress uses this revised projection.</li>
+        <li><strong>Pending arrival estimates:</strong> From the 5:48 PM EDT Marengo observation: Mansfield ~6:23 PM, Seville ~7:10 PM, Middleburg Heights ~7:41 PM, and Parma Heights ~7:46 PM. Seville is geographically between Mansfield and Middleburg Heights. These are departure-based estimates at the 55 MPH towing cap; the Richmond stop is treated as the planned break.</li>
+        <li><strong>Planned route:</strong> The revised projected total is approximately 2,862 miles: about 2,754 estimated miles traveled through Marengo plus approximately 108 route miles through Mansfield, Seville, and Middleburg Heights to Parma Heights. Progress uses this revised projection.</li>
         <li><strong>Joplin checkpoint:</strong> Google Maps showed Jeremy at Sleep Inn South Joplin at 5:21 AM EDT (4:21 AM local). Its shared-location view displayed 748 miles from Jason, which appears to be direct geographic separation. Google Maps Directions showed 853 miles via the faster toll route and 916 miles via the selected longer no-toll route. Those direct-route options are informational; trip completion uses the full planned itinerary.</li>
         <li><strong>Estimated:</strong> Jeremy's Newhall departure time was inferred from the Arizona report and the likely driving time of the bus-and-trailer combination. Segment road mileage is approximate route mileage.</li>
         <li><strong>Calculated:</strong> Elapsed time, average progress, cumulative mileage, and percent complete are derived from the recorded observations and estimated road mileage.</li>
@@ -508,7 +517,7 @@
       </ul>
     </aside>
 
-    <footer>Last observed August 23, 2026 at 5:02 PM EDT</footer>
+    <footer>Last observed August 23, 2026 at 5:48 PM EDT</footer>
   </main>
   <script>
     (() => {
