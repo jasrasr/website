@@ -62,16 +62,17 @@
         { name: "McCordsville, IN", time: "Aug. 22, ~3:49 PM EDT", lat: 39.8943, lon: -85.9198 },
         { name: "Greenfield, IN", time: "Aug. 23, 1:27 PM EDT", lat: 39.820411, lon: -85.832786 },
         { name: "New Lisbon, IN", time: "Aug. 23, 1:58 PM EDT", lat: 39.861, lon: -85.263 },
-        { name: "Richmond, IN", time: "Aug. 23, 2:52 PM EDT · Petro/Blue Beacon area", lat: 39.833, lon: -84.814 }
+        { name: "Richmond, IN", time: "Aug. 23, 2:52 PM EDT · Petro/Blue Beacon area", lat: 39.833, lon: -84.814 },
+        { name: "Eaton, OH area", time: "Aug. 23, ~3:27 PM EDT · 39.7903063, -84.6644220", lat: 39.7903063, lon: -84.6644220 }
       ];
       const pending = [
         { name: "St. Louis, MO", time: "Pending checkpoint", lat: 38.627, lon: -90.199 },
         { name: "Evansville, IN", time: "Pending checkpoint", lat: 37.972, lon: -87.571 },
-        { name: "Dayton, OH", time: "Estimated arrival: Aug. 23, ~3:40 PM EDT · ~44 mi from Richmond", lat: 39.759, lon: -84.192 },
-        { name: "Columbus, OH", time: "Estimated arrival: Aug. 23, ~4:59 PM EDT · ~116 cumulative mi", lat: 39.961, lon: -82.999 },
-        { name: "Mansfield, OH", time: "Estimated arrival: Aug. 23, ~6:11 PM EDT · ~182 cumulative mi", lat: 40.758, lon: -82.515 },
-        { name: "Middleburg Heights, OH", time: "Estimated arrival: Aug. 23, ~7:21 PM EDT · ~247 cumulative mi", lat: 41.361, lon: -81.813 },
-        { name: "6856 Anthony Lane, Parma Heights, OH 44130", time: "Estimated arrival: Aug. 23, ~7:43 PM EDT · ~253 cumulative mi", lat: 41.372245, lon: -81.748750 }
+        { name: "Dayton, OH", time: "Estimated arrival: Aug. 23, ~4:04 PM EDT · ~34 mi from Eaton area", lat: 39.759, lon: -84.192 },
+        { name: "Columbus, OH", time: "Estimated arrival: Aug. 23, ~5:23 PM EDT · ~106 cumulative mi", lat: 39.961, lon: -82.999 },
+        { name: "Mansfield, OH", time: "Estimated arrival: Aug. 23, ~6:35 PM EDT · ~172 cumulative mi", lat: 40.758, lon: -82.515 },
+        { name: "Middleburg Heights, OH", time: "Estimated arrival: Aug. 23, ~7:46 PM EDT · ~237 cumulative mi", lat: 41.361, lon: -81.813 },
+        { name: "6856 Anthony Lane, Parma Heights, OH 44130", time: "Estimated arrival: Aug. 23, ~7:52 PM EDT · ~243 cumulative mi", lat: 41.372245, lon: -81.748750 }
       ];
       const latest = recorded[recorded.length - 1];
       const upcoming = pending.filter((point) => latest.lon < point.lon);
