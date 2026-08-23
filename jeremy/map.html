@@ -65,15 +65,16 @@
         { name: "Richmond, IN", time: "Aug. 23, 2:52 PM EDT · Petro/Blue Beacon area", lat: 39.833, lon: -84.814 },
         { name: "Eaton, OH area", time: "Aug. 23, ~3:27 PM EDT · low-confidence GPS", lat: 39.7903063, lon: -84.6644220 },
         { name: "Clayton, OH", time: "Aug. 23, 3:37 PM EDT · I-70/Crestway area · approximate marker", lat: 39.855, lon: -84.358 },
-        { name: "Dublin, OH", time: "Aug. 23, 5:02 PM EDT · Upper Metro Place area", lat: 40.101, lon: -83.129 }
+        { name: "Dublin, OH", time: "Aug. 23, 5:02 PM EDT · Upper Metro Place area", lat: 40.101, lon: -83.129 },
+        { name: "Marengo, OH", time: "Aug. 23, 5:48 PM EDT · I-71 corridor", lat: 40.400, lon: -82.810 }
       ];
       const pending = [
         { name: "St. Louis, MO", time: "Pending checkpoint", lat: 38.627, lon: -90.199 },
         { name: "Evansville, IN", time: "Pending checkpoint", lat: 37.972, lon: -87.571 },
-        { name: "Mansfield, OH", time: "Estimated arrival: Aug. 23, ~6:11 PM EDT · ~63 mi from Dublin", lat: 40.758, lon: -82.515 },
-        { name: "Seville, OH", time: "Estimated arrival: Aug. 23, ~6:58 PM EDT · ~106 cumulative mi", lat: 41.015620, lon: -81.864363 },
-        { name: "Middleburg Heights, OH", time: "Estimated arrival: Aug. 23, ~7:29 PM EDT · ~135 cumulative mi", lat: 41.361, lon: -81.813 },
-        { name: "6856 Anthony Lane, Parma Heights, OH 44130", time: "Estimated arrival: Aug. 23, ~7:34 PM EDT · ~139 cumulative mi", lat: 41.372245, lon: -81.748750 }
+        { name: "Mansfield, OH", time: "Estimated arrival: Aug. 23, ~6:23 PM EDT · ~32 mi from Marengo", lat: 40.758, lon: -82.515 },
+        { name: "Seville, OH", time: "Estimated arrival: Aug. 23, ~7:10 PM EDT · ~75 cumulative mi", lat: 41.015620, lon: -81.864363 },
+        { name: "Middleburg Heights, OH", time: "Estimated arrival: Aug. 23, ~7:41 PM EDT · ~104 cumulative mi", lat: 41.361, lon: -81.813 },
+        { name: "6856 Anthony Lane, Parma Heights, OH 44130", time: "Estimated arrival: Aug. 23, ~7:46 PM EDT · ~108 cumulative mi", lat: 41.372245, lon: -81.748750 }
       ];
       const latest = recorded[recorded.length - 1];
       const upcoming = pending.filter((point) => latest.lon < point.lon);
