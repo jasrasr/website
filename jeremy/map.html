@@ -65,11 +65,11 @@
       const pending = [
         { name: "St. Louis, MO", time: "Pending checkpoint", lat: 38.627, lon: -90.199 },
         { name: "Evansville, IN", time: "Pending checkpoint", lat: 37.972, lon: -87.571 },
-        { name: "Dayton, OH", time: "Pending checkpoint", lat: 39.759, lon: -84.192 },
-        { name: "Columbus, OH", time: "Pending checkpoint", lat: 39.961, lon: -82.999 },
-        { name: "Mansfield, OH", time: "Pending checkpoint", lat: 40.758, lon: -82.515 },
-        { name: "Middleburg Heights, OH", time: "Pending checkpoint", lat: 41.361, lon: -81.813 },
-        { name: "6856 Anthony Lane, Parma Heights, OH 44130", time: "Final destination", lat: 41.372245, lon: -81.748750 }
+        { name: "Dayton, OH", time: "Estimated arrival: Aug. 23, ~3:13 PM EDT · ~97 mi from Greenfield", lat: 39.759, lon: -84.192 },
+        { name: "Columbus, OH", time: "Estimated arrival: Aug. 23, ~4:31 PM EDT · ~169 cumulative mi", lat: 39.961, lon: -82.999 },
+        { name: "Mansfield, OH", time: "Estimated arrival: Aug. 23, ~5:43 PM EDT · ~235 cumulative mi", lat: 40.758, lon: -82.515 },
+        { name: "Middleburg Heights, OH", time: "Estimated arrival: Aug. 23, ~7:09 PM EDT · ~300 cumulative mi", lat: 41.361, lon: -81.813 },
+        { name: "6856 Anthony Lane, Parma Heights, OH 44130", time: "Estimated arrival: Aug. 23, ~7:16 PM EDT · ~306 cumulative mi", lat: 41.372245, lon: -81.748750 }
       ];
       const latest = recorded[recorded.length - 1];
       const upcoming = pending.filter((point) => latest.lon < point.lon);
