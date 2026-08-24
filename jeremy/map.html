@@ -38,7 +38,7 @@
     }
   </script>
   <a class="map-nav" href="index.html" target="_top">← Back to trip tracker</a>
-  <div id="map" role="img" aria-label="Map of Jeremy's recorded trip checkpoints and planned route to Cleveland"></div>
+  <div id="map" role="img" aria-label="Map of Jeremy's completed trip from Newhall to Parma Heights"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     (() => {
@@ -68,14 +68,11 @@
         { name: "Dublin, OH", time: "Aug. 23, 5:02 PM EDT · Upper Metro Place area", lat: 40.101, lon: -83.129 },
         { name: "Marengo, OH", time: "Aug. 23, 5:48 PM EDT · I-71 corridor", lat: 40.400, lon: -82.810 },
         { name: "Ashland, OH", time: "Aug. 23, 6:27–6:53 PM EDT · apparent stop", lat: 40.868, lon: -82.318 },
-        { name: "Medina, OH area", time: "Aug. 23, 7:28 PM EDT · Windfall/I-271 · low-confidence GPS", lat: 41.1609562, lon: -81.7771641 }
+        { name: "Medina, OH area", time: "Aug. 23, 7:28 PM EDT · Windfall/I-271 · low-confidence GPS", lat: 41.1609562, lon: -81.7771641 },
+        { name: "Brunswick, OH", time: "Aug. 23, 7:37 PM EDT · N Carpenter Rd/I-71 area", lat: 41.238, lon: -81.841 },
+        { name: "Parma Heights, OH", time: "Arrived Aug. 23, 8:15 PM EDT · 6856 Anthony Lane", lat: 41.372245, lon: -81.748750 }
       ];
-      const pending = [
-        { name: "St. Louis, MO", time: "Pending checkpoint", lat: 38.627, lon: -90.199 },
-        { name: "Evansville, IN", time: "Pending checkpoint", lat: 37.972, lon: -87.571 },
-        { name: "Middleburg Heights, OH", time: "Estimated arrival: Aug. 23, ~7:54 PM EDT · ~19 mi from Medina area", lat: 41.361, lon: -81.813 },
-        { name: "6856 Anthony Lane, Parma Heights, OH 44130", time: "Estimated arrival: Aug. 23, ~7:59 PM EDT · ~23 cumulative mi", lat: 41.372245, lon: -81.748750 }
-      ];
+      const pending = [];
       const latest = recorded[recorded.length - 1];
       const upcoming = pending.filter((point) => latest.lon < point.lon);
       const planned = [latest, ...upcoming];
@@ -99,9 +96,11 @@
       const traveled = L.polyline(recorded.map((point) => [point.lat, point.lon]), {
         color: "#74e0aa", weight: 4
       }).addTo(map);
-      const future = L.polyline(planned.map((point) => [point.lat, point.lon]), {
-        color: "#ffd166", weight: 4, dashArray: "10 8"
-      }).addTo(map);
+      if (planned.length > 1) {
+        L.polyline(planned.map((point) => [point.lat, point.lon]), {
+          color: "#ffd166", weight: 4, dashArray: "10 8"
+        }).addTo(map);
+      }
       map.setView([latest.lat, latest.lon], 6);
     })();
   </script>
