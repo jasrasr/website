@@ -3,14 +3,27 @@ declare(strict_types=1);
 
 final class FreshserviceClient
 {
+    private readonly string $baseUrl;
+
     public function __construct(
-        private readonly string $domain,
+        string $domain,
         private readonly string $apiKey,
         private readonly int $workspaceId = 0
     ) {
         if (!function_exists('curl_init')) {
             throw new RuntimeException('The PHP cURL extension is required.');
         }
+
+        $candidate = trim($domain);
+        if (!preg_match('#^https?://#i', $candidate)) {
+            $candidate = 'https://' . $candidate;
+        }
+        $parts = parse_url($candidate);
+        $host = is_array($parts) ? (string) ($parts['host'] ?? '') : '';
+        if ($host === '') {
+            throw new RuntimeException('Invalid Freshservice domain. Use tenant.freshservice.com.');
+        }
+        $this->baseUrl = 'https://' . $host . (isset($parts['port']) ? ':' . (int) $parts['port'] : '');
     }
 
     /** @return array<int, array<string, mixed>> */
@@ -27,9 +40,7 @@ final class FreshserviceClient
                 'page' => $page,
                 'per_page' => $perPage,
             ];
-            if ($this->workspaceId > 0) {
-                $params['workspace_id'] = $this->workspaceId;
-            }
+            $params['workspace_id'] = $this->workspaceId;
 
             $response = $this->get('/api/v2/tickets/filter?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986));
             $batch = isset($response['tickets']) && is_array($response['tickets']) ? $response['tickets'] : [];
@@ -38,8 +49,9 @@ final class FreshserviceClient
                     $tickets[] = $ticket;
                 }
             }
+            $total = max(count($tickets), (int) ($response['total'] ?? count($tickets)));
             $page++;
-        } while (count($batch) === $perPage);
+        } while ($batch !== [] && count($tickets) < $total);
 
         return $tickets;
     }
@@ -61,7 +73,7 @@ final class FreshserviceClient
     /** @return array<string, mixed> */
     private function get(string $path): array
     {
-        $url = 'https://' . trim($this->domain, '/') . $path;
+        $url = $this->baseUrl . $path;
         $handle = curl_init($url);
         curl_setopt_array($handle, [
             CURLOPT_RETURNTRANSFER => true,
@@ -82,7 +94,11 @@ final class FreshserviceClient
             throw new RuntimeException('Freshservice request failed: ' . $error);
         }
         if ($status < 200 || $status >= 300) {
-            throw new RuntimeException(sprintf('Freshservice returned HTTP %d.', $status));
+            $endpoint = (string) (parse_url($path, PHP_URL_PATH) ?: $path);
+            $hint = $status === 404
+                ? ' Verify that domain is your tenant hostname, such as tenant.freshservice.com.'
+                : '';
+            throw new RuntimeException(sprintf('Freshservice returned HTTP %d for %s.%s', $status, $endpoint, $hint));
         }
 
         $decoded = json_decode($body, true);

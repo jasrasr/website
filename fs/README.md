@@ -19,10 +19,10 @@ The dashboard merges the Git-tracked manual history with API snapshots stored on
 ## Setup
 
 1. Copy `config.local.example.php` to `config.local.php` on the server.
-2. Set `domain` to the full Freshservice hostname, such as `company.freshservice.com`.
+2. Set `domain` to the Freshservice tenant hostname, such as `company.freshservice.com`. A pasted full portal URL is normalized to its hostname.
 3. Paste the API key into `api_key`.
 4. Set `agent_id` to the Freshservice agent ID whose **My Unresolved** queue is being tracked.
-5. Use `workspace_id` when the account requires a specific workspace; otherwise leave it as `0`.
+5. Use a positive `workspace_id` for one workspace, or leave it as `0` to request all accessible workspaces.
 6. Replace `collector_token` with a long random secret.
 7. Use **Pull tickets now** on the dashboard or run the collector from cron. The first run creates the API baseline; the second and later runs calculate activity.
 
