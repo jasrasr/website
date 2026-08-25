@@ -17,7 +17,7 @@ A private, mobile-first PHP/JSON gallery for one baby photo per day. Built from 
 
 ## Install
 
-1. Deploy this folder to `jasr.me/github/baby-photo-tracker/`.
+1. Deploy this folder to `jasr.me/github/daily-babe/`.
 2. Ensure PHP can write to `storage/`.
 3. For stronger privacy, copy `config/config.example.php` to `config/config.php` and set `storage_path` to a writable folder above `public_html`.
 4. Open the site and create a password of at least 10 characters.
