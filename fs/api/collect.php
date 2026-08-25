@@ -6,6 +6,10 @@ header('Cache-Control: no-store');
 
 $root = dirname(__DIR__);
 $configFile = $root . '/config.local.php';
+$legacyConfigFile = dirname($root) . '/FS/config.local.php';
+if (!is_file($configFile) && is_file($legacyConfigFile)) {
+    $configFile = $legacyConfigFile;
+}
 $stateFile = $root . '/storage/api-state.json';
 $snapshotFile = $root . '/storage/api-snapshots.json';
 
@@ -51,7 +55,7 @@ function minimalTicket(array $ticket): array
 }
 
 if (!is_file($configFile)) {
-    respond(503, ['ok' => false, 'error' => 'Missing config.local.php. Copy config.example.php and add your settings.']);
+    respond(503, ['ok' => false, 'error' => 'Missing config.local.php. Copy config.local.example.php and add your settings.']);
 }
 
 $config = require $configFile;
