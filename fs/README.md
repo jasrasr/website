@@ -18,7 +18,7 @@ The dashboard merges the Git-tracked manual history with API snapshots stored on
 
 ## Setup
 
-1. Copy `config.example.php` to `config.local.php` on the server.
+1. Copy `config.local.example.php` to `config.local.php` on the server.
 2. Set `domain` to the full Freshservice hostname, such as `company.freshservice.com`.
 3. Paste the API key into `api_key`.
 4. Set `agent_id` to the Freshservice agent ID whose **My Unresolved** queue is being tracked.
@@ -29,10 +29,12 @@ The dashboard merges the Git-tracked manual history with API snapshots stored on
 Recommended cron request:
 
 ```bash
-curl -fsS -H "Authorization: Bearer YOUR_COLLECTOR_TOKEN" https://jasr.me/github/FS/api/collect.php
+curl -fsS -H "Authorization: Bearer YOUR_COLLECTOR_TOKEN" https://jasr.me/github/fs/api/collect.php
 ```
 
 Running hourly captures tickets that enter and leave the queue during the same day more reliably than one end-of-day snapshot.
+
+During the folder rename, the collector can temporarily read an existing `FS/config.local.php`. Move that file to `fs/config.local.php` when convenient so all runtime files live under the lowercase folder.
 
 ## Privacy and security
 
