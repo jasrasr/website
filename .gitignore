@@ -48,6 +48,10 @@ smart-404/smart-404-data/smart-404-map.json
 smart-404/smart-404-data/smart-404-malicious.json
 debt-payoff/data/*.json
 debt-payoff/data/**/*.json
+FS/config.local.php
+FS/storage/*
+!FS/storage/.htaccess
+!FS/storage/.gitkeep
 
 # Example/sample files
 how-much-time-worked/example.jpg

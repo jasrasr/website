@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 $dataFile = __DIR__ . '/data/ticket-counts.json';
+$apiDataFile = __DIR__ . '/storage/api-snapshots.json';
 $payload = ['goal' => 0, 'entries' => []];
 $error = null;
 
@@ -16,6 +17,13 @@ if (is_file($dataFile)) {
     $error = 'Ticket data file was not found.';
 }
 
+if (is_file($apiDataFile)) {
+    $apiDecoded = json_decode((string) file_get_contents($apiDataFile), true);
+    if (is_array($apiDecoded) && isset($apiDecoded['entries']) && is_array($apiDecoded['entries'])) {
+        $payload['entries'] = array_merge($payload['entries'], $apiDecoded['entries']);
+    }
+}
+
 $entries = $payload['entries'];
 usort($entries, static fn(array $a, array $b): int => strcmp((string) ($a['capturedAt'] ?? ''), (string) ($b['capturedAt'] ?? '')));
 $goal = max(0, (int) ($payload['goal'] ?? 0));
@@ -28,6 +36,24 @@ $change = $previous ? $current - (int) ($previous['unresolved'] ?? 0) : null;
 $reduced = max(0, $baseline - $current);
 $reductionPercent = $baseline > $goal ? max(0, min(100, (($baseline - $current) / ($baseline - $goal)) * 100)) : 100;
 $remaining = max(0, $current - $goal);
+$latestDay = $latest && !empty($latest['capturedAt']) ? (new DateTimeImmutable((string) $latest['capturedAt']))->format('Y-m-d') : null;
+$todayActivity = [
+    'enteredUnresolved' => 0,
+    'exitedUnresolved' => 0,
+    'newTickets' => 0,
+    'assignedIn' => 0,
+    'reopened' => 0,
+    'resolved' => 0,
+    'closed' => 0,
+    'reassignedAway' => 0,
+];
+foreach ($entries as $entry) {
+    if ($latestDay === null || empty($entry['capturedAt']) || empty($entry['activity']) || !is_array($entry['activity'])) continue;
+    if ((new DateTimeImmutable((string) $entry['capturedAt']))->format('Y-m-d') !== $latestDay) continue;
+    foreach ($todayActivity as $key => $value) {
+        $todayActivity[$key] += (int) ($entry['activity'][$key] ?? 0);
+    }
+}
 
 function e(string $value): string
 {
@@ -73,6 +99,9 @@ function displayDate(?string $value): string
         .progress span { display:block; height:100%; background:linear-gradient(90deg,var(--blue),var(--green)); border-radius:inherit; }
         .section { margin-top:14px; padding:22px; }
         .section h2 { margin:0 0 16px; font-size:1.15rem; }
+        .activity-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+        .activity-item { padding:15px; border-radius:13px; background:#0b1727; border:1px solid var(--line); }
+        .activity-item strong { display:block; margin-top:5px; font-size:1.8rem; }
         canvas { display:block; width:100%; height:280px; }
         .table-wrap { overflow:auto; }
         table { width:100%; border-collapse:collapse; min-width:680px; }
@@ -81,7 +110,7 @@ function displayDate(?string $value): string
         td.number { font-weight:800; }
         .error { padding:14px; border:1px solid #74363a; border-radius:12px; background:#2d171b; color:#ffbec1; }
         footer { color:var(--muted); text-align:center; margin-top:24px; font-size:.85rem; }
-        @media (max-width:820px) { .grid { grid-template-columns:repeat(2,1fr); } header { align-items:flex-start; flex-direction:column; } }
+        @media (max-width:820px) { .grid,.activity-grid { grid-template-columns:repeat(2,1fr); } header { align-items:flex-start; flex-direction:column; } }
         @media (max-width:480px) { main { width:min(100% - 18px,1120px); padding-top:18px; } .grid { grid-template-columns:1fr 1fr; gap:9px; } .card { min-height:120px; padding:15px; } .section { padding:16px; } }
     </style>
 </head>
@@ -101,13 +130,25 @@ function displayDate(?string $value): string
         <article class="card"><span class="label">Reduction from start</span><span class="value goal"><?= number_format($reductionPercent, 0) ?>%</span><div class="progress"><span style="width:<?= e((string) $reductionPercent) ?>%"></span></div><span class="sub"><?= number_format($reduced) ?> fewer than the <?= number_format($baseline) ?> baseline</span></article>
     </section>
 
+    <section class="section">
+        <h2>Activity on <?= $latestDay ? e((new DateTimeImmutable($latestDay))->format('M j, Y')) : 'latest day' ?></h2>
+        <div class="activity-grid">
+            <div class="activity-item"><span class="label">Entered unresolved</span><strong><?= number_format($todayActivity['enteredUnresolved']) ?></strong><span class="sub">New, assigned, or reopened</span></div>
+            <div class="activity-item"><span class="label">Exited unresolved</span><strong><?= number_format($todayActivity['exitedUnresolved']) ?></strong><span class="sub">Resolved, closed, or reassigned</span></div>
+            <div class="activity-item"><span class="label">New tickets</span><strong><?= number_format($todayActivity['newTickets']) ?></strong><span class="sub"><?= number_format($todayActivity['assignedIn']) ?> assigned in · <?= number_format($todayActivity['reopened']) ?> reopened</span></div>
+            <div class="activity-item"><span class="label">Completed</span><strong><?= number_format($todayActivity['resolved'] + $todayActivity['closed']) ?></strong><span class="sub"><?= number_format($todayActivity['resolved']) ?> resolved · <?= number_format($todayActivity['closed']) ?> closed</span></div>
+        </div>
+        <?php if (($latest['source'] ?? '') !== 'freshservice-api'): ?><p class="muted">Detailed activity begins after the API collector is configured and has completed at least two runs.</p><?php endif; ?>
+    </section>
+
     <section class="section"><h2>Unresolved ticket trend</h2><canvas id="trend" role="img" aria-label="Unresolved ticket count over time"></canvas><p id="chart-note" class="muted"></p></section>
 
-    <section class="section"><h2>Snapshot history</h2><div class="table-wrap"><table><thead><tr><th>Captured</th><th>Unresolved</th><th>Change</th><th>Source</th><th>Note</th></tr></thead><tbody>
+    <section class="section"><h2>Snapshot history</h2><div class="table-wrap"><table><thead><tr><th>Captured</th><th>Unresolved</th><th>Change</th><th>Entered</th><th>Exited</th><th>Source</th><th>Note</th></tr></thead><tbody>
     <?php foreach (array_reverse($entries) as $index => $entry):
         $originalIndex = count($entries) - 1 - $index;
         $rowChange = $originalIndex > 0 ? (int) $entry['unresolved'] - (int) $entries[$originalIndex - 1]['unresolved'] : null;
-    ?><tr><td><?= e(displayDate($entry['capturedAt'] ?? null)) ?></td><td class="number"><?= number_format((int) ($entry['unresolved'] ?? 0)) ?></td><td><?= $rowChange === null ? '—' : sprintf('%+d', $rowChange) ?></td><td><?= e((string) ($entry['source'] ?? 'unknown')) ?></td><td><?= e((string) ($entry['note'] ?? '')) ?></td></tr><?php endforeach; ?>
+        $rowActivity = isset($entry['activity']) && is_array($entry['activity']) ? $entry['activity'] : [];
+    ?><tr><td><?= e(displayDate($entry['capturedAt'] ?? null)) ?></td><td class="number"><?= number_format((int) ($entry['unresolved'] ?? 0)) ?></td><td><?= $rowChange === null ? '—' : sprintf('%+d', $rowChange) ?></td><td><?= array_key_exists('enteredUnresolved', $rowActivity) ? number_format((int) $rowActivity['enteredUnresolved']) : '—' ?></td><td><?= array_key_exists('exitedUnresolved', $rowActivity) ? number_format((int) $rowActivity['exitedUnresolved']) : '—' ?></td><td><?= e((string) ($entry['source'] ?? 'unknown')) ?></td><td><?= e((string) ($entry['note'] ?? '')) ?></td></tr><?php endforeach; ?>
     </tbody></table></div></section>
     <footer>Aggregate counts only. No ticket subjects, requesters, or credentials are stored here.</footer>
 </main>
