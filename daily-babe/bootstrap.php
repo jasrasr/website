@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '1.0.0';
+const BABY_TRACKER_VERSION = '1.0.1';
 
 $configFile = __DIR__ . '/config/config.php';
 $config = require is_file($configFile) ? $configFile : __DIR__ . '/config/config.example.php';
@@ -176,4 +176,3 @@ function valid_date(string $date): bool
     $parsed = DateTimeImmutable::createFromFormat('!Y-m-d', $date);
     return $parsed !== false && $parsed->format('Y-m-d') === $date;
 }
-

@@ -72,7 +72,7 @@ $authenticated = is_authenticated();
 <dialog id="uploadDialog">
     <form id="uploadForm">
         <div class="dialog-head"><div><p class="eyebrow">DAILY MEMORY</p><h2>Add a photo</h2></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>
-        <label>Photo date<input type="date" name="photoDate" max="<?= date('Y-m-d') ?>" value="<?= date('Y-m-d') ?>" required></label>
+        <label>Photo date<input type="date" name="photoDate" required></label>
         <label>Photo<input type="file" name="photo" accept="image/jpeg,image/png,image/webp" capture="user" required></label>
         <div id="preview" class="preview">Photo preview</div>
         <label>Note <span>(optional)</span><textarea name="note" maxlength="300" placeholder="First smile, sleepy stretch, favorite outfit…"></textarea></label>
@@ -85,7 +85,7 @@ $authenticated = is_authenticated();
         <div class="dialog-head"><div><p class="eyebrow">GALLERY DETAILS</p><h2>Settings</h2></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>
         <label>Baby’s name<input name="babyName" maxlength="80" value="<?= htmlspecialchars((string) $settings['babyName']) ?>" placeholder="Optional for now"></label>
         <label>Due date<input type="date" name="dueDate" value="<?= htmlspecialchars((string) $settings['dueDate']) ?>" required></label>
-        <label>Actual birth date<input type="date" name="birthDate" max="<?= date('Y-m-d') ?>" value="<?= htmlspecialchars((string) $settings['birthDate']) ?>"><small>Add this after birth to calculate the correct day number.</small></label>
+        <label>Actual birth date<input type="date" name="birthDate" value="<?= htmlspecialchars((string) $settings['birthDate']) ?>"><small>Add this after birth to calculate the correct day number.</small></label>
         <button type="submit">Save settings</button>
     </form>
 </dialog>
@@ -99,4 +99,3 @@ $authenticated = is_authenticated();
 <script src="assets/app.js?v=<?= BABY_TRACKER_VERSION ?>" defer></script>
 </body>
 </html>
-

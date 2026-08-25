@@ -60,7 +60,8 @@ try {
         require_csrf();
         $dueDate = (string) ($_POST['dueDate'] ?? '');
         $birthDate = (string) ($_POST['birthDate'] ?? '');
-        if (!valid_date($dueDate) || ($birthDate !== '' && (!valid_date($birthDate) || $birthDate > date('Y-m-d')))) {
+        $latestClientDate = date('Y-m-d', strtotime('+1 day'));
+        if (!valid_date($dueDate) || ($birthDate !== '' && (!valid_date($birthDate) || $birthDate > $latestClientDate))) {
             json_response(false, 'Enter valid due and birth dates.', null, [['code' => 'INVALID_DATE']], 422);
         }
         $settings = [
@@ -78,7 +79,9 @@ try {
     if ($action === 'upload') {
         require_csrf();
         $photoDate = (string) ($_POST['photoDate'] ?? '');
-        if (!valid_date($photoDate) || $photoDate > date('Y-m-d')) {
+        // Permit one calendar day beyond server time for clients near a timezone boundary.
+        $latestClientDate = date('Y-m-d', strtotime('+1 day'));
+        if (!valid_date($photoDate) || $photoDate > $latestClientDate) {
             json_response(false, 'Choose today or an earlier valid date.', null, [['code' => 'INVALID_DATE', 'field' => 'photoDate']], 422);
         }
         if (!isset($_FILES['photo']) || !is_array($_FILES['photo']) || (int) $_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
@@ -131,4 +134,3 @@ try {
     error_log('Baby Daily [' . request_id() . '] ' . $exception->getMessage());
     json_response(false, 'Something went wrong. Try again.', null, [['code' => 'SERVER_ERROR']], 500);
 }
-
