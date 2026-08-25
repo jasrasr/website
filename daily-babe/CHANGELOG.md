@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2 — 2026-08-25
+
+- Replaced unreliable iPhone data-URL collage downloads with a real JPEG blob.
+- Added a collage preview with iOS Share/Save and standard file-download actions.
+- Added clearer collage progress and image-loading failure handling.
+
 ## 1.0.1 — 2026-08-25
 
 - Fixed iPhone uploads being blocked when the phone's local date was one day ahead of the web server date.

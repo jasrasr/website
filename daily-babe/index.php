@@ -91,6 +91,16 @@ $authenticated = is_authenticated();
 </dialog>
 
 <dialog id="photoDialog"><div class="photo-view"><button type="button" class="icon-button close-dialog" aria-label="Close">×</button><img id="fullPhoto" alt=""><div id="photoDetails"></div></div></dialog>
+
+<dialog id="collageDialog">
+    <div class="dialog-head"><div><p class="eyebrow">READY TO KEEP</p><h2>Your collage</h2></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>
+    <img id="collagePreview" class="collage-preview" alt="Generated Baby Daily collage">
+    <p class="save-help">On iPhone, tap <strong>Share or save</strong> and choose Save Image. You can also press and hold the preview.</p>
+    <div class="collage-actions">
+        <button type="button" id="shareCollageButton">Share or save</button>
+        <button type="button" class="secondary" id="downloadCollageButton">Download file</button>
+    </div>
+</dialog>
 <?php endif; ?>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
