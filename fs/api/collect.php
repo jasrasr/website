@@ -70,7 +70,9 @@ foreach ($required as $key) {
 
 $expectedToken = (string) $config['collector_token'];
 $authorization = (string) ($_SERVER['HTTP_AUTHORIZATION'] ?? '');
-$providedToken = str_starts_with($authorization, 'Bearer ') ? substr($authorization, 7) : (string) ($_GET['token'] ?? '');
+$providedToken = str_starts_with($authorization, 'Bearer ')
+    ? substr($authorization, 7)
+    : (string) ($_SERVER['HTTP_X_COLLECTOR_TOKEN'] ?? '');
 if (!hash_equals($expectedToken, $providedToken)) {
     respond(401, ['ok' => false, 'error' => 'Unauthorized collector request.']);
 }

@@ -86,7 +86,14 @@ function displayDate(?string $value): string
         h1 { margin:0; font-size:clamp(1.7rem,4vw,2.7rem); letter-spacing:-.04em; }
         header p,.muted { color:var(--muted); }
         header p { margin:.4rem 0 0; }
-        .badge { padding:8px 12px; border:1px solid var(--line); border-radius:999px; color:var(--green); background:#0d211c; font-weight:700; white-space:nowrap; }
+        .header-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:10px; align-items:center; }
+        .badge,.pull-button { padding:8px 12px; border:1px solid var(--line); border-radius:999px; font-weight:700; white-space:nowrap; }
+        .badge { color:var(--green); background:#0d211c; }
+        .pull-button { appearance:none; color:#fff; background:#1768d8; cursor:pointer; font:inherit; }
+        .pull-button:hover { background:#2478ed; }
+        .pull-button:disabled { cursor:wait; opacity:.65; }
+        .pull-status { width:100%; min-height:1.2em; color:var(--muted); text-align:right; font-size:.85rem; }
+        .pull-status.error-text { color:#ffbec1; }
         .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
         .card,.section { background:linear-gradient(145deg,var(--panel2),var(--panel)); border:1px solid var(--line); border-radius:18px; box-shadow:0 16px 38px rgba(0,0,0,.2); }
         .card { padding:20px; min-height:138px; }
@@ -110,7 +117,7 @@ function displayDate(?string $value): string
         td.number { font-weight:800; }
         .error { padding:14px; border:1px solid #74363a; border-radius:12px; background:#2d171b; color:#ffbec1; }
         footer { color:var(--muted); text-align:center; margin-top:24px; font-size:.85rem; }
-        @media (max-width:820px) { .grid,.activity-grid { grid-template-columns:repeat(2,1fr); } header { align-items:flex-start; flex-direction:column; } }
+        @media (max-width:820px) { .grid,.activity-grid { grid-template-columns:repeat(2,1fr); } header { align-items:flex-start; flex-direction:column; } .header-actions { justify-content:flex-start; } .pull-status { text-align:left; } }
         @media (max-width:480px) { main { width:min(100% - 18px,1120px); padding-top:18px; } .grid { grid-template-columns:1fr 1fr; gap:9px; } .card { min-height:120px; padding:15px; } .section { padding:16px; } }
     </style>
 </head>
@@ -118,7 +125,11 @@ function displayDate(?string $value): string
 <main>
     <header>
         <div><h1>Freshservice Ticket Tracker</h1><p>Working the unresolved queue toward zero.</p></div>
-        <div class="badge">Goal: <?= $goal ?> unresolved</div>
+        <div class="header-actions">
+            <div class="badge">Goal: <?= $goal ?> unresolved</div>
+            <button type="button" class="pull-button" id="pull-tickets">Pull tickets now</button>
+            <span class="pull-status" id="pull-status" role="status" aria-live="polite"></span>
+        </div>
     </header>
 
     <?php if ($error): ?><p class="error"><?= e($error) ?></p><?php endif; ?>
@@ -154,8 +165,36 @@ function displayDate(?string $value): string
 </main>
 <script>
 const entries = <?= json_encode($entries, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+const pullButton = document.getElementById('pull-tickets');
+const pullStatus = document.getElementById('pull-status');
 const canvas = document.getElementById('trend');
 const note = document.getElementById('chart-note');
+
+pullButton.addEventListener('click', async () => {
+    const token = window.prompt('Enter the private collector token from config.local.php:');
+    if (token === null || token.trim() === '') return;
+
+    pullButton.disabled = true;
+    pullStatus.classList.remove('error-text');
+    pullStatus.textContent = 'Contacting Freshservice…';
+
+    try {
+        const response = await fetch('api/collect.php', {
+            method: 'POST',
+            headers: { 'X-Collector-Token': token.trim(), 'Accept': 'application/json' },
+            cache: 'no-store'
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) throw new Error(result.error || `Collector returned HTTP ${response.status}.`);
+        pullStatus.textContent = `Pulled ${Number(result.endingUnresolved).toLocaleString()} unresolved tickets. Refreshing…`;
+        window.setTimeout(() => window.location.reload(), 700);
+    } catch (error) {
+        pullStatus.classList.add('error-text');
+        pullStatus.textContent = error instanceof Error ? error.message : 'The ticket pull failed.';
+        pullButton.disabled = false;
+    }
+});
+
 function drawChart() {
     const dpr = window.devicePixelRatio || 1, rect = canvas.getBoundingClientRect();
     canvas.width = Math.max(1, Math.round(rect.width * dpr)); canvas.height = Math.round(280 * dpr);

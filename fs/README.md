@@ -24,7 +24,7 @@ The dashboard merges the Git-tracked manual history with API snapshots stored on
 4. Set `agent_id` to the Freshservice agent ID whose **My Unresolved** queue is being tracked.
 5. Use `workspace_id` when the account requires a specific workspace; otherwise leave it as `0`.
 6. Replace `collector_token` with a long random secret.
-7. Visit the collector once or run it from cron. The first run creates the API baseline; the second and later runs calculate activity.
+7. Use **Pull tickets now** on the dashboard or run the collector from cron. The first run creates the API baseline; the second and later runs calculate activity.
 
 Recommended cron request:
 
@@ -33,6 +33,8 @@ curl -fsS -H "Authorization: Bearer YOUR_COLLECTOR_TOKEN" https://jasr.me/github
 ```
 
 Running hourly captures tickets that enter and leave the queue during the same day more reliably than one end-of-day snapshot.
+
+The tracker does not schedule itself. Without a Hostinger cron job, it collects only when **Pull tickets now** is used. The button prompts for `collector_token`, sends it in an HTTPS authorization header, and does not save it in the page or browser storage.
 
 During the folder rename, the collector can temporarily read an existing `FS/config.local.php`. Move that file to `fs/config.local.php` when convenient so all runtime files live under the lowercase folder.
 
