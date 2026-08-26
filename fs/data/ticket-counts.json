@@ -21,6 +21,13 @@
       "source": "screenshot-exif",
       "recordedAt": "2026-08-25T17:50:37-04:00",
       "note": "Freshservice mobile: My Unresolved Tickets"
+    },
+    {
+      "capturedAt": "2026-08-26T16:02:18-04:00",
+      "unresolved": 120,
+      "source": "screenshot-exif",
+      "recordedAt": "2026-08-26T16:05:04-04:00",
+      "note": "Freshservice mobile: My Unresolved Tickets"
     }
   ]
 }
