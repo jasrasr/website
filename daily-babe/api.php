@@ -11,31 +11,77 @@ try {
         if (is_configured()) {
             json_response(false, 'The gallery is already configured.', null, [['code' => 'ALREADY_CONFIGURED']], 409);
         }
+        $username = trim((string) ($_POST['username'] ?? ''));
         $password = (string) ($_POST['password'] ?? '');
         $confirm = (string) ($_POST['confirmPassword'] ?? '');
-        if (strlen($password) < 10 || $password !== $confirm) {
-            json_response(false, 'Use at least 10 characters and make both passwords match.', null, [['code' => 'INVALID_PASSWORD']], 422);
+        if (!valid_username($username)) {
+            json_response(false, 'Use the baby’s first name as the username.', null, [['code' => 'INVALID_USERNAME']], 422);
         }
-        json_write('data/auth.json', ['schemaVersion' => 1, 'passwordHash' => password_hash($password, PASSWORD_DEFAULT), 'updatedAt' => gmdate('c')]);
-        session_regenerate_id(true);
-        $_SESSION['authenticated'] = true;
-        audit_event('gallery.setup');
+        if (strlen($password) < 10 || $password !== $confirm) {
+            json_response(false, 'Use at least 10 characters and make both password entries match.', null, [['code' => 'INVALID_PASSWORD']], 422);
+        }
+        $babyId = bin2hex(random_bytes(12));
+        initialize_baby_storage($babyId);
+        json_write('babies/' . $babyId . '/data/settings.json', [
+            'schemaVersion' => 2,
+            'babyName' => $username,
+            'dueDate' => '2026-11-02',
+            'birthDate' => '',
+            'birthTime' => '',
+            'birthLengthInches' => '',
+            'birthWeightPounds' => '',
+            'birthWeightOunces' => '',
+            'updatedAt' => gmdate('c'),
+        ]);
+        write_auth([
+            'accounts' => [
+                normalize_username($username) => [
+                    'username' => $username,
+                    'babyId' => $babyId,
+                    'passwordHash' => password_hash($password, PASSWORD_DEFAULT),
+                    'createdAt' => gmdate('c'),
+                    'updatedAt' => gmdate('c'),
+                ],
+            ],
+        ]);
+        begin_account_session($username, $babyId);
+        audit_event('gallery.setup', ['username' => $username]);
         json_response(true, 'Private gallery created.');
     }
 
     if ($action === 'login') {
         require_csrf();
-        $auth = json_read('data/auth.json', []);
+        $auth = auth_data();
+        $username = trim((string) ($_POST['username'] ?? ''));
         $password = (string) ($_POST['password'] ?? '');
-        if (!isset($auth['passwordHash']) || !password_verify($password, (string) $auth['passwordHash'])) {
-            usleep(350000);
-            audit_event('auth.failed');
-            json_response(false, 'That password did not match.', null, [['code' => 'INVALID_LOGIN']], 401);
+        if (!valid_username($username)) {
+            json_response(false, 'Enter the baby’s first name.', null, [['code' => 'INVALID_USERNAME']], 422);
         }
-        session_regenerate_id(true);
-        $_SESSION['authenticated'] = true;
-        audit_event('auth.login');
-        json_response(true, 'Signed in.');
+        $key = normalize_username($username);
+        $account = $auth['accounts'][$key] ?? null;
+        if (is_array($account) && password_verify($password, (string) ($account['passwordHash'] ?? ''))) {
+            begin_account_session((string) $account['username'], (string) $account['babyId']);
+            audit_event('auth.login');
+            json_response(true, 'Signed in.');
+        }
+        if (isset($auth['passwordHash']) && password_verify($password, (string) $auth['passwordHash'])) {
+            $babyId = bin2hex(random_bytes(12));
+            migrate_legacy_gallery($babyId, $username);
+            $account = [
+                'username' => $username,
+                'babyId' => $babyId,
+                'passwordHash' => (string) $auth['passwordHash'],
+                'createdAt' => (string) ($auth['updatedAt'] ?? gmdate('c')),
+                'updatedAt' => gmdate('c'),
+            ];
+            write_auth(['accounts' => [$key => $account]]);
+            begin_account_session($username, $babyId);
+            audit_event('auth.legacy_migrated');
+            json_response(true, 'Gallery upgraded and signed in.');
+        }
+        usleep(350000);
+        audit_event('auth.failed', ['username' => $username]);
+        json_response(false, 'That username and password did not match.', null, [['code' => 'INVALID_LOGIN']], 401);
     }
 
     if ($action === 'logout') {
@@ -53,7 +99,79 @@ try {
         $entries = tracker_entries();
         $records = array_values($entries['records'] ?? []);
         usort($records, static fn(array $a, array $b): int => strcmp((string) $b['photoDate'], (string) $a['photoDate']));
-        json_response(true, 'Gallery loaded.', ['settings' => tracker_settings(), 'records' => $records]);
+        $account = current_account();
+        json_response(true, 'Gallery loaded.', [
+            'settings' => tracker_settings(),
+            'records' => $records,
+            'account' => ['username' => (string) $account['username']],
+        ]);
+    }
+
+    if ($action === 'change_password') {
+        require_csrf();
+        $currentPassword = (string) ($_POST['currentPassword'] ?? '');
+        $newPassword = (string) ($_POST['newPassword'] ?? '');
+        $confirmNewPassword = (string) ($_POST['confirmNewPassword'] ?? '');
+        $auth = auth_data();
+        $key = normalize_username((string) $_SESSION['username']);
+        $account = $auth['accounts'][$key] ?? null;
+        if (!is_array($account) || !password_verify($currentPassword, (string) ($account['passwordHash'] ?? ''))) {
+            json_response(false, 'The current password is incorrect.', null, [['code' => 'INVALID_CURRENT_PASSWORD']], 401);
+        }
+        if (strlen($newPassword) < 10 || $newPassword !== $confirmNewPassword) {
+            json_response(false, 'Use at least 10 characters and make both new password entries match.', null, [['code' => 'INVALID_NEW_PASSWORD']], 422);
+        }
+        if (password_verify($newPassword, (string) $account['passwordHash'])) {
+            json_response(false, 'Choose a new password that is different from the current password.', null, [['code' => 'PASSWORD_UNCHANGED']], 422);
+        }
+        $auth['accounts'][$key]['passwordHash'] = password_hash($newPassword, PASSWORD_DEFAULT);
+        $auth['accounts'][$key]['updatedAt'] = gmdate('c');
+        write_auth($auth);
+        audit_event('auth.password_changed');
+        json_response(true, 'Password changed.');
+    }
+
+    if ($action === 'add_baby') {
+        require_csrf();
+        $username = trim((string) ($_POST['babyUsername'] ?? ''));
+        $password = (string) ($_POST['babyPassword'] ?? '');
+        $confirm = (string) ($_POST['confirmBabyPassword'] ?? '');
+        if (!valid_username($username)) {
+            json_response(false, 'Use the baby’s first name as the username.', null, [['code' => 'INVALID_USERNAME']], 422);
+        }
+        if (strlen($password) < 10 || $password !== $confirm) {
+            json_response(false, 'Use at least 10 characters and make both password entries match.', null, [['code' => 'INVALID_PASSWORD']], 422);
+        }
+        $auth = auth_data();
+        $key = normalize_username($username);
+        if (isset($auth['accounts'][$key])) {
+            json_response(false, 'That baby username already exists.', null, [['code' => 'USERNAME_EXISTS']], 409);
+        }
+        $babyId = bin2hex(random_bytes(12));
+        initialize_baby_storage($babyId);
+        $account = [
+            'username' => $username,
+            'babyId' => $babyId,
+            'passwordHash' => password_hash($password, PASSWORD_DEFAULT),
+            'createdAt' => gmdate('c'),
+            'updatedAt' => gmdate('c'),
+        ];
+        $auth['accounts'][$key] = $account;
+        write_auth($auth);
+        begin_account_session($username, $babyId);
+        baby_json_write('data/settings.json', [
+            'schemaVersion' => 2,
+            'babyName' => $username,
+            'dueDate' => '2026-11-02',
+            'birthDate' => '',
+            'birthTime' => '',
+            'birthLengthInches' => '',
+            'birthWeightPounds' => '',
+            'birthWeightOunces' => '',
+            'updatedAt' => gmdate('c'),
+        ]);
+        audit_event('baby.created');
+        json_response(true, 'Baby gallery created.', ['username' => $username], [], 201);
     }
 
     if ($action === 'settings') {
@@ -87,7 +205,7 @@ try {
             'birthWeightOunces' => $birthWeightOunces,
             'updatedAt' => gmdate('c'),
         ];
-        json_write('data/settings.json', $settings);
+        baby_json_write('data/settings.json', $settings);
         audit_event('settings.updated');
         json_response(true, 'Settings saved.', $settings);
     }
@@ -116,7 +234,7 @@ try {
         }
         $id = bin2hex(random_bytes(12));
         $filename = $id . '.' . $extensions[$mime];
-        $destination = storage_path('uploads/' . $filename);
+        $destination = baby_storage_path('uploads/' . $filename);
         if (!move_uploaded_file((string) $upload['tmp_name'], $destination)) {
             throw new RuntimeException('Unable to store the uploaded photo.');
         }
@@ -140,7 +258,7 @@ try {
         $records[] = $record;
         $entries['records'] = $records;
         $entries['updatedAt'] = gmdate('c');
-        json_write('data/entries.json', $entries);
+        baby_json_write('data/entries.json', $entries);
         audit_event('photo.uploaded', ['id' => $id, 'photoDate' => $photoDate]);
         json_response(true, 'Daily photo saved.', $record, [], 201);
     }

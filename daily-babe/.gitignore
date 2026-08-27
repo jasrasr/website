@@ -3,6 +3,7 @@ storage/data/
 storage/logs/
 storage/backups/
 storage/uploads/
+storage/babies/
 !storage/.gitkeep
 !storage/.htaccess
 

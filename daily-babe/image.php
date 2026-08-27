@@ -27,7 +27,7 @@ if ($match === null) {
     exit;
 }
 
-$path = storage_path('uploads/' . basename((string) $match['filename']));
+$path = baby_storage_path('uploads/' . basename((string) $match['filename']));
 if (!is_file($path)) {
     http_response_code(404);
     exit;

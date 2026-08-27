@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 require __DIR__ . '/bootstrap.php';
-$settings = tracker_settings();
 $configured = is_configured();
 $authenticated = is_authenticated();
+$authData = auth_data();
+$legacyAuth = $configured && isset($authData['passwordHash']);
+$settings = $authenticated ? tracker_settings() : [];
+$account = $authenticated ? current_account() : [];
 ?>
 <!doctype html>
 <html lang="en">
@@ -15,22 +18,23 @@ $authenticated = is_authenticated();
     <title><?= htmlspecialchars((string) ($config['app_name'] ?? 'Baby Daily')) ?></title>
     <link rel="stylesheet" href="assets/app.css?v=<?= BABY_TRACKER_VERSION ?>">
 </head>
-<body data-authenticated="<?= $authenticated ? 'true' : 'false' ?>" data-configured="<?= $configured ? 'true' : 'false' ?>">
+<body data-authenticated="<?= $authenticated ? 'true' : 'false' ?>" data-configured="<?= $configured ? 'true' : 'false' ?>" data-legacy-auth="<?= $legacyAuth ? 'true' : 'false' ?>">
 <header class="topbar">
     <div>
         <p class="eyebrow">ONE PHOTO · EVERY DAY</p>
         <h1>Baby Daily</h1>
     </div>
-    <?php if ($authenticated): ?><button class="secondary compact" id="logoutButton">Sign out</button><?php endif; ?>
+    <?php if ($authenticated): ?><div class="account-actions"><span><?= htmlspecialchars((string) $account['username']) ?></span><button class="secondary compact" id="logoutButton">Sign out</button></div><?php endif; ?>
 </header>
 
 <main>
     <?php if (!$authenticated): ?>
         <section class="auth-card card">
             <div class="baby-mark" aria-hidden="true">♥</div>
-            <h2><?= $configured ? 'Welcome back' : 'Create the private gallery' ?></h2>
-            <p><?= $configured ? 'Sign in to view and add family photos.' : 'Choose the password that protects this gallery.' ?></p>
+            <h2><?= $legacyAuth ? 'Name the existing gallery' : ($configured ? 'Welcome back' : 'Create the private gallery') ?></h2>
+            <p><?= $legacyAuth ? 'Enter the baby’s first name and your existing password. This upgrades the gallery without deleting the current photos.' : ($configured ? 'Sign in with the baby’s first name to view that gallery.' : 'The baby’s first name becomes the username for this private gallery.') ?></p>
             <form id="authForm">
+                <label>Baby’s first name<input name="username" maxlength="40" pattern="[A-Za-z][A-Za-z'-]{0,39}" autocomplete="username" autocapitalize="words" required></label>
                 <label>Password<input type="password" name="password" minlength="10" autocomplete="<?= $configured ? 'current-password' : 'new-password' ?>" required></label>
                 <?php if (!$configured): ?><label>Confirm password<input type="password" name="confirmPassword" minlength="10" autocomplete="new-password" required></label><?php endif; ?>
                 <button type="submit"><?= $configured ? 'Sign in' : 'Create gallery' ?></button>
@@ -94,6 +98,28 @@ $authenticated = is_authenticated();
             <label>Weight ounces <span>(optional)</span><input type="number" name="birthWeightOunces" min="0" max="15" step="1" inputmode="numeric" value="<?= htmlspecialchars((string) ($settings['birthWeightOunces'] ?? '')) ?>" placeholder="8"></label>
         </div>
         <button type="submit">Save settings</button>
+    </form>
+    <div class="account-section">
+        <p class="eyebrow">ACCOUNT</p>
+        <p>Username: <strong><?= htmlspecialchars((string) $account['username']) ?></strong></p>
+        <form id="passwordForm">
+            <label>Current password<input type="password" name="currentPassword" minlength="10" autocomplete="current-password" required></label>
+            <label>New password<input type="password" name="newPassword" minlength="10" autocomplete="new-password" required></label>
+            <label>Confirm new password<input type="password" name="confirmNewPassword" minlength="10" autocomplete="new-password" required></label>
+            <button type="submit" class="secondary">Change password</button>
+        </form>
+        <button type="button" id="openBabyDialog">＋ Add another baby</button>
+    </div>
+</dialog>
+
+<dialog id="babyDialog">
+    <form id="babyForm">
+        <div class="dialog-head"><div><p class="eyebrow">ANOTHER GALLERY</p><h2>Add a baby</h2></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>
+        <p class="save-help">This creates a separate photo and metadata folder. The baby’s first name is the username.</p>
+        <label>Baby’s first name<input name="babyUsername" maxlength="40" pattern="[A-Za-z][A-Za-z'-]{0,39}" autocomplete="off" autocapitalize="words" required></label>
+        <label>Password<input type="password" name="babyPassword" minlength="10" autocomplete="new-password" required></label>
+        <label>Confirm password<input type="password" name="confirmBabyPassword" minlength="10" autocomplete="new-password" required></label>
+        <button type="submit">Create and open gallery</button>
     </form>
 </dialog>
 

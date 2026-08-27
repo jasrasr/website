@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.0 — 2026-08-27
+
+- Added a baby first-name username to setup and sign-in.
+- Added password changes requiring the current password, a new password, and a matching confirmation.
+- Added creation of additional baby galleries from the authenticated Settings screen.
+- Kept all account credentials in one protected authentication file.
+- Isolated each baby’s settings, entries, backups, and photos in a separate random-ID storage folder.
+- Added a safe first-login migration that copies the existing single-baby gallery before upgrading authentication.
+- Added duplicate-username prevention and per-baby authenticated image delivery.
+
 ## 1.1.0 — 2026-08-27
 
 - Close and reset the add-photo dialog immediately after a confirmed successful save.
