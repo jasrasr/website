@@ -2,16 +2,18 @@
 
 A private, mobile-first PHP/JSON gallery for one baby photo per day. Built from the conventions in `1-Framework` for shared Hostinger hosting.
 
-## Included in v1.0.0
+## Included in v1.1.0
 
 - First-run password setup and protected sessions
 - Daily or backdated JPEG, PNG, and WebP uploads
 - One photo per calendar date
 - Due date of November 2, 2026 and editable actual birth date
+- Optional birth time, length, and weight details
 - Automatic day numbering after the birth date is entered
 - Photo count, current contiguous streak, and missing-date view
 - Optional notes and full-photo viewer
-- Browser-generated downloadable collage of up to 100 photos
+- Browser-generated downloadable collage and animated GIF slideshow of up to 100 photos
+- Day labels on every collage tile and GIF frame
 - Atomic JSON writes, private image delivery, request IDs, and audit events
 - Responsive iPhone-friendly layout
 
@@ -22,6 +24,8 @@ A private, mobile-first PHP/JSON gallery for one baby photo per day. Built from 
 3. For stronger privacy, copy `config/config.example.php` to `config/config.php` and set `storage_path` to a writable folder above `public_html`.
 4. Open the site and create a password of at least 10 characters.
 5. After the baby arrives, enter the actual birth date in Settings.
+
+The due date powers the pre-birth countdown and shows whether the baby arrived early, on the due date, or afterward. Once an actual birth date is entered, it becomes the source for Day 1, age, missing-day, and streak calculations; changing the due date will not renumber the photos.
 
 Runtime photos, account data, logs, and settings are ignored by Git and must be backed up separately through Hostinger. The source repository contains no baby photos or production password.
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.1.0 — 2026-08-27
+
+- Close and reset the add-photo dialog immediately after a confirmed successful save.
+- Let iPhone users choose an existing photo, take a new photo, or browse Files.
+- Center-crop the upload preview instead of anchoring it to the top.
+- Add a downloadable, shareable animated GIF slideshow in addition to the collage.
+- Keep every image inside its collage cell so later rows cannot cover earlier day labels.
+- Add a visible day label to every collage tile and GIF frame.
+- Reduce the mobile add-photo dialog so its controls fit on screen more comfortably.
+- Add optional birth time, length in inches, and weight in pounds/ounces.
+- Clarify that actual birth date controls day numbering while due date remains the countdown and early/late reference.
+
 ## 1.0.2 — 2026-08-25
 
 - Replaced unreliable iPhone data-URL collage downloads with a real JPEG blob.

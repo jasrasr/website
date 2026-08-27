@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '1.0.2';
+const BABY_TRACKER_VERSION = '1.1.0';
 
 $configFile = __DIR__ . '/config/config.php';
 $config = require is_file($configFile) ? $configFile : __DIR__ . '/config/config.example.php';
@@ -162,6 +162,10 @@ function tracker_settings(): array
         'babyName' => '',
         'dueDate' => (string) ($config['due_date'] ?? '2026-11-02'),
         'birthDate' => '',
+        'birthTime' => '',
+        'birthLengthInches' => '',
+        'birthWeightPounds' => '',
+        'birthWeightOunces' => '',
         'updatedAt' => gmdate('c'),
     ]);
 }

@@ -59,6 +59,7 @@ $authenticated = is_authenticated();
             </div>
             <div class="toolbar-actions">
                 <button class="secondary" id="collageButton">Make collage</button>
+                <button class="secondary" id="gifButton">Make GIF</button>
                 <button class="secondary" id="settingsButton">Settings</button>
             </div>
         </section>
@@ -69,11 +70,11 @@ $authenticated = is_authenticated();
 </main>
 
 <?php if ($authenticated): ?>
-<dialog id="uploadDialog">
+<dialog id="uploadDialog" class="upload-dialog">
     <form id="uploadForm">
         <div class="dialog-head"><div><p class="eyebrow">DAILY MEMORY</p><h2>Add a photo</h2></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>
         <label>Photo date<input type="date" name="photoDate" required></label>
-        <label>Photo<input type="file" name="photo" accept="image/jpeg,image/png,image/webp" capture="user" required></label>
+        <label>Photo<input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required><small>Choose an existing photo or take a new one.</small></label>
         <div id="preview" class="preview">Photo preview</div>
         <label>Note <span>(optional)</span><textarea name="note" maxlength="300" placeholder="First smile, sleepy stretch, favorite outfit…"></textarea></label>
         <button type="submit">Save daily photo</button>
@@ -85,7 +86,13 @@ $authenticated = is_authenticated();
         <div class="dialog-head"><div><p class="eyebrow">GALLERY DETAILS</p><h2>Settings</h2></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>
         <label>Baby’s name<input name="babyName" maxlength="80" value="<?= htmlspecialchars((string) $settings['babyName']) ?>" placeholder="Optional for now"></label>
         <label>Due date<input type="date" name="dueDate" value="<?= htmlspecialchars((string) $settings['dueDate']) ?>" required></label>
-        <label>Actual birth date<input type="date" name="birthDate" value="<?= htmlspecialchars((string) $settings['birthDate']) ?>"><small>Add this after birth to calculate the correct day number.</small></label>
+        <label>Actual birth date<input type="date" name="birthDate" value="<?= htmlspecialchars((string) $settings['birthDate']) ?>"><small>Once entered, this date—not the due date—controls Day 1 and all age calculations.</small></label>
+        <div class="settings-grid">
+            <label>Time born <span>(optional)</span><input type="time" name="birthTime" value="<?= htmlspecialchars((string) ($settings['birthTime'] ?? '')) ?>"></label>
+            <label>Length in inches <span>(optional)</span><input type="number" name="birthLengthInches" min="5" max="30" step="0.25" inputmode="decimal" value="<?= htmlspecialchars((string) ($settings['birthLengthInches'] ?? '')) ?>" placeholder="20.5"></label>
+            <label>Weight pounds <span>(optional)</span><input type="number" name="birthWeightPounds" min="0" max="25" step="1" inputmode="numeric" value="<?= htmlspecialchars((string) ($settings['birthWeightPounds'] ?? '')) ?>" placeholder="7"></label>
+            <label>Weight ounces <span>(optional)</span><input type="number" name="birthWeightOunces" min="0" max="15" step="1" inputmode="numeric" value="<?= htmlspecialchars((string) ($settings['birthWeightOunces'] ?? '')) ?>" placeholder="8"></label>
+        </div>
         <button type="submit">Save settings</button>
     </form>
 </dialog>
@@ -93,12 +100,12 @@ $authenticated = is_authenticated();
 <dialog id="photoDialog"><div class="photo-view"><button type="button" class="icon-button close-dialog" aria-label="Close">×</button><img id="fullPhoto" alt=""><div id="photoDetails"></div></div></dialog>
 
 <dialog id="collageDialog">
-    <div class="dialog-head"><div><p class="eyebrow">READY TO KEEP</p><h2>Your collage</h2></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>
-    <img id="collagePreview" class="collage-preview" alt="Generated Baby Daily collage">
-    <p class="save-help">On iPhone, tap <strong>Share or save</strong> and choose Save Image. You can also press and hold the preview.</p>
+    <div class="dialog-head"><div><p class="eyebrow">READY TO KEEP</p><h2 id="exportTitle">Your collage</h2></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>
+    <img id="exportPreview" class="collage-preview" alt="Generated Baby Daily export">
+    <p id="exportHelp" class="save-help">On iPhone, tap <strong>Share or save</strong> and choose Save Image. You can also press and hold the preview.</p>
     <div class="collage-actions">
-        <button type="button" id="shareCollageButton">Share or save</button>
-        <button type="button" class="secondary" id="downloadCollageButton">Download file</button>
+        <button type="button" id="shareExportButton">Share or save</button>
+        <button type="button" class="secondary" id="downloadExportButton">Download file</button>
     </div>
 </dialog>
 <?php endif; ?>

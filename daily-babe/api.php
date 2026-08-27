@@ -60,15 +60,31 @@ try {
         require_csrf();
         $dueDate = (string) ($_POST['dueDate'] ?? '');
         $birthDate = (string) ($_POST['birthDate'] ?? '');
+        $birthTime = trim((string) ($_POST['birthTime'] ?? ''));
+        $birthLength = trim((string) ($_POST['birthLengthInches'] ?? ''));
+        $birthWeightPounds = trim((string) ($_POST['birthWeightPounds'] ?? ''));
+        $birthWeightOunces = trim((string) ($_POST['birthWeightOunces'] ?? ''));
         $latestClientDate = date('Y-m-d', strtotime('+1 day'));
         if (!valid_date($dueDate) || ($birthDate !== '' && (!valid_date($birthDate) || $birthDate > $latestClientDate))) {
             json_response(false, 'Enter valid due and birth dates.', null, [['code' => 'INVALID_DATE']], 422);
         }
+        if ($birthTime !== '' && preg_match('/^(?:[01]\\d|2[0-3]):[0-5]\\d$/', $birthTime) !== 1) {
+            json_response(false, 'Enter a valid time of birth.', null, [['code' => 'INVALID_TIME']], 422);
+        }
+        if (($birthLength !== '' && (!is_numeric($birthLength) || (float) $birthLength < 5 || (float) $birthLength > 30))
+            || ($birthWeightPounds !== '' && (!ctype_digit($birthWeightPounds) || (int) $birthWeightPounds > 25))
+            || ($birthWeightOunces !== '' && (!ctype_digit($birthWeightOunces) || (int) $birthWeightOunces > 15))) {
+            json_response(false, 'Enter valid optional birth measurements.', null, [['code' => 'INVALID_MEASUREMENT']], 422);
+        }
         $settings = [
-            'schemaVersion' => 1,
+            'schemaVersion' => 2,
             'babyName' => trim(substr((string) ($_POST['babyName'] ?? ''), 0, 80)),
             'dueDate' => $dueDate,
             'birthDate' => $birthDate,
+            'birthTime' => $birthTime,
+            'birthLengthInches' => $birthLength,
+            'birthWeightPounds' => $birthWeightPounds,
+            'birthWeightOunces' => $birthWeightOunces,
             'updatedAt' => gmdate('c'),
         ];
         json_write('data/settings.json', $settings);
