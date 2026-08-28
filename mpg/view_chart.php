@@ -3,21 +3,21 @@
 // File: view_chart.php
 // Purpose: Display MPG trend and partial fuel events for a license plate
 // Author: Jason Lamb (with help from AI)
-// Revision: 1.5
+// Revision: 1.6
 //
 // Revision Notes:
+// 1.6 - Initialize device/session state before any HTML output so menu.php does
+//       not trigger late cookie/header warnings.
 // 1.5 - Keep partial fills visible as event markers while withholding MPG until
 //       the next full fill. Show full-to-full calculation span in tooltips.
 // 1.4 - Omit missing/zero MPG values so the initial baseline is not graphed as 0.
 // 1.3 - Added ET tooltip support.
 // ============================================================================
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+
+require_once __DIR__ . '/device_init.php';
 
 $plate = strtoupper(trim($_GET['plate'] ?? ''));
 $logFile = __DIR__ . "/logs/{$plate}.json";
