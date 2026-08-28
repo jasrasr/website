@@ -40,6 +40,7 @@ curl -fsS -H "Authorization: Bearer YOUR_COLLECTOR_TOKEN" https://jasr.me/github
 ```
 
 The diagnostic checks the configured agent, general ticket access, and the exact agent filter. It returns only IDs, statuses, and counts—never the API key or ticket text.
+Append `?ticket_id=12345` to safely inspect the status and assignment IDs of a known ticket.
 
 Running hourly captures tickets that enter and leave the queue during the same day more reliably than one end-of-day snapshot.
 

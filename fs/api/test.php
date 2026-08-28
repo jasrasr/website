@@ -92,6 +92,7 @@ $baseUrl = 'https://' . $host;
 $apiKey = (string) ($config['api_key'] ?? '');
 $agentId = (int) ($config['agent_id'] ?? 0);
 $workspaceId = (int) ($config['workspace_id'] ?? 0);
+$ticketId = max(0, (int) ($_GET['ticket_id'] ?? 0));
 
 $agentResult = freshserviceGet($baseUrl, $apiKey, '/api/v2/agents/' . $agentId);
 $anyTicketsResult = freshserviceGet($baseUrl, $apiKey, '/api/v2/tickets?' . http_build_query([
@@ -103,6 +104,9 @@ $assignedResult = freshserviceGet($baseUrl, $apiKey, '/api/v2/tickets/filter?' .
     'workspace_id' => $workspaceId,
     'page' => 1,
 ], '', '&', PHP_QUERY_RFC3986));
+$ticketResult = $ticketId > 0
+    ? freshserviceGet($baseUrl, $apiKey, '/api/v2/tickets/' . $ticketId)
+    : null;
 
 $agentData = (array) ($agentResult['data']['agent'] ?? []);
 $anyTickets = (array) ($anyTicketsResult['data']['tickets'] ?? []);
@@ -142,5 +146,13 @@ respond(200, [
         'total' => (int) ($assignedResult['data']['total'] ?? count($assignedTickets)),
         'statusCounts' => $statusCounts,
         'sample' => isset($assignedTickets[0]) && is_array($assignedTickets[0]) ? safeTicket($assignedTickets[0]) : null,
+    ],
+    'requestedTicket' => $ticketResult === null ? null : [
+        'ok' => $ticketResult['ok'],
+        'httpStatus' => $ticketResult['httpStatus'],
+        'error' => $ticketResult['error'] ?? null,
+        'ticket' => isset($ticketResult['data']['ticket']) && is_array($ticketResult['data']['ticket'])
+            ? safeTicket($ticketResult['data']['ticket'])
+            : null,
     ],
 ]);
