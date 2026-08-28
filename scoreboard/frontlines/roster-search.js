@@ -18,12 +18,12 @@
   const emptyState = document.querySelector('#roster-search-empty');
   const cards = Array.from(document.querySelectorAll('.roster-card'));
 
-  if (!searchInput || !clearButton || !resultStatus || !emptyState || cards.length === 0) {
+  if (!searchInput || !clearButton || !resultStatus || !emptyState) {
     return;
   }
 
   function normalizedText(element) {
-    return element.textContent.replace(/\s+/g, ' ').trim().toLocaleLowerCase();
+    return (element.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
   }
 
   function matchesTokens(text, tokens) {
@@ -45,8 +45,9 @@
   }
 
   function updateSearch() {
-    const rawQuery = searchInput.value.trim();
-    const tokens = rawQuery.toLocaleLowerCase().split(/\s+/).filter(Boolean);
+    const rawValue = searchInput.value;
+    const rawQuery = rawValue.trim();
+    const tokens = rawQuery.toLowerCase().split(/\s+/).filter(Boolean);
     let visibleCount = 0;
 
     searchableCards.forEach(({ card, text, items, sections }) => {
@@ -64,11 +65,10 @@
           .filter((item) => !item.hidden);
         section.dataset.rosterSearchSectionEmpty = visibleItems.length === 0 ? 'true' : 'false';
       });
-
       if (matches) visibleCount += 1;
     });
 
-    clearButton.hidden = rawQuery === '';
+    clearButton.hidden = rawValue === '';
     emptyState.hidden = visibleCount !== 0;
 
     if (rawQuery === '') {
