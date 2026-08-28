@@ -17,13 +17,13 @@
   const emptyState = document.querySelector('#roster-search-empty');
   const cards = Array.from(document.querySelectorAll('.roster-card'));
 
-  if (!searchInput || !clearButton || !resultStatus || !emptyState || cards.length === 0) {
+  if (!searchInput || !clearButton || !resultStatus || !emptyState) {
     return;
   }
 
   const searchableCards = cards.map((card) => ({
     card,
-    text: card.textContent.replace(/\s+/g, ' ').trim().toLocaleLowerCase()
+    text: (card.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase()
   }));
 
   function pluralize(count, singular, plural = `${singular}s`) {
@@ -31,8 +31,9 @@
   }
 
   function updateSearch() {
+    const rawValue = searchInput.value;
     const rawQuery = searchInput.value.trim();
-    const tokens = rawQuery.toLocaleLowerCase().split(/\s+/).filter(Boolean);
+    const tokens = rawQuery.toLowerCase().split(/\s+/).filter(Boolean);
     let visibleCount = 0;
 
     searchableCards.forEach(({ card, text }) => {
@@ -41,7 +42,7 @@
       if (matches) visibleCount += 1;
     });
 
-    clearButton.hidden = rawQuery === '';
+    clearButton.hidden = rawValue === '';
     emptyState.hidden = visibleCount !== 0;
 
     if (rawQuery === '') {
