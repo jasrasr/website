@@ -15,6 +15,7 @@ Screenshots can still be recorded manually. The preferred method is the server-s
 - starting count, ending count, and net change
 
 The dashboard merges the Git-tracked manual history with API snapshots stored on the server and displays both the queue balance and daily activity.
+Each authenticated collector attempt is also recorded in `storage/pull-log.json` and displayed in the dashboard's API pull log. Successful and failed pulls are retained without credentials or ticket content.
 
 ## Setup
 

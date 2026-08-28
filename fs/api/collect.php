@@ -12,6 +12,7 @@ if (!is_file($configFile) && is_file($legacyConfigFile)) {
 }
 $stateFile = $root . '/storage/api-state.json';
 $snapshotFile = $root . '/storage/api-snapshots.json';
+$pullLogFile = $root . '/storage/pull-log.json';
 
 function respond(int $status, array $payload): never
 {
@@ -41,6 +42,19 @@ function writeJsonAtomically(string $path, array $payload): void
         throw new RuntimeException('Unable to save tracker data.');
     }
     @chmod($path, 0640);
+}
+
+function recordPull(string $path, array $entry): void
+{
+    try {
+        $log = readJsonFile($path, ['entries' => []]);
+        if (!isset($log['entries']) || !is_array($log['entries'])) $log['entries'] = [];
+        $log['entries'][] = $entry;
+        $log['entries'] = array_slice($log['entries'], -500);
+        writeJsonAtomically($path, $log);
+    } catch (Throwable) {
+        // Pull logging must never hide the collector's actual result.
+    }
 }
 
 function minimalTicket(array $ticket): array
@@ -76,6 +90,8 @@ $providedToken = str_starts_with($authorization, 'Bearer ')
 if (!hash_equals($expectedToken, $providedToken)) {
     respond(401, ['ok' => false, 'error' => 'Unauthorized collector request.']);
 }
+
+$pullStartedAt = new DateTimeImmutable('now', new DateTimeZone((string) ($config['timezone'] ?? 'America/New_York')));
 
 try {
     require_once $root . '/lib/FreshserviceClient.php';
@@ -183,6 +199,17 @@ try {
     ]);
     writeJsonAtomically($snapshotFile, $snapshots);
 
+    recordPull($pullLogFile, [
+        'attemptedAt' => $pullStartedAt->format(DateTimeInterface::ATOM),
+        'completedAt' => (new DateTimeImmutable('now', $timezone))->format(DateTimeInterface::ATOM),
+        'ok' => true,
+        'startingUnresolved' => $startingUnresolved,
+        'endingUnresolved' => $endingUnresolved,
+        'netChange' => $endingUnresolved - $startingUnresolved,
+        'initialRun' => $isInitialRun,
+        'activity' => $activity,
+    ]);
+
     respond(200, [
         'ok' => true,
         'capturedAt' => $now->format(DateTimeInterface::ATOM),
@@ -193,5 +220,11 @@ try {
         'initialRun' => $isInitialRun,
     ]);
 } catch (Throwable $exception) {
+    recordPull($pullLogFile, [
+        'attemptedAt' => $pullStartedAt->format(DateTimeInterface::ATOM),
+        'completedAt' => (new DateTimeImmutable('now', $pullStartedAt->getTimezone()))->format(DateTimeInterface::ATOM),
+        'ok' => false,
+        'error' => $exception->getMessage(),
+    ]);
     respond(500, ['ok' => false, 'error' => $exception->getMessage()]);
 }

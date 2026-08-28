@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 $dataFile = __DIR__ . '/data/ticket-counts.json';
 $apiDataFile = __DIR__ . '/storage/api-snapshots.json';
+$pullLogFile = __DIR__ . '/storage/pull-log.json';
 $payload = ['goal' => 0, 'entries' => []];
+$pullLog = [];
 $error = null;
 
 if (is_file($dataFile)) {
@@ -21,6 +23,13 @@ if (is_file($apiDataFile)) {
     $apiDecoded = json_decode((string) file_get_contents($apiDataFile), true);
     if (is_array($apiDecoded) && isset($apiDecoded['entries']) && is_array($apiDecoded['entries'])) {
         $payload['entries'] = array_merge($payload['entries'], $apiDecoded['entries']);
+    }
+}
+
+if (is_file($pullLogFile)) {
+    $pullLogDecoded = json_decode((string) file_get_contents($pullLogFile), true);
+    if (is_array($pullLogDecoded) && isset($pullLogDecoded['entries']) && is_array($pullLogDecoded['entries'])) {
+        $pullLog = $pullLogDecoded['entries'];
     }
 }
 
@@ -161,6 +170,28 @@ function displayDate(?string $value): string
         $rowActivity = isset($entry['activity']) && is_array($entry['activity']) ? $entry['activity'] : [];
     ?><tr><td><?= e(displayDate($entry['capturedAt'] ?? null)) ?></td><td class="number"><?= number_format((int) ($entry['unresolved'] ?? 0)) ?></td><td><?= $rowChange === null ? '—' : sprintf('%+d', $rowChange) ?></td><td><?= array_key_exists('enteredUnresolved', $rowActivity) ? number_format((int) $rowActivity['enteredUnresolved']) : '—' ?></td><td><?= array_key_exists('exitedUnresolved', $rowActivity) ? number_format((int) $rowActivity['exitedUnresolved']) : '—' ?></td><td><?= e((string) ($entry['source'] ?? 'unknown')) ?></td><td><?= e((string) ($entry['note'] ?? '')) ?></td></tr><?php endforeach; ?>
     </tbody></table></div></section>
+
+    <section class="section"><h2>API pull log</h2>
+        <?php if (!$pullLog): ?>
+            <p class="muted">No collector attempts have been logged yet. The next pull will appear here.</p>
+        <?php else: ?>
+            <div class="table-wrap"><table><thead><tr><th>Attempted</th><th>Result</th><th>Starting</th><th>Ending</th><th>Net</th><th>Entered</th><th>Exited</th><th>Details</th></tr></thead><tbody>
+            <?php foreach (array_reverse($pullLog) as $pull):
+                $pullActivity = isset($pull['activity']) && is_array($pull['activity']) ? $pull['activity'] : [];
+                $pullOk = (bool) ($pull['ok'] ?? false);
+            ?><tr>
+                <td><?= e(displayDate($pull['attemptedAt'] ?? null)) ?></td>
+                <td class="number <?= $pullOk ? 'good' : 'bad' ?>"><?= $pullOk ? 'Success' : 'Failed' ?></td>
+                <td><?= $pullOk ? number_format((int) ($pull['startingUnresolved'] ?? 0)) : '—' ?></td>
+                <td><?= $pullOk ? number_format((int) ($pull['endingUnresolved'] ?? 0)) : '—' ?></td>
+                <td><?= $pullOk ? sprintf('%+d', (int) ($pull['netChange'] ?? 0)) : '—' ?></td>
+                <td><?= $pullOk ? number_format((int) ($pullActivity['enteredUnresolved'] ?? 0)) : '—' ?></td>
+                <td><?= $pullOk ? number_format((int) ($pullActivity['exitedUnresolved'] ?? 0)) : '—' ?></td>
+                <td><?= $pullOk ? ((bool) ($pull['initialRun'] ?? false) ? 'Baseline initialized' : 'Completed') : e((string) ($pull['error'] ?? 'Unknown error')) ?></td>
+            </tr><?php endforeach; ?>
+            </tbody></table></div>
+        <?php endif; ?>
+    </section>
     <footer>Aggregate counts only. No ticket subjects, requesters, or credentials are stored here.</footer>
 </main>
 <script>
