@@ -200,11 +200,11 @@ const pullButton = document.getElementById('pull-tickets');
 const pullStatus = document.getElementById('pull-status');
 const canvas = document.getElementById('trend');
 const note = document.getElementById('chart-note');
+const tokenStorageKey = 'freshserviceCollectorToken';
+const lastPullStorageKey = 'freshserviceLastAutoPull';
+const autoPullIntervalMs = 5 * 60 * 1000;
 
-pullButton.addEventListener('click', async () => {
-    const token = window.prompt('Enter the private collector token from config.local.php:');
-    if (token === null || token.trim() === '') return;
-
+async function pullTickets(token) {
     pullButton.disabled = true;
     pullStatus.classList.remove('error-text');
     pullStatus.textContent = 'Contacting Freshservice…';
@@ -217,6 +217,7 @@ pullButton.addEventListener('click', async () => {
         });
         const result = await response.json().catch(() => ({}));
         if (!response.ok || !result.ok) throw new Error(result.error || `Collector returned HTTP ${response.status}.`);
+        sessionStorage.setItem(lastPullStorageKey, String(Date.now()));
         pullStatus.textContent = `Pulled ${Number(result.endingUnresolved).toLocaleString()} unresolved tickets. Refreshing…`;
         window.setTimeout(() => window.location.reload(), 700);
     } catch (error) {
@@ -224,7 +225,22 @@ pullButton.addEventListener('click', async () => {
         pullStatus.textContent = error instanceof Error ? error.message : 'The ticket pull failed.';
         pullButton.disabled = false;
     }
+}
+
+pullButton.addEventListener('click', async () => {
+    const existingToken = sessionStorage.getItem(tokenStorageKey) || '';
+    const token = window.prompt('Enter the private collector token from config.local.php:', existingToken);
+    if (token === null || token.trim() === '') return;
+    sessionStorage.setItem(tokenStorageKey, token.trim());
+    await pullTickets(token.trim());
 });
+
+const savedToken = sessionStorage.getItem(tokenStorageKey);
+const lastAutoPull = Number(sessionStorage.getItem(lastPullStorageKey) || 0);
+if (savedToken && Date.now() - lastAutoPull >= autoPullIntervalMs) {
+    pullStatus.textContent = 'Refreshing tickets on page load…';
+    pullTickets(savedToken);
+}
 
 function drawChart() {
     const dpr = window.devicePixelRatio || 1, rect = canvas.getBoundingClientRect();

@@ -42,9 +42,11 @@ curl -fsS -H "Authorization: Bearer YOUR_COLLECTOR_TOKEN" https://jasr.me/github
 The diagnostic checks the configured agent, general ticket access, and the exact agent filter. It returns only IDs, statuses, and counts—never the API key or ticket text.
 Append `?ticket_id=12345` to safely inspect the status and assignment IDs of a known ticket.
 
+The protected `api/cleanup.php` maintenance endpoint accepts authenticated POST requests, backs up API snapshots, and removes zero-count API snapshots created by an invalid configuration.
+
 Running hourly captures tickets that enter and leave the queue during the same day more reliably than one end-of-day snapshot.
 
-The tracker does not schedule itself. Without a Hostinger cron job, it collects only when **Pull tickets now** is used. The button prompts for `collector_token`, sends it in an HTTPS authorization header, and does not save it in the page or browser storage.
+The tracker does not schedule itself. Without a Hostinger cron job, it collects when **Pull tickets now** is used. The button prompts for `collector_token`, sends it in an HTTPS authorization header, and keeps it only in the current tab's session storage. Later page loads in that tab automatically pull at most once every five minutes. Closing the tab clears the saved token.
 
 During the folder rename, the collector can temporarily read an existing `FS/config.local.php`. Move that file to `fs/config.local.php` when convenient so all runtime files live under the lowercase folder.
 
