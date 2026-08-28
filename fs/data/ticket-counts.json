@@ -28,6 +28,27 @@
       "source": "screenshot-exif",
       "recordedAt": "2026-08-26T16:05:04-04:00",
       "note": "Freshservice mobile: My Unresolved Tickets"
+    },
+    {
+      "capturedAt": "2026-08-27T12:51:01-04:00",
+      "unresolved": 120,
+      "source": "screenshot-upload-time",
+      "recordedAt": "2026-08-27T12:51:59-04:00",
+      "note": "Freshservice mobile: My Unresolved Tickets"
+    },
+    {
+      "capturedAt": "2026-08-27T15:37:04-04:00",
+      "unresolved": 92,
+      "source": "screenshot-exif",
+      "recordedAt": "2026-08-27T15:38:03-04:00",
+      "note": "Freshservice mobile: My Unresolved Tickets"
+    },
+    {
+      "capturedAt": "2026-08-28T06:59:22-04:00",
+      "unresolved": 85,
+      "source": "screenshot-upload-time",
+      "recordedAt": "2026-08-28T06:59:37-04:00",
+      "note": "Freshservice mobile: My Unresolved Tickets"
     }
   ]
 }
