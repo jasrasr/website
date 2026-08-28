@@ -125,12 +125,31 @@ function displayDate(?string $value): string
         th { color:var(--muted); font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; }
         td.number { font-weight:800; }
         .error { padding:14px; border:1px solid #74363a; border-radius:12px; background:#2d171b; color:#ffbec1; }
+        .celebration { position:fixed; inset:0; z-index:1000; display:grid; place-items:center; overflow:hidden; padding:24px; background:rgba(3,9,18,.84); backdrop-filter:blur(8px); }
+        .celebration[hidden] { display:none; }
+        .celebration-canvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+        .celebration-banner { position:relative; width:min(760px,100%); padding:clamp(30px,7vw,70px); border:2px solid #ffe082; border-radius:28px; background:linear-gradient(145deg,#183b62,#102139); box-shadow:0 24px 90px rgba(0,0,0,.55),0 0 60px rgba(61,220,132,.2); text-align:center; }
+        .celebration-emoji { display:block; font-size:clamp(3rem,10vw,6rem); line-height:1; }
+        .celebration h2 { margin:18px 0 8px; font-size:clamp(2.2rem,8vw,5rem); line-height:.95; letter-spacing:-.05em; color:#fff3a8; text-transform:uppercase; }
+        .celebration p { margin:16px auto 0; max-width:560px; color:#dcecff; font-size:clamp(1.05rem,3vw,1.4rem); }
+        .celebration-close { margin-top:26px; padding:11px 20px; border:1px solid #8dbfff; border-radius:999px; color:#fff; background:#1768d8; cursor:pointer; font:inherit; font-weight:700; }
         footer { color:var(--muted); text-align:center; margin-top:24px; font-size:.85rem; }
         @media (max-width:820px) { .grid,.activity-grid { grid-template-columns:repeat(2,1fr); } header { align-items:flex-start; flex-direction:column; } .header-actions { justify-content:flex-start; } .pull-status { text-align:left; } }
         @media (max-width:480px) { main { width:min(100% - 18px,1120px); padding-top:18px; } .grid { grid-template-columns:1fr 1fr; gap:9px; } .card { min-height:120px; padding:15px; } .section { padding:16px; } }
     </style>
 </head>
 <body>
+<?php if ($latest !== null && $current === 0): ?>
+<div class="celebration" id="goal-celebration" role="dialog" aria-modal="true" aria-labelledby="celebration-title">
+    <canvas class="celebration-canvas" id="fireworks" aria-hidden="true"></canvas>
+    <div class="celebration-banner">
+        <span class="celebration-emoji" aria-hidden="true">👏 🎆 👏</span>
+        <h2 id="celebration-title">Zero achieved!</h2>
+        <p>The unresolved queue is clear. Outstanding work—take a bow!</p>
+        <button type="button" class="celebration-close" id="celebration-close">Continue to dashboard</button>
+    </div>
+</div>
+<?php endif; ?>
 <main>
     <header>
         <div><h1>Freshservice Ticket Tracker</h1><p>Working the unresolved queue toward zero.</p></div>
@@ -203,6 +222,51 @@ const note = document.getElementById('chart-note');
 const tokenStorageKey = 'freshserviceCollectorToken';
 const lastPullStorageKey = 'freshserviceLastAutoPull';
 const autoPullIntervalMs = 5 * 60 * 1000;
+const celebration = document.getElementById('goal-celebration');
+const celebrationClose = document.getElementById('celebration-close');
+const fireworksCanvas = document.getElementById('fireworks');
+
+if (celebration && celebrationClose) {
+    celebrationClose.focus();
+    celebrationClose.addEventListener('click', () => { celebration.hidden = true; });
+    celebration.addEventListener('click', event => { if (event.target === celebration) celebration.hidden = true; });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') celebration.hidden = true; });
+}
+
+if (fireworksCanvas && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const context = fireworksCanvas.getContext('2d');
+    const colors = ['#ffe082','#3ddc84','#4d95ff','#ff6b72','#ffffff'];
+    let particles = [], lastBurst = 0, animationStart = performance.now();
+    const resizeFireworks = () => {
+        const ratio = window.devicePixelRatio || 1;
+        fireworksCanvas.width = Math.round(innerWidth * ratio);
+        fireworksCanvas.height = Math.round(innerHeight * ratio);
+        fireworksCanvas.style.width = `${innerWidth}px`;
+        fireworksCanvas.style.height = `${innerHeight}px`;
+        context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    };
+    const burst = () => {
+        const x = innerWidth * (.15 + Math.random() * .7), y = innerHeight * (.1 + Math.random() * .45);
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        for (let i = 0; i < 54; i++) {
+            const angle = Math.PI * 2 * i / 54, speed = 1.5 + Math.random() * 4;
+            particles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:1,color});
+        }
+    };
+    const animateFireworks = now => {
+        context.clearRect(0, 0, innerWidth, innerHeight);
+        if (now - lastBurst > 550 && now - animationStart < 8500) { burst(); lastBurst = now; }
+        particles = particles.filter(particle => particle.life > .02);
+        for (const particle of particles) {
+            particle.x += particle.vx; particle.y += particle.vy; particle.vy += .035; particle.vx *= .992; particle.life *= .975;
+            context.globalAlpha = particle.life; context.fillStyle = particle.color;
+            context.beginPath(); context.arc(particle.x, particle.y, 2.2, 0, Math.PI * 2); context.fill();
+        }
+        context.globalAlpha = 1;
+        if (now - animationStart < 10000 && celebration && !celebration.hidden) requestAnimationFrame(animateFireworks);
+    };
+    resizeFireworks(); window.addEventListener('resize', resizeFireworks); requestAnimationFrame(animateFireworks);
+}
 
 async function pullTickets(token) {
     pullButton.disabled = true;
