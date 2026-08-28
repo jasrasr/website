@@ -63,8 +63,89 @@ function minimalTicket(array $ticket): array
         'id' => (int) ($ticket['id'] ?? 0),
         'status' => (int) ($ticket['status'] ?? 0),
         'responderId' => isset($ticket['responder_id']) ? (int) $ticket['responder_id'] : null,
+        'requesterId' => isset($ticket['requester_id']) ? (int) $ticket['requester_id'] : null,
+        'priority' => (int) ($ticket['priority'] ?? 0),
+        'category' => trim((string) ($ticket['category'] ?? '')),
+        'subCategory' => trim((string) ($ticket['sub_category'] ?? '')),
+        'itemCategory' => trim((string) ($ticket['item_category'] ?? '')),
+        'type' => trim((string) ($ticket['type'] ?? '')),
+        'source' => (int) ($ticket['source'] ?? 0),
         'createdAt' => (string) ($ticket['created_at'] ?? ''),
         'updatedAt' => (string) ($ticket['updated_at'] ?? ''),
+    ];
+}
+
+function incrementCount(array &$counts, string $label): void
+{
+    $label = trim($label) !== '' ? trim($label) : 'Uncategorized';
+    $counts[$label] = ($counts[$label] ?? 0) + 1;
+}
+
+function sortedCounts(array $counts): array
+{
+    arsort($counts, SORT_NUMERIC);
+    return $counts;
+}
+
+function privacySafeCategoryCounts(array $counts): array
+{
+    $safe = [];
+    $other = 0;
+    foreach (sortedCounts($counts) as $label => $count) {
+        if ($count < 3 || count($safe) >= 8) $other += $count;
+        else $safe[$label] = $count;
+    }
+    if ($other > 0) $safe['Other'] = $other;
+    return $safe;
+}
+
+function aggregateAnalytics(array $tickets, array $closedStatuses, DateTimeImmutable $now): array
+{
+    $statusLabels = [2 => 'Open', 3 => 'Pending', 4 => 'Resolved', 5 => 'Closed'];
+    $priorityLabels = [1 => 'Low', 2 => 'Medium', 3 => 'High', 4 => 'Urgent'];
+    $statusCounts = [];
+    $categoryCounts = [];
+    $priorityCounts = [];
+    $ageCounts = ['0–2 days' => 0, '3–7 days' => 0, '8–30 days' => 0, '31–90 days' => 0, '91+ days' => 0];
+    $requesterLoads = [];
+
+    foreach ($tickets as $ticket) {
+        $status = (int) ($ticket['status'] ?? 0);
+        if (in_array($status, $closedStatuses, true)) continue;
+
+        incrementCount($statusCounts, $statusLabels[$status] ?? 'Status ' . $status);
+        incrementCount($categoryCounts, (string) ($ticket['category'] ?? ''));
+        $priority = (int) ($ticket['priority'] ?? 0);
+        incrementCount($priorityCounts, $priorityLabels[$priority] ?? 'Priority ' . $priority);
+
+        try {
+            $createdAt = new DateTimeImmutable((string) ($ticket['createdAt'] ?? ''));
+            $ageDays = max(0, (int) $createdAt->diff($now)->format('%a'));
+            if ($ageDays <= 2) $ageCounts['0–2 days']++;
+            elseif ($ageDays <= 7) $ageCounts['3–7 days']++;
+            elseif ($ageDays <= 30) $ageCounts['8–30 days']++;
+            elseif ($ageDays <= 90) $ageCounts['31–90 days']++;
+            else $ageCounts['91+ days']++;
+        } catch (Throwable) {
+            // Ignore invalid creation timestamps in age analytics.
+        }
+
+        $requesterId = (int) ($ticket['requesterId'] ?? 0);
+        if ($requesterId > 0) $requesterLoads[$requesterId] = ($requesterLoads[$requesterId] ?? 0) + 1;
+    }
+
+    $requesterDistribution = ['1 ticket' => 0, '2 tickets' => 0, '3 tickets' => 0, '4 tickets' => 0, '5+ tickets' => 0];
+    foreach ($requesterLoads as $ticketCount) {
+        $bucket = $ticketCount >= 5 ? '5+ tickets' : $ticketCount . ($ticketCount === 1 ? ' ticket' : ' tickets');
+        $requesterDistribution[$bucket]++;
+    }
+
+    return [
+        'status' => sortedCounts($statusCounts),
+        'category' => privacySafeCategoryCounts($categoryCounts),
+        'priority' => sortedCounts($priorityCounts),
+        'age' => array_filter($ageCounts, static fn(int $count): bool => $count > 0),
+        'requesterDistribution' => array_filter($requesterDistribution, static fn(int $count): bool => $count > 0),
     ];
 }
 
@@ -180,6 +261,7 @@ try {
         if (!in_array((int) $ticket['status'], $closedStatuses, true)) $endingUnresolved++;
     }
     if ($isInitialRun) $startingUnresolved = $endingUnresolved;
+    $analytics = aggregateAnalytics($currentTickets, $closedStatuses, $now);
 
     $snapshots = readJsonFile($snapshotFile, ['entries' => []]);
     if (!isset($snapshots['entries']) || !is_array($snapshots['entries'])) $snapshots['entries'] = [];
@@ -190,6 +272,7 @@ try {
         'recordedAt' => $now->format(DateTimeInterface::ATOM),
         'note' => $isInitialRun ? 'Freshservice API baseline initialized.' : 'Automated Freshservice API snapshot.',
         'activity' => $activity,
+        'analytics' => $analytics,
         'startingUnresolved' => $startingUnresolved,
     ];
 

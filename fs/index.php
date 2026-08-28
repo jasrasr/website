@@ -45,6 +45,7 @@ $change = $previous ? $current - (int) ($previous['unresolved'] ?? 0) : null;
 $reduced = max(0, $baseline - $current);
 $reductionPercent = $baseline > $goal ? max(0, min(100, (($baseline - $current) / ($baseline - $goal)) * 100)) : 100;
 $remaining = max(0, $current - $goal);
+$analytics = $latest && isset($latest['analytics']) && is_array($latest['analytics']) ? $latest['analytics'] : [];
 $latestDay = $latest && !empty($latest['capturedAt']) ? (new DateTimeImmutable((string) $latest['capturedAt']))->format('Y-m-d') : null;
 $todayActivity = [
     'enteredUnresolved' => 0,
@@ -77,6 +78,12 @@ function displayDate(?string $value): string
     } catch (Throwable) {
         return $value;
     }
+}
+
+function analyticsRows(array $analytics, string $key): array
+{
+    if (!isset($analytics[$key]) || !is_array($analytics[$key])) return [];
+    return array_filter($analytics[$key], static fn(mixed $count): bool => is_numeric($count) && (int) $count > 0);
 }
 ?>
 <!doctype html>
@@ -118,6 +125,14 @@ function displayDate(?string $value): string
         .activity-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
         .activity-item { padding:15px; border-radius:13px; background:#0b1727; border:1px solid var(--line); }
         .activity-item strong { display:block; margin-top:5px; font-size:1.8rem; }
+        .analytics-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+        .analytics-chart { padding:18px; border-radius:14px; background:#0b1727; border:1px solid var(--line); }
+        .analytics-chart h3 { margin:0 0 16px; font-size:1rem; }
+        .bar-row { display:grid; grid-template-columns:minmax(95px,1.25fr) minmax(120px,3fr) auto; gap:10px; align-items:center; margin:10px 0; }
+        .bar-label { overflow:hidden; color:#dce7f5; text-overflow:ellipsis; white-space:nowrap; font-size:.86rem; }
+        .bar-track { height:10px; overflow:hidden; border-radius:999px; background:#07111f; }
+        .bar-fill { display:block; height:100%; min-width:3px; border-radius:inherit; background:linear-gradient(90deg,var(--blue),var(--green)); }
+        .bar-value { min-width:2ch; text-align:right; font-weight:800; font-variant-numeric:tabular-nums; }
         canvas { display:block; width:100%; height:280px; }
         .table-wrap { overflow:auto; }
         table { width:100%; border-collapse:collapse; min-width:680px; }
@@ -134,7 +149,7 @@ function displayDate(?string $value): string
         .celebration p { margin:16px auto 0; max-width:560px; color:#dcecff; font-size:clamp(1.05rem,3vw,1.4rem); }
         .celebration-close { margin-top:26px; padding:11px 20px; border:1px solid #8dbfff; border-radius:999px; color:#fff; background:#1768d8; cursor:pointer; font:inherit; font-weight:700; }
         footer { color:var(--muted); text-align:center; margin-top:24px; font-size:.85rem; }
-        @media (max-width:820px) { .grid,.activity-grid { grid-template-columns:repeat(2,1fr); } header { align-items:flex-start; flex-direction:column; } .header-actions { justify-content:flex-start; } .pull-status { text-align:left; } }
+        @media (max-width:820px) { .grid,.activity-grid { grid-template-columns:repeat(2,1fr); } .analytics-grid { grid-template-columns:1fr; } header { align-items:flex-start; flex-direction:column; } .header-actions { justify-content:flex-start; } .pull-status { text-align:left; } }
         @media (max-width:480px) { main { width:min(100% - 18px,1120px); padding-top:18px; } .grid { grid-template-columns:1fr 1fr; gap:9px; } .card { min-height:120px; padding:15px; } .section { padding:16px; } }
     </style>
 </head>
@@ -181,6 +196,38 @@ function displayDate(?string $value): string
     </section>
 
     <section class="section"><h2>Unresolved ticket trend</h2><canvas id="trend" role="img" aria-label="Unresolved ticket count over time"></canvas><p id="chart-note" class="muted"></p></section>
+
+    <section class="section"><h2>Current queue analytics</h2>
+        <?php if (!$analytics): ?>
+            <p class="muted">Analytics will appear after the next API pull.</p>
+        <?php else: ?>
+            <div class="analytics-grid">
+            <?php foreach ([
+                'status' => 'Tickets by status',
+                'category' => 'Tickets by category',
+                'priority' => 'Tickets by priority',
+                'age' => 'Tickets by age',
+                'requesterDistribution' => 'Anonymous requester distribution',
+            ] as $analyticsKey => $analyticsTitle):
+                $rows = analyticsRows($analytics, $analyticsKey);
+                $chartMax = $rows ? max(array_map('intval', $rows)) : 1;
+            ?>
+                <article class="analytics-chart">
+                    <h3><?= e($analyticsTitle) ?></h3>
+                    <?php if (!$rows): ?><p class="muted">No data</p><?php endif; ?>
+                    <?php foreach ($rows as $label => $count): ?>
+                        <div class="bar-row">
+                            <span class="bar-label" title="<?= e((string) $label) ?>"><?= e((string) $label) ?></span>
+                            <span class="bar-track" aria-hidden="true"><span class="bar-fill" style="width:<?= e(number_format(((int) $count / $chartMax) * 100, 2, '.', '')) ?>%"></span></span>
+                            <span class="bar-value" aria-label="<?= e((string) $label) ?>: <?= number_format((int) $count) ?>"><?= number_format((int) $count) ?></span>
+                        </div>
+                    <?php endforeach; ?>
+                </article>
+            <?php endforeach; ?>
+            </div>
+            <p class="muted">Requester IDs never appear on this public page. Categories with fewer than three tickets are grouped into Other.</p>
+        <?php endif; ?>
+    </section>
 
     <section class="section"><h2>Snapshot history</h2><div class="table-wrap"><table><thead><tr><th>Captured</th><th>Unresolved</th><th>Change</th><th>Entered</th><th>Exited</th><th>Source</th><th>Note</th></tr></thead><tbody>
     <?php foreach (array_reverse($entries) as $index => $entry):
