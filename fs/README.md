@@ -32,6 +32,14 @@ Recommended cron request:
 curl -fsS -H "Authorization: Bearer YOUR_COLLECTOR_TOKEN" https://jasr.me/github/fs/api/collect.php
 ```
 
+To verify API access without changing tracker state, call the protected diagnostic endpoint with the same token:
+
+```bash
+curl -fsS -H "Authorization: Bearer YOUR_COLLECTOR_TOKEN" https://jasr.me/github/fs/api/test.php
+```
+
+The diagnostic checks the configured agent, general ticket access, and the exact agent filter. It returns only IDs, statuses, and counts—never the API key or ticket text.
+
 Running hourly captures tickets that enter and leave the queue during the same day more reliably than one end-of-day snapshot.
 
 The tracker does not schedule itself. Without a Hostinger cron job, it collects only when **Pull tickets now** is used. The button prompts for `collector_token`, sends it in an HTTPS authorization header, and does not save it in the page or browser storage.
