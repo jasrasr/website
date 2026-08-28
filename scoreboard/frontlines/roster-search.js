@@ -32,7 +32,7 @@
 
   function updateSearch() {
     const rawValue = searchInput.value;
-    const rawQuery = searchInput.value.trim();
+    const rawQuery = rawValue.trim();
     const tokens = rawQuery.toLowerCase().split(/\s+/).filter(Boolean);
     let visibleCount = 0;
 
