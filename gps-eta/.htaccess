@@ -1,0 +1,14 @@
+# GPS Speed + ETA Tracker
+# Force the wrapper entrypoint so the visible revision and injected helper scripts stay current.
+DirectoryIndex index-secure.php
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^index\.php$ index-secure.php [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
+</IfModule>

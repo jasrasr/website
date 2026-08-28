@@ -1,14 +1,14 @@
 <?php declare(strict_types=1);
 /**
  * Filename: auth.php
- * Revision : 1.12.0
+ * Revision : 1.13.0
  * Description : Shared authentication library for CVC Scoreboard.
  *               Handles sessions, user management, login/logout, and audit logging.
  *               Users stored in data/users.json with bcrypt-hashed passwords.
  *               First-run users are created from data/users-seed.sample.json only when users.json is absent.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-13
- * Modified Date : 2026-06-20
+ * Modified Date : 2026-06-21
  * Changelog :
  * 1.0.0 Initial release; per-user auth, roles, scoreboard access, audit logging
  * 1.1.0 Replaced hardcoded temp passwords with random generation; writes first-run-credentials.txt
@@ -23,6 +23,7 @@
  * 1.10.0 Added soft-disable on users: makeUser includes disabled:false; attemptLogin rejects disabled accounts (returns null, same as invalid credentials)
  * 1.11.0 saveUsers() now snapshots data/users.json to data/users.previous.json before every write, so a destructive change can be recovered by copying that file back. Single slot, overwritten on each save.
  * 1.12.0 Preserve an existing users.json during deployments; seed a missing file from users-seed.sample.json using an atomic create so concurrent requests cannot overwrite it.
+ * 1.13.0 Preserve the current scoreboard page through login and forced password-change redirects.
  */
 
 const USERS_FILE     = __DIR__ . '/data/users.json';
@@ -71,6 +72,42 @@ function authPasswordChangeUrl(string $loginUrl): string
     return ($base === '' || $base === '.') ? './change-password.php' : $base . '/change-password.php';
 }
 
+function authCurrentReturnPath(string $loginUrl): string
+{
+    $requestPath = (string) (parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH) ?? '');
+    $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    $basePath = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+
+    if ($requestPath === '') {
+        return 'enter-scores.php';
+    }
+
+    if ($basePath !== '' && $basePath !== '.' && str_starts_with($requestPath, $basePath . '/')) {
+        $requestPath = substr($requestPath, strlen($basePath) + 1);
+    } else {
+        $requestPath = ltrim($requestPath, '/');
+    }
+
+    if ($requestPath === '' || preg_match('~(^|/)\.\.(/|$)~', $requestPath) === 1) {
+        return 'enter-scores.php';
+    }
+
+    $loginDir = str_replace('\\', '/', dirname($loginUrl));
+    if (str_starts_with($loginDir, '..')) {
+        $currentDir = basename($basePath);
+        if ($currentDir !== '' && $currentDir !== '.' && $currentDir !== '..' && !str_starts_with($requestPath, $currentDir . '/')) {
+            $requestPath = $currentDir . '/' . $requestPath;
+        }
+    }
+
+    return $requestPath;
+}
+
+function authLoginRedirect(string $loginUrl): string
+{
+    return $loginUrl . '?redirect=' . urlencode((string) ($_SERVER['REQUEST_URI'] ?? ''));
+}
+
 function authRedirectIfPasswordChangeRequired(array $user, string $loginUrl): void
 {
     if (!authPasswordChangeRequired($user)) {
@@ -78,7 +115,7 @@ function authRedirectIfPasswordChangeRequired(array $user, string $loginUrl): vo
     }
 
     $changePasswordUrl = authPasswordChangeUrl($loginUrl);
-    header("Location: {$changePasswordUrl}?force=1&return=scoreboards.php");
+    header('Location: ' . $changePasswordUrl . '?force=1&return=' . rawurlencode(authCurrentReturnPath($loginUrl)));
     exit;
 }
 
@@ -92,8 +129,7 @@ function requireAuth(string $scoreboardId, string $loginUrl): array
     $user = $_SESSION[AUTH_SESSION] ?? null;
 
     if ($user === null) {
-        $redirect = urlencode($_SERVER['REQUEST_URI'] ?? '');
-        header("Location: {$loginUrl}?redirect={$redirect}");
+        header('Location: ' . authLoginRedirect($loginUrl));
         exit;
     }
 
@@ -144,8 +180,7 @@ function requireSignedIn(string $loginUrl): array
     $user = $_SESSION[AUTH_SESSION] ?? null;
 
     if ($user === null) {
-        $redirect = urlencode($_SERVER['REQUEST_URI'] ?? '');
-        header("Location: {$loginUrl}?redirect={$redirect}");
+        header('Location: ' . authLoginRedirect($loginUrl));
         exit;
     }
 

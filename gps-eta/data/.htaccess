@@ -1,0 +1,9 @@
+# GPS ETA server-side device history storage
+# Block direct web access to raw JSON history logs.
+Options -Indexes
+<IfModule mod_authz_core.c>
+  Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+  Deny from all
+</IfModule>

@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Jeremy's 2026 trip progress from Newhall, California to Cleveland, Ohio.">
+  <title>Jeremy's Trip to Cleveland</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07111f;
+      --panel: #101d2e;
+      --panel-2: #15263b;
+      --text: #f4f7fb;
+      --muted: #aab8ca;
+      --accent: #55c2ff;
+      --accent-2: #74e0aa;
+      --line: #29405b;
+      --warning: #ffd166;
+      --map: #7dd3fc;
+      --calculated: #c4b5fd;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #132944 0, var(--bg) 45rem);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+    main { width: min(1180px, calc(100% - 2rem)); margin: 0 auto; padding: 2.5rem 0 4rem; }
+    header { margin-bottom: 1.5rem; }
+    .eyebrow {
+      color: var(--accent);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    h1 { margin: .25rem 0 .35rem; font-size: clamp(2rem, 5vw, 4.2rem); line-height: 1.05; }
+    .subtitle { margin: 0; color: var(--muted); font-size: clamp(1rem, 2vw, 1.2rem); }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: .85rem;
+      margin: 1.5rem 0;
+    }
+    .card, .table-wrap, .notes {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: color-mix(in srgb, var(--panel) 94%, transparent);
+      box-shadow: 0 18px 50px rgb(0 0 0 / .18);
+    }
+    .card { padding: 1rem 1.1rem; }
+    .eta-card { grid-column: 1 / -1; }
+    .eta-basis { margin: .35rem 0 0; color: var(--muted); font-size: .85rem; }
+    .label { color: var(--muted); font-size: .78rem; font-weight: 700; text-transform: uppercase; }
+    .value { margin-top: .15rem; font-size: clamp(1.35rem, 3vw, 2rem); font-weight: 800; }
+    .value small { color: var(--muted); font-size: .85rem; font-weight: 500; }
+    .progress-panel {
+      margin: 0 0 1rem;
+      padding: 1rem 1.15rem;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: color-mix(in srgb, var(--panel) 94%, transparent);
+      box-shadow: 0 18px 50px rgb(0 0 0 / .18);
+    }
+    .progress-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: .65rem;
+    }
+    .progress-heading h2 { margin: 0; font-size: 1rem; }
+    .progress-percent { color: var(--accent-2); font-size: 1.35rem; font-weight: 900; }
+    .progress-track {
+      height: 22px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #07111f;
+    }
+    .progress-fill {
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      box-shadow: 0 0 18px rgb(85 194 255 / .35);
+    }
+    .progress-details {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: .35rem 1rem;
+      margin-top: .55rem;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+    .map-panel {
+      margin: 0 0 1rem;
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: color-mix(in srgb, var(--panel) 94%, transparent);
+      box-shadow: 0 18px 50px rgb(0 0 0 / .18);
+    }
+    .map-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      margin-bottom: .75rem;
+    }
+    .map-panel h2 { margin: 0; font-size: 1rem; }
+    .map-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: .65rem 1rem;
+      border: 1px solid var(--accent);
+      border-radius: 999px;
+      color: var(--bg);
+      background: var(--accent);
+      font-weight: 800;
+      text-decoration: none;
+    }
+    .map-link:hover, .map-link:focus-visible { filter: brightness(1.08); }
+    .map-preview {
+      display: block;
+      width: 100%;
+      height: clamp(260px, 42vw, 430px);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel-2);
+    }
+    @media (max-width: 560px) {
+      .map-panel-header { align-items: stretch; flex-direction: column; }
+      .map-link { width: 100%; }
+    }
+    .data-key {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .65rem 1rem;
+      margin: 0 0 1rem;
+      padding: .85rem 1rem;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: color-mix(in srgb, var(--panel) 94%, transparent);
+    }
+    .key-title { width: 100%; font-weight: 800; }
+    .key-item { display: inline-flex; align-items: center; gap: .4rem; color: var(--muted); font-size: .82rem; }
+    .key-dot { width: .72rem; height: .72rem; flex: 0 0 auto; border-radius: 50%; background: var(--text); }
+    .key-dot.estimate { background: var(--warning); }
+    .key-dot.map { background: var(--map); }
+    .key-dot.calc { background: var(--calculated); }
+    .key-dot.total-key { background: var(--accent-2); }
+    .shared-location { color: var(--map); }
+    .route-estimate { color: var(--warning); }
+    .calculated { color: var(--calculated); }
+    .total-badge {
+      display: inline-block;
+      margin: 0 .45rem .2rem 0;
+      padding: .12rem .42rem;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      font-size: .67rem;
+      letter-spacing: .07em;
+      vertical-align: middle;
+    }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; min-width: 680px; table-layout: fixed; border-collapse: collapse; }
+    th:first-child, td:first-child { width: 128px; }
+    th:nth-child(2), td:nth-child(2), th:nth-child(3), td:nth-child(3) { width: 110px; }
+    th:nth-child(4), td:nth-child(4) { width: 100px; }
+    th:nth-child(5), td:nth-child(5) { width: 105px; }
+    th:nth-child(6), td:nth-child(6) { width: 115px; }
+    caption { padding: 1rem 1.1rem; text-align: left; font-size: 1.2rem; font-weight: 800; }
+    th, td { padding: .9rem 1rem; border-top: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--muted); background: var(--panel-2); font-size: .76rem; letter-spacing: .05em; text-transform: uppercase; }
+    tbody tr:hover { background: rgb(85 194 255 / .055); }
+    td:nth-child(n+4), th:nth-child(n+4) { text-align: right; }
+    td:nth-child(n+4) { white-space: nowrap; }
+    .total {
+      color: var(--accent-2);
+      font-weight: 800;
+      background: rgb(116 224 170 / .075);
+    }
+    tfoot .total td { border-top: 3px double var(--accent-2); }
+    .estimated { color: var(--warning); }
+    .notes { margin-top: 1rem; padding: 1rem 1.15rem; }
+    .notes h2 { margin: 0 0 .5rem; font-size: 1rem; }
+    .notes ul { margin: 0; padding-left: 1.2rem; color: var(--muted); }
+    footer { margin-top: 1.2rem; color: var(--muted); font-size: .82rem; text-align: center; }
+    @media (max-width: 760px) {
+      main { width: min(100% - 1rem, 1180px); padding-top: 1.25rem; }
+      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .card { padding: .85rem; }
+      table { min-width: 668px; }
+      th, td { padding: .5rem .4rem; }
+      th { font-size: .7rem; line-height: 1.25; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="eyebrow">West Coast → North Coast</div>
+      <h1>Jeremy's Trip to Cleveland</h1>
+      <p class="subtitle">Newhall, California to Parma Heights, Ohio · August 2026</p>
+    </header>
+
+    <section class="summary" aria-label="Trip summary">
+      <article class="card">
+        <div class="label">Latest checkpoint</div>
+        <div class="value shared-location">Parma Heights, OH</div>
+      </article>
+      <article class="card">
+        <div class="label">Reported</div>
+        <div class="value shared-location">Aug. 23 <small>8:15 PM EDT</small></div>
+      </article>
+      <article class="card">
+        <div class="label">Estimated traveled</div>
+        <div class="value">2,861 <small>miles</small></div>
+      </article>
+      <article class="card">
+        <div class="label">Overall progress rate</div>
+        <div class="value">~11.9 <small>mph</small></div>
+      </article>
+      <article class="card eta-card" id="arrival-complete">
+        <div class="label">Actual Parma Heights arrival</div>
+        <div class="value shared-location">Aug. 23 <small>8:15 PM EDT</small></div>
+        <p class="eta-basis">Confirmed by Google Maps at 6856 Anthony Lane. The final 7:59 PM estimate was 16 minutes early.</p>
+      </article>
+    </section>
+
+    <section class="progress-panel" aria-labelledby="trip-progress-title">
+      <div class="progress-heading">
+        <h2 id="trip-progress-title">Estimated trip progress</h2>
+        <div class="progress-percent">100%</div>
+      </div>
+      <div class="progress-track" role="progressbar" aria-label="Estimated trip completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+        <div class="progress-fill"></div>
+      </div>
+      <div class="progress-details">
+        <span>~2,861 miles traveled</span>
+        <span>0 miles remaining</span>
+        <span>~2,861-mile completed route</span>
+      </div>
+    </section>
+
+    <section class="map-panel" aria-labelledby="trip-map-title">
+      <div class="map-panel-header">
+        <h2 id="trip-map-title">Trip route map</h2>
+        <a class="map-link" href="map.html">Open larger map →</a>
+      </div>
+      <iframe class="map-preview" src="map.html?embed=1" title="Jeremy's recorded checkpoints and planned route" loading="lazy"></iframe>
+    </section>
+
+    <section class="data-key" aria-labelledby="data-key-title">
+      <div class="key-title" id="data-key-title">Data key</div>
+      <span class="key-item"><span class="key-dot"></span>Direct text from Jeremy</span>
+      <span class="key-item"><span class="key-dot map"></span>Google Maps shared-location observation</span>
+      <span class="key-item"><span class="key-dot estimate"></span>Estimated or inferred</span>
+      <span class="key-item"><span class="key-dot calc"></span>Calculated from observations</span>
+      <span class="key-item"><span class="key-dot total-key"></span>Trip total</span>
+    </section>
+
+    <section class="table-wrap">
+      <table>
+        <caption>Trip segments</caption>
+        <thead>
+          <tr>
+            <th scope="col">Segment</th>
+            <th scope="col">Start — Ohio time</th>
+            <th scope="col">End — Ohio time</th>
+            <th scope="col">Est. distance</th>
+            <th scope="col">Elapsed</th>
+            <th scope="col">Avg. progress</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Newhall, CA → Arizona line</td>
+            <td class="estimated">Aug. 13, ~6:30–7:30 PM</td>
+            <td>Aug. 14, 12:34 AM</td>
+            <td class="route-estimate">~255 mi</td>
+            <td class="calculated">~5–6 hr</td>
+            <td class="calculated">~43–51 mph</td>
+          </tr>
+          <tr>
+            <td>Arizona line → Estelline, TX</td>
+            <td>Aug. 14, 12:34 AM</td>
+            <td class="shared-location">Aug. 15, 7:00 PM</td>
+            <td class="route-estimate">~895 mi</td>
+            <td class="calculated">42 hr 26 min</td>
+            <td class="calculated">~21.1 mph</td>
+          </tr>
+          <tr>
+            <td>Estelline, TX → Saginaw, TX</td>
+            <td class="shared-location">Aug. 15, 7:00 PM</td>
+            <td class="shared-location">Aug. 16, 10:15 AM</td>
+            <td class="route-estimate">~230 mi</td>
+            <td class="calculated">15 hr 15 min</td>
+            <td class="calculated">~15 mph</td>
+          </tr>
+          <tr>
+            <td>Saginaw, TX → Denison, TX</td>
+            <td class="shared-location">Aug. 16, 10:15 AM</td>
+            <td class="shared-location">Aug. 16, 12:30 PM</td>
+            <td class="route-estimate">~95 mi</td>
+            <td class="calculated">2 hr 15 min</td>
+            <td class="calculated">~42.2 mph</td>
+          </tr>
+          <tr>
+            <td>Denison, TX → Kenefic, OK</td>
+            <td class="shared-location">Aug. 16, 12:30 PM</td>
+            <td class="shared-location">Aug. 16, ~5:53 PM</td>
+            <td class="route-estimate">~38 mi</td>
+            <td class="calculated">5 hr 23 min</td>
+            <td class="calculated">~7.1 mph</td>
+          </tr>
+          <tr>
+            <td>Kenefic, OK → Savanna, OK</td>
+            <td class="shared-location">Aug. 16, ~5:53 PM</td>
+            <td class="shared-location">Aug. 16, 11:32 PM</td>
+            <td class="route-estimate">~72 mi</td>
+            <td class="calculated">5 hr 39 min</td>
+            <td class="calculated">~12.7 mph</td>
+          </tr>
+          <tr>
+            <td>Savanna, OK → Joplin, MO</td>
+            <td class="shared-location">Aug. 16, 11:32 PM</td>
+            <td class="shared-location">Aug. 17, 5:21 AM</td>
+            <td class="route-estimate">~189 mi</td>
+            <td class="calculated">5 hr 49 min</td>
+            <td class="calculated">~32.5 mph</td>
+          </tr>
+          <tr>
+            <td>Joplin, MO → Osceola, MO</td>
+            <td class="shared-location">Aug. 17, 5:21 AM</td>
+            <td class="shared-location">Aug. 17, 1:08 PM</td>
+            <td class="route-estimate">~118 mi</td>
+            <td class="calculated">7 hr 47 min</td>
+            <td class="calculated">~15.2 mph</td>
+          </tr>
+          <tr>
+            <td>Osceola, MO → Richland, MO</td>
+            <td class="shared-location">Aug. 17, 1:08 PM</td>
+            <td class="shared-location">Aug. 17, ~5:36 PM</td>
+            <td class="route-estimate">~82 mi</td>
+            <td class="calculated">4 hr 28 min</td>
+            <td class="calculated">~18.4 mph</td>
+          </tr>
+          <tr>
+            <td>Richland, MO → Linn Creek, MO</td>
+            <td class="shared-location">Aug. 17, ~5:36 PM</td>
+            <td class="shared-location">Aug. 17, 6:19 PM</td>
+            <td class="route-estimate">~13 mi</td>
+            <td class="calculated">43 min</td>
+            <td class="calculated">~18.1 mph</td>
+          </tr>
+          <tr>
+            <td>Linn Creek, MO → Osage Beach, MO</td>
+            <td class="shared-location">Aug. 17, 6:19 PM</td>
+            <td class="shared-location">Aug. 17, ~9:03 PM</td>
+            <td class="route-estimate">~10 mi</td>
+            <td class="calculated">2 hr 44 min</td>
+            <td class="calculated">~3.7 mph</td>
+          </tr>
+          <tr>
+            <td>Osage Beach, MO → New Baden, IL</td>
+            <td class="shared-location">Aug. 17, ~9:03 PM</td>
+            <td class="shared-location">Aug. 18, ~5:28 AM</td>
+            <td class="route-estimate">~207 mi</td>
+            <td class="calculated">8 hr 25 min</td>
+            <td class="calculated">~24.6 mph</td>
+          </tr>
+          <tr>
+            <td>New Baden, IL → Santa Claus, IN</td>
+            <td class="shared-location">Aug. 18, ~5:28 AM</td>
+            <td class="shared-location">Aug. 18, 3:11 PM</td>
+            <td class="route-estimate">~165 mi</td>
+            <td class="calculated">9 hr 43 min</td>
+            <td class="calculated">~17.0 mph</td>
+          </tr>
+          <tr>
+            <td>Santa Claus, IN → Sellersburg, IN</td>
+            <td class="shared-location">Aug. 18, 3:11 PM</td>
+            <td class="shared-location">Aug. 18, ~5:07 PM</td>
+            <td class="route-estimate">~73 mi</td>
+            <td class="calculated">1 hr 56 min</td>
+            <td class="calculated">~37.8 mph</td>
+          </tr>
+          <tr>
+            <td>Sellersburg, IN → Sellersburg, IN</td>
+            <td class="shared-location">Aug. 18, ~5:07 PM</td>
+            <td class="shared-location">Aug. 21, 9:51 AM</td>
+            <td class="route-estimate">~2 mi local movement</td>
+            <td class="calculated">64 hr 44 min</td>
+            <td class="calculated">~0.1 mph</td>
+          </tr>
+          <tr>
+            <td>Sellersburg, IN → McCordsville, IN</td>
+            <td class="shared-location">Aug. 21, 9:51 AM</td>
+            <td class="shared-location">Aug. 22, ~3:49 PM</td>
+            <td class="route-estimate">~125 mi</td>
+            <td class="calculated">29 hr 58 min</td>
+            <td class="calculated">~4.2 mph</td>
+          </tr>
+          <tr>
+            <td>McCordsville, IN → Greenfield, IN</td>
+            <td class="shared-location">Aug. 22, ~3:49 PM</td>
+            <td class="shared-location">Aug. 23, 1:27 PM</td>
+            <td class="route-estimate">~10 mi</td>
+            <td class="calculated">21 hr 38 min</td>
+            <td class="calculated">~0.5 mph</td>
+          </tr>
+          <tr>
+            <td>Greenfield, IN → New Lisbon, IN</td>
+            <td class="shared-location">Aug. 23, 1:27 PM</td>
+            <td class="shared-location">Aug. 23, 1:58 PM</td>
+            <td class="route-estimate">~29 mi</td>
+            <td class="calculated">31 min</td>
+            <td class="calculated">~56.1 mph</td>
+          </tr>
+          <tr>
+            <td>New Lisbon, IN → Richmond, IN</td>
+            <td class="shared-location">Aug. 23, 1:58 PM</td>
+            <td class="shared-location">Aug. 23, 2:52 PM</td>
+            <td class="route-estimate">~24 mi</td>
+            <td class="calculated">54 min</td>
+            <td class="calculated">~26.7 mph</td>
+          </tr>
+          <tr>
+            <td>Richmond, IN → Eaton, OH</td>
+            <td class="shared-location">Aug. 23, 2:52 PM</td>
+            <td class="shared-location">Aug. 23, ~3:27 PM</td>
+            <td class="route-estimate">~10 mi</td>
+            <td class="calculated">~35 min</td>
+            <td class="calculated">~17.1 mph</td>
+          </tr>
+          <tr>
+            <td>Eaton, OH → Clayton, OH</td>
+            <td class="shared-location">Aug. 23, ~3:27 PM</td>
+            <td class="shared-location">Aug. 23, 3:37 PM</td>
+            <td class="route-estimate">~9 mi</td>
+            <td class="calculated">~10 min</td>
+            <td class="calculated">~54 mph</td>
+          </tr>
+          <tr>
+            <td>Clayton, OH → Dublin, OH</td>
+            <td class="shared-location">Aug. 23, 3:37 PM</td>
+            <td class="shared-location">Aug. 23, 5:02 PM</td>
+            <td class="route-estimate">~72 mi</td>
+            <td class="calculated">1 hr 25 min</td>
+            <td class="calculated">~50.8 mph</td>
+          </tr>
+          <tr>
+            <td>Dublin, OH → Marengo, OH</td>
+            <td class="shared-location">Aug. 23, 5:02 PM</td>
+            <td class="shared-location">Aug. 23, 5:48 PM</td>
+            <td class="route-estimate">~31 mi</td>
+            <td class="calculated">46 min</td>
+            <td class="calculated">~40.4 mph</td>
+          </tr>
+          <tr>
+            <td>Marengo, OH → Medina, OH</td>
+            <td class="shared-location">Aug. 23, 5:48 PM</td>
+            <td class="shared-location">Aug. 23, 7:28 PM</td>
+            <td class="route-estimate">~85 mi</td>
+            <td class="calculated">1 hr 40 min</td>
+            <td class="calculated">~51 mph</td>
+          </tr>
+
+          <tr>
+            <td>Medina, OH → Brunswick, OH</td>
+            <td class="shared-location">Aug. 23, 7:28 PM</td>
+            <td class="shared-location">Aug. 23, 7:37 PM</td>
+            <td class="route-estimate">~8 mi</td>
+            <td class="calculated">9 min</td>
+            <td class="calculated">~53.3 mph</td>
+          </tr>
+          <tr>
+            <td>Brunswick, OH → Parma Heights, OH</td>
+            <td class="shared-location">Aug. 23, 7:37 PM</td>
+            <td class="shared-location">Aug. 23, 8:15 PM</td>
+            <td class="route-estimate">~14 mi</td>
+            <td class="calculated">38 min</td>
+            <td class="calculated">~22.1 mph</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="total">
+            <td><span class="total-badge">TOTAL</span>Newhall, CA → Parma Heights, OH</td>
+            <td>Aug. 13, ~6:30–7:30 PM</td>
+            <td>Aug. 23, 8:15 PM</td>
+            <td>~2,861 mi</td>
+            <td>~240 hr 45 min–241 hr 45 min</td>
+            <td>~11.9 mph</td>
+          </tr>
+        </tfoot>
+      </table>
+    </section>
+
+    <aside class="notes">
+      <h2>Tracking notes</h2>
+      <ul>
+        <li><strong>Direct report:</strong> The Arizona state-line checkpoint came from Jeremy's text message at 12:34 AM EDT on August 14 saying he had “Just entered Arizona.”</li>
+        <li><strong>Google Maps observations:</strong> Jason recorded the later city and time updates while viewing the live location Jeremy shared through Google Maps.</li>
+        <li><strong>Map marker:</strong> The orange-and-white bow-tie avatar shown in the screenshots is Jeremy's Google profile image and identifies his shared position.</li>
+        <li><strong>Observation time:</strong> A Google Maps timestamp records when Jason checked Jeremy's location; it is not necessarily the exact arrival or departure time. Displayed times are rounded and shown in Ohio time (EDT).</li>
+        <li><strong>Kenefic timestamp:</strong> The screenshot was taken at 6:31 PM and showed Jeremy's location as 38 minutes old, producing an approximate location time of 5:53 PM EDT.</li>
+        <li><strong>Richland timestamp:</strong> The screenshot was taken at 5:38 PM EDT and showed Jeremy’s position as two minutes old, producing an approximate observation time of 5:36 PM EDT near 18941 State Route A.</li>
+        <li><strong>Linn Creek checkpoint:</strong> Google Maps showed Jeremy near State Route A and US-54 at 6:19 PM EDT on August 17. The shared-location screen displayed 657 miles from Jason; that figure is treated as direct geographic separation rather than road mileage.</li>
+        <li><strong>Osage Beach checkpoint:</strong> The screenshot was taken at 9:04 PM EDT and showed Jeremy’s position as one minute old, producing an approximate observation time of 9:03 PM EDT near 4252 US-54. The displayed 618 miles is treated as direct geographic separation rather than road mileage.</li>
+        <li><strong>Missouri backtrack:</strong> The confirmed path from Richland west to Linn Creek and then north to Osage Beach added approximately 23 tracked road miles and 3 hr 27 min of elapsed trip time. That detour is included in cumulative mileage, overall progress rate, the revised route total, and the arrival estimate; the elapsed period may also include stopped time.</li>
+        <li><strong>New Baden checkpoint:</strong> The screenshot was taken at 5:29 AM EDT on August 18 and showed Jeremy’s position as one minute old, producing an approximate observation time of 5:28 AM EDT at Love’s Travel Stop near New Baden, Illinois. The displayed 466 miles is treated as direct geographic separation rather than road mileage.</li>
+        <li><strong>Santa Claus checkpoint:</strong> Google Maps showed Jeremy at Santa’s Cottages near 1405 W Christmas Boulevard at 3:11 PM EDT on August 18. The displayed 395 miles is treated as direct geographic separation rather than road mileage.</li>
+        <li><strong>Sellersburg checkpoint:</strong> The screenshot was taken at 5:08 PM EDT and showed Jeremy’s position as one minute old, producing an approximate observation time of 5:07 PM EDT near 947 S Indiana Avenue. The displayed 330 miles is treated as direct geographic separation rather than road mileage.</li>
+        <li><strong>Sellersburg overnight stop:</strong> The latest shared-location observation still placed Jeremy near 4215 Lakeside Drive at 9:51 AM EDT on August 21, 64 hr 44 min after the first Sellersburg observation. Approximately two miles of local movement is estimated; nearly all of the elapsed period is treated as stopped time. The displayed 330 miles is direct geographic separation.</li>
+        <li><strong>Waze route reference:</strong> Jason’s August 19 Waze screenshot showed approximately 344 road miles and 5 hours for a normal passenger vehicle between his Cleveland-area location and Sellersburg. The tracker previously used the 344-mile distance in the reverse direction; the current ETA now uses McCordsville as its starting point and the 55 MPH towing cap.</li>
+        <li><strong>Final arrival:</strong> Google Maps confirmed Jeremy at 6856 Anthony Lane in Parma Heights at 8:15 PM EDT on August 23. The final tracker estimate was 7:59 PM, 16 minutes early.</li>
+        <li><strong>McCordsville checkpoint:</strong> Google Maps showed Jeremy near 8630 N Autumnview Drive at approximately 3:49 PM EDT on August 22. The displayed 241 miles is direct geographic separation. Approximately 280 road miles remaining is inferred from that separation and the earlier road-route ratio; it is not a live directions result.</li>
+        <li><strong>Greenfield checkpoint:</strong> Google Maps showed Jeremy near Mohawk/Greenfield at coordinates 39.820411, -85.832786 at 1:27 PM EDT on August 23. A screenshot four minutes earlier showed the same area near I-70 and the Pilot Travel Center. The displayed 243 miles is direct geographic separation.</li>
+        <li><strong>New Lisbon checkpoint:</strong> Google Maps showed Jeremy in New Lisbon, Indiana at 1:58 PM EDT on August 23. The displayed 212 miles is direct geographic separation. Approximately 29 route miles in 31 minutes gives about 56 MPH; location and route rounding account for the small difference from the 55 MPH towing cap.</li>
+        <li><strong>Richmond checkpoint:</strong> Google Maps showed Jeremy at the Petro/Blue Beacon travel-center area near 6400 National Road East in Richmond, Indiana at 2:52 PM EDT on August 23. Approximately 24 route miles elapsed from New Lisbon; the 54-minute segment may include stopped time. The displayed 212 miles is direct geographic separation, not the tracker’s estimated road distance.</li>
+        <li><strong>Eaton-area checkpoint:</strong> At 3:28 PM EDT on August 23, Google Maps showed Jeremy’s location as one minute old at coordinates 39.7903063, -84.6644220 near Surface Road and Alexander Road, north of Eaton, Ohio. The tracker records the observation as approximately 3:27 PM. Roughly 10 route miles elapsed from the Richmond travel-center checkpoint; the segment includes the apparent stop there.</li>
+        <li><strong>Clayton checkpoint and GPS drift:</strong> Google Maps showed Jeremy near I-70 at Crestway Drive in Clayton, Ohio at 3:37 PM EDT. The immediately preceding pins jumped farther than the bus could physically travel, and each appeared off the highway. The tracker therefore uses approximately nine miles of plausible I-70 progress during this ten-minute interval rather than measuring between the raw GPS pins.</li>
+        <li><strong>Dublin checkpoint:</strong> Google Maps showed Jeremy near Upper Metro Place in Dublin, Ohio at 5:02 PM EDT on August 23. This replaces the pending Dayton and Columbus markers because the confirmed route reached the Columbus metro by way of Dublin. Approximately 72 road miles in 1 hour 25 minutes gives about 50.8 MPH of overall progress, consistent with the 55 MPH towing cap.</li>
+        <li><strong>Marengo checkpoint:</strong> Google Maps showed Jeremy on I-71 near Marengo, Ohio at 5:48 PM EDT on August 23. Approximately 31 route miles in 46 minutes gives about 40.4 MPH of overall progress; this may include slower traffic or a brief stop and is not instantaneous driving speed.</li>
+        <li><strong>Ashland observations:</strong> Google Maps placed Jeremy on I-71 near Ashland at 6:27 PM and near the Hampton Inn area around 6:53 PM, suggesting a stop of roughly 25 minutes. Two 6:56 PM pins differed by several miles within the same minute, further confirming GPS drift.</li>
+        <li><strong>Medina checkpoint:</strong> Google Maps showed Jeremy near Windfall and I-271 in the Medina area at 7:28 PM EDT, including coordinates 41.1609562, -81.7771641. The displayed 46-mile separation remained unchanged across multiple moving observations and is treated as stale. The tracker uses approximately 85 plausible route miles for the full Marengo-to-Medina corridor rather than measuring between drifting pins.</li>
+        <li><strong>Brunswick checkpoint:</strong> Google Maps showed Jeremy near N Carpenter Road and I-71 in Brunswick at 7:37 PM EDT. The displayed 8.7-mile separation was treated as a shared-location figure; approximately eight route miles were assigned from the Medina-area checkpoint.</li>
+        <li><strong>Parma Heights arrival:</strong> Google Maps showed Jeremy at 6856 Anthony Lane at 8:15 PM EDT. Approximately 14 route miles and 38 minutes are assigned from Brunswick to the destination.</li>
+        <li><strong>Final destination:</strong> 6856 Anthony Lane, Parma Heights, Ohio 44130. Google Maps confirmed Jeremy at the destination at 8:15 PM EDT on August 23.</li>
+        <li><strong>Trip complete:</strong> All pending waypoints were removed after the confirmed arrival. The final ETA was based on the Medina-area observation and was 16 minutes earlier than the actual arrival.</li>
+        <li><strong>Completed route:</strong> The tracker estimates approximately 2,861 total road miles from Newhall to Parma Heights, including the confirmed Missouri backtrack and all recorded route segments.</li>
+        <li><strong>Joplin checkpoint:</strong> Google Maps showed Jeremy at Sleep Inn South Joplin at 5:21 AM EDT (4:21 AM local). Its shared-location view displayed 748 miles from Jason, which appears to be direct geographic separation. Google Maps Directions showed 853 miles via the faster toll route and 916 miles via the selected longer no-toll route. Those direct-route options are informational; trip completion uses the full planned itinerary.</li>
+        <li><strong>Estimated:</strong> Jeremy's Newhall departure time was inferred from the Arizona report and the likely driving time of the bus-and-trailer combination. Segment road mileage is approximate route mileage.</li>
+        <li><strong>Calculated:</strong> Elapsed time, average progress, cumulative mileage, and percent complete are derived from the recorded observations and estimated road mileage.</li>
+        <li>Jeremy is driving a shorter school bus approximately 24 feet in length, towing a tandem-axle car hauler carrying a midsize SUV. The ETA model caps travel speed at 55 MPH because of trailer wobble and the U-Haul towing recommendation.</li>
+        <li>Average progress includes fuel, food, sleep, and other stops; it is not driving speed.</li>
+        <li>Provisional fuel economy estimate: about 6.5 MPG, with a likely range of 5–8 MPG depending on the engine, load, terrain, and speed.</li>
+      </ul>
+    </aside>
+
+    <footer>Trip completed August 23, 2026 at 8:15 PM EDT</footer>
+  </main>
+  <script>
+    (() => {
+      const card = document.getElementById("arrival-estimate");
+      const output = document.getElementById("arrival-estimate-value");
+      if (!card || !output) return;
+
+      const leaveTime = new Date(card.dataset.leaveTime);
+      const remaining = Number(card.dataset.remainingMiles);
+      const travelMph = Number(card.dataset.travelMph);
+      const stopMinutes = Number(card.dataset.stopMinutes);
+      if (Number.isNaN(leaveTime.getTime()) || !Number.isFinite(remaining) || travelMph <= 0 || !Number.isFinite(stopMinutes)) return;
+
+      const travelMilliseconds = (remaining / travelMph) * 3600000;
+      const arrival = new Date(leaveTime.getTime() + travelMilliseconds + stopMinutes * 60000);
+      const zone = "America/New_York";
+      const dateFormat = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: zone });
+      const timeFormat = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: zone });
+      const zoneFormat = new Intl.DateTimeFormat("en-US", { timeZone: zone, timeZoneName: "short" });
+      const zoneName = zoneFormat.formatToParts(arrival).find((part) => part.type === "timeZoneName")?.value || "ET";
+
+      output.innerHTML = dateFormat.format(arrival) + " <small>~" + timeFormat.format(arrival) + " " + zoneName + "</small>";
+    })();
+  </script>
+</body>
+</html>

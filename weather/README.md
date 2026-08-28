@@ -45,7 +45,8 @@ Go to https://home.openweathermap.org/api_keys to create a free account and API 
 /weather
 ├── index.php                    # UI (mobile friendly)
 ├── weather_update.php           # Weather fetch and cache engine
-├── config.php                   # Authoritative city configuration (lat/lon)
+├── config.example.php           # Tracked placeholder configuration
+├── config.php                   # Private server configuration, ignored by Git
 ├── geocode_helper.php           # Setup-time helper for lat/lon + ZIP resolution
 ├── data/
 ├── ├── README.md
@@ -60,7 +61,29 @@ Go to https://home.openweathermap.org/api_keys to create a free account and API 
 
 ---
 
-## Configuration (`config.php`)
+## Configuration
+
+Create the private config file by copying:
+
+```
+/weather/config.example.php
+```
+
+to:
+
+```
+/weather/config.php
+```
+
+Then replace:
+
+```php
+'api_key' => 'ENTER-API-HERE',
+```
+
+with your real API key.
+
+`config.php` is ignored by Git and should exist only on the server or local machine that needs the private key. GitHub updates can replace tracked files like `config.example.php`, but they should not overwrite `config.php`.
 
 All base cities **must** be defined using latitude and longitude.
 

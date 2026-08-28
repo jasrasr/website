@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 /**
  * Filename: frontlines/enter-scores.php
- * Revision : 1.7.0
+ * Revision : 1.8.0
  * Description : Admin score entry page for CVC Frontlines Scoreboard.
- *               Allows authorized users to update, reset, and rename team scores and title.
+ *               Allows authorized users to update, reset, rename, and view full rankings.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-09
- * Modified Date : 2026-06-20
+ * Modified Date : 2026-06-23
  * Changelog :
  * 1.0.0 Initial release for Frontlines scoreboard instance
  * 1.1.0 Added session authentication; passes username/role/urls to JS via data attrs
@@ -16,6 +16,8 @@
  * 1.5.0 Added category navigation URLs (Enter Categories for all; Edit Categories for admin)
  * 1.6.0 Server-rendered page-header block so View Source shows page identity and signed-in user
  * 1.7.0 Add an Add Category Score shortcut to the top banner and normalize category-link wording
+ * 1.7.1 Load the shared light/dark theme toggle
+ * 1.8.0 Add Full Rankings shortcut for signed-in Frontlines admins/scorers
  */
 
 require __DIR__ . '/../auth.php';
@@ -52,6 +54,7 @@ $isAdmin = ($user['role'] ?? '') === 'admin';
           <p class="updated-at">Signed in as <?= htmlspecialchars($user['username']) ?> (<?= htmlspecialchars($user['role']) ?>)</p>
         </div>
         <div class="header-actions">
+          <a class="au-btn" href="./rankings.php" data-full-rankings-link="top">Full Rankings</a>
           <a class="au-btn" href="./enter-scores-category.php" data-category-score-link="top">Add Category Score</a>
         </div>
       </header>
@@ -59,5 +62,6 @@ $isAdmin = ($user['role'] ?? '') === 'admin';
     </div>
     <script src="../public/app.js?v=<?= filemtime(__DIR__ . '/../public/app.js') ?>" defer></script>
     <script src="./category-navigation.js?v=<?= filemtime(__DIR__ . '/category-navigation.js') ?>" defer></script>
+    <script src="../public/theme-toggle.js?v=<?= filemtime(__DIR__ . '/../public/theme-toggle.js') ?>" defer></script>
   </body>
 </html>

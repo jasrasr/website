@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jeremy's Trip Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    html, body, #map { width: 100%; height: 100%; margin: 0; }
+    body { background: #101d2e; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .marker {
+      display: grid; place-items: center; width: 28px; height: 28px;
+      border: 2px solid #07111f; border-radius: 50%; background: #55c2ff;
+      color: #07111f; font-size: 12px; font-weight: 800; box-shadow: 0 2px 8px rgb(0 0 0 / .4);
+    }
+    .marker.latest { background: #74e0aa; }
+    .marker.planned { background: #ffd166; }
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #101d2e; color: #f4f7fb; }
+    .leaflet-popup-content { line-height: 1.4; }
+    .map-nav {
+      position: fixed; top: 12px; left: 50%; z-index: 1000;
+      transform: translateX(-50%);
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 44px; padding: .65rem 1rem;
+      border: 2px solid #55c2ff; border-radius: 999px;
+      background: #07111f; color: #f4f7fb;
+      box-shadow: 0 4px 16px rgb(0 0 0 / .45);
+      font-weight: 800; text-decoration: none; white-space: nowrap;
+    }
+    .map-nav:hover, .map-nav:focus-visible { background: #15263b; }
+    body.embed .map-nav { display: none; }
+  </style>
+</head>
+<body>
+  <script>
+    if (new URLSearchParams(window.location.search).get("embed") === "1") {
+      document.body.classList.add("embed");
+    }
+  </script>
+  <a class="map-nav" href="index.html" target="_top">← Back to trip tracker</a>
+  <div id="map" role="img" aria-label="Map of Jeremy's completed trip from Newhall to Parma Heights"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    (() => {
+      const recorded = [
+        { name: "Newhall, CA", time: "Aug. 13, ~6:30–7:30 PM EDT", lat: 34.379, lon: -118.540 },
+        { name: "Arizona line near Topock", time: "Aug. 14, 12:34 AM EDT", lat: 34.718, lon: -114.487 },
+        { name: "Estelline, TX", time: "Aug. 15, 7:00 PM EDT", lat: 34.546, lon: -100.437 },
+        { name: "Saginaw, TX", time: "Aug. 16, 10:15 AM EDT", lat: 32.861, lon: -97.364 },
+        { name: "Denison, TX", time: "Aug. 16, 12:30 PM EDT", lat: 33.755, lon: -96.536 },
+        { name: "Kenefic, OK", time: "Aug. 16, ~5:53 PM EDT", lat: 34.156, lon: -96.366 },
+        { name: "Savanna, OK", time: "Aug. 16, 11:32 PM EDT", lat: 34.833, lon: -95.839 },
+        { name: "Joplin, MO", time: "Aug. 17, 5:21 AM EDT", lat: 37.008, lon: -94.516 },
+        { name: "Osceola, MO", time: "Aug. 17, 1:08 PM EDT", lat: 38.046, lon: -93.704 },
+        { name: "Richland, MO", time: "Aug. 17, ~5:36 PM EDT", lat: 37.955, lon: -92.437 },
+        { name: "Linn Creek, MO", time: "Aug. 17, 6:19 PM EDT", lat: 38.0342, lon: -92.6034 },
+        { name: "Osage Beach, MO", time: "Aug. 17, ~9:03 PM EDT", lat: 38.151, lon: -92.618 },
+        { name: "New Baden, IL", time: "Aug. 18, ~5:28 AM EDT", lat: 38.535, lon: -89.701 },
+        { name: "Santa Claus, IN", time: "Aug. 18, 3:11 PM EDT", lat: 38.1190, lon: -86.9754 },
+        { name: "Sellersburg, IN", time: "Aug. 18, ~5:07 PM EDT", lat: 38.398, lon: -85.755 },
+        { name: "Sellersburg extended stop", time: "Aug. 21, 9:51 AM EDT", lat: 38.407, lon: -85.763 },
+        { name: "McCordsville, IN", time: "Aug. 22, ~3:49 PM EDT", lat: 39.8943, lon: -85.9198 },
+        { name: "Greenfield, IN", time: "Aug. 23, 1:27 PM EDT", lat: 39.820411, lon: -85.832786 },
+        { name: "New Lisbon, IN", time: "Aug. 23, 1:58 PM EDT", lat: 39.861, lon: -85.263 },
+        { name: "Richmond, IN", time: "Aug. 23, 2:52 PM EDT · Petro/Blue Beacon area", lat: 39.833, lon: -84.814 },
+        { name: "Eaton, OH area", time: "Aug. 23, ~3:27 PM EDT · low-confidence GPS", lat: 39.7903063, lon: -84.6644220 },
+        { name: "Clayton, OH", time: "Aug. 23, 3:37 PM EDT · I-70/Crestway area · approximate marker", lat: 39.855, lon: -84.358 },
+        { name: "Dublin, OH", time: "Aug. 23, 5:02 PM EDT · Upper Metro Place area", lat: 40.101, lon: -83.129 },
+        { name: "Marengo, OH", time: "Aug. 23, 5:48 PM EDT · I-71 corridor", lat: 40.400, lon: -82.810 },
+        { name: "Ashland, OH", time: "Aug. 23, 6:27–6:53 PM EDT · apparent stop", lat: 40.868, lon: -82.318 },
+        { name: "Medina, OH area", time: "Aug. 23, 7:28 PM EDT · Windfall/I-271 · low-confidence GPS", lat: 41.1609562, lon: -81.7771641 },
+        { name: "Brunswick, OH", time: "Aug. 23, 7:37 PM EDT · N Carpenter Rd/I-71 area", lat: 41.238, lon: -81.841 },
+        { name: "Parma Heights, OH", time: "Arrived Aug. 23, 8:15 PM EDT · 6856 Anthony Lane", lat: 41.372245, lon: -81.748750 }
+      ];
+      const pending = [];
+      const latest = recorded[recorded.length - 1];
+      const upcoming = pending.filter((point) => latest.lon < point.lon);
+      const planned = [latest, ...upcoming];
+      const map = L.map("map", { scrollWheelZoom: false });
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 18, attribution: "&copy; OpenStreetMap contributors"
+      }).addTo(map);
+      const icon = (label, type) => L.divIcon({
+        className: "", html: '<span class="marker ' + type + '">' + label + "</span>",
+        iconSize: [28, 28], iconAnchor: [14, 14]
+      });
+      recorded.forEach((point, index) => {
+        const type = index === recorded.length - 1 ? "latest" : "";
+        L.marker([point.lat, point.lon], { icon: icon(String(index + 1), type) })
+          .bindPopup("<strong>" + point.name + "</strong><br>" + point.time).addTo(map);
+      });
+      planned.slice(1).forEach((point) => {
+        L.marker([point.lat, point.lon], { icon: icon("P", "planned") })
+          .bindPopup("<strong>" + point.name + "</strong><br>" + point.time).addTo(map);
+      });
+      const traveled = L.polyline(recorded.map((point) => [point.lat, point.lon]), {
+        color: "#74e0aa", weight: 4
+      }).addTo(map);
+      if (planned.length > 1) {
+        L.polyline(planned.map((point) => [point.lat, point.lon]), {
+          color: "#ffd166", weight: 4, dashArray: "10 8"
+        }).addTo(map);
+      }
+      map.setView([latest.lat, latest.lon], 6);
+    })();
+  </script>
+</body>
+</html>

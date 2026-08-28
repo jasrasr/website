@@ -1,0 +1,81 @@
+{
+  "id": "./",
+  "name": "TV Binge Board",
+  "short_name": "TV Binge Board",
+  "description": "Mobile-friendly JSON-based TV and movie tracking.",
+  "start_url": "index.php",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "browser"],
+  "orientation": "portrait",
+  "background_color": "#0b1020",
+  "theme_color": "#111827",
+  "categories": ["entertainment", "productivity"],
+  "lang": "en-US",
+  "shortcuts": [
+    {
+      "name": "Search / Add",
+      "short_name": "Search",
+      "description": "Search TMDB or add a show or movie.",
+      "url": "search.php",
+      "icons": [{ "src": "assets/icons/icon-jl-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "My List",
+      "short_name": "List",
+      "description": "Open the full watch list.",
+      "url": "watchlist.php",
+      "icons": [{ "src": "assets/icons/icon-jl-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Import",
+      "short_name": "Import",
+      "description": "Upload CSV, JSON, or screenshots.",
+      "url": "search.php#file-import",
+      "icons": [{ "src": "assets/icons/icon-jl-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ],
+  "icons": [
+    {
+      "src": "assets/icons/icon-jl-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-jl-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/apple-touch-icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/screenshots/pwa-mobile-list.svg",
+      "sizes": "390x844",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "Compact mobile watch list with next-up tracking"
+    },
+    {
+      "src": "assets/screenshots/pwa-mobile-search-import.svg",
+      "sizes": "390x844",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "Search, add, file import, and screenshot import hub"
+    },
+    {
+      "src": "assets/screenshots/pwa-desktop-dashboard.svg",
+      "sizes": "1365x768",
+      "type": "image/svg+xml",
+      "form_factor": "wide",
+      "label": "Wide dashboard with tracking cards and install features"
+    }
+  ]
+}

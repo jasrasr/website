@@ -1,0 +1,24 @@
+# Project: Family GPS Tracker
+# File: .htaccess
+# Revision: 1.1.1
+# Description: Apache access-control and security headers for the public app folder.
+# Author: Jason Lamb / ChatGPT scaffold
+# Created: 2026-07-06
+# Modified: 2026-07-06
+
+DirectoryIndex index.php
+Options -Indexes
+
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set Referrer-Policy "same-origin"
+    Header set Permissions-Policy "geolocation=(self)"
+</IfModule>
+
+<FilesMatch "[.](json|lock)$">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "^(config|json-store|security)[.]php$">
+    Require all denied
+</FilesMatch>

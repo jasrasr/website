@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Open the Dell Support page for a service tag.">
+  <title>Dell Service Tag Lookup</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --blue: #0672ce;
+      --blue-dark: #005da6;
+      --ink: #18212b;
+      --muted: #5b6672;
+      --surface: rgba(255, 255, 255, 0.94);
+      --line: #ccd5dd;
+      --danger: #b42318;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 15%, rgba(6, 114, 206, 0.19), transparent 32rem),
+        linear-gradient(135deg, #f7fafc 0%, #e8f2f9 100%);
+    }
+
+    main {
+      width: min(100%, 560px);
+      padding: clamp(28px, 6vw, 48px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 22px;
+      background: var(--surface);
+      box-shadow: 0 24px 70px rgba(12, 52, 80, 0.16);
+    }
+
+    .mark {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 24px;
+      border-radius: 15px;
+      color: white;
+      background: var(--blue);
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: -1px;
+      box-shadow: 0 10px 24px rgba(6, 114, 206, 0.26);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 6vw, 40px);
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+    }
+
+    .intro {
+      margin: 14px 0 30px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 9px;
+      font-weight: 700;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+    }
+
+    input, button {
+      min-height: 52px;
+      border-radius: 10px;
+      font: inherit;
+    }
+
+    input {
+      width: 100%;
+      padding: 0 16px;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      background: white;
+      text-transform: uppercase;
+      font-weight: 650;
+      letter-spacing: 0.08em;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(6, 114, 206, 0.14);
+    }
+
+    button {
+      padding: 0 22px;
+      border: 0;
+      color: white;
+      background: var(--blue);
+      font-weight: 750;
+      cursor: pointer;
+      transition: background 150ms ease, transform 150ms ease;
+    }
+
+    button:hover { background: var(--blue-dark); }
+    button:active { transform: translateY(1px); }
+    button:focus-visible { outline: 3px solid rgba(6, 114, 206, 0.3); outline-offset: 3px; }
+
+    .hint, .error {
+      min-height: 22px;
+      margin: 10px 0 0;
+      font-size: 14px;
+    }
+
+    .hint { color: var(--muted); }
+    .error { color: var(--danger); font-weight: 650; }
+
+    .scan-actions { margin-top: 12px; }
+
+    .scan-button {
+      width: 100%;
+      border: 1px solid var(--blue);
+      color: var(--blue);
+      background: transparent;
+    }
+
+    .scan-button:hover {
+      color: white;
+      background: var(--blue);
+    }
+
+    .scan-button:disabled {
+      opacity: 0.65;
+      cursor: wait;
+    }
+
+    .ocr-panel {
+      display: none;
+      margin-top: 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(6, 114, 206, 0.04);
+    }
+
+    .ocr-panel.visible { display: block; }
+
+    .ocr-preview {
+      display: block;
+      width: 100%;
+      max-height: 220px;
+      border-radius: 8px;
+      object-fit: contain;
+      background: #101820;
+    }
+
+    .ocr-progress {
+      width: 100%;
+      height: 8px;
+      margin-top: 12px;
+      accent-color: var(--blue);
+    }
+
+    .ocr-status {
+      min-height: 22px;
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    footer {
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid #e1e7ec;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .history {
+      display: none;
+      margin-top: 30px;
+      padding-top: 22px;
+      border-top: 1px solid #e1e7ec;
+    }
+
+    .history.visible { display: block; }
+
+    .history-heading { margin-bottom: 12px; }
+
+    .history h2 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .history-list a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--blue);
+      background: rgba(6, 114, 206, 0.04);
+      font-weight: 750;
+      letter-spacing: 0.06em;
+      text-decoration: none;
+    }
+
+    .history-list a:hover {
+      border-color: var(--blue);
+      background: rgba(6, 114, 206, 0.09);
+    }
+
+    .history-list a::after {
+      content: "Open support ↗";
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    @media (max-width: 520px) {
+      body { padding: 16px; }
+      main { border-radius: 18px; }
+      .controls { grid-template-columns: 1fr; }
+      button { width: 100%; }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #f1f5f8;
+        --muted: #b6c2cc;
+        --surface: rgba(22, 31, 39, 0.96);
+        --line: #52616d;
+      }
+      body { background: radial-gradient(circle at 15% 15%, #083d63, transparent 34rem), #0b1117; }
+      input { background: #111a22; }
+      footer { border-color: #34414b; }
+      .history { border-color: #34414b; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="mark" aria-hidden="true">DELL</div>
+    <h1>Dell Service Tag Lookup</h1>
+    <p class="intro">Enter a Dell service tag to open that device’s product support page.</p>
+
+    <form id="lookup-form" novalidate>
+      <label for="service-tag">Service tag</label>
+      <div class="controls">
+        <input
+          id="service-tag"
+          name="service-tag"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          minlength="5"
+          maxlength="20"
+          placeholder="ABCD123"
+          aria-describedby="message"
+          autofocus>
+        <button type="submit">Open Dell Support</button>
+      </div>
+      <p id="message" class="hint" aria-live="polite">Letters and numbers only. Press Enter to continue.</p>
+
+      <div class="scan-actions">
+        <button id="scan-button" class="scan-button" type="button">📷 Scan service tag from photo</button>
+        <input id="photo-input" type="file" accept="image/*" capture="environment" hidden>
+      </div>
+
+      <div id="ocr-panel" class="ocr-panel">
+        <img id="ocr-preview" class="ocr-preview" alt="Selected service tag photo">
+        <progress id="ocr-progress" class="ocr-progress" max="1" value="0"></progress>
+        <p id="ocr-status" class="ocr-status" aria-live="polite"></p>
+      </div>
+    </form>
+
+    <section id="history" class="history" aria-labelledby="history-title">
+      <div class="history-heading">
+        <h2 id="history-title">Shared recent service tags</h2>
+      </div>
+      <ul id="history-list" class="history-list"></ul>
+    </section>
+
+    <footer>This independent shortcut sends the tag directly to Dell’s official support website. Recent tags are shared with everyone who uses this page.</footer>
+  </main>
+
+  <script>
+    const form = document.querySelector('#lookup-form');
+    const input = document.querySelector('#service-tag');
+    const message = document.querySelector('#message');
+    const historySection = document.querySelector('#history');
+    const historyList = document.querySelector('#history-list');
+    const scanButton = document.querySelector('#scan-button');
+    const photoInput = document.querySelector('#photo-input');
+    const ocrPanel = document.querySelector('#ocr-panel');
+    const ocrPreview = document.querySelector('#ocr-preview');
+    const ocrProgress = document.querySelector('#ocr-progress');
+    const ocrStatus = document.querySelector('#ocr-status');
+    let ocrLibraryPromise;
+
+    function loadOcrLibrary() {
+      if (window.Tesseract) return Promise.resolve(window.Tesseract);
+      if (ocrLibraryPromise) return ocrLibraryPromise;
+
+      ocrLibraryPromise = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js';
+        script.crossOrigin = 'anonymous';
+        script.onload = () => resolve(window.Tesseract);
+        script.onerror = () => reject(new Error('Unable to load the OCR engine.'));
+        document.head.append(script);
+      });
+
+      return ocrLibraryPromise;
+    }
+
+    function findServiceTag(text) {
+      const normalized = text.toUpperCase().replace(/[^A-Z0-9:#\n ]/g, ' ');
+      const labeledMatch = normalized.match(/(?:SERVICE\s*TAG|SVC\s*TAG|ST)\s*[:#]?\s*([A-Z0-9]{7})\b/);
+      if (labeledMatch) return labeledMatch[1];
+
+      const ignoredWords = new Set(['SERVICE', 'SUPPORT', 'PRODUCT', 'EXPRESS', 'WARRANTY']);
+      const candidates = normalized.match(/\b[A-Z0-9]{7}\b/g) || [];
+      return candidates.find(candidate => !ignoredWords.has(candidate)) || null;
+    }
+
+    async function scanPhoto(file) {
+      const previewUrl = URL.createObjectURL(file);
+      ocrPreview.src = previewUrl;
+      ocrPanel.classList.add('visible');
+      ocrProgress.value = 0;
+      ocrStatus.textContent = 'Loading the OCR engine… The first scan can take a few seconds.';
+      scanButton.disabled = true;
+
+      try {
+        const Tesseract = await loadOcrLibrary();
+        const result = await Tesseract.recognize(file, 'eng', {
+          logger: update => {
+            if (typeof update.progress === 'number') ocrProgress.value = update.progress;
+            if (update.status) ocrStatus.textContent = `${update.status}…`;
+          }
+        });
+
+        const detectedTag = findServiceTag(result.data.text || '');
+        if (!detectedTag) {
+          ocrStatus.textContent = 'I could not confidently find a seven-character service tag. Try a closer, well-lit photo or enter it manually.';
+          return;
+        }
+
+        input.value = detectedTag;
+        message.className = 'hint';
+        message.textContent = `Detected ${detectedTag}. Verify it, then select Open Dell Support.`;
+        ocrStatus.textContent = `Possible service tag: ${detectedTag}. Please verify it before continuing.`;
+        input.focus();
+        input.select();
+      } catch (error) {
+        ocrStatus.textContent = 'The photo could not be processed. Check your connection or enter the tag manually.';
+      } finally {
+        scanButton.disabled = false;
+        photoInput.value = '';
+        URL.revokeObjectURL(previewUrl);
+      }
+    }
+
+    async function getHistory() {
+      try {
+        const response = await fetch('api.php', { cache: 'no-store' });
+        if (!response.ok) throw new Error('History request failed');
+        const data = await response.json();
+        return Array.isArray(data.tags)
+          ? data.tags.map(item => item.tag).filter(tag => /^[A-Z0-9]{5,20}$/.test(tag))
+          : [];
+      } catch {
+        return [];
+      }
+    }
+
+    async function renderHistory() {
+      const tags = await getHistory();
+      historyList.replaceChildren();
+      historySection.classList.toggle('visible', tags.length > 0);
+
+      tags.forEach(tag => {
+        const item = document.createElement('li');
+        const link = document.createElement('a');
+        link.href = `https://www.dell.com/support/product-details/en-us/servicetag/${encodeURIComponent(tag.toLowerCase())}`;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = tag;
+        link.setAttribute('aria-label', `Open Dell support page for service tag ${tag}`);
+        item.append(link);
+        historyList.append(item);
+      });
+    }
+
+    function rememberTag(tag) {
+      const payload = JSON.stringify({ tag });
+
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('api.php', new Blob([payload], { type: 'application/json' }));
+        return;
+      }
+
+      fetch('api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        keepalive: true
+      }).catch(() => {});
+    }
+
+    input.addEventListener('input', () => {
+      input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      message.className = 'hint';
+      message.textContent = 'Letters and numbers only. Press Enter to continue.';
+    });
+
+    scanButton.addEventListener('click', () => photoInput.click());
+
+    photoInput.addEventListener('change', () => {
+      const file = photoInput.files?.[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        message.className = 'error';
+        message.textContent = 'Choose a photo or image file.';
+        return;
+      }
+
+      scanPhoto(file);
+    });
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const serviceTag = input.value.trim().toLowerCase();
+
+      if (!/^[a-z0-9]{5,20}$/.test(serviceTag)) {
+        message.className = 'error';
+        message.textContent = 'Enter a valid Dell service tag using 5–20 letters or numbers.';
+        input.focus();
+        return;
+      }
+
+      rememberTag(serviceTag.toUpperCase());
+      const supportUrl = `https://www.dell.com/support/product-details/en-us/servicetag/${encodeURIComponent(serviceTag)}`;
+      window.location.assign(supportUrl);
+    });
+
+    renderHistory();
+  </script>
+</body>
+</html>

@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Robot or human?</title>
+<style>
+  :root {
+    --hold-duration: 3000ms;   /* how long you must hold */
+    --card: #ffffff;
+    --ink: #1f2430;
+    --muted: #3a4150;
+    --btn: #4a4a4a;
+    --btn-fill: #16a34a;
+    --accent: #2d3350;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body { height: 100%; margin: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100%;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    /* dim, slightly patterned backdrop as if a page sits behind the modal */
+    background:
+      radial-gradient(1200px 600px at 20% -10%, #3a4468 0%, transparent 60%),
+      radial-gradient(900px 500px at 110% 120%, #2a3350 0%, transparent 55%),
+      #1b2033;
+  }
+
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(12, 16, 28, 0.35);
+    backdrop-filter: blur(2px);
+  }
+
+  .card {
+    position: relative;
+    width: min(504px, 100%);
+    background: var(--card);
+    border-radius: 22px;
+    padding: 28px 40px 32px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+    animation: pop 260ms cubic-bezier(.2,.8,.2,1);
+  }
+
+  @keyframes pop {
+    from { opacity: 0; transform: translateY(8px) scale(.98); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .card__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(25px, 4.6vw, 34px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+
+  .close {
+    flex: none;
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: #6b7280;
+    font-size: 30px;
+    line-height: 1;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 150ms, color 150ms;
+  }
+  .close:hover { background: #f1f2f4; color: var(--ink); }
+
+  /* comic-relief robot racing the human by mashing its own button */
+  .robot {
+    /* --mash: arm-pump duration, set from JS (shorter = more frantic) */
+    --mash: 0.9s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px 0 4px;
+  }
+  .robot__svg { width: 122px; height: auto; }
+  .robot__bubble {
+    position: relative;
+    background: #eef1f6;
+    color: #2b3040;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 7px 14px;
+    border-radius: 14px;
+    margin-bottom: 8px;
+    transition: background .3s;
+  }
+  .robot__bubble::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -6px;
+    transform: translateX(-50%);
+    border: 7px solid transparent;
+    border-top-color: #eef1f6;
+    border-bottom: 0;
+  }
+
+  .robot__eye   { animation: robot-blink 3.4s infinite; transform-origin: center; }
+  .robot__sweat { opacity: 0; }
+
+  /* the mashing arm — pivots at the shoulder; speed comes from --mash */
+  .robot__arm      { transform-origin: 148px 108px; }
+  .robot__btncap   { transition: transform .08s; }
+
+  /* while actively racing (human is holding) the robot hammers away */
+  .robot.is-racing .robot__arm    { animation: robot-mash var(--mash) ease-in-out infinite; }
+  .robot.is-racing .robot__btncap { animation: robot-press var(--mash) ease-in-out infinite; }
+  .robot.is-racing .robot__sweat  { animation: robot-sweat calc(var(--mash) * 2.2) ease-in infinite; }
+  .robot.is-racing .robot__eye    { fill: #fca5a5; }   /* panicked red eyes */
+
+  /* the robot loses: slumps, disguise falls off, eyes go dead */
+  .robot.is-defeated .robot__svg  { transform: rotate(3deg); transition: transform .5s; }
+  .robot.is-defeated .robot__arm  { animation: none; transform: rotate(28deg); }
+  .robot.is-defeated .robot__eye  { fill: #64748b; }
+  .robot.is-defeated .robot__mouth{ d: path("M62 80 q18 -12 36 0"); }  /* frown */
+  .card.is-verified .robot__disguise { opacity: 0; transition: opacity .4s; }
+
+  /* the robot's own race meter */
+  .robot__race {
+    position: relative;
+    width: 130px;
+    height: 18px;
+    margin-top: 6px;
+    background: #e5e8ef;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .robot__racefill {
+    position: absolute; inset: 0;
+    width: 0%;
+    background: linear-gradient(90deg, #dc2626, #f97316);
+    transition: width 90ms linear;
+  }
+  .robot__racelabel {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    font-size: 11px; font-weight: 800; letter-spacing: .05em;
+    color: #1f2430;
+  }
+
+  @keyframes robot-mash {
+    0%, 100% { transform: rotate(-6deg); }
+    50%      { transform: rotate(24deg); }
+  }
+  @keyframes robot-press {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(4px); }
+  }
+  @keyframes robot-blink {
+    0%, 92%, 100% { transform: scaleY(1); }
+    96%           { transform: scaleY(0.1); }
+  }
+  @keyframes robot-sweat {
+    0%, 55%  { opacity: 0; transform: translateY(0); }
+    65%      { opacity: 1; transform: translateY(0); }
+    100%     { opacity: 0; transform: translateY(34px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .robot__arm, .robot__btncap, .robot__eye, .robot__sweat { animation: none !important; }
+    .robot__sweat { opacity: 0; }
+  }
+
+  .subtitle {
+    margin: 14px 0 24px;
+    font-size: clamp(16px, 2.2vw, 19px);
+    line-height: 1.4;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+  }
+
+  .a11y {
+    flex: none;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: grid;
+    place-items: center;
+    color: #fff;
+  }
+  .a11y svg { width: 30px; height: 30px; }
+
+  /* The press & hold button */
+  .hold {
+    position: relative;
+    flex: 1;
+    min-height: 88px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--btn);
+    color: #fff;
+    font-size: clamp(24px, 4vw, 34px);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    overflow: hidden;
+    user-select: none;
+    touch-action: none;
+    transition: transform 120ms ease, box-shadow 200ms ease;
+    box-shadow: inset 0 0 0 0 rgba(0,0,0,0);
+  }
+  .hold:active { transform: scale(0.99); }
+  .hold:focus-visible { outline: 3px solid #93c5fd; outline-offset: 3px; }
+
+  /* progress fill grows left -> right while held */
+  .hold__fill {
+    position: absolute;
+    inset: 0;
+    width: 0%;
+    background: linear-gradient(90deg, #15803d, var(--btn-fill));
+    transition: width 60ms linear;
+    z-index: 0;
+  }
+
+  /* draining back down after a premature release */
+  .hold.is-draining .hold__fill {
+    background: linear-gradient(90deg, #d97706, #facc15);
+  }
+
+  .hold__label {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* success state */
+  .card.is-verified .hold {
+    background: var(--btn-fill);
+    cursor: default;
+  }
+  .card.is-verified .hold__fill { width: 100% !important; }
+
+  .checkmark { width: 30px; height: 30px; }
+
+  /* warning state (closed before verifying) */
+  .card.is-warning { box-shadow: 0 30px 80px rgba(120, 20, 20, 0.5); }
+  .card.is-warning h1 { color: #b91c1c; }
+  .card.is-warning .hold { background: #b45309; }
+  .card.is-warning .hold__fill {
+    background: linear-gradient(90deg, #15803d, var(--btn-fill));
+  }
+
+  .note {
+    margin: 14px 0 0;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.35;
+    color: #6b7280;
+  }
+  .note em { font-style: italic; color: #374151; }
+  .card.is-verified .note { display: none; }
+
+  .retest {
+    display: block;
+    margin: 12px auto 0;
+    appearance: none;
+    border: 1.5px solid #cbd2dc;
+    background: #fff;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px 22px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 150ms, border-color 150ms;
+  }
+  .retest:hover { background: #f1f2f4; border-color: #9aa1ad; }
+
+  .foot {
+    margin-top: 16px;
+    text-align: center;
+    font-size: 13px;
+    color: #9aa1ad;
+    min-height: 18px;
+  }
+
+  @media (max-width: 480px) {
+    .card { padding: 28px 22px 34px; border-radius: 20px; }
+    .controls { gap: 14px; }
+    .hold { min-height: 92px; }
+  }
+</style>
+</head>
+<body>
+  <div class="backdrop"></div>
+
+  <div class="card" id="card" role="dialog" aria-modal="true" aria-labelledby="title">
+    <div class="card__head">
+      <h1 id="title">Robot or human?</h1>
+      <button class="close" id="close" aria-label="Close">&times;</button>
+    </div>
+
+    <div class="robot" id="robot" aria-hidden="true">
+      <div class="robot__bubble" id="robotBubble">I'll pass this too! 🤖</div>
+      <svg class="robot__svg" viewBox="0 0 200 190" role="img">
+        <!-- antenna -->
+        <line x1="80" y1="20" x2="80" y2="6" stroke="#8b93a7" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="80" cy="6" r="5" fill="#ef4444"/>
+        <!-- head -->
+        <rect x="30" y="20" width="100" height="78" rx="18" fill="#c9d1e0" stroke="#9aa4bb" stroke-width="3"/>
+        <rect x="20" y="46" width="12" height="26" rx="5" fill="#9aa4bb"/>
+        <rect x="128" y="46" width="12" height="26" rx="5" fill="#9aa4bb"/>
+        <!-- face screen -->
+        <rect x="44" y="33" width="72" height="52" rx="12" fill="#1f2740"/>
+        <circle class="robot__eye" cx="65" cy="55" r="7" fill="#7dd3fc"/>
+        <circle class="robot__eye" cx="95" cy="55" r="7" fill="#7dd3fc"/>
+        <path class="robot__mouth" d="M62 71 q18 12 36 0" fill="none" stroke="#7dd3fc" stroke-width="3" stroke-linecap="round"/>
+        <!-- Groucho disguise -->
+        <g class="robot__disguise">
+          <rect x="50" y="45" width="26" height="18" rx="9" fill="none" stroke="#2b2b2b" stroke-width="4"/>
+          <rect x="84" y="45" width="26" height="18" rx="9" fill="none" stroke="#2b2b2b" stroke-width="4"/>
+          <line x1="76" y1="51" x2="84" y2="51" stroke="#2b2b2b" stroke-width="4"/>
+          <path d="M50 45 q13 -8 26 0" fill="none" stroke="#2b2b2b" stroke-width="5" stroke-linecap="round"/>
+          <path d="M84 45 q13 -8 26 0" fill="none" stroke="#2b2b2b" stroke-width="5" stroke-linecap="round"/>
+          <path d="M74 63 q6 10 12 0 z" fill="#e6a17a"/>
+          <path d="M60 77 q20 10 40 0 q-6 8 -20 8 q-14 0 -20 -8z" fill="#2b2b2b"/>
+        </g>
+        <path class="robot__sweat" d="M120 38 q6 10 0 16 q-6 -6 0 -16z" fill="#7dd3fc"/>
+        <!-- torso -->
+        <rect x="52" y="100" width="96" height="56" rx="14" fill="#b8c1d6" stroke="#9aa4bb" stroke-width="3"/>
+        <!-- left arm (static) -->
+        <rect x="40" y="108" width="16" height="40" rx="8" fill="#9aa4bb"/>
+        <!-- the button the robot frantically mashes -->
+        <ellipse class="robot__btn" cx="150" cy="150" rx="26" ry="12" fill="#7a1f1f"/>
+        <ellipse class="robot__btncap" cx="150" cy="146" rx="26" ry="12" fill="#ef4444" stroke="#b91c1c" stroke-width="2"/>
+        <!-- right arm: pivots at the shoulder to hammer the button -->
+        <g class="robot__arm">
+          <rect x="140" y="104" width="16" height="48" rx="8" fill="#9aa4bb"/>
+          <circle cx="148" cy="150" r="12" fill="#c9d1e0" stroke="#9aa4bb" stroke-width="2"/>
+        </g>
+      </svg>
+      <div class="robot__race" title="the robot's progress">
+        <span class="robot__racefill" id="robotFill"></span>
+        <span class="robot__racelabel">🤖 BOT</span>
+      </div>
+    </div>
+
+    <p class="subtitle" id="subtitle">
+      Activate and hold the button to confirm that you're human. Thank&nbsp;You!
+    </p>
+
+    <div class="controls">
+      <div class="a11y" aria-hidden="true" title="Accessibility">
+        <!-- person-in-circle accessibility glyph -->
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="12" cy="4" r="2"/>
+          <path d="M21 8.5c0 .6-.5 1-1 1l-4.7-.5-.3 3.2 2.9 6.6c.3.6 0 1.4-.7 1.7-.6.3-1.3 0-1.6-.6L12 15.2 9.4 20c-.3.6-1 .9-1.6.6-.7-.3-1-1.1-.7-1.7l2.9-6.6-.3-3.2L5 9.5c-.6 0-1-.4-1-1s.5-1 1-1l7-.5 7 .5c.5 0 1 .4 1 1z"/>
+        </svg>
+      </div>
+
+      <button class="hold" id="hold" aria-label="Press and hold to verify you are human">
+        <span class="hold__fill" id="fill"></span>
+        <span class="hold__label" id="label">PRESS &amp; HOLD</span>
+      </button>
+    </div>
+
+    <p class="note" id="note">
+      💡 Tip: keep holding <em>and</em> wiggle your mouse — moving while you hold fills the bar faster.
+    </p>
+
+    <div class="foot" id="foot"></div>
+
+    <button class="retest" id="retest" hidden>↺ Run the test again</button>
+  </div>
+
+<script>
+(function () {
+  const card   = document.getElementById('card');
+  const hold   = document.getElementById('hold');
+  const fill   = document.getElementById('fill');
+  const label  = document.getElementById('label');
+  const foot   = document.getElementById('foot');
+  const closeB = document.getElementById('close');
+  const retest = document.getElementById('retest');
+  const robot       = document.getElementById('robot');
+  const robotFill   = document.getElementById('robotFill');
+  const robotBubble = document.getElementById('robotBubble');
+
+  // ── Config ────────────────────────────────────────────────────────────
+  // SERVER_MODE=false : static demo (works on GitHub Pages, no backend).
+  // SERVER_MODE=true  : real gate — talks to verify.php, server decides the
+  //                     destination so it never appears in this file's source.
+  const SERVER_MODE = false;
+  const VERIFY_URL  = 'verify.php';
+  // Static-only fallback (Option A). Encoded so it's not plain-text in source.
+  // atob('bmV4dC5odG1s') === 'next.html'. Only used when SERVER_MODE is false.
+  const STATIC_NEXT = '';   // e.g. 'bmV4dC5odG1s' — leave '' to just show congrats
+  let serverNonce = null;   // one-time token fetched from verify.php in SERVER_MODE
+  // ──────────────────────────────────────────────────────────────────────
+
+  const DURATION = 3000;   // ms you must hold (matches --hold-duration)
+  const RATE = 100 / DURATION;   // percent per millisecond (base fill AND drain speed)
+  const MAX_BOOST = 3;     // extra multiplier at full wiggle -> up to (1 + MAX_BOOST)x fill speed
+  let rafId = null;
+  let lastTs = null;
+  let progress = 0;        // 0..100, persists across release so you can catch back up
+  let holding = false;
+  let verified = false;
+  let moveEnergy = 0;      // recent pointer movement; decays each frame
+
+  const CHECK_SVG =
+    '<svg class="checkmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+    'stroke-width="3" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M20 6 9 17l-5-5"/></svg>';
+
+  function now() { return performance.now(); }
+
+  function setProgress(pct) {
+    fill.style.width = pct + '%';
+  }
+
+  // Drive the racing robot from the human's live progress.
+  function updateRobot(pct, active) {
+    if (verified) return;                       // defeat pose handled in succeed()
+    robot.classList.toggle('is-racing', active);
+
+    // arm mashes faster the higher the human climbs (0.95s → 0.22s)
+    const mash = 0.95 - (pct / 100) * 0.73;
+    robot.style.setProperty('--mash', mash.toFixed(2) + 's');
+
+    // robot keeps pace but always trails just behind — it can't quite win
+    robotFill.style.width = Math.min(94, pct * 0.92) + '%';
+
+    if (active) {
+      robotBubble.textContent =
+        pct > 75 ? 'No no no, wait! 😰'
+      : pct > 35 ? 'Almost human… 😅'
+      :            "I'll pass this too! 🤖";
+    }
+  }
+
+  function tick(ts) {
+    if (lastTs === null) lastTs = ts;
+    const dt = ts - lastTs;
+    lastTs = ts;
+
+    // pointer movement decays over ~150ms; more recent motion => bigger boost
+    moveEnergy *= Math.exp(-dt / 150);
+    const boost = holding ? (1 + Math.min(moveEnergy / 40, MAX_BOOST)) : 1;
+
+    // climb while held (faster if the mouse is moving), drain at base rate when released
+    progress += (holding ? boost : -1) * RATE * dt;
+    progress = Math.max(0, Math.min(100, progress));
+    setProgress(progress);
+    updateRobot(progress, holding);
+
+    // yellow fill while counting down after a premature release
+    hold.classList.toggle('is-draining', !holding && progress > 0);
+
+    if (holding) {
+      const wiggling = boost > 1.15;
+      label.textContent = (wiggling ? '⚡ ' : '') + 'VERIFYING… ' + Math.floor(progress) + '%';
+    } else {
+      label.textContent = progress > 0
+        ? 'HOLD TO RESUME… ' + Math.floor(progress) + '%'
+        : 'PRESS & HOLD';
+    }
+
+    if (holding && progress >= 100) {
+      succeed();
+      return;
+    }
+
+    // keep the loop alive while filling OR while there's still fill to drain
+    if (holding || progress > 0) {
+      rafId = requestAnimationFrame(tick);
+    } else {
+      rafId = null;
+      lastTs = null;
+      foot.textContent = 'Released too soon — hold until it fills.';
+    }
+  }
+
+  function start(e) {
+    if (verified) return;
+    e.preventDefault();
+    if (card.classList.contains('is-warning')) reset();   // TRY AGAIN clears the warning
+    holding = true;
+    foot.textContent = 'Keep holding…';
+    if (rafId === null) {         // resume from current progress, don't restart
+      lastTs = null;
+      rafId = requestAnimationFrame(tick);
+    }
+  }
+
+  function cancel() {
+    if (verified || !holding) return;
+    holding = false;              // tick() now drains progress back to 0
+    foot.textContent = 'Draining — press again to catch back up.';
+    if (rafId === null) {
+      lastTs = null;
+      rafId = requestAnimationFrame(tick);
+    }
+  }
+
+  const subtitle = document.getElementById('subtitle');
+  const title    = document.getElementById('title');
+
+  function succeed() {
+    holding = false;
+    verified = true;
+    progress = 100;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+    setProgress(100);
+    card.classList.add('is-verified');
+    label.innerHTML = CHECK_SVG + '<span>VERIFIED</span>';
+    // congratulate them on being human
+    title.innerHTML = 'You’re human! 🎉';
+    subtitle.innerHTML =
+      'Congratulations — verification complete. ' +
+      'Thanks for proving you’re a real, live human being. Welcome!';
+    foot.textContent = "Nice hold. 100% human confirmed.";
+    closeB.style.display = 'none';
+    retest.hidden = false;
+    // the robot loses the race
+    robot.classList.remove('is-racing');
+    robot.classList.add('is-defeated');
+    robotFill.style.width = '92%';
+    robotBubble.textContent = 'No fair!! You win… 😩';
+    proceed();
+  }
+
+  // Where to go after success. In SERVER_MODE the server decides + validates;
+  // in static mode we optionally use the encoded STATIC_NEXT.
+  function proceed() {
+    if (SERVER_MODE) {
+      foot.textContent = 'Verifying with server…';
+      fetch(VERIFY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nonce: serverNonce })
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data && data.ok && data.next) {
+            window.location.href = data.next;   // URL came from the server
+          } else {
+            foot.textContent = 'Server rejected verification. Try again.';
+          }
+        })
+        .catch(function () { foot.textContent = 'Network error contacting server.'; });
+      return;
+    }
+    if (STATIC_NEXT) {
+      window.location.href = atob(STATIC_NEXT);
+    }
+  }
+
+  function bailOut() {
+    // fired when they close before finishing — flag them as possibly not human
+    holding = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+    progress = 0;
+    setProgress(0);
+    card.classList.add('is-warning');
+    title.innerHTML = '⚠️ Not verified';
+    subtitle.innerHTML =
+      'You closed the check before confirming you’re human. ' +
+      'We can’t tell you apart from a <strong>robot</strong> 🤖 — ' +
+      'access to humans-only areas is blocked until you verify.';
+    label.textContent = 'TRY AGAIN';
+    hold.setAttribute('aria-label', 'Try verification again');
+    foot.textContent = 'Press and hold to prove you are human.';
+    retest.hidden = false;
+  }
+
+  function reset() {
+    // full reset back to the pristine start state (retest / try again)
+    holding = false;
+    verified = false;
+    progress = 0;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+    lastTs = null;
+    moveEnergy = 0;
+    setProgress(0);
+    card.classList.remove('is-warning', 'is-verified');
+    hold.classList.remove('is-draining');
+    title.textContent = 'Robot or human?';
+    subtitle.innerHTML =
+      'Activate and hold the button to confirm that you’re human. Thank&nbsp;You!';
+    label.textContent = 'PRESS & HOLD';
+    hold.setAttribute('aria-label', 'Press and hold to verify you are human');
+    foot.textContent = '';
+    closeB.style.display = '';
+    retest.hidden = true;
+    // reset the robot back to the starting line
+    robot.classList.remove('is-racing', 'is-defeated');
+    robot.style.setProperty('--mash', '0.9s');
+    robotFill.style.width = '0%';
+    robotBubble.textContent = "I'll pass this too! 🤖";
+  }
+
+  // While holding, mouse movement anywhere adds "energy" that speeds up the fill
+  window.addEventListener('pointermove', function (e) {
+    if (!holding) return;
+    moveEnergy += Math.hypot(e.movementX || 0, e.movementY || 0);
+  });
+
+  // Pointer events cover mouse + touch + pen
+  hold.addEventListener('pointerdown', start);
+  hold.addEventListener('pointerup', cancel);
+  hold.addEventListener('pointercancel', cancel);
+  hold.addEventListener('pointerleave', cancel);
+
+  // Keyboard support: hold Space or Enter
+  hold.addEventListener('keydown', function (e) {
+    if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) start(e);
+  });
+  hold.addEventListener('keyup', function (e) {
+    if (e.key === ' ' || e.key === 'Enter') cancel();
+  });
+
+  // Closing before verifying flags them as possibly not human
+  closeB.addEventListener('click', bailOut);
+
+  // Retest / run again -> pristine reset
+  retest.addEventListener('click', reset);
+
+  // In SERVER_MODE, grab a fresh one-time token so verify.php can trust us
+  if (SERVER_MODE) {
+    fetch(VERIFY_URL, { method: 'GET' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { serverNonce = d && d.nonce; })
+      .catch(function () { /* offline / no server; success will report error */ });
+  }
+})();
+</script>
+</body>
+</html>

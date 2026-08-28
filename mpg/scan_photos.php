@@ -1,420 +1,53 @@
 <?php
 // ============================================================================
 // File: scan_photos.php
-// Purpose: Multi-photo upload, AI extracts values, saves entry directly
-// Revision: 2.1
+// Purpose: Multi-photo AI fuel extraction with review and station assistance
+// Revision: 2.5
 // Author: Jason Lamb
+//
+// Revision Notes:
+// 2.5 - Consume photo EXIF GPS, add saved/nearby station confirmation, and
+//       historical partial-fill prompting.
+// 2.4 - Four-photo scan, fill type, comments, station brand, and live GPS.
 // ============================================================================
 
 require_once __DIR__ . '/device_init.php';
-
-// Known plates for selector
-$logDir = __DIR__ . '/logs/';
-$knownPlates = [];
-if (is_dir($logDir)) {
-    foreach (glob($logDir . '*.json') as $f) {
-        $p = basename($f, '.json');
-        if ($p !== '') $knownPlates[] = $p;
-    }
-}
-sort($knownPlates);
-
-$canUseDropdown = $isIPWhitelisted || $isDeviceTrusted;
-$activePlate    = $_SESSION['active_plate'] ?? $defaultPlate ?? '';
-$today          = (new DateTime('now', new DateTimeZone('America/New_York')))->format('Y-m-d');
+$logDir=__DIR__.'/logs/';$knownPlates=[];if(is_dir($logDir)){foreach(glob($logDir.'*.json') as $f){$p=basename($f,'.json');if($p!=='')$knownPlates[]=$p;}}sort($knownPlates);
+$stationBrands=[];$stationLocations=[];$stationsFile=__DIR__.'/stations.json';if(file_exists($stationsFile)){$sd=json_decode(file_get_contents($stationsFile),true);if(is_array($sd)){if(is_array($sd['brands']??null))$stationBrands=array_values(array_filter(array_map('trim',$sd['brands'])));if(is_array($sd['locations']??null))$stationLocations=array_values($sd['locations']);}}natcasesort($stationBrands);$stationBrands=array_values($stationBrands);
+$canUseDropdown=$isIPWhitelisted||$isDeviceTrusted;$activePlate=$_SESSION['active_plate']??$defaultPlate??'';$today=(new DateTime('now',new DateTimeZone('America/New_York')))->format('Y-m-d');
+function stationLabel($loc){$brand=trim((string)($loc['brand']??$loc['name']??'Station'));$place=trim((string)($loc['nickname']??$loc['street']??$loc['intersection']??''));$city=trim((string)($loc['city']??''));return implode(' — ',array_values(array_filter([$brand,trim($place.($city?', '.$city:''))])));}
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Scan Fuel Photos</title>
-<style>
-* { box-sizing: border-box; }
-body { font-family: sans-serif; max-width: 560px; margin: auto; padding: 1rem; background: #f4f4f4; }
-h2 { margin-bottom: 0.2rem; }
-.subtitle { color: #666; font-size: 0.88rem; margin-bottom: 1.2rem; }
-
-.upload-card {
-    background: white; border-radius: 10px; padding: 1.2rem;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1); margin-bottom: 1rem;
-}
-.upload-card p { color: #555; font-size: 0.85rem; margin: 0.3rem 0 0.9rem; }
-
-#uploadBtn {
-    display: block; width: 100%; padding: 0.8rem;
-    background: #007bff; color: white; border: none;
-    border-radius: 8px; font-size: 1rem; cursor: pointer; text-align: center;
-}
-#uploadBtn:hover { background: #0056b3; }
-input[type="file"] { display: none; }
-
-#thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 0.8rem; }
-.thumb-wrap {
-    position: relative; display: inline-block; width: 90px; height: 70px;
-}
-#thumbs img {
-    width: 90px; height: 70px; object-fit: cover; border-radius: 6px;
-    border: 2px solid #ddd; cursor: zoom-in; transition: border-color 0.15s;
-}
-#thumbs img:hover { border-color: #007bff; }
-.thumb-remove {
-    position: absolute; top: -6px; right: -6px;
-    width: 20px; height: 20px; border-radius: 50%;
-    background: #dc3545; color: white; border: none;
-    font-size: 0.7rem; line-height: 20px; text-align: center;
-    cursor: pointer; padding: 0; font-weight: bold;
-}
-
-/* Lightbox */
-#lightbox {
-    display: none; position: fixed; inset: 0; z-index: 1000;
-    background: rgba(0,0,0,0.92); justify-content: center; align-items: center;
-}
-#lightbox.open { display: flex; }
-#lightbox img {
-    max-width: 96vw; max-height: 92vh; object-fit: contain;
-    border-radius: 6px; box-shadow: 0 0 30px rgba(0,0,0,0.6);
-}
-#lightboxClose {
-    position: absolute; top: 14px; right: 18px;
-    color: white; font-size: 2rem; cursor: pointer;
-    line-height: 1; background: none; border: none; padding: 0;
-}
-#photoCount { font-size: 0.82rem; color: #28a745; margin-top: 0.4rem; display: none; }
-
-#errorBox {
-    display: none; background: #f8d7da; color: #721c24;
-    padding: 0.7rem; border-radius: 7px; margin-bottom: 0.8rem; font-size: 0.9rem;
-}
-
-#scanBtn {
-    display: block; width: 100%; padding: 0.85rem; font-size: 1.05rem;
-    background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer;
-}
-#scanBtn:hover { background: #1e7e34; }
-#scanBtn:disabled { background: #999; cursor: not-allowed; }
-
-.loading { display: none; text-align: center; padding: 1.5rem; color: #555; }
-.spinner {
-    display: inline-block; width: 34px; height: 34px;
-    border: 4px solid #ddd; border-top-color: #007bff;
-    border-radius: 50%; animation: spin 0.75s linear infinite; margin-bottom: 0.5rem;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-#review {
-    display: none; background: white; border-radius: 10px;
-    padding: 1.2rem; margin-top: 0.9rem; box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-}
-#review h3 { margin: 0 0 0.3rem; }
-#review .note { font-size: 0.82rem; color: #666; margin-bottom: 1rem; }
-
-.field { margin-bottom: 0.7rem; }
-.field label { display: block; font-size: 0.85rem; color: #444; margin-bottom: 0.2rem; }
-.field input, .field select {
-    width: 100%; padding: 0.45rem 0.6rem; border: 1px solid #ccc;
-    border-radius: 5px; font-size: 0.95rem;
-}
-.field input.filled { border-color: #28a745; background: #f6fff8; }
-
-#saveBtn {
-    display: block; width: 100%; padding: 0.85rem; font-size: 1.05rem;
-    background: #28a745; color: white; border: none; border-radius: 8px;
-    cursor: pointer; margin-top: 0.8rem;
-}
-#saveBtn:hover { background: #1e7e34; }
-
-.footer { margin-top: 2rem; padding-top: 0.5rem; border-top: 1px solid #ddd; color: #aaa; font-size: 0.75rem; text-align: center; }
-a { color: #007bff; text-decoration: none; }
-</style>
-</head>
-<body>
-
-<h2>📷 Scan Fuel Photos</h2>
-<p class="subtitle">Select up to 3 photos — odometer, price per gallon, pump total & gallons. AI figures out which is which.</p>
-
-<div id="errorBox"></div>
-
-<div class="upload-card">
-    <p>Select all your pump/odometer photos at once from your photo library.</p>
-    <button id="uploadBtn" onclick="document.getElementById('photoInput').click()">📷 Select Photos</button>
-    <input type="file" id="photoInput" accept="image/*" multiple>
-    <div id="photoCount"></div>
-    <div id="thumbs"></div>
-</div>
-
-<button id="scanBtn" disabled>🔍 Scan &amp; Extract Data</button>
-
-<div class="loading" id="loadingDiv">
-    <div class="spinner"></div>
-    <div>Reading photos with AI…</div>
-</div>
-
-<div id="review">
-    <h3>Review &amp; Save</h3>
-    <p class="note">Correct anything that looks wrong, then tap Save Entry.</p>
-
-    <div class="field">
-        <label>License Plate</label>
-        <?php if ($canUseDropdown && !empty($knownPlates)): ?>
-        <select id="revPlate">
-            <option value="">-- Select Plate --</option>
-            <?php foreach ($knownPlates as $p): ?>
-            <option value="<?= htmlspecialchars($p) ?>" <?= strtoupper($activePlate) === $p ? 'selected' : '' ?>>
-                <?= htmlspecialchars($p) ?><?= (strtoupper($activePlate) === $p) ? ' (default)' : '' ?>
-            </option>
-            <?php endforeach; ?>
-        </select>
-        <?php else: ?>
-        <input type="text" id="revPlate" value="<?= htmlspecialchars($activePlate) ?>" placeholder="Enter plate">
-        <?php endif; ?>
-    </div>
-
-    <div class="field">
-        <label>Date</label>
-        <input type="date" id="revDate" value="<?= $today ?>">
-    </div>
-    <div class="field">
-        <label>Odometer (mi)</label>
-        <input type="number" id="revOdometer" step="0.1" placeholder="e.g. 84824.8">
-    </div>
-    <div class="field">
-        <label>Price per Gallon ($)</label>
-        <input type="number" id="revPrice" step="0.001" placeholder="e.g. 3.699">
-    </div>
-    <div class="field">
-        <label>Total Cost ($)</label>
-        <input type="number" id="revTotal" step="0.01" placeholder="e.g. 42.76">
-    </div>
-    <div class="field">
-        <label>Gallons</label>
-        <input type="number" id="revGallons" step="0.001" placeholder="e.g. 12.290">
-    </div>
-
-    <button id="saveBtn">💾 Save Entry</button>
-    <div id="saveError" style="display:none;margin-top:0.7rem;background:#f8d7da;color:#721c24;padding:0.7rem;border-radius:6px;font-size:0.9rem;"></div>
-</div>
-
-<!-- Success card -->
-<div id="successCard" style="display:none;background:white;border-radius:10px;padding:1.2rem;margin-top:0.9rem;box-shadow:0 1px 4px rgba(0,0,0,0.1);border-left:5px solid #28a745;">
-    <h3 style="margin:0 0 0.6rem;color:#28a745;">✅ Entry Saved!</h3>
-    <div id="successDetails" style="font-size:0.9rem;line-height:1.8;"></div>
-    <div style="margin-top:1rem;display:flex;gap:0.7rem;flex-wrap:wrap;">
-        <a href="scan_photos.php" style="background:#007bff;color:white;padding:0.5rem 1rem;border-radius:6px;text-decoration:none;font-size:0.9rem;">📷 New Scan</a>
-        <a id="viewLatestLink" href="#" style="background:#6c757d;color:white;padding:0.5rem 1rem;border-radius:6px;text-decoration:none;font-size:0.9rem;">🔍 View Entry</a>
-    </div>
-</div>
-
-<!-- Lightbox -->
-<div id="lightbox">
-    <button id="lightboxClose" onclick="closeLightbox()">✕</button>
-    <img id="lightboxImg" src="" alt="Full size photo">
-</div>
-
-
-<?php include 'menu.php'; ?>
-
-<div class="footer">
-    scan_photos.php — Rev 2.3 — Updated: <?php $mt = new DateTime('@'.filemtime(__FILE__)); $mt->setTimezone(new DateTimeZone('America/New_York')); echo $mt->format('Y-m-d H:i (g:i A T)'); ?>
-</div>
-
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Scan Fuel Photos</title>
+<style>*{box-sizing:border-box}body{font-family:sans-serif;max-width:620px;margin:auto;padding:1rem;background:#f4f4f4}h2{margin-bottom:.2rem}.subtitle,.note{color:#666;font-size:.86rem}.card,#review,#successCard{background:#fff;border-radius:10px;padding:1.1rem;box-shadow:0 1px 4px rgba(0,0,0,.1);margin-bottom:1rem}button{padding:.6rem .8rem;border-radius:6px;border:1px solid #ccc;cursor:pointer}#uploadBtn,#scanBtn,#saveBtn{width:100%;padding:.85rem;color:#fff;border:none;font-size:1rem}#uploadBtn{background:#007bff}#scanBtn,#saveBtn{background:#28a745}#scanBtn:disabled{background:#999}input[type=file]{display:none}.field{margin-bottom:.8rem}.field label{display:block;font-size:.86rem;color:#444;margin-bottom:.2rem}.field input,.field select,.field textarea{width:100%;padding:.5rem;border:1px solid #ccc;border-radius:5px}.field textarea{min-height:75px}.radio-row,.button-row{display:flex;gap:.6rem;flex-wrap:wrap}.radio-row label{display:flex;align-items:center;gap:.3rem}.radio-row input{width:auto}.thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:.8rem}.thumb{width:90px;height:70px;object-fit:cover;border-radius:6px;border:2px solid #ddd}#review,#successCard,#otherStationWrap,#nearbyWrap,#errorBox,#partialHint{display:none}#errorBox{background:#f8d7da;color:#721c24;padding:.7rem;border-radius:7px;margin-bottom:.8rem}#partialHint{background:#fff3cd;color:#664d03;padding:.6rem;border-radius:6px}.loading{display:none;text-align:center;padding:1rem}.footer{margin-top:2rem;color:#aaa;font-size:.75rem;text-align:center}a{color:#007bff;text-decoration:none}</style></head><body>
+<h2>📷 Scan Fuel Photos</h2><p class="subtitle">Select up to 4 photos: odometer, price, pump totals/gallons, and optionally station signage. JPEG photo GPS is used when available.</p>
+<div id="errorBox"></div><div class="card"><button id="uploadBtn" type="button">📷 Select Photos</button><input type="file" id="photoInput" accept="image/*" multiple><div id="photoCount" class="note"></div><div id="thumbs" class="thumbs"></div></div><button id="scanBtn" disabled>🔍 Scan &amp; Extract Data</button><div id="loading" class="loading">Reading photos with AI…</div>
+<div id="review"><h3>Review &amp; Save</h3><p class="note">AI, EXIF, and GPS provide suggestions only. Confirm the values and exact station.</p>
+<div class="field"><label>License Plate</label><?php if($canUseDropdown&&!empty($knownPlates)):?><select id="revPlate"><option value="">-- Select Plate --</option><?php foreach($knownPlates as $p):?><option value="<?=htmlspecialchars($p)?>" <?=strtoupper($activePlate)===$p?'selected':''?>><?=htmlspecialchars($p)?></option><?php endforeach;?></select><?php else:?><input type="text" id="revPlate" value="<?=htmlspecialchars($activePlate)?>"><?php endif;?></div>
+<div class="field"><label>Date</label><input type="date" id="revDate" value="<?=$today?>"></div><div class="field"><label>Odometer</label><input type="number" id="revOdometer" step="0.1"></div><div class="field"><label>Price per Gallon ($)</label><input type="number" id="revPrice" step="0.001"></div><div class="field"><label>Total Cost ($)</label><input type="number" id="revTotal" step="0.01"></div><div class="field"><label>Gallons</label><input type="number" id="revGallons" step="0.001"><div id="partialHint"></div></div>
+<div class="field"><label>Fill Type</label><div class="radio-row"><label><input type="radio" name="revFillType" value="full" checked> Full fill-up</label><label><input type="radio" name="revFillType" value="partial"> Partial fill-up</label></div></div>
+<div class="field"><label>Station Brand</label><select id="revStationBrand"><option value="">-- Not specified --</option><?php foreach($stationBrands as $b):?><option value="<?=htmlspecialchars($b)?>"><?=htmlspecialchars($b)?></option><?php endforeach;?><option value="other">Other / Add new…</option></select><div id="otherStationWrap"><label>New Station Brand</label><input type="text" id="revStationBrandOther" maxlength="80"></div></div>
+<div class="field"><label>Saved Station</label><select id="savedStation"><option value="">-- Select saved station --</option><?php foreach($stationLocations as $loc):if(empty($loc['id']))continue;?><option value="<?=htmlspecialchars($loc['id'])?>"><?=htmlspecialchars(stationLabel($loc))?></option><?php endforeach;?></select></div>
+<div class="field"><label>Location / Nearby Station</label><div class="button-row"><button type="button" id="gpsBtn">📍 Capture GPS</button><button type="button" id="nearbyBtn">⛽ Find Nearby</button><button type="button" id="clearGpsBtn">Clear</button></div><div id="locationStatus" class="note">No location attached.</div><div id="nearbyWrap"><select id="nearbyStation"><option value="">-- Confirm exact station --</option></select></div><input type="hidden" id="revLatitude"><input type="hidden" id="revLongitude"><input type="hidden" id="revLocationSource"><input type="hidden" id="revStationLocationId"></div>
+<div class="field"><label>Comment</label><textarea id="revComment" maxlength="500"></textarea></div><button id="saveBtn">💾 Save Entry</button><div id="saveError" class="note"></div></div>
+<div id="successCard"><h3 style="color:#28a745">✅ Entry Saved!</h3><div id="successDetails"></div><p><a id="viewLatestLink" href="#">View Entry</a> · <a href="scan_photos.php">New Scan</a></p></div>
+<?php include 'menu.php';?><div class="footer">scan_photos.php — Rev 2.5 — Updated: <?php $mt=new DateTime('@'.filemtime(__FILE__));$mt->setTimezone(new DateTimeZone('America/New_York'));echo $mt->format('Y-m-d H:i (g:i A T)');?></div>
 <script>
-const photoInput = document.getElementById('photoInput');
-const thumbsDiv  = document.getElementById('thumbs');
-const photoCount = document.getElementById('photoCount');
-const scanBtn    = document.getElementById('scanBtn');
-
-let allFiles = [];
-
-function normalizePlateInput(value) {
-    return value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-}
-
-function renderThumbs() {
-    thumbsDiv.innerHTML = '';
-    allFiles.forEach((file, idx) => {
-        const reader = new FileReader();
-        reader.onload = e => {
-            const wrap = document.createElement('div');
-            wrap.className = 'thumb-wrap';
-
-            const img = document.createElement('img');
-            img.src = e.target.result;
-            img.title = 'Tap to expand';
-            img.addEventListener('click', () => openLightbox(e.target.result));
-
-            const btn = document.createElement('button');
-            btn.className = 'thumb-remove';
-            btn.textContent = '✕';
-            btn.title = 'Remove photo';
-            btn.addEventListener('click', () => {
-                allFiles.splice(idx, 1);
-                renderThumbs();
-                updatePhotoCount();
-            });
-
-            wrap.appendChild(img);
-            wrap.appendChild(btn);
-            thumbsDiv.appendChild(wrap);
-        };
-        reader.readAsDataURL(file);
-    });
-}
-
-function updatePhotoCount() {
-    const n = allFiles.length;
-    if (n === 0) {
-        photoCount.style.display = 'none';
-        scanBtn.disabled = true;
-    } else {
-        photoCount.textContent = `${n} photo${n > 1 ? 's' : ''} selected`;
-        photoCount.style.display = 'block';
-        scanBtn.disabled = false;
-    }
-}
-
-photoInput.addEventListener('change', () => {
-    const newFiles = Array.from(photoInput.files);
-    if (!newFiles.length) return;
-
-    newFiles.forEach(f => {
-        // Avoid exact duplicates (same name + size)
-        const isDupe = allFiles.some(x => x.name === f.name && x.size === f.size);
-        if (!isDupe) allFiles.push(f);
-    });
-
-    // Reset input so re-selecting same file triggers change again
-    photoInput.value = '';
-
-    renderThumbs();
-    updatePhotoCount();
-    document.getElementById('review').style.display = 'none';
-    document.getElementById('errorBox').style.display = 'none';
-});
-
-scanBtn.addEventListener('click', async () => {
-    if (!allFiles.length) return;
-
-    const formData = new FormData();
-    allFiles.forEach(f => formData.append('images[]', f));
-
-    scanBtn.disabled = true;
-    document.getElementById('loadingDiv').style.display = 'block';
-    document.getElementById('review').style.display = 'none';
-    document.getElementById('errorBox').style.display = 'none';
-
-    try {
-        const resp = await fetch('process_photos.php', { method: 'POST', body: formData });
-        if (!resp.ok) throw new Error('Server error ' + resp.status);
-        const data = await resp.json();
-
-        if (data.error) { showError(data.error); return; }
-
-        setField('revOdometer', data.odometer);
-        setField('revPrice',    data.pricePerGallon);
-        setField('revTotal',    data.totalCost);
-        setField('revGallons',  data.gallons);
-
-        document.getElementById('review').style.display = 'block';
-        document.getElementById('review').scrollIntoView({ behavior: 'smooth' });
-
-    } catch (e) {
-        showError('Request failed: ' + e.message);
-    } finally {
-        document.getElementById('loadingDiv').style.display = 'none';
-        scanBtn.disabled = false;
-    }
-});
-
-document.getElementById('saveBtn').addEventListener('click', async () => {
-    const plateEl  = document.getElementById('revPlate');
-    const plate    = normalizePlateInput(plateEl.value);
-    const odometer = document.getElementById('revOdometer').value;
-
-    if (!plate)    { showSaveError('Please enter or select a license plate.'); return; }
-    if (!odometer) { showSaveError('Odometer reading is required.'); return; }
-    plateEl.value = plate;
-
-    const saveBtn = document.getElementById('saveBtn');
-    saveBtn.disabled = true;
-    saveBtn.textContent = 'Saving…';
-    document.getElementById('saveError').style.display = 'none';
-
-    const body = new URLSearchParams({
-        licensePlate:    plate,
-        date:            document.getElementById('revDate').value,
-        odometer:        odometer,
-        pricePerGallon:  document.getElementById('revPrice').value,
-        totalPrice:      document.getElementById('revTotal').value,
-        gallons:         document.getElementById('revGallons').value,
-        source:          'scan'
-    });
-
-    try {
-        const resp = await fetch('auto_save.php', { method: 'POST', body });
-        const data = await resp.json();
-
-        if (data.error) {
-            showSaveError(data.error);
-        } else {
-            // Show success card
-            document.getElementById('successDetails').innerHTML =
-                `<b>Plate:</b> ${data.plate}<br>
-                 <b>Date:</b> ${data.date}<br>
-                 <b>Odometer:</b> ${data.odometer}<br>
-                 <b>Miles driven:</b> ${data.miles}<br>
-                 <b>Gallons:</b> ${data.gallons}<br>
-                 <b>Price/gal:</b> $${data.price}<br>
-                 <b>Total:</b> $${data.total}<br>
-                 <b>MPG:</b> ${data.mpg}<br>
-                 <b>Submitted:</b> ${data.submitted}`;
-            document.getElementById('viewLatestLink').href = `view_latest.php?plate=${encodeURIComponent(data.plate)}`;
-            document.getElementById('successCard').style.display = 'block';
-            document.getElementById('review').style.display = 'none';
-            document.getElementById('successCard').scrollIntoView({ behavior: 'smooth' });
-        }
-    } catch (e) {
-        showSaveError('Save failed: ' + e.message);
-    } finally {
-        saveBtn.disabled = false;
-        saveBtn.textContent = '💾 Save Entry';
-    }
-});
-
-function showSaveError(msg) {
-    const el = document.getElementById('saveError');
-    el.textContent = '⚠️ ' + msg;
-    el.style.display = 'block';
-    el.scrollIntoView({ behavior: 'smooth' });
-}
-
-function setField(id, val) {
-    if (val === null || val === undefined || val === '') return;
-    const el = document.getElementById(id);
-    el.value = val;
-    el.classList.add('filled');
-}
-
-function openLightbox(src) {
-    document.getElementById('lightboxImg').src = src;
-    document.getElementById('lightbox').classList.add('open');
-}
-function closeLightbox() {
-    document.getElementById('lightbox').classList.remove('open');
-}
-// Close on backdrop tap
-document.getElementById('lightbox').addEventListener('click', e => {
-    if (e.target === document.getElementById('lightbox')) closeLightbox();
-});
-
-function showError(msg) {
-    const el = document.getElementById('errorBox');
-    el.textContent = '⚠️ ' + msg;
-    el.style.display = 'block';
-    el.scrollIntoView({ behavior: 'smooth' });
-}
-</script>
-
-</body>
-</html>
+const photoInput=document.getElementById('photoInput'),thumbs=document.getElementById('thumbs'),scanBtn=document.getElementById('scanBtn');let files=[],nearbyCandidates=[];const stationProfiles=<?=json_encode($stationLocations,JSON_UNESCAPED_SLASHES)?>;
+function norm(v){return v.trim().toUpperCase().replace(/[^A-Z0-9]/g,'')}function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}function setField(id,v){if(v===undefined||v===null||v==='')return;document.getElementById(id).value=v}
+document.getElementById('uploadBtn').onclick=()=>photoInput.click();photoInput.onchange=()=>{for(const f of [...photoInput.files]){if(files.length>=4)break;if(!files.some(x=>x.name===f.name&&x.size===f.size))files.push(f)}photoInput.value='';thumbs.innerHTML='';files.forEach(f=>{const r=new FileReader();r.onload=e=>{const i=document.createElement('img');i.src=e.target.result;i.className='thumb';thumbs.appendChild(i)};r.readAsDataURL(f)});document.getElementById('photoCount').textContent=`${files.length} of 4 photos selected`;scanBtn.disabled=!files.length};
+const brandSel=document.getElementById('revStationBrand'),otherWrap=document.getElementById('otherStationWrap');brandSel.onchange=()=>otherWrap.style.display=brandSel.value==='other'?'block':'none';function setBrand(b){if(!b)return;const m=[...brandSel.options].find(o=>o.value.toLowerCase()===String(b).trim().toLowerCase());if(m){brandSel.value=m.value;otherWrap.style.display='none'}else{brandSel.value='other';document.getElementById('revStationBrandOther').value=b;otherWrap.style.display='block'}}
+const lat=document.getElementById('revLatitude'),lon=document.getElementById('revLongitude'),src=document.getElementById('revLocationSource'),stationId=document.getElementById('revStationLocationId'),locStatus=document.getElementById('locationStatus'),nearbyWrap=document.getElementById('nearbyWrap'),nearbySel=document.getElementById('nearbyStation'),savedSel=document.getElementById('savedStation');
+function applyProfile(p){if(!p)return;stationId.value=p.id||'';setBrand(p.brand||p.name||'');if(p.latitude!=null)lat.value=Number(p.latitude).toFixed(6);if(p.longitude!=null)lon.value=Number(p.longitude).toFixed(6);src.value='saved_station';locStatus.textContent=`Selected ${p.brand||p.name||'station'}${p.street?' — '+p.street:''}${p.city?', '+p.city:''}`}
+savedSel.onchange=()=>applyProfile(stationProfiles.find(x=>x.id===savedSel.value));
+function captureGps(){return new Promise((resolve,reject)=>{if(!navigator.geolocation)return reject(new Error('Geolocation unsupported'));navigator.geolocation.getCurrentPosition(p=>{lat.value=p.coords.latitude.toFixed(6);lon.value=p.coords.longitude.toFixed(6);src.value='gps';stationId.value='';locStatus.textContent=`GPS captured (${lat.value}, ${lon.value})`;resolve()},reject,{enableHighAccuracy:true,timeout:10000,maximumAge:60000})})}
+document.getElementById('gpsBtn').onclick=async()=>{try{await captureGps()}catch(e){locStatus.textContent='GPS failed: '+e.message}};
+async function loadNearby(){if(!lat.value||!lon.value)await captureGps();locStatus.textContent='Finding nearby stations…';const r=await fetch(`station_api.php?action=nearby&lat=${encodeURIComponent(lat.value)}&lon=${encodeURIComponent(lon.value)}&radius=1500`);const d=await r.json();if(d.error)throw new Error(d.error);nearbyCandidates=d.results||[];nearbySel.innerHTML='<option value="">-- Confirm exact station --</option>';nearbyCandidates.forEach((s,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${s.brand||s.name}${s.street?' — '+s.street:''} (${s.distance_meters} m)`;nearbySel.appendChild(o)});nearbyWrap.style.display='block';locStatus.textContent=nearbyCandidates.length?'Confirm the station below.':'No nearby stations found.'}
+document.getElementById('nearbyBtn').onclick=async()=>{try{await loadNearby()}catch(e){locStatus.textContent='Nearby lookup failed: '+e.message}};
+nearbySel.onchange=async()=>{if(nearbySel.value==='')return;const s=nearbyCandidates[Number(nearbySel.value)];const body=new URLSearchParams({action:'save_profile',candidate_id:s.candidate_id||'',brand:s.brand||'',name:s.name||'',city:s.city||'',street:s.street||'',latitude:s.latitude,longitude:s.longitude,source:'gps_confirmed'});try{const r=await fetch('station_api.php',{method:'POST',body});const d=await r.json();if(d.error)throw new Error(d.error);stationProfiles.push(d.profile);applyProfile(d.profile);src.value='gps_confirmed'}catch(e){locStatus.textContent='Could not save station: '+e.message}};
+document.getElementById('clearGpsBtn').onclick=()=>{lat.value='';lon.value='';src.value='';stationId.value='';savedSel.value='';nearbyWrap.style.display='none';locStatus.textContent='No location attached.'};
+scanBtn.onclick=async()=>{if(!files.length)return;const fd=new FormData();files.forEach(f=>fd.append('images[]',f));scanBtn.disabled=true;document.getElementById('loading').style.display='block';try{const r=await fetch('process_photos.php',{method:'POST',body:fd});const d=await r.json();if(d.error)throw new Error(d.error);setField('revOdometer',d.odometer);setField('revPrice',d.pricePerGallon);setField('revTotal',d.totalCost);setField('revGallons',d.gallons);if(d.stationBrand)setBrand(d.stationBrand);if(d.latitude!=null&&d.longitude!=null){lat.value=Number(d.latitude).toFixed(6);lon.value=Number(d.longitude).toFixed(6);src.value=d.locationSource||'photo_exif';locStatus.textContent=`Photo location found (${lat.value}, ${lon.value}). Confirm nearby station below.`;try{await loadNearby()}catch(e){locStatus.textContent+=' Nearby lookup unavailable.'}}document.getElementById('review').style.display='block';document.getElementById('review').scrollIntoView({behavior:'smooth'});maybePromptPartial()}catch(e){showError(e.message)}finally{document.getElementById('loading').style.display='none';scanBtn.disabled=false}};
+async function maybePromptPartial(){const g=parseFloat(document.getElementById('revGallons').value||'0'),plate=norm(document.getElementById('revPlate').value||'');if(!g||!plate)return;try{const r=await fetch(`fill_baseline.php?plate=${encodeURIComponent(plate)}`),d=await r.json();if(!d.ready||g>=d.promptBelowGallons)return;const h=document.getElementById('partialHint');h.style.display='block';h.textContent=`This fill (${g.toFixed(3)} gal) is unusually small versus your median (${Number(d.medianGallons).toFixed(3)} gal).`;if(confirm(h.textContent+' Was this a partial fill-up?'))document.querySelector('input[name="revFillType"][value="partial"]').checked=true}catch(e){}}
+document.getElementById('revGallons').onchange=maybePromptPartial;
+document.getElementById('saveBtn').onclick=async()=>{const plate=norm(document.getElementById('revPlate').value),odo=document.getElementById('revOdometer').value;if(!plate||!odo){showSaveError('Plate and odometer are required.');return}const body=new URLSearchParams({licensePlate:plate,date:document.getElementById('revDate').value,odometer:odo,pricePerGallon:document.getElementById('revPrice').value,totalPrice:document.getElementById('revTotal').value,gallons:document.getElementById('revGallons').value,fillType:document.querySelector('input[name="revFillType"]:checked')?.value||'full',stationBrand:brandSel.value,stationBrandOther:document.getElementById('revStationBrandOther').value,stationLocationId:stationId.value,comment:document.getElementById('revComment').value,latitude:lat.value,longitude:lon.value,locationSource:src.value,source:'scan'});try{const r=await fetch('auto_save.php',{method:'POST',body}),d=await r.json();if(d.error)throw new Error(d.error);document.getElementById('successDetails').innerHTML=`<b>${esc(d.plate)}</b> · ${esc(d.date)}<br>${d.gallons} gal · $${d.total}<br>${d.fillType==='partial'?'Partial':'Full'} · MPG: ${esc(d.mpgDisplay)}${d.stationBrand?'<br>'+esc(d.stationBrand)+(d.stationLocationLabel?' — '+esc(d.stationLocationLabel):''):''}`;document.getElementById('viewLatestLink').href=`view_latest.php?plate=${encodeURIComponent(d.plate)}`;document.getElementById('review').style.display='none';document.getElementById('successCard').style.display='block'}catch(e){showSaveError(e.message)}};
+function showError(m){const e=document.getElementById('errorBox');e.textContent='⚠️ '+m;e.style.display='block'}function showSaveError(m){const e=document.getElementById('saveError');e.textContent='⚠️ '+m;e.style.color='#721c24'}
+</script></body></html>

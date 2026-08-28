@@ -1,0 +1,50 @@
+button:disabled {
+  cursor: wait;
+  opacity: .82;
+}
+
+.toast {
+  position: fixed;
+  z-index: 1000;
+  left: 50%;
+  bottom: 24px;
+  width: min(520px, calc(100% - 28px));
+  padding: 13px 16px;
+  border: 1px solid #46525b;
+  border-radius: 12px;
+  background: #11171b;
+  color: #f4f6f7;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, .55);
+  font-weight: 750;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 18px);
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.toast.success {
+  border-color: rgba(96, 211, 130, .62);
+  background: #102118;
+}
+
+.toast.error {
+  border-color: rgba(255, 107, 107, .66);
+  background: #291415;
+}
+
+.help-text {
+  margin: 16px 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .button {
+    transition: none;
+  }
+}

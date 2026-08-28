@@ -1,0 +1,16 @@
+/* GPS ETA session store client - Rev 1.8.0 */
+(function(){
+var KEY='gpsEtaActiveTripIdV1';
+function gid(){var v=localStorage.getItem(KEY);if(!v){v=(crypto&&crypto.randomUUID)?crypto.randomUUID():'trip-'+Date.now();localStorage.setItem(KEY,v);}return v;}
+function resetId(){localStorage.removeItem(KEY);return gid();}
+function dev(){return getDeviceId();}
+function num(v){var x=Number(v);return Number.isFinite(x)?x:0;}
+function makeSummary(){var tracked=dist(distanceTraveledMeters),remaining=dist(remain()),elapsed=num(elapsedSeconds),moving=num(movingSeconds),stopped=Math.max(elapsed-moving,0),avg=elapsed?tracked/(elapsed/3600):0,avgMoving=moving?tracked/(moving/3600):0,max=spd(maxSpeedMps);return{startDistance:tracked+remaining,tracked:tracked,remaining:remaining,unit:label(),elapsedSeconds:elapsed,movingSeconds:moving,stoppedSeconds:stopped,avgSpeed:avg,avgMovingSpeed:avgMoving,maxSpeed:max,speedUnit:speedLabel(),endLocation:els.locationValue.textContent,snapshotCount:logEntries.length};}
+async function send(action,data){try{data=data||{};data.deviceId=dev();await fetch('trip-store.php?action='+action,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});}catch(e){}}
+async function refresh(){try{var r=await fetch('trip-store.php?action=list&deviceId='+encodeURIComponent(dev()));var d=await r.json();draw(d.trips||[]);}catch(e){}}
+function c(row,value){var td=document.createElement('td');td.textContent=value==null?'':String(value);row.appendChild(td);}
+function draw(trips){var b=document.getElementById('storedTripBody');if(!b)return;b.replaceChildren();if(!trips.length){var r=document.createElement('tr'),td=document.createElement('td');td.colSpan=7;td.className='small';td.textContent='No stored trip sessions yet.';r.appendChild(td);b.appendChild(r);return;}trips.slice(0,25).forEach(function(t){var s=t.summary||{},r=document.createElement('tr');c(r,t.startAt?new Date(t.startAt).toLocaleString():'--');c(r,t.endAt?new Date(t.endAt).toLocaleString():'--');c(r,t.status||'active');c(r,s.tracked!=null?Number(s.tracked).toFixed(2)+' '+(s.unit||label()):'--');c(r,s.remaining!=null?Number(s.remaining).toFixed(2)+' '+(s.unit||label()):'--');c(r,s.avgMovingSpeed!=null?Number(s.avgMovingSpeed).toFixed(1)+' '+(s.speedUnit||speedLabel()):'--');c(r,(t.entries||[]).length);b.appendChild(r);});}
+function ui(){if(document.getElementById('storedTripBody'))return;var s=document.createElement('section');s.className='card';s.innerHTML='<h2>PHP Stored Trips</h2><p class="small">Trips saved to the PHP trip-session schema. Existing snapshot history is separate.</p><div class="log"><table><thead><tr><th>Start</th><th>End</th><th>Status</th><th>Tracked</th><th>Remaining</th><th>Moving Avg</th><th>Entries</th></tr></thead><tbody id="storedTripBody"><tr><td colspan="7" class="small">Loading...</td></tr></tbody></table></div>';var ref=document.getElementById('tripSessionSection');if(ref&&ref.parentNode)ref.parentNode.insertBefore(s,ref.nextSibling);else document.querySelector('main').appendChild(s);}
+var old=log;log=function(reason){if(reason==='start')resetId();old(reason);var e=logEntries[0];if(e)send('log',{tripId:gid(),entry:e}).then(refresh);if(reason==='end')send('end',{tripId:gid(),summary:makeSummary()}).then(function(){localStorage.removeItem(KEY);refresh();});};
+ui();refresh();
+})();

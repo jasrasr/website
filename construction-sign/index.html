@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Construction Sign Text Generator</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="fixes.css">
+</head>
+<body>
+  <main class="page-shell">
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">ONLINE BUILDER</p>
+        <h1>Construction Sign Text Generator</h1>
+        <p class="subtitle">Enter a message, preview it as an amber highway construction sign, then copy the generated code or save the sign as an image.</p>
+      </div>
+      <div class="revision">
+        <span>Revision 1.1.2</span>
+        <span>Updated July 30, 2026</span>
+      </div>
+    </header>
+
+    <section class="panel" aria-labelledby="builder-heading">
+      <div class="section-heading">
+        <div>
+          <p class="step">STEP 1</p>
+          <h2 id="builder-heading">Build your message</h2>
+        </div>
+        <span id="characterCount" class="status-chip">0 characters</span>
+      </div>
+
+      <div class="control-grid">
+        <label class="field field-wide" for="messageInput">
+          <span>Sign text</span>
+          <textarea id="messageInput" rows="5" maxlength="140" placeholder="ENTER TEXT HERE">ENTER TEXT HERE</textarea>
+          <small>Use Enter to force a new line. Unsupported symbols are removed automatically.</small>
+        </label>
+
+        <label class="field">
+          <span>Number of lines</span>
+          <select id="lineCount">
+            <option value="1">1 line</option>
+            <option value="2" selected>2 lines</option>
+            <option value="3">3 lines</option>
+            <option value="4">4 lines</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Text alignment</span>
+          <select id="textAlign">
+            <option value="center" selected>Center</option>
+            <option value="left">Left</option>
+            <option value="right">Right</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>LED color</span>
+          <select id="ledColor">
+            <option value="#ffb000" selected>Amber</option>
+            <option value="#ffd54a">Yellow</option>
+            <option value="#ff7a00">Orange</option>
+            <option value="#f3f3f3">White</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Bulb size</span>
+          <input id="bulbSize" type="range" min="4" max="10" value="7">
+        </label>
+
+        <label class="field">
+          <span>Bulb spacing</span>
+          <input id="bulbGap" type="range" min="1" max="6" value="3">
+        </label>
+
+        <label class="field checkbox-field">
+          <input id="glowToggle" type="checkbox" checked>
+          <span>Enable LED glow</span>
+        </label>
+
+        <label class="field checkbox-field">
+          <input id="frameToggle" type="checkbox" checked>
+          <span>Show metal frame</span>
+        </label>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="preview-heading">
+      <div class="section-heading">
+        <div>
+          <p class="step">STEP 2</p>
+          <h2 id="preview-heading">Live preview</h2>
+        </div>
+      </div>
+      <div class="sign-stage">
+        <div id="signFrame" class="sign-frame">
+          <div id="signPreview" aria-label="Construction sign preview"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="export-heading">
+      <div class="section-heading">
+        <div>
+          <p class="step">STEP 3</p>
+          <h2 id="export-heading">Copy or download</h2>
+        </div>
+      </div>
+
+      <div class="export-actions">
+        <button id="copyEmbedButton" type="button" class="button button-primary">Copy embed code</button>
+        <button id="copyStandaloneButton" type="button" class="button button-secondary">Copy standalone HTML</button>
+        <button id="downloadPngButton" type="button" class="button button-secondary">Download PNG</button>
+      </div>
+
+      <p class="help-text">Embed code is intended for pages that permit inline JavaScript. The standalone HTML option creates a complete webpage. On iPhone or iPad, the PNG may open in a new tab so it can be saved to Photos or Files.</p>
+
+      <label class="field code-field" for="codeOutput">
+        <span>Generated embed code</span>
+        <textarea id="codeOutput" rows="12" readonly spellcheck="false"></textarea>
+      </label>
+      <p id="statusMessage" class="notice" role="status" aria-live="polite"></p>
+    </section>
+
+    <footer class="site-footer">
+      <span>Construction Sign Text Generator</span>
+      <span>Revision 1.1.2</span>
+      <span>Updated July 30, 2026</span>
+      <span>No data is uploaded or stored.</span>
+    </footer>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="script.js"></script>
+  <script src="fixes.js"></script>
+</body>
+</html>

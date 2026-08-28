@@ -1,0 +1,33 @@
+/*
+ * Project: Family GPS Tracker
+ * File: assets/css/security-maintenance.css
+ * Revision: 1.5.4
+ * Description: Consent-review overlay and security-maintenance UI styling.
+ * Author: Jason Lamb / ChatGPT scaffold
+ * Created: 2026-07-11
+ * Modified: 2026-07-11
+ */
+
+.consent-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.82);
+    backdrop-filter: blur(8px);
+}
+
+.consent-dialog {
+    width: min(36rem, 100%);
+    margin: auto;
+    display: grid;
+    gap: 0.9rem;
+    border-color: rgba(74, 222, 128, 0.55);
+}
+
+.consent-dialog p { margin: 0; line-height: 1.55; }
+.consent-dialog .check-row { grid-template-columns: auto 1fr; }
+.consent-dialog button { width: 100%; }

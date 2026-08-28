@@ -1,50 +1,126 @@
 {
-  "updatedAt": "2026-06-17T22:00:00+00:00",
-  "categories": [
-    {
-      "id": "cat-clean-table",
-      "name": "Clean Table",
-      "points": 10,
-      "maxAwardsPerTeam": null,
-      "active": true,
-      "created_at": "2026-06-17T22:00:00+00:00",
-      "modified_at": "2026-06-17T22:00:00+00:00"
-    },
-    {
-      "id": "cat-good-listeners",
-      "name": "Good Listeners",
-      "points": 20,
-      "maxAwardsPerTeam": null,
-      "active": true,
-      "created_at": "2026-06-17T22:00:00+00:00",
-      "modified_at": "2026-06-17T22:00:00+00:00"
-    },
-    {
-      "id": "cat-good-sportsmanship",
-      "name": "Good Sportsmanship",
-      "points": 30,
-      "maxAwardsPerTeam": null,
-      "active": true,
-      "created_at": "2026-06-17T22:00:00+00:00",
-      "modified_at": "2026-06-17T22:00:00+00:00"
-    },
-    {
-      "id": "cat-creativity",
-      "name": "Creativity",
-      "points": 40,
-      "maxAwardsPerTeam": null,
-      "active": true,
-      "created_at": "2026-06-17T22:00:00+00:00",
-      "modified_at": "2026-06-17T22:00:00+00:00"
-    },
-    {
-      "id": "cat-happy-birthday",
-      "name": "Happy Birthday",
-      "points": -1,
-      "maxAwardsPerTeam": null,
-      "active": true,
-      "created_at": "2026-06-17T22:00:00+00:00",
-      "modified_at": "2026-06-17T22:00:00+00:00"
-    }
-  ]
+    "updatedAt": "2026-06-21T16:16:22+00:00",
+    "categories": [
+        {
+            "id": "cat-clean-table",
+            "name": "Dirty Table",
+            "points": -2000,
+            "maxAwardsPerTeam": null,
+            "active": true,
+            "created_at": "2026-06-17T22:00:00+00:00",
+            "modified_at": "2026-06-21T16:02:50+00:00",
+            "scoringMode": "fixed",
+            "sortOrder": 1
+        },
+        {
+            "id": "cat-good-listeners",
+            "name": "Good Listening",
+            "points": 2000,
+            "maxAwardsPerTeam": null,
+            "active": true,
+            "created_at": "2026-06-17T22:00:00+00:00",
+            "modified_at": "2026-06-21T16:06:00+00:00",
+            "scoringMode": "fixed",
+            "sortOrder": 2
+        },
+        {
+            "id": "cat-good-sportsmanship",
+            "name": "Good Sportsmanship",
+            "points": 5000,
+            "maxAwardsPerTeam": null,
+            "active": true,
+            "created_at": "2026-06-17T22:00:00+00:00",
+            "modified_at": "2026-06-21T16:04:28+00:00",
+            "scoringMode": "fixed",
+            "sortOrder": 3
+        },
+        {
+            "id": "cat-43759445",
+            "name": "Game Scoring (Ranked)",
+            "points": 0,
+            "scoringMode": "ranked",
+            "maxAwardsPerTeam": null,
+            "active": true,
+            "created_at": "2026-06-21T16:00:44+00:00",
+            "modified_at": "2026-06-21T16:16:18+00:00",
+            "sortOrder": 4
+        },
+        {
+            "id": "cat-3c73deb0",
+            "name": "Water Bucket Refill",
+            "points": 500,
+            "scoringMode": "fixed",
+            "maxAwardsPerTeam": null,
+            "active": true,
+            "created_at": "2026-06-21T16:02:00+00:00",
+            "modified_at": "2026-06-21T16:02:00+00:00",
+            "sortOrder": 5
+        },
+        {
+            "id": "cat-dbeb0f1d",
+            "name": "Cheating",
+            "points": -5000,
+            "scoringMode": "fixed",
+            "maxAwardsPerTeam": null,
+            "active": true,
+            "created_at": "2026-06-21T16:02:21+00:00",
+            "modified_at": "2026-06-21T16:02:55+00:00",
+            "sortOrder": 6
+        },
+        {
+            "id": "cat-4f4d3033",
+            "name": "Team Chant (Ranked)",
+            "points": 0,
+            "scoringMode": "ranked",
+            "maxAwardsPerTeam": null,
+            "active": true,
+            "created_at": "2026-06-21T16:03:19+00:00",
+            "modified_at": "2026-06-21T16:16:22+00:00",
+            "sortOrder": 7
+        },
+        {
+            "id": "cat-03c78ded",
+            "name": "Frontlines Media (Ranked)",
+            "points": 0,
+            "scoringMode": "ranked",
+            "maxAwardsPerTeam": null,
+            "active": true,
+            "created_at": "2026-06-21T16:03:46+00:00",
+            "modified_at": "2026-06-21T16:16:15+00:00",
+            "sortOrder": 8
+        },
+        {
+            "id": "cat-b4c761ef",
+            "name": "Team Spirit",
+            "points": 5000,
+            "scoringMode": "fixed",
+            "maxAwardsPerTeam": null,
+            "active": true,
+            "created_at": "2026-06-21T16:05:42+00:00",
+            "modified_at": "2026-06-21T16:05:42+00:00",
+            "sortOrder": 9
+        },
+        {
+            "id": "cat-9328cdbe",
+            "name": "Flag Decoration (Ranked)",
+            "points": 0,
+            "scoringMode": "ranked",
+            "maxAwardsPerTeam": null,
+            "active": true,
+            "created_at": "2026-06-21T16:06:18+00:00",
+            "modified_at": "2026-06-21T16:16:12+00:00",
+            "sortOrder": 10
+        },
+        {
+            "id": "cat-b3a5e526",
+            "name": "Cabin Closure Time",
+            "points": -100,
+            "scoringMode": "fixed",
+            "maxAwardsPerTeam": null,
+            "active": true,
+            "created_at": "2026-06-21T16:06:31+00:00",
+            "modified_at": "2026-06-21T16:06:31+00:00",
+            "sortOrder": 11
+        }
+    ]
 }

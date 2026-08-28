@@ -46,6 +46,12 @@ smart-404/smart-404-data/404-requests.jsonl
 smart-404/smart-404-data/smart-404-admin-password.php
 smart-404/smart-404-data/smart-404-map.json
 smart-404/smart-404-data/smart-404-malicious.json
+debt-payoff/data/*.json
+debt-payoff/data/**/*.json
+fs/config.local.php
+fs/storage/*
+!fs/storage/.htaccess
+!fs/storage/.gitkeep
 
 # Example/sample files
 how-much-time-worked/example.jpg

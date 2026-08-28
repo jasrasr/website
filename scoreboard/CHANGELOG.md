@@ -1,6 +1,194 @@
 # Changelog
 
-Current project version: **v1.11.0**
+Current project version: **v1.19.1**
+
+## v1.19.1 - 2026-06-22
+
+### Full-admin score controls
+
+- Fixed the full-admin custom amount row so the **Apply** button stays inside each team card instead of being pushed off the right edge.
+
+### Revision verification
+
+| File | Revision | Verified purpose |
+|---|---:|---|
+| `public/styles.css` | 1.13.1 | Custom amount row grid sizing |
+| `tests/github-issues-layout-test.php` | 1.5.0 | Apply button layout verification |
+
+## v1.19.0 - 2026-06-21
+
+### Frontlines top-three tie handling
+
+- Frontlines public scoreboard still targets the top 3 scoring teams, but now includes any additional teams tied with the third-place score.
+- If all Frontlines teams are tied at `0`, all teams remain visible instead of showing only three.
+- Three visible teams now render as a full-width 3x1 viewer grid; twelve tied teams render as a 4x3 grid so the cards fill the screen cleanly.
+
+### Revision verification
+
+| File | Revision | Verified purpose |
+|---|---:|---|
+| `public/app.js` | 1.36.0 | Tie-aware viewer limit and grid column calculation |
+| `tests/viewer-team-limit-test.js` | 1.0.0 | Top-three-with-ties behavior coverage |
+
+## v1.18.1 - 2026-06-21
+
+### Documentation
+
+- Added a dedicated README Appearance section for the dark-default light/dark mode toggle.
+- Documented the saved browser preference key, `cvc-scoreboard-theme`, and how to return to default dark mode.
+
+## v1.18.0 - 2026-06-21
+
+### Scoreboard light mode
+
+- Added a shared light/dark theme toggle to scoreboard viewer, login, navigation, admin, quick-entry, roster, and category-entry pages.
+- Dark mode remains the default when no browser preference has been saved.
+- Theme choice is saved in browser storage as `cvc-scoreboard-theme`.
+- Added light-theme variables and adjusted quick-entry, category-entry, and roster-search surfaces to follow the shared theme.
+
+### Revision verification
+
+| File | Revision | Verified purpose |
+|---|---:|---|
+| `public/theme-toggle.js` | 1.0.0 | Persisted theme toggle |
+| `public/styles.css` | 1.13.0 | Shared light theme and toggle styles |
+| `public/quick-entry.css` | 1.7.0 | Quick-entry theme surfaces |
+| `public/category-entry.css` | 1.2.0 | Category-entry theme surfaces |
+| `frontlines/roster-search.css` | 1.2.0 | Roster search theme surfaces |
+| `tests/navigation-pages-test.php` | 1.11.0 | Theme toggle wiring verification |
+
+## v1.17.0 - 2026-06-21
+
+### Frontlines public scoreboard top 3
+
+- Frontlines public scoreboard now shows only the top 3 scoring teams.
+- The shared viewer supports an optional `data-viewer-team-limit` value, so other scoreboards continue showing all teams unless they opt in.
+- The public Frontlines header and hidden-count note now describe the display as top 3 by score.
+
+### Revision verification
+
+| File | Revision | Verified purpose |
+|---|---:|---|
+| `frontlines/index.php` | 1.4.0 | Frontlines top-three public viewer opt-in |
+| `public/app.js` | 1.35.0 | Shared viewer team limit support |
+| `tests/navigation-pages-test.php` | 1.10.0 | Frontlines top-three viewer verification |
+
+## v1.16.0 - 2026-06-21
+
+### Frontlines custom category ordering
+
+- Added `sortOrder` support for Frontlines categories.
+- The Add Category Score page now sorts categories by `sortOrder`, then name.
+- Edit Categories now exposes an **Order** field so categories can be rearranged without renaming them.
+- New categories automatically receive the next available order unless an order is entered.
+- The current downloaded `categories.json` order is preserved with initial `sortOrder` values.
+
+### Revision verification
+
+| File | Revision | Verified purpose |
+|---|---:|---|
+| `frontlines/api.php` | 1.7.0 | Category sortOrder persistence |
+| `public/category-entry.js` | 1.2.0 | Scorer category sortOrder display |
+| `public/edit-categories.js` | 1.2.0 | Category order editor field |
+| `public/edit-categories.css` | 1.2.0 | Category order field layout |
+| `tests/frontlines-categories-test.php` | 1.5.0 | Custom category ordering verification |
+| `frontlines/data/categories.json` | data | Downloaded category data with initial sortOrder values |
+
+## v1.15.0 - 2026-06-21
+
+### Frontlines ranked categories
+
+- Added ranked category mode for Frontlines goal categories.
+- Ranked categories use manual award values: `12000`, `11000`, `10000`, `9000`, `8000`, `7000`, `6000`, `5000`, `4000`, `3000`, `2000`, and `1000`.
+- Scorers can award ranked values in any order; the value is chosen at scoring time.
+- After a team receives a ranked category, that category is hidden for that team.
+- The API validates ranked award values and blocks duplicate ranked awards for the same team/category.
+
+### Revision verification
+
+| File | Revision | Verified purpose |
+|---|---:|---|
+| `frontlines/api.php` | 1.6.0 | Ranked category validation and awards |
+| `public/category-entry.js` | 1.1.0 | Ranked value selection and hide-after-award behavior |
+| `public/category-entry.css` | 1.1.0 | Ranked value grid styles |
+| `public/edit-categories.js` | 1.1.0 | Ranked category admin option |
+| `public/edit-categories.css` | 1.1.0 | Ranked category editor layout |
+| `tests/frontlines-categories-test.php` | 1.4.0 | Ranked category static verification |
+
+## v1.14.0 - 2026-06-21
+
+### Frontlines roster search match display
+
+- Roster search still matches by team name, leader, member, gender/grade suffix, or sponsor.
+- When a search is active, matching team cards now show only the matching leader/member/sponsor rows instead of the full roster.
+- Empty Leaders/Members sections are hidden while a search is active.
+- Clearing the search restores each matching team's full roster display.
+
+### Login and password-change return flow
+
+- Shared auth redirects now normalize the current page into a scoreboard-relative return path.
+- Forced password changes preserve the requested scoreboard-specific page, including Frontlines nested pages, instead of returning to the scoreboard picker or Default entry page.
+- Password-change return validation now allows Frontlines roster and category pages.
+
+### Revision verification
+
+| File | Revision | Verified purpose |
+|---|---:|---|
+| `auth.php` | 1.13.0 | Current-page login/password-change return helpers |
+| `change-password.php` | 1.3.0 | Scoreboard-specific password-change returns |
+| `frontlines/teams.php` | 1.10.0 | Searchable roster row markers |
+| `frontlines/roster-search.js` | 1.1.0 | Match-only roster card display |
+| `frontlines/roster-search.css` | 1.1.0 | Hide nonmatching rows and empty sections |
+| `tests/frontlines-roster-search-test.php` | 1.1.0 | Row-level search static verification |
+| `tests/navigation-pages-test.php` | 1.7.0 | Auth return-flow static verification |
+
+## v1.13.0 - 2026-06-20
+
+### Frontlines searchable roster
+
+- Added a responsive search panel above the Frontlines roster team cards.
+- Search filters by team name, leader, member, gender/grade suffix, or sponsor without modifying roster data.
+- Multiple terms use AND matching; for example, `Alex 12` requires both terms to appear in the same team card.
+- Added a live result count, no-results state, Clear button, and Escape-key clearing.
+- Search runs entirely in the browser and leaves `team-roster.json`, users, and score files unchanged.
+- Added `frontlines-roster-search-test.php` for static page, JavaScript, CSS, and responsive-wiring checks.
+
+### Revision verification
+
+| File | Revision | Verified purpose |
+|---|---:|---|
+| `frontlines/teams.php` | 1.9.0 | Public roster and search shell |
+| `frontlines/roster-search.js` | 1.0.0 | Client-side roster filtering |
+| `frontlines/roster-search.css` | 1.0.0 | Responsive search controls |
+| `tests/frontlines-roster-search-test.php` | 1.0.0 | Roster search static verification |
+
+## v1.12.0 - 2026-06-20
+
+### Login return flow and password-change escape
+
+- Login now preserves and validates the originally requested scoreboard path.
+- A login started from Frontlines returns to the requested Frontlines page instead of falling back to Default score entry.
+- The same destination survives an existing session and a forced first-run/reset password change.
+- Forced password-change pages now show **Cancel and return to login**. Cancel routes through `logout.php` so the temporary authenticated session is destroyed before returning to login.
+
+### Frontlines category navigation
+
+- Renamed user-facing **Enter Categories** links to **Add Category Score**.
+- Added **Add Category Score** near the top of Frontlines full score entry and quick entry.
+- Added `frontlines/category-navigation.js` to preserve the label and top shortcut when shared JavaScript rebuilds the page during automatic refreshes.
+- Updated roster, roster editor, and category editor navigation to use the same wording.
+
+### Revision verification
+
+| File | Revision | Verified purpose |
+|---|---:|---|
+| `login.php` | 1.2.0 | Safe requested-page redirect through login |
+| `change-password.php` | 1.2.0 | Forced-change cancel/sign-out action |
+| `frontlines/category-navigation.js` | 1.0.0 | Dynamic category-link labeling and top shortcuts |
+| `frontlines/enter-scores.php` | 1.7.0 | Frontlines full-entry category shortcut |
+| `frontlines/enter-scores-quick.php` | 1.6.0 | Frontlines quick-entry category shortcut |
+| `frontlines/edit-categories.php` | 1.2.0 | Category navigation label integration |
+| `frontlines/edit-roster.php` | 1.2.0 | Roster editor category link label |
 
 ## v1.11.0 - 2026-06-18
 
@@ -77,7 +265,7 @@ Closes several gaps where a destructive action would leave no recovery path.
 Same morale-protection goal as v1.9.0, different execution. v1.9.0 left the bottom teams on screen with names visible and a `—` placeholder where the score would be. v1.9.1 omits the bottom half from rendering altogether so the visible cards expand to fill the viewport instead of competing for space with muted placeholders.
 
 - `frontlines/index.php` v1.3.0: opt-in attribute renamed `data-hide-bottom-scores` → `data-hide-bottom-teams`. Server-rendered header copy now reads "Only top-half teams are shown."
-- `public/app.js` v1.30.0: `renderViewer` slices the sorted team list to `ceil(n/2)` when the opt-in is on, recomputes the `--viewer-cols` / `--viewer-rows` custom properties from the visible count, and only renders the visible cards. Existing CSS grid expands the cards to fill via `minmax(0, 1fr)` rows. Header shows a small "Showing top X of Y teams" note when the mode is active.
+- `public/app.js` v1.30.0: `renderViewer` slices the sorted team list to `ceil(n/2)` when the opt-in is on, recomputes the `--viewer-cols` / `--viewer-rows` custom properties from the visible count, and only renders the visible teams. Existing CSS grid expands the cards to fill via `minmax(0, 1fr)` rows. Header shows a small "Showing top X of Y teams" note when the mode is active.
 - `public/styles.css` v1.12.1: removed `.viewer-card-hidden` and `.viewer-score-hidden` (no muted cards remain on screen).
 - `createViewerCard` reverted to its simple two-arg signature.
 - README updated to describe the new behavior.
@@ -309,7 +497,7 @@ A new way to score Frontlines events: pre-define point-value goals (e.g., "Water
 
 ### File Revision Inventory
 
-This inventory was built from each file's header revision notes.
+This inventory was built from each file's header revision notes at the time of the v1.0.0 documentation pass. Later release entries above contain newer file revisions.
 
 #### Root PHP
 - `admin-users.php` revision 1.2.0, modified 2026-06-13: Admin-only user management and merged audit log page; created/reset passwords require a change and root access displays as Default.

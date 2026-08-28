@@ -1,0 +1,12 @@
+# File: public-cache/.htaccess
+# Project: TV Binge Board
+# Description: Allows browser access to cached public artwork while preventing PHP execution in the cache folder.
+# Author: Jason Lamb / ChatGPT
+# Created: 2026-07-02
+# Modified: 2026-07-02
+# Revision: 1.4.2
+
+Options -Indexes
+<FilesMatch "\.(php|phtml|phar|cgi|pl)$">
+    Require all denied
+</FilesMatch>

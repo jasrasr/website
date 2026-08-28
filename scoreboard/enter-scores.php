@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 /**
  * Filename: enter-scores.php
- * Revision : 1.5.0
+ * Revision : 1.5.1
  * Description : Admin score entry page for the default Live Scoreboard instance.
  *               Allows authorized users to update, reset, and rename team scores and title.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-09
- * Modified Date : 2026-06-17
+ * Modified Date : 2026-06-21
  * Changelog :
  * 1.0.0 Initial release; admin page split from index.php
  * 1.1.0 Added session authentication; passes username/role/urls to JS via data attrs
@@ -14,6 +14,7 @@
  * 1.3.0 Added changelog and all-scoreboards navigation URLs
  * 1.4.0 Rename root/default page title to Live Scoreboard
  * 1.5.0 Server-rendered page-header block so View Source shows the page identity and signed-in user (JS still overrides on first render)
+ * 1.5.1 Load the shared light/dark theme toggle
  */
 
 require __DIR__ . '/auth.php';
@@ -48,5 +49,6 @@ $user = requireAuth('root', './login.php');
       <p class="status-text">Loading score entry...</p>
     </div>
     <script src="./public/app.js?v=<?= filemtime(__DIR__ . '/public/app.js') ?>" defer></script>
+    <script src="./public/theme-toggle.js?v=<?= filemtime(__DIR__ . '/public/theme-toggle.js') ?>" defer></script>
   </body>
 </html>

@@ -3,18 +3,32 @@
 // File Name    : geocode_helper.php
 // Author       : Jason Lamb (with help from ChatGPT)
 // Created Date : 2026-01-29
-// Modified Date: 2026-01-29
-// Revision     : 1.1
+// Modified Date: 2026-07-25
+// Revision     : 1.3
 // Description : Utility to convert City,ST or ZIP into authoritative
 //               lat/lon + ZIP using OpenWeather Geocoding APIs.
 //               Intended for config.php generation only.
 // Changelog    :
 //   Rev 1.0 - Initial helper for generating lat/lon config entries
 //   Rev 1.1 - Added ZIP resolution and country/state validation
+//   Rev 1.2 - Added controlled error for missing or placeholder config
+//   Rev 1.3 - URL-encoded API key in geocoding requests
 // ============================================================================
 
-$config = require __DIR__ . '/config.php';
-$apiKey = $config['api_key'];
+$configFile = __DIR__ . '/config.php';
+
+if (!is_file($configFile)) {
+    echo "Missing config.php. Copy config.example.php to config.php and add the OpenWeather API key.\n";
+    exit;
+}
+
+$config = require $configFile;
+$apiKey = $config['api_key'] ?? '';
+
+if ($apiKey === '' || $apiKey === 'ENTER-API-HERE') {
+    echo "OpenWeather API key is not configured in config.php.\n";
+    exit;
+}
 
 $input = $_GET['q'] ?? null;
 
@@ -36,7 +50,7 @@ if (preg_match('/^\d{5}$/', $input)) {
     $geoUrl = sprintf(
         'https://api.openweathermap.org/geo/1.0/zip?zip=%s,US&appid=%s',
         $input,
-        $apiKey
+        urlencode($apiKey)
     );
 
     $geoResp = file_get_contents($geoUrl, false, $context);
@@ -65,7 +79,7 @@ if (preg_match('/^\d{5}$/', $input)) {
         'https://api.openweathermap.org/geo/1.0/direct?q=%s,%s,US&limit=1&appid=%s',
         urlencode($city),
         $state,
-        $apiKey
+        urlencode($apiKey)
     );
 
     $geoResp = file_get_contents($geoUrl, false, $context);
@@ -90,7 +104,7 @@ if (preg_match('/^\d{5}$/', $input)) {
         'https://api.openweathermap.org/geo/1.0/reverse?lat=%s&lon=%s&limit=1&appid=%s',
         $result['lat'],
         $result['lon'],
-        $apiKey
+        urlencode($apiKey)
     );
 
     $zipResp = file_get_contents($zipUrl, false, $context);

@@ -1,0 +1,735 @@
+<?php
+/*
+    Debt Payoff Planner
+    Revision: 1.0.5
+    Description: Main dashboard with login, registration, shared viewer/editor debt access, reversible audit history, daily backup and recovery controls, per-loan amortization tables, top-nav access to the rendered readme, and a once-per-update notice.
+*/
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/config.php';
+
+$flash = '';
+$error = '';
+
+if (isset($_GET['logout'])) {
+    logoutUser();
+    header('Location: index.php');
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = (string)($_POST['action'] ?? '');
+
+    if ($action === 'login') {
+        if (authenticateUser((string)($_POST['username'] ?? ''), (string)($_POST['password'] ?? ''))) {
+            header('Location: index.php');
+            exit;
+        }
+        $error = 'Invalid username or password.';
+    } elseif ($action === 'register') {
+        $result = registerUser((string)($_POST['username'] ?? ''), (string)($_POST['password'] ?? ''));
+        if ($result['ok']) {
+            authenticateUser((string)($_POST['username'] ?? ''), (string)($_POST['password'] ?? ''));
+            header('Location: index.php');
+            exit;
+        }
+        $error = $result['error'] ?? 'Registration failed.';
+    } else {
+        $account = requireLogin();
+        $username = (string)$account['username'];
+        $targetDatasetOwner = resolveDatasetOwner($username, (string)($_POST['dataset_owner'] ?? $_GET['dataset'] ?? $username));
+
+        if ($action === 'save_loan') {
+            if (!canEditDataset($username, $targetDatasetOwner)) {
+                $error = 'You do not have edit access to that dataset.';
+            } else {
+                saveLoan($targetDatasetOwner, $_POST);
+                $flash = 'Loan saved.';
+            }
+        } elseif ($action === 'delete_loan') {
+            if (!canEditDataset($username, $targetDatasetOwner)) {
+                $error = 'You do not have edit access to that dataset.';
+            } else {
+                deleteLoan($targetDatasetOwner, (string)($_POST['loan_id'] ?? ''));
+                $flash = 'Loan deleted.';
+            }
+        } elseif ($action === 'save_strategy') {
+            if (!canEditDataset($username, $targetDatasetOwner)) {
+                $error = 'You do not have edit access to that dataset.';
+            } else {
+                updateStrategyBudget($targetDatasetOwner, (float)($_POST['strategy_extra_budget'] ?? 0));
+                $flash = 'Strategy budget updated.';
+            }
+        } elseif ($action === 'grant_share') {
+            if ($targetDatasetOwner !== $username) {
+                $error = 'Only the owner can manage sharing.';
+            } else {
+                $result = grantSharedAccess($username, (string)($_POST['shared_username'] ?? ''), (string)($_POST['share_permission'] ?? 'viewer'));
+                if ($result['ok']) {
+                    $flash = 'Shared access saved.';
+                } else {
+                    $error = $result['error'] ?? 'Unable to save shared access.';
+                }
+            }
+        } elseif ($action === 'revoke_share') {
+            if ($targetDatasetOwner !== $username) {
+                $error = 'Only the owner can manage sharing.';
+            } else {
+                revokeSharedAccess($username, (string)($_POST['shared_username'] ?? ''));
+                $flash = 'Shared access removed.';
+            }
+        } elseif ($action === 'create_backup') {
+            if ($targetDatasetOwner !== $username) {
+                $error = 'Only the owner can create backups for this dataset.';
+            } else {
+                createBackupSnapshot($username, $username, 'manual', 'Manual backup created from the dashboard.');
+                $flash = 'Backup created.';
+            }
+        } elseif ($action === 'restore_backup') {
+            if ($targetDatasetOwner !== $username) {
+                $error = 'Only the owner can recover backups for this dataset.';
+            } else {
+                $result = restoreBackupSnapshot($username, (string)($_POST['backup_filename'] ?? ''), $username);
+                if ($result['ok']) {
+                    $flash = 'Backup recovered.';
+                } else {
+                    $error = $result['error'] ?? 'Unable to recover backup.';
+                }
+            }
+        } elseif ($action === 'revert_audit') {
+            if ($targetDatasetOwner !== $username) {
+                $error = 'Only the owner can revert audit entries for this dataset.';
+            } else {
+                $result = revertAuditEntry($username, (string)($_POST['audit_entry_id'] ?? ''), $username);
+                if ($result['ok']) {
+                    $flash = 'Audit entry reverted.';
+                } else {
+                    $error = $result['error'] ?? 'Unable to revert audit entry.';
+                }
+            }
+        }
+    }
+}
+
+$currentAccount = currentUser();
+$projectRevision = readProjectRevision();
+$projectModifiedAt = readProjectModifiedAt();
+
+if ($currentAccount === null):
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><?= h(APP_NAME) ?></title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="container">
+    <div class="topbar">
+        <nav class="nav">
+            <a href="index.php">Home</a>
+            <a href="readme.php">Readme</a>
+            <a href="changelog.php">Changelog</a>
+            <a href="todo.php">Todo</a>
+        </nav>
+        <div class="top-meta">
+            <span><strong>Rev:</strong> <?= h($projectRevision) ?></span>
+            <span><strong>Modified:</strong> <?= h($projectModifiedAt) ?></span>
+        </div>
+    </div>
+
+    <header class="page-header">
+        <div>
+            <h1><?= h(APP_NAME) ?></h1>
+            <p class="small">Private, per-user debt tracking for credit cards, mortgages, auto loans, personal loans, and payoff planning.</p>
+        </div>
+        <div class="status-box">
+            <strong>Test user:</strong> <?= h(DEFAULT_TEST_USERNAME) ?><br>
+            <strong>Password:</strong> <?= h(DEFAULT_TEST_PASSWORD) ?><br>
+            <strong>Admin setup:</strong> First newly registered account becomes admin.
+        </div>
+    </header>
+
+    <?php if ($error !== ''): ?>
+    <section class="card alert alert-error"><?= h($error) ?></section>
+    <?php endif; ?>
+    <?= renderUpdateNotice($projectRevision) ?>
+
+    <section class="two-column">
+        <form method="post" class="card">
+            <h2>Login</h2>
+            <input type="hidden" name="action" value="login">
+            <label>Username
+                <input type="text" name="username" required>
+            </label>
+            <label>Password
+                <input type="password" name="password" required>
+            </label>
+            <div class="actions">
+                <button type="submit">Sign In</button>
+            </div>
+        </form>
+
+        <form method="post" class="card">
+            <h2>Register</h2>
+            <input type="hidden" name="action" value="register">
+            <label>Username
+                <input type="text" name="username" required minlength="3">
+            </label>
+            <label>Password
+                <input type="password" name="password" required minlength="4">
+            </label>
+            <div class="actions">
+                <button type="submit">Create Account</button>
+            </div>
+            <p class="small">Registration is active. If no admin exists yet, the first new account created here will receive admin access.</p>
+        </form>
+    </section>
+</main>
+</body>
+</html>
+<?php
+exit;
+endif;
+
+$currentUsername = (string)$currentAccount['username'];
+$accessibleDatasets = accessibleDatasetsForUser($currentUsername);
+$datasetOwner = resolveDatasetOwner($currentUsername, (string)($_GET['dataset'] ?? $currentUsername));
+$datasetPermission = getSharePermission($datasetOwner, $currentUsername) ?? 'owner';
+$canEditCurrentDataset = canEditDataset($currentUsername, $datasetOwner);
+$isOwnDataset = $datasetOwner === $currentUsername;
+$userData = readUserData($datasetOwner);
+$loans = $userData['loans'];
+$loanSummaries = [];
+foreach ($loans as $loan) {
+    $loanSummaries[(string)($loan['id'] ?? '')] = summarizeLoan($loan);
+}
+$metrics = overallMetrics($loans, $loanSummaries);
+$strategyBudget = (float)($userData['profile']['strategy_extra_budget'] ?? 0);
+$snowball = simulateStrategy($loans, $strategyBudget, 'snowball');
+$avalanche = simulateStrategy($loans, $strategyBudget, 'avalanche');
+$backupSnapshots = $isOwnDataset ? array_slice(readBackupSnapshots($datasetOwner), 0, 20) : [];
+$auditEntries = $isOwnDataset ? array_slice(readAuditEntries($datasetOwner), 0, 20) : [];
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><?= h(APP_NAME) ?></title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="container container-wide">
+    <div class="topbar">
+        <nav class="nav">
+            <a href="index.php">Dashboard</a>
+            <?php if (($currentAccount['role'] ?? 'user') === 'admin'): ?>
+            <a href="admin.php">Admin</a>
+            <?php endif; ?>
+            <a href="readme.php">Readme</a>
+            <a href="changelog.php">Changelog</a>
+            <a href="todo.php">Todo</a>
+            <a href="index.php?logout=1" class="nav-button">Logout</a>
+        </nav>
+        <div class="top-meta">
+            <span><strong>Rev:</strong> <?= h($projectRevision) ?></span>
+            <span><strong>Modified:</strong> <?= h($projectModifiedAt) ?></span>
+        </div>
+    </div>
+
+    <header class="page-header">
+        <div>
+            <h1><?= h(APP_NAME) ?></h1>
+            <p class="small">
+                Signed in as <strong><?= h($currentUsername) ?></strong>.
+                Viewing <strong><?= h($datasetOwner) ?></strong>'s data as <strong><?= h(ucfirst($datasetPermission)) ?></strong>.
+            </p>
+        </div>
+        <div class="status-box">
+            <strong>Loans:</strong> <?= count($loans) ?><br>
+            <strong>Total debt:</strong> <?= h(currency($metrics['total_debt'])) ?><br>
+            <strong>Monthly minimums:</strong> <?= h(currency($metrics['total_minimums'])) ?>
+        </div>
+    </header>
+
+    <?php if ($error !== ''): ?>
+    <section class="card alert alert-error"><?= h($error) ?></section>
+    <?php endif; ?>
+    <?php if ($flash !== ''): ?>
+    <section class="card alert alert-success"><?= h($flash) ?></section>
+    <?php endif; ?>
+    <?= renderUpdateNotice($projectRevision) ?>
+    <?php if (!$canEditCurrentDataset): ?>
+    <section class="card">
+        <p class="small">This dataset is shared with you as view-only. You can review the numbers but cannot change them.</p>
+    </section>
+    <?php endif; ?>
+
+    <section class="two-column">
+        <form method="get" class="card">
+            <h2>Dataset Access</h2>
+            <label>Select which user's debt data to open
+                <select name="dataset">
+                    <?php foreach ($accessibleDatasets as $dataset): ?>
+                    <option value="<?= h((string)$dataset['owner_username']) ?>"<?= (string)$dataset['owner_username'] === $datasetOwner ? ' selected' : '' ?>><?= h((string)$dataset['label']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <div class="actions">
+                <button type="submit">Open Dataset</button>
+            </div>
+        </form>
+
+        <?php if ($isOwnDataset): ?>
+        <div class="card">
+            <h2>Share This Data</h2>
+            <form method="post" class="loan-form-grid">
+                <input type="hidden" name="action" value="grant_share">
+                <input type="hidden" name="dataset_owner" value="<?= h($datasetOwner) ?>">
+                <label>Username
+                    <input type="text" name="shared_username" required>
+                </label>
+                <label>Access
+                    <select name="share_permission"><?= renderPermissionOptions('viewer') ?></select>
+                </label>
+                <div class="actions full-width">
+                    <button type="submit">Grant Access</button>
+                </div>
+            </form>
+            <?php if (!empty($userData['sharing'])): ?>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Access</th>
+                            <th>Granted</th>
+                            <th>Revoke</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($userData['sharing'] as $share): ?>
+                        <tr>
+                            <td><?= h((string)$share['username']) ?></td>
+                            <td><?= h(ucfirst((string)$share['permission'])) ?></td>
+                            <td><?= h(formatTimestamp((string)($share['granted_at'] ?? ''))) ?></td>
+                            <td>
+                                <form method="post" class="inline-form">
+                                    <input type="hidden" name="action" value="revoke_share">
+                                    <input type="hidden" name="dataset_owner" value="<?= h($datasetOwner) ?>">
+                                    <input type="hidden" name="shared_username" value="<?= h((string)$share['username']) ?>">
+                                    <button type="submit" class="danger">Revoke</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php else: ?>
+            <p class="small">No shared users yet.</p>
+            <?php endif; ?>
+        </div>
+        <?php else: ?>
+        <div class="card">
+            <h2>Shared Access</h2>
+            <p class="small">This dataset belongs to <strong><?= h($datasetOwner) ?></strong>. Only the owner can add or remove sharing entries.</p>
+        </div>
+        <?php endif; ?>
+    </section>
+
+    <section class="stats-grid">
+        <div class="card stat-card"><strong>Total debt</strong><span><?= h(currency($metrics['total_debt'])) ?></span></div>
+        <div class="card stat-card"><strong>Total original balance</strong><span><?= h(currency($metrics['total_original_balance'])) ?></span></div>
+        <div class="card stat-card"><strong>Paid down so far</strong><span><?= h(currency($metrics['total_paid_down'])) ?></span></div>
+        <div class="card stat-card"><strong>Weighted APR</strong><span><?= h(pct($metrics['weighted_apr'])) ?></span></div>
+        <div class="card stat-card"><strong>Baseline interest</strong><span><?= h(currency($metrics['baseline_interest'])) ?></span></div>
+        <div class="card stat-card"><strong>Current accelerated interest</strong><span><?= h(currency($metrics['accelerated_interest'])) ?></span></div>
+        <div class="card stat-card"><strong>Interest savings</strong><span><?= h(currency($metrics['interest_savings'])) ?></span></div>
+        <div class="card stat-card"><strong>Latest projected payoff</strong><span><?= h(payoffDateLabel($metrics['latest_projected_date'])) ?></span></div>
+    </section>
+
+    <section class="two-column">
+        <form method="post" class="card">
+            <h2>Strategy Budget</h2>
+            <input type="hidden" name="action" value="save_strategy">
+            <input type="hidden" name="dataset_owner" value="<?= h($datasetOwner) ?>">
+            <label>Monthly extra budget available for strategy comparison
+                <input type="number" step="0.01" min="0" name="strategy_extra_budget" value="<?= h((string)$strategyBudget) ?>">
+            </label>
+            <div class="actions">
+                <button type="submit"<?= $canEditCurrentDataset ? '' : ' disabled' ?>>Save Strategy Budget</button>
+            </div>
+            <p class="small">This compares the debt snowball method against the highest-APR avalanche method using the same extra monthly payoff budget.</p>
+        </form>
+
+        <div class="card">
+            <h2>What This Baseline Covers</h2>
+            <ul class="plain-list">
+                <li>Private user registration and login</li>
+                <li>Debt tracking across multiple loan types and categories</li>
+                <li>Per-loan payoff modeling with extra monthly, annual blue moon, and lump-sum payments</li>
+                <li>Snowball and avalanche strategy comparisons</li>
+                <li>Admin-only user management that does not reveal loan contents</li>
+                <li>Owner-controlled sharing with viewer or editor access</li>
+            </ul>
+        </div>
+    </section>
+
+    <?php if ($isOwnDataset): ?>
+    <section class="two-column">
+        <div class="card">
+            <h2>Backups</h2>
+            <form method="post" class="actions">
+                <input type="hidden" name="action" value="create_backup">
+                <input type="hidden" name="dataset_owner" value="<?= h($datasetOwner) ?>">
+                <button type="submit">Create Backup Now</button>
+            </form>
+            <p class="small">A daily backup is created automatically on the first successful login of the day for this user. The newest 99 backups are retained.</p>
+            <?php if (!empty($backupSnapshots)): ?>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Created</th>
+                            <th>Reason</th>
+                            <th>Actor</th>
+                            <th>Recover</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($backupSnapshots as $backup): ?>
+                        <tr>
+                            <td><?= h(formatTimestamp((string)($backup['created_at'] ?? ''))) ?></td>
+                            <td><?= h((string)($backup['reason'] ?? '')) ?></td>
+                            <td><?= h((string)($backup['actor_username'] ?? '')) ?></td>
+                            <td>
+                                <form method="post" class="inline-form">
+                                    <input type="hidden" name="action" value="restore_backup">
+                                    <input type="hidden" name="dataset_owner" value="<?= h($datasetOwner) ?>">
+                                    <input type="hidden" name="backup_filename" value="<?= h((string)($backup['filename'] ?? '')) ?>">
+                                    <button type="submit" onclick="return confirm('Recover this backup and replace current data?');">Recover</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php else: ?>
+            <p class="small">No backups are available yet.</p>
+            <?php endif; ?>
+        </div>
+
+        <div class="card">
+            <h2>Audit History</h2>
+            <p class="small">Each saved loan change, delete, strategy update, share grant, share revoke, backup recovery, and audit revert is captured here with a full before/after snapshot so it can be rolled back.</p>
+            <?php if (!empty($auditEntries)): ?>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>When</th>
+                            <th>Action</th>
+                            <th>Actor</th>
+                            <th>Summary</th>
+                            <th>Revert</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($auditEntries as $entry): ?>
+                        <tr>
+                            <td><?= h(formatTimestamp((string)($entry['recorded_at'] ?? ''))) ?></td>
+                            <td><?= h((string)($entry['action'] ?? '')) ?></td>
+                            <td><?= h((string)($entry['actor_username'] ?? '')) ?></td>
+                            <td><?= h((string)($entry['summary'] ?? '')) ?></td>
+                            <td>
+                                <form method="post" class="inline-form">
+                                    <input type="hidden" name="action" value="revert_audit">
+                                    <input type="hidden" name="dataset_owner" value="<?= h($datasetOwner) ?>">
+                                    <input type="hidden" name="audit_entry_id" value="<?= h((string)($entry['id'] ?? '')) ?>">
+                                    <button type="submit" onclick="return confirm('Revert this audited change by restoring its previous dataset state?');">Revert</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php else: ?>
+            <p class="small">No audit entries are available yet.</p>
+            <?php endif; ?>
+        </div>
+    </section>
+    <?php endif; ?>
+
+    <section class="two-column">
+        <div class="card">
+            <h2>Snowball Plan</h2>
+            <p class="small">Smallest balance first. Good for faster account count reduction and momentum.</p>
+            <div class="summary-grid">
+                <div><strong>Debt-free</strong><span><?= h(payoffDateLabel($snowball['payoff_date'])) ?></span></div>
+                <div><strong>Months</strong><span><?= h((string)$snowball['months']) ?></span></div>
+                <div><strong>Interest</strong><span><?= h(currency($snowball['interest_total'])) ?></span></div>
+                <div><strong>Target now</strong><span><?= h($snowball['timeline'][0]['target'] ?? 'None') ?></span></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Avalanche Plan</h2>
+            <p class="small">Highest APR first. Good for the least interest cost.</p>
+            <div class="summary-grid">
+                <div><strong>Debt-free</strong><span><?= h(payoffDateLabel($avalanche['payoff_date'])) ?></span></div>
+                <div><strong>Months</strong><span><?= h((string)$avalanche['months']) ?></span></div>
+                <div><strong>Interest</strong><span><?= h(currency($avalanche['interest_total'])) ?></span></div>
+                <div><strong>Target now</strong><span><?= h($avalanche['timeline'][0]['target'] ?? 'None') ?></span></div>
+            </div>
+        </div>
+    </section>
+
+    <?php if ($canEditCurrentDataset): ?>
+    <section class="card">
+        <h2>Add Loan</h2>
+        <form method="post" class="loan-form-grid">
+            <input type="hidden" name="action" value="save_loan">
+            <input type="hidden" name="dataset_owner" value="<?= h($datasetOwner) ?>">
+            <label>Loan name
+                <input type="text" name="name" required>
+            </label>
+            <label>Type
+                <select name="type"><?= renderOptions(loanTypes(), 'Credit Card') ?></select>
+            </label>
+            <label>Category
+                <select name="category"><?= renderOptions(loanCategories(), 'Credit Cards') ?></select>
+            </label>
+            <label>Current principal
+                <input type="number" step="0.01" min="0" name="current_balance" required>
+            </label>
+            <label>APR
+                <input type="number" step="0.01" min="0" name="apr" required>
+            </label>
+            <label>Monthly payment
+                <input type="number" step="0.01" min="0" name="monthly_payment" required>
+            </label>
+            <label>Original date
+                <input type="date" name="original_date">
+            </label>
+            <label>Original balance
+                <input type="number" step="0.01" min="0" name="original_balance">
+            </label>
+            <label>Extra principal per month
+                <input type="number" step="0.01" min="0" name="extra_monthly" value="0">
+            </label>
+            <label>Blue moon / annual payment
+                <input type="number" step="0.01" min="0" name="annual_extra" value="0">
+            </label>
+            <label>Blue moon month
+                <select name="annual_extra_month">
+                    <?php for ($month = 1; $month <= 12; $month++): ?>
+                    <option value="<?= $month ?>"><?= h(monthName($month)) ?></option>
+                    <?php endfor; ?>
+                </select>
+            </label>
+            <label>One-time lump sum
+                <input type="number" step="0.01" min="0" name="lump_sum" value="0">
+            </label>
+            <label class="full-width">Notes
+                <textarea name="notes" rows="2"></textarea>
+            </label>
+            <div class="actions full-width">
+                <button type="submit">Add Loan</button>
+            </div>
+        </form>
+    </section>
+    <?php endif; ?>
+
+    <?php if (empty($loans)): ?>
+    <section class="card">
+        <p class="small">No loans have been added yet.</p>
+    </section>
+    <?php endif; ?>
+
+    <?php foreach ($loans as $loan): ?>
+    <?php $summary = $loanSummaries[(string)($loan['id'] ?? '')] ?? summarizeLoan($loan); ?>
+    <section class="card loan-card">
+        <div class="loan-card-header">
+            <div>
+                <h2><?= h((string)$loan['name']) ?></h2>
+                <p class="small"><?= h((string)$loan['type']) ?> | <?= h((string)$loan['category']) ?></p>
+            </div>
+            <div class="status-box compact">
+                <strong>Current balance:</strong> <?= h(currency((float)$loan['current_balance'])) ?><br>
+                <strong>APR:</strong> <?= h(pct((float)$loan['apr'])) ?><br>
+                <strong>Monthly payment:</strong> <?= h(currency((float)$loan['monthly_payment'])) ?>
+            </div>
+        </div>
+
+        <div class="stats-grid loan-metrics">
+            <div class="card stat-card"><strong>Standard payoff</strong><span><?= h(payoffDateLabel($summary['baseline']['payoff_date'])) ?></span></div>
+            <div class="card stat-card"><strong>Adjusted payoff</strong><span><?= h(payoffDateLabel($summary['accelerated']['payoff_date'])) ?></span></div>
+            <div class="card stat-card"><strong>Months saved</strong><span><?= h((string)$summary['months_saved']) ?></span></div>
+            <div class="card stat-card"><strong>Interest saved</strong><span><?= h(currency($summary['interest_saved'])) ?></span></div>
+        </div>
+
+        <div class="two-column amortization-summary-grid">
+            <div class="card">
+                <h3>Standard Amortization</h3>
+                <div class="summary-grid">
+                    <div><strong>Months</strong><span><?= h((string)$summary['baseline']['months']) ?></span></div>
+                    <div><strong>Total interest</strong><span><?= h(currency($summary['baseline']['interest_total'])) ?></span></div>
+                    <div><strong>Total principal</strong><span><?= h(currency($summary['baseline']['principal_total'])) ?></span></div>
+                    <div><strong>Total paid</strong><span><?= h(currency($summary['baseline']['interest_total'] + $summary['baseline']['principal_total'])) ?></span></div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Adjusted Amortization</h3>
+                <div class="summary-grid">
+                    <div><strong>Months</strong><span><?= h((string)$summary['accelerated']['months']) ?></span></div>
+                    <div><strong>Total interest</strong><span><?= h(currency($summary['accelerated']['interest_total'])) ?></span></div>
+                    <div><strong>Total principal</strong><span><?= h(currency($summary['accelerated']['principal_total'])) ?></span></div>
+                    <div><strong>Total paid</strong><span><?= h(currency($summary['accelerated']['interest_total'] + $summary['accelerated']['principal_total'])) ?></span></div>
+                </div>
+            </div>
+        </div>
+
+        <?php if ($summary['baseline']['negative_amortization'] || $summary['accelerated']['negative_amortization']): ?>
+        <p class="small alert-inline">Warning: payment settings fall below monthly interest for this loan, so the payoff projection is not fully amortizing.</p>
+        <?php endif; ?>
+
+        <form method="post" class="loan-form-grid">
+            <input type="hidden" name="action" value="save_loan">
+            <input type="hidden" name="dataset_owner" value="<?= h($datasetOwner) ?>">
+            <input type="hidden" name="loan_id" value="<?= h((string)$loan['id']) ?>">
+            <label>Loan name
+                <input type="text" name="name" value="<?= h((string)$loan['name']) ?>" required>
+            </label>
+            <label>Type
+                <select name="type"><?= renderOptions(loanTypes(), (string)$loan['type']) ?></select>
+            </label>
+            <label>Category
+                <select name="category"><?= renderOptions(loanCategories(), (string)$loan['category']) ?></select>
+            </label>
+            <label>Current principal
+                <input type="number" step="0.01" min="0" name="current_balance" value="<?= h((string)$loan['current_balance']) ?>" required>
+            </label>
+            <label>APR
+                <input type="number" step="0.01" min="0" name="apr" value="<?= h((string)$loan['apr']) ?>" required>
+            </label>
+            <label>Monthly payment
+                <input type="number" step="0.01" min="0" name="monthly_payment" value="<?= h((string)$loan['monthly_payment']) ?>" required>
+            </label>
+            <label>Original date
+                <input type="date" name="original_date" value="<?= h((string)$loan['original_date']) ?>">
+            </label>
+            <label>Original balance
+                <input type="number" step="0.01" min="0" name="original_balance" value="<?= h((string)$loan['original_balance']) ?>">
+            </label>
+            <label>Extra principal per month
+                <input type="number" step="0.01" min="0" name="extra_monthly" value="<?= h((string)$loan['extra_monthly']) ?>">
+            </label>
+            <label>Blue moon / annual payment
+                <input type="number" step="0.01" min="0" name="annual_extra" value="<?= h((string)$loan['annual_extra']) ?>">
+            </label>
+            <label>Blue moon month
+                <select name="annual_extra_month">
+                    <?php for ($month = 1; $month <= 12; $month++): ?>
+                    <option value="<?= $month ?>"<?= (int)$loan['annual_extra_month'] === $month ? ' selected' : '' ?>><?= h(monthName($month)) ?></option>
+                    <?php endfor; ?>
+                </select>
+            </label>
+            <label>One-time lump sum
+                <input type="number" step="0.01" min="0" name="lump_sum" value="<?= h((string)$loan['lump_sum']) ?>">
+            </label>
+            <label class="full-width">Notes
+                <textarea name="notes" rows="2"><?= h((string)$loan['notes']) ?></textarea>
+            </label>
+            <div class="actions full-width">
+                <button type="submit"<?= $canEditCurrentDataset ? '' : ' disabled' ?>>Save Loan</button>
+            </div>
+        </form>
+
+        <?php if ($canEditCurrentDataset): ?>
+        <form method="post" class="inline-form">
+            <input type="hidden" name="action" value="delete_loan">
+            <input type="hidden" name="dataset_owner" value="<?= h($datasetOwner) ?>">
+            <input type="hidden" name="loan_id" value="<?= h((string)$loan['id']) ?>">
+            <button type="submit" class="danger" onclick="return confirm('Delete this loan?');">Delete Loan</button>
+        </form>
+        <?php endif; ?>
+
+        <details class="schedule-block" open>
+            <summary>Adjusted amortization table</summary>
+            <div class="table-wrap">
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Month</th>
+                            <th>Start Balance</th>
+                            <th>Payment</th>
+                            <th>Principal</th>
+                            <th>Interest</th>
+                            <th>Extra</th>
+                            <th>End Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($summary['accelerated']['rows'] as $row): ?>
+                        <tr>
+                            <td><?= h((string)$row['payment_number']) ?></td>
+                            <td><?= h($row['period']) ?></td>
+                            <td><?= h(currency($row['starting_balance'])) ?></td>
+                            <td><?= h(currency($row['payment'])) ?></td>
+                            <td><?= h(currency($row['principal'])) ?></td>
+                            <td><?= h(currency($row['interest'])) ?></td>
+                            <td><?= h(currency($row['extra'])) ?></td>
+                            <td><?= h(currency($row['ending_balance'])) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </details>
+
+        <details class="schedule-block">
+            <summary>Standard amortization table</summary>
+            <div class="table-wrap">
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Month</th>
+                            <th>Start Balance</th>
+                            <th>Payment</th>
+                            <th>Principal</th>
+                            <th>Interest</th>
+                            <th>Extra</th>
+                            <th>End Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($summary['baseline']['rows'] as $row): ?>
+                        <tr>
+                            <td><?= h((string)$row['payment_number']) ?></td>
+                            <td><?= h($row['period']) ?></td>
+                            <td><?= h(currency($row['starting_balance'])) ?></td>
+                            <td><?= h(currency($row['payment'])) ?></td>
+                            <td><?= h(currency($row['principal'])) ?></td>
+                            <td><?= h(currency($row['interest'])) ?></td>
+                            <td><?= h(currency($row['extra'])) ?></td>
+                            <td><?= h(currency($row['ending_balance'])) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </details>
+    </section>
+    <?php endforeach; ?>
+</main>
+</body>
+</html>

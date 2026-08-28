@@ -1,0 +1,131 @@
+<?php
+/**
+ * File: settings.php
+ * Project: TV Binge Board
+ * Description: User profile, email, avatar, sharing preferences, dashboard prompt preferences, app install/reload links, exports, imports, suggestions, and account actions.
+ * Author: Jason Lamb / ChatGPT
+ * Created: 2026-07-02
+ * Modified: 2026-07-05
+ * Revision: 1.5.20
+ */
+declare(strict_types=1);
+
+require_once __DIR__ . '/includes/functions.php';
+$user = app_require_login();
+$profile = app_profile((string)$user['username']);
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    app_verify_csrf();
+    $email = trim((string)($_POST['email'] ?? $profile['email'] ?? $user['email'] ?? ''));
+    $profile['display_name'] = trim((string)($_POST['display_name'] ?? $profile['display_name'] ?? $user['username']));
+    $profile['email'] = filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : '';
+    $profile['bio'] = trim((string)($_POST['bio'] ?? ''));
+    $profile['avatar_url'] = trim((string)($_POST['avatar_url'] ?? ''));
+    $profile['public_share_enabled'] = isset($_POST['public_share_enabled']);
+    $profile['hide_install_prompt'] = !isset($_POST['show_install_prompt']);
+    app_save_profile((string)$user['username'], $profile);
+
+    $user['display_name'] = $profile['display_name'];
+    $user['email'] = $profile['email'];
+    $user['public_share_enabled'] = $profile['public_share_enabled'];
+    app_update_account($user);
+
+    app_flash('Settings saved.', 'success');
+    header('Location: settings.php');
+    exit;
+}
+
+app_page_header('Settings');
+?>
+<section class="card">
+    <h1>Settings</h1>
+    <form method="post" class="stack">
+        <input type="hidden" name="csrf_token" value="<?= e(app_csrf_token()) ?>">
+        <div class="profile-heading">
+            <?= app_render_avatar($profile, (string)$user['username'], 64) ?>
+            <div><strong><?= e((string)($profile['display_name'] ?? $user['username'])) ?></strong><p class="muted">@<?= e((string)$user['username']) ?></p></div>
+        </div>
+        <label>Display name
+            <input name="display_name" value="<?= e((string)($profile['display_name'] ?? $user['display_name'] ?? $user['username'])) ?>">
+        </label>
+        <label>Email for suggestions
+            <input type="email" name="email" value="<?= e((string)($profile['email'] ?? $user['email'] ?? '')) ?>" placeholder="name@example.com">
+        </label>
+        <label>Avatar image URL
+            <input name="avatar_url" value="<?= e((string)($profile['avatar_url'] ?? '')) ?>" placeholder="https://example.com/avatar.png">
+        </label>
+        <label>Bio
+            <textarea name="bio" rows="3"><?= e((string)($profile['bio'] ?? '')) ?></textarea>
+        </label>
+        <?php if (app_can_track($user)): ?>
+        <label class="checkbox-row">
+            <input type="checkbox" name="public_share_enabled" value="1" <?= !empty($profile['public_share_enabled']) ? 'checked' : '' ?>>
+            Share my list publicly
+        </label>
+        <p class="muted">Public URL: <a href="public.php?u=<?= e($user['username']) ?>">public.php?u=<?= e($user['username']) ?></a></p>
+        <?php else: ?>
+        <p class="muted">Admin accounts do not have public tracking lists.</p>
+        <?php endif; ?>
+        <label class="checkbox-row">
+            <input type="checkbox" name="show_install_prompt" value="1" <?= empty($profile['hide_install_prompt']) ? 'checked' : '' ?>>
+            Show the Add to Home Screen reminder on Home
+        </label>
+        <button type="submit">Save settings</button>
+    </form>
+</section>
+<section class="card">
+    <h2>Suggestions</h2>
+    <p class="muted">Open the public suggestion and bug board.</p>
+    <div class="actions"><a class="button secondary" href="suggestions.php">Suggestions / bugs</a></div>
+</section>
+<section class="card">
+    <h2>App install and reload</h2>
+    <p class="muted">Use these when you want install instructions or a manual refresh of the app shell after updates.</p>
+    <div class="actions">
+        <a class="button secondary" href="install.php">Install / Add to Home Screen</a>
+        <button class="secondary" type="button" data-app-reload>Reload latest app files</button>
+    </div>
+    <p class="muted" data-app-update-status></p>
+</section>
+<section class="card">
+    <h2>Data</h2>
+    <?php if (app_can_track($user)): ?>
+    <div class="actions">
+        <a class="button secondary" href="export.php?format=json">Export JSON</a>
+        <a class="button secondary" href="export.php?format=csv">Export CSV</a>
+        <a class="button secondary" href="import.php">Import data</a>
+        <a class="button secondary" href="upload-screenshot.php">Upload screenshot</a>
+    </div>
+    <?php else: ?>
+    <p class="muted">Use the admin user list to export individual user libraries.</p>
+    <?php endif; ?>
+</section>
+<section class="card">
+    <h2>Account</h2>
+    <div class="actions"><a class="button secondary" href="change-password.php">Change password</a><a class="button secondary" href="logout.php">Sign out</a></div>
+</section>
+<script>
+document.querySelectorAll('[data-app-reload]').forEach(function (button) {
+    button.addEventListener('click', function () {
+        var status = document.querySelector('[data-app-update-status]');
+        if (status) { status.textContent = 'Reloading latest app files...'; }
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistration().then(function (registration) {
+                if (registration && registration.waiting) {
+                    registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                    window.setTimeout(function () { window.location.reload(); }, 900);
+                    return;
+                }
+                if (registration) {
+                    registration.update().finally(function () { window.location.reload(); });
+                    return;
+                }
+                window.location.reload();
+            }).catch(function () { window.location.reload(); });
+            return;
+        }
+        window.location.reload();
+    });
+});
+</script>
+<?php app_page_footer(); ?>

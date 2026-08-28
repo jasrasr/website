@@ -1,0 +1,19 @@
+{
+  "name": "Friends & Family GPS Tracker",
+  "short_name": "Family Tracker",
+  "description": "Private family and friend-circle location sharing.",
+  "start_url": "./index.php",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b1020",
+  "theme_color": "#101827",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "assets/icons/family-tracker.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

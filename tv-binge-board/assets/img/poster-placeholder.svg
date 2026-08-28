@@ -1,0 +1,17 @@
+<!--
+File: assets/img/poster-placeholder.svg
+Project: TV Binge Board
+Description: Poster placeholder image used when media metadata has no artwork.
+Author: Jason Lamb / ChatGPT
+Created: 2026-07-02
+Modified: 2026-07-02
+Revision: 1.4.2
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="342" height="513" viewBox="0 0 342 513" role="img" aria-labelledby="title desc">
+  <title id="title">Poster placeholder</title>
+  <desc id="desc">A simple placeholder image for movies and TV shows without posters.</desc>
+  <rect width="342" height="513" fill="#1f2937"/>
+  <rect x="28" y="28" width="286" height="457" rx="24" fill="#111827" stroke="#374151" stroke-width="4"/>
+  <text x="171" y="238" text-anchor="middle" fill="#9ca3af" font-family="Arial, sans-serif" font-size="28" font-weight="700">No Poster</text>
+  <text x="171" y="278" text-anchor="middle" fill="#6b7280" font-family="Arial, sans-serif" font-size="18">TV Binge Board</text>
+</svg>

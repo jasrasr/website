@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 /**
  * Filename: scoreboards.php
- * Revision : 1.5.0
+ * Revision : 1.6.0
  * Description : Navigation page for all CVC Scoreboard instances the signed-in user can access.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-06-02
- * Modified Date : 2026-06-13
+ * Modified Date : 2026-06-23
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Opened to any signed-in user; filters listed instances by user's scoreboard access
@@ -13,6 +13,8 @@
  * 1.3.0 Added Frontlines team roster link
  * 1.4.0 Show notice when redirected here after attempting an off-limits scoreboard
  * 1.5.0 Rename Root scoreboard label to Default
+ * 1.5.1 Load the shared light/dark theme toggle
+ * 1.6.0 Add Frontlines Full Rankings link for signed-in admins/scorers
  */
 
 require __DIR__ . '/auth.php';
@@ -26,6 +28,7 @@ $scoreboards = [
         'admin' => './enter-scores.php',
         'quick' => './enter-scores-quick.php',
         'teams' => null,
+        'rankings' => null,
     ],
     [
         'id' => 'collide',
@@ -34,6 +37,7 @@ $scoreboards = [
         'admin' => './collide/enter-scores.php',
         'quick' => './collide/enter-scores-quick.php',
         'teams' => null,
+        'rankings' => null,
     ],
     [
         'id' => 'youth',
@@ -42,6 +46,7 @@ $scoreboards = [
         'admin' => './youth/enter-scores.php',
         'quick' => './youth/enter-scores-quick.php',
         'teams' => null,
+        'rankings' => null,
     ],
     [
         'id' => 'frontlines',
@@ -50,6 +55,7 @@ $scoreboards = [
         'admin' => './frontlines/enter-scores.php',
         'quick' => './frontlines/enter-scores-quick.php',
         'teams' => './frontlines/teams.php',
+        'rankings' => './frontlines/rankings.php',
     ],
 ];
 
@@ -111,6 +117,9 @@ if (isset($_GET['denied'])) {
                 <?php if (!empty($scoreboard['teams'])): ?>
                   <a class="au-btn" href="<?= htmlspecialchars($scoreboard['teams']) ?>">Teams</a>
                 <?php endif; ?>
+                <?php if (!empty($scoreboard['rankings'])): ?>
+                  <a class="au-btn" href="<?= htmlspecialchars($scoreboard['rankings']) ?>">Full Rankings</a>
+                <?php endif; ?>
               </div>
             </section>
           <?php endforeach; ?>
@@ -123,5 +132,6 @@ if (isset($_GET['denied'])) {
         <a class="au-btn" href="./logout.php">Sign Out</a>
       </section>
     </div>
+    <script src="./public/theme-toggle.js?v=<?= filemtime(__DIR__ . '/public/theme-toggle.js') ?>" defer></script>
   </body>
 </html>

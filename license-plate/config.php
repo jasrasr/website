@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.0.0
-    Description: Shared configuration for batch license plate photo uploads, extraction, duplicate detection, and JSON logging.
+    Revision: 1.2.28
+    Description: Shared configuration for batch license plate photo uploads, metadata/state extraction, changelog helpers, duplicate cleanup, live reprocessing, manual entry updates, deleted-item audit handling, deleted purge logging, and case-safe changelog path resolution.
 */
 
 declare(strict_types=1);
@@ -10,13 +10,17 @@ declare(strict_types=1);
 date_default_timezone_set('America/New_York');
 
 const APP_NAME = 'License Plate Photo Logger';
-const APP_REVISION = '1.0.0';
-const APP_UPDATED = '2026-05-08';
+const APP_REVISION = '1.2.21';
+const APP_UPDATED = '2026-07-25';
 
 const DATA_DIR = __DIR__ . '/data';
 const UPLOAD_DIR = __DIR__ . '/uploads';
+const DELETED_DIR = __DIR__ . '/deleted';
 const LOG_FILE = DATA_DIR . '/plate-log.json';
 const HASH_INDEX_FILE = DATA_DIR . '/file-hashes.json';
+const DELETED_AUDIT_FILE = DATA_DIR . '/deleted-audit.json';
+const DELETED_PURGE_LOG_FILE = DATA_DIR . '/deleted-purge-log.json';
+const CHANGELOG_FILE = __DIR__ . '/CHANGELOG.md';
 const MAX_UPLOAD_BYTES = 12 * 1024 * 1024;
 
 // ai = OpenAI vision parser, ocrspace = OCR.Space text extraction plus local plate cleanup,
@@ -51,7 +55,7 @@ $allowedMimeTypes = [
 
 function ensureAppFolders(): void
 {
-    foreach ([DATA_DIR, UPLOAD_DIR] as $dir) {
+    foreach ([DATA_DIR, UPLOAD_DIR, DELETED_DIR] as $dir) {
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
         }
@@ -93,11 +97,393 @@ function readHashIndex(): array
     return readJsonFile(HASH_INDEX_FILE);
 }
 
+function readDeletedAuditEntries(): array
+{
+    $entries = readJsonFile(DELETED_AUDIT_FILE);
+    usort($entries, fn($a, $b) => strcmp((string)($b['deleted_at'] ?? ''), (string)($a['deleted_at'] ?? '')));
+    return $entries;
+}
+
+function readDeletedPurgeLogEntries(): array
+{
+    $entries = readJsonFile(DELETED_PURGE_LOG_FILE);
+    usort($entries, fn($a, $b) => strcmp((string)($b['purged_at'] ?? ''), (string)($a['purged_at'] ?? '')));
+    return $entries;
+}
+
+function readProjectRevision(): string
+{
+    $versionFile = __DIR__ . '/VERSION.txt';
+    if (is_file($versionFile)) {
+        $version = trim((string)file_get_contents($versionFile));
+        if ($version !== '') {
+            return $version;
+        }
+    }
+    return APP_REVISION;
+}
+
+function readProjectModifiedAt(): string
+{
+    $changelogPath = resolveChangelogPath();
+    if ($changelogPath === null) {
+        return '';
+    }
+    $timestamp = filemtime($changelogPath);
+    return $timestamp ? date('Y-m-d H:i:s', $timestamp) : '';
+}
+
+function changelogHtml(): string
+{
+    $changelogPath = resolveChangelogPath();
+    if ($changelogPath === null) {
+        return '<p class="small">No changelog is available.</p>';
+    }
+
+    $lines = preg_split("/\r\n|\n|\r/", (string)file_get_contents($changelogPath)) ?: [];
+    $html = [];
+    $inList = false;
+
+    foreach ($lines as $line) {
+        $trimmed = trim($line);
+        if ($trimmed === '') {
+            if ($inList) {
+                $html[] = '</ul>';
+                $inList = false;
+            }
+            continue;
+        }
+
+        if (preg_match('/^##\s+(.+)$/', $trimmed, $matches)) {
+            if ($inList) {
+                $html[] = '</ul>';
+                $inList = false;
+            }
+            $html[] = '<h2>' . h($matches[1]) . '</h2>';
+            continue;
+        }
+
+        if (preg_match('/^###\s+(.+)$/', $trimmed, $matches)) {
+            if ($inList) {
+                $html[] = '</ul>';
+                $inList = false;
+            }
+            $html[] = '<h3>' . h($matches[1]) . '</h3>';
+            continue;
+        }
+
+        if (preg_match('/^- (.+)$/', $trimmed, $matches)) {
+            if (!$inList) {
+                $html[] = '<ul>';
+                $inList = true;
+            }
+            $html[] = '<li>' . h($matches[1]) . '</li>';
+            continue;
+        }
+
+        if ($inList) {
+            $html[] = '</ul>';
+            $inList = false;
+        }
+        $html[] = '<p>' . h($trimmed) . '</p>';
+    }
+
+    if ($inList) {
+        $html[] = '</ul>';
+    }
+
+    return implode("\n", $html);
+}
+
+function resolveChangelogPath(): ?string
+{
+    $candidates = [
+        CHANGELOG_FILE,
+        __DIR__ . '/changelog.md',
+    ];
+
+    foreach ($candidates as $candidate) {
+        if (is_file($candidate)) {
+            return $candidate;
+        }
+    }
+
+    return null;
+}
+
 function normalizePlateText(string $value): string
 {
     $value = strtoupper($value);
     $value = preg_replace('/[^A-Z0-9]/', '', $value);
     return trim($value ?? '');
+}
+
+function normalizeConfidenceValue(float|int|string|null $value): int
+{
+    $numeric = (float)($value ?? 0);
+    if ($numeric >= 0 && $numeric <= 1) {
+        $numeric *= 100;
+    }
+    $normalized = (int)round($numeric);
+    return max(0, min(100, $normalized));
+}
+
+function normalizePreferenceRank(mixed $value): ?int
+{
+    if ($value === null || $value === '') {
+        return null;
+    }
+    $rank = (int)$value;
+    if ($rank < 1 || $rank > 10) {
+        return null;
+    }
+    return $rank;
+}
+
+function normalizeBooleanFlag(mixed $value): bool
+{
+    if (is_bool($value)) {
+        return $value;
+    }
+    $normalized = strtolower(trim((string)$value));
+    return in_array($normalized, ['1', 'true', 'yes', 'on'], true);
+}
+
+function scanModeLabel(string $mode): string
+{
+    return match($mode) {
+        'ai' => 'OpenAI',
+        'ocrspace' => 'OCR.Space',
+        'tesseract' => 'Tesseract',
+        'manual' => 'Manual',
+        default => $mode,
+    };
+}
+
+function entryScannerLabel(array $entry): string
+{
+    $label = scanModeLabel((string)($entry['scan_mode'] ?? ''));
+    if (!empty($entry['manual_corrected'])) {
+        $label .= ' + Manual';
+    }
+    return $label;
+}
+
+function daysSinceIsoTimestamp(string $timestamp): ?int
+{
+    if ($timestamp === '') {
+        return null;
+    }
+    try {
+        $deletedAt = new DateTimeImmutable($timestamp);
+        $now = new DateTimeImmutable('now');
+        return max(0, (int)$deletedAt->diff($now)->days);
+    } catch (Exception) {
+        return null;
+    }
+}
+
+function usStateMap(): array
+{
+    return [
+        'AL' => 'Alabama', 'AK' => 'Alaska', 'AZ' => 'Arizona', 'AR' => 'Arkansas',
+        'CA' => 'California', 'CO' => 'Colorado', 'CT' => 'Connecticut', 'DE' => 'Delaware',
+        'FL' => 'Florida', 'GA' => 'Georgia', 'HI' => 'Hawaii', 'ID' => 'Idaho',
+        'IL' => 'Illinois', 'IN' => 'Indiana', 'IA' => 'Iowa', 'KS' => 'Kansas',
+        'KY' => 'Kentucky', 'LA' => 'Louisiana', 'ME' => 'Maine', 'MD' => 'Maryland',
+        'MA' => 'Massachusetts', 'MI' => 'Michigan', 'MN' => 'Minnesota', 'MS' => 'Mississippi',
+        'MO' => 'Missouri', 'MT' => 'Montana', 'NE' => 'Nebraska', 'NV' => 'Nevada',
+        'NH' => 'New Hampshire', 'NJ' => 'New Jersey', 'NM' => 'New Mexico', 'NY' => 'New York',
+        'NC' => 'North Carolina', 'ND' => 'North Dakota', 'OH' => 'Ohio', 'OK' => 'Oklahoma',
+        'OR' => 'Oregon', 'PA' => 'Pennsylvania', 'RI' => 'Rhode Island', 'SC' => 'South Carolina',
+        'SD' => 'South Dakota', 'TN' => 'Tennessee', 'TX' => 'Texas', 'UT' => 'Utah',
+        'VT' => 'Vermont', 'VA' => 'Virginia', 'WA' => 'Washington', 'WV' => 'West Virginia',
+        'WI' => 'Wisconsin', 'WY' => 'Wyoming', 'DC' => 'District of Columbia',
+    ];
+}
+
+function normalizeUsStateName(string|null $value): string
+{
+    $value = trim((string)$value);
+    if ($value === '') {
+        return '';
+    }
+
+    $map = usStateMap();
+    $upper = strtoupper($value);
+    if (isset($map[$upper])) {
+        return $map[$upper];
+    }
+
+    $normalized = trim(preg_replace('/\s+/', ' ', preg_replace('/[^A-Z ]+/', ' ', $upper) ?? '') ?? '');
+    if ($normalized === '') {
+        return '';
+    }
+
+    foreach ($map as $name) {
+        if (strtoupper($name) === $normalized) {
+            return $name;
+        }
+    }
+
+    return '';
+}
+
+function extractPlateStateFromText(string $text): string
+{
+    $text = strtoupper($text);
+    $clean = trim(preg_replace('/\s+/', ' ', preg_replace('/[^A-Z ]+/', ' ', $text) ?? '') ?? '');
+    if ($clean === '') {
+        return '';
+    }
+
+    foreach (usStateMap() as $abbr => $name) {
+        if (preg_match('/\b' . preg_quote(strtoupper($name), '/') . '\b/', $clean)) {
+            return $name;
+        }
+    }
+
+    foreach (usStateMap() as $abbr => $name) {
+        if (preg_match('/\b' . preg_quote($abbr, '/') . '\b/', $clean)) {
+            return $name;
+        }
+    }
+
+    return '';
+}
+
+function parseExifFraction(mixed $value): ?float
+{
+    if (is_numeric($value)) {
+        return (float)$value;
+    }
+    if (!is_string($value) || $value === '') {
+        return null;
+    }
+    if (!str_contains($value, '/')) {
+        return is_numeric($value) ? (float)$value : null;
+    }
+
+    [$numerator, $denominator] = array_pad(explode('/', $value, 2), 2, '1');
+    if (!is_numeric($numerator) || !is_numeric($denominator) || (float)$denominator === 0.0) {
+        return null;
+    }
+
+    return (float)$numerator / (float)$denominator;
+}
+
+function parseExifGpsCoordinate(mixed $parts, string $ref): ?float
+{
+    if (!is_array($parts) || count($parts) < 3) {
+        return null;
+    }
+
+    $degrees = parseExifFraction($parts[0]);
+    $minutes = parseExifFraction($parts[1]);
+    $seconds = parseExifFraction($parts[2]);
+    if ($degrees === null || $minutes === null || $seconds === null) {
+        return null;
+    }
+
+    $value = $degrees + ($minutes / 60) + ($seconds / 3600);
+    if (in_array(strtoupper($ref), ['S', 'W'], true)) {
+        $value *= -1;
+    }
+    return round($value, 6);
+}
+
+function normalizeDateTaken(string|null $value): string
+{
+    $value = trim((string)$value);
+    if ($value === '') {
+        return '';
+    }
+
+    foreach (['Y:m:d H:i:s', 'Y-m-d H:i:s', DATE_ATOM] as $format) {
+        $date = DateTimeImmutable::createFromFormat($format, $value);
+        if ($date instanceof DateTimeImmutable) {
+            return $date->format('c');
+        }
+    }
+
+    $timestamp = strtotime($value);
+    return $timestamp ? date('c', $timestamp) : '';
+}
+
+function displayEasternDateTime(string|null $value): string
+{
+    $value = trim((string)$value);
+    if ($value === '') {
+        return '';
+    }
+
+    try {
+        $date = new DateTimeImmutable($value);
+        return $date->setTimezone(new DateTimeZone('America/New_York'))->format('Y-m-d H:i:s');
+    } catch (Exception) {
+        $timestamp = strtotime($value);
+        return $timestamp ? date('Y-m-d H:i:s', $timestamp) : '';
+    }
+}
+
+function displayEasternDate(string|null $value): string
+{
+    $display = displayEasternDateTime($value);
+    return $display === '' ? '' : substr($display, 0, 10);
+}
+
+function displayDateTime(string|null $value): string
+{
+    $normalized = normalizeDateTaken($value);
+    return $normalized === '' ? '' : displayEasternDateTime($normalized);
+}
+
+function formatGpsDisplay(?float $latitude, ?float $longitude): string
+{
+    if ($latitude === null || $longitude === null) {
+        return '';
+    }
+    return number_format($latitude, 6, '.', '') . ', ' . number_format($longitude, 6, '.', '');
+}
+
+function extractImageMetadata(string $imagePath): array
+{
+    $metadata = [
+        'date_taken' => '',
+        'photo_state' => '',
+        'gps_latitude' => null,
+        'gps_longitude' => null,
+        'gps_display' => '',
+    ];
+
+    $info = [];
+    if (function_exists('getimagesize')) {
+        @getimagesize($imagePath, $info);
+        if (!empty($info['APP13']) && function_exists('iptcparse')) {
+            $iptc = @iptcparse($info['APP13']);
+            if (is_array($iptc)) {
+                $metadata['photo_state'] = normalizeUsStateName($iptc['2#095'][0] ?? '');
+                $metadata['date_taken'] = normalizeDateTaken($iptc['2#055'][0] ?? '');
+            }
+        }
+    }
+
+    if (function_exists('exif_read_data')) {
+        $exif = @exif_read_data($imagePath, null, true, false);
+        if (is_array($exif)) {
+            if ($metadata['date_taken'] === '') {
+                $metadata['date_taken'] = normalizeDateTaken($exif['EXIF']['DateTimeOriginal'] ?? $exif['IFD0']['DateTime'] ?? '');
+            }
+
+            $latitude = parseExifGpsCoordinate($exif['GPS']['GPSLatitude'] ?? null, (string)($exif['GPS']['GPSLatitudeRef'] ?? ''));
+            $longitude = parseExifGpsCoordinate($exif['GPS']['GPSLongitude'] ?? null, (string)($exif['GPS']['GPSLongitudeRef'] ?? ''));
+            $metadata['gps_latitude'] = $latitude;
+            $metadata['gps_longitude'] = $longitude;
+            $metadata['gps_display'] = formatGpsDisplay($latitude, $longitude);
+        }
+    }
+
+    return $metadata;
 }
 
 function extractPlateCandidatesFromText(string $text): array
@@ -126,6 +512,513 @@ function plateCounts(array $entries): array
     }
     arsort($counts);
     return $counts;
+}
+
+function createImageResource(string $path, string $mimeType): mixed
+{
+    return match(strtolower($mimeType)) {
+        'image/jpeg' => @imagecreatefromjpeg($path),
+        'image/png' => @imagecreatefrompng($path),
+        'image/webp' => function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($path) : false,
+        default => false,
+    };
+}
+
+function computeImageClarityScore(string $path, string $mimeType): int
+{
+    if (!function_exists('imagecreatetruecolor')) {
+        return 0;
+    }
+
+    $src = createImageResource($path, $mimeType);
+    if (!$src) {
+        return 0;
+    }
+
+    $width = imagesx($src);
+    $height = imagesy($src);
+    if ($width < 2 || $height < 2) {
+        imagedestroy($src);
+        return 0;
+    }
+
+    $maxDim = 220;
+    $scale = min($maxDim / $width, $maxDim / $height, 1);
+    $sampleW = max(2, (int)round($width * $scale));
+    $sampleH = max(2, (int)round($height * $scale));
+    $sample = imagecreatetruecolor($sampleW, $sampleH);
+    imagecopyresampled($sample, $src, 0, 0, 0, 0, $sampleW, $sampleH, $width, $height);
+    imagedestroy($src);
+
+    $grayscale = [];
+    for ($y = 0; $y < $sampleH; $y++) {
+        $grayscale[$y] = [];
+        for ($x = 0; $x < $sampleW; $x++) {
+            $rgb = imagecolorat($sample, $x, $y);
+            $r = ($rgb >> 16) & 0xFF;
+            $g = ($rgb >> 8) & 0xFF;
+            $b = $rgb & 0xFF;
+            $grayscale[$y][$x] = (int)round(($r * 0.299) + ($g * 0.587) + ($b * 0.114));
+        }
+    }
+    imagedestroy($sample);
+
+    $edgeTotal = 0.0;
+    $samples = 0;
+    for ($y = 0; $y < $sampleH - 1; $y++) {
+        for ($x = 0; $x < $sampleW - 1; $x++) {
+            $current = $grayscale[$y][$x];
+            $edgeTotal += abs($current - $grayscale[$y][$x + 1]);
+            $edgeTotal += abs($current - $grayscale[$y + 1][$x]);
+            $samples += 2;
+        }
+    }
+
+    if ($samples === 0) {
+        return 0;
+    }
+
+    return (int)round(($edgeTotal / $samples) * 10);
+}
+
+function recalculatePlateClarityFlags(array &$entries): void
+{
+    $groups = [];
+
+    foreach ($entries as $index => $entry) {
+        $entries[$index]['best_plate_photo'] = false;
+        $status = $entry['scan_status'] ?? (empty($entry['error']) ? 'complete' : 'pending');
+        $plate = normalizePlateText((string)($entry['plate_normalized'] ?? $entry['plate'] ?? ''));
+        if ($status !== 'complete' || $plate === '') {
+            continue;
+        }
+        $groups[$plate][] = $index;
+    }
+
+    foreach ($groups as $indexes) {
+        if (count($indexes) < 2) {
+            continue;
+        }
+
+        $bestScore = null;
+        foreach ($indexes as $index) {
+            $score = (int)($entries[$index]['clarity_score'] ?? 0);
+            if ($bestScore === null || $score > $bestScore) {
+                $bestScore = $score;
+            }
+        }
+
+        if ($bestScore === null) {
+            continue;
+        }
+
+        foreach ($indexes as $index) {
+            $entries[$index]['best_plate_photo'] = (int)($entries[$index]['clarity_score'] ?? 0) === $bestScore;
+        }
+    }
+}
+
+function refreshDuplicatePlateFlags(array &$entries): void
+{
+    $totals = [];
+    foreach ($entries as $entry) {
+        $status = $entry['scan_status'] ?? (empty($entry['error']) ? 'complete' : 'pending');
+        $plate = normalizePlateText((string)($entry['plate_normalized'] ?? $entry['plate'] ?? ''));
+        if ($status === 'complete' && $plate !== '') {
+            $totals[$plate] = ($totals[$plate] ?? 0) + 1;
+        }
+    }
+
+    foreach ($entries as $index => $entry) {
+        $plate = normalizePlateText((string)($entry['plate_normalized'] ?? $entry['plate'] ?? ''));
+        $entries[$index]['duplicate_plate'] = $plate !== '' && ($totals[$plate] ?? 0) > 1;
+    }
+}
+
+function rebuildHashIndexFromEntries(array $entries): array
+{
+    $index = [];
+    foreach ($entries as $entry) {
+        $hash = (string)($entry['sha256'] ?? '');
+        if ($hash === '' || isset($index[$hash])) {
+            continue;
+        }
+
+        $index[$hash] = [
+            'id' => $entry['id'] ?? '',
+            'stored_file' => $entry['stored_file'] ?? '',
+            'original_file' => $entry['original_file'] ?? '',
+            'plate' => $entry['plate'] ?? '',
+            'plate_state' => $entry['plate_state'] ?? '',
+            'confidence' => $entry['confidence'] ?? 0,
+            'processed_at' => $entry['processed_at'] ?? '',
+            'scan_mode' => $entry['scan_mode'] ?? '',
+            'scan_status' => $entry['scan_status'] ?? '',
+            'error' => $entry['error'] ?? '',
+            'clarity_score' => $entry['clarity_score'] ?? 0,
+            'best_plate_photo' => $entry['best_plate_photo'] ?? false,
+            'manual_corrected' => $entry['manual_corrected'] ?? false,
+            'photo_state' => $entry['photo_state'] ?? '',
+            'date_taken' => $entry['date_taken'] ?? '',
+            'gps_latitude' => $entry['gps_latitude'] ?? null,
+            'gps_longitude' => $entry['gps_longitude'] ?? null,
+            'gps_display' => $entry['gps_display'] ?? '',
+        ];
+    }
+    return $index;
+}
+
+function processSavedLogEntry(string $id, bool $requirePending = false): array
+{
+    $entries = readLogEntries();
+    $entryIndex = null;
+
+    foreach ($entries as $index => $entry) {
+        if ((string)($entry['id'] ?? '') === $id) {
+            $entryIndex = $index;
+            break;
+        }
+    }
+
+    if ($entryIndex === null) {
+        return ['http_status' => 404, 'error' => 'Entry not found.'];
+    }
+
+    $entry = $entries[$entryIndex];
+    $status = $entry['scan_status'] ?? (empty($entry['error']) ? 'complete' : 'pending');
+    if ($requirePending && $status !== 'pending') {
+        return ['http_status' => 409, 'error' => 'Entry is not pending.'];
+    }
+
+    $storedFile = basename((string)($entry['stored_file'] ?? ''));
+    $imagePath = UPLOAD_DIR . '/' . $storedFile;
+    if ($storedFile === '' || !is_file($imagePath)) {
+        return ['http_status' => 404, 'error' => 'Stored image not found.'];
+    }
+
+    $mimeType = mime_content_type($imagePath) ?: 'application/octet-stream';
+    $scan = scanImage($imagePath, $mimeType);
+    $scanError = trim((string)($scan['error'] ?? ''));
+    $attempts = (int)($entry['scan_attempts'] ?? 1) + 1;
+
+    $entries[$entryIndex]['scan_attempts'] = $attempts;
+    $entries[$entryIndex]['last_scan_attempt_at'] = date('c');
+    $entries[$entryIndex]['scan_mode'] = SCAN_MODE;
+
+    if ($scanError !== '') {
+        $entries[$entryIndex]['scan_status'] = 'pending';
+        $entries[$entryIndex]['error'] = $scanError;
+        refreshDuplicatePlateFlags($entries);
+        recalculatePlateClarityFlags($entries);
+        writeJsonFile(LOG_FILE, $entries);
+        writeJsonFile(HASH_INDEX_FILE, rebuildHashIndexFromEntries($entries));
+
+        return [
+            'http_status' => 422,
+            'id' => $id,
+            'status' => 'pending',
+            'error' => $scanError,
+            'scan_attempts' => $attempts,
+            'scanner_label' => entryScannerLabel($entries[$entryIndex]),
+        ];
+    }
+
+    $value = normalizePlateText((string)($scan['plate'] ?? ''));
+    $plateState = normalizeUsStateName((string)($scan['state'] ?? ''));
+    $entries[$entryIndex]['plate'] = $value;
+    $entries[$entryIndex]['plate_normalized'] = $value;
+    $entries[$entryIndex]['plate_state'] = $plateState;
+    $entries[$entryIndex]['confidence'] = normalizeConfidenceValue($scan['confidence'] ?? 0);
+    $entries[$entryIndex]['raw_text'] = (string)($scan['raw_text'] ?? '');
+    $entries[$entryIndex]['error'] = '';
+    $entries[$entryIndex]['scan_status'] = 'complete';
+    $entries[$entryIndex]['processed_at'] = date('c');
+    $entries[$entryIndex]['manual_corrected'] = false;
+    unset($entries[$entryIndex]['manual_corrected_at']);
+    if (!isset($entries[$entryIndex]['clarity_score'])) {
+        $entries[$entryIndex]['clarity_score'] = computeImageClarityScore($imagePath, $mimeType);
+    }
+
+    refreshDuplicatePlateFlags($entries);
+    recalculatePlateClarityFlags($entries);
+    writeJsonFile(LOG_FILE, $entries);
+    writeJsonFile(HASH_INDEX_FILE, rebuildHashIndexFromEntries($entries));
+
+    $plateCount = 0;
+    if ($value !== '') {
+        foreach ($entries as $candidate) {
+            $candidateStatus = $candidate['scan_status'] ?? (empty($candidate['error']) ? 'complete' : 'pending');
+            $candidateValue = normalizePlateText((string)($candidate['plate_normalized'] ?? $candidate['plate'] ?? ''));
+            if ($candidateStatus === 'complete' && $candidateValue === $value) {
+                $plateCount++;
+            }
+        }
+    }
+
+    return [
+        'http_status' => 200,
+        'id' => $id,
+        'status' => 'complete',
+        'plate' => $value,
+        'plate_state' => $entries[$entryIndex]['plate_state'] ?? '',
+        'confidence' => $entries[$entryIndex]['confidence'] ?? 0,
+        'clarity_score' => $entries[$entryIndex]['clarity_score'] ?? 0,
+        'best_plate_photo' => !empty($entries[$entryIndex]['best_plate_photo']),
+        'duplicate_plate' => !empty($entries[$entryIndex]['duplicate_plate']),
+        'duplicate_file' => !empty($entries[$entryIndex]['duplicate_file']),
+        'plate_count' => $plateCount,
+        'scan_attempts' => $attempts,
+        'scanner_label' => entryScannerLabel($entries[$entryIndex]),
+        'error' => '',
+    ];
+}
+
+function updateLogEntry(string $id, array $changes): ?array
+{
+    $entries = readLogEntries();
+    $entryIndex = null;
+    foreach ($entries as $index => $entry) {
+        if ((string)($entry['id'] ?? '') === $id) {
+            $entryIndex = $index;
+            break;
+        }
+    }
+
+    if ($entryIndex === null) {
+        return null;
+    }
+
+    $entry = $entries[$entryIndex];
+
+    $manualFieldsChanged = false;
+
+    if (array_key_exists('plate', $changes)) {
+        $plate = normalizePlateText((string)$changes['plate']);
+        $existingPlate = normalizePlateText((string)($entry['plate_normalized'] ?? $entry['plate'] ?? ''));
+        if ($plate !== $existingPlate) {
+            $entry['plate'] = $plate;
+            $entry['plate_normalized'] = $plate;
+            if ($plate !== '') {
+                $entry['scan_status'] = 'complete';
+                $entry['error'] = '';
+            }
+            $manualFieldsChanged = true;
+        }
+    }
+
+    if (array_key_exists('plate_state', $changes)) {
+        $plateState = normalizeUsStateName((string)$changes['plate_state']);
+        if ($plateState !== (string)($entry['plate_state'] ?? '')) {
+            $entry['plate_state'] = $plateState;
+            $manualFieldsChanged = true;
+        }
+    }
+
+    if ($manualFieldsChanged) {
+        $entry['manual_corrected'] = true;
+        $entry['manual_corrected_at'] = date('c');
+    }
+
+    if (array_key_exists('favorite', $changes)) {
+        $entry['favorite'] = normalizeBooleanFlag($changes['favorite']);
+    }
+
+    if (array_key_exists('preference_rank', $changes)) {
+        $entry['preference_rank'] = normalizePreferenceRank($changes['preference_rank']);
+    }
+
+    $entries[$entryIndex] = $entry;
+    refreshDuplicatePlateFlags($entries);
+    recalculatePlateClarityFlags($entries);
+    writeJsonFile(LOG_FILE, $entries);
+    writeJsonFile(HASH_INDEX_FILE, rebuildHashIndexFromEntries($entries));
+
+    foreach ($entries as $updatedEntry) {
+        if ((string)($updatedEntry['id'] ?? '') === $id) {
+            return $updatedEntry;
+        }
+    }
+
+    return null;
+}
+
+function uniqueDeletedFilename(string $storedFile): string
+{
+    $storedFile = basename($storedFile);
+    $info = pathinfo($storedFile);
+    $name = preg_replace('/[^A-Za-z0-9._-]+/', '_', (string)($info['filename'] ?? 'deleted'));
+    $ext = isset($info['extension']) && $info['extension'] !== '' ? '.' . $info['extension'] : '';
+    return date('Ymd-His') . '-' . bin2hex(random_bytes(4)) . '-' . substr((string)$name, 0, 80) . $ext;
+}
+
+function softDeleteLogEntry(string $id, string $reason): ?array
+{
+    $reason = trim($reason);
+    if ($id === '' || $reason === '') {
+        return null;
+    }
+
+    $entries = readLogEntries();
+    $entryIndex = null;
+    foreach ($entries as $index => $entry) {
+        if ((string)($entry['id'] ?? '') === $id) {
+            $entryIndex = $index;
+            break;
+        }
+    }
+
+    if ($entryIndex === null) {
+        return null;
+    }
+
+    $entry = $entries[$entryIndex];
+    $remaining = $entries;
+    array_splice($remaining, $entryIndex, 1);
+
+    $storedFile = basename((string)($entry['stored_file'] ?? ''));
+    $fileMoved = false;
+    $deletedStoredFile = '';
+    $deletedRelativePath = '';
+    $fileNote = '';
+
+    if ($storedFile !== '') {
+        $stillReferenced = false;
+        foreach ($remaining as $candidate) {
+            if (basename((string)($candidate['stored_file'] ?? '')) === $storedFile) {
+                $stillReferenced = true;
+                break;
+            }
+        }
+
+        $sourcePath = UPLOAD_DIR . '/' . $storedFile;
+        if ($stillReferenced) {
+            $fileNote = 'Photo retained because it is still referenced by another active log entry.';
+        } elseif (is_file($sourcePath)) {
+            $deletedStoredFile = uniqueDeletedFilename($storedFile);
+            $targetPath = DELETED_DIR . '/' . $deletedStoredFile;
+            if (@rename($sourcePath, $targetPath)) {
+                $fileMoved = true;
+                $deletedRelativePath = 'deleted/' . $deletedStoredFile;
+            } else {
+                $fileNote = 'Photo could not be moved into the deleted folder.';
+            }
+        } else {
+            $fileNote = 'Photo file was not present in uploads at delete time.';
+        }
+    }
+
+    refreshDuplicatePlateFlags($remaining);
+    recalculatePlateClarityFlags($remaining);
+    writeJsonFile(LOG_FILE, array_values($remaining));
+    writeJsonFile(HASH_INDEX_FILE, rebuildHashIndexFromEntries($remaining));
+
+    $auditEntries = readDeletedAuditEntries();
+    $auditId = bin2hex(random_bytes(8));
+    $deletedAt = date('c');
+    $auditEntry = [
+        'audit_id' => $auditId,
+        'source_entry_id' => (string)($entry['id'] ?? ''),
+        'deleted_at' => $deletedAt,
+        'deleted_reason' => $reason,
+        'days_deleted' => 0,
+        'original_file' => (string)($entry['original_file'] ?? ''),
+        'stored_file' => $storedFile,
+        'deleted_stored_file' => $deletedStoredFile,
+        'deleted_relative_path' => $deletedRelativePath,
+        'plate' => (string)($entry['plate'] ?? ''),
+        'plate_state' => (string)($entry['plate_state'] ?? ''),
+        'confidence' => $entry['confidence'] ?? 0,
+        'clarity_score' => $entry['clarity_score'] ?? 0,
+        'favorite' => !empty($entry['favorite']),
+        'preference_rank' => $entry['preference_rank'] ?? null,
+        'scan_mode' => (string)($entry['scan_mode'] ?? ''),
+        'file_moved' => $fileMoved,
+        'file_note' => $fileNote,
+    ];
+    $auditEntries[] = $auditEntry;
+    writeJsonFile(DELETED_AUDIT_FILE, $auditEntries);
+
+    return $auditEntry;
+}
+
+function permanentlyDeleteAuditItems(array $auditIds): array
+{
+    $auditIds = array_values(array_unique(array_filter(array_map('strval', $auditIds), fn($id) => trim($id) !== '')));
+    if ($auditIds === []) {
+        return ['deleted' => 0, 'missing' => [], 'removed_files' => []];
+    }
+
+    $auditEntries = readDeletedAuditEntries();
+    $kept = [];
+    $removedFiles = [];
+    $deleted = 0;
+    $missing = $auditIds;
+
+    foreach ($auditEntries as $entry) {
+        $auditId = (string)($entry['audit_id'] ?? '');
+        if (!in_array($auditId, $auditIds, true)) {
+            $kept[] = $entry;
+            continue;
+        }
+
+        $missing = array_values(array_filter($missing, fn($id) => $id !== $auditId));
+        $deleted++;
+        $deletedStoredFile = basename((string)($entry['deleted_stored_file'] ?? ''));
+        if ($deletedStoredFile !== '') {
+            $path = DELETED_DIR . '/' . $deletedStoredFile;
+            if (is_file($path) && @unlink($path)) {
+                $removedFiles[] = $deletedStoredFile;
+            }
+        }
+    }
+
+    writeJsonFile(DELETED_AUDIT_FILE, array_values($kept));
+
+    return [
+        'deleted' => $deleted,
+        'missing' => $missing,
+        'removed_files' => $removedFiles,
+    ];
+}
+
+function logDeletedAuditPurge(string $trigger, int $purged, array $removedFiles): array
+{
+    $trigger = trim($trigger) === '' ? 'manual' : trim($trigger);
+    $entries = readDeletedPurgeLogEntries();
+    $entry = [
+        'purge_id' => bin2hex(random_bytes(8)),
+        'purged_at' => date('c'),
+        'trigger' => $trigger,
+        'purged_items' => $purged,
+        'removed_files_count' => count($removedFiles),
+        'removed_files' => array_values($removedFiles),
+    ];
+    $entries[] = $entry;
+    writeJsonFile(DELETED_PURGE_LOG_FILE, $entries);
+    return $entry;
+}
+
+function purgeDeletedAudit(string $trigger = 'manual'): array
+{
+    $auditEntries = readDeletedAuditEntries();
+    $removedFiles = [];
+    foreach ($auditEntries as $entry) {
+        $deletedStoredFile = basename((string)($entry['deleted_stored_file'] ?? ''));
+        if ($deletedStoredFile === '') {
+            continue;
+        }
+        $path = DELETED_DIR . '/' . $deletedStoredFile;
+        if (is_file($path) && @unlink($path)) {
+            $removedFiles[] = $deletedStoredFile;
+        }
+    }
+    writeJsonFile(DELETED_AUDIT_FILE, []);
+    $purgeLogEntry = logDeletedAuditPurge($trigger, count($auditEntries), $removedFiles);
+    return [
+        'purged' => count($auditEntries),
+        'removed_files' => $removedFiles,
+        'purge_log' => $purgeLogEntry,
+    ];
 }
 
 function imageToBase64Jpeg(string $path, string $mimeType, int $maxDim = 1400): string
@@ -200,7 +1093,7 @@ function callOpenAiVision(string $imagePath, string $mimeType): array
                 ],
                 [
                     'type' => 'text',
-                    'text' => 'Read the license plate number/word/text from this photo. Return only JSON with keys plate, confidence, notes. Use uppercase letters and digits. If no plate is readable, use an empty plate and confidence 0.',
+                    'text' => 'Read the license plate number/word/text from this photo. Return only JSON with keys plate, confidence, state, notes. Use uppercase letters and digits. If the plate state is visible, return the full state name in state. If no plate is readable, use an empty plate and confidence 0.',
                 ],
             ],
         ]],
@@ -235,6 +1128,7 @@ function callOpenAiVision(string $imagePath, string $mimeType): array
         return [
             'plate' => $candidates[0] ?? '',
             'confidence' => ($candidates[0] ?? '') !== '' ? 50 : 0,
+            'state' => extractPlateStateFromText($content),
             'raw_text' => $content,
             'error' => '',
         ];
@@ -242,7 +1136,8 @@ function callOpenAiVision(string $imagePath, string $mimeType): array
 
     return [
         'plate' => normalizePlateText((string)($parsed['plate'] ?? '')),
-        'confidence' => (int)round((float)($parsed['confidence'] ?? 0)),
+        'confidence' => normalizeConfidenceValue($parsed['confidence'] ?? 0),
+        'state' => normalizeUsStateName((string)($parsed['state'] ?? '')),
         'raw_text' => $content,
         'error' => '',
     ];
@@ -283,6 +1178,7 @@ function callOcrSpace(string $imagePath): array
     return [
         'plate' => $candidates[0] ?? '',
         'confidence' => ($candidates[0] ?? '') !== '' ? 65 : 0,
+        'state' => extractPlateStateFromText($text),
         'raw_text' => $text,
         'error' => '',
     ];
@@ -296,6 +1192,7 @@ function callTesseract(string $imagePath): array
     return [
         'plate' => $candidates[0] ?? '',
         'confidence' => ($candidates[0] ?? '') !== '' ? 55 : 0,
+        'state' => extractPlateStateFromText($text),
         'raw_text' => $text,
         'error' => '',
     ];

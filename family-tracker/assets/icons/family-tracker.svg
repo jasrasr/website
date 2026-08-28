@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Family GPS Tracker icon">
+  <rect width="512" height="512" rx="112" fill="#101827"/>
+  <circle cx="256" cy="214" r="112" fill="#4ade80"/>
+  <path d="M256 92c-67 0-121 54-121 121 0 91 121 207 121 207s121-116 121-207c0-67-54-121-121-121zm0 176a55 55 0 1 1 0-110 55 55 0 0 1 0 110z" fill="#0b1020"/>
+  <circle cx="256" cy="213" r="30" fill="#f8fafc"/>
+</svg>

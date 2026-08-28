@@ -1,8 +1,24 @@
 <?php
+/*
+    License Plate Photo Logger
+    Revision: 1.2.29
+    Description: Front-page upload queue with a latest-upload preview card, project revision badge, cache-busted stylesheet loading, wider desktop layout, stats and deleted-audit navigation, mobile batch-layout fixes, and automatic queue reset after processing.
+*/
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
 $entries = readLogEntries();
 $counts = plateCounts($entries);
+$pendingEntries = array_filter($entries, fn($entry) => ($entry['scan_status'] ?? '') === 'pending');
+$latestUploadEntry = null;
+foreach ($entries as $entry) {
+    if (!empty($entry['stored_file'])) {
+        $latestUploadEntry = $entry;
+        break;
+    }
+}
+$projectRevision = readProjectRevision();
+$projectModifiedAt = readProjectModifiedAt();
+$styleVersion = rawurlencode($projectRevision);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -10,26 +26,60 @@ $counts = plateCounts($entries);
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= h(APP_NAME) ?></title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=<?= h($styleVersion) ?>">
 </head>
 <body>
-<main class="container">
+<main class="container container-wide">
+    <aside class="project-badge">
+        <strong>Project Rev:</strong> <?= h($projectRevision) ?><br>
+        <strong>Modified:</strong> <?= h($projectModifiedAt) ?>
+    </aside>
     <nav class="nav">
         <a href="index.php">Upload</a>
         <a href="view_log.php">View Log</a>
+        <a href="stats.php">Stats</a>
+        <a href="deleted_audit.php">Deleted</a>
+        <a href="changelog.php">Changelog</a>
     </nav>
 
     <header class="page-header">
         <div>
             <h1><?= h(APP_NAME) ?></h1>
-            <p class="small">Batch upload plate photos. Each file is hashed, scanned, logged, and checked for duplicate files and repeated plate values.</p>
+            <p class="small">Batch upload plate photos. Each file is hashed, saved, scanned when available, and checked for duplicate files and repeated plate values.</p>
         </div>
         <div class="status-box">
-            <strong>Mode:</strong> <?= h(SCAN_MODE) ?><br>
+            <strong>Mode:</strong> <?= h(scanModeLabel(SCAN_MODE)) ?><br>
             <strong>Entries:</strong> <?= count($entries) ?><br>
+            <strong>Pending:</strong> <?= count($pendingEntries) ?><br>
             <strong>Unique plates:</strong> <?= count($counts) ?>
         </div>
     </header>
+
+    <?php if ($latestUploadEntry !== null): ?>
+    <section class="card latest-upload-card">
+        <div class="latest-upload-preview">
+            <img
+                src="uploads/<?= h((string)$latestUploadEntry['stored_file']) ?>"
+                alt="<?= h((string)($latestUploadEntry['original_file'] ?? 'Latest uploaded plate photo')) ?>"
+            >
+        </div>
+        <div>
+            <h2>Last Uploaded Photo</h2>
+            <div class="latest-upload-meta">
+                <strong>Uploaded</strong>
+                <span><?= h(displayEasternDateTime((string)($latestUploadEntry['processed_at'] ?? ''))) ?></span>
+                <strong>Plate</strong>
+                <span><?= h((string)($latestUploadEntry['plate'] ?? '')) ?: 'Not yet read' ?></span>
+                <strong>Original File</strong>
+                <span><?= h((string)($latestUploadEntry['original_file'] ?? '')) ?></span>
+                <strong>Scanner</strong>
+                <span><?= h(entryScannerLabel($latestUploadEntry)) ?></span>
+                <strong>Status</strong>
+                <span><?= h((string)($latestUploadEntry['scan_status'] ?? 'complete')) ?></span>
+            </div>
+        </div>
+    </section>
+    <?php endif; ?>
 
     <section class="card">
         <label for="photos">License plate photos</label>
@@ -46,7 +96,8 @@ $counts = plateCounts($entries);
 
     <section class="card">
         <h2>Batch Results</h2>
-        <table>
+        <div class="table-wrap">
+        <table class="results-table">
             <thead>
                 <tr>
                     <th>File</th>
@@ -60,6 +111,7 @@ $counts = plateCounts($entries);
                 <tr><td colspan="5" class="small">Results will appear as each photo finishes.</td></tr>
             </tbody>
         </table>
+        </div>
     </section>
 </main>
 
@@ -92,9 +144,11 @@ clearBtn.addEventListener('click', () => {
 startBtn.addEventListener('click', async () => {
     if (!queue.length) return;
     startBtn.disabled = true;
+    clearBtn.disabled = true;
     results.innerHTML = '';
     progress.hidden = false;
-    let ok = 0;
+    let logged = 0;
+    let pending = 0;
     let dupes = 0;
     let failed = 0;
 
@@ -111,9 +165,16 @@ startBtn.addEventListener('click', async () => {
                 failed++;
                 updateRow(row, file.name, data.plate || '', data.confidence || '', data.error || `HTTP ${resp.status}`, '');
             } else {
-                ok++;
+                if (data.pending) {
+                    pending++;
+                } else {
+                    logged++;
+                }
                 if (data.duplicate_file || data.duplicate_plate) dupes++;
-                updateRow(row, file.name, data.plate || '', data.confidence || '', data.status || 'Logged', duplicateText(data));
+                const status = data.pending && data.scan_error
+                    ? `${data.status}: ${data.scan_error}`
+                    : (data.status || 'Logged');
+                updateRow(row, file.name, data.plate || '', data.confidence || '', status, duplicateText(data));
             }
         } catch (e) {
             failed++;
@@ -122,10 +183,15 @@ startBtn.addEventListener('click', async () => {
 
         const pct = Math.round(((i + 1) / queue.length) * 100);
         progressBar.style.width = pct + '%';
-        summary.textContent = `${i + 1} of ${queue.length} processed. Logged: ${ok}. Duplicates flagged: ${dupes}. Failed: ${failed}.`;
+        summary.textContent = `${i + 1} of ${queue.length} processed. Logged: ${logged}. Pending processing: ${pending}. Duplicates flagged: ${dupes}. Failed uploads: ${failed}.`;
     }
 
-    startBtn.disabled = false;
+    input.value = '';
+    queue = [];
+    startBtn.disabled = true;
+    clearBtn.disabled = false;
+    startBtn.textContent = 'Process Selected Photos';
+    summary.textContent = `Batch complete. Logged: ${logged}. Pending processing: ${pending}. Duplicates flagged: ${dupes}. Failed uploads: ${failed}. Choose new files to process another batch.`;
 });
 
 function addRow(file, plate, confidence, status, duplicate) {
@@ -148,6 +214,7 @@ function duplicateText(data) {
     const parts = [];
     if (data.duplicate_file) parts.push('same file');
     if (data.duplicate_plate) parts.push(`plate seen ${data.plate_count} times`);
+    if (data.best_plate_photo && data.duplicate_plate) parts.push('clearest photo');
     return parts.join(', ');
 }
 </script>

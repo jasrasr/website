@@ -1,10 +1,10 @@
 /*
  * Filename: quick-entry.css
- * Revision : 1.6.0
+ * Revision : 1.7.0
  * Description : Compact score-entry styles for CVC Youth Scoreboard quick entry page.
  * Author : Jason Lamb (with help from Codex CLI)
  * Created Date : 2026-05-26
- * Modified Date : 2026-06-17
+ * Modified Date : 2026-06-21
  * Changelog :
  * 1.0.0 initial release
  * 1.1.0 Moved navigation links to footer and kept team buttons at half/third width on mobile
@@ -13,11 +13,12 @@
  * 1.4.0 Added quick-status-block and quick-revision styles for revision display under last-updated
  * 1.5.0 Stack manual form as Add/Subtract Score mode row above amount input row
  * 1.6.0 Move mode row out of manual form so it sits above the quick score grid; add bottom margin to space it from the grid
+ * 1.7.0 Use shared theme variables so quick entry follows the dark/light toggle
  */
 
 .quick-entry-body {
   min-height: 100vh;
-  background: #0b1120;
+  background: var(--page-bg);
 }
 
 .quick-entry-shell {
@@ -61,7 +62,7 @@
   padding: 0.75rem;
   border: 1px solid var(--panel-border);
   border-radius: 8px;
-  background: rgba(15, 23, 42, 0.82);
+  background: var(--panel-bg);
   box-shadow: var(--shadow);
 }
 
@@ -91,6 +92,10 @@
   border-color: color-mix(in srgb, var(--team-color) 60%, white 8%);
   background: color-mix(in srgb, var(--team-color) 32%, rgba(15, 23, 42, 0.9));
   text-align: center;
+}
+
+:root[data-theme="light"] .quick-team-button {
+  background: color-mix(in srgb, var(--team-color) 22%, rgba(255, 255, 255, 0.96));
 }
 
 .quick-team-button .rank-badge {

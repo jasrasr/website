@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1365" height="768" viewBox="0 0 1365 768" role="img" aria-labelledby="title desc">
+  <title id="title">TV Binge Board desktop dashboard screenshot</title>
+  <desc id="desc">Mock wide PWA screenshot showing the TV Binge Board dashboard, watch progress cards, and import tools.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#0b1020"/>
+      <stop offset="0.48" stop-color="#172554"/>
+      <stop offset="1" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" x2="1">
+      <stop offset="0" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#22c55e"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#020617" flood-opacity="0.42"/>
+    </filter>
+  </defs>
+  <rect width="1365" height="768" fill="url(#bg)"/>
+  <rect x="44" y="34" width="1277" height="700" rx="30" fill="#0f172a" opacity="0.9"/>
+  <text x="78" y="86" fill="#f8fafc" font-family="system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="30" font-weight="900">TV Binge Board</text>
+  <text x="1192" y="86" fill="#a7b0c2" font-family="system-ui" font-size="22">rev 1.5.7</text>
+  <rect x="78" y="116" width="1208" height="74" rx="24" fill="#111827" stroke="#334155"/>
+  <text x="110" y="162" fill="#94a3b8" font-family="system-ui" font-size="22">Signed in as</text>
+  <text x="248" y="162" fill="#e5e7eb" font-family="system-ui" font-size="26" font-weight="900">Jason</text>
+  <rect x="1084" y="130" width="164" height="44" rx="22" fill="#2563eb"/>
+  <text x="1117" y="159" fill="#fff" font-family="system-ui" font-size="16" font-weight="900">Search / Add</text>
+  <text x="78" y="246" fill="#f8fafc" font-family="system-ui" font-size="34" font-weight="900">Continue watching</text>
+  <g filter="url(#shadow)">
+    <rect x="78" y="278" width="374" height="190" rx="24" fill="#111827" stroke="#334155"/>
+    <rect x="104" y="304" width="92" height="126" rx="14" fill="#1e40af"/>
+    <polygon points="138,344 138,392 174,368" fill="#93c5fd"/>
+    <text x="220" y="320" fill="#f8fafc" font-family="system-ui" font-size="24" font-weight="900">The White Lotus</text>
+    <text x="220" y="350" fill="#94a3b8" font-family="system-ui" font-size="16">Watching • TV</text>
+    <rect x="220" y="376" width="186" height="9" rx="5" fill="#334155"/>
+    <rect x="220" y="376" width="72" height="9" rx="5" fill="url(#bar)"/>
+    <text x="220" y="414" fill="#93c5fd" font-family="system-ui" font-size="16" font-weight="800">Next up: S1E2</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="496" y="278" width="374" height="190" rx="24" fill="#111827" stroke="#334155"/>
+    <rect x="522" y="304" width="92" height="126" rx="14" fill="#7f1d1d"/>
+    <rect x="538" y="326" width="60" height="78" rx="10" fill="#f97316" opacity="0.8"/>
+    <text x="638" y="320" fill="#f8fafc" font-family="system-ui" font-size="24" font-weight="900">Goliath</text>
+    <text x="638" y="350" fill="#94a3b8" font-family="system-ui" font-size="16">Watching • TV</text>
+    <rect x="638" y="376" width="186" height="9" rx="5" fill="#334155"/>
+    <rect x="638" y="376" width="112" height="9" rx="5" fill="url(#bar)"/>
+    <text x="638" y="414" fill="#93c5fd" font-family="system-ui" font-size="16" font-weight="800">Next up: S3E1</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="914" y="278" width="372" height="190" rx="24" fill="#111827" stroke="#334155"/>
+    <rect x="940" y="304" width="92" height="126" rx="14" fill="#14532d"/>
+    <circle cx="986" cy="367" r="32" fill="#22c55e" opacity="0.9"/>
+    <text x="1056" y="320" fill="#f8fafc" font-family="system-ui" font-size="24" font-weight="900">House of the Dragon</text>
+    <text x="1056" y="350" fill="#94a3b8" font-family="system-ui" font-size="16">Watching • TV</text>
+    <rect x="1056" y="376" width="186" height="9" rx="5" fill="#334155"/>
+    <rect x="1056" y="376" width="128" height="9" rx="5" fill="url(#bar)"/>
+    <text x="1056" y="414" fill="#93c5fd" font-family="system-ui" font-size="16" font-weight="800">Next up: S3E1</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="78" y="518" width="580" height="150" rx="24" fill="#111827" stroke="#334155"/>
+    <text x="110" y="558" fill="#f8fafc" font-family="system-ui" font-size="26" font-weight="900">Search, add, and import</text>
+    <text x="110" y="590" fill="#94a3b8" font-family="system-ui" font-size="17">TMDB search, manual add, CSV/JSON import, and screenshot AI/OCR upload in one intake hub.</text>
+    <rect x="110" y="616" width="150" height="38" rx="19" fill="#2563eb"/>
+    <text x="147" y="641" fill="#fff" font-family="system-ui" font-size="15" font-weight="900">Search</text>
+    <rect x="276" y="616" width="160" height="38" rx="19" fill="#1f2937" stroke="#475569"/>
+    <text x="311" y="641" fill="#e5e7eb" font-family="system-ui" font-size="15" font-weight="900">Import</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="706" y="518" width="580" height="150" rx="24" fill="#111827" stroke="#334155"/>
+    <text x="738" y="558" fill="#f8fafc" font-family="system-ui" font-size="26" font-weight="900">Installed app experience</text>
+    <text x="738" y="590" fill="#94a3b8" font-family="system-ui" font-size="17">Standalone display, service-worker update prompts, offline fallback, app shortcuts, and PWA screenshots.</text>
+    <rect x="738" y="616" width="182" height="38" rx="19" fill="#22c55e"/>
+    <text x="774" y="641" fill="#052e16" font-family="system-ui" font-size="15" font-weight="900">Add to Home Screen</text>
+  </g>
+</svg>

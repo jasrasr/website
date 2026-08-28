@@ -1,0 +1,51 @@
+# Freshservice Ticket Tracker
+
+Small PHP/JSON dashboard for tracking Jason's aggregate unresolved Freshservice ticket count toward a goal of zero.
+
+## Tracking methods
+
+Screenshots can still be recorded manually. The preferred method is the server-side API collector in `api/collect.php`. It compares consecutive ticket states and records:
+
+- new tickets
+- tickets assigned to the configured agent
+- reopened tickets
+- resolved and closed tickets
+- tickets reassigned away
+- entries to and exits from the unresolved queue
+- starting count, ending count, and net change
+
+The dashboard merges the Git-tracked manual history with API snapshots stored on the server and displays both the queue balance and daily activity.
+
+## Setup
+
+1. Copy `config.local.example.php` to `config.local.php` on the server.
+2. Set `domain` to the Freshservice tenant hostname, such as `company.freshservice.com`. A pasted full portal URL is normalized to its hostname.
+3. Paste the API key into `api_key`.
+4. Set `agent_id` to the Freshservice agent ID whose **My Unresolved** queue is being tracked.
+5. Use a positive `workspace_id` for one workspace, or leave it as `0` to request all accessible workspaces.
+6. Replace `collector_token` with a long random secret.
+7. Use **Pull tickets now** on the dashboard or run the collector from cron. The first run creates the API baseline; the second and later runs calculate activity.
+
+Recommended cron request:
+
+```bash
+curl -fsS -H "Authorization: Bearer YOUR_COLLECTOR_TOKEN" https://jasr.me/github/fs/api/collect.php
+```
+
+Running hourly captures tickets that enter and leave the queue during the same day more reliably than one end-of-day snapshot.
+
+The tracker does not schedule itself. Without a Hostinger cron job, it collects only when **Pull tickets now** is used. The button prompts for `collector_token`, sends it in an HTTPS authorization header, and does not save it in the page or browser storage.
+
+During the folder rename, the collector can temporarily read an existing `FS/config.local.php`. Move that file to `fs/config.local.php` when convenient so all runtime files live under the lowercase folder.
+
+## Privacy and security
+
+`config.local.php`, `storage/api-state.json`, and `storage/api-snapshots.json` are ignored by Git and denied to web requests. The private state contains only ticket IDs, statuses, assignee IDs, and timestamps—no subjects, descriptions, requester names, or conversations. API snapshots contain aggregate counts only. Keeping runtime snapshots out of tracked files prevents deployment conflicts.
+
+## How calculation works
+
+```text
+ending unresolved = starting unresolved + entered unresolved - exited unresolved
+```
+
+Because Freshservice only provides the current ticket state in list results, the collector compares each run with its private previous-state file. More frequent runs produce better transition coverage.

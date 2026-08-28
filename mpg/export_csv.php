@@ -1,82 +1,38 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-?>
-<?php
+if (session_status() === PHP_SESSION_NONE) session_start();
 // ============================================================================
 // File: export_csv.php
 // Purpose: Export fuel log entries in CSV format
-// Revision: 1.5
+// Revision: 1.6
 // ============================================================================
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-$plate = strtoupper(trim($_GET['plate'] ?? ''));
+$plate = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($_GET['plate'] ?? '')));
 $logFile = __DIR__ . "/logs/{$plate}.json";
-
-if (!$plate || !file_exists($logFile)) {
-    die("❌ No log found for license plate {$plate}.");
-}
-
+if (!$plate || !file_exists($logFile)) die("❌ No log found for license plate {$plate}.");
 $data = json_decode(file_get_contents($logFile), true);
-if (!is_array($data)) {
-    die("⚠️ Invalid data for {$plate}.");
-}
+if (!is_array($data)) die("⚠️ Invalid data for {$plate}.");
 
-// CSV headers
 header('Content-Type: text/csv');
 header('Content-Disposition: attachment; filename="'.$plate.'_fuel_log.csv"');
-
 $csv = fopen('php://output', 'w');
 
-// ------------------------
-// Write CSV header row
-// ------------------------
-fputcsv(
-    $csv,
-    [
-        'license_plate',
-        'date',
-        'odometer',
-        'gallons',
-        'price_per_gallon',
-        'total_cost',
-        'mpg',
-        'submitted_et',
-        'ip_address'
-    ],
-    ",",
-    '"',
-    "\\"
-);
+$headers = [
+    'license_plate','date','odometer','miles','gallons','price_per_gallon','total_cost',
+    'fill_type','mpg','mpg_miles','mpg_gallons','station_brand','station_location_id',
+    'station_location_label','station_city','station_street','station_intersection',
+    'latitude','longitude','location_source','comment','source','verified','submitted_et','ip_address','device_id'
+];
+fputcsv($csv, $headers, ',', '"', "\\");
 
-// ------------------------
-// Write CSV rows
-// ------------------------
 foreach ($data as $row) {
-    fputcsv(
-        $csv,
-        [
-            $row['license_plate']    ?? "",
-            $row['date']             ?? "",
-            $row['odometer']         ?? "",
-            $row['gallons']          ?? "",
-            $row['price_per_gallon'] ?? "",
-            $row['total_cost']       ?? "",
-            $row['mpg']              ?? "",
-            $row['submitted_et']     ?? "",
-            $row['ip_address']       ?? ""
-        ],
-        ",",
-        '"',
-        "\\"
-    );
+    $out = [];
+    foreach ($headers as $h) $out[] = $row[$h] ?? '';
+    fputcsv($csv, $out, ',', '"', "\\");
 }
 
 fclose($csv);
 exit;
 ?>
-
-<?php include 'menu.php'; ?>
