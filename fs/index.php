@@ -365,7 +365,14 @@ function drawChart() {
     const points=values.map((v,i)=>({x:entries.length===1?(p.l+w-p.r)/2:p.l+(w-p.l-p.r)*(i/(entries.length-1)),y:p.t+(h-p.t-p.b)*((max-v)/range)}));
     if(points.length>1){c.strokeStyle='#4d95ff';c.lineWidth=3;c.beginPath();points.forEach((q,i)=>i?c.lineTo(q.x,q.y):c.moveTo(q.x,q.y));c.stroke();}
     points.forEach((q,i)=>{c.fillStyle='#3ddc84';c.beginPath();c.arc(q.x,q.y,5,0,Math.PI*2);c.fill();c.fillStyle='#f3f7fb';c.fillText(String(values[i]),q.x-8,q.y-12);});
-    c.fillStyle='#93a4ba'; const first=new Date(entries[0].capturedAt),last=new Date(entries.at(-1).capturedAt); c.fillText(first.toLocaleDateString(),p.l,h-12); if(entries.length>1)c.fillText(last.toLocaleDateString(),w-p.r-72,h-12);
+    c.fillStyle='#93a4ba';
+    const labelCount=Math.min(entries.length,w<480?3:w<760?5:7), labelIndexes=[];
+    for(let i=0;i<labelCount;i++) labelIndexes.push(Math.round((entries.length-1)*(labelCount===1?0:i/(labelCount-1))));
+    [...new Set(labelIndexes)].forEach(index=>{
+        const x=points[index].x,label=new Date(entries[index].capturedAt).toLocaleDateString(undefined,{month:'short',day:'numeric'}),labelWidth=c.measureText(label).width;
+        c.strokeStyle='#29405d';c.beginPath();c.moveTo(x,h-p.b);c.lineTo(x,h-p.b+5);c.stroke();
+        const labelX=Math.max(p.l,Math.min(w-p.r-labelWidth,x-labelWidth/2));c.fillText(label,labelX,h-12);
+    });
     note.textContent=entries.length<2?'One snapshot recorded; the trend line begins with the next update.':'';
 }
 drawChart(); window.addEventListener('resize',drawChart);

@@ -70,6 +70,32 @@ final class FreshserviceClient
         }
     }
 
+    /** @return array<int, string> */
+    public function getStatusLabels(): array
+    {
+        try {
+            $response = $this->get('/api/v2/ticket_form_fields?' . http_build_query([
+                'workspace_id' => $this->workspaceId,
+            ], '', '&', PHP_QUERY_RFC3986));
+        } catch (RuntimeException) {
+            return [];
+        }
+
+        $labels = [];
+        $fields = isset($response['ticket_fields']) && is_array($response['ticket_fields']) ? $response['ticket_fields'] : [];
+        foreach ($fields as $field) {
+            if (!is_array($field) || (($field['name'] ?? '') !== 'status' && ($field['field_type'] ?? '') !== 'default_status')) continue;
+            foreach ((array) ($field['choices'] ?? []) as $choice) {
+                if (!is_array($choice)) continue;
+                $id = (int) ($choice['id'] ?? 0);
+                $value = trim((string) ($choice['value'] ?? ''));
+                if ($id > 0 && $value !== '') $labels[$id] = $value;
+            }
+            if ($labels) break;
+        }
+        return $labels;
+    }
+
     /** @return array<string, mixed> */
     private function get(string $path): array
     {

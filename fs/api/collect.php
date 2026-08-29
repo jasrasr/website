@@ -99,9 +99,8 @@ function privacySafeCategoryCounts(array $counts): array
     return $safe;
 }
 
-function aggregateAnalytics(array $tickets, array $closedStatuses, DateTimeImmutable $now): array
+function aggregateAnalytics(array $tickets, array $closedStatuses, DateTimeImmutable $now, array $statusLabels): array
 {
-    $statusLabels = [2 => 'Open', 3 => 'Pending', 4 => 'Resolved', 5 => 'Closed'];
     $priorityLabels = [1 => 'Low', 2 => 'Medium', 3 => 'High', 4 => 'Urgent'];
     $statusCounts = [];
     $categoryCounts = [];
@@ -181,6 +180,8 @@ try {
     $closedStatuses = array_map('intval', (array) ($config['resolved_status_ids'] ?? [4, 5]));
     $agentId = (int) $config['agent_id'];
     $client = new FreshserviceClient((string) $config['domain'], (string) $config['api_key'], (int) ($config['workspace_id'] ?? 0));
+    $statusLabels = [2 => 'Open', 3 => 'Pending', 4 => 'Resolved', 5 => 'Closed'];
+    $statusLabels = array_replace($statusLabels, $client->getStatusLabels(), (array) ($config['status_labels'] ?? []));
 
     $state = readJsonFile($stateFile, ['lastRun' => null, 'tickets' => []]);
     $previousTickets = isset($state['tickets']) && is_array($state['tickets']) ? $state['tickets'] : [];
@@ -261,7 +262,7 @@ try {
         if (!in_array((int) $ticket['status'], $closedStatuses, true)) $endingUnresolved++;
     }
     if ($isInitialRun) $startingUnresolved = $endingUnresolved;
-    $analytics = aggregateAnalytics($currentTickets, $closedStatuses, $now);
+    $analytics = aggregateAnalytics($currentTickets, $closedStatuses, $now, $statusLabels);
 
     $snapshots = readJsonFile($snapshotFile, ['entries' => []]);
     if (!isset($snapshots['entries']) || !is_array($snapshots['entries'])) $snapshots['entries'] = [];

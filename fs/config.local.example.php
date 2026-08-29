@@ -11,4 +11,6 @@ return [
     'collector_token' => 'REPLACE_WITH_A_LONG_RANDOM_SECRET',
     'timezone' => 'America/New_York',
     'resolved_status_ids' => [4, 5],
+    // Optional fallback/overrides if the API key cannot read ticket-field metadata.
+    'status_labels' => [],
 ];

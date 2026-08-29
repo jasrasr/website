@@ -35,6 +35,14 @@ Recommended cron request:
 curl -fsS -H "Authorization: Bearer YOUR_COLLECTOR_TOKEN" https://jasr.me/github/fs/api/collect.php
 ```
 
+For adaptive background collection, configure one Hostinger cron job to run hourly (`0 * * * *`) with:
+
+```bash
+curl -fsS -H "Authorization: Bearer YOUR_COLLECTOR_TOKEN" https://jasr.me/github/fs/api/scheduled.php
+```
+
+The scheduler pulls hourly on weekdays from 6:00 AM through 5:59 PM, every four hours on weekday nights, and every twelve hours on Saturdays and Sundays. All decisions use the configured timezone.
+
 To verify API access without changing tracker state, call the protected diagnostic endpoint with the same token:
 
 ```bash
