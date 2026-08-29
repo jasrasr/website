@@ -107,6 +107,9 @@ $assignedResult = freshserviceGet($baseUrl, $apiKey, '/api/v2/tickets/filter?' .
 $ticketResult = $ticketId > 0
     ? freshserviceGet($baseUrl, $apiKey, '/api/v2/tickets/' . $ticketId)
     : null;
+$ticketFieldsResult = freshserviceGet($baseUrl, $apiKey, '/api/v2/ticket_form_fields?' . http_build_query([
+    'workspace_id' => $workspaceId,
+], '', '&', PHP_QUERY_RFC3986));
 
 $agentData = (array) ($agentResult['data']['agent'] ?? []);
 $anyTickets = (array) ($anyTicketsResult['data']['tickets'] ?? []);
@@ -116,6 +119,17 @@ foreach ($assignedTickets as $ticket) {
     if (!is_array($ticket)) continue;
     $status = (string) ((int) ($ticket['status'] ?? 0));
     $statusCounts[$status] = ($statusCounts[$status] ?? 0) + 1;
+}
+$statusLabels = [];
+foreach ((array) ($ticketFieldsResult['data']['ticket_fields'] ?? []) as $field) {
+    if (!is_array($field) || (($field['name'] ?? '') !== 'status' && ($field['field_type'] ?? '') !== 'default_status')) continue;
+    foreach ((array) ($field['choices'] ?? []) as $choice) {
+        if (!is_array($choice)) continue;
+        $id = (int) ($choice['id'] ?? 0);
+        $value = trim((string) ($choice['value'] ?? ''));
+        if ($id > 0 && $value !== '') $statusLabels[(string) $id] = $value;
+    }
+    if ($statusLabels) break;
 }
 
 respond(200, [
@@ -146,6 +160,12 @@ respond(200, [
         'total' => (int) ($assignedResult['data']['total'] ?? count($assignedTickets)),
         'statusCounts' => $statusCounts,
         'sample' => isset($assignedTickets[0]) && is_array($assignedTickets[0]) ? safeTicket($assignedTickets[0]) : null,
+    ],
+    'statusLabels' => [
+        'ok' => $ticketFieldsResult['ok'],
+        'httpStatus' => $ticketFieldsResult['httpStatus'],
+        'error' => $ticketFieldsResult['error'] ?? null,
+        'labels' => $statusLabels,
     ],
     'requestedTicket' => $ticketResult === null ? null : [
         'ok' => $ticketResult['ok'],
