@@ -56,7 +56,7 @@ The protected `api/cleanup.php` maintenance endpoint accepts authenticated POST 
 
 Running hourly captures tickets that enter and leave the queue during the same day more reliably than one end-of-day snapshot.
 
-The tracker does not schedule itself. Without a Hostinger cron job, it collects when **Pull tickets now** is used. The button prompts for `collector_token`, sends it in an HTTPS authorization header, and keeps it only in the current tab's session storage. Later page loads in that tab automatically pull at most once every five minutes. Closing the tab clears the saved token.
+Every page load calls the public `api/auto.php` gate. It performs a server-wide pull only when the last successful pull was at least one hour ago, regardless of which computer opens the site. A filesystem lock prevents simultaneous visitors from starting duplicate pulls. The automatic request does not use or expose the collector token. **Pull tickets now** remains token-protected for forced refreshes.
 
 During the folder rename, the collector can temporarily read an existing `FS/config.local.php`. Move that file to `fs/config.local.php` when convenient so all runtime files live under the lowercase folder.
 
