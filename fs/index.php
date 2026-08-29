@@ -36,15 +36,10 @@ if (is_file($pullLogFile)) {
 $entries = $payload['entries'];
 usort($entries, static fn(array $a, array $b): int => strcmp((string) ($a['capturedAt'] ?? ''), (string) ($b['capturedAt'] ?? '')));
 $goal = max(0, (int) ($payload['goal'] ?? 0));
-$first = $entries[0] ?? null;
 $latest = $entries ? $entries[array_key_last($entries)] : null;
 $previous = count($entries) > 1 ? $entries[count($entries) - 2] : null;
 $current = (int) ($latest['unresolved'] ?? 0);
-$baseline = (int) ($first['unresolved'] ?? 0);
 $change = $previous ? $current - (int) ($previous['unresolved'] ?? 0) : null;
-$reduced = max(0, $baseline - $current);
-$reductionPercent = $baseline > $goal ? max(0, min(100, (($baseline - $current) / ($baseline - $goal)) * 100)) : 100;
-$remaining = max(0, $current - $goal);
 $analytics = $latest && isset($latest['analytics']) && is_array($latest['analytics']) ? $latest['analytics'] : [];
 $latestDay = $latest && !empty($latest['capturedAt']) ? (new DateTimeImmutable((string) $latest['capturedAt']))->format('Y-m-d') : null;
 $todayActivity = [
@@ -80,6 +75,16 @@ function displayDate(?string $value): string
     }
 }
 
+function displayDateWithoutTimezone(?string $value): string
+{
+    if (!$value) return '—';
+    try {
+        return (new DateTimeImmutable($value))->format('M j, Y g:i A');
+    } catch (Throwable) {
+        return $value;
+    }
+}
+
 function analyticsRows(array $analytics, string $key): array
 {
     if (!isset($analytics[$key]) || !is_array($analytics[$key])) return [];
@@ -110,16 +115,13 @@ function analyticsRows(array $analytics, string $key): array
         .pull-button:disabled { cursor:wait; opacity:.65; }
         .pull-status { width:100%; min-height:1.2em; color:var(--muted); text-align:right; font-size:.85rem; }
         .pull-status.error-text { color:#ffbec1; }
-        .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+        .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
         .card,.section { background:linear-gradient(145deg,var(--panel2),var(--panel)); border:1px solid var(--line); border-radius:18px; box-shadow:0 16px 38px rgba(0,0,0,.2); }
         .card { padding:20px; min-height:138px; }
         .label { display:block; margin-bottom:18px; color:var(--muted); font-size:.78rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
         .value { display:block; font-size:clamp(2rem,5vw,3.5rem); font-weight:850; line-height:1; }
-        .value.goal { color:var(--green); }
         .value.good { color:var(--green); }.value.bad { color:var(--red); }
         .sub { display:block; color:var(--muted); margin-top:10px; font-size:.9rem; }
-        .progress { height:10px; margin-top:15px; overflow:hidden; border-radius:999px; background:#07111f; }
-        .progress span { display:block; height:100%; background:linear-gradient(90deg,var(--blue),var(--green)); border-radius:inherit; }
         .section { margin-top:14px; padding:22px; }
         .section h2 { margin:0 0 16px; font-size:1.15rem; }
         .activity-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
@@ -178,10 +180,8 @@ function analyticsRows(array $analytics, string $key): array
     <?php if ($error): ?><p class="error"><?= e($error) ?></p><?php endif; ?>
 
     <section class="grid" aria-label="Ticket summary">
-        <article class="card"><span class="label">Current unresolved</span><span class="value"><?= number_format($current) ?></span><span class="sub">As of <?= e(displayDate($latest['capturedAt'] ?? null)) ?></span></article>
+        <article class="card"><span class="label">Current unresolved</span><span class="value"><?= number_format($current) ?></span><span class="sub">As of <?= e(displayDateWithoutTimezone($latest['capturedAt'] ?? null)) ?></span></article>
         <article class="card"><span class="label">Change since prior</span><span class="value <?= $change !== null && $change <= 0 ? 'good' : 'bad' ?>"><?= $change === null ? '—' : sprintf('%+d', $change) ?></span><span class="sub"><?= $change === null ? 'Needs a second snapshot' : ($change <= 0 ? 'Moving the right direction' : 'Queue increased') ?></span></article>
-        <article class="card"><span class="label">Tickets to go</span><span class="value"><?= number_format($remaining) ?></span><span class="sub">Until the queue reaches <?= $goal ?></span></article>
-        <article class="card"><span class="label">Reduction from start</span><span class="value goal"><?= number_format($reductionPercent, 0) ?>%</span><div class="progress"><span style="width:<?= e((string) $reductionPercent) ?>%"></span></div><span class="sub"><?= number_format($reduced) ?> fewer than the <?= number_format($baseline) ?> baseline</span></article>
     </section>
 
     <section class="section">
