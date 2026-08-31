@@ -207,7 +207,7 @@ function analyticsRows(array $analytics, string $key): array
                 'category' => 'Tickets by category',
                 'priority' => 'Tickets by priority',
                 'age' => 'Tickets by age',
-                'requesterDistribution' => 'Anonymous requester distribution',
+                'requesterDistribution' => 'Requesters by unresolved ticket count',
             ] as $analyticsKey => $analyticsTitle):
                 $rows = analyticsRows($analytics, $analyticsKey);
                 $chartMax = $rows ? max(array_map('intval', $rows)) : 1;
