@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.0 — 2026-08-31
+
+- Replaced the overflowing mobile student table with compact, responsive student cards.
+- Added a confirmed student Delete action for authenticated users.
+- Added select-all and bulk delete controls to the student directory.
+- Student deletion now preserves attendance history through an audited soft delete.
+- Added a dedicated Super Admin Life Groups screen.
+- Added life-group creation and editing, including leader, meeting time, and active status.
+- Replaced the sibling multi-select with type-to-search selection and same-last-name suggestions.
+
 ## 1.1.0 — 2026-08-22
 
 - Added Super Admin and Attendance roles.

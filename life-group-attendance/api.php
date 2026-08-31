@@ -27,6 +27,19 @@ if ($action==='save-student') {
     foreach($students as &$s){ if($s['id']===$id)continue; $linked=in_array($s['id'],$row['siblingIds'],true); $has=in_array($id,$s['siblingIds']??[],true); if($linked&&!$has)$s['siblingIds'][]=$id; if(!$linked&&$has)$s['siblingIds']=array_values(array_diff($s['siblingIds'],[$id])); } unset($s);
     write_store('students',$students); audit($found?'update':'create','student',$id); json_out(['student'=>$row],$found?200:201);
 }
+if ($action==='delete-student') {
+    $b=body(); $ids=array_values(array_unique(array_filter(array_map('strval',$b['ids']??[]))));
+    if(!$ids&&trim($b['id']??'')!=='')$ids=[trim($b['id'])];
+    if(!$ids)json_out(['error'=>'At least one student ID is required.'],422);
+    $students=read_store('students'); $deleted=[];
+    foreach($students as &$s){
+        if(in_array($s['id'],$ids,true)){$s['active']=false;$s['deletedAt']=now_iso();$s['updatedAt']=now_iso();$deleted[]=$s['id'];continue;}
+        if(array_intersect($ids,$s['siblingIds']??[]))$s['siblingIds']=array_values(array_diff($s['siblingIds'],$ids));
+    } unset($s);
+    if(!$deleted)json_out(['error'=>'No matching students were found.'],404);
+    write_store('students',$students); foreach($deleted as $id)audit('delete','student',$id,['method'=>'soft-delete','bulk'=>count($ids)>1]);
+    json_out(['ids'=>$deleted,'count'=>count($deleted)]);
+}
 if ($action==='save-attendance') {
     $b=body(); $groupId=trim($b['groupId']??''); $date=trim($b['date']??date('Y-m-d')); $present=array_values(array_unique(array_filter($b['studentIds']??[])));
     if(!$groupId)json_out(['error'=>'Choose a life group.'],422);

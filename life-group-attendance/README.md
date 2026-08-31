@@ -6,10 +6,12 @@ The optional Frontlines importer reads only youth name, gender, and grade from t
 
 ## Roles
 
-- **Super Admin:** manages users, groups, roster imports, students, reports, and attendance.
-- **Attendance:** takes attendance and can add or edit complete student profiles. It cannot manage users, groups, imports, or administrative reports.
+- **Super Admin:** manages users, life groups, roster imports, students, reports, and attendance.
+- **Attendance:** takes attendance and can add, edit, or remove student profiles. It cannot manage users, groups, imports, or administrative reports.
 
 Click any student row—or its explicit **Edit** button—to update the student.
+
+Removing one student—or a bulk selection—is a soft delete: profiles disappear from active lists, sibling links are cleaned up, and prior attendance remains available for historical totals and audits. Siblings can be found by typing a first or last name, with matching last names suggested first. Super Admins can add and edit life groups from the dedicated **Groups** screen.
 
 ## Requirements
 
@@ -42,4 +44,4 @@ Designed for current Chrome, Safari, Edge, and Firefox. The interface is respons
 
 Back up the complete `data/` folder. It contains users, students, groups, attendance, and the audit log.
 
-Version: 1.1.0
+Version: 1.2.0
