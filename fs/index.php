@@ -383,34 +383,63 @@ function drawChart() {
         c.beginPath();c.moveTo(p.l,y);c.lineTo(w-p.r,y);c.stroke();c.fillText(String(v),6,y+4);
     }
 
-    const tickCount=Math.min(samples.length===1?1:(w<480?5:w<760?7:9),9);
+    const maxTickCount=samples.length===1?1:(w<480?4:w<760?7:14);
     const dateOptions=timeRange<=36*60*60*1000
         ? {month:'short',day:'numeric',hour:'numeric'}
         : {month:'short',day:'numeric'};
-    c.font=(w<480?'10px':'11px')+' system-ui';
+    const calendarTicks=[];
+    const calendarCursor=new Date(firstTime);calendarCursor.setHours(0,0,0,0);
+    while(calendarCursor.getTime()<=lastTime){
+        calendarTicks.push(Math.max(firstTime,calendarCursor.getTime()));
+        calendarCursor.setDate(calendarCursor.getDate()+1);
+    }
+    if(calendarTicks.at(-1)!==lastTime)calendarTicks.push(lastTime);
+    const tickCount=Math.min(maxTickCount,calendarTicks.length),visibleTicks=[];
     for(let i=0;i<tickCount;i++){
-        const ratio=tickCount===1?0:i/(tickCount-1),tickTime=firstTime+timeRange*ratio,x=xFor(tickTime);
+        const index=tickCount===1?0:Math.round((calendarTicks.length-1)*(i/(tickCount-1)));
+        if(!visibleTicks.includes(calendarTicks[index]))visibleTicks.push(calendarTicks[index]);
+    }
+    c.font=(w<480?'10px':'11px')+' system-ui';
+    for(const tickTime of visibleTicks){
+        const x=xFor(tickTime);
         const label=new Date(tickTime).toLocaleString(undefined,dateOptions),labelWidth=c.measureText(label).width;
         c.strokeStyle='#29405d';c.beginPath();c.moveTo(x,h-p.b);c.lineTo(x,h-p.b+6);c.stroke();
         const labelX=Math.max(p.l,Math.min(w-p.r-labelWidth,x-labelWidth/2));
         c.fillStyle='#93a4ba';c.fillText(label,labelX,h-15);
     }
 
+    const gapThreshold=36*60*60*1000,gaps=[];
     if(samples.length>1){
-        c.strokeStyle='#4d95ff';c.lineWidth=3;c.lineJoin='round';c.beginPath();
-        c.moveTo(xFor(samples[0].time),yFor(samples[0].value));
+        c.strokeStyle='#4d95ff';c.lineWidth=3;c.lineJoin='round';c.setLineDash([]);
         for(let i=1;i<samples.length;i++){
-            const x=xFor(samples[i].time),previousY=yFor(samples[i-1].value),currentY=yFor(samples[i].value);
-            c.lineTo(x,previousY);
-            if(currentY!==previousY)c.lineTo(x,currentY);
+            const previous=samples[i-1],current=samples[i],startX=xFor(previous.time),endX=xFor(current.time),startY=yFor(previous.value),endY=yFor(current.value);
+            if(current.time-previous.time>gapThreshold){
+                gaps.push({startX,endX,startY,endY,duration:current.time-previous.time});
+                continue;
+            }
+            c.beginPath();c.moveTo(startX,startY);c.lineTo(endX,startY);
+            if(endY!==startY)c.lineTo(endX,endY);
+            c.stroke();
         }
-        c.stroke();
+        c.save();c.strokeStyle='#93a4ba';c.lineWidth=2;c.setLineDash([7,7]);
+        for(const gap of gaps){
+            c.beginPath();c.moveTo(gap.startX,gap.startY);c.lineTo(gap.endX,gap.endY);c.stroke();
+        }
+        c.restore();c.setLineDash([]);
+
+        c.font='11px system-ui';c.textAlign='center';c.fillStyle='#93a4ba';
+        for(const gap of gaps){
+            const days=Math.max(2,Math.round(gap.duration/(24*60*60*1000)));
+            c.fillText(`No data · ${days} days`,(gap.startX+gap.endX)/2,(gap.startY+gap.endY)/2-9);
+        }
+        c.textAlign='start';
     }
 
     const runs=[];
-    for(const sample of samples){
+    for(let sampleIndex=0;sampleIndex<samples.length;sampleIndex++){
+        const sample=samples[sampleIndex],previousSample=samples[sampleIndex-1];
         const previous=runs.at(-1);
-        if(previous&&previous.value===sample.value){
+        if(previous&&previous.value===sample.value&&sample.time-previousSample.time<=gapThreshold){
             previous.endTime=sample.time;previous.count++;
         }else{
             runs.push({value:sample.value,startTime:sample.time,endTime:sample.time,count:1});
@@ -437,7 +466,7 @@ function drawChart() {
 
     note.textContent=samples.length<2
         ? 'One snapshot recorded; the trend begins with the next update.'
-        : 'Time spacing reflects elapsed time. Consecutive duplicate pulls are grouped as ×N; tap a plateau for details.';
+        : 'Time spacing reflects elapsed time. Dashed segments mark periods without snapshots; duplicate pulls are grouped as ×N.';
 }
 
 canvas.addEventListener('click',event=>{
