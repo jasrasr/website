@@ -363,24 +363,99 @@ function drawChart() {
     const dpr = window.devicePixelRatio || 1, rect = canvas.getBoundingClientRect();
     canvas.width = Math.max(1, Math.round(rect.width * dpr)); canvas.height = Math.round(280 * dpr);
     const c = canvas.getContext('2d'); c.scale(dpr,dpr);
-    const w=rect.width,h=280,p={l:48,r:20,t:18,b:42}; c.clearRect(0,0,w,h);
-    if (!entries.length) { note.textContent='No snapshots recorded.'; return; }
-    const values=entries.map(x=>Number(x.unresolved)), min=Math.min(...values,0), max=Math.max(...values,1), range=Math.max(1,max-min);
+    const w=rect.width,h=280,p={l:48,r:16,t:30,b:52}; c.clearRect(0,0,w,h);
+
+    const samples=entries
+        .map(entry=>({entry,value:Number(entry.unresolved),time:new Date(entry.capturedAt).getTime()}))
+        .filter(sample=>Number.isFinite(sample.value)&&Number.isFinite(sample.time))
+        .sort((a,b)=>a.time-b.time);
+    if (!samples.length) { note.textContent='No snapshots recorded.'; canvas._trendHits=[]; return; }
+
+    const values=samples.map(sample=>sample.value), min=Math.min(...values,0), max=Math.max(...values,1), range=Math.max(1,max-min);
+    const firstTime=samples[0].time,lastTime=samples.at(-1).time,timeRange=Math.max(1,lastTime-firstTime);
+    const plotWidth=w-p.l-p.r,plotHeight=h-p.t-p.b;
+    const xFor=time=>samples.length===1?(p.l+w-p.r)/2:p.l+plotWidth*((time-firstTime)/timeRange);
+    const yFor=value=>p.t+plotHeight*((max-value)/range);
+
     c.strokeStyle='#29405d'; c.fillStyle='#93a4ba'; c.font='12px system-ui'; c.lineWidth=1;
-    for(let i=0;i<5;i++){ const y=p.t+(h-p.t-p.b)*(i/4),v=Math.round(max-range*(i/4)); c.beginPath();c.moveTo(p.l,y);c.lineTo(w-p.r,y);c.stroke();c.fillText(String(v),6,y+4); }
-    const points=values.map((v,i)=>({x:entries.length===1?(p.l+w-p.r)/2:p.l+(w-p.l-p.r)*(i/(entries.length-1)),y:p.t+(h-p.t-p.b)*((max-v)/range)}));
-    if(points.length>1){c.strokeStyle='#4d95ff';c.lineWidth=3;c.beginPath();points.forEach((q,i)=>i?c.lineTo(q.x,q.y):c.moveTo(q.x,q.y));c.stroke();}
-    points.forEach((q,i)=>{c.fillStyle='#3ddc84';c.beginPath();c.arc(q.x,q.y,5,0,Math.PI*2);c.fill();c.fillStyle='#f3f7fb';c.fillText(String(values[i]),q.x-8,q.y-12);});
-    c.fillStyle='#93a4ba';
-    const labelCount=Math.min(entries.length,w<480?3:w<760?5:7), labelIndexes=[];
-    for(let i=0;i<labelCount;i++) labelIndexes.push(Math.round((entries.length-1)*(labelCount===1?0:i/(labelCount-1))));
-    [...new Set(labelIndexes)].forEach(index=>{
-        const x=points[index].x,label=new Date(entries[index].capturedAt).toLocaleDateString(undefined,{month:'short',day:'numeric'}),labelWidth=c.measureText(label).width;
-        c.strokeStyle='#29405d';c.beginPath();c.moveTo(x,h-p.b);c.lineTo(x,h-p.b+5);c.stroke();
-        const labelX=Math.max(p.l,Math.min(w-p.r-labelWidth,x-labelWidth/2));c.fillText(label,labelX,h-12);
+    for(let i=0;i<5;i++){
+        const y=p.t+plotHeight*(i/4),v=Math.round(max-range*(i/4));
+        c.beginPath();c.moveTo(p.l,y);c.lineTo(w-p.r,y);c.stroke();c.fillText(String(v),6,y+4);
+    }
+
+    const tickCount=Math.min(samples.length===1?1:(w<480?5:w<760?7:9),9);
+    const dateOptions=timeRange<=36*60*60*1000
+        ? {month:'short',day:'numeric',hour:'numeric'}
+        : {month:'short',day:'numeric'};
+    c.font=(w<480?'10px':'11px')+' system-ui';
+    for(let i=0;i<tickCount;i++){
+        const ratio=tickCount===1?0:i/(tickCount-1),tickTime=firstTime+timeRange*ratio,x=xFor(tickTime);
+        const label=new Date(tickTime).toLocaleString(undefined,dateOptions),labelWidth=c.measureText(label).width;
+        c.strokeStyle='#29405d';c.beginPath();c.moveTo(x,h-p.b);c.lineTo(x,h-p.b+6);c.stroke();
+        const labelX=Math.max(p.l,Math.min(w-p.r-labelWidth,x-labelWidth/2));
+        c.fillStyle='#93a4ba';c.fillText(label,labelX,h-15);
+    }
+
+    if(samples.length>1){
+        c.strokeStyle='#4d95ff';c.lineWidth=3;c.lineJoin='round';c.beginPath();
+        c.moveTo(xFor(samples[0].time),yFor(samples[0].value));
+        for(let i=1;i<samples.length;i++){
+            const x=xFor(samples[i].time),previousY=yFor(samples[i-1].value),currentY=yFor(samples[i].value);
+            c.lineTo(x,previousY);
+            if(currentY!==previousY)c.lineTo(x,currentY);
+        }
+        c.stroke();
+    }
+
+    const runs=[];
+    for(const sample of samples){
+        const previous=runs.at(-1);
+        if(previous&&previous.value===sample.value){
+            previous.endTime=sample.time;previous.count++;
+        }else{
+            runs.push({value:sample.value,startTime:sample.time,endTime:sample.time,count:1});
+        }
+    }
+
+    c.font='12px system-ui';c.textAlign='center';c.textBaseline='alphabetic';
+    const placed=[];
+    canvas._trendHits=runs.map(run=>{
+        const startX=xFor(run.startTime),endX=xFor(run.endTime),labelX=(startX+endX)/2,y=yFor(run.value);
+        const label=run.count>1?`${run.value} × ${run.count}`:String(run.value);
+        const labelWidth=c.measureText(label).width;
+        let labelY=y-12;
+        if(placed.some(item=>Math.abs(item.y-labelY)<15&&labelX-labelWidth/2<item.right+7&&labelX+labelWidth/2>item.left-7)) labelY=y+21;
+        if(labelY>h-p.b-3)labelY=y-12;
+        placed.push({left:labelX-labelWidth/2,right:labelX+labelWidth/2,y:labelY});
+
+        c.fillStyle='#3ddc84';c.beginPath();c.arc(startX,y,5,0,Math.PI*2);c.fill();
+        c.fillStyle='#f3f7fb';c.fillText(label,labelX,labelY);
+        return {startX,endX,y,run};
     });
-    note.textContent=entries.length<2?'One snapshot recorded; the trend line begins with the next update.':'';
+    c.textAlign='start';
+
+    note.textContent=samples.length<2
+        ? 'One snapshot recorded; the trend begins with the next update.'
+        : 'Time spacing reflects elapsed time. Consecutive duplicate pulls are grouped as ×N; tap a plateau for details.';
 }
+
+canvas.addEventListener('click',event=>{
+    const rect=canvas.getBoundingClientRect(),x=event.clientX-rect.left,y=event.clientY-rect.top;
+    const hits=canvas._trendHits||[];
+    let best=null,bestDistance=Infinity;
+    for(const hit of hits){
+        const left=Math.min(hit.startX,hit.endX)-12,right=Math.max(hit.startX,hit.endX)+12;
+        const dx=x<left?left-x:x>right?x-right:0,dy=Math.abs(y-hit.y),distance=Math.hypot(dx,dy);
+        if(distance<bestDistance){best=hit;bestDistance=distance;}
+    }
+    if(!best||bestDistance>28)return;
+    const {run}=best,start=new Date(run.startTime),end=new Date(run.endTime);
+    const rangeLabel=run.count>1
+        ? `${start.toLocaleString()} through ${end.toLocaleString()}`
+        : start.toLocaleString();
+    note.textContent=`${run.value} unresolved across ${run.count} ${run.count===1?'check':'checks'} — ${rangeLabel}.`;
+});
+
 drawChart(); window.addEventListener('resize',drawChart);
 </script>
 </body>
