@@ -374,7 +374,8 @@ function drawChart() {
     const values=samples.map(sample=>sample.value), min=Math.min(...values,0), max=Math.max(...values,1), range=Math.max(1,max-min);
     const firstTime=samples[0].time,lastTime=samples.at(-1).time,timeRange=Math.max(1,lastTime-firstTime);
     const plotWidth=w-p.l-p.r,plotHeight=h-p.t-p.b;
-    const xFor=time=>samples.length===1?(p.l+w-p.r)/2:p.l+plotWidth*((time-firstTime)/timeRange);
+    const sampleIndexes=new Map(samples.map((sample,index)=>[sample.time,index]));
+    const xFor=time=>samples.length===1?(p.l+w-p.r)/2:p.l+plotWidth*((sampleIndexes.get(time)??0)/(samples.length-1));
     const yFor=value=>p.t+plotHeight*((max-value)/range);
 
     c.strokeStyle='#29405d'; c.fillStyle='#93a4ba'; c.font='12px system-ui'; c.lineWidth=1;
@@ -387,17 +388,15 @@ function drawChart() {
     const dateOptions=timeRange<=36*60*60*1000
         ? {month:'short',day:'numeric',hour:'numeric'}
         : {month:'short',day:'numeric'};
-    const calendarTicks=[];
-    const calendarCursor=new Date(firstTime);calendarCursor.setHours(0,0,0,0);
-    while(calendarCursor.getTime()<=lastTime){
-        calendarTicks.push(Math.max(firstTime,calendarCursor.getTime()));
-        calendarCursor.setDate(calendarCursor.getDate()+1);
+    const observedDays=[];
+    for(const sample of samples){
+        const date=new Date(sample.time),dayKey=`${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+        if(!observedDays.some(day=>day.key===dayKey))observedDays.push({key:dayKey,time:sample.time});
     }
-    if(calendarTicks.at(-1)!==lastTime)calendarTicks.push(lastTime);
-    const tickCount=Math.min(maxTickCount,calendarTicks.length),visibleTicks=[];
+    const tickCount=Math.min(maxTickCount,observedDays.length),visibleTicks=[];
     for(let i=0;i<tickCount;i++){
-        const index=tickCount===1?0:Math.round((calendarTicks.length-1)*(i/(tickCount-1)));
-        if(!visibleTicks.includes(calendarTicks[index]))visibleTicks.push(calendarTicks[index]);
+        const index=tickCount===1?0:Math.round((observedDays.length-1)*(i/(tickCount-1)));
+        if(!visibleTicks.includes(observedDays[index].time))visibleTicks.push(observedDays[index].time);
     }
     c.font=(w<480?'10px':'11px')+' system-ui';
     for(const tickTime of visibleTicks){
@@ -408,38 +407,21 @@ function drawChart() {
         c.fillStyle='#93a4ba';c.fillText(label,labelX,h-15);
     }
 
-    const gapThreshold=36*60*60*1000,gaps=[];
     if(samples.length>1){
         c.strokeStyle='#4d95ff';c.lineWidth=3;c.lineJoin='round';c.setLineDash([]);
         for(let i=1;i<samples.length;i++){
             const previous=samples[i-1],current=samples[i],startX=xFor(previous.time),endX=xFor(current.time),startY=yFor(previous.value),endY=yFor(current.value);
-            if(current.time-previous.time>gapThreshold){
-                gaps.push({startX,endX,startY,endY,duration:current.time-previous.time});
-                continue;
-            }
             c.beginPath();c.moveTo(startX,startY);c.lineTo(endX,startY);
             if(endY!==startY)c.lineTo(endX,endY);
             c.stroke();
         }
-        c.save();c.strokeStyle='#93a4ba';c.lineWidth=2;c.setLineDash([7,7]);
-        for(const gap of gaps){
-            c.beginPath();c.moveTo(gap.startX,gap.startY);c.lineTo(gap.endX,gap.endY);c.stroke();
-        }
-        c.restore();c.setLineDash([]);
-
-        c.font='11px system-ui';c.textAlign='center';c.fillStyle='#93a4ba';
-        for(const gap of gaps){
-            const days=Math.max(2,Math.round(gap.duration/(24*60*60*1000)));
-            c.fillText(`No data · ${days} days`,(gap.startX+gap.endX)/2,(gap.startY+gap.endY)/2-9);
-        }
-        c.textAlign='start';
     }
 
     const runs=[];
     for(let sampleIndex=0;sampleIndex<samples.length;sampleIndex++){
-        const sample=samples[sampleIndex],previousSample=samples[sampleIndex-1];
+        const sample=samples[sampleIndex];
         const previous=runs.at(-1);
-        if(previous&&previous.value===sample.value&&sample.time-previousSample.time<=gapThreshold){
+        if(previous&&previous.value===sample.value){
             previous.endTime=sample.time;previous.count++;
         }else{
             runs.push({value:sample.value,startTime:sample.time,endTime:sample.time,count:1});
@@ -466,7 +448,7 @@ function drawChart() {
 
     note.textContent=samples.length<2
         ? 'One snapshot recorded; the trend begins with the next update.'
-        : 'Time spacing reflects elapsed time. Dashed segments mark periods without snapshots; duplicate pulls are grouped as ×N.';
+        : 'Only recorded checks are shown; dates without snapshots are omitted. Consecutive duplicate pulls are grouped as ×N.';
 }
 
 canvas.addEventListener('click',event=>{
