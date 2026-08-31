@@ -133,11 +133,15 @@ function aggregateAnalytics(array $tickets, array $closedStatuses, DateTimeImmut
         if ($requesterId > 0) $requesterLoads[$requesterId] = ($requesterLoads[$requesterId] ?? 0) + 1;
     }
 
-    $requesterDistribution = ['1 ticket' => 0, '2 tickets' => 0, '3 tickets' => 0, '4 tickets' => 0, '5+ tickets' => 0];
+    $requesterDistribution = [];
     foreach ($requesterLoads as $ticketCount) {
-        $bucket = $ticketCount >= 5 ? '5+ tickets' : $ticketCount . ($ticketCount === 1 ? ' ticket' : ' tickets');
-        $requesterDistribution[$bucket]++;
+        $bucket = $ticketCount . ($ticketCount === 1 ? ' ticket' : ' tickets');
+        $requesterDistribution[$bucket] = ($requesterDistribution[$bucket] ?? 0) + 1;
     }
+    uksort(
+        $requesterDistribution,
+        static fn(string $left, string $right): int => (int) $left <=> (int) $right
+    );
 
     return [
         'status' => sortedCounts($statusCounts),
