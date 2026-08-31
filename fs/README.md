@@ -18,7 +18,7 @@ The dashboard merges the Git-tracked manual history with API snapshots stored on
 Each authenticated collector attempt is also recorded in `storage/pull-log.json` and displayed in the dashboard's API pull log. Successful and failed pulls are retained without credentials or ticket content.
 When the latest unresolved count reaches zero, the dashboard displays a dismissible applause banner with an accessible fireworks celebration.
 API snapshots include anonymous aggregate charts for status, category, priority, ticket age, and requester ticket-count distribution. Raw requester IDs remain only in protected state; categories with fewer than three tickets are grouped into `Other`.
-The unresolved trend spaces recorded checks evenly and omits dates without snapshots. Consecutive duplicate values are grouped into plateaus.
+The unresolved trend spaces recorded checks evenly and omits dates without snapshots. Consecutive duplicate values are grouped into plateaus, and repeated checks on the latest date include a timestamp at the right edge.
 
 ## Setup
 

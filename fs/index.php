@@ -391,17 +391,26 @@ function drawChart() {
     const observedDays=[];
     for(const sample of samples){
         const date=new Date(sample.time),dayKey=`${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-        if(!observedDays.some(day=>day.key===dayKey))observedDays.push({key:dayKey,time:sample.time});
+        const existingDay=observedDays.find(day=>day.key===dayKey);
+        if(existingDay){existingDay.lastTime=sample.time;existingDay.count++;}
+        else observedDays.push({key:dayKey,time:sample.time,lastTime:sample.time,count:1});
     }
-    const tickCount=Math.min(maxTickCount,observedDays.length),visibleTicks=[];
+    const latestObservedDay=observedDays.at(-1),showLatestTime=latestObservedDay&&latestObservedDay.count>1;
+    const dayCandidates=showLatestTime?observedDays.slice(0,-1):observedDays;
+    const dayTickLimit=Math.max(0,maxTickCount-(showLatestTime?1:0));
+    const tickCount=Math.min(dayTickLimit,dayCandidates.length),visibleTicks=[];
     for(let i=0;i<tickCount;i++){
-        const index=tickCount===1?0:Math.round((observedDays.length-1)*(i/(tickCount-1)));
-        if(!visibleTicks.includes(observedDays[index].time))visibleTicks.push(observedDays[index].time);
+        const index=tickCount===1?0:Math.round((dayCandidates.length-1)*(i/(tickCount-1)));
+        if(!visibleTicks.some(tick=>tick.time===dayCandidates[index].time))visibleTicks.push({time:dayCandidates[index].time,showTime:false});
     }
+    if(showLatestTime)visibleTicks.push({time:latestObservedDay.lastTime,showTime:true});
     c.font=(w<480?'10px':'11px')+' system-ui';
-    for(const tickTime of visibleTicks){
+    for(const tick of visibleTicks){
+        const tickTime=tick.time;
         const x=xFor(tickTime);
-        const label=new Date(tickTime).toLocaleString(undefined,dateOptions),labelWidth=c.measureText(label).width;
+        const label=new Date(tickTime).toLocaleString(undefined,tick.showTime
+            ? {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}
+            : dateOptions),labelWidth=c.measureText(label).width;
         c.strokeStyle='#29405d';c.beginPath();c.moveTo(x,h-p.b);c.lineTo(x,h-p.b+6);c.stroke();
         const labelX=Math.max(p.l,Math.min(w-p.r-labelWidth,x-labelWidth/2));
         c.fillStyle='#93a4ba';c.fillText(label,labelX,h-15);
