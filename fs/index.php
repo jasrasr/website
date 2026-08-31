@@ -420,9 +420,10 @@ function drawChart() {
     c.font='12px system-ui';c.textAlign='center';c.textBaseline='alphabetic';
     const placed=[];
     canvas._trendHits=runs.map(run=>{
-        const startX=xFor(run.startTime),endX=xFor(run.endTime),labelX=(startX+endX)/2,y=yFor(run.value);
+        const startX=xFor(run.startTime),endX=xFor(run.endTime),rawLabelX=(startX+endX)/2,y=yFor(run.value);
         const label=run.count>1?`${run.value} × ${run.count}`:String(run.value);
         const labelWidth=c.measureText(label).width;
+        const labelX=Math.max(p.l+labelWidth/2,Math.min(w-p.r-labelWidth/2,rawLabelX));
         let labelY=y-12;
         if(placed.some(item=>Math.abs(item.y-labelY)<15&&labelX-labelWidth/2<item.right+7&&labelX+labelWidth/2>item.left-7)) labelY=y+21;
         if(labelY>h-p.b-3)labelY=y-12;
