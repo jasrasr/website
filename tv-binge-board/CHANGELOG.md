@@ -5,10 +5,21 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-05
-Revision: 1.5.22
+Revision: 1.5.23
 -->
 
 # Changelog
+
+## rev 1.5.23 - 2026-07-05
+
+- Verified Matt's current list/detail/home feedback against the active GitHub source.
+- The episode detail page no longer defaults to Season 1 for long-running shows; it opens the most recent season that still has unwatched episodes.
+- When the detail page auto-selects a later season, it scrolls that season into view after load.
+- The List page now remembers each user's last filter choices in their profile JSON.
+- The List page now defaults to hiding 100% complete, watched, caught-up, finished, and dropped items.
+- The List page top area is more compact, uses a title-only partial search by default, and moves status/type/sort options into an Advanced filters panel.
+- Home screen media sections now hide finished/caught-up/100% watched items, while stats still reflect the full library.
+- Bumped the visible project revision and service worker cache to 1.5.23.
 
 ## rev 1.5.22 - 2026-07-05
 
@@ -41,13 +52,4 @@ Revision: 1.5.22
 - Queued the next list-page update in `TASKS.md`.
 - Bumped the visible project revision and service worker cache to 1.5.20.
 
-## rev 1.5.19 - 2026-07-05
-
-- Completed the remaining non-security feature backlog in one pass.
-- Added `smart-import.php` for paste-based structured parsing with fuzzy existing-library matching and optional TMDB matching.
-- Added `lists.php` for user-created custom lists and per-item tags.
-- Added `recommendations.php` for friend/public-list recommendations based on visible libraries, completion status, ratings, repeated support, and shared-title overlap.
-- Added Dashboard links to Smart import, Lists / tags, and Recommendations.
-- Bumped the visible project revision and service worker cache to 1.5.19.
-
-Older entries are available in Git history before rev 1.5.19.
+Older entries are available in Git history before rev 1.5.20.
