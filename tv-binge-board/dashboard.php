@@ -2,16 +2,29 @@
 /**
  * File: dashboard.php
  * Project: TV Binge Board
- * Description: User landing page with automatic new-episode checks, watch progress, dismissible PWA install help, compact dashboard notices, advanced feature links, and admin account routing.
+ * Description: User landing page with automatic new-episode checks, watch progress, hidden finished/caught-up home cards, dismissible PWA install help, compact dashboard notices, advanced feature links, suggestion-board link, and admin account routing.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-05
- * Revision: 1.5.19
+ * Revision: 1.5.23
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/auto-refresh.php';
 $user = app_require_login();
+
+function app_dashboard_should_show_item(array $item): bool
+{
+    $status = (string)($item['status'] ?? 'watchlist');
+    if (in_array($status, ['completed', 'watched', 'dropped'], true)) { return false; }
+    if (($item['type'] ?? '') === 'tv') {
+        $nextUp = app_next_up_summary($item);
+        if (($nextUp['state'] ?? '') === 'caught-up') { return false; }
+        $percent = app_episode_percent($item);
+        if ($percent !== null && $percent >= 100) { return false; }
+    }
+    return true;
+}
 
 app_page_header('Dashboard');
 ?>
@@ -25,10 +38,11 @@ $activity = app_activity_events(6);
 ?>
 <section class="card">
     <h1>Admin dashboard</h1>
-    <p>This account is intentionally not a watch-tracking account. Use it to manage users, site settings, and audits.</p>
+    <p>This account is intentionally not a watch-tracking account. Use it to manage users, site settings, audits, and suggestions.</p>
     <div class="actions">
         <a class="button" href="admin/users.php">Manage users</a>
         <a class="button secondary" href="admin/site-settings.php">Site settings</a>
+        <a class="button secondary" href="suggestions.php">Suggestions / bugs</a>
         <a class="button secondary" href="changelog.php">View changelog</a>
         <a class="button secondary" href="install.php">Install app</a>
     </div>
@@ -50,19 +64,21 @@ $autoRefresh = app_auto_refresh_user_library((string)$user['username']);
 $autoRefreshNotice = app_auto_refresh_notice($autoRefresh);
 $library = is_array($autoRefresh['library'] ?? null) ? $autoRefresh['library'] : app_library($user['username']);
 $items = $library['items'];
+$homeItems = array_values(array_filter($items, static fn($i) => app_dashboard_should_show_item(is_array($i) ? $i : [])));
 $stats = app_library_stats($items);
-$watching = array_values(array_filter($items, fn($i) => ($i['status'] ?? '') === 'watching'));
-$watchlist = array_values(array_filter($items, fn($i) => ($i['status'] ?? '') === 'watchlist'));
-$recent = $items;
+$watching = array_values(array_filter($homeItems, fn($i) => ($i['status'] ?? '') === 'watching'));
+$watchlist = array_values(array_filter($homeItems, fn($i) => ($i['status'] ?? '') === 'watchlist'));
+$recent = $homeItems;
 usort($recent, fn($a, $b) => strcmp((string)($b['updated_at'] ?? ''), (string)($a['updated_at'] ?? '')));
 $showInstallPrompt = empty($profile['hide_install_prompt']);
 ?>
 <section class="hero-card">
     <h1>What’s next?</h1>
-    <p>Track movies, shows, ratings, notes, exports, imports, episode progress, tags, custom lists, and friend recommendations.</p>
+    <p>Track movies, shows, ratings, notes, exports, imports, episode progress, tags, custom lists, friend recommendations, and feature suggestions.</p>
     <div class="actions">
         <a class="button" href="search.php">Add something</a>
         <a class="button secondary" href="watchlist.php">Open full list</a>
+        <a class="button secondary" href="suggestions.php">Suggest / report</a>
         <a class="button secondary" href="smart-import.php">Smart import</a>
         <a class="button secondary" href="lists.php">Lists / tags</a>
         <a class="button secondary" href="recommendations.php">Recommendations</a>
@@ -99,20 +115,21 @@ $showInstallPrompt = empty($profile['hide_install_prompt']);
 </section>
 <section>
     <h2>Continue Watching</h2>
-    <?php if (!$watching): ?><p class="muted">Nothing currently marked as watching.</p><?php endif; ?>
+    <?php if (!$watching): ?><p class="muted">Nothing currently active in Watching.</p><?php endif; ?>
     <div class="media-list">
         <?php foreach (array_slice($watching, 0, 6) as $item) app_render_media_card($item, true); ?>
     </div>
 </section>
 <section>
     <h2>Watchlist</h2>
-    <?php if (!$watchlist): ?><p class="muted">Your watchlist is empty. Glorious freedom, or terrible data entry discipline.</p><?php endif; ?>
+    <?php if (!$watchlist): ?><p class="muted">Your active watchlist is empty.</p><?php endif; ?>
     <div class="media-list">
         <?php foreach (array_slice($watchlist, 0, 6) as $item) app_render_media_card($item, true); ?>
     </div>
 </section>
 <section>
     <h2>Recently Updated</h2>
+    <?php if (!$recent): ?><p class="muted">No active unfinished items to show.</p><?php endif; ?>
     <div class="media-list">
         <?php foreach (array_slice($recent, 0, 6) as $item) app_render_media_card($item, true); ?>
     </div>

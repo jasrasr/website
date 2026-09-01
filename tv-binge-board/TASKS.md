@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-05
-Revision: 1.5.22
+Revision: 1.5.23
 -->
 
 # TV Binge Board Task List
@@ -50,12 +50,17 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] rev 1.5.20 - public suggestion and bug board with required email capture.
 - [x] rev 1.5.21 - PNG/JPG screenshot attachments for suggestions.
 - [x] rev 1.5.22 - gap-aware episode/season prior-progress prompts.
+- [x] rev 1.5.23 - Matt list/detail/home progress cleanup.
 
 ## Matt feedback
 
 - [x] Do not prompt when marking the very next unwatched episode.
 - [x] Prompt only when a selected episode would skip over an unwatched earlier episode.
 - [x] Apply the same gap-aware logic to season-level prior-season prompts.
+- [x] Open long-running shows at the most recent season with unwatched episodes instead of Season 1.
+- [x] Auto-scroll to the selected unwatched season on first item-detail load.
+- [x] Keep the List page Hide 100% / caught-up / finished setting persistent per user.
+- [x] Hide 100% watched/caught-up/finished shows from Home screen media sections.
 
 ## Suggestion board
 
@@ -73,14 +78,14 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Save attachment metadata to suggestion JSON.
 - [x] Document that iPhone screenshots are usually PNG and HEIC photos must be converted first.
 
-## Next list-page update
+## List-page update
 
-- [ ] Make the top of the List page smaller.
-- [ ] Remember the last List filter used per user.
-- [ ] Default to hiding 100% complete/watched/caught-up items.
-- [ ] Search list results by partial title entry.
-- [ ] Show only a title search box by default.
-- [ ] Add an expandable advanced-search area for other criteria.
+- [x] Make the top of the List page smaller.
+- [x] Remember the last List filter used per user.
+- [x] Default to hiding 100% complete/watched/caught-up items.
+- [x] Search list results by partial title entry.
+- [x] Show only a title search box by default.
+- [x] Add an expandable advanced-search area for other criteria.
 
 ## Import plan
 
