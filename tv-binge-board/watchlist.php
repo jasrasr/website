@@ -178,6 +178,8 @@ function app_render_compact_media_card(array $item): void
     <?php
 }
 
+$filters = app_can_track($user) ? app_watchlist_current_filters((string)$user['username'], $_GET) : [];
+
 app_page_header('My List');
 if (!app_can_track($user)):
 ?>
@@ -190,7 +192,6 @@ else:
 $autoRefresh = app_auto_refresh_user_library((string)$user['username']);
 $autoRefreshNotice = app_auto_refresh_notice($autoRefresh);
 $library = is_array($autoRefresh['library'] ?? null) ? $autoRefresh['library'] : app_library($user['username']);
-$filters = app_watchlist_current_filters((string)$user['username'], $_GET);
 $items = app_watchlist_filter_sort_items($library['items'], $filters);
 $currentSort = (string)($filters['sort'] ?? 'smart');
 $advancedOpen = ($filters['status'] ?? '') !== '' || ($filters['type'] ?? '') !== '' || $currentSort !== 'smart' || empty($filters['in_progress']);
