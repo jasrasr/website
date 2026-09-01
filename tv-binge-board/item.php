@@ -2,11 +2,11 @@
 /**
  * File: item.php
  * Project: TV Binge Board
- * Description: Media detail page with editable metadata, next-up/caught-up TV status, TMDB links, metadata refresh controls, local artwork refresh controls, host-friendly watch progress actions, watched episode checkmarks, current-show auto-refresh, spoiler-safe episode display modes, completion percentage, gap-aware prior-progress prompts, and TMDB-backed TV episode grid.
+ * Description: Media detail page with editable metadata, next-up/caught-up TV status, TMDB links, metadata refresh controls, local artwork refresh controls, host-friendly watch progress actions, watched episode checkmarks, current-show auto-refresh, spoiler-safe episode display modes, completion percentage, gap-aware prior-progress prompts, most-recent-unwatched season focus, and TMDB-backed TV episode grid.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-05
- * Revision: 1.5.22
+ * Revision: 1.5.23
  */
 declare(strict_types=1);
 
@@ -44,7 +44,8 @@ $editable = app_is_admin($user) || $targetUsername === $user['username'];
 $watched = app_watched_episode_keys($item);
 $percent = app_episode_percent($item);
 $nextUpSummary = app_next_up_summary($item, true);
-$requestedSeason = max(0, (int)($_GET['season'] ?? 1));
+$requestedSeason = isset($_GET['season']) ? max(0, (int)$_GET['season']) : 0;
+$autoScrollSeason = false;
 $episodeView = (string)($_GET['episode_view'] ?? ($_COOKIE['tvbb_episode_view'] ?? 'image'));
 if (!in_array($episodeView, ['image', 'text'], true)) { $episodeView = 'image'; }
 if (isset($_GET['episode_view'])) {
@@ -53,6 +54,26 @@ if (isset($_GET['episode_view'])) {
 $baseItemQuery = 'item.php?uid=' . rawurlencode($uid) . (app_is_admin($user) ? '&u=' . rawurlencode($targetUsername) : '');
 $tmdbUrl = app_tmdb_public_url_for_item($item);
 $artworkQuery = 'artwork.php?uid=' . rawurlencode($uid) . (app_is_admin($user) ? '&u=' . rawurlencode($targetUsername) : '');
+
+function app_item_most_recent_unwatched_season(array $seasonSummaries, array $watched): int
+{
+    $fallbackSeason = 1;
+    $targetSeason = 0;
+    foreach ($seasonSummaries as $summary) {
+        if (!is_array($summary)) { continue; }
+        $seasonNumber = (int)($summary['season_number'] ?? 0);
+        if ($seasonNumber <= 0) { continue; }
+        $fallbackSeason = max($fallbackSeason, $seasonNumber);
+        $episodeCount = max(1, (int)($summary['episode_count'] ?? 1));
+        for ($episode = 1; $episode <= min($episodeCount, 80); $episode++) {
+            if (empty($watched[$seasonNumber . '-' . $episode])) {
+                $targetSeason = max($targetSeason, $seasonNumber);
+                break;
+            }
+        }
+    }
+    return $targetSeason > 0 ? $targetSeason : $fallbackSeason;
+}
 
 $seasonSummaries = [];
 if (($item['type'] ?? '') === 'tv') {
@@ -71,6 +92,10 @@ if (($item['type'] ?? '') === 'tv') {
         }
     }
     usort($seasonSummaries, static fn($left, $right) => (int)($left['season_number'] ?? 0) <=> (int)($right['season_number'] ?? 0));
+    if ($requestedSeason <= 0) {
+        $requestedSeason = app_item_most_recent_unwatched_season($seasonSummaries, $watched);
+        $autoScrollSeason = $requestedSeason > 1;
+    }
 }
 
 app_page_header((string)($item['title'] ?? 'Item'));
@@ -142,7 +167,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
     </div>
     <p class="muted">Text-only mode is more compact and avoids episode stills that may reveal spoilers.</p>
     <p class="muted">Green with ✓ Watched = watched. Gray/dark without a checkmark = unwatched.</p>
-    <p class="muted">The prior-episode prompt appears only when the selected episode or season would skip over unwatched earlier progress.</p>
+    <p class="muted">Opening this page jumps to the most recent season with unwatched episodes. The prior-episode prompt appears only when a selected episode or season would skip over unwatched earlier progress.</p>
     <div id="episodes"></div>
     <?php $hasUnwatchedBeforeEpisode = false; foreach ($seasonSummaries as $summary): ?>
         <?php
@@ -222,6 +247,14 @@ app_page_header((string)($item['title'] ?? 'Item'));
     <?php endforeach; ?>
 </section>
 <script>
+<?php if ($autoScrollSeason): ?>
+window.addEventListener('load', function () {
+    window.setTimeout(function () {
+        var target = document.getElementById('season-<?= e((string)$requestedSeason) ?>');
+        if (target) { target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    }, 250);
+});
+<?php endif; ?>
 function tvbbConfirmEpisodeProgress(form) {
     if (!form || form.dataset.watched === '1') { return true; }
     var op = form.querySelector('input[name="op"]');
