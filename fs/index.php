@@ -136,6 +136,7 @@ function analyticsRows(array $analytics, string $key): array
         .bar-fill { display:block; height:100%; min-width:3px; border-radius:inherit; background:linear-gradient(90deg,var(--blue),var(--green)); }
         .bar-value { min-width:2ch; text-align:right; font-weight:800; font-variant-numeric:tabular-nums; }
         canvas { display:block; width:100%; height:280px; }
+        .trend-viewport { overflow-x:auto; }
         .table-wrap { overflow:auto; }
         table { width:100%; border-collapse:collapse; min-width:680px; }
         th,td { padding:13px 10px; border-bottom:1px solid var(--line); text-align:left; }
@@ -195,7 +196,7 @@ function analyticsRows(array $analytics, string $key): array
         <?php if (($latest['source'] ?? '') !== 'freshservice-api'): ?><p class="muted">Detailed activity begins after the API collector is configured and has completed at least two runs.</p><?php endif; ?>
     </section>
 
-    <section class="section"><h2>Unresolved ticket trend</h2><canvas id="trend" role="img" aria-label="Unresolved ticket count over time"></canvas><p id="chart-note" class="muted"></p></section>
+    <section class="section"><h2>Daily unresolved ticket trend</h2><div class="trend-viewport" tabindex="0" role="region" aria-label="Scrollable daily ticket chart"><canvas id="trend" role="img" aria-label="Daily unresolved ticket counts"></canvas></div><p id="chart-note" class="muted" aria-live="polite"></p></section>
 
     <section class="section"><h2>Current queue analytics</h2>
         <?php if (!$analytics): ?>
@@ -359,122 +360,113 @@ async function autoPullOnPageLoad() {
 }
 autoPullOnPageLoad();
 
-function drawChart() {
-    const dpr = window.devicePixelRatio || 1, rect = canvas.getBoundingClientRect();
-    canvas.width = Math.max(1, Math.round(rect.width * dpr)); canvas.height = Math.round(280 * dpr);
-    const c = canvas.getContext('2d'); c.scale(dpr,dpr);
-    const w=rect.width,h=280,p={l:48,r:16,t:30,b:52}; c.clearRect(0,0,w,h);
+const chartTimezone = 'America/New_York';
+const calendarDayMs = 24 * 60 * 60 * 1000;
+const chartDayFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: chartTimezone, year: 'numeric', month: '2-digit', day: '2-digit'
+});
 
-    const samples=entries
-        .map(entry=>({entry,value:Number(entry.unresolved),time:new Date(entry.capturedAt).getTime()}))
-        .filter(sample=>Number.isFinite(sample.value)&&Number.isFinite(sample.time))
-        .sort((a,b)=>a.time-b.time);
-    if (!samples.length) { note.textContent='No snapshots recorded.'; canvas._trendHits=[]; return; }
-
-    const values=samples.map(sample=>sample.value), min=Math.min(...values,0), max=Math.max(...values,1), range=Math.max(1,max-min);
-    const firstTime=samples[0].time,lastTime=samples.at(-1).time,timeRange=Math.max(1,lastTime-firstTime);
-    const plotWidth=w-p.l-p.r,plotHeight=h-p.t-p.b;
-    const sampleIndexes=new Map(samples.map((sample,index)=>[sample.time,index]));
-    const xFor=time=>samples.length===1?(p.l+w-p.r)/2:p.l+plotWidth*((sampleIndexes.get(time)??0)/(samples.length-1));
-    const yFor=value=>p.t+plotHeight*((max-value)/range);
-
-    c.strokeStyle='#29405d'; c.fillStyle='#93a4ba'; c.font='12px system-ui'; c.lineWidth=1;
-    for(let i=0;i<5;i++){
-        const y=p.t+plotHeight*(i/4),v=Math.round(max-range*(i/4));
-        c.beginPath();c.moveTo(p.l,y);c.lineTo(w-p.r,y);c.stroke();c.fillText(String(v),6,y+4);
-    }
-
-    const maxTickCount=samples.length===1?1:(w<480?4:w<760?7:14);
-    const dateOptions=timeRange<=36*60*60*1000
-        ? {month:'short',day:'numeric',hour:'numeric'}
-        : {month:'short',day:'numeric'};
-    const observedDays=[];
-    for(const sample of samples){
-        const date=new Date(sample.time),dayKey=`${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-        const existingDay=observedDays.find(day=>day.key===dayKey);
-        if(existingDay){existingDay.lastTime=sample.time;existingDay.count++;}
-        else observedDays.push({key:dayKey,time:sample.time,lastTime:sample.time,count:1});
-    }
-    const latestObservedDay=observedDays.at(-1),showLatestTime=latestObservedDay&&latestObservedDay.count>1;
-    const dayCandidates=showLatestTime?observedDays.slice(0,-1):observedDays;
-    const dayTickLimit=Math.max(0,maxTickCount-(showLatestTime?1:0));
-    const tickCount=Math.min(dayTickLimit,dayCandidates.length),visibleTicks=[];
-    for(let i=0;i<tickCount;i++){
-        const index=tickCount===1?0:Math.round((dayCandidates.length-1)*(i/(tickCount-1)));
-        if(!visibleTicks.some(tick=>tick.time===dayCandidates[index].time))visibleTicks.push({time:dayCandidates[index].time,showTime:false});
-    }
-    if(showLatestTime)visibleTicks.push({time:latestObservedDay.lastTime,showTime:true});
-    c.font=(w<480?'10px':'11px')+' system-ui';
-    for(const tick of visibleTicks){
-        const tickTime=tick.time;
-        const x=xFor(tickTime);
-        const label=new Date(tickTime).toLocaleString(undefined,tick.showTime
-            ? {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}
-            : dateOptions),labelWidth=c.measureText(label).width;
-        c.strokeStyle='#29405d';c.beginPath();c.moveTo(x,h-p.b);c.lineTo(x,h-p.b+6);c.stroke();
-        const labelX=Math.max(p.l,Math.min(w-p.r-labelWidth,x-labelWidth/2));
-        c.fillStyle='#93a4ba';c.fillText(label,labelX,h-15);
-    }
-
-    if(samples.length>1){
-        c.strokeStyle='#4d95ff';c.lineWidth=3;c.lineJoin='round';c.setLineDash([]);
-        for(let i=1;i<samples.length;i++){
-            const previous=samples[i-1],current=samples[i],startX=xFor(previous.time),endX=xFor(current.time),startY=yFor(previous.value),endY=yFor(current.value);
-            c.beginPath();c.moveTo(startX,startY);c.lineTo(endX,startY);
-            if(endY!==startY)c.lineTo(endX,endY);
-            c.stroke();
-        }
-    }
-
-    const runs=[];
-    for(let sampleIndex=0;sampleIndex<samples.length;sampleIndex++){
-        const sample=samples[sampleIndex];
-        const previous=runs.at(-1);
-        if(previous&&previous.value===sample.value){
-            previous.endTime=sample.time;previous.count++;
-        }else{
-            runs.push({value:sample.value,startTime:sample.time,endTime:sample.time,count:1});
-        }
-    }
-
-    c.font='12px system-ui';c.textAlign='center';c.textBaseline='alphabetic';
-    const placed=[];
-    canvas._trendHits=runs.map(run=>{
-        const startX=xFor(run.startTime),endX=xFor(run.endTime),rawLabelX=(startX+endX)/2,y=yFor(run.value);
-        const label=run.count>1?`${run.value} × ${run.count}`:String(run.value);
-        const labelWidth=c.measureText(label).width;
-        const labelX=Math.max(p.l+labelWidth/2,Math.min(w-p.r-labelWidth/2,rawLabelX));
-        let labelY=y-12;
-        if(placed.some(item=>Math.abs(item.y-labelY)<15&&labelX-labelWidth/2<item.right+7&&labelX+labelWidth/2>item.left-7)) labelY=y+21;
-        if(labelY>h-p.b-3)labelY=y-12;
-        placed.push({left:labelX-labelWidth/2,right:labelX+labelWidth/2,y:labelY});
-
-        c.fillStyle='#3ddc84';c.beginPath();c.arc(startX,y,5,0,Math.PI*2);c.fill();
-        c.fillStyle='#f3f7fb';c.fillText(label,labelX,labelY);
-        return {startX,endX,y,run};
-    });
-    c.textAlign='start';
-
-    note.textContent=samples.length<2
-        ? 'One snapshot recorded; the trend begins with the next update.'
-        : 'Only recorded checks are shown; dates without snapshots are omitted. Consecutive duplicate pulls are grouped as ×N.';
+function chartDay(time) {
+    const parts = Object.fromEntries(chartDayFormatter.formatToParts(time).map(part => [part.type, part.value]));
+    return Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day));
 }
 
-canvas.addEventListener('click',event=>{
-    const rect=canvas.getBoundingClientRect(),x=event.clientX-rect.left,y=event.clientY-rect.top;
-    const hits=canvas._trendHits||[];
-    let best=null,bestDistance=Infinity;
-    for(const hit of hits){
-        const left=Math.min(hit.startX,hit.endX)-12,right=Math.max(hit.startX,hit.endX)+12;
-        const dx=x<left?left-x:x>right?x-right:0,dy=Math.abs(y-hit.y),distance=Math.hypot(dx,dy);
-        if(distance<bestDistance){best=hit;bestDistance=distance;}
+// Display aggregation only: keep every raw snapshot for history and activity.
+function dailyChartSamples(rawEntries) {
+    const days = new Map();
+    for (const entry of rawEntries) {
+        const value = Number(entry.unresolved), time = Date.parse(entry.capturedAt);
+        if (entry.unresolved === null || entry.unresolved === '' || !Number.isFinite(value) ||
+            value < 0 || !Number.isFinite(time)) continue;
+        const day = chartDay(time), previous = days.get(day);
+        if (!previous || time >= previous.time) days.set(day, {value, time, day});
     }
-    if(!best||bestDistance>28)return;
-    const {run}=best,start=new Date(run.startTime),end=new Date(run.endTime);
-    const rangeLabel=run.count>1
-        ? `${start.toLocaleString()} through ${end.toLocaleString()}`
-        : start.toLocaleString();
-    note.textContent=`${run.value} unresolved across ${run.count} ${run.count===1?'check':'checks'} — ${rangeLabel}.`;
+    return [...days.values()].sort((a, b) => a.day - b.day);
+}
+
+let chartInitiallyScrolled = false;
+function drawChart() {
+    const samples = dailyChartSamples(entries);
+    const viewport = canvas.parentElement;
+    const p = {l:48, r:24, t:30, b:52}, h = 280;
+    const firstDay = samples[0]?.day ?? 0, lastDay = samples.at(-1)?.day ?? firstDay;
+    const dayCount = Math.round((lastDay - firstDay) / calendarDayMs) + 1;
+    // Each calendar date gets a readable tick, including dates with no observations.
+    const w = Math.max(viewport.clientWidth, p.l + p.r + Math.max(1, dayCount - 1) * 52);
+    const dpr = window.devicePixelRatio || 1;
+    canvas.style.width = `${w}px`;
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+    const c = canvas.getContext('2d'); c.scale(dpr, dpr); c.clearRect(0, 0, w, h);
+    canvas._trendHits = [];
+    if (!samples.length) { note.textContent = 'No snapshots recorded.'; return; }
+
+    const max = Math.max(1, ...samples.map(sample => sample.value));
+    const plotWidth = w - p.l - p.r, plotHeight = h - p.t - p.b;
+    const xFor = day => dayCount === 1 ? p.l + plotWidth / 2 :
+        p.l + plotWidth * (day - firstDay) / (lastDay - firstDay);
+    const yFor = value => p.t + plotHeight * (max - value) / max;
+    c.strokeStyle = '#29405d'; c.fillStyle = '#93a4ba'; c.font = '12px system-ui'; c.lineWidth = 1;
+    for (let i = 0; i < 5; i++) {
+        const y = p.t + plotHeight * i / 4;
+        c.beginPath(); c.moveTo(p.l, y); c.lineTo(w - p.r, y); c.stroke();
+        c.fillText(String(Math.round(max * (1 - i / 4))), 6, y + 4);
+    }
+
+    c.textAlign = 'center'; c.font = '11px system-ui';
+    for (let day = firstDay; day <= lastDay; day += calendarDayMs) {
+        const x = xFor(day), date = new Date(day);
+        c.beginPath(); c.moveTo(x, h - p.b); c.lineTo(x, h - p.b + 6); c.stroke();
+        c.fillText(date.toLocaleDateString('en-US', {timeZone:'UTC', month:'short'}), x, h - 23);
+        c.fillText(String(date.getUTCDate()), x, h - 8);
+    }
+
+    // Connect daily observations; dashed spans explicitly indicate missing days.
+    c.strokeStyle = '#4d95ff'; c.lineWidth = 3; c.lineJoin = 'round';
+    for (let i = 1; i < samples.length; i++) {
+        const previous = samples[i - 1], current = samples[i];
+        c.setLineDash(current.day - previous.day > calendarDayMs ? [5, 5] : []);
+        c.beginPath(); c.moveTo(xFor(previous.day), yFor(previous.value));
+        c.lineTo(xFor(current.day), yFor(current.value)); c.stroke();
+    }
+    c.setLineDash([]); c.font = '12px system-ui';
+    canvas._trendHits = samples.map((sample, index) => {
+        const x = xFor(sample.day), y = yFor(sample.value);
+        c.fillStyle = '#3ddc84'; c.beginPath(); c.arc(x, y, 5, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#f3f7fb'; c.fillText(String(sample.value), x, y - 12);
+        return {x, y, sample, previous: samples[index - 1]};
+    });
+    c.textAlign = 'start';
+    const todayIsPartial = lastDay === chartDay(Date.now());
+    note.textContent = 'One point per day: latest recorded unresolved count (Eastern time). ' +
+        (todayIsPartial ? 'Today is still in progress. ' : '') +
+        'Dashed lines bridge days without readings; no counts are invented. ' +
+        'Tap a point for its net change. Swipe horizontally to see every date.';
+    canvas.setAttribute('aria-label', `Daily unresolved tickets, ${samples.length} recorded days. Latest: ${samples.at(-1).value}. Full readings are in Snapshot history.`);
+    if (!chartInitiallyScrolled) {
+        viewport.scrollLeft = viewport.scrollWidth;
+        chartInitiallyScrolled = true;
+    }
+}
+
+canvas.addEventListener('click', event => {
+    const rect = canvas.getBoundingClientRect(), x = event.clientX - rect.left, y = event.clientY - rect.top;
+    let best = null, distance = Infinity;
+    for (const hit of canvas._trendHits || []) {
+        const candidate = Math.hypot(x - hit.x, y - hit.y);
+        if (candidate < distance) { best = hit; distance = candidate; }
+    }
+    if (!best || distance > 28) return;
+    const {sample, previous} = best;
+    const observed = new Date(sample.time).toLocaleString('en-US', {
+        timeZone: chartTimezone, month:'short', day:'numeric', year:'numeric',
+        hour:'numeric', minute:'2-digit', timeZoneName:'short'
+    });
+    const delta = previous ? sample.value - previous.value : null;
+    const gap = previous ? Math.round((sample.day - previous.day) / calendarDayMs) : 0;
+    const changeLabel = delta === null ? 'First recorded day; no prior comparison.' :
+        `Net change: ${delta > 0 ? '+' : ''}${delta} vs ${gap === 1 ? 'previous day' : `previous recorded day (${gap} days earlier)`}.`;
+    note.textContent = `${sample.value} unresolved — last reading ${observed}. ${changeLabel}` +
+        (sample.day === chartDay(Date.now()) ? ' Today is still in progress.' : '');
 });
 
 drawChart(); window.addEventListener('resize',drawChart);
