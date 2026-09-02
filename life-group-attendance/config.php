@@ -2,7 +2,8 @@
 declare(strict_types=1);
 
 const APP_NAME = 'Life Group Attendance';
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.3.0';
+const APP_UPDATED = '2026-09-02';
 const SESSION_NAME = 'life_group_portal';
 const DATA_DIR = __DIR__ . '/data';
 

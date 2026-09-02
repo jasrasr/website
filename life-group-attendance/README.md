@@ -13,6 +13,14 @@ Click any student row—or its explicit **Edit** button—to update the student.
 
 Removing one student—or a bulk selection—is a soft delete: profiles disappear from active lists, sibling links are cleaned up, and prior attendance remains available for historical totals and audits. Siblings can be found by typing a first or last name, with matching last names suggested first. Super Admins can add and edit life groups from the dedicated **Groups** screen.
 
+## Leader accounts and approval
+
+New leaders select **Register for an account** on the login page (or visit `register.php`). They enter their name, email, password, and matching confirmation. New accounts are inactive and awaiting approval with the Attendance role; registration never grants access to student data or Super Admin privileges.
+
+A Super Admin opens **Users**, selects **Review** beside an awaiting-approval account, checks **Active account**, and saves. No email notifications are sent; tell the leader when they can sign in. Existing duplicate email addresses are not modified. Public requests are limited to five per source per hour and 100 pending requests. Registration and administrator account writes share a lock to avoid overwriting one another.
+
+All navigation tabs wrap on phones. The footer displays revision and updated date. CSS/JS URLs include a content hash to refresh cached files after deployment; if startup or data loading fails, the page shows an error instead of silently failing.
+
 ## Requirements
 
 - PHP 8.1 or newer
@@ -44,4 +52,8 @@ Designed for current Chrome, Safari, Edge, and Firefox. The interface is respons
 
 Back up the complete `data/` folder. It contains users, students, groups, attendance, and the audit log.
 
-Version: 1.2.0
+## Validation
+
+Run `node tests/ui-regression.cjs` for dependency-free UI wiring tests. On a PHP 8.1+ machine, lint each PHP file before deployment. Test registration with a non-production account: it must not be able to sign in or retrieve API data until a Super Admin approves it. Verify duplicate registration does not change an existing account and that disabling an account revokes its existing session.
+
+Version: 1.3.0 · Updated: 2026-09-02

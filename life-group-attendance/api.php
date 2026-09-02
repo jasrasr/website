@@ -3,12 +3,13 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib.php';
 $me=require_user();
 $action=$_GET['action'] ?? 'bootstrap';
+if ($action !== 'bootstrap' && $_SERVER['REQUEST_METHOD'] !== 'POST') json_out(['error'=>'Use POST for this action.'],405);
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') require_csrf();
 
 if ($action==='bootstrap') {
     $students=read_store('students'); $groups=read_store('groups'); $attendance=read_store('attendance');
     $safeStudents=$students;
-    $users=[]; if(is_super_admin($me)) foreach(read_store('users') as $u) $users[]=array_intersect_key($u,array_flip(['id','name','email','role','active','createdAt']));
+    $users=[]; if(is_super_admin($me)) foreach(read_store('users') as $u) $users[]=array_intersect_key($u,array_flip(['id','name','email','role','active','pendingRegistration','createdAt']));
     json_out(['groups'=>$groups,'students'=>$safeStudents,'attendance'=>$attendance,'users'=>$users,'version'=>APP_VERSION]);
 }
 if ($action==='save-group') {
@@ -64,17 +65,21 @@ if ($action==='import-frontlines') {
     json_out(['students'=>$students,'added'=>$added,'updated'=>$updated,'sourceCount'=>count($incoming)]);
 }
 if ($action==='save-user') {
-    require_super_admin(); $b=body(); $users=read_store('users'); $id=trim($b['id']??'')?:uuid();
+    require_super_admin(); $b=body();
+    $usersLock=fopen(DATA_DIR.'/users.lock','c');
+    if(!$usersLock||!flock($usersLock,LOCK_EX))json_out(['error'=>'Unable to lock account storage. Try again.'],503);
+    // PHP closes this lock on exit, including all validation-error responses.
+    $users=read_store('users'); $id=trim($b['id']??'')?:uuid();
     $name=trim($b['name']??''); $email=strtolower(trim($b['email']??'')); $role=trim($b['role']??'attendance'); $active=(bool)($b['active']??true); $password=(string)($b['password']??'');
     if($name===''||!filter_var($email,FILTER_VALIDATE_EMAIL))json_out(['error'=>'Name and a valid email are required.'],422);
     if(!in_array($role,['super_admin','attendance'],true))json_out(['error'=>'Invalid role.'],422);
     foreach($users as $u)if($u['id']!==$id&&strcasecmp($u['email'],$email)===0)json_out(['error'=>'That email already has an account.'],422);
     $found=false; foreach($users as &$u)if($u['id']===$id){
         if($id===$me['id']&&(!$active||$role!=='super_admin'))json_out(['error'=>'You cannot deactivate or demote your own account.'],422);
-        $u['name']=$name;$u['email']=$email;$u['role']=$role;$u['active']=$active;if($password!==''){if(strlen($password)<12)json_out(['error'=>'Passwords must be at least 12 characters.'],422);$u['passwordHash']=password_hash($password,PASSWORD_DEFAULT);}$found=true;break;
+        $u['name']=$name;$u['email']=$email;$u['role']=$role;$u['active']=$active;if($active&&($u['pendingRegistration']??false)){$u['pendingRegistration']=false;$u['approvedAt']=now_iso();$u['approvedBy']=$me['id'];}if($password!==''){if(strlen($password)<12)json_out(['error'=>'Passwords must be at least 12 characters.'],422);$u['passwordHash']=password_hash($password,PASSWORD_DEFAULT);}$found=true;break;
     } unset($u);
     if(!$found){if(strlen($password)<12)json_out(['error'=>'A password of at least 12 characters is required for new users.'],422);$users[]=['id'=>$id,'name'=>$name,'email'=>$email,'role'=>$role,'passwordHash'=>password_hash($password,PASSWORD_DEFAULT),'active'=>$active,'createdAt'=>now_iso()];}
     write_store('users',$users);audit($found?'update':'create','user',$id,['role'=>$role,'active'=>$active]);
-    $safe=[];foreach($users as $u)$safe[]=array_intersect_key($u,array_flip(['id','name','email','role','active','createdAt']));json_out(['users'=>$safe],$found?200:201);
+    $safe=[];foreach($users as $u)$safe[]=array_intersect_key($u,array_flip(['id','name','email','role','active','pendingRegistration','createdAt']));json_out(['users'=>$safe],$found?200:201);
 }
 json_out(['error'=>'Unknown action.'],404);

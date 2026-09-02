@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.0 — 2026-09-02
+
+- Versioned CSS/JavaScript URLs by revision and content hash to prevent stale-script/page mismatches after deployment.
+- Added delegated Add life group handling, startup/data-load error messages, and visible revision/date.
+- Made all navigation tabs visible on phones, including Users.
+- Added public leader registration with password confirmation and pending Super Admin approval; registrations cannot choose a role or activate themselves.
+- Added pending-registration review in Users. Existing accounts are never replaced by registration.
+- Added registration limits and serialized account writes; disabled/pending accounts cannot use existing sessions.
+- Fixed login CSRF enforcement and required POST for API mutations.
+
 ## 1.2.0 — 2026-08-31
 
 - Replaced the overflowing mobile student table with compact, responsive student cards.

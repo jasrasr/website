@@ -33,7 +33,21 @@ function body(): array {
     $data = json_decode($raw ?: '{}', true);
     return is_array($data) ? $data : [];
 }
-function user(): ?array { return $_SESSION['user'] ?? null; }
+function asset_url(string $path): string {
+    return $path . '?v=' . APP_VERSION . '-' . substr(hash_file('sha256', __DIR__ . '/' . $path), 0, 12);
+}
+function user(): ?array {
+    $session = $_SESSION['user'] ?? null;
+    if (!$session) return null;
+    foreach (read_store('users') as $account) {
+        if (($account['id'] ?? '') !== $session['id']) continue;
+        if (!($account['active'] ?? true) || ($account['pendingRegistration'] ?? false)) break;
+        $role = ($account['role'] ?? 'attendance') === 'admin' ? 'super_admin' : ($account['role'] ?? 'attendance');
+        return $_SESSION['user'] = ['id'=>$account['id'], 'name'=>$account['name'], 'email'=>$account['email'], 'role'=>$role];
+    }
+    unset($_SESSION['user']);
+    return null;
+}
 function is_super_admin(?array $account = null): bool {
     $role = ($account ?? user())['role'] ?? '';
     return in_array($role, ['super_admin', 'admin'], true);
