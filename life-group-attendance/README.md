@@ -19,6 +19,8 @@ New leaders select **Register for an account** on the login page (or visit `regi
 
 A Super Admin opens **Users**, selects **Review** beside an awaiting-approval account, checks **Active account**, and saves. No email notifications are sent; tell the leader when they can sign in. Existing duplicate email addresses are not modified. Public requests are limited to five per source per hour and 100 pending requests. Registration and administrator account writes share a lock to avoid overwriting one another.
 
+Users fetches fresh accounts each time it is opened; **Refresh approvals** requests another server read without reloading the entire portal. A failed request is shown as an error, not as “no approvals.” Pending accounts appear first in responsive cards. A successful new registration displays a reference only after a read-back verifies the stored row; compare it with the reference in Users. Signing in with the correct password on a pending account shows an approval message, not an incorrect-password error. Re-registering with a matching existing password shows that account's status without modifying it.
+
 All navigation tabs wrap on phones. The footer displays revision and updated date. CSS/JS URLs include a content hash to refresh cached files after deployment; if startup or data loading fails, the page shows an error instead of silently failing.
 
 ## Requirements
@@ -56,4 +58,4 @@ Back up the complete `data/` folder. It contains users, students, groups, attend
 
 Run `node tests/ui-regression.cjs` for dependency-free UI wiring tests. On a PHP 8.1+ machine, lint each PHP file before deployment. Test registration with a non-production account: it must not be able to sign in or retrieve API data until a Super Admin approves it. Verify duplicate registration does not change an existing account and that disabling an account revokes its existing session.
 
-Version: 1.3.0 · Updated: 2026-09-02
+Version: 1.3.1 · Updated: 2026-09-02

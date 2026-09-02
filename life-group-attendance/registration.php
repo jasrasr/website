@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib.php';
 
 /** Store an inactive leader request. Never replace or activate an existing user. */
-function register_leader(array $input, string $source): void {
+function register_leader(array $input, string $source): array {
     $name = trim((string)($input['name'] ?? ''));
     $email = strtolower(trim((string)($input['email'] ?? '')));
     $password = (string)($input['password'] ?? '');
@@ -25,16 +25,29 @@ function register_leader(array $input, string $source): void {
         $sourceHash = hash('sha256', $source);
         $recent = 0; $pending = 0;
         foreach ($users as $u) {
-            // Same response for duplicates; do not disclose whether an account exists.
-            if (strcasecmp($u['email'], $email) === 0) return;
+            if (strcasecmp($u['email'], $email) === 0) {
+                // Reveal status only after verifying the existing account password.
+                if (!password_verify($password, $u['passwordHash'])) {
+                    throw new InvalidArgumentException('Unable to register with these details. If you already have an account, sign in or contact your Super Admin. No account was changed.');
+                }
+                return ['status'=>($u['pendingRegistration']??false)?'pending':(($u['active']??true)?'active':'disabled'), 'id'=>$u['id'], 'created'=>false];
+            }
             if ($u['pendingRegistration'] ?? false) $pending++;
             if (($u['registrationSource'] ?? '') === $sourceHash && strtotime($u['createdAt'] ?? '') > time() - 3600) $recent++;
         }
         if ($recent >= 5 || $pending >= 100) throw new RuntimeException('Registration is temporarily limited. Please contact a Super Admin.');
-        $users[] = ['id'=>uuid(), 'name'=>$name, 'email'=>$email, 'role'=>'attendance',
+        $id = uuid();
+        $users[] = ['id'=>$id, 'name'=>$name, 'email'=>$email, 'role'=>'attendance',
             'passwordHash'=>password_hash($password, PASSWORD_DEFAULT), 'active'=>false,
             'pendingRegistration'=>true, 'registrationSource'=>$sourceHash, 'createdAt'=>now_iso()];
         write_store('users', $users);
+        // Do not show a saved receipt until the persisted row can be read back.
+        $saved = null;
+        foreach (read_store('users') as $row) if (($row['id']??'') === $id) { $saved=$row; break; }
+        if (!$saved || !($saved['pendingRegistration']??false) || ($saved['active']??true) || $saved['email'] !== $email || !password_verify($password, $saved['passwordHash'])) {
+            throw new RuntimeException('Unable to verify saved registration.');
+        }
+        return ['status'=>'pending', 'id'=>$id, 'created'=>true];
     } finally {
         flock($lock, LOCK_UN);
         fclose($lock);

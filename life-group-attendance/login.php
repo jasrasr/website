@@ -8,7 +8,9 @@ $error='';
 if ($_SERVER['REQUEST_METHOD']==='POST') {
     if (!hash_equals(csrf(), $_POST['csrf'] ?? '')) $error='Session expired. Try again.';
     $email=strtolower(trim($_POST['email'] ?? '')); $password=$_POST['password'] ?? '';
-    if (!$error) foreach (read_store('users') as $u) if (!($u['pendingRegistration'] ?? false) && ($u['active'] ?? true) && hash_equals($u['email'], $email) && password_verify($password, $u['passwordHash'])) {
+    if (!$error) foreach (read_store('users') as $u) if (strcasecmp($u['email'], $email) === 0 && password_verify($password, $u['passwordHash'])) {
+        if ($u['pendingRegistration'] ?? false) { $error='Your account is awaiting Super Admin approval. Registration reference: '.substr($u['id'],0,12).'.'; break; }
+        if (!($u['active'] ?? true)) { $error='Your account is disabled. Please contact your Super Admin.'; break; }
         $role=($u['role']??'attendance')==='admin'?'super_admin':($u['role']??'attendance'); session_regenerate_id(true); $_SESSION['user']=['id'=>$u['id'],'name'=>$u['name'],'email'=>$u['email'],'role'=>$role]; csrf(); audit('login','user',$u['id']); header('Location: index.php'); exit;
     }
     if (!$error) $error='Email or password is incorrect.';

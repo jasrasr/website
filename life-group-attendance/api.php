@@ -3,8 +3,15 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib.php';
 $me=require_user();
 $action=$_GET['action'] ?? 'bootstrap';
-if ($action !== 'bootstrap' && $_SERVER['REQUEST_METHOD'] !== 'POST') json_out(['error'=>'Use POST for this action.'],405);
+if (!in_array($action,['bootstrap','list-users'],true) && $_SERVER['REQUEST_METHOD'] !== 'POST') json_out(['error'=>'Use POST for this action.'],405);
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') require_csrf();
+
+if ($action==='list-users') {
+    require_super_admin();
+    $users=[];
+    foreach(read_store('users') as $u)$users[]=array_intersect_key($u,array_flip(['id','name','email','role','active','pendingRegistration','createdAt']));
+    json_out(['users'=>$users,'loadedAt'=>now_iso(),'version'=>APP_VERSION]);
+}
 
 if ($action==='bootstrap') {
     $students=read_store('students'); $groups=read_store('groups'); $attendance=read_store('attendance');

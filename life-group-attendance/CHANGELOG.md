@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.1 — 2026-09-02
+
+- Fetch fresh account data when opening Users and via Refresh approvals; bypass API caches and display load errors instead of an empty approval claim.
+- Show Awaiting Super Admin approval (or Disabled) at login only after the account password is verified.
+- Verify newly saved registrations by reading the persisted row back before issuing a registration reference.
+- Return verified existing-account status without silently replacing credentials or claiming a new registration was created.
+- Replace the clipped Users table with responsive account cards, pending accounts first, with matching registration references.
+- Add regression tests for registrations arriving after the admin page opens and failed/retried account refreshes.
+
 ## 1.3.0 — 2026-09-02
 
 - Versioned CSS/JavaScript URLs by revision and content hash to prevent stale-script/page mismatches after deployment.

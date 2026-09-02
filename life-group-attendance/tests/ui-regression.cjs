@@ -9,10 +9,11 @@ function node(selector) {
   return nodes.get(selector);
 }
 const clicks = []; const requests = []; const errors = [];
+let serverUsers=[]; let failUsers=false;
 const context = {console, Set, Date, JSON, String, Math, Error, crypto:{randomUUID:()=> 'test-id'},
   setTimeout:()=>0, confirm:()=>true, APP:{csrf:'test-token',user:{role:'super_admin'}},
   document:{querySelector:node,querySelectorAll:()=>[],addEventListener:(type,fn)=>{if(type==='click')clicks.push(fn)}},
-  fetch:async(url,options)=>{requests.push({url,options});return {ok:true,json:async()=>url.includes('bootstrap')?{groups:[],students:[],attendance:[],users:[]}:{group:{id:'g1',...JSON.parse(options.body)}}}}};
+  fetch:async(url,options)=>{requests.push({url,options});if(url.includes('list-users')){if(failUsers)throw Error('Test network failure');return {ok:true,json:async()=>({users:serverUsers,loadedAt:'2026-09-02T12:00:00Z'})}}return {ok:true,json:async()=>url.includes('bootstrap')?{groups:[],students:[],attendance:[],users:[]}:{group:{id:'g1',...JSON.parse(options.body)}}}}};
 context.window=context;context.scrollTo=()=>{};context.appLoadError=message=>errors.push(message);
 vm.createContext(context);vm.runInContext(source,context);
 const evaluate=code=>vm.runInContext(code,context);
@@ -40,5 +41,22 @@ const evaluate=code=>vm.runInContext(code,context);
   const index=fs.readFileSync(require('node:path').join(__dirname,'../index.php'),'utf8');
   assert.match(index,/asset_url\('assets\/app\.js'\)/);
   assert.match(index,/asset_url\('assets\/app\.css'\)/);
-  console.log('PASS: startup, group button/modal/save, pending-account review, and versioned asset wiring.');
+  // Another session registers after this admin page was opened.
+  serverUsers=[{id:'new-leader-001',name:'New Demo Leader',email:'new@example.test',role:'attendance',active:false,pendingRegistration:true}];
+  evaluate("state.users=[];showView('users');");
+  assert.match(node('#pendingUsers').textContent,/Checking the server/);
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.match(node('#userTable').innerHTML,/New Demo Leader/);
+  assert.match(node('#userTable').innerHTML,/Registration reference/);
+  assert.equal(requests.at(-1).options.cache,'no-store');
+  assert.match(requests.at(-1).url,/list-users.*&_=/);
+  failUsers=true;
+  await evaluate('refreshUsers()');
+  assert.match(node('#pendingUsers').textContent,/Unable to check approvals/);
+  assert.ok(!node('#pendingUsers').textContent.includes('No leader registrations'));
+  assert.equal(node('#userTable').innerHTML,'');
+  failUsers=false;
+  await node('#refreshUsers').onclick();
+  assert.match(node('#userTable').innerHTML,/New Demo Leader/);
+  console.log('PASS: startup, group controls, pending review, fresh Users fetch, refresh retry, failure display, and versioned assets.');
 })().catch(error=>{console.error(error);process.exitCode=1});

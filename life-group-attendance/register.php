@@ -4,7 +4,7 @@ require_once __DIR__ . '/registration.php';
 header('Cache-Control: no-store');
 if (!read_store('users')) { header('Location: setup.php'); exit; }
 if (user()) { header('Location: index.php'); exit; }
-$error = ''; $success = false;
+$error = ''; $result = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!hash_equals(csrf(), (string)($_POST['csrf'] ?? ''))) {
         $error = 'Session expired. Refresh and try again.';
@@ -13,8 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $_SESSION['registrationAttempt'] = time();
         try {
-            register_leader($_POST, (string)($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
-            $success = true;
+            $result = register_leader($_POST, (string)($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
         } catch (InvalidArgumentException $e) {
             $error = $e->getMessage();
         } catch (Throwable $e) {
@@ -27,8 +26,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <title>Register as a leader · <?=e(APP_NAME)?></title><link rel="stylesheet" href="<?=e(asset_url('assets/app.css'))?>"></head>
 <body class="auth-page"><main class="auth-card"><div class="brand-mark">LG</div><p class="eyebrow">LIFE GROUP TEAM</p>
 <h1>Leader registration</h1><p>Request your own login. A Super Admin must approve it before you can access students or attendance.</p>
-<?php if ($success): ?>
-<div class="alert success" role="status">Your request has been received. If this email is new, your account is awaiting approval. If you already have an account, it has not been changed. Please contact your Super Admin; no email notification is sent.</div>
+<?php if ($result): ?>
+<div class="alert success" role="status">
+<?php if ($result['status'] === 'pending'): ?>
+<?= $result['created'] ? 'Your new leader registration was saved and verified.' : 'Your existing leader registration is still awaiting approval.' ?> A Super Admin must approve it before you can sign in. No email notification is sent.
+<p><strong>Registration reference: <?=e(substr($result['id'],0,12))?></strong></p>
+<?php elseif ($result['status'] === 'active'): ?>
+Your account already exists and is active. No new request was created and your password was not changed. You can sign in.
+<?php else: ?>
+Your account exists but is disabled. Please contact your Super Admin. No account or password was changed.
+<?php endif; ?>
+</div>
 <?php else: ?>
 <?php if ($error): ?><div class="alert error" role="alert"><?=e($error)?></div><?php endif; ?>
 <form method="post" class="stack">
