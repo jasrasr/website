@@ -43,6 +43,8 @@ jobs:
           fi
 
       - name: Send email notification
+        id: send_mail
+        continue-on-error: true
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.office365.com
@@ -67,3 +69,7 @@ jobs:
             Sites:
               https://jasr.me/time-clock/
               https://justjason.fyi/
+
+      - name: Warn if email notification failed
+        if: ${{ steps.send_mail.outcome == 'failure' }}
+        run: echo "::warning::Email notification failed (SMTP auth issue). Deployment checks completed."
