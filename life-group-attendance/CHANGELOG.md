@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.2 — 2026-09-02
+
+- Keep the current section in the URL so refreshing Users, Students, Groups, Reports, or Check-in restores that section.
+- Support browser Back/Forward and direct section links; unknown or unauthorized sections fall back to Dashboard.
+- Add navigation regression tests, including a fresh page load on Users and role-restricted links.
+
 ## 1.3.1 — 2026-09-02
 
 - Fetch fresh account data when opening Users and via Refresh approvals; bypass API caches and display load errors instead of an empty approval claim.

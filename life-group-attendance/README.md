@@ -21,7 +21,7 @@ A Super Admin opens **Users**, selects **Review** beside an awaiting-approval ac
 
 Users fetches fresh accounts each time it is opened; **Refresh approvals** requests another server read without reloading the entire portal. A failed request is shown as an error, not as “no approvals.” Pending accounts appear first in responsive cards. A successful new registration displays a reference only after a read-back verifies the stored row; compare it with the reference in Users. Signing in with the correct password on a pending account shows an approval message, not an incorrect-password error. Re-registering with a matching existing password shows that account's status without modifying it.
 
-All navigation tabs wrap on phones. The footer displays revision and updated date. CSS/JS URLs include a content hash to refresh cached files after deployment; if startup or data loading fails, the page shows an error instead of silently failing.
+All navigation tabs wrap on phones. The current section is stored in the URL (for example, `#users`), so refresh and browser Back/Forward keep navigation consistent. Section links respect the signed-in role; unknown or unauthorized sections return to Dashboard. This preserves the section, not unsaved form changes. The footer displays revision and updated date. CSS/JS URLs include a content hash to refresh cached files after deployment; if startup or data loading fails, the page shows an error instead of silently failing.
 
 ## Requirements
 
