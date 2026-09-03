@@ -4,11 +4,16 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const source = fs.readFileSync(require('node:path').join(__dirname, '../index.php'), 'utf8');
 const code = source.slice(source.indexOf("const chartTimezone ="), source.indexOf('\ndrawChart(); window.addEventListener'));
-const labels = [], lines = [], bars = [], listeners = {};
+const labels = [], lines = [], bars = [], segments = [], markers = [], listeners = {};
+let currentPath = [];
 const context2d = new Proxy({}, {get: (target, key) => target[key] || ((...args) => {
     if (key === 'fillText') labels.push(args);
     if (key === 'setLineDash') lines.push(args[0]);
     if (key === 'fillRect') bars.push({args,color:context2d.fillStyle});
+    if (key === 'beginPath') currentPath = [];
+    if (key === 'moveTo' || key === 'lineTo') currentPath.push(args);
+    if (key === 'stroke') segments.push({points:currentPath.slice(),color:context2d.strokeStyle});
+    if (key === 'arc') markers.push({args,color:context2d.fillStyle});
 }), set: (target, key, value) => { target[key] = value; return true; }});
 const canvas = {
     parentElement: {clientWidth: 320, scrollWidth: 1000, scrollLeft: 0},
@@ -117,30 +122,47 @@ assert.equal(totals[2].resolved,5);
 assert.equal(totals[2].closed,2);
 assert.equal(JSON.stringify(combined),combinedBefore);
 assert.equal(aggregate([api('2026-09-03T12:00:00Z',5,activity(null,-1,2))])[0].newTickets,null);
-sandbox.entries=combined; bars.length=0; labels.length=0;
+sandbox.entries=combined; bars.length=0; labels.length=0; segments.length=0; markers.length=0;
 sandbox.drawChart();
 assert.equal(picker.options.length,5);
-assert.equal(bars.filter(bar=>bar.color==='#ffad4d').length,2);
-assert.equal(bars.filter(bar=>bar.color==='#3ddc84').length,1);
-assert.ok(labels.some(label=>label[0]==='?'),'Unknown activity is visibly marked');
+assert.equal(bars.length,0,'Activity must not be drawn as bars');
+assert.equal(segments.filter(segment=>segment.color==='#ffad4d').length,2);
+assert.equal(segments.filter(segment=>segment.color==='#3ddc84').length,1);
+assert.equal(markers.filter(marker=>marker.color==='#ffad4d').length,3,'Only known activity gets points, including zero');
+assert.equal(markers.filter(marker=>marker.color==='#3ddc84').length,2);
 const comboHit=canvas._trendHits[2];
-listeners.click({clientX:comboHit.x,clientY:220}); // tap bars, not just unresolved point
+listeners.click({clientX:comboHit.x,clientY:220}); // tap the date column, not just unresolved point
 assert.match(sandbox.note.textContent,/New: 3. Completed: 7 \(5 resolved, 2 closed\)/);
 picker.value=String(totals[0].day); picker.change();
 assert.match(sandbox.note.textContent,/New: unknown. Completed: unknown/);
 picker.value=String(totals[3].day); picker.change();
 assert.match(sandbox.note.textContent,/New: 0. Completed: 0/);
-controls[1].checked=false; bars.length=0; controls[1].change();
-assert.equal(bars.filter(bar=>bar.color==='#ffad4d').length,0);
-assert.equal(bars.filter(bar=>bar.color==='#3ddc84').length,1);
+controls[1].checked=false; segments.length=0; markers.length=0; controls[1].change();
+assert.equal(segments.filter(segment=>segment.color==='#ffad4d').length,0);
+assert.equal(markers.filter(marker=>marker.color==='#ffad4d').length,0);
+assert.equal(segments.filter(segment=>segment.color==='#3ddc84').length,1);
 controls.forEach(control=>{control.checked=false;control.change();});
 assert.match(sandbox.note.textContent,/Select a series/);
-// Both bar series use a common scale and bars can exceed the unresolved total.
+// Activity lines share a scale and can exceed the unresolved total.
 controls.forEach(control=>{control.checked=true;control.change();});
 sandbox.entries=[api('2026-09-03T12:00:00Z',1,activity(150,4,2))];
-bars.length=0; sandbox.drawChart();
-assert.ok(bars.every(bar=>bar.args[1]>=30&&bar.args[3]>=0&&bar.args[1]+bar.args[3]===228));
-assert.equal(bars.find(bar=>bar.color==='#ffad4d').args[1],30);
+markers.length=0; sandbox.drawChart();
+assert.ok(markers.every(marker=>marker.args[1]>=30&&marker.args[1]<=228));
+assert.equal(markers.find(marker=>marker.color==='#ffad4d').args[1],30);
+// A known day, an unknown day, and another known day must not bridge unknown activity.
+sandbox.entries=[
+    api('2026-09-01T12:00:00Z',80,activity(0,0,0)),
+    entry('2026-09-02T12:00:00Z',80),
+    api('2026-09-03T12:00:00Z',80,activity(2,1,0))
+];
+segments.length=0; markers.length=0; sandbox.drawChart();
+assert.equal(segments.filter(segment=>segment.color==='#ffad4d').length,0);
+assert.equal(segments.filter(segment=>segment.color==='#3ddc84').length,0);
+assert.equal(segments.filter(segment=>segment.color==='#4d95ff').length,2);
+assert.equal(markers.filter(marker=>marker.color==='#ffad4d').length,2);
+assert.equal(markers.find(marker=>marker.color==='#ffad4d').args[1],228,'Known zero remains on baseline');
+assert.equal(markers.filter(marker=>marker.color==='#ffad4d')[1].args[0],canvas._trendHits[2].x,'Every series aligns on the same date');
+assert.doesNotMatch(source,/New — bars|Completed — bars|new\/completed bars/);
 const dstTotals=aggregate([
     api('2026-11-01T05:30:00Z',5,activity(1,2,0)),
     api('2026-11-01T06:30:00Z',4,activity(2,1,0))
