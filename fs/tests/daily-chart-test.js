@@ -46,9 +46,10 @@ sandbox.entries = data;
 sandbox.drawChart();
 assert.equal(canvas._trendHits.length, 3);
 const [a,b,c] = canvas._trendHits;
-assert.ok(Math.abs((c.x-b.x)/(b.x-a.x)-2)<0.00001, 'Missing dates must retain space');
+assert.ok(Math.abs((c.x-b.x)/(b.x-a.x)-1)<0.00001, 'Only recorded days occupy equally spaced axis slots');
 assert.ok(lines.some(line=>line.length===2), 'Missing days use dashed connectors');
-assert.equal(labels.filter(label=>label[0]==='Sep').length,4, 'Every calendar day gets a tick');
+assert.equal(labels.filter(label=>label[0]==='Sep').length,3, 'Only recorded days get ticks');
+assert.deepEqual(labels.filter(label=>label[2]===272).map(label=>label[0]), ['1','2','4'], 'Missing Sep 3 is omitted; unchanged Sep 4 remains');
 listeners.click({clientX:b.x,clientY:b.y});
 assert.match(sandbox.note.textContent,/Net change: -1 vs previous day/);
 assert.match(sandbox.note.textContent,/Sep 2, 2026, 1:00 AM/);
@@ -63,6 +64,13 @@ sandbox.entries = Array.from({length:31},(_,i)=>entry(new Date(Date.UTC(2026,8,i
 sandbox.drawChart();
 assert.ok(parseFloat(canvas.style.width)>320, 'Mobile chart scrolls instead of overlapping daily ticks');
 assert.equal(canvas._trendHits.length,31);
+// A long gap must not create empty ticks or widen the chart by elapsed days.
+labels.length = 0;
+sandbox.entries = [entry('2026-01-01T12:00:00Z',80),entry('2026-09-01T12:00:00Z',80)];
+sandbox.drawChart();
+assert.equal(canvas._trendHits.length,2);
+assert.equal(parseFloat(canvas.style.width),320);
+assert.equal(labels.filter(label=>label[2]===272).length,2);
 // One page-wide timezone note, with suffix-free summer and winter tooltips.
 assert.equal((source.match(/All times are Eastern \(EDT\/EST\)/g) || []).length,1);
 for (const [timestamp, expected] of [
