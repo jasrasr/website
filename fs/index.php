@@ -34,14 +34,16 @@ if (is_file($pullLogFile)) {
 }
 
 $entries = $payload['entries'];
-usort($entries, static fn(array $a, array $b): int => strcmp((string) ($a['capturedAt'] ?? ''), (string) ($b['capturedAt'] ?? '')));
+usort($entries, static fn(array $a, array $b): int =>
+    (easternDate($a['capturedAt'] ?? null)?->getTimestamp() ?? PHP_INT_MIN)
+    <=> (easternDate($b['capturedAt'] ?? null)?->getTimestamp() ?? PHP_INT_MIN));
 $goal = max(0, (int) ($payload['goal'] ?? 0));
 $latest = $entries ? $entries[array_key_last($entries)] : null;
 $previous = count($entries) > 1 ? $entries[count($entries) - 2] : null;
 $current = (int) ($latest['unresolved'] ?? 0);
 $change = $previous ? $current - (int) ($previous['unresolved'] ?? 0) : null;
 $analytics = $latest && isset($latest['analytics']) && is_array($latest['analytics']) ? $latest['analytics'] : [];
-$latestDay = $latest && !empty($latest['capturedAt']) ? (new DateTimeImmutable((string) $latest['capturedAt']))->format('Y-m-d') : null;
+$latestDay = easternDate($latest['capturedAt'] ?? null)?->format('Y-m-d');
 $todayActivity = [
     'enteredUnresolved' => 0,
     'exitedUnresolved' => 0,
@@ -54,7 +56,7 @@ $todayActivity = [
 ];
 foreach ($entries as $entry) {
     if ($latestDay === null || empty($entry['capturedAt']) || empty($entry['activity']) || !is_array($entry['activity'])) continue;
-    if ((new DateTimeImmutable((string) $entry['capturedAt']))->format('Y-m-d') !== $latestDay) continue;
+    if (easternDate($entry['capturedAt'])?->format('Y-m-d') !== $latestDay) continue;
     foreach ($todayActivity as $key => $value) {
         $todayActivity[$key] += (int) ($entry['activity'][$key] ?? 0);
     }
@@ -65,24 +67,20 @@ function e(string $value): string
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 }
 
-function displayDate(?string $value): string
+function easternDate(?string $value): ?DateTimeImmutable
 {
-    if (!$value) return '—';
+    if ($value === null || trim($value) === '') return null;
     try {
-        return (new DateTimeImmutable($value))->format('M j, Y g:i A T');
+        $timezone = new DateTimeZone('America/New_York');
+        return (new DateTimeImmutable($value, $timezone))->setTimezone($timezone);
     } catch (Throwable) {
-        return $value;
+        return null;
     }
 }
 
-function displayDateWithoutTimezone(?string $value): string
+function displayDate(?string $value): string
 {
-    if (!$value) return '—';
-    try {
-        return (new DateTimeImmutable($value))->format('M j, Y g:i A');
-    } catch (Throwable) {
-        return $value;
-    }
+    return easternDate($value)?->format('M j, Y g:i A') ?? '—';
 }
 
 function analyticsRows(array $analytics, string $key): array
@@ -170,7 +168,7 @@ function analyticsRows(array $analytics, string $key): array
 <?php endif; ?>
 <main>
     <header>
-        <div><h1>Freshservice Ticket Tracker</h1><p>Working the unresolved queue toward zero.</p></div>
+        <div><h1>Freshservice Ticket Tracker</h1><p>Working the unresolved queue toward zero.</p><p>All times are Eastern (EDT/EST), adjusted automatically for daylight saving time.</p></div>
         <div class="header-actions">
             <div class="badge">Goal: <?= $goal ?> unresolved</div>
             <button type="button" class="pull-button" id="pull-tickets">Pull tickets now</button>
@@ -181,12 +179,12 @@ function analyticsRows(array $analytics, string $key): array
     <?php if ($error): ?><p class="error"><?= e($error) ?></p><?php endif; ?>
 
     <section class="grid" aria-label="Ticket summary">
-        <article class="card"><span class="label">Current unresolved</span><span class="value"><?= number_format($current) ?></span><span class="sub">As of <?= e(displayDateWithoutTimezone($latest['capturedAt'] ?? null)) ?></span></article>
+        <article class="card"><span class="label">Current unresolved</span><span class="value"><?= number_format($current) ?></span><span class="sub">As of <?= e(displayDate($latest['capturedAt'] ?? null)) ?></span></article>
         <article class="card"><span class="label">Change since prior</span><span class="value <?= $change !== null && $change <= 0 ? 'good' : 'bad' ?>"><?= $change === null ? '—' : sprintf('%+d', $change) ?></span><span class="sub"><?= $change === null ? 'Needs a second snapshot' : ($change <= 0 ? 'Moving the right direction' : 'Queue increased') ?></span></article>
     </section>
 
     <section class="section">
-        <h2>Activity on <?= $latestDay ? e((new DateTimeImmutable($latestDay))->format('M j, Y')) : 'latest day' ?></h2>
+        <h2>Activity on <?= $latestDay ? e(easternDate($latestDay)->format('M j, Y')) : 'latest day' ?></h2>
         <div class="activity-grid">
             <div class="activity-item"><span class="label">Entered unresolved</span><strong><?= number_format($todayActivity['enteredUnresolved']) ?></strong><span class="sub">New, assigned, or reopened</span></div>
             <div class="activity-item"><span class="label">Exited unresolved</span><strong><?= number_format($todayActivity['exitedUnresolved']) ?></strong><span class="sub">Resolved, closed, or reassigned</span></div>
@@ -437,7 +435,7 @@ function drawChart() {
     });
     c.textAlign = 'start';
     const todayIsPartial = lastDay === chartDay(Date.now());
-    note.textContent = 'One point per day: latest recorded unresolved count (Eastern time). ' +
+    note.textContent = 'One point per day: latest recorded unresolved count. ' +
         (todayIsPartial ? 'Today is still in progress. ' : '') +
         'Dashed lines bridge days without readings; no counts are invented. ' +
         'Tap a point for its net change. Swipe horizontally to see every date.';
@@ -459,7 +457,7 @@ canvas.addEventListener('click', event => {
     const {sample, previous} = best;
     const observed = new Date(sample.time).toLocaleString('en-US', {
         timeZone: chartTimezone, month:'short', day:'numeric', year:'numeric',
-        hour:'numeric', minute:'2-digit', timeZoneName:'short'
+        hour:'numeric', minute:'2-digit'
     });
     const delta = previous ? sample.value - previous.value : null;
     const gap = previous ? Math.round((sample.day - previous.day) / calendarDayMs) : 0;
