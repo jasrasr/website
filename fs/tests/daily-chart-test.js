@@ -7,6 +7,7 @@ const code = source.slice(source.indexOf("const chartTimezone ="), source.indexO
 const labels = [], lines = [], bars = [], segments = [], markers = [], listeners = {};
 let currentPath = [];
 const context2d = new Proxy({}, {get: (target, key) => target[key] || ((...args) => {
+    if (key === 'measureText') return {width:String(args[0]).length*7};
     if (key === 'fillText') labels.push(args);
     if (key === 'setLineDash') lines.push(args[0]);
     if (key === 'fillRect') bars.push({args,color:context2d.fillStyle});
@@ -29,7 +30,7 @@ const picker = {value:'',disabled:false,options:[],
     replaceChildren(...options) { this.options=options; },
     addEventListener(name, callback) { this.change=callback; }
 };
-const document = {getElementById:()=>picker,querySelectorAll:()=>controls,createElement:()=>({})};
+const document = {getElementById:id=>id==='trend-day'?picker:null,querySelectorAll:()=>controls,createElement:()=>({})};
 const sandbox = {canvas, note:{}, entries:[], window:{devicePixelRatio:2}, Intl, Date,document};
 vm.createContext(sandbox);
 vm.runInContext(code, sandbox);
@@ -171,3 +172,45 @@ assert.equal(dstTotals.length,1);
 assert.equal(dstTotals[0].newTickets,3);
 assert.equal(dstTotals[0].completed,3);
 console.log('Combined chart tests passed: daily sums, manual/baseline unknown, known zeros, toggles, accessible details, common scale, DST.');
+
+// Both views render by default, with three values labeled and no label collisions.
+const comboListeners={};
+const comboCanvas={
+    ...canvas,parentElement:{clientWidth:320,scrollWidth:1000,scrollLeft:0},style:{},
+    addEventListener:(name,callback)=>{comboListeners[name]=callback;}
+};
+const dualDocument={...document,getElementById:id=>id==='trend-combo'?comboCanvas:id==='trend-day'?picker:null};
+const dual={...sandbox,document:dualDocument,entries:[
+    api('2026-09-01T12:00:00Z',5,activity(5,3,2)),
+    api('2026-09-02T12:00:00Z',0,activity(0,0,0)),
+    entry('2026-09-03T12:00:00Z',4)
+]};
+vm.createContext(dual);vm.runInContext(code,dual);
+bars.length=0;dual.drawChart();
+assert.equal(bars.length,4,'Only known new/completed values render bars in the second view');
+for(const chart of [canvas,comboCanvas]){
+    assert.equal(chart._dataLabels.length,7,'Every known value has a numeric label; unknown values have none');
+    for(const color of ['#ffad4d','#3ddc84']){
+        assert.deepEqual(Array.from(chart._dataLabels.filter(label=>label.color===color),label=>label.value),[5,0]);
+    }
+    for(let i=0;i<chart._dataLabels.length;i++){
+        const a=chart._dataLabels[i];
+        assert.ok(a.top>=0&&a.bottom<228,'Data labels stay above the date axis');
+        for(const b of chart._dataLabels.slice(i+1)){
+            assert.ok(!(a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top),'Data label boxes must not overlap');
+        }
+    }
+}
+assert.deepEqual(Array.from(canvas._trendHits,hit=>hit.x),Array.from(comboCanvas._trendHits,hit=>hit.x));
+const secondHit=comboCanvas._trendHits[0];
+comboListeners.click({clientX:secondHit.x,clientY:220});
+assert.match(dual.note.textContent,/New: 5. Completed: 5/);
+controls[1].checked=false;controls[1].change();
+assert.equal(canvas._dataLabels.filter(label=>label.color==='#ffad4d').length,0);
+assert.equal(comboCanvas._dataLabels.filter(label=>label.color==='#ffad4d').length,0);
+dual.entries=[];dual.drawChart();
+assert.equal(canvas._dataLabels.length,0);
+assert.equal(comboCanvas._dataLabels.length,0);
+assert.match(source,/Three-line view/);
+assert.match(source,/Unresolved line \+ activity bars/);
+console.log('Dual-view tests passed: both charts, numeric labels, zeros/unknowns, collision spacing, aligned dates, shared toggles and details.');
