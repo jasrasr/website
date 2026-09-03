@@ -202,13 +202,13 @@ function analyticsRows(array $analytics, string $key): array
     <section class="section"><h2>Daily ticket totals and activity</h2>
         <div class="chart-controls" role="group" aria-label="Visible chart series">
             <label style="color:#4d95ff"><input type="checkbox" data-chart-series="unresolved" checked>Unresolved — line</label>
-            <label style="color:#ffad4d"><input type="checkbox" data-chart-series="newTickets" checked>New — bars</label>
-            <label style="color:#3ddc84"><input type="checkbox" data-chart-series="completed" checked>Completed — bars</label>
+            <label style="color:#ffad4d"><input type="checkbox" data-chart-series="newTickets" checked>New — line</label>
+            <label style="color:#3ddc84"><input type="checkbox" data-chart-series="completed" checked>Completed — line</label>
         </div>
         <div class="trend-viewport" tabindex="0" role="region" aria-label="Scrollable daily ticket chart"><canvas id="trend" role="img" aria-label="Daily unresolved, new and completed ticket counts"></canvas></div>
         <div class="chart-day-picker"><label for="trend-day">Daily details: </label><select id="trend-day"></select></div>
         <p id="chart-note" class="muted" aria-live="polite"></p>
-        <p class="muted">Bars show observed activity, grouped by the day of the pull—not guaranteed event-day totals. Completed = resolved + closed exits; a later resolved-to-closed change is not counted again. A reopened ticket completed again can count again. Missed transitions cannot be reconstructed. ? means unknown; 0 means a recorded zero.</p>
+        <p class="muted">New and Completed lines show observed activity, grouped by the day of the pull—not guaranteed event-day totals. Completed = resolved + closed exits; a later resolved-to-closed change is not counted again. A reopened ticket completed again can count again. Missed transitions cannot be reconstructed. Gaps mean unknown activity; points at 0 mean a recorded zero.</p>
     </section>
 
     <section class="section"><h2>Current queue analytics</h2>
@@ -473,48 +473,43 @@ function drawChart() {
         c.fillText(String(date.getUTCDate()), x, h - 8);
     }
 
-    // Grouped bars share the same zero-based ticket scale as the unresolved line.
-    const baselineY = h - p.b;
-    for (const sample of samples) {
-        for (const [key, offset, color] of [['newTickets',-8,'#ffad4d'],['completed',8,'#3ddc84']]) {
-            if (!chartSeries[key]) continue;
-            const value = sample[key], x = xFor(sample.day) + offset;
-            c.fillStyle = color;
-            if (value === null) {
-                c.fillText('?', x, baselineY - 4);
-            } else if (value === 0) {
-                c.fillText('0', x, baselineY - 4);
-            } else {
-                const y = yFor(value);
-                c.fillRect(x - 6, y, 12, baselineY - y);
+    // All series use the same dates and ticket scale. Unknown values break a line.
+    c.lineWidth = 3; c.lineJoin = 'round'; c.font = '12px system-ui';
+    for (const [key, field, color, radius] of [
+        ['unresolved','value','#4d95ff',5],
+        ['newTickets','newTickets','#ffad4d',4],
+        ['completed','completed','#3ddc84',3]
+    ]) {
+        if (!chartSeries[key]) continue;
+        c.strokeStyle = color;
+        for (let i = 1; i < samples.length; i++) {
+            const previous = samples[i - 1], current = samples[i];
+            if (previous[field] === null || current[field] === null) continue;
+            c.setLineDash(current.day - previous.day > calendarDayMs ? [5, 5] : []);
+            c.beginPath(); c.moveTo(xFor(previous.day), yFor(previous[field]));
+            c.lineTo(xFor(current.day), yFor(current[field])); c.stroke();
+        }
+        c.setLineDash([]);
+        for (const sample of samples) {
+            if (sample[field] === null) continue;
+            const x = xFor(sample.day), y = yFor(sample[field]);
+            c.fillStyle = color; c.beginPath(); c.arc(x, y, radius, 0, Math.PI * 2); c.fill();
+            if (key === 'unresolved') {
+                c.fillStyle = '#f3f7fb'; c.fillText(String(sample.value), x, y - 12);
             }
         }
     }
-    // Connect daily observations; dashed spans explicitly indicate missing days.
-    c.strokeStyle = '#4d95ff'; c.lineWidth = 3; c.lineJoin = 'round';
-    for (let i = 1; chartSeries.unresolved && i < samples.length; i++) {
-        const previous = samples[i - 1], current = samples[i];
-        c.setLineDash(current.day - previous.day > calendarDayMs ? [5, 5] : []);
-        c.beginPath(); c.moveTo(xFor(previous.day), yFor(previous.value));
-        c.lineTo(xFor(current.day), yFor(current.value)); c.stroke();
-    }
-    c.setLineDash([]); c.font = '12px system-ui';
-    canvas._trendHits = samples.map((sample, index) => {
-        const x = xFor(sample.day), y = yFor(sample.value);
-        if (chartSeries.unresolved) {
-            c.fillStyle = '#4d95ff'; c.beginPath(); c.arc(x, y, 5, 0, Math.PI * 2); c.fill();
-            c.fillStyle = '#f3f7fb'; c.fillText(String(sample.value), x, y - 12);
-        }
-        return {x, y, sample, previous: samples[index - 1]};
-    });
+    canvas._trendHits = samples.map((sample, index) => ({
+        x:xFor(sample.day), y:yFor(sample.value), sample, previous:samples[index - 1]
+    }));
     c.textAlign = 'start';
     const todayIsPartial = lastDay === chartDay(Date.now());
-    note.textContent = 'Line: latest daily unresolved total. Bars: observed new and completed counts summed across daily pulls. ' +
+    note.textContent = 'Blue: latest daily unresolved total. Orange: observed new tickets. Green: observed completed tickets. Activity is summed across daily pulls. ' +
         (todayIsPartial ? 'Today is still in progress. ' : '') +
         'Only recorded days are shown, evenly spaced; dates without readings are omitted. ' +
         'Dashed lines indicate skipped dates. Tap a date column or choose Daily details. Swipe horizontally to see every recorded date.';
     if (!Object.values(chartSeries).some(Boolean)) note.textContent = 'Select a series above to display it. Daily details remain available.';
-    canvas.setAttribute('aria-label', `Daily ticket chart, ${samples.length} recorded days. Unresolved line and observed new/completed bars share one ticket scale. Use Daily details for values.`);
+    canvas.setAttribute('aria-label', `Daily ticket chart, ${samples.length} recorded days. Unresolved, observed new and completed lines share one ticket scale. Unknown activity breaks the line. Use Daily details for values.`);
     if (dayPicker) {
         const selected = dayPicker.value;
         dayPicker.replaceChildren(...samples.map(sample => {
