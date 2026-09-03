@@ -51,6 +51,8 @@ assert.ok(lines.some(line=>line.length===2), 'Missing days use dashed connectors
 assert.equal(labels.filter(label=>label[0]==='Sep').length,4, 'Every calendar day gets a tick');
 listeners.click({clientX:b.x,clientY:b.y});
 assert.match(sandbox.note.textContent,/Net change: -1 vs previous day/);
+assert.match(sandbox.note.textContent,/Sep 2, 2026, 1:00 AM/);
+assert.doesNotMatch(sandbox.note.textContent,/EDT|EST|GMT|UTC/);
 listeners.click({clientX:c.x,clientY:c.y});
 assert.match(sandbox.note.textContent,/Net change: 0 vs previous recorded day \(2 days earlier\)/);
 for (const entries of [[],[entry('2026-09-01T12:00:00Z',0)]]) {
@@ -61,4 +63,17 @@ sandbox.entries = Array.from({length:31},(_,i)=>entry(new Date(Date.UTC(2026,8,i
 sandbox.drawChart();
 assert.ok(parseFloat(canvas.style.width)>320, 'Mobile chart scrolls instead of overlapping daily ticks');
 assert.equal(canvas._trendHits.length,31);
+// One page-wide timezone note, with suffix-free summer and winter tooltips.
+assert.equal((source.match(/All times are Eastern \(EDT\/EST\)/g) || []).length,1);
+for (const [timestamp, expected] of [
+    ['2026-07-01T12:00:00Z', 'Jul 1, 2026, 8:00 AM'],
+    ['2026-01-01T12:00:00Z', 'Jan 1, 2026, 7:00 AM']
+]) {
+    sandbox.entries = [entry(timestamp,80)];
+    sandbox.drawChart();
+    const hit = canvas._trendHits[0];
+    listeners.click({clientX:hit.x,clientY:hit.y});
+    assert.ok(sandbox.note.textContent.includes(expected));
+    assert.doesNotMatch(sandbox.note.textContent,/EDT|EST|GMT|UTC/);
+}
 console.log('Daily chart tests passed: daily latest, timezone/DST, gaps, zero, history preservation, tap changes, mobile layout.');
