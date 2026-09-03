@@ -4,11 +4,17 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const source = fs.readFileSync(require('node:path').join(__dirname, '../index.php'), 'utf8');
 const code = source.slice(source.indexOf("const chartTimezone ="), source.indexOf('\ndrawChart(); window.addEventListener'));
-const labels = [], lines = [], bars = [], listeners = {};
+const labels = [], lines = [], bars = [], segments = [], markers = [], listeners = {};
+let currentPath = [];
 const context2d = new Proxy({}, {get: (target, key) => target[key] || ((...args) => {
+    if (key === 'measureText') return {width:String(args[0]).length*7};
     if (key === 'fillText') labels.push(args);
     if (key === 'setLineDash') lines.push(args[0]);
     if (key === 'fillRect') bars.push({args,color:context2d.fillStyle});
+    if (key === 'beginPath') currentPath = [];
+    if (key === 'moveTo' || key === 'lineTo') currentPath.push(args);
+    if (key === 'stroke') segments.push({points:currentPath.slice(),color:context2d.strokeStyle});
+    if (key === 'arc') markers.push({args,color:context2d.fillStyle});
 }), set: (target, key, value) => { target[key] = value; return true; }});
 const canvas = {
     parentElement: {clientWidth: 320, scrollWidth: 1000, scrollLeft: 0},
@@ -24,7 +30,7 @@ const picker = {value:'',disabled:false,options:[],
     replaceChildren(...options) { this.options=options; },
     addEventListener(name, callback) { this.change=callback; }
 };
-const document = {getElementById:()=>picker,querySelectorAll:()=>controls,createElement:()=>({})};
+const document = {getElementById:id=>id==='trend-day'?picker:null,querySelectorAll:()=>controls,createElement:()=>({})};
 const sandbox = {canvas, note:{}, entries:[], window:{devicePixelRatio:2}, Intl, Date,document};
 vm.createContext(sandbox);
 vm.runInContext(code, sandbox);
@@ -117,30 +123,47 @@ assert.equal(totals[2].resolved,5);
 assert.equal(totals[2].closed,2);
 assert.equal(JSON.stringify(combined),combinedBefore);
 assert.equal(aggregate([api('2026-09-03T12:00:00Z',5,activity(null,-1,2))])[0].newTickets,null);
-sandbox.entries=combined; bars.length=0; labels.length=0;
+sandbox.entries=combined; bars.length=0; labels.length=0; segments.length=0; markers.length=0;
 sandbox.drawChart();
 assert.equal(picker.options.length,5);
-assert.equal(bars.filter(bar=>bar.color==='#ffad4d').length,2);
-assert.equal(bars.filter(bar=>bar.color==='#3ddc84').length,1);
-assert.ok(labels.some(label=>label[0]==='?'),'Unknown activity is visibly marked');
+assert.equal(bars.length,0,'Activity must not be drawn as bars');
+assert.equal(segments.filter(segment=>segment.color==='#ffad4d').length,2);
+assert.equal(segments.filter(segment=>segment.color==='#3ddc84').length,1);
+assert.equal(markers.filter(marker=>marker.color==='#ffad4d').length,3,'Only known activity gets points, including zero');
+assert.equal(markers.filter(marker=>marker.color==='#3ddc84').length,2);
 const comboHit=canvas._trendHits[2];
-listeners.click({clientX:comboHit.x,clientY:220}); // tap bars, not just unresolved point
+listeners.click({clientX:comboHit.x,clientY:220}); // tap the date column, not just unresolved point
 assert.match(sandbox.note.textContent,/New: 3. Completed: 7 \(5 resolved, 2 closed\)/);
 picker.value=String(totals[0].day); picker.change();
 assert.match(sandbox.note.textContent,/New: unknown. Completed: unknown/);
 picker.value=String(totals[3].day); picker.change();
 assert.match(sandbox.note.textContent,/New: 0. Completed: 0/);
-controls[1].checked=false; bars.length=0; controls[1].change();
-assert.equal(bars.filter(bar=>bar.color==='#ffad4d').length,0);
-assert.equal(bars.filter(bar=>bar.color==='#3ddc84').length,1);
+controls[1].checked=false; segments.length=0; markers.length=0; controls[1].change();
+assert.equal(segments.filter(segment=>segment.color==='#ffad4d').length,0);
+assert.equal(markers.filter(marker=>marker.color==='#ffad4d').length,0);
+assert.equal(segments.filter(segment=>segment.color==='#3ddc84').length,1);
 controls.forEach(control=>{control.checked=false;control.change();});
 assert.match(sandbox.note.textContent,/Select a series/);
-// Both bar series use a common scale and bars can exceed the unresolved total.
+// Activity lines share a scale and can exceed the unresolved total.
 controls.forEach(control=>{control.checked=true;control.change();});
 sandbox.entries=[api('2026-09-03T12:00:00Z',1,activity(150,4,2))];
-bars.length=0; sandbox.drawChart();
-assert.ok(bars.every(bar=>bar.args[1]>=30&&bar.args[3]>=0&&bar.args[1]+bar.args[3]===228));
-assert.equal(bars.find(bar=>bar.color==='#ffad4d').args[1],30);
+markers.length=0; sandbox.drawChart();
+assert.ok(markers.every(marker=>marker.args[1]>=30&&marker.args[1]<=228));
+assert.equal(markers.find(marker=>marker.color==='#ffad4d').args[1],30);
+// A known day, an unknown day, and another known day must not bridge unknown activity.
+sandbox.entries=[
+    api('2026-09-01T12:00:00Z',80,activity(0,0,0)),
+    entry('2026-09-02T12:00:00Z',80),
+    api('2026-09-03T12:00:00Z',80,activity(2,1,0))
+];
+segments.length=0; markers.length=0; sandbox.drawChart();
+assert.equal(segments.filter(segment=>segment.color==='#ffad4d').length,0);
+assert.equal(segments.filter(segment=>segment.color==='#3ddc84').length,0);
+assert.equal(segments.filter(segment=>segment.color==='#4d95ff').length,2);
+assert.equal(markers.filter(marker=>marker.color==='#ffad4d').length,2);
+assert.equal(markers.find(marker=>marker.color==='#ffad4d').args[1],228,'Known zero remains on baseline');
+assert.equal(markers.filter(marker=>marker.color==='#ffad4d')[1].args[0],canvas._trendHits[2].x,'Every series aligns on the same date');
+assert.doesNotMatch(source,/New — bars|Completed — bars|new\/completed bars/);
 const dstTotals=aggregate([
     api('2026-11-01T05:30:00Z',5,activity(1,2,0)),
     api('2026-11-01T06:30:00Z',4,activity(2,1,0))
@@ -149,3 +172,45 @@ assert.equal(dstTotals.length,1);
 assert.equal(dstTotals[0].newTickets,3);
 assert.equal(dstTotals[0].completed,3);
 console.log('Combined chart tests passed: daily sums, manual/baseline unknown, known zeros, toggles, accessible details, common scale, DST.');
+
+// Both views render by default, with three values labeled and no label collisions.
+const comboListeners={};
+const comboCanvas={
+    ...canvas,parentElement:{clientWidth:320,scrollWidth:1000,scrollLeft:0},style:{},
+    addEventListener:(name,callback)=>{comboListeners[name]=callback;}
+};
+const dualDocument={...document,getElementById:id=>id==='trend-combo'?comboCanvas:id==='trend-day'?picker:null};
+const dual={...sandbox,document:dualDocument,entries:[
+    api('2026-09-01T12:00:00Z',5,activity(5,3,2)),
+    api('2026-09-02T12:00:00Z',0,activity(0,0,0)),
+    entry('2026-09-03T12:00:00Z',4)
+]};
+vm.createContext(dual);vm.runInContext(code,dual);
+bars.length=0;dual.drawChart();
+assert.equal(bars.length,4,'Only known new/completed values render bars in the second view');
+for(const chart of [canvas,comboCanvas]){
+    assert.equal(chart._dataLabels.length,7,'Every known value has a numeric label; unknown values have none');
+    for(const color of ['#ffad4d','#3ddc84']){
+        assert.deepEqual(Array.from(chart._dataLabels.filter(label=>label.color===color),label=>label.value),[5,0]);
+    }
+    for(let i=0;i<chart._dataLabels.length;i++){
+        const a=chart._dataLabels[i];
+        assert.ok(a.top>=0&&a.bottom<228,'Data labels stay above the date axis');
+        for(const b of chart._dataLabels.slice(i+1)){
+            assert.ok(!(a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top),'Data label boxes must not overlap');
+        }
+    }
+}
+assert.deepEqual(Array.from(canvas._trendHits,hit=>hit.x),Array.from(comboCanvas._trendHits,hit=>hit.x));
+const secondHit=comboCanvas._trendHits[0];
+comboListeners.click({clientX:secondHit.x,clientY:220});
+assert.match(dual.note.textContent,/New: 5. Completed: 5/);
+controls[1].checked=false;controls[1].change();
+assert.equal(canvas._dataLabels.filter(label=>label.color==='#ffad4d').length,0);
+assert.equal(comboCanvas._dataLabels.filter(label=>label.color==='#ffad4d').length,0);
+dual.entries=[];dual.drawChart();
+assert.equal(canvas._dataLabels.length,0);
+assert.equal(comboCanvas._dataLabels.length,0);
+assert.match(source,/Three-line view/);
+assert.match(source,/Unresolved line \+ activity bars/);
+console.log('Dual-view tests passed: both charts, numeric labels, zeros/unknowns, collision spacing, aligned dates, shared toggles and details.');
