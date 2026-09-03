@@ -387,9 +387,10 @@ function drawChart() {
     const samples = dailyChartSamples(entries);
     const viewport = canvas.parentElement;
     const p = {l:48, r:24, t:30, b:52}, h = 280;
-    const firstDay = samples[0]?.day ?? 0, lastDay = samples.at(-1)?.day ?? firstDay;
-    const dayCount = Math.round((lastDay - firstDay) / calendarDayMs) + 1;
-    // Each calendar date gets a readable tick, including dates with no observations.
+    const lastDay = samples.at(-1)?.day;
+    const dayCount = samples.length;
+    const dayIndexes = new Map(samples.map((sample, index) => [sample.day, index]));
+    // Only recorded days occupy axis slots; missing calendar dates are omitted.
     const w = Math.max(viewport.clientWidth, p.l + p.r + Math.max(1, dayCount - 1) * 52);
     const dpr = window.devicePixelRatio || 1;
     canvas.style.width = `${w}px`;
@@ -401,7 +402,7 @@ function drawChart() {
     const max = Math.max(1, ...samples.map(sample => sample.value));
     const plotWidth = w - p.l - p.r, plotHeight = h - p.t - p.b;
     const xFor = day => dayCount === 1 ? p.l + plotWidth / 2 :
-        p.l + plotWidth * (day - firstDay) / (lastDay - firstDay);
+        p.l + plotWidth * dayIndexes.get(day) / (dayCount - 1);
     const yFor = value => p.t + plotHeight * (max - value) / max;
     c.strokeStyle = '#29405d'; c.fillStyle = '#93a4ba'; c.font = '12px system-ui'; c.lineWidth = 1;
     for (let i = 0; i < 5; i++) {
@@ -411,7 +412,7 @@ function drawChart() {
     }
 
     c.textAlign = 'center'; c.font = '11px system-ui';
-    for (let day = firstDay; day <= lastDay; day += calendarDayMs) {
+    for (const {day} of samples) {
         const x = xFor(day), date = new Date(day);
         c.beginPath(); c.moveTo(x, h - p.b); c.lineTo(x, h - p.b + 6); c.stroke();
         c.fillText(date.toLocaleDateString('en-US', {timeZone:'UTC', month:'short'}), x, h - 23);
@@ -437,8 +438,8 @@ function drawChart() {
     const todayIsPartial = lastDay === chartDay(Date.now());
     note.textContent = 'One point per day: latest recorded unresolved count. ' +
         (todayIsPartial ? 'Today is still in progress. ' : '') +
-        'Dashed lines bridge days without readings; no counts are invented. ' +
-        'Tap a point for its net change. Swipe horizontally to see every date.';
+        'Only recorded days are shown, evenly spaced; dates without readings are omitted. ' +
+        'Dashed lines indicate skipped dates. Tap a point for its net change. Swipe horizontally to see every recorded date.';
     canvas.setAttribute('aria-label', `Daily unresolved tickets, ${samples.length} recorded days. Latest: ${samples.at(-1).value}. Full readings are in Snapshot history.`);
     if (!chartInitiallyScrolled) {
         viewport.scrollLeft = viewport.scrollWidth;
