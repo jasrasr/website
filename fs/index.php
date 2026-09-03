@@ -135,6 +135,11 @@ function analyticsRows(array $analytics, string $key): array
         .bar-value { min-width:2ch; text-align:right; font-weight:800; font-variant-numeric:tabular-nums; }
         canvas { display:block; width:100%; height:280px; }
         .trend-viewport { overflow-x:auto; }
+        .chart-controls { display:flex; flex-wrap:wrap; gap:10px 18px; margin-bottom:14px; }
+        .chart-controls label { display:flex; gap:6px; align-items:center; font-size:.9rem; }
+        .chart-controls input { width:18px; height:18px; }
+        .chart-day-picker { margin-top:14px; }
+        .chart-day-picker select { max-width:100%; padding:7px; background:#0b1727; color:var(--text); border:1px solid var(--line); border-radius:6px; }
         .table-wrap { overflow:auto; }
         table { width:100%; border-collapse:collapse; min-width:680px; }
         th,td { padding:13px 10px; border-bottom:1px solid var(--line); text-align:left; }
@@ -194,7 +199,17 @@ function analyticsRows(array $analytics, string $key): array
         <?php if (($latest['source'] ?? '') !== 'freshservice-api'): ?><p class="muted">Detailed activity begins after the API collector is configured and has completed at least two runs.</p><?php endif; ?>
     </section>
 
-    <section class="section"><h2>Daily unresolved ticket trend</h2><div class="trend-viewport" tabindex="0" role="region" aria-label="Scrollable daily ticket chart"><canvas id="trend" role="img" aria-label="Daily unresolved ticket counts"></canvas></div><p id="chart-note" class="muted" aria-live="polite"></p></section>
+    <section class="section"><h2>Daily ticket totals and activity</h2>
+        <div class="chart-controls" role="group" aria-label="Visible chart series">
+            <label style="color:#4d95ff"><input type="checkbox" data-chart-series="unresolved" checked>Unresolved — line</label>
+            <label style="color:#ffad4d"><input type="checkbox" data-chart-series="newTickets" checked>New — bars</label>
+            <label style="color:#3ddc84"><input type="checkbox" data-chart-series="completed" checked>Completed — bars</label>
+        </div>
+        <div class="trend-viewport" tabindex="0" role="region" aria-label="Scrollable daily ticket chart"><canvas id="trend" role="img" aria-label="Daily unresolved, new and completed ticket counts"></canvas></div>
+        <div class="chart-day-picker"><label for="trend-day">Daily details: </label><select id="trend-day"></select></div>
+        <p id="chart-note" class="muted" aria-live="polite"></p>
+        <p class="muted">Bars show observed activity, grouped by the day of the pull—not guaranteed event-day totals. Completed = resolved + closed exits; a later resolved-to-closed change is not counted again. A reopened ticket completed again can count again. Missed transitions cannot be reconstructed. ? means unknown; 0 means a recorded zero.</p>
+    </section>
 
     <section class="section"><h2>Current queue analytics</h2>
         <?php if (!$analytics): ?>
@@ -376,11 +391,42 @@ function dailyChartSamples(rawEntries) {
         const value = Number(entry.unresolved), time = Date.parse(entry.capturedAt);
         if (entry.unresolved === null || entry.unresolved === '' || !Number.isFinite(value) ||
             value < 0 || !Number.isFinite(time)) continue;
-        const day = chartDay(time), previous = days.get(day);
-        if (!previous || time >= previous.time) days.set(day, {value, time, day});
+        const day = chartDay(time);
+        let daily = days.get(day);
+        if (!daily) {
+            daily = {value, time, day, newTickets:null, completed:null, resolved:null, closed:null};
+            days.set(day, daily);
+        }
+        if (time >= daily.time) { daily.value = value; daily.time = time; }
+        // Baseline zeroes mean no comparison, not a measured day with no activity.
+        const baseline = entry.initialRun === true || /baseline initialized/i.test(entry.note || '');
+        const activity = !baseline && entry.activity;
+        const valid = count => (typeof count === 'number' || (typeof count === 'string' && count.trim() !== '')) &&
+            Number.isInteger(Number(count)) && Number(count) >= 0;
+        if (activity && valid(activity.newTickets)) {
+            daily.newTickets = (daily.newTickets ?? 0) + Number(activity.newTickets);
+        }
+        if (activity && valid(activity.resolved) && valid(activity.closed)) {
+            daily.resolved = (daily.resolved ?? 0) + Number(activity.resolved);
+            daily.closed = (daily.closed ?? 0) + Number(activity.closed);
+            daily.completed = daily.resolved + daily.closed;
+        }
     }
     return [...days.values()].sort((a, b) => a.day - b.day);
 }
+
+const chartSeries = {unresolved:true, newTickets:true, completed:true};
+const dayPicker = document.getElementById('trend-day');
+document.querySelectorAll('[data-chart-series]').forEach(control => {
+    control.addEventListener('change', () => {
+        chartSeries[control.dataset.chartSeries] = control.checked;
+        drawChart();
+    });
+});
+if (dayPicker) dayPicker.addEventListener('change', () => {
+    const hit = (canvas._trendHits || []).find(hit => String(hit.sample.day) === dayPicker.value);
+    if (hit) showDailyDetails(hit);
+});
 
 let chartInitiallyScrolled = false;
 function drawChart() {
@@ -397,9 +443,17 @@ function drawChart() {
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
     const c = canvas.getContext('2d'); c.scale(dpr, dpr); c.clearRect(0, 0, w, h);
     canvas._trendHits = [];
-    if (!samples.length) { note.textContent = 'No snapshots recorded.'; return; }
+    if (!samples.length) {
+        note.textContent = 'No snapshots recorded.';
+        if (dayPicker) { dayPicker.replaceChildren(); dayPicker.disabled = true; }
+        return;
+    }
 
-    const max = Math.max(1, ...samples.map(sample => sample.value));
+    const max = Math.max(1, ...samples.flatMap(sample => [
+        chartSeries.unresolved ? sample.value : 0,
+        chartSeries.newTickets ? sample.newTickets ?? 0 : 0,
+        chartSeries.completed ? sample.completed ?? 0 : 0
+    ]));
     const plotWidth = w - p.l - p.r, plotHeight = h - p.t - p.b;
     const xFor = day => dayCount === 1 ? p.l + plotWidth / 2 :
         p.l + plotWidth * dayIndexes.get(day) / (dayCount - 1);
@@ -419,9 +473,26 @@ function drawChart() {
         c.fillText(String(date.getUTCDate()), x, h - 8);
     }
 
+    // Grouped bars share the same zero-based ticket scale as the unresolved line.
+    const baselineY = h - p.b;
+    for (const sample of samples) {
+        for (const [key, offset, color] of [['newTickets',-8,'#ffad4d'],['completed',8,'#3ddc84']]) {
+            if (!chartSeries[key]) continue;
+            const value = sample[key], x = xFor(sample.day) + offset;
+            c.fillStyle = color;
+            if (value === null) {
+                c.fillText('?', x, baselineY - 4);
+            } else if (value === 0) {
+                c.fillText('0', x, baselineY - 4);
+            } else {
+                const y = yFor(value);
+                c.fillRect(x - 6, y, 12, baselineY - y);
+            }
+        }
+    }
     // Connect daily observations; dashed spans explicitly indicate missing days.
     c.strokeStyle = '#4d95ff'; c.lineWidth = 3; c.lineJoin = 'round';
-    for (let i = 1; i < samples.length; i++) {
+    for (let i = 1; chartSeries.unresolved && i < samples.length; i++) {
         const previous = samples[i - 1], current = samples[i];
         c.setLineDash(current.day - previous.day > calendarDayMs ? [5, 5] : []);
         c.beginPath(); c.moveTo(xFor(previous.day), yFor(previous.value));
@@ -430,17 +501,31 @@ function drawChart() {
     c.setLineDash([]); c.font = '12px system-ui';
     canvas._trendHits = samples.map((sample, index) => {
         const x = xFor(sample.day), y = yFor(sample.value);
-        c.fillStyle = '#3ddc84'; c.beginPath(); c.arc(x, y, 5, 0, Math.PI * 2); c.fill();
-        c.fillStyle = '#f3f7fb'; c.fillText(String(sample.value), x, y - 12);
+        if (chartSeries.unresolved) {
+            c.fillStyle = '#4d95ff'; c.beginPath(); c.arc(x, y, 5, 0, Math.PI * 2); c.fill();
+            c.fillStyle = '#f3f7fb'; c.fillText(String(sample.value), x, y - 12);
+        }
         return {x, y, sample, previous: samples[index - 1]};
     });
     c.textAlign = 'start';
     const todayIsPartial = lastDay === chartDay(Date.now());
-    note.textContent = 'One point per day: latest recorded unresolved count. ' +
+    note.textContent = 'Line: latest daily unresolved total. Bars: observed new and completed counts summed across daily pulls. ' +
         (todayIsPartial ? 'Today is still in progress. ' : '') +
         'Only recorded days are shown, evenly spaced; dates without readings are omitted. ' +
-        'Dashed lines indicate skipped dates. Tap a point for its net change. Swipe horizontally to see every recorded date.';
-    canvas.setAttribute('aria-label', `Daily unresolved tickets, ${samples.length} recorded days. Latest: ${samples.at(-1).value}. Full readings are in Snapshot history.`);
+        'Dashed lines indicate skipped dates. Tap a date column or choose Daily details. Swipe horizontally to see every recorded date.';
+    if (!Object.values(chartSeries).some(Boolean)) note.textContent = 'Select a series above to display it. Daily details remain available.';
+    canvas.setAttribute('aria-label', `Daily ticket chart, ${samples.length} recorded days. Unresolved line and observed new/completed bars share one ticket scale. Use Daily details for values.`);
+    if (dayPicker) {
+        const selected = dayPicker.value;
+        dayPicker.replaceChildren(...samples.map(sample => {
+            const option = document.createElement('option');
+            option.value = String(sample.day);
+            option.textContent = new Date(sample.day).toLocaleDateString('en-US', {timeZone:'UTC', month:'short', day:'numeric', year:'numeric'});
+            return option;
+        }));
+        dayPicker.disabled = false;
+        dayPicker.value = samples.some(sample => String(sample.day) === selected) ? selected : String(lastDay);
+    }
     if (!chartInitiallyScrolled) {
         viewport.scrollLeft = viewport.scrollWidth;
         chartInitiallyScrolled = true;
@@ -449,13 +534,18 @@ function drawChart() {
 
 canvas.addEventListener('click', event => {
     const rect = canvas.getBoundingClientRect(), x = event.clientX - rect.left, y = event.clientY - rect.top;
+    if (y < 18 || y > 280) return;
     let best = null, distance = Infinity;
     for (const hit of canvas._trendHits || []) {
-        const candidate = Math.hypot(x - hit.x, y - hit.y);
+        const candidate = Math.abs(x - hit.x);
         if (candidate < distance) { best = hit; distance = candidate; }
     }
     if (!best || distance > 28) return;
-    const {sample, previous} = best;
+    if (dayPicker) dayPicker.value = String(best.sample.day);
+    showDailyDetails(best);
+});
+
+function showDailyDetails({sample, previous}) {
     const observed = new Date(sample.time).toLocaleString('en-US', {
         timeZone: chartTimezone, month:'short', day:'numeric', year:'numeric',
         hour:'numeric', minute:'2-digit'
@@ -464,9 +554,13 @@ canvas.addEventListener('click', event => {
     const gap = previous ? Math.round((sample.day - previous.day) / calendarDayMs) : 0;
     const changeLabel = delta === null ? 'First recorded day; no prior comparison.' :
         `Net change: ${delta > 0 ? '+' : ''}${delta} vs ${gap === 1 ? 'previous day' : `previous recorded day (${gap} days earlier)`}.`;
-    note.textContent = `${sample.value} unresolved — last reading ${observed}. ${changeLabel}` +
+    const newLabel = sample.newTickets ?? 'unknown';
+    const completedLabel = sample.completed === null ? 'unknown' :
+        `${sample.completed} (${sample.resolved} resolved, ${sample.closed} closed)`;
+    note.textContent = `${sample.value} unresolved — last reading ${observed}. New: ${newLabel}. Completed: ${completedLabel}. ${changeLabel}` +
+        ' Activity is observed, not a complete event history.' +
         (sample.day === chartDay(Date.now()) ? ' Today is still in progress.' : '');
-});
+}
 
 drawChart(); window.addEventListener('resize',drawChart);
 </script>
