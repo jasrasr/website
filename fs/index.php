@@ -135,6 +135,8 @@ function analyticsRows(array $analytics, string $key): array
         .bar-value { min-width:2ch; text-align:right; font-weight:800; font-variant-numeric:tabular-nums; }
         canvas { display:block; width:100%; height:280px; }
         .trend-viewport { overflow-x:auto; }
+        .chart-view + .chart-view { margin-top:26px; }
+        .chart-view h3 { margin:12px 0; font-size:1rem; }
         .chart-controls { display:flex; flex-wrap:wrap; gap:10px 18px; margin-bottom:14px; }
         .chart-controls label { display:flex; gap:6px; align-items:center; font-size:.9rem; }
         .chart-controls input { width:18px; height:18px; }
@@ -201,14 +203,19 @@ function analyticsRows(array $analytics, string $key): array
 
     <section class="section"><h2>Daily ticket totals and activity</h2>
         <div class="chart-controls" role="group" aria-label="Visible chart series">
-            <label style="color:#4d95ff"><input type="checkbox" data-chart-series="unresolved" checked>Unresolved — line</label>
-            <label style="color:#ffad4d"><input type="checkbox" data-chart-series="newTickets" checked>New — line</label>
-            <label style="color:#3ddc84"><input type="checkbox" data-chart-series="completed" checked>Completed — line</label>
+            <label style="color:#4d95ff"><input type="checkbox" data-chart-series="unresolved" checked>Unresolved</label>
+            <label style="color:#ffad4d"><input type="checkbox" data-chart-series="newTickets" checked>New</label>
+            <label style="color:#3ddc84"><input type="checkbox" data-chart-series="completed" checked>Completed</label>
         </div>
-        <div class="trend-viewport" tabindex="0" role="region" aria-label="Scrollable daily ticket chart"><canvas id="trend" role="img" aria-label="Daily unresolved, new and completed ticket counts"></canvas></div>
+        <div class="chart-view"><h3>Three-line view</h3>
+            <div class="trend-viewport" tabindex="0" role="region" aria-label="Scrollable daily line chart"><canvas id="trend" role="img" aria-label="Daily unresolved, new and completed ticket lines"></canvas></div>
+        </div>
+        <div class="chart-view"><h3>Unresolved line + activity bars</h3>
+            <div class="trend-viewport" tabindex="0" role="region" aria-label="Scrollable daily line and bar chart"><canvas id="trend-combo" role="img" aria-label="Daily unresolved line with new and completed bars"></canvas></div>
+        </div>
         <div class="chart-day-picker"><label for="trend-day">Daily details: </label><select id="trend-day"></select></div>
         <p id="chart-note" class="muted" aria-live="polite"></p>
-        <p class="muted">New and Completed lines show observed activity, grouped by the day of the pull—not guaranteed event-day totals. Completed = resolved + closed exits; a later resolved-to-closed change is not counted again. A reopened ticket completed again can count again. Missed transitions cannot be reconstructed. Gaps mean unknown activity; points at 0 mean a recorded zero.</p>
+        <p class="muted">Both views use the same daily data and shared ticket scale. New and Completed show observed activity, grouped by the day of the pull—not guaranteed event-day totals. Completed = resolved + closed exits; a later resolved-to-closed change is not counted again. A reopened ticket completed again can count again. Missed transitions cannot be reconstructed. Missing activity is unknown, not zero; known zeroes are labeled 0.</p>
     </section>
 
     <section class="section"><h2>Current queue analytics</h2>
@@ -417,6 +424,7 @@ function dailyChartSamples(rawEntries) {
 
 const chartSeries = {unresolved:true, newTickets:true, completed:true};
 const dayPicker = document.getElementById('trend-day');
+const comboCanvas = document.getElementById('trend-combo');
 document.querySelectorAll('[data-chart-series]').forEach(control => {
     control.addEventListener('change', () => {
         chartSeries[control.dataset.chartSeries] = control.checked;
@@ -428,8 +436,12 @@ if (dayPicker) dayPicker.addEventListener('change', () => {
     if (hit) showDailyDetails(hit);
 });
 
-let chartInitiallyScrolled = false;
 function drawChart() {
+    drawChartView(canvas, 'lines');
+    if (comboCanvas) drawChartView(comboCanvas, 'combo');
+}
+
+function drawChartView(canvas, view) {
     const samples = dailyChartSamples(entries);
     const viewport = canvas.parentElement;
     const p = {l:48, r:24, t:30, b:52}, h = 280;
@@ -443,6 +455,7 @@ function drawChart() {
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
     const c = canvas.getContext('2d'); c.scale(dpr, dpr); c.clearRect(0, 0, w, h);
     canvas._trendHits = [];
+    canvas._dataLabels = [];
     if (!samples.length) {
         note.textContent = 'No snapshots recorded.';
         if (dayPicker) { dayPicker.replaceChildren(); dayPicker.disabled = true; }
@@ -473,14 +486,28 @@ function drawChart() {
         c.fillText(String(date.getUTCDate()), x, h - 8);
     }
 
-    // All series use the same dates and ticket scale. Unknown values break a line.
+    // Label collision checks keep close/identical series values readable.
+    const pendingLabels = [];
+    const addLabel = (value, x, y, color) => pendingLabels.push({value, x, y, color});
+    if (view === 'combo') {
+        for (const sample of samples) {
+            for (const [key, offset, color] of [['newTickets',-8,'#ffad4d'],['completed',8,'#3ddc84']]) {
+                if (!chartSeries[key] || sample[key] === null) continue;
+                const value = sample[key], x = xFor(sample.day) + offset, y = yFor(value);
+                c.fillStyle = color;
+                c.fillRect(x - 6, y, 12, Math.max(1, h - p.b - y));
+                addLabel(value, x, y, color);
+            }
+        }
+    }
+    // Unknown values break a line; no fabricated zero markers.
     c.lineWidth = 3; c.lineJoin = 'round'; c.font = '12px system-ui';
     for (const [key, field, color, radius] of [
         ['unresolved','value','#4d95ff',5],
         ['newTickets','newTickets','#ffad4d',4],
         ['completed','completed','#3ddc84',3]
     ]) {
-        if (!chartSeries[key]) continue;
+        if (!chartSeries[key] || (view === 'combo' && key !== 'unresolved')) continue;
         c.strokeStyle = color;
         for (let i = 1; i < samples.length; i++) {
             const previous = samples[i - 1], current = samples[i];
@@ -494,10 +521,21 @@ function drawChart() {
             if (sample[field] === null) continue;
             const x = xFor(sample.day), y = yFor(sample[field]);
             c.fillStyle = color; c.beginPath(); c.arc(x, y, radius, 0, Math.PI * 2); c.fill();
-            if (key === 'unresolved') {
-                c.fillStyle = '#f3f7fb'; c.fillText(String(sample.value), x, y - 12);
-            }
+            addLabel(sample[field], x, y, color);
         }
+    }
+    c.font = '12px system-ui';
+    for (const label of pendingLabels) {
+        const text = String(label.value), width = c.measureText(text).width;
+        const x = Math.max(p.l + width / 2, Math.min(w - p.r - width / 2, label.x));
+        const candidates = [label.y - 12, label.y - 28, label.y - 44, label.y + 18, label.y + 34, label.y + 50];
+        for (let y = 16; y <= h - p.b - 4; y += 16) candidates.push(y);
+        const boundsAt = y => ({left:x-width/2-3,right:x+width/2+3,top:y-12,bottom:y+3});
+        const clear = box => !canvas._dataLabels.some(other =>
+            box.left < other.right && box.right > other.left && box.top < other.bottom && box.bottom > other.top);
+        const y = candidates.find(y => y >= 16 && y <= h-p.b-4 && clear(boundsAt(y))) ?? 16;
+        canvas._dataLabels.push({...boundsAt(y),value:label.value,color:label.color});
+        c.fillStyle = label.color; c.fillText(text, x, y);
     }
     canvas._trendHits = samples.map((sample, index) => ({
         x:xFor(sample.day), y:yFor(sample.value), sample, previous:samples[index - 1]
@@ -509,7 +547,7 @@ function drawChart() {
         'Only recorded days are shown, evenly spaced; dates without readings are omitted. ' +
         'Dashed lines indicate skipped dates. Tap a date column or choose Daily details. Swipe horizontally to see every recorded date.';
     if (!Object.values(chartSeries).some(Boolean)) note.textContent = 'Select a series above to display it. Daily details remain available.';
-    canvas.setAttribute('aria-label', `Daily ticket chart, ${samples.length} recorded days. Unresolved, observed new and completed lines share one ticket scale. Unknown activity breaks the line. Use Daily details for values.`);
+    canvas.setAttribute('aria-label', `Daily ticket chart, ${samples.length} recorded days. ${view === 'combo' ? 'Unresolved line with new and completed bars' : 'Three lines: unresolved, new and completed'}. All known values are labeled on one ticket scale. Unknown activity is omitted. Use Daily details for values.`);
     if (dayPicker) {
         const selected = dayPicker.value;
         dayPicker.replaceChildren(...samples.map(sample => {
@@ -521,13 +559,14 @@ function drawChart() {
         dayPicker.disabled = false;
         dayPicker.value = samples.some(sample => String(sample.day) === selected) ? selected : String(lastDay);
     }
-    if (!chartInitiallyScrolled) {
+    if (!canvas._initiallyScrolled) {
         viewport.scrollLeft = viewport.scrollWidth;
-        chartInitiallyScrolled = true;
+        canvas._initiallyScrolled = true;
     }
 }
 
-canvas.addEventListener('click', event => {
+for (const chart of [canvas, comboCanvas].filter(Boolean)) chart.addEventListener('click', event => {
+    const canvas = chart;
     const rect = canvas.getBoundingClientRect(), x = event.clientX - rect.left, y = event.clientY - rect.top;
     if (y < 18 || y > 280) return;
     let best = null, distance = Infinity;
