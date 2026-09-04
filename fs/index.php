@@ -135,8 +135,6 @@ function analyticsRows(array $analytics, string $key): array
         .bar-value { min-width:2ch; text-align:right; font-weight:800; font-variant-numeric:tabular-nums; }
         canvas { display:block; width:100%; height:280px; }
         .trend-viewport { overflow-x:auto; }
-        .chart-view + .chart-view { margin-top:26px; }
-        .chart-view h3 { margin:12px 0; font-size:1rem; }
         .chart-controls { display:flex; flex-wrap:wrap; gap:10px 18px; margin-bottom:14px; }
         .chart-controls label { display:flex; gap:6px; align-items:center; font-size:.9rem; }
         .chart-controls input { width:18px; height:18px; }
@@ -205,17 +203,12 @@ function analyticsRows(array $analytics, string $key): array
         <div class="chart-controls" role="group" aria-label="Visible chart series">
             <label style="color:#4d95ff"><input type="checkbox" data-chart-series="unresolved" checked>Unresolved</label>
             <label style="color:#ffad4d"><input type="checkbox" data-chart-series="newTickets" checked>New</label>
-            <label style="color:#3ddc84"><input type="checkbox" data-chart-series="completed" checked>Completed</label>
+            <label style="color:#3ddc84"><input type="checkbox" data-chart-series="completed" checked>Resolved/Closed</label>
         </div>
-        <div class="chart-view"><h3>Three-line view</h3>
-            <div class="trend-viewport" tabindex="0" role="region" aria-label="Scrollable daily line chart"><canvas id="trend" role="img" aria-label="Daily unresolved, new and completed ticket lines"></canvas></div>
-        </div>
-        <div class="chart-view"><h3>Unresolved line + activity bars</h3>
-            <div class="trend-viewport" tabindex="0" role="region" aria-label="Scrollable daily line and bar chart"><canvas id="trend-combo" role="img" aria-label="Daily unresolved line with new and completed bars"></canvas></div>
-        </div>
+        <div class="trend-viewport" tabindex="0" role="region" aria-label="Scrollable combined daily chart"><canvas id="trend" role="img" aria-label="Daily unresolved, new and resolved or closed ticket lines with activity bars"></canvas></div>
         <div class="chart-day-picker"><label for="trend-day">Daily details: </label><select id="trend-day"></select></div>
         <p id="chart-note" class="muted" aria-live="polite"></p>
-        <p class="muted">Both views use the same daily data and shared ticket scale. New and Completed show observed activity, grouped by the day of the pull—not guaranteed event-day totals. Completed = resolved + closed exits; a later resolved-to-closed change is not counted again. A reopened ticket completed again can count again. Missed transitions cannot be reconstructed. Missing activity is unknown, not zero; known zeroes are labeled 0.</p>
+        <p class="muted">The combined view uses lines for all three series and bars for New and Resolved/Closed. Activity is grouped by the day of the pull—not guaranteed event-day totals. A later resolved-to-closed change is not counted again. A reopened ticket completed again can count again. Missed transitions cannot be reconstructed. Missing activity is unknown, not zero; known zeroes are labeled 0.</p>
     </section>
 
     <section class="section"><h2>Current queue analytics</h2>
@@ -424,7 +417,6 @@ function dailyChartSamples(rawEntries) {
 
 const chartSeries = {unresolved:true, newTickets:true, completed:true};
 const dayPicker = document.getElementById('trend-day');
-const comboCanvas = document.getElementById('trend-combo');
 document.querySelectorAll('[data-chart-series]').forEach(control => {
     control.addEventListener('change', () => {
         chartSeries[control.dataset.chartSeries] = control.checked;
@@ -437,11 +429,6 @@ if (dayPicker) dayPicker.addEventListener('change', () => {
 });
 
 function drawChart() {
-    drawChartView(canvas, 'lines');
-    if (comboCanvas) drawChartView(comboCanvas, 'combo');
-}
-
-function drawChartView(canvas, view) {
     const samples = dailyChartSamples(entries);
     const viewport = canvas.parentElement;
     const p = {l:48, r:24, t:30, b:52}, h = 280;
@@ -489,15 +476,13 @@ function drawChartView(canvas, view) {
     // Label collision checks keep close/identical series values readable.
     const pendingLabels = [];
     const addLabel = (value, x, y, color) => pendingLabels.push({value, x, y, color});
-    if (view === 'combo') {
-        for (const sample of samples) {
-            for (const [key, offset, color] of [['newTickets',-8,'#ffad4d'],['completed',8,'#3ddc84']]) {
-                if (!chartSeries[key] || sample[key] === null) continue;
-                const value = sample[key], x = xFor(sample.day) + offset, y = yFor(value);
-                c.fillStyle = color;
-                c.fillRect(x - 6, y, 12, Math.max(1, h - p.b - y));
-                addLabel(value, x, y, color);
-            }
+    // Activity bars sit behind their matching lines; the unresolved count remains line-only.
+    for (const sample of samples) {
+        for (const [key, offset, color] of [['newTickets',-8,'#ffad4d'],['completed',8,'#3ddc84']]) {
+            if (!chartSeries[key] || sample[key] === null) continue;
+            const value = sample[key], x = xFor(sample.day) + offset, y = yFor(value);
+            c.save(); c.globalAlpha = .34; c.fillStyle = color;
+            c.fillRect(x - 6, y, 12, Math.max(1, h - p.b - y)); c.restore();
         }
     }
     // Unknown values break a line; no fabricated zero markers.
@@ -507,7 +492,7 @@ function drawChartView(canvas, view) {
         ['newTickets','newTickets','#ffad4d',4],
         ['completed','completed','#3ddc84',3]
     ]) {
-        if (!chartSeries[key] || (view === 'combo' && key !== 'unresolved')) continue;
+        if (!chartSeries[key]) continue;
         c.strokeStyle = color;
         for (let i = 1; i < samples.length; i++) {
             const previous = samples[i - 1], current = samples[i];
@@ -542,12 +527,12 @@ function drawChartView(canvas, view) {
     }));
     c.textAlign = 'start';
     const todayIsPartial = lastDay === chartDay(Date.now());
-    note.textContent = 'Blue: latest daily unresolved total. Orange: observed new tickets. Green: observed completed tickets. Activity is summed across daily pulls. ' +
+    note.textContent = 'Blue: latest daily unresolved total. Orange: observed new tickets. Green: observed resolved/closed tickets. Activity is summed across daily pulls. ' +
         (todayIsPartial ? 'Today is still in progress. ' : '') +
         'Only recorded days are shown, evenly spaced; dates without readings are omitted. ' +
         'Dashed lines indicate skipped dates. Tap a date column or choose Daily details. Swipe horizontally to see every recorded date.';
     if (!Object.values(chartSeries).some(Boolean)) note.textContent = 'Select a series above to display it. Daily details remain available.';
-    canvas.setAttribute('aria-label', `Daily ticket chart, ${samples.length} recorded days. ${view === 'combo' ? 'Unresolved line with new and completed bars' : 'Three lines: unresolved, new and completed'}. All known values are labeled on one ticket scale. Unknown activity is omitted. Use Daily details for values.`);
+    canvas.setAttribute('aria-label', `Combined daily ticket chart, ${samples.length} recorded days. Unresolved, New and Resolved or Closed use labeled lines; New and Resolved or Closed also use translucent bars. Unknown activity is omitted. Use Daily details for values.`);
     if (dayPicker) {
         const selected = dayPicker.value;
         dayPicker.replaceChildren(...samples.map(sample => {
@@ -565,8 +550,7 @@ function drawChartView(canvas, view) {
     }
 }
 
-for (const chart of [canvas, comboCanvas].filter(Boolean)) chart.addEventListener('click', event => {
-    const canvas = chart;
+canvas.addEventListener('click', event => {
     const rect = canvas.getBoundingClientRect(), x = event.clientX - rect.left, y = event.clientY - rect.top;
     if (y < 18 || y > 280) return;
     let best = null, distance = Infinity;
@@ -591,7 +575,7 @@ function showDailyDetails({sample, previous}) {
     const newLabel = sample.newTickets ?? 'unknown';
     const completedLabel = sample.completed === null ? 'unknown' :
         `${sample.completed} (${sample.resolved} resolved, ${sample.closed} closed)`;
-    note.textContent = `${sample.value} unresolved — last reading ${observed}. New: ${newLabel}. Completed: ${completedLabel}. ${changeLabel}` +
+    note.textContent = `${sample.value} unresolved — last reading ${observed}. New: ${newLabel}. Resolved/Closed: ${completedLabel}. ${changeLabel}` +
         ' Activity is observed, not a complete event history.' +
         (sample.day === chartDay(Date.now()) ? ' Today is still in progress.' : '');
 }
