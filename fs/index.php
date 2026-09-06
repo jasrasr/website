@@ -209,12 +209,12 @@ function analyticsRows(array $analytics, string $key): array
             <label style="color:#ffad4d"><input type="checkbox" data-chart-series="newTickets" checked>New</label>
             <label style="color:#3ddc84"><input type="checkbox" data-chart-series="completed" checked>Resolved/Closed</label>
         </div>
-        <div class="trend-viewport" tabindex="0" role="region" aria-label="Scrollable combined daily chart"><canvas id="trend" role="img" aria-label="Daily unresolved, new and resolved or closed ticket lines with activity bars"></canvas></div>
+        <div class="trend-viewport" tabindex="0" role="region" aria-label="Scrollable combined daily chart"><canvas id="trend" role="img" aria-label="Daily unresolved, new and resolved or closed ticket lines with matching bars and separate vertical scales"></canvas></div>
         <div class="chart-day-picker"><label for="trend-day">Daily details: </label><select id="trend-day"></select></div>
         <details class="chart-explanation">
             <summary>About this chart and its calculations</summary>
             <p id="chart-note" class="muted" aria-live="polite"></p>
-            <p class="muted">The combined view uses lines for all three series and bars for New and Resolved/Closed. Activity is grouped by the day of the pull—not guaranteed event-day totals. A later resolved-to-closed change is not counted again. A reopened ticket completed again can count again. Missed transitions cannot be reconstructed. Missing activity is unknown, not zero; known zeroes are labeled 0.</p>
+            <p class="muted">The combined view uses lines and bars for all three series. Unresolved uses the left scale; New and Resolved/Closed share the right scale. Activity is grouped by the day of the pull—not guaranteed event-day totals. A later resolved-to-closed change is not counted again. A reopened ticket completed again can count again. Missed transitions cannot be reconstructed. Missing activity is unknown, not zero; known zeroes are labeled 0.</p>
         </details>
     </section>
 
@@ -440,7 +440,7 @@ if (dayPicker) dayPicker.addEventListener('change', () => {
 function drawChart() {
     const samples = dailyChartSamples(entries);
     const viewport = canvas.parentElement;
-    const p = {l:48, r:24, t:30, b:52}, h = 280;
+    const p = {l:48, r:48, t:30, b:52}, h = 280;
     const lastDay = samples.at(-1)?.day;
     const dayCount = samples.length;
     const dayIndexes = new Map(samples.map((sample, index) => [sample.day, index]));
@@ -458,20 +458,30 @@ function drawChart() {
         return;
     }
 
-    const max = Math.max(1, ...samples.flatMap(sample => [
-        chartSeries.unresolved ? sample.value : 0,
+    const activityVisible = chartSeries.newTickets || chartSeries.completed;
+    const unresolvedMax = Math.max(1, ...samples.map(sample =>
+        chartSeries.unresolved ? sample.value : 0));
+    const activityMax = Math.max(1, ...samples.flatMap(sample => [
         chartSeries.newTickets ? sample.newTickets ?? 0 : 0,
         chartSeries.completed ? sample.completed ?? 0 : 0
     ]));
     const plotWidth = w - p.l - p.r, plotHeight = h - p.t - p.b;
     const xFor = day => dayCount === 1 ? p.l + plotWidth / 2 :
         p.l + plotWidth * dayIndexes.get(day) / (dayCount - 1);
-    const yFor = value => p.t + plotHeight * (max - value) / max;
-    c.strokeStyle = '#29405d'; c.fillStyle = '#93a4ba'; c.font = '12px system-ui'; c.lineWidth = 1;
+    const unresolvedYFor = value => p.t + plotHeight * (unresolvedMax - value) / unresolvedMax;
+    const activityYFor = value => p.t + plotHeight * (activityMax - value) / activityMax;
+    c.strokeStyle = '#29405d'; c.font = '12px system-ui'; c.lineWidth = 1;
     for (let i = 0; i < 5; i++) {
         const y = p.t + plotHeight * i / 4;
         c.beginPath(); c.moveTo(p.l, y); c.lineTo(w - p.r, y); c.stroke();
-        c.fillText(String(Math.round(max * (1 - i / 4))), 6, y + 4);
+        if (chartSeries.unresolved) {
+            c.fillStyle = '#78aaff'; c.textAlign = 'start';
+            c.fillText(String(Math.round(unresolvedMax * (1 - i / 4))), 6, y + 4);
+        }
+        if (activityVisible) {
+            c.fillStyle = '#a9b8ca'; c.textAlign = 'right';
+            c.fillText(String(Math.round(activityMax * (1 - i / 4))), w - 6, y + 4);
+        }
     }
 
     c.textAlign = 'center'; c.font = '11px system-ui';
@@ -485,23 +495,29 @@ function drawChart() {
     // Label collision checks keep close/identical series values readable.
     const pendingLabels = [];
     const addLabel = (value, x, y, color) => pendingLabels.push({value, x, y, color});
-    // Activity bars sit behind their matching lines; the unresolved count remains line-only.
+    // Translucent bars sit behind all three matching lines.
     for (const sample of samples) {
+        if (chartSeries.unresolved) {
+            const x = xFor(sample.day), y = unresolvedYFor(sample.value);
+            c.save(); c.globalAlpha = .16; c.fillStyle = '#4d95ff';
+            c.fillRect(x - 11, y, 22, Math.max(1, h - p.b - y)); c.restore();
+        }
         for (const [key, offset, color] of [['newTickets',-8,'#ffad4d'],['completed',8,'#3ddc84']]) {
             if (!chartSeries[key] || sample[key] === null) continue;
-            const value = sample[key], x = xFor(sample.day) + offset, y = yFor(value);
+            const value = sample[key], x = xFor(sample.day) + offset, y = activityYFor(value);
             c.save(); c.globalAlpha = .34; c.fillStyle = color;
             c.fillRect(x - 6, y, 12, Math.max(1, h - p.b - y)); c.restore();
         }
     }
     // Unknown values break a line; no fabricated zero markers.
     c.lineWidth = 3; c.lineJoin = 'round'; c.font = '12px system-ui';
-    for (const [key, field, color, radius] of [
-        ['unresolved','value','#4d95ff',5],
-        ['newTickets','newTickets','#ffad4d',4],
-        ['completed','completed','#3ddc84',3]
+    for (const [key, field, color, radius, axis] of [
+        ['unresolved','value','#4d95ff',5,'unresolved'],
+        ['newTickets','newTickets','#ffad4d',4,'activity'],
+        ['completed','completed','#3ddc84',3,'activity']
     ]) {
         if (!chartSeries[key]) continue;
+        const yFor = axis === 'unresolved' ? unresolvedYFor : activityYFor;
         c.strokeStyle = color;
         for (let i = 1; i < samples.length; i++) {
             const previous = samples[i - 1], current = samples[i];
@@ -532,16 +548,16 @@ function drawChart() {
         c.fillStyle = label.color; c.fillText(text, x, y);
     }
     canvas._trendHits = samples.map((sample, index) => ({
-        x:xFor(sample.day), y:yFor(sample.value), sample, previous:samples[index - 1]
+        x:xFor(sample.day), y:unresolvedYFor(sample.value), sample, previous:samples[index - 1]
     }));
     c.textAlign = 'start';
     const todayIsPartial = lastDay === chartDay(Date.now());
-    note.textContent = 'Blue: latest daily unresolved total. Orange: observed new tickets. Green: observed resolved/closed tickets. Activity is summed across daily pulls. ' +
+    note.textContent = 'Blue: latest daily unresolved total using the left scale. Orange: observed new tickets. Green: observed resolved/closed tickets. Orange and green use the right activity scale. Every series has a line and translucent bars. Activity is summed across daily pulls. ' +
         (todayIsPartial ? 'Today is still in progress. ' : '') +
         'Only recorded days are shown, evenly spaced; dates without readings are omitted. ' +
         'Dashed lines indicate skipped dates. Tap a date column or choose Daily details. Swipe horizontally to see every recorded date.';
     if (!Object.values(chartSeries).some(Boolean)) note.textContent = 'Select a series above to display it. Daily details remain available.';
-    canvas.setAttribute('aria-label', `Combined daily ticket chart, ${samples.length} recorded days. Unresolved, New and Resolved or Closed use labeled lines; New and Resolved or Closed also use translucent bars. Unknown activity is omitted. Use Daily details for values.`);
+    canvas.setAttribute('aria-label', `Combined daily ticket chart, ${samples.length} recorded days. Unresolved uses the left vertical scale; New and Resolved or Closed use the right activity scale. All three use labeled lines and translucent bars. Unknown activity is omitted. Use Daily details for values.`);
     if (dayPicker) {
         const selected = dayPicker.value;
         dayPicker.replaceChildren(...samples.map(sample => {
