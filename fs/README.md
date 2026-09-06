@@ -18,7 +18,7 @@ The dashboard merges the Git-tracked manual history with API snapshots stored on
 Each authenticated collector attempt is also recorded in `storage/pull-log.json` and displayed in the dashboard's API pull log. Successful and failed pulls are retained without credentials or ticket content.
 When the latest unresolved count reaches zero, the dashboard displays a dismissible applause banner with an accessible fireworks celebration.
 API snapshots include anonymous aggregate charts for status, category, category › subcategory, category › subcategory › item, priority, ticket age, and requester ticket-count distribution. Hierarchical labels keep duplicate subcategory or item names under the correct parent. Raw requester IDs remain only in protected state; category combinations with fewer than three tickets are grouped into `Other`.
-The combined daily chart spaces recorded days evenly and omits dates without snapshots. Unresolved uses the left vertical scale; New and Resolved/Closed share the right activity scale. All three series render as labeled lines with translucent bars, while skipped dates use dashed connectors.
+The combined daily chart appears above the summary cards, spaces recorded days evenly, and omits dates without snapshots. Unresolved uses the fixed left vertical scale; New and Resolved/Closed share the fixed right activity scale. Only the plot scrolls horizontally, so both axes remain visible. All three series render as labeled lines with translucent bars, while skipped dates use dashed connectors.
 
 ## Setup
 
