@@ -134,7 +134,12 @@ function analyticsRows(array $analytics, string $key): array
         .bar-fill { display:block; height:100%; min-width:3px; border-radius:inherit; background:linear-gradient(90deg,var(--blue),var(--green)); }
         .bar-value { min-width:2ch; text-align:right; font-weight:800; font-variant-numeric:tabular-nums; }
         canvas { display:block; width:100%; height:280px; }
-        .trend-viewport { overflow-x:auto; }
+        .trend-shell { display:grid; grid-template-columns:38px minmax(0,1fr) 38px; align-items:start; }
+        .trend-viewport { min-width:0; overflow-x:auto; }
+        .trend-axis { position:relative; z-index:1; height:280px; color:var(--muted); font-size:.75rem; font-variant-numeric:tabular-nums; background:linear-gradient(145deg,var(--panel2),var(--panel)); }
+        .trend-axis span { position:absolute; width:100%; transform:translateY(-50%); }
+        .trend-axis-left { color:#78aaff; text-align:right; padding-right:6px; }
+        .trend-axis-right { color:#a9b8ca; text-align:left; padding-left:6px; }
         .chart-controls { display:flex; flex-wrap:wrap; gap:10px 18px; margin-bottom:14px; }
         .chart-controls label { display:flex; gap:6px; align-items:center; font-size:.9rem; }
         .chart-controls input { width:18px; height:18px; }
@@ -187,6 +192,25 @@ function analyticsRows(array $analytics, string $key): array
 
     <?php if ($error): ?><p class="error"><?= e($error) ?></p><?php endif; ?>
 
+    <section class="section"><h2>Daily ticket totals and activity</h2>
+        <div class="chart-controls" role="group" aria-label="Visible chart series">
+            <label style="color:#4d95ff"><input type="checkbox" data-chart-series="unresolved" checked>Unresolved</label>
+            <label style="color:#ffad4d"><input type="checkbox" data-chart-series="newTickets" checked>New</label>
+            <label style="color:#3ddc84"><input type="checkbox" data-chart-series="completed" checked>Resolved/Closed</label>
+        </div>
+        <div class="trend-shell">
+            <div class="trend-axis trend-axis-left" id="unresolved-axis" aria-hidden="true"></div>
+            <div class="trend-viewport" tabindex="0" role="region" aria-label="Scrollable combined daily chart plot"><canvas id="trend" role="img" aria-label="Daily unresolved, new and resolved or closed ticket lines with matching bars and separate vertical scales"></canvas></div>
+            <div class="trend-axis trend-axis-right" id="activity-axis" aria-hidden="true"></div>
+        </div>
+        <div class="chart-day-picker"><label for="trend-day">Daily details: </label><select id="trend-day"></select></div>
+        <details class="chart-explanation">
+            <summary>About this chart and its calculations</summary>
+            <p id="chart-note" class="muted" aria-live="polite"></p>
+            <p class="muted">The combined view uses lines and bars for all three series. Unresolved uses the left scale; New and Resolved/Closed share the right scale. Activity is grouped by the day of the pull—not guaranteed event-day totals. A later resolved-to-closed change is not counted again. A reopened ticket completed again can count again. Missed transitions cannot be reconstructed. Missing activity is unknown, not zero; known zeroes are labeled 0.</p>
+        </details>
+    </section>
+
     <section class="grid" aria-label="Ticket summary">
         <article class="card"><span class="label">Current unresolved</span><span class="value"><?= number_format($current) ?></span><span class="sub">As of <?= e(displayDate($latest['capturedAt'] ?? null)) ?></span></article>
         <article class="card"><span class="label">Change since prior</span><span class="value <?= $change !== null && $change <= 0 ? 'good' : 'bad' ?>"><?= $change === null ? '—' : sprintf('%+d', $change) ?></span><span class="sub"><?= $change === null ? 'Needs a second snapshot' : ($change <= 0 ? 'Moving the right direction' : 'Queue increased') ?></span></article>
@@ -201,21 +225,6 @@ function analyticsRows(array $analytics, string $key): array
             <div class="activity-item"><span class="label">Completed</span><strong><?= number_format($todayActivity['resolved'] + $todayActivity['closed']) ?></strong><span class="sub"><?= number_format($todayActivity['resolved']) ?> resolved · <?= number_format($todayActivity['closed']) ?> closed</span></div>
         </div>
         <?php if (($latest['source'] ?? '') !== 'freshservice-api'): ?><p class="muted">Detailed activity begins after the API collector is configured and has completed at least two runs.</p><?php endif; ?>
-    </section>
-
-    <section class="section"><h2>Daily ticket totals and activity</h2>
-        <div class="chart-controls" role="group" aria-label="Visible chart series">
-            <label style="color:#4d95ff"><input type="checkbox" data-chart-series="unresolved" checked>Unresolved</label>
-            <label style="color:#ffad4d"><input type="checkbox" data-chart-series="newTickets" checked>New</label>
-            <label style="color:#3ddc84"><input type="checkbox" data-chart-series="completed" checked>Resolved/Closed</label>
-        </div>
-        <div class="trend-viewport" tabindex="0" role="region" aria-label="Scrollable combined daily chart"><canvas id="trend" role="img" aria-label="Daily unresolved, new and resolved or closed ticket lines with matching bars and separate vertical scales"></canvas></div>
-        <div class="chart-day-picker"><label for="trend-day">Daily details: </label><select id="trend-day"></select></div>
-        <details class="chart-explanation">
-            <summary>About this chart and its calculations</summary>
-            <p id="chart-note" class="muted" aria-live="polite"></p>
-            <p class="muted">The combined view uses lines and bars for all three series. Unresolved uses the left scale; New and Resolved/Closed share the right scale. Activity is grouped by the day of the pull—not guaranteed event-day totals. A later resolved-to-closed change is not counted again. A reopened ticket completed again can count again. Missed transitions cannot be reconstructed. Missing activity is unknown, not zero; known zeroes are labeled 0.</p>
-        </details>
     </section>
 
     <section class="section"><h2>Current queue analytics</h2>
@@ -288,6 +297,8 @@ const entries = <?= json_encode($entries, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG 
 const pullButton = document.getElementById('pull-tickets');
 const pullStatus = document.getElementById('pull-status');
 const canvas = document.getElementById('trend');
+const unresolvedAxis = document.getElementById('unresolved-axis');
+const activityAxis = document.getElementById('activity-axis');
 const note = document.getElementById('chart-note');
 const celebration = document.getElementById('goal-celebration');
 const celebrationClose = document.getElementById('celebration-close');
@@ -440,7 +451,7 @@ if (dayPicker) dayPicker.addEventListener('change', () => {
 function drawChart() {
     const samples = dailyChartSamples(entries);
     const viewport = canvas.parentElement;
-    const p = {l:48, r:48, t:30, b:52}, h = 280;
+    const p = {l:18, r:18, t:30, b:52}, h = 280;
     const lastDay = samples.at(-1)?.day;
     const dayCount = samples.length;
     const dayIndexes = new Map(samples.map((sample, index) => [sample.day, index]));
@@ -470,18 +481,25 @@ function drawChart() {
         p.l + plotWidth * dayIndexes.get(day) / (dayCount - 1);
     const unresolvedYFor = value => p.t + plotHeight * (unresolvedMax - value) / unresolvedMax;
     const activityYFor = value => p.t + plotHeight * (activityMax - value) / activityMax;
+    const renderAxis = (element, maximum, visible) => {
+        if (!element) return;
+        if (!visible) { element.replaceChildren(); return; }
+        const labels = [];
+        for (let i = 0; i < 5; i++) {
+            const label = document.createElement('span');
+            label.style.top = `${p.t + plotHeight * i / 4}px`;
+            label.textContent = String(Math.round(maximum * (1 - i / 4)));
+            labels.push(label);
+        }
+        element.replaceChildren(...labels);
+    };
+    renderAxis(unresolvedAxis, unresolvedMax, chartSeries.unresolved);
+    renderAxis(activityAxis, activityMax, activityVisible);
+
     c.strokeStyle = '#29405d'; c.font = '12px system-ui'; c.lineWidth = 1;
     for (let i = 0; i < 5; i++) {
         const y = p.t + plotHeight * i / 4;
         c.beginPath(); c.moveTo(p.l, y); c.lineTo(w - p.r, y); c.stroke();
-        if (chartSeries.unresolved) {
-            c.fillStyle = '#78aaff'; c.textAlign = 'start';
-            c.fillText(String(Math.round(unresolvedMax * (1 - i / 4))), 6, y + 4);
-        }
-        if (activityVisible) {
-            c.fillStyle = '#a9b8ca'; c.textAlign = 'right';
-            c.fillText(String(Math.round(activityMax * (1 - i / 4))), w - 6, y + 4);
-        }
     }
 
     c.textAlign = 'center'; c.font = '11px system-ui';
