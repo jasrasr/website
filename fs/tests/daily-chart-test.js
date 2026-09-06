@@ -74,8 +74,10 @@ assert.equal(axes.unresolved.labels.length,5,'The fixed unresolved axis renders 
 assert.equal(axes.activity.labels.length,5,'The fixed activity axis remains visible when activity is unavailable');
 assert.match(source,/<div class="trend-shell">\s*<div[^>]+id="unresolved-axis"[^>]*><\/div>\s*<div class="trend-viewport"[\s\S]*<\/div>\s*<div[^>]+id="activity-axis"[^>]*><\/div>/,
     'Both axes are outside the horizontally scrolling plot');
-assert.ok(source.indexOf('Daily ticket totals and activity') < source.indexOf('aria-label="Ticket summary"'),
-    'The chart appears above the count boxes');
+assert.ok(source.indexOf('aria-label="Ticket summary"') < source.indexOf('Daily ticket totals and activity'),
+    'The headline count boxes appear above the chart');
+assert.ok(source.indexOf('Daily ticket totals and activity') < source.indexOf('<h2>Activity on'),
+    'The chart remains above the activity boxes');
 const [a,b,c] = canvas._trendHits;
 assert.ok(Math.abs((c.x-b.x)/(b.x-a.x)-1)<0.00001, 'Only recorded days occupy equally spaced axis slots');
 assert.ok(lines.some(line=>line.length===2), 'Missing days use dashed connectors');
