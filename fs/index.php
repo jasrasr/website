@@ -219,6 +219,8 @@ function analyticsRows(array $analytics, string $key): array
             <?php foreach ([
                 'status' => 'Tickets by status',
                 'category' => 'Tickets by category',
+                'subcategory' => 'Tickets by category › subcategory',
+                'itemCategory' => 'Tickets by category › subcategory › item',
                 'priority' => 'Tickets by priority',
                 'age' => 'Tickets by age',
                 'requesterDistribution' => 'Requesters by unresolved ticket count',
@@ -239,7 +241,7 @@ function analyticsRows(array $analytics, string $key): array
                 </article>
             <?php endforeach; ?>
             </div>
-            <p class="muted">Requester IDs never appear on this public page. Categories with fewer than three tickets are grouped into Other.</p>
+            <p class="muted">Requester IDs never appear on this public page. Category, subcategory, and item combinations with fewer than three tickets are grouped into Other. Hierarchical labels keep identically named subcategories and items under the correct parent.</p>
         <?php endif; ?>
     </section>
 
