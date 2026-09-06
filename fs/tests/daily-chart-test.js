@@ -126,6 +126,7 @@ assert.equal(aggregate([api('2026-09-03T12:00:00Z',5,activity(null,-1,2))])[0].n
 sandbox.entries=combined; bars.length=0; labels.length=0; segments.length=0; markers.length=0;
 sandbox.drawChart();
 assert.equal(picker.options.length,5);
+assert.equal(bars.filter(bar=>bar.color==='#4d95ff').length,5,'Every daily unresolved value renders a bar');
 assert.equal(bars.filter(bar=>bar.color==='#ffad4d').length,3,'Known New values render bars, including zero');
 assert.equal(bars.filter(bar=>bar.color==='#3ddc84').length,2,'Known Resolved/Closed values render bars, including zero');
 assert.equal(segments.filter(segment=>segment.color==='#ffad4d').length,2);
@@ -146,11 +147,12 @@ assert.equal(markers.filter(marker=>marker.color==='#ffad4d').length,0);
 assert.equal(segments.filter(segment=>segment.color==='#3ddc84').length,1);
 controls.forEach(control=>{control.checked=false;control.change();});
 assert.match(sandbox.note.textContent,/Select a series/);
-// Activity lines share a scale and can exceed the unresolved total.
+// Independent axes let each domain use the full height: both maxima reach the top gridline.
 controls.forEach(control=>{control.checked=true;control.change();});
 sandbox.entries=[api('2026-09-03T12:00:00Z',1,activity(150,4,2))];
 markers.length=0; sandbox.drawChart();
 assert.ok(markers.every(marker=>marker.args[1]>=30&&marker.args[1]<=228));
+assert.equal(markers.find(marker=>marker.color==='#4d95ff').args[1],30);
 assert.equal(markers.find(marker=>marker.color==='#ffad4d').args[1],30);
 // A known day, an unknown day, and another known day must not bridge unknown activity.
 sandbox.entries=[
@@ -182,7 +184,7 @@ sandbox.entries=[
     entry('2026-09-03T12:00:00Z',4)
 ];
 bars.length=0;sandbox.drawChart();
-assert.equal(bars.length,4,'Only known New and Resolved/Closed values render bars');
+assert.equal(bars.length,7,'Every unresolved value and only known activity values render bars');
 assert.equal(canvas._dataLabels.length,7,'Every known value has one numeric label; bars do not duplicate them');
     for(const color of ['#ffad4d','#3ddc84']){
         assert.deepEqual(Array.from(canvas._dataLabels.filter(label=>label.color===color),label=>label.value),[5,0]);
@@ -199,4 +201,4 @@ listeners.click({clientX:firstHit.x,clientY:220});
 assert.match(sandbox.note.textContent,/New: 5. Resolved\/Closed: 5/);
 sandbox.entries=[];sandbox.drawChart();
 assert.equal(canvas._dataLabels.length,0);
-console.log('Overlay tests passed: three lines plus activity bars, one label per value, zero/unknown handling, collision spacing and daily details.');
+console.log('Overlay tests passed: dual axes, three lines and bar series, one label per value, zero/unknown handling, collision spacing and daily details.');
