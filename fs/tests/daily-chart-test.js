@@ -37,7 +37,10 @@ const document = {
     querySelectorAll:()=>controls,
     createElement:()=>({style:{}})
 };
-const sandbox = {canvas, note:{}, entries:[], window:{devicePixelRatio:2}, Intl, Date,document};
+const sandbox = {
+    canvas, unresolvedAxis:axes.unresolved, activityAxis:axes.activity,
+    note:{}, entries:[], window:{devicePixelRatio:2}, Intl, Date, document
+};
 vm.createContext(sandbox);
 vm.runInContext(code, sandbox);
 const aggregate = entries => JSON.parse(JSON.stringify(sandbox.dailyChartSamples(entries)));
