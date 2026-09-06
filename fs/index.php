@@ -192,6 +192,11 @@ function analyticsRows(array $analytics, string $key): array
 
     <?php if ($error): ?><p class="error"><?= e($error) ?></p><?php endif; ?>
 
+    <section class="grid" aria-label="Ticket summary">
+        <article class="card"><span class="label">Current unresolved</span><span class="value"><?= number_format($current) ?></span><span class="sub">As of <?= e(displayDate($latest['capturedAt'] ?? null)) ?></span></article>
+        <article class="card"><span class="label">Change since prior</span><span class="value <?= $change !== null && $change <= 0 ? 'good' : 'bad' ?>"><?= $change === null ? '—' : sprintf('%+d', $change) ?></span><span class="sub"><?= $change === null ? 'Needs a second snapshot' : ($change <= 0 ? 'Moving the right direction' : 'Queue increased') ?></span></article>
+    </section>
+
     <section class="section"><h2>Daily ticket totals and activity</h2>
         <div class="chart-controls" role="group" aria-label="Visible chart series">
             <label style="color:#4d95ff"><input type="checkbox" data-chart-series="unresolved" checked>Unresolved</label>
@@ -209,11 +214,6 @@ function analyticsRows(array $analytics, string $key): array
             <p id="chart-note" class="muted" aria-live="polite"></p>
             <p class="muted">The combined view uses lines and bars for all three series. Unresolved uses the left scale; New and Resolved/Closed share the right scale. Activity is grouped by the day of the pull—not guaranteed event-day totals. A later resolved-to-closed change is not counted again. A reopened ticket completed again can count again. Missed transitions cannot be reconstructed. Missing activity is unknown, not zero; known zeroes are labeled 0.</p>
         </details>
-    </section>
-
-    <section class="grid" aria-label="Ticket summary">
-        <article class="card"><span class="label">Current unresolved</span><span class="value"><?= number_format($current) ?></span><span class="sub">As of <?= e(displayDate($latest['capturedAt'] ?? null)) ?></span></article>
-        <article class="card"><span class="label">Change since prior</span><span class="value <?= $change !== null && $change <= 0 ? 'good' : 'bad' ?>"><?= $change === null ? '—' : sprintf('%+d', $change) ?></span><span class="sub"><?= $change === null ? 'Needs a second snapshot' : ($change <= 0 ? 'Moving the right direction' : 'Queue increased') ?></span></article>
     </section>
 
     <section class="section">
