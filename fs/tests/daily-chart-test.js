@@ -71,7 +71,7 @@ sandbox.entries = data;
 sandbox.drawChart();
 assert.equal(canvas._trendHits.length, 3);
 assert.equal(axes.unresolved.labels.length,5,'The fixed unresolved axis renders five labels');
-assert.equal(axes.activity.labels.length,0,'The activity axis stays empty when activity is unavailable');
+assert.equal(axes.activity.labels.length,5,'The fixed activity axis remains visible when activity is unavailable');
 assert.match(source,/<div class="trend-shell">\s*<div[^>]+id="unresolved-axis"[^>]*><\/div>\s*<div class="trend-viewport"[\s\S]*<\/div>\s*<div[^>]+id="activity-axis"[^>]*><\/div>/,
     'Both axes are outside the horizontally scrolling plot');
 assert.ok(source.indexOf('Daily ticket totals and activity') < source.indexOf('aria-label="Ticket summary"'),
