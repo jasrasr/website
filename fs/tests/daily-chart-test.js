@@ -10,10 +10,10 @@ const context2d = new Proxy({}, {get: (target, key) => target[key] || ((...args)
     if (key === 'measureText') return {width:String(args[0]).length*7};
     if (key === 'fillText') labels.push(args);
     if (key === 'setLineDash') lines.push(args[0]);
-    if (key === 'fillRect') bars.push({args,color:context2d.fillStyle});
+    if (key === 'fillRect') bars.push({args,color:context2d.fillStyle,alpha:context2d.globalAlpha});
     if (key === 'beginPath') currentPath = [];
     if (key === 'moveTo' || key === 'lineTo') currentPath.push(args);
-    if (key === 'stroke') segments.push({points:currentPath.slice(),color:context2d.strokeStyle});
+    if (key === 'stroke') segments.push({points:currentPath.slice(),color:context2d.strokeStyle,width:context2d.lineWidth,alpha:context2d.globalAlpha});
     if (key === 'arc') markers.push({args,color:context2d.fillStyle});
 }), set: (target, key, value) => { target[key] = value; return true; }});
 const canvas = {
@@ -149,8 +149,12 @@ assert.equal(axes.activity.labels[0].textContent,'7');
 assert.equal(bars.filter(bar=>bar.color==='#4d95ff').length,5,'Every daily unresolved value renders a bar');
 assert.equal(bars.filter(bar=>bar.color==='#ffad4d').length,3,'Known New values render bars, including zero');
 assert.equal(bars.filter(bar=>bar.color==='#3ddc84').length,2,'Known Resolved/Closed values render bars, including zero');
+assert.ok(bars.filter(bar=>bar.color==='#4d95ff').every(bar=>bar.alpha===.24),'Unresolved bars are emphasized');
+assert.ok(bars.filter(bar=>bar.color==='#ffad4d'||bar.color==='#3ddc84').every(bar=>bar.alpha===.16),'Activity bars are subdued');
 assert.equal(segments.filter(segment=>segment.color==='#ffad4d').length,2);
 assert.equal(segments.filter(segment=>segment.color==='#3ddc84').length,1);
+assert.ok(segments.filter(segment=>segment.color==='#4d95ff').every(segment=>segment.width===4.5&&segment.alpha===1),'Unresolved line is bold');
+assert.ok(segments.filter(segment=>segment.color==='#ffad4d'||segment.color==='#3ddc84').every(segment=>segment.width===2&&segment.alpha===.58),'Activity lines are lighter');
 assert.equal(markers.filter(marker=>marker.color==='#ffad4d').length,3,'Only known activity gets points, including zero');
 assert.equal(markers.filter(marker=>marker.color==='#3ddc84').length,2);
 const comboHit=canvas._trendHits[2];
