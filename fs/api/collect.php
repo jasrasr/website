@@ -81,6 +81,17 @@ function incrementCount(array &$counts, string $label): void
     $counts[$label] = ($counts[$label] ?? 0) + 1;
 }
 
+function hierarchyLabel(array $parts): string
+{
+    $fallbacks = ['Uncategorized', 'No subcategory', 'No item'];
+    $labels = [];
+    foreach ($parts as $index => $part) {
+        $label = trim((string) $part);
+        $labels[] = $label !== '' ? $label : ($fallbacks[$index] ?? 'Uncategorized');
+    }
+    return implode(' › ', $labels);
+}
+
 function sortedCounts(array $counts): array
 {
     arsort($counts, SORT_NUMERIC);
@@ -104,6 +115,8 @@ function aggregateAnalytics(array $tickets, array $closedStatuses, DateTimeImmut
     $priorityLabels = [1 => 'Low', 2 => 'Medium', 3 => 'High', 4 => 'Urgent'];
     $statusCounts = [];
     $categoryCounts = [];
+    $subcategoryCounts = [];
+    $itemCategoryCounts = [];
     $priorityCounts = [];
     $ageCounts = ['0–2 days' => 0, '3–7 days' => 0, '8–30 days' => 0, '31–90 days' => 0, '91+ days' => 0];
     $requesterLoads = [];
@@ -113,7 +126,12 @@ function aggregateAnalytics(array $tickets, array $closedStatuses, DateTimeImmut
         if (in_array($status, $closedStatuses, true)) continue;
 
         incrementCount($statusCounts, $statusLabels[$status] ?? 'Status ' . $status);
-        incrementCount($categoryCounts, (string) ($ticket['category'] ?? ''));
+        $category = (string) ($ticket['category'] ?? '');
+        $subcategory = (string) ($ticket['subCategory'] ?? '');
+        $itemCategory = (string) ($ticket['itemCategory'] ?? '');
+        incrementCount($categoryCounts, $category);
+        incrementCount($subcategoryCounts, hierarchyLabel([$category, $subcategory]));
+        incrementCount($itemCategoryCounts, hierarchyLabel([$category, $subcategory, $itemCategory]));
         $priority = (int) ($ticket['priority'] ?? 0);
         incrementCount($priorityCounts, $priorityLabels[$priority] ?? 'Priority ' . $priority);
 
@@ -146,6 +164,8 @@ function aggregateAnalytics(array $tickets, array $closedStatuses, DateTimeImmut
     return [
         'status' => sortedCounts($statusCounts),
         'category' => privacySafeCategoryCounts($categoryCounts),
+        'subcategory' => privacySafeCategoryCounts($subcategoryCounts),
+        'itemCategory' => privacySafeCategoryCounts($itemCategoryCounts),
         'priority' => sortedCounts($priorityCounts),
         'age' => array_filter($ageCounts, static fn(int $count): bool => $count > 0),
         'requesterDistribution' => array_filter($requesterDistribution, static fn(int $count): bool => $count > 0),

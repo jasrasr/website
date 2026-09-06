@@ -17,8 +17,8 @@ Screenshots can still be recorded manually. The preferred method is the server-s
 The dashboard merges the Git-tracked manual history with API snapshots stored on the server and displays both the queue balance and daily activity.
 Each authenticated collector attempt is also recorded in `storage/pull-log.json` and displayed in the dashboard's API pull log. Successful and failed pulls are retained without credentials or ticket content.
 When the latest unresolved count reaches zero, the dashboard displays a dismissible applause banner with an accessible fireworks celebration.
-API snapshots include anonymous aggregate charts for status, category, priority, ticket age, and requester ticket-count distribution. Raw requester IDs remain only in protected state; categories with fewer than three tickets are grouped into `Other`.
-The unresolved trend spaces recorded checks evenly and omits dates without snapshots. Consecutive duplicate values are grouped into plateaus, and repeated checks on the latest date include a timestamp at the right edge.
+API snapshots include anonymous aggregate charts for status, category, category › subcategory, category › subcategory › item, priority, ticket age, and requester ticket-count distribution. Hierarchical labels keep duplicate subcategory or item names under the correct parent. Raw requester IDs remain only in protected state; category combinations with fewer than three tickets are grouped into `Other`.
+The combined daily chart spaces recorded days evenly and omits dates without snapshots. Unresolved uses the left vertical scale; New and Resolved/Closed share the right activity scale. All three series render as labeled lines with translucent bars, while skipped dates use dashed connectors.
 
 ## Setup
 
