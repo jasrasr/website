@@ -30,8 +30,17 @@ const picker = {value:'',disabled:false,options:[],
     replaceChildren(...options) { this.options=options; },
     addEventListener(name, callback) { this.change=callback; }
 };
-const document = {getElementById:id=>id==='trend-day'?picker:null,querySelectorAll:()=>controls,createElement:()=>({})};
-const sandbox = {canvas, note:{}, entries:[], window:{devicePixelRatio:2}, Intl, Date,document};
+const axis = () => ({labels:[],replaceChildren(...labels) { this.labels=labels; }});
+const axes = {unresolved:axis(),activity:axis()};
+const document = {
+    getElementById:id=>id==='trend-day'?picker:id==='unresolved-axis'?axes.unresolved:id==='activity-axis'?axes.activity:null,
+    querySelectorAll:()=>controls,
+    createElement:()=>({style:{}})
+};
+const sandbox = {
+    canvas, unresolvedAxis:axes.unresolved, activityAxis:axes.activity,
+    note:{}, entries:[], window:{devicePixelRatio:2}, Intl, Date, document
+};
 vm.createContext(sandbox);
 vm.runInContext(code, sandbox);
 const aggregate = entries => JSON.parse(JSON.stringify(sandbox.dailyChartSamples(entries)));
@@ -61,6 +70,12 @@ assert.deepEqual(aggregate([
 sandbox.entries = data;
 sandbox.drawChart();
 assert.equal(canvas._trendHits.length, 3);
+assert.equal(axes.unresolved.labels.length,5,'The fixed unresolved axis renders five labels');
+assert.equal(axes.activity.labels.length,5,'The fixed activity axis remains visible when activity is unavailable');
+assert.match(source,/<div class="trend-shell">\s*<div[^>]+id="unresolved-axis"[^>]*><\/div>\s*<div class="trend-viewport"[\s\S]*<\/div>\s*<div[^>]+id="activity-axis"[^>]*><\/div>/,
+    'Both axes are outside the horizontally scrolling plot');
+assert.ok(source.indexOf('Daily ticket totals and activity') < source.indexOf('aria-label="Ticket summary"'),
+    'The chart appears above the count boxes');
 const [a,b,c] = canvas._trendHits;
 assert.ok(Math.abs((c.x-b.x)/(b.x-a.x)-1)<0.00001, 'Only recorded days occupy equally spaced axis slots');
 assert.ok(lines.some(line=>line.length===2), 'Missing days use dashed connectors');
@@ -100,7 +115,7 @@ for (const [timestamp, expected] of [
     assert.ok(sandbox.note.textContent.includes(expected));
     assert.doesNotMatch(sandbox.note.textContent,/EDT|EST|GMT|UTC/);
 }
-console.log('Daily chart tests passed: daily latest, timezone/DST, gaps, zero, history preservation, tap changes, mobile layout.');
+console.log('Daily chart tests passed: daily latest, timezone/DST, gaps, zero, history preservation, fixed axes, section order, tap changes, mobile layout.');
 
 const api = (time,value,activity,note='Automated Freshservice API snapshot.') =>
     ({capturedAt:time,unresolved:value,activity,note,source:'freshservice-api'});
@@ -126,6 +141,9 @@ assert.equal(aggregate([api('2026-09-03T12:00:00Z',5,activity(null,-1,2))])[0].n
 sandbox.entries=combined; bars.length=0; labels.length=0; segments.length=0; markers.length=0;
 sandbox.drawChart();
 assert.equal(picker.options.length,5);
+assert.equal(axes.unresolved.labels[0].textContent,'90');
+assert.equal(axes.activity.labels.length,5,'The fixed activity axis renders five labels');
+assert.equal(axes.activity.labels[0].textContent,'7');
 assert.equal(bars.filter(bar=>bar.color==='#4d95ff').length,5,'Every daily unresolved value renders a bar');
 assert.equal(bars.filter(bar=>bar.color==='#ffad4d').length,3,'Known New values render bars, including zero');
 assert.equal(bars.filter(bar=>bar.color==='#3ddc84').length,2,'Known Resolved/Closed values render bars, including zero');
