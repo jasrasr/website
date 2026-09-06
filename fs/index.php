@@ -140,6 +140,10 @@ function analyticsRows(array $analytics, string $key): array
         .chart-controls input { width:18px; height:18px; }
         .chart-day-picker { margin-top:14px; }
         .chart-day-picker select { max-width:100%; padding:7px; background:#0b1727; color:var(--text); border:1px solid var(--line); border-radius:6px; }
+        .chart-explanation { margin-top:16px; border-top:1px solid var(--line); }
+        .chart-explanation summary { padding:14px 0 2px; color:#dce7f5; cursor:pointer; font-weight:700; }
+        .chart-explanation[open] summary { margin-bottom:8px; }
+        .chart-explanation p:last-child { margin-bottom:0; }
         .table-wrap { overflow:auto; }
         table { width:100%; border-collapse:collapse; min-width:680px; }
         th,td { padding:13px 10px; border-bottom:1px solid var(--line); text-align:left; }
@@ -207,8 +211,11 @@ function analyticsRows(array $analytics, string $key): array
         </div>
         <div class="trend-viewport" tabindex="0" role="region" aria-label="Scrollable combined daily chart"><canvas id="trend" role="img" aria-label="Daily unresolved, new and resolved or closed ticket lines with activity bars"></canvas></div>
         <div class="chart-day-picker"><label for="trend-day">Daily details: </label><select id="trend-day"></select></div>
-        <p id="chart-note" class="muted" aria-live="polite"></p>
-        <p class="muted">The combined view uses lines for all three series and bars for New and Resolved/Closed. Activity is grouped by the day of the pull—not guaranteed event-day totals. A later resolved-to-closed change is not counted again. A reopened ticket completed again can count again. Missed transitions cannot be reconstructed. Missing activity is unknown, not zero; known zeroes are labeled 0.</p>
+        <details class="chart-explanation">
+            <summary>About this chart and its calculations</summary>
+            <p id="chart-note" class="muted" aria-live="polite"></p>
+            <p class="muted">The combined view uses lines for all three series and bars for New and Resolved/Closed. Activity is grouped by the day of the pull—not guaranteed event-day totals. A later resolved-to-closed change is not counted again. A reopened ticket completed again can count again. Missed transitions cannot be reconstructed. Missing activity is unknown, not zero; known zeroes are labeled 0.</p>
+        </details>
     </section>
 
     <section class="section"><h2>Current queue analytics</h2>
