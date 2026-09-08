@@ -487,8 +487,8 @@ function renderTrendAnalysis(samples) {
             <div class="trend-stats">
                 <div class="trend-stat"><span>Daily trend</span><strong>${slope}</strong></div>
                 <div class="trend-stat"><span>Estimated zero</span><strong>${estimate}</strong></div>
-                <div class="trend-stat"><span>New observed</span><strong>${trend.newTickets.total.toLocaleString()}</strong></div>
-                <div class="trend-stat"><span>Completed observed</span><strong>${trend.completed.total.toLocaleString()}</strong></div>
+                <div class="trend-stat"><span>New observed</span><strong>${trend.newTickets.days ? trend.newTickets.total.toLocaleString() : '—'}</strong></div>
+                <div class="trend-stat"><span>Completed observed</span><strong>${trend.completed.days ? trend.completed.total.toLocaleString() : '—'}</strong></div>
             </div>
             <p class="trend-coverage">${trend.points.length} of ${days} days recorded · New activity on ${trend.newTickets.days} days · Completed activity on ${trend.completed.days} days</p>
         </article>`;
