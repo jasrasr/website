@@ -167,6 +167,9 @@ const flatTrend = sandbox.trendWindow(aggregate([
 assert.equal(flatTrend.status,'flat');
 assert.equal(flatTrend.estimateDays,null);
 assert.equal(sandbox.trendWindow([trendPoints.at(-1)],7).status,'insufficient');
+sandbox.renderTrendAnalysis([{day:Date.UTC(2026,8,8),value:90,newTickets:null,completed:null}]);
+assert.match(trendAnalysis.innerHTML,/New observed<\/span><strong>—/);
+assert.match(trendAnalysis.innerHTML,/Completed observed<\/span><strong>—/);
 sandbox.entries=combined; bars.length=0; labels.length=0; segments.length=0; markers.length=0;
 sandbox.drawChart();
 assert.equal(picker.options.length,5);
