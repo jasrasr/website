@@ -19,6 +19,7 @@ Each authenticated collector attempt is also recorded in `storage/pull-log.json`
 When the latest unresolved count reaches zero, the dashboard displays a dismissible applause banner with an accessible fireworks celebration.
 API snapshots include anonymous aggregate charts for status, category, category › subcategory, category › subcategory › item, priority, ticket age, and requester ticket-count distribution. Hierarchical labels keep duplicate subcategory or item names under the correct parent. Raw requester IDs remain only in protected state; category combinations with fewer than three tickets are grouped into `Other`.
 The combined daily chart appears above the summary cards, spaces recorded days evenly, and omits dates without snapshots. Unresolved uses the fixed left vertical scale; New and Resolved/Closed share the fixed right activity scale. Only the plot scrolls horizontally, so both axes remain visible. All three series render as labeled lines with translucent bars, while skipped dates use dashed connectors.
+The dashboard also calculates 7, 14, and 30-calendar-day trend cards from the daily series. Each card shows unresolved change and percentage, a least-squares tickets-per-day slope using real calendar spacing, observed New and Resolved/Closed totals, coverage, and a guarded estimate to zero for sufficiently sampled declining trends.
 
 ## Setup
 

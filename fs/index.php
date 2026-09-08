@@ -149,6 +149,24 @@ function analyticsRows(array $analytics, string $key): array
         .chart-explanation summary { padding:14px 0 2px; color:#dce7f5; cursor:pointer; font-weight:700; }
         .chart-explanation[open] summary { margin-bottom:8px; }
         .chart-explanation p:last-child { margin-bottom:0; }
+        .trend-analysis-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+        .trend-card { padding:16px; border:1px solid var(--line); border-radius:14px; background:#0b1727; }
+        .trend-card-header { display:flex; justify-content:space-between; gap:8px; align-items:center; }
+        .trend-card h3 { margin:0; font-size:1rem; }
+        .trend-status { padding:4px 8px; border-radius:999px; font-size:.72rem; font-weight:800; }
+        .trend-status.improving { color:#7ce9aa; background:#0d2b20; }
+        .trend-status.flat { color:#c5d2e1; background:#1b2a3d; }
+        .trend-status.increasing { color:#ff9da2; background:#351b22; }
+        .trend-status.insufficient { color:#c5d2e1; background:#1b2a3d; }
+        .trend-change { display:block; margin-top:16px; font-size:1.65rem; line-height:1; }
+        .trend-change.improving { color:#7ce9aa; }
+        .trend-change.increasing { color:#ff8188; }
+        .trend-route { display:block; margin-top:8px; color:var(--muted); font-size:.84rem; }
+        .trend-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+        .trend-stat { padding:9px; border-radius:9px; background:#101d2f; }
+        .trend-stat span { display:block; color:var(--muted); font-size:.7rem; }
+        .trend-stat strong { display:block; margin-top:4px; font-size:.95rem; }
+        .trend-coverage { margin:12px 0 0; color:var(--muted); font-size:.76rem; }
         .table-wrap { overflow:auto; }
         table { width:100%; border-collapse:collapse; min-width:680px; }
         th,td { padding:13px 10px; border-bottom:1px solid var(--line); text-align:left; }
@@ -164,7 +182,7 @@ function analyticsRows(array $analytics, string $key): array
         .celebration p { margin:16px auto 0; max-width:560px; color:#dcecff; font-size:clamp(1.05rem,3vw,1.4rem); }
         .celebration-close { margin-top:26px; padding:11px 20px; border:1px solid #8dbfff; border-radius:999px; color:#fff; background:#1768d8; cursor:pointer; font:inherit; font-weight:700; }
         footer { color:var(--muted); text-align:center; margin-top:24px; font-size:.85rem; }
-        @media (max-width:820px) { .grid,.activity-grid { grid-template-columns:repeat(2,1fr); } .analytics-grid { grid-template-columns:1fr; } header { align-items:flex-start; flex-direction:column; } .header-actions { justify-content:flex-start; } .pull-status { text-align:left; } }
+        @media (max-width:820px) { .grid,.activity-grid { grid-template-columns:repeat(2,1fr); } .analytics-grid,.trend-analysis-grid { grid-template-columns:1fr; } header { align-items:flex-start; flex-direction:column; } .header-actions { justify-content:flex-start; } .pull-status { text-align:left; } }
         @media (max-width:480px) { main { width:min(100% - 18px,1120px); padding-top:18px; } .grid { grid-template-columns:1fr 1fr; gap:9px; } .card { min-height:120px; padding:15px; } .section { padding:16px; } .bar-row { grid-template-columns:minmax(0,1fr) auto; gap:6px 10px; } .bar-label { overflow:visible; text-overflow:clip; white-space:normal; } .bar-value { grid-column:2; grid-row:1; } .bar-track { grid-column:1 / -1; grid-row:2; } }
     </style>
 </head>
@@ -213,6 +231,15 @@ function analyticsRows(array $analytics, string $key): array
             <summary>About this chart and its calculations</summary>
             <p id="chart-note" class="muted" aria-live="polite"></p>
             <p class="muted">The combined view uses lines and bars for all three series. Unresolved uses the left scale; New and Resolved/Closed share the right scale. Activity is grouped by the day of the pull—not guaranteed event-day totals. A later resolved-to-closed change is not counted again. A reopened ticket completed again can count again. Missed transitions cannot be reconstructed. Missing activity is unknown, not zero; known zeroes are labeled 0.</p>
+        </details>
+    </section>
+
+    <section class="section" aria-labelledby="trend-analysis-title">
+        <h2 id="trend-analysis-title">Trend analysis</h2>
+        <div class="trend-analysis-grid" id="trend-analysis"></div>
+        <details class="chart-explanation">
+            <summary>How these trends are calculated</summary>
+            <p class="muted">Each 7, 14, or 30-day window ends on the latest recorded Eastern date and uses one latest unresolved value per recorded day. Net and percentage changes compare the first available reading in the window with the latest reading. The daily trend is a least-squares regression using actual calendar-day spacing, so missing dates remain missing rather than becoming zeroes. New and Resolved/Closed totals include only observed API activity. A zero estimate appears only for a declining trend with at least three recorded days.</p>
         </details>
     </section>
 
@@ -299,6 +326,7 @@ const pullStatus = document.getElementById('pull-status');
 const canvas = document.getElementById('trend');
 const unresolvedAxis = document.getElementById('unresolved-axis');
 const activityAxis = document.getElementById('activity-axis');
+const trendAnalysis = document.getElementById('trend-analysis');
 const note = document.getElementById('chart-note');
 const celebration = document.getElementById('goal-celebration');
 const celebrationClose = document.getElementById('celebration-close');
@@ -405,6 +433,68 @@ function chartDay(time) {
 }
 
 // Display aggregation only: keep every raw snapshot for history and activity.
+function trendWindow(samples, days) {
+    if (!samples.length) return null;
+    const latest = samples.at(-1);
+    const cutoff = latest.day - (days - 1) * calendarDayMs;
+    const points = samples.filter(sample => sample.day >= cutoff && sample.day <= latest.day);
+    if (!points.length) return null;
+    const first = points[0];
+    const change = latest.value - first.value;
+    const percent = first.value === 0 ? null : change / first.value * 100;
+    const offsets = points.map(point => (point.day - first.day) / calendarDayMs);
+    const meanX = offsets.reduce((sum, value) => sum + value, 0) / offsets.length;
+    const meanY = points.reduce((sum, point) => sum + point.value, 0) / points.length;
+    const denominator = offsets.reduce((sum, value) => sum + (value - meanX) ** 2, 0);
+    const slope = denominator === 0 ? null : points.reduce(
+        (sum, point, index) => sum + (offsets[index] - meanX) * (point.value - meanY), 0
+    ) / denominator;
+    const status = slope === null ? 'insufficient' : slope < -.05 ? 'improving' : slope > .05 ? 'increasing' : 'flat';
+    const observed = field => {
+        const values = points.map(point => point[field]).filter(value => value !== null);
+        return {total:values.reduce((sum, value) => sum + value, 0), days:values.length};
+    };
+    const newTickets = observed('newTickets');
+    const completed = observed('completed');
+    const estimateDays = status === 'improving' && points.length >= 3 && latest.value > 0
+        ? Math.ceil(latest.value / Math.abs(slope))
+        : null;
+    return {days, latest, first, points, change, percent, slope, status, newTickets, completed, estimateDays};
+}
+
+function signedNumber(value, digits = 0) {
+    const rounded = Number(value).toFixed(digits);
+    return Number(value) > 0 ? `+${rounded}` : rounded;
+}
+
+function renderTrendAnalysis(samples) {
+    if (!trendAnalysis) return;
+    if (!samples.length) {
+        trendAnalysis.innerHTML = '<p class="muted">At least two recorded days are needed for trend analysis.</p>';
+        return;
+    }
+    const statusLabels = {improving:'Improving', flat:'Flat', increasing:'Increasing', insufficient:'Insufficient data'};
+    trendAnalysis.innerHTML = [7, 14, 30].map(days => {
+        const trend = trendWindow(samples, days);
+        const percent = trend.percent === null ? '—' : `${signedNumber(trend.percent, 1)}%`;
+        const slope = trend.slope === null ? '—' : `${signedNumber(trend.slope, 1)}/day`;
+        const estimate = trend.estimateDays === null ? '—' : `~${trend.estimateDays} days`;
+        const change = `${signedNumber(trend.change)} unresolved`;
+        return `<article class="trend-card">
+            <div class="trend-card-header"><h3>Last ${days} days</h3><span class="trend-status ${trend.status}">${statusLabels[trend.status]}</span></div>
+            <strong class="trend-change ${trend.status}">${change}</strong>
+            <span class="trend-route">${trend.first.value.toLocaleString()} → ${trend.latest.value.toLocaleString()} · ${percent}</span>
+            <div class="trend-stats">
+                <div class="trend-stat"><span>Daily trend</span><strong>${slope}</strong></div>
+                <div class="trend-stat"><span>Estimated zero</span><strong>${estimate}</strong></div>
+                <div class="trend-stat"><span>New observed</span><strong>${trend.newTickets.days ? trend.newTickets.total.toLocaleString() : '—'}</strong></div>
+                <div class="trend-stat"><span>Completed observed</span><strong>${trend.completed.days ? trend.completed.total.toLocaleString() : '—'}</strong></div>
+            </div>
+            <p class="trend-coverage">${trend.points.length} of ${days} days recorded · New activity on ${trend.newTickets.days} days · Completed activity on ${trend.completed.days} days</p>
+        </article>`;
+    }).join('');
+}
+
 function dailyChartSamples(rawEntries) {
     const days = new Map();
     for (const entry of rawEntries) {
@@ -464,11 +554,13 @@ function drawChart() {
     canvas._trendHits = [];
     canvas._dataLabels = [];
     if (!samples.length) {
+        renderTrendAnalysis(samples);
         note.textContent = 'No snapshots recorded.';
         if (dayPicker) { dayPicker.replaceChildren(); dayPicker.disabled = true; }
         return;
     }
 
+    renderTrendAnalysis(samples);
     const activityVisible = chartSeries.newTickets || chartSeries.completed;
     const unresolvedMax = Math.max(1, ...samples.map(sample =>
         chartSeries.unresolved ? sample.value : 0));
