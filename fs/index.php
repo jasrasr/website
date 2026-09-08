@@ -199,9 +199,9 @@ function analyticsRows(array $analytics, string $key): array
 
     <section class="section"><h2>Daily ticket totals and activity</h2>
         <div class="chart-controls" role="group" aria-label="Visible chart series">
-            <label style="color:#4d95ff"><input type="checkbox" data-chart-series="unresolved" checked>Unresolved</label>
-            <label style="color:#ffad4d"><input type="checkbox" data-chart-series="newTickets" checked>New</label>
-            <label style="color:#3ddc84"><input type="checkbox" data-chart-series="completed" checked>Resolved/Closed</label>
+            <label style="color:#4d95ff;font-weight:800"><input type="checkbox" data-chart-series="unresolved" checked>Unresolved</label>
+            <label style="color:#ffad4d;opacity:.68"><input type="checkbox" data-chart-series="newTickets" checked>New</label>
+            <label style="color:#3ddc84;opacity:.68"><input type="checkbox" data-chart-series="completed" checked>Resolved/Closed</label>
         </div>
         <div class="trend-shell">
             <div class="trend-axis trend-axis-left" id="unresolved-axis" aria-hidden="true"></div>
@@ -512,30 +512,33 @@ function drawChart() {
 
     // Label collision checks keep close/identical series values readable.
     const pendingLabels = [];
-    const addLabel = (value, x, y, color) => pendingLabels.push({value, x, y, color});
+    const addLabel = (value, x, y, color, alpha) => pendingLabels.push({value, x, y, color, alpha});
     // Translucent bars sit behind all three matching lines.
     for (const sample of samples) {
         if (chartSeries.unresolved) {
             const x = xFor(sample.day), y = unresolvedYFor(sample.value);
-            c.save(); c.globalAlpha = .16; c.fillStyle = '#4d95ff';
-            c.fillRect(x - 11, y, 22, Math.max(1, h - p.b - y)); c.restore();
+            c.save(); c.globalAlpha = .24; c.fillStyle = '#4d95ff';
+            c.fillRect(x - 12, y, 24, Math.max(1, h - p.b - y)); c.restore();
         }
         for (const [key, offset, color] of [['newTickets',-8,'#ffad4d'],['completed',8,'#3ddc84']]) {
             if (!chartSeries[key] || sample[key] === null) continue;
             const value = sample[key], x = xFor(sample.day) + offset, y = activityYFor(value);
-            c.save(); c.globalAlpha = .34; c.fillStyle = color;
+            c.save(); c.globalAlpha = .16; c.fillStyle = color;
             c.fillRect(x - 6, y, 12, Math.max(1, h - p.b - y)); c.restore();
         }
     }
     // Unknown values break a line; no fabricated zero markers.
     c.lineWidth = 3; c.lineJoin = 'round'; c.font = '12px system-ui';
     for (const [key, field, color, radius, axis] of [
-        ['unresolved','value','#4d95ff',5,'unresolved'],
-        ['newTickets','newTickets','#ffad4d',4,'activity'],
+        ['unresolved','value','#4d95ff',6.5,'unresolved'],
+        ['newTickets','newTickets','#ffad4d',3.5,'activity'],
         ['completed','completed','#3ddc84',3,'activity']
     ]) {
         if (!chartSeries[key]) continue;
         const yFor = axis === 'unresolved' ? unresolvedYFor : activityYFor;
+        const alpha = axis === 'unresolved' ? 1 : .58;
+        c.lineWidth = axis === 'unresolved' ? 4.5 : 2;
+        c.globalAlpha = alpha;
         c.strokeStyle = color;
         for (let i = 1; i < samples.length; i++) {
             const previous = samples[i - 1], current = samples[i];
@@ -549,8 +552,9 @@ function drawChart() {
             if (sample[field] === null) continue;
             const x = xFor(sample.day), y = yFor(sample[field]);
             c.fillStyle = color; c.beginPath(); c.arc(x, y, radius, 0, Math.PI * 2); c.fill();
-            addLabel(sample[field], x, y, color);
+            addLabel(sample[field], x, y, color, alpha);
         }
+        c.globalAlpha = 1;
     }
     c.font = '12px system-ui';
     for (const label of pendingLabels) {
@@ -563,8 +567,9 @@ function drawChart() {
             box.left < other.right && box.right > other.left && box.top < other.bottom && box.bottom > other.top);
         const y = candidates.find(y => y >= 16 && y <= h-p.b-4 && clear(boundsAt(y))) ?? 16;
         canvas._dataLabels.push({...boundsAt(y),value:label.value,color:label.color});
-        c.fillStyle = label.color; c.fillText(text, x, y);
+        c.globalAlpha = label.alpha; c.fillStyle = label.color; c.fillText(text, x, y);
     }
+    c.globalAlpha = 1;
     canvas._trendHits = samples.map((sample, index) => ({
         x:xFor(sample.day), y:unresolvedYFor(sample.value), sample, previous:samples[index - 1]
     }));
