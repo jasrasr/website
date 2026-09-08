@@ -32,13 +32,14 @@ const picker = {value:'',disabled:false,options:[],
 };
 const axis = () => ({labels:[],replaceChildren(...labels) { this.labels=labels; }});
 const axes = {unresolved:axis(),activity:axis()};
+const trendAnalysis = {innerHTML:''};
 const document = {
     getElementById:id=>id==='trend-day'?picker:id==='unresolved-axis'?axes.unresolved:id==='activity-axis'?axes.activity:null,
     querySelectorAll:()=>controls,
     createElement:()=>({style:{}})
 };
 const sandbox = {
-    canvas, unresolvedAxis:axes.unresolved, activityAxis:axes.activity,
+    canvas, unresolvedAxis:axes.unresolved, activityAxis:axes.activity, trendAnalysis,
     note:{}, entries:[], window:{devicePixelRatio:2}, Intl, Date, document
 };
 vm.createContext(sandbox);
@@ -140,9 +141,39 @@ assert.equal(totals[2].resolved,5);
 assert.equal(totals[2].closed,2);
 assert.equal(JSON.stringify(combined),combinedBefore);
 assert.equal(aggregate([api('2026-09-03T12:00:00Z',5,activity(null,-1,2))])[0].newTickets,null);
+
+const trendPoints = aggregate([
+    api('2026-08-10T12:00:00Z',120,activity(4,2,1)),
+    api('2026-09-01T12:00:00Z',100,activity(5,3,1)),
+    api('2026-09-02T12:00:00Z',98,activity(2,2,1)),
+    api('2026-09-04T12:00:00Z',94,activity(1,3,1)),
+    api('2026-09-08T12:00:00Z',90,activity(3,4,1))
+]);
+const sevenDayTrend = sandbox.trendWindow(trendPoints,7);
+assert.deepEqual(Array.from(sevenDayTrend.points,point=>point.value),[98,94,90]);
+assert.equal(sevenDayTrend.change,-8);
+assert.ok(Math.abs(sevenDayTrend.percent-(-8/98*100))<1e-9);
+assert.ok(Math.abs(sevenDayTrend.slope-(-9/7))<1e-9,'Regression uses actual calendar spacing');
+assert.equal(sevenDayTrend.status,'improving');
+assert.equal(sevenDayTrend.newTickets.total,6);
+assert.equal(sevenDayTrend.completed.total,12);
+assert.equal(sevenDayTrend.newTickets.days,3);
+assert.equal(sevenDayTrend.estimateDays,70);
+assert.equal(sandbox.trendWindow(trendPoints,14).change,-10);
+assert.equal(sandbox.trendWindow(trendPoints,30).change,-30);
+const flatTrend = sandbox.trendWindow(aggregate([
+    entry('2026-09-01T12:00:00Z',5), entry('2026-09-03T12:00:00Z',5)
+]),7);
+assert.equal(flatTrend.status,'flat');
+assert.equal(flatTrend.estimateDays,null);
+assert.equal(sandbox.trendWindow([trendPoints.at(-1)],7).status,'insufficient');
 sandbox.entries=combined; bars.length=0; labels.length=0; segments.length=0; markers.length=0;
 sandbox.drawChart();
 assert.equal(picker.options.length,5);
+assert.match(trendAnalysis.innerHTML,/Last 7 days/);
+assert.match(trendAnalysis.innerHTML,/Last 14 days/);
+assert.match(trendAnalysis.innerHTML,/Last 30 days/);
+assert.match(trendAnalysis.innerHTML,/days recorded/);
 assert.equal(axes.unresolved.labels[0].textContent,'90');
 assert.equal(axes.activity.labels.length,5,'The fixed activity axis renders five labels');
 assert.equal(axes.activity.labels[0].textContent,'7');
@@ -199,7 +230,7 @@ const dstTotals=aggregate([
 assert.equal(dstTotals.length,1);
 assert.equal(dstTotals[0].newTickets,3);
 assert.equal(dstTotals[0].completed,3);
-console.log('Combined chart tests passed: daily sums, manual/baseline unknown, known zeros, toggles, accessible details, common scale, DST.');
+console.log('Combined chart and trend tests passed: daily sums, 7/14/30-day regression, coverage, forecasts, unknown activity, toggles, dual scales and DST.');
 
 // The one overlay renders line labels and activity bars without duplicating labels.
 sandbox.entries=[
