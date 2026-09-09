@@ -43,25 +43,6 @@ $previous = count($entries) > 1 ? $entries[count($entries) - 2] : null;
 $current = (int) ($latest['unresolved'] ?? 0);
 $change = $previous ? $current - (int) ($previous['unresolved'] ?? 0) : null;
 $analytics = $latest && isset($latest['analytics']) && is_array($latest['analytics']) ? $latest['analytics'] : [];
-$latestDay = easternDate($latest['capturedAt'] ?? null)?->format('Y-m-d');
-$todayActivity = [
-    'enteredUnresolved' => 0,
-    'exitedUnresolved' => 0,
-    'newTickets' => 0,
-    'assignedIn' => 0,
-    'reopened' => 0,
-    'resolved' => 0,
-    'closed' => 0,
-    'reassignedAway' => 0,
-];
-foreach ($entries as $entry) {
-    if ($latestDay === null || empty($entry['capturedAt']) || empty($entry['activity']) || !is_array($entry['activity'])) continue;
-    if (easternDate($entry['capturedAt'])?->format('Y-m-d') !== $latestDay) continue;
-    foreach ($todayActivity as $key => $value) {
-        $todayActivity[$key] += (int) ($entry['activity'][$key] ?? 0);
-    }
-}
-
 function e(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
@@ -122,6 +103,12 @@ function analyticsRows(array $analytics, string $key): array
         .sub { display:block; color:var(--muted); margin-top:10px; font-size:.9rem; }
         .section { margin-top:14px; padding:22px; }
         .section h2 { margin:0 0 16px; font-size:1.15rem; }
+        .activity-heading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-bottom:16px; }
+        .activity-heading h2 { margin:0; }
+        .activity-day-picker { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:.9rem; }
+        .activity-day-picker select { max-width:100%; padding:7px; background:#0b1727; color:var(--text); border:1px solid var(--line); border-radius:6px; }
+        .activity-warning { margin:0 0 14px; padding:11px 13px; border:1px solid #806b32; border-radius:10px; background:#2b2515; color:#ffe39a; }
+        .activity-warning[hidden] { display:none; }
         .activity-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
         .activity-item { padding:15px; border-radius:13px; background:#0b1727; border:1px solid var(--line); }
         .activity-item strong { display:block; margin-top:5px; font-size:1.8rem; }
@@ -243,15 +230,21 @@ function analyticsRows(array $analytics, string $key): array
         </details>
     </section>
 
-    <section class="section">
-        <h2>Activity on <?= $latestDay ? e(easternDate($latestDay)->format('M j, Y')) : 'latest day' ?></h2>
-        <div class="activity-grid">
-            <div class="activity-item"><span class="label">Entered unresolved</span><strong><?= number_format($todayActivity['enteredUnresolved']) ?></strong><span class="sub">New, assigned, or reopened</span></div>
-            <div class="activity-item"><span class="label">Exited unresolved</span><strong><?= number_format($todayActivity['exitedUnresolved']) ?></strong><span class="sub">Resolved, closed, or reassigned</span></div>
-            <div class="activity-item"><span class="label">New tickets</span><strong><?= number_format($todayActivity['newTickets']) ?></strong><span class="sub"><?= number_format($todayActivity['assignedIn']) ?> assigned in · <?= number_format($todayActivity['reopened']) ?> reopened</span></div>
-            <div class="activity-item"><span class="label">Completed</span><strong><?= number_format($todayActivity['resolved'] + $todayActivity['closed']) ?></strong><span class="sub"><?= number_format($todayActivity['resolved']) ?> resolved · <?= number_format($todayActivity['closed']) ?> closed</span></div>
+    <section class="section" aria-labelledby="activity-title">
+        <div class="activity-heading">
+            <h2 id="activity-title">Activity</h2>
+            <label class="activity-day-picker" for="activity-day">Show date
+                <select id="activity-day" aria-describedby="activity-warning"></select>
+            </label>
         </div>
-        <?php if (($latest['source'] ?? '') !== 'freshservice-api'): ?><p class="muted">Detailed activity begins after the API collector is configured and has completed at least two runs.</p><?php endif; ?>
+        <p id="activity-warning" class="activity-warning" role="status" hidden></p>
+        <div class="activity-grid">
+            <div class="activity-item"><span class="label">Entered unresolved</span><strong id="activity-entered">—</strong><span class="sub">New, assigned, or reopened</span></div>
+            <div class="activity-item"><span class="label">Exited unresolved</span><strong id="activity-exited">—</strong><span class="sub">Resolved, closed, or reassigned</span></div>
+            <div class="activity-item"><span class="label">New tickets</span><strong id="activity-new">—</strong><span class="sub" id="activity-new-detail">Assigned in and reopened</span></div>
+            <div class="activity-item"><span class="label">Completed</span><strong id="activity-completed">—</strong><span class="sub" id="activity-completed-detail">Resolved and closed</span></div>
+        </div>
+        <p id="activity-empty" class="muted" hidden>No API activity was recorded for this date.</p>
     </section>
 
     <section class="section"><h2>Current queue analytics</h2>
@@ -432,6 +425,89 @@ function chartDay(time) {
     return Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day));
 }
 
+const activityFields = ['enteredUnresolved','exitedUnresolved','newTickets','assignedIn','reopened','resolved','closed','reassignedAway'];
+
+function dailyActivitySamples(rawEntries) {
+    const days = new Map();
+    const valid = value => (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '')) &&
+        Number.isInteger(Number(value)) && Number(value) >= 0;
+    for (const entry of rawEntries) {
+        const time = Date.parse(entry.capturedAt);
+        const baseline = entry.initialRun === true || /baseline initialized/i.test(entry.note || '');
+        if (!Number.isFinite(time) || baseline || !entry.activity) continue;
+        const day = chartDay(time);
+        let sample = days.get(day);
+        if (!sample) {
+            sample = Object.fromEntries(activityFields.map(field => [field, 0]));
+            Object.assign(sample, {day, hasMeasurement:false, hasChanges:false});
+            days.set(day, sample);
+        }
+        let measured = false;
+        for (const field of activityFields) {
+            if (!valid(entry.activity[field])) continue;
+            sample[field] += Number(entry.activity[field]);
+            measured = true;
+        }
+        sample.hasMeasurement ||= measured;
+    }
+    for (const sample of days.values()) {
+        sample.hasChanges = activityFields.some(field => sample[field] > 0);
+    }
+    return [...days.values()].sort((a, b) => a.day - b.day);
+}
+
+function defaultActivityDay(samples, now = Date.now()) {
+    const today = chartDay(now);
+    return samples.filter(sample => sample.day < today && sample.hasChanges).at(-1) ??
+        samples.filter(sample => sample.day < today && sample.hasMeasurement).at(-1) ??
+        samples.at(-1) ?? null;
+}
+
+const activityDayPicker = document.getElementById('activity-day');
+const activityTitle = document.getElementById('activity-title');
+const activityWarning = document.getElementById('activity-warning');
+const activityEmpty = document.getElementById('activity-empty');
+const activityDateFormatter = new Intl.DateTimeFormat('en-US', {timeZone:'UTC', month:'short', day:'numeric', year:'numeric'});
+
+function renderActivityCards(requestedDay = null) {
+    if (!activityDayPicker || !activityTitle || !activityWarning) return;
+    const today = chartDay(Date.now());
+    const samples = dailyActivitySamples(entries);
+    if (!samples.some(sample => sample.day === today)) {
+        const blank = Object.fromEntries(activityFields.map(field => [field, 0]));
+        samples.push(Object.assign(blank, {day:today, hasMeasurement:false, hasChanges:false}));
+        samples.sort((a, b) => a.day - b.day);
+    }
+    const fallback = defaultActivityDay(samples.filter(sample => sample.day !== today)) ?? samples.at(-1);
+    const selected = samples.find(sample => sample.day === Number(requestedDay)) ?? fallback;
+    activityDayPicker.replaceChildren(...samples.slice().reverse().map(sample => {
+        const option = document.createElement('option');
+        option.value = String(sample.day);
+        option.textContent = activityDateFormatter.format(sample.day) + (sample.day === today ? ' (in progress)' : '');
+        return option;
+    }));
+    activityDayPicker.value = String(selected.day);
+    activityTitle.textContent = `Activity on ${activityDateFormatter.format(selected.day)}`;
+    const isToday = selected.day === today;
+    activityWarning.hidden = !isToday;
+    activityWarning.textContent = isToday
+        ? 'Today is still in progress. Activity totals may appear low or incomplete until the workday is finished.'
+        : '';
+    document.getElementById('activity-entered').textContent = selected.hasMeasurement ? selected.enteredUnresolved.toLocaleString() : '—';
+    document.getElementById('activity-exited').textContent = selected.hasMeasurement ? selected.exitedUnresolved.toLocaleString() : '—';
+    document.getElementById('activity-new').textContent = selected.hasMeasurement ? selected.newTickets.toLocaleString() : '—';
+    document.getElementById('activity-completed').textContent = selected.hasMeasurement ? (selected.resolved + selected.closed).toLocaleString() : '—';
+    document.getElementById('activity-new-detail').textContent = selected.hasMeasurement
+        ? `${selected.assignedIn.toLocaleString()} assigned in · ${selected.reopened.toLocaleString()} reopened`
+        : 'Assigned in and reopened';
+    document.getElementById('activity-completed-detail').textContent = selected.hasMeasurement
+        ? `${selected.resolved.toLocaleString()} resolved · ${selected.closed.toLocaleString()} closed`
+        : 'Resolved and closed';
+    activityEmpty.hidden = selected.hasMeasurement;
+}
+
+if (activityDayPicker) activityDayPicker.addEventListener('change', () => renderActivityCards(Number(activityDayPicker.value)));
+
 // Display aggregation only: keep every raw snapshot for history and activity.
 function trendWindow(samples, days) {
     if (!samples.length) return null;
@@ -594,6 +670,7 @@ function drawChart() {
         c.beginPath(); c.moveTo(p.l, y); c.lineTo(w - p.r, y); c.stroke();
     }
 
+    c.globalAlpha = 1; c.fillStyle = '#93a4ba';
     c.textAlign = 'center'; c.font = '11px system-ui';
     for (const {day} of samples) {
         const x = xFor(day), date = new Date(day);
@@ -720,7 +797,7 @@ function showDailyDetails({sample, previous}) {
         (sample.day === chartDay(Date.now()) ? ' Today is still in progress.' : '');
 }
 
-drawChart(); window.addEventListener('resize',drawChart);
+renderActivityCards(); drawChart(); window.addEventListener('resize',drawChart);
 </script>
 </body>
 </html>

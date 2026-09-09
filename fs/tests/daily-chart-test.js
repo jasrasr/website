@@ -3,12 +3,16 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const source = fs.readFileSync(require('node:path').join(__dirname, '../index.php'), 'utf8');
-const code = source.slice(source.indexOf("const chartTimezone ="), source.indexOf('\ndrawChart(); window.addEventListener'));
-const labels = [], lines = [], bars = [], segments = [], markers = [], listeners = {};
+const scriptEnd = source.indexOf('\nrenderActivityCards(); drawChart(); window.addEventListener');
+const code = source.slice(source.indexOf("const chartTimezone ="), scriptEnd);
+const labels = [], textStyles = [], lines = [], bars = [], segments = [], markers = [], listeners = {};
 let currentPath = [];
 const context2d = new Proxy({}, {get: (target, key) => target[key] || ((...args) => {
     if (key === 'measureText') return {width:String(args[0]).length*7};
-    if (key === 'fillText') labels.push(args);
+    if (key === 'fillText') {
+      labels.push(args);
+      textStyles.push({args, color: context2d.fillStyle, alpha: context2d.globalAlpha});
+    }
     if (key === 'setLineDash') lines.push(args[0]);
     if (key === 'fillRect') bars.push({args,color:context2d.fillStyle,alpha:context2d.globalAlpha});
     if (key === 'beginPath') currentPath = [];
@@ -77,13 +81,16 @@ assert.match(source,/<div class="trend-shell">\s*<div[^>]+id="unresolved-axis"[^
     'Both axes are outside the horizontally scrolling plot');
 assert.ok(source.indexOf('aria-label="Ticket summary"') < source.indexOf('Daily ticket totals and activity'),
     'The headline count boxes appear above the chart');
-assert.ok(source.indexOf('Daily ticket totals and activity') < source.indexOf('<h2>Activity on'),
+assert.ok(source.indexOf('Daily ticket totals and activity') < source.indexOf('<h2 id="activity-title">Activity'),
     'The chart remains above the activity boxes');
 const [a,b,c] = canvas._trendHits;
 assert.ok(Math.abs((c.x-b.x)/(b.x-a.x)-1)<0.00001, 'Only recorded days occupy equally spaced axis slots');
 assert.ok(lines.some(line=>line.length===2), 'Missing days use dashed connectors');
 assert.equal(labels.filter(label=>label[0]==='Sep').length,3, 'Only recorded days get ticks');
 assert.deepEqual(labels.filter(label=>label[2]===272).map(label=>label[0]), ['1','2','4'], 'Missing Sep 3 is omitted; unchanged Sep 4 remains');
+const xAxisText = textStyles.filter(label=>label.args[2]===257 || label.args[2]===272);
+assert.ok(xAxisText.length>0 && xAxisText.every(label=>label.color==='#93a4ba' && label.alpha===1),
+    'X-axis dates use readable, full-opacity muted text');
 listeners.click({clientX:b.x,clientY:b.y});
 assert.match(sandbox.note.textContent,/Net change: -1 vs previous day/);
 assert.match(sandbox.note.textContent,/Sep 2, 2026, 1:00 AM/);
@@ -123,6 +130,22 @@ console.log('Daily chart tests passed: daily latest, timezone/DST, gaps, zero, h
 const api = (time,value,activity,note='Automated Freshservice API snapshot.') =>
     ({capturedAt:time,unresolved:value,activity,note,source:'freshservice-api'});
 const activity = (newTickets,resolved,closed) => ({newTickets,resolved,closed});
+const activityHistory = [
+    api('2026-09-04T16:00:00Z',70,{enteredUnresolved:3,exitedUnresolved:5,newTickets:2,assignedIn:1,reopened:0,resolved:4,closed:1,reassignedAway:0}),
+    api('2026-09-07T16:00:00Z',70,{enteredUnresolved:0,exitedUnresolved:0,newTickets:0,assignedIn:0,reopened:0,resolved:0,closed:0,reassignedAway:0}),
+    api('2026-09-09T09:00:00Z',70,{enteredUnresolved:0,exitedUnresolved:0,newTickets:0,assignedIn:0,reopened:0,resolved:0,closed:0,reassignedAway:0})
+];
+const activityDays = JSON.parse(JSON.stringify(sandbox.dailyActivitySamples(activityHistory)));
+assert.equal(activityDays.length,3);
+assert.equal(activityDays[0].newTickets,2);
+assert.equal(activityDays[0].resolved + activityDays[0].closed,5);
+assert.equal(sandbox.defaultActivityDay(activityDays,Date.parse('2026-09-09T09:00:00Z')).day,Date.UTC(2026,8,4),
+    'An early current-day view defaults to the most recent completed date with changes');
+const withTuesdayChanges = sandbox.dailyActivitySamples(activityHistory.concat(
+    api('2026-09-08T16:00:00Z',69,{enteredUnresolved:1,exitedUnresolved:2,newTickets:1,assignedIn:0,reopened:0,resolved:2,closed:0,reassignedAway:0})
+));
+assert.equal(sandbox.defaultActivityDay(withTuesdayChanges,Date.parse('2026-09-09T09:00:00Z')).day,Date.UTC(2026,8,8));
+assert.match(source,/Today is still in progress\. Activity totals may appear low or incomplete/);
 const combined = [
     entry('2026-09-01T12:00:00Z',90), // manual only: activity unknown
     api('2026-09-02T12:00:00Z',88,activity(0,0,0),'Freshservice API baseline initialized.'),
