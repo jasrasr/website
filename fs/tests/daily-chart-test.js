@@ -4,11 +4,14 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const source = fs.readFileSync(require('node:path').join(__dirname, '../index.php'), 'utf8');
 const code = source.slice(source.indexOf("const chartTimezone ="), source.indexOf('\ndrawChart(); window.addEventListener'));
-const labels = [], lines = [], bars = [], segments = [], markers = [], listeners = {};
+const labels = [], textStyles = [], lines = [], bars = [], segments = [], markers = [], listeners = {};
 let currentPath = [];
 const context2d = new Proxy({}, {get: (target, key) => target[key] || ((...args) => {
     if (key === 'measureText') return {width:String(args[0]).length*7};
-    if (key === 'fillText') labels.push(args);
+    if (key === 'fillText') {
+      labels.push(args);
+      textStyles.push({args, color: context2d.fillStyle, alpha: context2d.globalAlpha});
+    }
     if (key === 'setLineDash') lines.push(args[0]);
     if (key === 'fillRect') bars.push({args,color:context2d.fillStyle,alpha:context2d.globalAlpha});
     if (key === 'beginPath') currentPath = [];
@@ -84,6 +87,9 @@ assert.ok(Math.abs((c.x-b.x)/(b.x-a.x)-1)<0.00001, 'Only recorded days occupy eq
 assert.ok(lines.some(line=>line.length===2), 'Missing days use dashed connectors');
 assert.equal(labels.filter(label=>label[0]==='Sep').length,3, 'Only recorded days get ticks');
 assert.deepEqual(labels.filter(label=>label[2]===272).map(label=>label[0]), ['1','2','4'], 'Missing Sep 3 is omitted; unchanged Sep 4 remains');
+const xAxisText = textStyles.filter(label=>label.args[2]===257 || label.args[2]===272);
+assert.ok(xAxisText.length>0 && xAxisText.every(label=>label.color==='#93a4ba' && label.alpha===1),
+    'X-axis dates use readable, full-opacity muted text');
 listeners.click({clientX:b.x,clientY:b.y});
 assert.match(sandbox.note.textContent,/Net change: -1 vs previous day/);
 assert.match(sandbox.note.textContent,/Sep 2, 2026, 1:00 AM/);
