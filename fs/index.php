@@ -594,6 +594,7 @@ function drawChart() {
         c.beginPath(); c.moveTo(p.l, y); c.lineTo(w - p.r, y); c.stroke();
     }
 
+    c.globalAlpha = 1; c.fillStyle = '#93a4ba';
     c.textAlign = 'center'; c.font = '11px system-ui';
     for (const {day} of samples) {
         const x = xFor(day), date = new Date(day);
