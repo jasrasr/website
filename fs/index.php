@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/lib/version.php';
+
 $dataFile = __DIR__ . '/data/ticket-counts.json';
 $apiDataFile = __DIR__ . '/storage/api-snapshots.json';
 $pullLogFile = __DIR__ . '/storage/pull-log.json';
@@ -310,7 +312,7 @@ function analyticsRows(array $analytics, string $key): array
             </tbody></table></div>
         <?php endif; ?>
     </section>
-    <footer>Aggregate counts only. No ticket subjects, requesters, or credentials are stored here.</footer>
+    <footer>Aggregate counts only. No ticket subjects, requesters, or credentials are stored here.<br>Rev <?= e(APP_REVISION) ?> · Updated <?= e(APP_UPDATED) ?></footer>
 </main>
 <script>
 const entries = <?= json_encode($entries, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
