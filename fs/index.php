@@ -94,6 +94,8 @@ function analyticsRows(array $analytics, string $key): array
         .pull-button { appearance:none; color:#fff; background:#1768d8; cursor:pointer; font:inherit; }
         .pull-button:hover { background:#2478ed; }
         .pull-button:disabled { cursor:wait; opacity:.65; }
+        .simple-link { color:var(--text); background:transparent; text-decoration:none; }
+        .simple-link:hover { border-color:var(--blue); color:var(--blue); }
         .pull-status { width:100%; min-height:1.2em; color:var(--muted); text-align:right; font-size:.85rem; }
         .pull-status.error-text { color:#ffbec1; }
         .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
@@ -192,6 +194,7 @@ function analyticsRows(array $analytics, string $key): array
         <div><h1>Freshservice Ticket Tracker</h1><p>Working the unresolved queue toward zero.</p><p>All times are Eastern (EDT/EST), adjusted automatically for daylight saving time.</p></div>
         <div class="header-actions">
             <div class="badge">Goal: <?= $goal ?> unresolved</div>
+            <a class="simple-link" href="index-simple.php">Simple view</a>
             <button type="button" class="pull-button" id="pull-tickets">Pull tickets now</button>
             <span class="pull-status" id="pull-status" role="status" aria-live="polite"></span>
         </div>

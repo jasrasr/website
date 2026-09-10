@@ -9,6 +9,7 @@ All notable changes to this project are documented here. Format is loosely based
 - Added `lib/version.php`: shared `APP_REVISION`/`APP_UPDATED` constants, surfaced in the footer of both dashboards.
 - Added this changelog.
 - Added per-point value labels to the simple dashboard's chart, colored to match each series, so exact numbers are readable next to each date. (Rev 1.1)
+- Linked the simple dashboard from the main dashboard's header. (Rev 1.2)
 
 ## 2026-09-09
 - Improved chart x-axis date label contrast for readability, with test coverage.
