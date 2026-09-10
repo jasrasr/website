@@ -83,7 +83,7 @@ $latest = $dayCount ? $days[$dayCount - 1] : null;
 
 // SVG layout.
 $width = 900; $height = 340;
-$padL = 46; $padR = 16; $padT = 20; $padB = 40;
+$padL = 46; $padR = 16; $padT = 30; $padB = 40;
 $plotW = $width - $padL - $padR;
 $plotH = $height - $padT - $padB;
 
@@ -205,6 +205,7 @@ $labelStep = $dayCount > 14 ? (int) ceil($dayCount / 10) : 1;
                         />
                         <?php foreach ($segment as $point): ?>
                             <circle cx="<?= $point['x'] ?>" cy="<?= $point['y'] ?>" r="4" fill="<?= e($config['color']) ?>" />
+                            <text x="<?= $point['x'] ?>" y="<?= $point['y'] - 10 ?>" text-anchor="middle" font-size="11" font-weight="700" fill="<?= e($config['color']) ?>"><?= $point['value'] ?></text>
                         <?php endforeach; ?>
                     <?php endforeach; ?>
                 <?php endforeach; ?>
