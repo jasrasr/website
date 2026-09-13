@@ -8,6 +8,7 @@
       "color": "#1d4ed8",
       "score": 0,
       "motto": "",
+      "placeholder_song": "blue-burst",
       "walkup_song": null
     },
     {
@@ -16,6 +17,7 @@
       "color": "#db2777",
       "score": 0,
       "motto": "",
+      "placeholder_song": "pink-spark",
       "walkup_song": null
     },
     {
@@ -24,6 +26,7 @@
       "color": "#0f766e",
       "score": 0,
       "motto": "",
+      "placeholder_song": "teal-rise",
       "walkup_song": null
     },
     {
@@ -32,6 +35,7 @@
       "color": "#7c3aed",
       "score": 0,
       "motto": "",
+      "placeholder_song": "purple-pop",
       "walkup_song": null
     },
     {
@@ -40,6 +44,7 @@
       "color": "#ea580c",
       "score": 0,
       "motto": "",
+      "placeholder_song": "orange-charge",
       "walkup_song": null
     },
     {
@@ -48,6 +53,7 @@
       "color": "#15803d",
       "score": 0,
       "motto": "",
+      "placeholder_song": "green-run",
       "walkup_song": null
     }
   ]
