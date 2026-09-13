@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: collide/enter-scores.php
- * Revision : 1.5.0
+ * Revision : 1.5.1
  * Description : Admin score entry page for CVC Collide Scoreboard.
  *               Allows authorized users to update, reset, rename team scores/title,
  *               and maintain Collide-only team mottos and walk-up songs.
@@ -15,6 +15,7 @@
  * 1.3.0 Added changelog and all-scoreboards navigation URLs
  * 1.4.0 Server-rendered page-header block so View Source shows page identity and signed-in user
  * 1.5.0 Load Collide-only motto and walk-up song admin UI
+ * 1.5.1 Load Collide-only reset-score label overrides
  */
 
 require __DIR__ . '/../auth.php';
@@ -51,5 +52,6 @@ $user = requireAuth('collide', '../login.php');
     </div>
     <script src="../public/app.js?v=<?= filemtime(__DIR__ . '/../public/app.js') ?>" defer></script>
     <script src="collide-extras.js?v=<?= filemtime(__DIR__ . '/collide-extras.js') ?>" defer></script>
+    <script src="collide-admin-labels.js?v=<?= filemtime(__DIR__ . '/collide-admin-labels.js') ?>" defer></script>
   </body>
 </html>
