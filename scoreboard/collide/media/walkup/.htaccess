@@ -1,0 +1,13 @@
+Options -Indexes
+
+# Uploaded media should be playable, not executable. PHP in an upload folder is how gremlins get root access and confidence.
+RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .phps .phar
+RemoveType .php .phtml .php3 .php4 .php5 .php7 .phps .phar
+
+<FilesMatch "\.(php|phtml|phar|cgi|pl|py|sh)$">
+  Require all denied
+</FilesMatch>
+
+<FilesMatch "\.(mp3|m4a|aac|wav|ogg|webm)$">
+  Require all granted
+</FilesMatch>
