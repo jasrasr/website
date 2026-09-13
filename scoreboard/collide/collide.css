@@ -1,0 +1,117 @@
+/*
+ * Filename: collide/collide.css
+ * Revision : 1.0.0
+ * Description : Collide-only styles for team mottos and walk-up song controls.
+ * Author : Jason Lamb (with help from ChatGPT)
+ * Created Date : 2026-09-13
+ * Modified Date : 2026-09-13
+ * Changelog :
+ * 1.0.0 Add motto display, audio upload controls, and walk-up song buttons
+ */
+
+.collide-team-motto {
+  width: 100%;
+  margin-top: 0.15rem;
+  color: var(--text-muted);
+  font-size: clamp(0.78rem, min(1.4vw, 1.6vh), 1.15rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+}
+
+.viewer-card .collide-team-motto {
+  text-align: center;
+}
+
+.collide-viewer-extra {
+  display: grid;
+  gap: 0.45rem;
+  justify-items: center;
+  margin-top: -0.25rem;
+}
+
+.collide-play-button {
+  min-height: 40px;
+  padding: 0.45rem 0.75rem;
+  font-size: clamp(0.78rem, min(1.4vw, 1.5vh), 1rem);
+  white-space: nowrap;
+}
+
+.collide-meta-panel {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.85rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.38);
+}
+
+:root[data-theme="light"] .collide-meta-panel {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.collide-meta-form,
+.collide-meta-field {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.collide-meta-field span {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.collide-meta-field textarea,
+.collide-meta-field input[type="file"] {
+  width: 100%;
+  min-height: 46px;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--button-border);
+  border-radius: 14px;
+  background: var(--button-bg);
+  color: var(--text-main);
+  font: inherit;
+}
+
+.collide-meta-field textarea {
+  resize: vertical;
+  line-height: 1.35;
+}
+
+.collide-meta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.collide-meta-actions button {
+  flex: 1 1 140px;
+  min-height: 42px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.9rem;
+}
+
+.collide-song-status {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .collide-meta-actions {
+    flex-direction: column;
+  }
+
+  .collide-meta-actions button {
+    width: 100%;
+  }
+
+  .collide-play-button {
+    width: 100%;
+  }
+}
