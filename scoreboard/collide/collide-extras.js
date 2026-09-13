@@ -1,11 +1,12 @@
 // Filename: collide-extras.js
-// Revision : 1.0.0
+// Revision : 1.0.1
 // Description : Collide-only UI layer for team mottos and walk-up songs.
 // Author : Jason Lamb (with help from ChatGPT)
 // Created Date : 2026-09-13
 // Modified Date : 2026-09-13
 // Changelog :
 // 1.0.0 Add per-team motto display, walk-up song playback, and admin upload controls
+// 1.0.1 Clear only the uploaded file field after save so saved motto text remains visible
 
 const collideExtras = {
   decorateQueued: false,
@@ -245,7 +246,10 @@ async function collideSaveMeta(form) {
   }
 
   collideExtras.data = payload;
-  form.reset();
+  const fileInput = form.querySelector('input[type="file"][name="walkup_audio"]');
+  if (fileInput) fileInput.value = '';
+  const card = form.closest('.team-card');
+  if (card) delete card.dataset.collideMetaSignature;
   collideDecorateAdmin(payload);
   const statusText = document.querySelector('#status-text');
   if (statusText) {
