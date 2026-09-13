@@ -1,5 +1,5 @@
 // Filename: collide-extras.js
-// Revision : 1.0.1
+// Revision : 1.1.0
 // Description : Collide-only UI layer for team mottos and walk-up songs.
 // Author : Jason Lamb (with help from ChatGPT)
 // Created Date : 2026-09-13
@@ -7,12 +7,52 @@
 // Changelog :
 // 1.0.0 Add per-team motto display, walk-up song playback, and admin upload controls
 // 1.0.1 Clear only the uploaded file field after save so saved motto text remains visible
+// 1.1.0 Make public team cards clickable for audio and add per-team placeholder jingles
+
+const collidePlaceholderSongByTeamId = {
+  'sixth-boys': 'blue-burst',
+  'sixth-girls': 'pink-spark',
+  'seventh-boys': 'teal-rise',
+  'seventh-girls': 'purple-pop',
+  'eighth-boys': 'orange-charge',
+  'eighth-girls': 'green-run'
+};
+
+const collidePlaceholderSongs = {
+  'blue-burst': {
+    label: 'Blue Burst',
+    notes: [[392, 0.11], [494, 0.11], [587, 0.17]]
+  },
+  'pink-spark': {
+    label: 'Pink Spark',
+    notes: [[523, 0.1], [659, 0.1], [784, 0.16]]
+  },
+  'teal-rise': {
+    label: 'Teal Rise',
+    notes: [[330, 0.12], [392, 0.1], [523, 0.18]]
+  },
+  'purple-pop': {
+    label: 'Purple Pop',
+    notes: [[466, 0.09], [622, 0.12], [698, 0.16]]
+  },
+  'orange-charge': {
+    label: 'Orange Charge',
+    notes: [[294, 0.11], [440, 0.11], [587, 0.19]]
+  },
+  'green-run': {
+    label: 'Green Run',
+    notes: [[349, 0.09], [440, 0.09], [523, 0.09], [659, 0.15]]
+  },
+  'default-chime': {
+    label: 'Default Chime',
+    notes: [[440, 0.12], [554, 0.12], [659, 0.18]]
+  }
+};
 
 const collideExtras = {
   decorateQueued: false,
   data: null,
-  activeAudio: null,
-  activeButton: null
+  active: null
 };
 
 function collideEscapeHtml(value) {
@@ -54,6 +94,11 @@ async function collideFetchScores() {
   return collideExtras.data;
 }
 
+function collidePlaceholderSongForTeam(team) {
+  const key = String(team?.placeholder_song || collidePlaceholderSongByTeamId[team?.id] || 'default-chime');
+  return collidePlaceholderSongs[key] || collidePlaceholderSongs['default-chime'];
+}
+
 function collideTeamSignature(team, mode) {
   const song = team.walkup_song || {};
   return [
@@ -61,6 +106,7 @@ function collideTeamSignature(team, mode) {
     team.id || '',
     team.name || '',
     team.motto || '',
+    team.placeholder_song || collidePlaceholderSongByTeamId[team.id] || 'default-chime',
     song.file || '',
     song.uploaded_at || ''
   ].join('|');
@@ -68,8 +114,8 @@ function collideTeamSignature(team, mode) {
 
 function collideSongLabel(team) {
   const song = team.walkup_song || null;
-  if (!song || !song.file) return 'No walk-up song uploaded';
-  return song.original_name || song.file;
+  if (song && song.file) return song.original_name || song.file;
+  return `Placeholder quick song: ${collidePlaceholderSongForTeam(team).label}`;
 }
 
 function collideViewerExtraHtml(team) {
@@ -77,17 +123,14 @@ function collideViewerExtraHtml(team) {
   const song = team.walkup_song || null;
   return `
     ${motto ? `<div class="collide-team-motto">${collideEscapeHtml(motto)}</div>` : ''}
-    ${song && song.url ? `
-      <button class="secondary collide-play-button" type="button" data-collide-play="${collideEscapeHtml(team.id)}">
-        ▶ Walk-up song
-      </button>
-    ` : ''}
+    <div class="collide-song-hint">${song && song.url ? 'Tap team for walk-up song' : 'Tap team for placeholder song'}</div>
   `;
 }
 
 function collideAdminExtraHtml(team) {
   const motto = String(team.motto || '').trim();
   const song = team.walkup_song || null;
+  const previewLabel = song && song.url ? 'Play Song' : 'Play Placeholder';
   return `
     <section class="collide-meta-panel" aria-label="Collide extras for ${collideEscapeHtml(team.name)}">
       <form class="collide-meta-form" enctype="multipart/form-data">
@@ -102,7 +145,7 @@ function collideAdminExtraHtml(team) {
         </label>
         <div class="collide-meta-actions">
           <button class="secondary" type="submit">Save Motto / Upload Song</button>
-          ${song && song.url ? `<button class="secondary" type="button" data-collide-play="${collideEscapeHtml(team.id)}">Play</button>` : ''}
+          <button class="secondary" type="button" data-collide-play="${collideEscapeHtml(team.id)}">${previewLabel}</button>
           ${song && song.file ? `<button class="warning" type="button" data-collide-delete-song="${collideEscapeHtml(team.id)}">Remove Song</button>` : ''}
         </div>
         <div class="collide-song-status">${collideEscapeHtml(collideSongLabel(team))}</div>
@@ -147,21 +190,27 @@ function collideDecorateViewer(data) {
 
     const signature = collideTeamSignature(team, 'viewer');
     if (card.dataset.collideMetaSignature === signature && card.querySelector('.collide-viewer-extra')) {
+      card.classList.toggle('collide-is-playing', collideExtras.active?.teamId === team.id);
       return;
     }
 
     card.dataset.collideTeamId = team.id;
     card.dataset.collideMetaSignature = signature;
+    card.classList.add('collide-card-playable');
+    card.classList.toggle('collide-is-playing', collideExtras.active?.teamId === team.id);
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', `${team.name || 'Team'}: play walk-up song`);
     card.querySelector('.collide-viewer-extra')?.remove();
 
     const wrapper = document.createElement('div');
     wrapper.className = 'collide-viewer-extra';
     wrapper.innerHTML = collideViewerExtraHtml(team);
-    const scoreBox = card.querySelector('.score-box');
-    if (scoreBox) {
-      scoreBox.insertAdjacentElement('afterend', wrapper);
+    const title = card.querySelector('.team-title');
+    if (title) {
+      title.insertAdjacentElement('afterend', wrapper);
     } else {
-      card.appendChild(wrapper);
+      card.insertAdjacentElement('afterbegin', wrapper);
     }
   });
 }
@@ -196,42 +245,130 @@ function collideFindTeam(teamId) {
   return (collideExtras.data?.teams || []).find((team) => team.id === teamId) || null;
 }
 
-async function collidePlaySong(teamId, button) {
-  const team = collideFindTeam(teamId) || (await collideFetchScores()).teams?.find((candidate) => candidate.id === teamId);
-  const song = team?.walkup_song || null;
-  if (!song || !song.url) return;
+function collideMarkControl(control, playing) {
+  if (!control) return;
 
-  if (collideExtras.activeAudio && collideExtras.activeAudio.dataset?.teamId === teamId && !collideExtras.activeAudio.paused) {
-    collideExtras.activeAudio.pause();
-    button.textContent = '▶ Walk-up song';
-    return;
+  control.classList?.toggle('collide-is-playing', playing);
+
+  if (control.tagName === 'BUTTON') {
+    if (!control.dataset.originalLabel) {
+      control.dataset.originalLabel = control.textContent.trim() || 'Play Song';
+    }
+    control.textContent = playing ? 'Playing...' : control.dataset.originalLabel;
+  }
+}
+
+function collideStopActivePlayback() {
+  const active = collideExtras.active;
+  if (!active) return;
+
+  if (active.audio) {
+    active.audio.pause();
+    active.audio.currentTime = 0;
   }
 
-  if (collideExtras.activeAudio) {
-    collideExtras.activeAudio.pause();
-    collideExtras.activeAudio.currentTime = 0;
-  }
-  if (collideExtras.activeButton) {
-    collideExtras.activeButton.textContent = collideExtras.activeButton.dataset.originalLabel || '▶ Walk-up song';
+  if (active.timer) {
+    clearTimeout(active.timer);
   }
 
+  if (active.context) {
+    active.context.close().catch(() => {});
+  }
+
+  collideMarkControl(active.control, false);
+  document
+    .querySelectorAll(`.viewer-card[data-collide-team-id="${CSS.escape(active.teamId)}"]`)
+    .forEach((card) => card.classList.remove('collide-is-playing'));
+
+  collideExtras.active = null;
+}
+
+async function collidePlayUploadedSong(teamId, song, control) {
   const audio = new Audio(song.url);
   audio.dataset.teamId = teamId;
-  collideExtras.activeAudio = audio;
-  collideExtras.activeButton = button;
-  button.dataset.originalLabel = button.textContent.trim() || '▶ Walk-up song';
-  button.textContent = '⏸ Playing';
+
+  collideExtras.active = { type: 'upload', teamId, audio, control };
+  collideMarkControl(control, true);
 
   audio.addEventListener('ended', () => {
-    button.textContent = button.dataset.originalLabel || '▶ Walk-up song';
+    if (collideExtras.active?.audio === audio) {
+      collideStopActivePlayback();
+    }
   }, { once: true });
 
   try {
     await audio.play();
   } catch {
-    button.textContent = button.dataset.originalLabel || '▶ Walk-up song';
+    collideStopActivePlayback();
     window.alert('Unable to play this audio file. The browser may not support the format.');
   }
+}
+
+async function collidePlayPlaceholderSong(teamId, team, control) {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) {
+    window.alert('This browser cannot play the placeholder song.');
+    return;
+  }
+
+  const context = new AudioContextClass();
+  const song = collidePlaceholderSongForTeam(team);
+  const masterGain = context.createGain();
+  masterGain.gain.setValueAtTime(0.08, context.currentTime);
+  masterGain.connect(context.destination);
+
+  let cursor = context.currentTime + 0.02;
+  song.notes.forEach(([frequency, duration]) => {
+    const oscillator = context.createOscillator();
+    const noteGain = context.createGain();
+    oscillator.type = 'triangle';
+    oscillator.frequency.setValueAtTime(frequency, cursor);
+    noteGain.gain.setValueAtTime(0.0001, cursor);
+    noteGain.gain.exponentialRampToValueAtTime(0.24, cursor + 0.02);
+    noteGain.gain.exponentialRampToValueAtTime(0.0001, cursor + duration);
+    oscillator.connect(noteGain);
+    noteGain.connect(masterGain);
+    oscillator.start(cursor);
+    oscillator.stop(cursor + duration + 0.03);
+    cursor += duration + 0.035;
+  });
+
+  const totalMilliseconds = Math.max(250, Math.ceil((cursor - context.currentTime + 0.08) * 1000));
+  collideExtras.active = {
+    type: 'placeholder',
+    teamId,
+    context,
+    control,
+    timer: window.setTimeout(() => {
+      if (collideExtras.active?.context === context) {
+        collideStopActivePlayback();
+      }
+    }, totalMilliseconds)
+  };
+
+  collideMarkControl(control, true);
+  await context.resume();
+}
+
+async function collidePlaySong(teamId, control) {
+  const loadedData = collideExtras.data || await collideFetchScores();
+  const team = collideFindTeam(teamId) || loadedData.teams?.find((candidate) => candidate.id === teamId);
+  if (!team) return;
+
+  if (collideExtras.active?.teamId === teamId) {
+    collideStopActivePlayback();
+    return;
+  }
+
+  collideStopActivePlayback();
+
+  const song = team.walkup_song || null;
+  if (song && song.url) {
+    await collidePlayUploadedSong(teamId, song, control);
+    return;
+  }
+
+  await collidePlayPlaceholderSong(teamId, team, control);
 }
 
 async function collideSaveMeta(form) {
@@ -273,7 +410,7 @@ async function collideDeleteSong(teamId) {
   collideDecorateAdmin(payload);
   const statusText = document.querySelector('#status-text');
   if (statusText) {
-    statusText.textContent = 'Walk-up song removed.';
+    statusText.textContent = 'Walk-up song removed. Placeholder quick song is still available.';
   }
 }
 
@@ -314,7 +451,26 @@ document.addEventListener('click', async (event) => {
       const statusText = document.querySelector('#status-text');
       if (statusText) statusText.textContent = error.message;
     }
+    return;
   }
+
+  const viewerCard = event.target.closest('.viewer-card[data-collide-team-id]');
+  if (document.body.dataset.pageType === 'viewer' && viewerCard && !event.target.closest('a, button, input, textarea, select, label')) {
+    event.preventDefault();
+    event.stopPropagation();
+    await collidePlaySong(viewerCard.dataset.collideTeamId, viewerCard);
+  }
+});
+
+document.addEventListener('keydown', async (event) => {
+  if (document.body.dataset.pageType !== 'viewer') return;
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+
+  const viewerCard = event.target.closest('.viewer-card[data-collide-team-id]');
+  if (!viewerCard) return;
+
+  event.preventDefault();
+  await collidePlaySong(viewerCard.dataset.collideTeamId, viewerCard);
 });
 
 const collideObserver = new MutationObserver(collideScheduleDecorate);
