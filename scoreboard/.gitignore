@@ -10,5 +10,12 @@ node_modules/
 # Frontlines categories are code-managed config (deployed via git, not in-app edited).
 # If you ever want categories editable in-app instead, drop this line.
 !**/data/categories.json
+
+# Runtime uploads — keep user-provided audio out of source control.
+**/media/walkup/*
+!**/media/
+!**/media/walkup/
+!**/media/walkup/.htaccess
+
 first-run-credentials.txt
 SECURITY-TODO.md
