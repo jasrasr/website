@@ -1,6 +1,6 @@
 // Filename: collide-extras.js
-// Revision : 1.1.0
-// Description : Collide-only UI layer for team mottos and walk-up songs.
+// Revision : 1.2.0
+// Description : Collide-only UI layer for team mottos, walk-up songs, and hurray overlays.
 // Author : Jason Lamb (with help from ChatGPT)
 // Created Date : 2026-09-13
 // Modified Date : 2026-09-13
@@ -8,6 +8,7 @@
 // 1.0.0 Add per-team motto display, walk-up song playback, and admin upload controls
 // 1.0.1 Clear only the uploaded file field after save so saved motto text remains visible
 // 1.1.0 Make public team cards clickable for audio and add per-team placeholder jingles
+// 1.2.0 Add separate admin-triggered full-screen hurray overlay
 
 const collidePlaceholderSongByTeamId = {
   'sixth-boys': 'blue-burst',
@@ -52,7 +53,9 @@ const collidePlaceholderSongs = {
 const collideExtras = {
   decorateQueued: false,
   data: null,
-  active: null
+  active: null,
+  hurraySeenEventId: null,
+  hurrayTimer: null
 };
 
 function collideEscapeHtml(value) {
@@ -146,6 +149,7 @@ function collideAdminExtraHtml(team) {
         <div class="collide-meta-actions">
           <button class="secondary" type="submit">Save Motto / Upload Song</button>
           <button class="secondary" type="button" data-collide-play="${collideEscapeHtml(team.id)}">${previewLabel}</button>
+          <button class="positive" type="button" data-collide-hurray="${collideEscapeHtml(team.id)}">Hurray Screen</button>
           ${song && song.file ? `<button class="warning" type="button" data-collide-delete-song="${collideEscapeHtml(team.id)}">Remove Song</button>` : ''}
         </div>
         <div class="collide-song-status">${collideEscapeHtml(collideSongLabel(team))}</div>
@@ -215,6 +219,63 @@ function collideDecorateViewer(data) {
   });
 }
 
+function collideEnsureHurrayOverlay() {
+  let overlay = document.querySelector('#collide-hurray-overlay');
+  if (overlay) return overlay;
+
+  overlay = document.createElement('div');
+  overlay.id = 'collide-hurray-overlay';
+  overlay.className = 'collide-hurray-overlay hidden';
+  overlay.setAttribute('aria-live', 'polite');
+  overlay.innerHTML = `
+    <div class="collide-hurray-card">
+      <div class="collide-hurray-kicker">Team Celebration</div>
+      <div class="collide-hurray-message">HURRAY!</div>
+      <div class="collide-hurray-team"></div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
+function collideShowHurrayOverlay(event) {
+  const overlay = collideEnsureHurrayOverlay();
+  const message = String(event?.message || 'HURRAY!').trim() || 'HURRAY!';
+  const teamName = String(event?.team_name || 'Team').trim() || 'Team';
+  const teamColor = /^#[0-9a-fA-F]{6}$/.test(String(event?.team_color || '')) ? event.team_color : '#38bdf8';
+
+  overlay.style.setProperty('--team-color', teamColor);
+  overlay.querySelector('.collide-hurray-message').textContent = message;
+  overlay.querySelector('.collide-hurray-team').textContent = teamName;
+
+  clearTimeout(collideExtras.hurrayTimer);
+  overlay.classList.remove('hidden', 'is-visible');
+  void overlay.offsetWidth;
+  overlay.classList.add('is-visible');
+
+  collideExtras.hurrayTimer = window.setTimeout(() => {
+    overlay.classList.remove('is-visible');
+    window.setTimeout(() => overlay.classList.add('hidden'), 450);
+  }, 3600);
+}
+
+function collideMaybeShowHurray(data) {
+  if (document.body.dataset.pageType !== 'viewer') return;
+
+  const event = data?.hurray_event || null;
+  const eventId = String(event?.id || '');
+  if (eventId === '' || collideExtras.hurraySeenEventId === eventId) return;
+
+  const eventTime = Date.parse(String(event?.created_at || ''));
+  if (Number.isFinite(eventTime) && Date.now() - eventTime > 20000) {
+    collideExtras.hurraySeenEventId = eventId;
+    return;
+  }
+
+  collideExtras.hurraySeenEventId = eventId;
+  collideShowHurrayOverlay(event);
+}
+
 async function collideDecorate() {
   const app = document.querySelector('#app');
   if (!app) return;
@@ -225,6 +286,7 @@ async function collideDecorate() {
     collideDecorateAdmin(data);
   } else if (pageType === 'viewer') {
     collideDecorateViewer(data);
+    collideMaybeShowHurray(data);
   }
 }
 
@@ -414,6 +476,26 @@ async function collideDeleteSong(teamId) {
   }
 }
 
+async function collideTriggerHurray(teamId) {
+  const response = await fetch('team-meta.php?action=hurray', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ team_id: teamId })
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || 'Unable to trigger the hurray screen.');
+  }
+
+  collideExtras.data = payload;
+  const event = payload.hurray_event || null;
+  const statusText = document.querySelector('#status-text');
+  if (statusText) {
+    statusText.textContent = `${event?.team_name || 'Team'} hurray screen sent to the public scoreboard.`;
+  }
+}
+
 document.addEventListener('submit', async (event) => {
   const form = event.target.closest('.collide-meta-form');
   if (!form) return;
@@ -433,6 +515,19 @@ document.addEventListener('click', async (event) => {
     event.preventDefault();
     event.stopPropagation();
     await collidePlaySong(playButton.dataset.collidePlay, playButton);
+    return;
+  }
+
+  const hurrayButton = event.target.closest('[data-collide-hurray]');
+  if (hurrayButton) {
+    event.preventDefault();
+    event.stopPropagation();
+    try {
+      await collideTriggerHurray(hurrayButton.dataset.collideHurray);
+    } catch (error) {
+      const statusText = document.querySelector('#status-text');
+      if (statusText) statusText.textContent = error.message;
+    }
     return;
   }
 
