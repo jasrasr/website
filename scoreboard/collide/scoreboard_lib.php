@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 /**
  * Filename: collide/scoreboard_lib.php
- * Revision : 1.2.0
+ * Revision : 1.3.0
  * Description : Core library for CVC Collide Scoreboard. Defines 6 teams
  *               (6th-8th Boys/Girls), handles JSON file read/write with file locking,
- *               and normalizes Collide-only motto and walk-up song metadata.
+ *               and normalizes Collide-only motto, walk-up song, and hurray metadata.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-09
  * Modified Date : 2026-09-13
@@ -12,6 +12,7 @@
  * 1.0.0 Initial release for Collide scoreboard instance
  * 1.1.0 Add per-team motto and walk-up song metadata defaults/normalization
  * 1.2.0 Add placeholder quick-song keys for every Collide team
+ * 1.3.0 Add hurray event default and normalization
  */
 
 const SCOREBOARD_DATA_FILE = __DIR__ . '/data/scores.json';
@@ -35,6 +36,7 @@ function scoreboardDefaultData(): array
     return [
         'title' => 'CVC Collide Scoreboard',
         'updatedAt' => null,
+        'hurray_event' => null,
         'teams' => [
             [
                 'id' => 'sixth-boys',
@@ -122,6 +124,38 @@ function normalizeWalkupSong(mixed $song): ?array
     ];
 }
 
+function normalizeHurrayEvent(mixed $event): ?array
+{
+    if (!is_array($event)) {
+        return null;
+    }
+
+    $id = preg_replace('/[^a-zA-Z0-9_-]/', '-', (string) ($event['id'] ?? '')) ?: '';
+    if ($id === '') {
+        return null;
+    }
+
+    $teamColor = (string) ($event['team_color'] ?? '#38bdf8');
+    if (!preg_match('/^#[0-9a-fA-F]{6}$/', $teamColor)) {
+        $teamColor = '#38bdf8';
+    }
+
+    $message = substr(trim((string) ($event['message'] ?? 'HURRAY!')), 0, 40);
+    if ($message === '') {
+        $message = 'HURRAY!';
+    }
+
+    return [
+        'id' => $id,
+        'team_id' => preg_replace('/[^a-zA-Z0-9_-]/', '-', (string) ($event['team_id'] ?? '')) ?: '',
+        'team_name' => substr(trim((string) ($event['team_name'] ?? 'Team')), 0, 80),
+        'team_color' => $teamColor,
+        'message' => $message,
+        'created_at' => (string) ($event['created_at'] ?? ''),
+        'created_by' => substr(trim((string) ($event['created_by'] ?? '')), 0, 80),
+    ];
+}
+
 function scoreboardNormalizeData(array $data): array
 {
     $default = scoreboardDefaultData();
@@ -133,6 +167,8 @@ function scoreboardNormalizeData(array $data): array
     if (!array_key_exists('updatedAt', $data)) {
         $data['updatedAt'] = null;
     }
+
+    $data['hurray_event'] = normalizeHurrayEvent($data['hurray_event'] ?? null);
 
     $teams = [];
     foreach (($data['teams'] ?? []) as $team) {
