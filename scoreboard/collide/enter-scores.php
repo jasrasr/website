@@ -1,18 +1,20 @@
 <?php declare(strict_types=1);
 /**
  * Filename: collide/enter-scores.php
- * Revision : 1.4.0
+ * Revision : 1.5.0
  * Description : Admin score entry page for CVC Collide Scoreboard.
- *               Allows authorized users to update, reset, and rename team scores and title.
+ *               Allows authorized users to update, reset, rename team scores/title,
+ *               and maintain Collide-only team mottos and walk-up songs.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-09
- * Modified Date : 2026-06-17
+ * Modified Date : 2026-09-13
  * Changelog :
  * 1.0.0 Initial release for Collide scoreboard instance
  * 1.1.0 Added session authentication; passes username/role/urls to JS via data attrs
  * 1.2.0 Added change-password URL for signed-in users
  * 1.3.0 Added changelog and all-scoreboards navigation URLs
  * 1.4.0 Server-rendered page-header block so View Source shows page identity and signed-in user
+ * 1.5.0 Load Collide-only motto and walk-up song admin UI
  */
 
 require __DIR__ . '/../auth.php';
@@ -25,6 +27,7 @@ $user = requireAuth('collide', '../login.php');
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CVC Collide Scoreboard Admin</title>
     <link rel="stylesheet" href="../public/styles.css?v=<?= filemtime(__DIR__ . '/../public/styles.css') ?>" />
+    <link rel="stylesheet" href="collide.css?v=<?= filemtime(__DIR__ . '/collide.css') ?>" />
   </head>
   <body
     data-page-type="admin"
@@ -47,5 +50,6 @@ $user = requireAuth('collide', '../login.php');
       <p class="status-text">Loading score entry...</p>
     </div>
     <script src="../public/app.js?v=<?= filemtime(__DIR__ . '/../public/app.js') ?>" defer></script>
+    <script src="collide-extras.js?v=<?= filemtime(__DIR__ . '/collide-extras.js') ?>" defer></script>
   </body>
 </html>
