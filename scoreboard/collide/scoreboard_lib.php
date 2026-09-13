@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /**
  * Filename: collide/scoreboard_lib.php
- * Revision : 1.1.0
+ * Revision : 1.2.0
  * Description : Core library for CVC Collide Scoreboard. Defines 6 teams
  *               (6th-8th Boys/Girls), handles JSON file read/write with file locking,
  *               and normalizes Collide-only motto and walk-up song metadata.
@@ -11,9 +11,24 @@
  * Changelog :
  * 1.0.0 Initial release for Collide scoreboard instance
  * 1.1.0 Add per-team motto and walk-up song metadata defaults/normalization
+ * 1.2.0 Add placeholder quick-song keys for every Collide team
  */
 
 const SCOREBOARD_DATA_FILE = __DIR__ . '/data/scores.json';
+
+function defaultCollidePlaceholderSong(string $teamId): string
+{
+    $map = [
+        'sixth-boys' => 'blue-burst',
+        'sixth-girls' => 'pink-spark',
+        'seventh-boys' => 'teal-rise',
+        'seventh-girls' => 'purple-pop',
+        'eighth-boys' => 'orange-charge',
+        'eighth-girls' => 'green-run',
+    ];
+
+    return $map[$teamId] ?? 'default-chime';
+}
 
 function scoreboardDefaultData(): array
 {
@@ -27,6 +42,7 @@ function scoreboardDefaultData(): array
                 'color' => '#1d4ed8',
                 'score' => 0,
                 'motto' => '',
+                'placeholder_song' => 'blue-burst',
                 'walkup_song' => null,
             ],
             [
@@ -35,6 +51,7 @@ function scoreboardDefaultData(): array
                 'color' => '#db2777',
                 'score' => 0,
                 'motto' => '',
+                'placeholder_song' => 'pink-spark',
                 'walkup_song' => null,
             ],
             [
@@ -43,6 +60,7 @@ function scoreboardDefaultData(): array
                 'color' => '#0f766e',
                 'score' => 0,
                 'motto' => '',
+                'placeholder_song' => 'teal-rise',
                 'walkup_song' => null,
             ],
             [
@@ -51,6 +69,7 @@ function scoreboardDefaultData(): array
                 'color' => '#7c3aed',
                 'score' => 0,
                 'motto' => '',
+                'placeholder_song' => 'purple-pop',
                 'walkup_song' => null,
             ],
             [
@@ -59,6 +78,7 @@ function scoreboardDefaultData(): array
                 'color' => '#ea580c',
                 'score' => 0,
                 'motto' => '',
+                'placeholder_song' => 'orange-charge',
                 'walkup_song' => null,
             ],
             [
@@ -67,6 +87,7 @@ function scoreboardDefaultData(): array
                 'color' => '#15803d',
                 'score' => 0,
                 'motto' => '',
+                'placeholder_song' => 'green-run',
                 'walkup_song' => null,
             ],
         ],
@@ -129,6 +150,8 @@ function scoreboardNormalizeData(array $data): array
         $team['color'] = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($team['color'] ?? '')) ? (string) $team['color'] : '#64748b';
         $team['score'] = (int) ($team['score'] ?? 0);
         $team['motto'] = substr(trim((string) ($team['motto'] ?? '')), 0, 160);
+        $placeholderSong = preg_replace('/[^a-zA-Z0-9_-]/', '-', (string) ($team['placeholder_song'] ?? '')) ?: '';
+        $team['placeholder_song'] = $placeholderSong !== '' ? $placeholderSong : defaultCollidePlaceholderSong($teamId);
         $team['walkup_song'] = normalizeWalkupSong($team['walkup_song'] ?? null);
         $teams[] = $team;
     }
