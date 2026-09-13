@@ -1,14 +1,16 @@
 <?php declare(strict_types=1);
 /**
  * Filename: collide/scoreboard_lib.php
- * Revision : 1.0.0
+ * Revision : 1.1.0
  * Description : Core library for CVC Collide Scoreboard. Defines 6 teams
- *               (6th-8th Boys/Girls), handles JSON file read/write with file locking.
+ *               (6th-8th Boys/Girls), handles JSON file read/write with file locking,
+ *               and normalizes Collide-only motto and walk-up song metadata.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-09
- * Modified Date : 2026-04-09
+ * Modified Date : 2026-09-13
  * Changelog :
  * 1.0.0 Initial release for Collide scoreboard instance
+ * 1.1.0 Add per-team motto and walk-up song metadata defaults/normalization
  */
 
 const SCOREBOARD_DATA_FILE = __DIR__ . '/data/scores.json';
@@ -24,39 +26,116 @@ function scoreboardDefaultData(): array
                 'name' => '6th Boys',
                 'color' => '#1d4ed8',
                 'score' => 0,
+                'motto' => '',
+                'walkup_song' => null,
             ],
             [
                 'id' => 'sixth-girls',
                 'name' => '6th Girls',
                 'color' => '#db2777',
                 'score' => 0,
+                'motto' => '',
+                'walkup_song' => null,
             ],
             [
                 'id' => 'seventh-boys',
                 'name' => '7th Boys',
                 'color' => '#0f766e',
                 'score' => 0,
+                'motto' => '',
+                'walkup_song' => null,
             ],
             [
                 'id' => 'seventh-girls',
                 'name' => '7th Girls',
                 'color' => '#7c3aed',
                 'score' => 0,
+                'motto' => '',
+                'walkup_song' => null,
             ],
             [
                 'id' => 'eighth-boys',
                 'name' => '8th Boys',
                 'color' => '#ea580c',
                 'score' => 0,
+                'motto' => '',
+                'walkup_song' => null,
             ],
             [
                 'id' => 'eighth-girls',
                 'name' => '8th Girls',
                 'color' => '#15803d',
                 'score' => 0,
+                'motto' => '',
+                'walkup_song' => null,
             ],
         ],
     ];
+}
+
+function normalizeWalkupSong(mixed $song): ?array
+{
+    if (!is_array($song)) {
+        return null;
+    }
+
+    $file = basename((string) ($song['file'] ?? ''));
+    if ($file === '') {
+        return null;
+    }
+
+    $uploadedAt = (string) ($song['uploaded_at'] ?? '');
+    $url = 'media/walkup/' . rawurlencode($file);
+    if ($uploadedAt !== '') {
+        $url .= '?v=' . rawurlencode($uploadedAt);
+    }
+
+    return [
+        'file' => $file,
+        'url' => $url,
+        'original_name' => (string) ($song['original_name'] ?? $file),
+        'mime_type' => (string) ($song['mime_type'] ?? ''),
+        'size_bytes' => (int) ($song['size_bytes'] ?? 0),
+        'uploaded_at' => $uploadedAt,
+        'uploaded_by' => (string) ($song['uploaded_by'] ?? ''),
+    ];
+}
+
+function scoreboardNormalizeData(array $data): array
+{
+    $default = scoreboardDefaultData();
+
+    $data['title'] = trim((string) ($data['title'] ?? '')) !== ''
+        ? (string) $data['title']
+        : $default['title'];
+
+    if (!array_key_exists('updatedAt', $data)) {
+        $data['updatedAt'] = null;
+    }
+
+    $teams = [];
+    foreach (($data['teams'] ?? []) as $team) {
+        if (!is_array($team)) {
+            continue;
+        }
+
+        $teamId = trim((string) ($team['id'] ?? ''));
+        if ($teamId === '') {
+            continue;
+        }
+
+        $team['id'] = $teamId;
+        $team['name'] = trim((string) ($team['name'] ?? '')) !== '' ? (string) $team['name'] : $teamId;
+        $team['color'] = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($team['color'] ?? '')) ? (string) $team['color'] : '#64748b';
+        $team['score'] = (int) ($team['score'] ?? 0);
+        $team['motto'] = substr(trim((string) ($team['motto'] ?? '')), 0, 160);
+        $team['walkup_song'] = normalizeWalkupSong($team['walkup_song'] ?? null);
+        $teams[] = $team;
+    }
+
+    $data['teams'] = $teams !== [] ? array_values($teams) : $default['teams'];
+
+    return $data;
 }
 
 function ensureScoreboardDataFile(): void
@@ -78,7 +157,7 @@ function readScoreboardData(): array
     $raw = file_get_contents(SCOREBOARD_DATA_FILE);
     $decoded = json_decode($raw ?: '', true);
 
-    return is_array($decoded) ? $decoded : scoreboardDefaultData();
+    return scoreboardNormalizeData(is_array($decoded) ? $decoded : scoreboardDefaultData());
 }
 
 function writeScoreboardData(callable $callback): array
@@ -102,7 +181,7 @@ function writeScoreboardData(callable $callback): array
             $current = scoreboardDefaultData();
         }
 
-        $updated = $callback($current);
+        $updated = scoreboardNormalizeData($callback(scoreboardNormalizeData($current)));
         $updated['updatedAt'] = gmdate('c');
 
         $encoded = json_encode($updated, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
