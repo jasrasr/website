@@ -2,7 +2,7 @@
 
 A PHP scoreboard application for tracking team scores across multiple ministry instances, each with its own teams, runtime data, viewer, and score-entry pages.
 
-Current project version: **v1.19.1**
+Current project version: **v1.20.1**
 
 ## Versioning
 
@@ -34,9 +34,11 @@ Each instance includes:
 
 - `collide/collide-extras.js` adds a Collide-only UI layer without changing the shared scoreboard app for Default, Youth, or Frontlines.
 - Each Collide team can have a short subtitle/motto stored in `collide/data/scores.json` as `motto`.
-- Each Collide team can have one walk-up song stored as `walkup_song` metadata.
-- The public Collide viewer shows the motto and a **Walk-up song** button when a song exists.
-- The Collide full-admin page adds a per-team motto field, audio upload field, play button, and remove-song button.
+- The public Collide viewer shows that subtitle below the team name in smaller text.
+- Each Collide team can have one uploaded walk-up song stored as `walkup_song` metadata.
+- Clicking a Collide team card on the public viewer plays that team's uploaded walk-up song.
+- If a team does not have an uploaded song yet, the card plays a tiny built-in placeholder quick song for that team.
+- The Collide full-admin page adds a per-team motto field, audio upload field, preview button, and remove-song button.
 - `collide/team-meta.php` handles authenticated motto saves, audio uploads, and song removal.
 - Uploaded audio files are stored under `collide/media/walkup/` and are intentionally ignored by Git.
 - Supported upload types: MP3, M4A/AAC, WAV, OGG, and WEBM up to 15 MB.
