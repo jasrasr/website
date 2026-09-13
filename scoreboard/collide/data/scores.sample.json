@@ -1,6 +1,7 @@
 {
   "title": "CVC Collide Scoreboard",
   "updatedAt": null,
+  "hurray_event": null,
   "teams": [
     {
       "id": "sixth-boys",
