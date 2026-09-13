@@ -1,18 +1,19 @@
 <?php declare(strict_types=1);
 /**
  * Filename: collide/api.php
- * Revision : 1.4.0
+ * Revision : 1.4.1
  * Description : REST API endpoint for CVC Collide Scoreboard score management.
  *               Handles reading, updating, resetting, and renaming teams and title.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-09
- * Modified Date : 2026-06-18
+ * Modified Date : 2026-09-13
  * Changelog :
  * 1.0.0 Initial release for Collide scoreboard instance
  * 1.1.0 Allow negative scores (removed max(0) floor)
  * 1.2.0 Added session authentication and audit logging per action
  * 1.3.0 Stamp score_changed_at on every score change (tiebreaker source); Reset All snapshots data/scores.previous.json before clearing for recovery
  * 1.4.0 reset-team snapshots data/scores.previous-single.json. remove-team appends to data/removed-teams.json. New restore-previous-scores action (admin-only). scores GET adds hasPreviousSnapshot flag.
+ * 1.4.1 Add Collide motto/walk-up placeholder metadata to newly added teams
  */
 
 require __DIR__ . '/scoreboard_lib.php';
@@ -223,6 +224,9 @@ try {
                 'color' => $color,
                 'score' => 0,
                 'score_changed_at' => gmdate('c'),
+                'motto' => '',
+                'placeholder_song' => defaultCollidePlaceholderSong($newTeamId),
+                'walkup_song' => null,
             ];
             return $data;
         });
