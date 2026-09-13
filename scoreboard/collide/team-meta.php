@@ -1,13 +1,15 @@
 <?php declare(strict_types=1);
 /**
  * Filename: collide/team-meta.php
- * Revision : 1.0.0
- * Description : Collide-only API for per-team motto text and walk-up song uploads.
+ * Revision : 1.1.0
+ * Description : Collide-only API for per-team motto text, walk-up song uploads,
+ *               and full-screen hurray triggers.
  * Author : Jason Lamb (with help from ChatGPT)
  * Created Date : 2026-09-13
  * Modified Date : 2026-09-13
  * Changelog :
  * 1.0.0 Initial Collide motto and walk-up song metadata endpoint
+ * 1.1.0 Add authenticated hurray trigger event for the public viewer
  */
 
 require __DIR__ . '/scoreboard_lib.php';
@@ -229,6 +231,53 @@ try {
             'action'     => 'delete-walkup-song',
             'team_id'    => $teamId,
             'team_name'  => $teamName,
+            'amount'     => null,
+            'new_score'  => null,
+            'ip'         => clientIp(),
+            'user_agent' => clientUserAgent(),
+        ]);
+
+        jsonResponse($saved);
+    }
+
+    if ($action === 'hurray') {
+        $payload = readJsonRequestBody();
+        $teamId = trim((string) ($payload['team_id'] ?? ''));
+        if ($teamId === '') {
+            jsonResponse(['error' => 'Team is required.'], 400);
+        }
+
+        $eventId = bin2hex(random_bytes(8));
+        $createdAt = gmdate('c');
+        $event = null;
+
+        $saved = writeScoreboardData(function (array $data) use ($teamId, $eventId, $createdAt, $currentUser, &$event): array {
+            $teamIndex = findTeamIndex($data, $teamId);
+            if ($teamIndex === null) {
+                throw new InvalidArgumentException('Team not found.');
+            }
+
+            $team = $data['teams'][$teamIndex];
+            $event = [
+                'id' => $eventId,
+                'team_id' => $teamId,
+                'team_name' => (string) ($team['name'] ?? 'Team'),
+                'team_color' => (string) ($team['color'] ?? '#38bdf8'),
+                'message' => 'HURRAY!',
+                'created_at' => $createdAt,
+                'created_by' => (string) ($currentUser['username'] ?? ''),
+            ];
+
+            $data['hurray_event'] = $event;
+            return $data;
+        });
+
+        logAudit($auditFile, [
+            'timestamp'  => gmdate('c'),
+            'username'   => $currentUser['username'],
+            'action'     => 'trigger-hurray',
+            'team_id'    => $teamId,
+            'team_name'  => (string) ($event['team_name'] ?? ''),
             'amount'     => null,
             'new_score'  => null,
             'ip'         => clientIp(),
