@@ -2,7 +2,7 @@
 
 A PHP scoreboard application for tracking team scores across multiple ministry instances, each with its own teams, runtime data, viewer, and score-entry pages.
 
-Current project version: **v1.20.1**
+Current project version: **v1.20.2**
 
 ## Versioning
 
@@ -30,7 +30,7 @@ Each instance includes:
 
 ## Collide-only features
 
-### Team motto and walk-up song
+### Team motto, walk-up song, and hurray screen
 
 - `collide/collide-extras.js` adds a Collide-only UI layer without changing the shared scoreboard app for Default, Youth, or Frontlines.
 - Each Collide team can have a short subtitle/motto stored in `collide/data/scores.json` as `motto`.
@@ -38,8 +38,10 @@ Each instance includes:
 - Each Collide team can have one uploaded walk-up song stored as `walkup_song` metadata.
 - Clicking a Collide team card on the public viewer plays that team's uploaded walk-up song.
 - If a team does not have an uploaded song yet, the card plays a tiny built-in placeholder quick song for that team.
-- The Collide full-admin page adds a per-team motto field, audio upload field, preview button, and remove-song button.
-- `collide/team-meta.php` handles authenticated motto saves, audio uploads, and song removal.
+- The Collide full-admin page adds a per-team motto field, audio upload field, preview button, remove-song button, and separate **Hurray Screen** button.
+- The **Hurray Screen** button writes a short-lived `hurray_event` to `collide/data/scores.json`; the public viewer polls for that event and displays a large dim full-screen **HURRAY!** overlay for that team.
+- The hurray overlay is separate from walk-up song playback. It does not play audio and does not change the team-card click behavior.
+- `collide/team-meta.php` handles authenticated motto saves, audio uploads, song removal, and hurray triggers.
 - Uploaded audio files are stored under `collide/media/walkup/` and are intentionally ignored by Git.
 - Supported upload types: MP3, M4A/AAC, WAV, OGG, and WEBM up to 15 MB.
 
@@ -81,9 +83,8 @@ The Frontlines viewer opts in to `data-viewer-team-limit="3"`. After sorting by 
 - `requireAuthJson($scoreboardId)` is the JSON/API equivalent.
 - `requireSignedIn($loginUrl)` allows any authenticated user.
 - `requireAdmin($loginUrl)` requires the `admin` role.
-- Login preserves the requested scoreboard destination. A login or forced password-change flow started from Frontlines returns to the requested Frontlines page instead of falling back to the Default scoreboard.
+- Login preserves the requested scoreboard destination.
 - First-run and administrator-reset passwords require a password change before scoreboard access.
-- The forced password-change page includes **Cancel and return to login**. Canceling signs the temporary session out first so the user does not loop back to the same page.
 - `scoreboards.php` lists only the scoreboard instances the signed-in user may access.
 - `changelog.php` displays `CHANGELOG.md` to signed-in users.
 
@@ -91,4 +92,18 @@ The Frontlines viewer opts in to `data-viewer-team-limit="3"`. After sorting by 
 
 Live runtime files are ignored by Git. Committed sample files are deployed, while an existing live file is left unchanged.
 
-Important authentication files:
+Important runtime files:
+
+| File | Purpose |
+|---|---|
+| `data/users.json` | Shared user accounts and bcrypt password hashes |
+| `data/users.previous.json` | Previous user snapshot before user saves |
+| `<instance>/data/scores.json` | Live scores and team data |
+| `<instance>/data/audit.json` | Score and admin audit events |
+| `collide/media/walkup/` | Runtime walk-up song uploads |
+
+## Backup & recovery notes
+
+- Resetting one team or all teams resets scores only; names, mottos, placeholder song keys, and uploaded walk-up song metadata remain intact.
+- **Undo Reset All** is available after a Reset All when the relevant snapshot exists.
+- Runtime JSON files are protected by `.htaccess` and ignored by Git.
