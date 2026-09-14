@@ -1,13 +1,24 @@
 <!--
 File: CHANGELOG.md
-File Revision: 1.1.0
+File Revision: 1.1.1
 Modified: 2026-09-14
 History:
+1.1.1 - Added password confirmation validation for requester and agent account creation.
 1.1.0 - Added passwordless testing mode and user profile/avatar support.
 1.0.0 - Established the project revision baseline and documented authentication and directory features.
 -->
 
 # Ticketing Changelog
+
+## Project Revision 1.1.1 — 2026-09-14
+
+### Changed
+- Requester account creation now includes both Password and Confirm Password fields.
+- First-agent account creation now includes both Password and Confirm Password fields.
+- The agent-side Add Requester and Add Agent dialog now includes both Password and Confirm Password fields.
+- In test mode, both password fields may remain blank.
+- If a password is entered, both fields must match and the password must be at least 8 characters.
+- Password matching is validated in the browser and again by PHP on the server.
 
 ## Project Revision 1.1.0 — 2026-09-14
 
