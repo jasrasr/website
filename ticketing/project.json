@@ -1,6 +1,6 @@
 {
   "name": "Ticketing",
-  "revision": "1.1.1",
+  "revision": "1.2.0",
   "modified": "2026-09-14",
   "revisionPolicy": "Project and file revisions start at 1.0.0 and never use values below 1.0.0.",
   "files": {
@@ -33,15 +33,30 @@
         "Initial build - Responsive dark ticketing interface."
       ]
     },
+    "csv.php": {
+      "revision": "1.0.0",
+      "modified": "2026-09-14",
+      "history": [
+        "1.0.0 - Added agent-only CSV import/export, full ticket metadata and comments round-trip support, validation, and sequential ticket numbering based on the live highest ticket number."
+      ]
+    },
+    "sample-ticket-import.csv": {
+      "revision": "1.0.0",
+      "modified": "2026-09-14",
+      "history": [
+        "1.0.0 - Added downloadable CSV import template with metadata, public reply, and private-note examples."
+      ]
+    },
     "README.md": {
       "revision": "1.0.0",
       "modified": "2026-09-14",
       "history": ["1.0.0 - Documented authentication, directories, revision policy, and current architecture."]
     },
     "CHANGELOG.md": {
-      "revision": "1.1.1",
+      "revision": "1.2.0",
       "modified": "2026-09-14",
       "history": [
+        "1.2.0 - Documented CSV import/export tools and sequential numbering behavior.",
         "1.1.1 - Documented password confirmation behavior for account creation.",
         "1.1.0 - Documented passwordless test mode and user profile/avatar support.",
         "1.0.0 - Established production revision baseline and documented authentication/directory release."
@@ -53,9 +68,10 @@
       "history": ["1.0.0 - Maintained future feature backlog and marked authentication foundation implemented."]
     },
     "project.json": {
-      "revision": "1.1.1",
+      "revision": "1.2.0",
       "modified": "2026-09-14",
       "history": [
+        "1.2.0 - Added CSV tools and sample-template files to the manifest and advanced the project revision.",
         "1.1.1 - Updated manifest for password confirmation patch.",
         "1.1.0 - Updated manifest for passwordless test mode and profile/avatar release.",
         "1.0.0 - Established manifest and minimum revision policy of 1.0.0."
