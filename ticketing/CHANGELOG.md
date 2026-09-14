@@ -1,10 +1,11 @@
 <!--
 File: CHANGELOG.md
-File Revision: 1.6.0
+File Revision: 1.6.1
 Modified: 2026-09-14
 History:
-1.6.0 - Added web category management and moved live categories to Hostinger-only runtime storage.
-1.5.0 - Moved mutable ticketing data out of GitHub tracking and added sample datastore files.
+1.6.1 - Clarified fork/host independence and added generic installation guidance.
+1.6.0 - Added web category management and moved live categories to instance-local runtime storage.
+1.5.0 - Moved mutable ticketing data out of Git tracking and added sample datastore files.
 1.4.0 - Redesigned the mobile header, profile, navigation, and dashboard spacing.
 1.3.1 - Fixed mobile scrolling and responsive sidebar behavior.
 1.3.0 - Added hierarchical ticket categories with stable category references.
@@ -15,6 +16,21 @@ History:
 -->
 
 # Ticketing Changelog
+
+## Project Revision 1.6.1 — 2026-09-14
+
+### Changed
+- Reframed the application as host-agnostic and fork-friendly rather than Hostinger-specific.
+- Clarified that Git is used only for application source and starter/sample data.
+- Defined users, tickets, directory entries, categories, and avatars as **instance-local runtime data** owned by each deployment.
+- Added `INSTALL.md` with generic deployment instructions for forks and non-original hosts.
+- Removed documentation language implying that a fork needs the original GitHub account, original domain, or original hosting provider.
+
+### Fork behavior
+- A fork can be deployed independently and creates its own users, first agent, tickets, categories, directory, and avatars.
+- Live runtime JSON is ignored by Git and does not need to be pushed back to the original repository.
+- Sample files provide clean starting data for every new installation.
+- No live installation needs to connect to the original repository owner after the source has been copied.
 
 ## Project Revision 1.6.0 — 2026-09-14
 
@@ -36,24 +52,24 @@ History:
 - This means a category can move from one part of the hierarchy to another without breaking tickets that already reference it.
 
 ### Runtime category storage
-- Live `data/categories.json` is now Hostinger-only runtime data and is ignored by Git, matching users, directory, and tickets.
-- GitHub now contains `data/categories.json.sample`, populated with the starter IT-helpdesk hierarchy.
+- Live `data/categories.json` is instance-local runtime data and is ignored by Git, matching users, directory, and tickets.
+- The repository contains `data/categories.json.sample`, populated with the starter IT-helpdesk hierarchy.
 - If live `categories.json` does not exist, `index.php`, `csv.php`, or `categories.php` automatically initializes it from the sample file.
 - The seeded hierarchy therefore appears automatically on a new deployment but subsequent web edits are not overwritten by normal Git pulls.
 
 ## Project Revision 1.5.0 — 2026-09-14
 
 ### Changed
-- Removed live `data/users.json`, `data/directory.json`, and `data/tickets.json` from GitHub tracking.
+- Removed live `data/users.json`, `data/directory.json`, and `data/tickets.json` from Git tracking.
 - Added `data/users.json.sample`, `data/directory.json.sample`, and `data/tickets.json.sample` as empty templates.
 - Added `ticketing/.gitignore` rules so live runtime JSON files cannot be accidentally recommitted.
 - Uploaded profile images under `avatars/` are also treated as runtime content.
 
 ### Why
-Previously, creating an agent on Hostinger wrote that account into `data/users.json`, but a later deployment could replace the live file with GitHub's empty `[]` copy. This caused the application to repeatedly offer **Create first agent account** even after an agent had already been created.
+Previously, creating an agent wrote that account into `data/users.json`, but a later deployment could replace the live file with the repository's empty `[]` copy. This caused the application to repeatedly offer **Create first agent account** even after an agent had already been created.
 
 ### Runtime behavior
-- The application continues reading and writing live JSON on Hostinger.
+- The application continues reading and writing instance-local live JSON.
 - If runtime files do not exist, PHP creates or initializes them when needed.
 - Normal Git pulls should leave ignored/untracked runtime files alone.
 - A deployment process that completely deletes the destination directory before copying the repository would still remove runtime files and should not be used without moving runtime storage outside the deployment directory.
