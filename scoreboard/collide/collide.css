@@ -1,15 +1,16 @@
 /*
  * Filename: collide/collide.css
- * Revision : 1.2.0
+ * Revision : 1.3.0
  * Description : Collide-only styles for team mottos, walk-up song controls,
- *               and hurray overlays.
+ *               existing audio picker, and hurray overlays.
  * Author : Jason Lamb (with help from ChatGPT)
  * Created Date : 2026-09-13
- * Modified Date : 2026-09-13
+ * Modified Date : 2026-09-14
  * Changelog :
  * 1.0.0 Add motto display, audio upload controls, and walk-up song buttons
  * 1.1.0 Make public team cards clickable, shrink viewer motto text, and add playing state
  * 1.2.0 Add full-screen dim hurray overlay styles
+ * 1.3.0 Style existing uploaded-song picker controls
  */
 
 .collide-team-motto {
@@ -96,6 +97,7 @@
 }
 
 .collide-meta-field textarea,
+.collide-meta-field select,
 .collide-meta-field input[type="file"] {
   width: 100%;
   min-height: 46px;
@@ -110,6 +112,17 @@
 .collide-meta-field textarea {
   resize: vertical;
   line-height: 1.35;
+}
+
+.collide-meta-field select:disabled {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.collide-meta-help {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.25;
 }
 
 .collide-meta-actions {
