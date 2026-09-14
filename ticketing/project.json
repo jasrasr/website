@@ -1,75 +1,72 @@
 {
   "name": "Ticketing",
-  "revision": "0.2.0",
+  "revision": "1.0.0",
   "modified": "2026-09-14",
+  "revisionPolicy": "Project and file revisions start at 1.0.0 and never use values below 1.0.0.",
   "files": {
     "index.php": {
-      "revision": "0.2.0",
+      "revision": "1.0.0",
       "modified": "2026-09-14",
       "history": [
-        "0.2.0 - Added requester and agent portals, public/private replies, project metadata API.",
-        "0.1.1 - Fixed PUT response to return updated ticket.",
-        "0.1.0 - Initial JSON-backed ticket API and interface."
+        "1.0.0 - Added PHP-session authentication, requester/agent authorization, protected ticket APIs, and persistent people directory support.",
+        "Initial build - JSON-backed ticket API, requester/agent views, and public/private replies."
       ]
     },
     "app.js": {
-      "revision": "0.2.0",
+      "revision": "1.0.0",
       "modified": "2026-09-14",
       "history": [
-        "0.2.0 - Added requester/agent portal behavior, sortable agent table, public/private replies.",
-        "0.1.0 - Initial dashboard, ticket list, create/edit flow."
+        "1.0.0 - Added requester/agent login flows, persistent dropdown lists, add-new actions, and session-aware UI behavior.",
+        "Initial build - Dashboards, sortable ticket table, create/edit flow, and public/private replies."
       ]
     },
     "styles.css": {
-      "revision": "0.2.0",
+      "revision": "1.0.0",
       "modified": "2026-09-14",
       "history": [
-        "0.2.0 - Added portal switcher, sortable tables, requester identity card, reply visibility styles.",
-        "0.1.0 - Initial responsive dark interface."
+        "1.0.0 - Added login, signed-in identity, person-directory dialog, and authenticated portal styling.",
+        "Initial build - Responsive dark ticketing interface."
       ]
     },
     "README.md": {
-      "revision": "0.2.0",
+      "revision": "1.0.0",
       "modified": "2026-09-14",
-      "history": [
-        "0.2.0 - Documented two-portal architecture, revisions, and current capabilities.",
-        "0.1.0 - Initial project documentation."
-      ]
+      "history": ["1.0.0 - Documented authentication, directories, revision policy, and current architecture."]
     },
     "CHANGELOG.md": {
-      "revision": "0.1.0",
+      "revision": "1.0.0",
       "modified": "2026-09-14",
-      "history": [
-        "0.1.0 - Created project changelog covering revisions 0.1.0 through 0.2.0."
-      ]
+      "history": ["1.0.0 - Established production revision baseline and documented authentication/directory release."]
     },
     "TODO.md": {
-      "revision": "0.1.0",
+      "revision": "1.0.0",
       "modified": "2026-09-14",
-      "history": [
-        "0.1.0 - Created future-features and task backlog."
-      ]
+      "history": ["1.0.0 - Maintained future feature backlog and marked authentication foundation implemented."]
     },
     "project.json": {
-      "revision": "0.1.0",
+      "revision": "1.0.0",
       "modified": "2026-09-14",
-      "history": [
-        "0.1.0 - Created project/file revision manifest."
-      ]
+      "history": ["1.0.0 - Established manifest and minimum revision policy of 1.0.0."]
     },
     "data/tickets.json": {
-      "revision": "0.1.0",
+      "revision": "1.0.0",
       "modified": "2026-09-14",
-      "history": [
-        "0.1.0 - JSON ticket datastore. Data content changes do not increment source revision."
-      ]
+      "history": ["1.0.0 - JSON ticket datastore. Data content changes do not increment source revision."]
+    },
+    "data/users.json": {
+      "revision": "1.0.0",
+      "modified": "2026-09-14",
+      "history": ["1.0.0 - Added password-hashed requester and agent login account datastore."]
+    },
+    "data/directory.json": {
+      "revision": "1.0.0",
+      "modified": "2026-09-14",
+      "history": ["1.0.0 - Added persistent requester and agent directory datastore."]
     },
     "data/.htaccess": {
-      "revision": "0.1.0",
+      "revision": "1.0.0",
       "modified": "2026-09-14",
-      "history": [
-        "0.1.0 - Blocks direct browser access to ticket JSON data."
-      ]
+      "history": ["1.0.0 - Blocks direct browser access to all JSON data files."]
     }
   }
 }
