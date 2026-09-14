@@ -1,6 +1,6 @@
 {
   "name": "Ticketing",
-  "revision": "1.4.0",
+  "revision": "1.5.0",
   "modified": "2026-09-14",
   "revisionPolicy": "Project and file revisions start at 1.0.0 and never use values below 1.0.0.",
   "files": {
@@ -28,10 +28,10 @@
       "revision": "1.2.0",
       "modified": "2026-09-14",
       "history": [
-        "1.2.0 - Redesigned the mobile header, profile identity, navigation, utility links, page title row, and dashboard spacing for a compact two-column layout.",
-        "1.1.1 - Fixed mobile vertical scrolling by removing the full sticky sidebar, preventing horizontal page overflow, and improving touch scrolling for tables/dialogs.",
+        "1.2.0 - Redesigned the mobile header, profile identity, navigation, utility links, page title row, and dashboard spacing for a compact layout.",
+        "1.1.1 - Fixed mobile vertical scrolling and touch behavior.",
         "1.1.0 - Added avatar, profile editor, and test-mode notice styling.",
-        "1.0.0 - Added login, signed-in identity, person-directory dialog, and authenticated portal styling."
+        "1.0.0 - Added authentication screen and authenticated portal styling."
       ]
     },
     "csv.php": {
@@ -39,7 +39,7 @@
       "modified": "2026-09-14",
       "history": [
         "1.1.0 - Added categoryId and hierarchical category-path round-trip support.",
-        "1.0.0 - Added agent-only CSV import/export, full ticket metadata and comments round-trip support, validation, and sequential ticket numbering."
+        "1.0.0 - Added agent-only CSV import/export, metadata/comments round-trip support, validation, and sequential ticket numbering."
       ]
     },
     "sample-ticket-import.csv": {
@@ -51,65 +51,81 @@
       ]
     },
     "README.md": {
-      "revision": "1.0.0",
-      "modified": "2026-09-14",
-      "history": ["1.0.0 - Documented authentication, directories, revision policy, and current architecture."]
-    },
-    "CHANGELOG.md": {
-      "revision": "1.4.0",
+      "revision": "1.1.0",
       "modified": "2026-09-14",
       "history": [
+        "1.1.0 - Documented Hostinger-only runtime JSON storage, sample files, and deployment preservation requirement.",
+        "1.0.0 - Documented authentication, directories, revision policy, and architecture."
+      ]
+    },
+    "CHANGELOG.md": {
+      "revision": "1.5.0",
+      "modified": "2026-09-14",
+      "history": [
+        "1.5.0 - Documented separation of live runtime JSON from GitHub-tracked sample files.",
         "1.4.0 - Documented compact mobile header/navigation redesign.",
         "1.3.1 - Documented mobile scrolling and responsive sidebar fix.",
         "1.3.0 - Documented hierarchical categories and stable ticket category references.",
         "1.2.0 - Documented CSV import/export tools and sequential numbering behavior.",
-        "1.1.1 - Documented password confirmation behavior for account creation.",
-        "1.1.0 - Documented passwordless test mode and user profile/avatar support.",
-        "1.0.0 - Established production revision baseline and documented authentication/directory release."
+        "1.1.1 - Documented password confirmation behavior.",
+        "1.1.0 - Documented passwordless test mode and profile/avatar support.",
+        "1.0.0 - Established production revision baseline."
       ]
     },
     "TODO.md": {
       "revision": "1.0.0",
       "modified": "2026-09-14",
-      "history": ["1.0.0 - Maintained future feature backlog and marked authentication foundation implemented."]
+      "history": ["1.0.0 - Maintained future feature backlog."]
     },
     "project.json": {
-      "revision": "1.4.0",
+      "revision": "1.5.0",
       "modified": "2026-09-14",
       "history": [
-        "1.4.0 - Advanced project revision for the compact mobile interface redesign.",
-        "1.3.1 - Advanced project revision for the mobile scrolling fix.",
-        "1.3.0 - Added categories datastore to the manifest and advanced project revision.",
-        "1.2.0 - Added CSV tools and sample-template files to the manifest.",
+        "1.5.0 - Updated manifest for Hostinger-only runtime storage and GitHub sample datastores.",
+        "1.4.0 - Advanced project revision for compact mobile interface redesign.",
+        "1.3.1 - Advanced project revision for mobile scrolling fix.",
+        "1.3.0 - Added categories datastore to manifest.",
+        "1.2.0 - Added CSV tools and sample-template files.",
         "1.1.1 - Updated manifest for password confirmation patch.",
         "1.1.0 - Updated manifest for passwordless test mode and profile/avatar release.",
-        "1.0.0 - Established manifest and minimum revision policy of 1.0.0."
+        "1.0.0 - Established manifest and minimum revision policy."
       ]
+    },
+    ".gitignore": {
+      "revision": "1.0.0",
+      "modified": "2026-09-14",
+      "history": ["1.0.0 - Excluded live users, directory, tickets, and uploaded avatars from Git tracking."]
     },
     "data/categories.json": {
       "revision": "1.0.0",
       "modified": "2026-09-14",
       "history": ["1.0.0 - Added hierarchical ticket category datastore with stable IDs and nested child categories."]
     },
-    "data/tickets.json": {
+    "data/users.json.sample": {
       "revision": "1.0.0",
       "modified": "2026-09-14",
-      "history": ["1.0.0 - Single JSON ticket datastore containing all ticket records. Ticket records may include categoryId plus category path snapshot."]
+      "history": ["1.0.0 - Empty sample for the Hostinger-only users.json runtime datastore."]
     },
-    "data/users.json": {
+    "data/directory.json.sample": {
       "revision": "1.0.0",
       "modified": "2026-09-14",
-      "history": ["1.0.0 - Requester and agent account datastore; supports optional password hashes during test mode plus display name/avatar metadata."]
+      "history": ["1.0.0 - Empty sample for the Hostinger-only directory.json runtime datastore."]
     },
-    "data/directory.json": {
+    "data/tickets.json.sample": {
       "revision": "1.0.0",
       "modified": "2026-09-14",
-      "history": ["1.0.0 - Persistent requester and agent directory datastore."]
+      "history": ["1.0.0 - Empty sample for the Hostinger-only tickets.json runtime datastore."]
     },
     "data/.htaccess": {
       "revision": "1.0.0",
       "modified": "2026-09-14",
-      "history": ["1.0.0 - Blocks direct browser access to all JSON data files."]
+      "history": ["1.0.0 - Blocks direct browser access to JSON data files."
+      ]
     }
+  },
+  "runtimeData": {
+    "data/users.json": "Hostinger-only; ignored by Git; created automatically when account data is first written.",
+    "data/directory.json": "Hostinger-only; ignored by Git; created automatically when directory data is first written.",
+    "data/tickets.json": "Hostinger-only; ignored by Git; created automatically when ticket data is first written."
   }
 }
