@@ -3,18 +3,49 @@
     "id": "general",
     "name": "General",
     "active": true,
-    "children": []
+    "children": [
+      { "id": "general-question", "name": "General Question", "active": true, "children": [] },
+      { "id": "general-other", "name": "Other / Not Listed", "active": true, "children": [] }
+    ]
   },
   {
     "id": "hardware",
     "name": "Hardware",
     "active": true,
     "children": [
-      { "id": "hardware-computer", "name": "Computer", "active": true, "children": [] },
-      { "id": "hardware-monitor", "name": "Monitor", "active": true, "children": [] },
-      { "id": "hardware-printer", "name": "Printer", "active": true, "children": [] },
-      { "id": "hardware-mobile", "name": "Mobile Device", "active": true, "children": [] },
-      { "id": "hardware-peripheral", "name": "Peripheral", "active": true, "children": [] }
+      {
+        "id": "hardware-computer",
+        "name": "Computer",
+        "active": true,
+        "children": [
+          { "id": "hardware-computer-desktop", "name": "Desktop", "active": true, "children": [] },
+          { "id": "hardware-computer-laptop", "name": "Laptop", "active": true, "children": [] },
+          { "id": "hardware-computer-dock", "name": "Docking Station", "active": true, "children": [] },
+          { "id": "hardware-computer-performance", "name": "Performance / Slowness", "active": true, "children": [] },
+          { "id": "hardware-computer-power", "name": "Power / Battery", "active": true, "children": [] }
+        ]
+      },
+      {
+        "id": "hardware-display",
+        "name": "Display",
+        "active": true,
+        "children": [
+          { "id": "hardware-display-monitor", "name": "Monitor", "active": true, "children": [] },
+          { "id": "hardware-display-projector", "name": "Projector / Conference Display", "active": true, "children": [] }
+        ]
+      },
+      {
+        "id": "hardware-peripheral",
+        "name": "Peripheral",
+        "active": true,
+        "children": [
+          { "id": "hardware-peripheral-keyboard", "name": "Keyboard", "active": true, "children": [] },
+          { "id": "hardware-peripheral-mouse", "name": "Mouse", "active": true, "children": [] },
+          { "id": "hardware-peripheral-webcam", "name": "Webcam", "active": true, "children": [] },
+          { "id": "hardware-peripheral-headset", "name": "Headset / Audio", "active": true, "children": [] },
+          { "id": "hardware-peripheral-usb", "name": "USB / Other Peripheral", "active": true, "children": [] }
+        ]
+      }
     ]
   },
   {
@@ -22,43 +53,122 @@
     "name": "Software",
     "active": true,
     "children": [
-      { "id": "software-microsoft-365", "name": "Microsoft 365", "active": true, "children": [] },
-      { "id": "software-windows", "name": "Windows", "active": true, "children": [] },
+      { "id": "software-install", "name": "Install / Uninstall", "active": true, "children": [] },
+      { "id": "software-update", "name": "Update / Patch", "active": true, "children": [] },
+      { "id": "software-license", "name": "License / Activation", "active": true, "children": [] },
+      { "id": "software-error", "name": "Application Error / Crash", "active": true, "children": [] },
+      { "id": "software-performance", "name": "Application Performance", "active": true, "children": [] },
       { "id": "software-business-app", "name": "Business Application", "active": true, "children": [] },
-      { "id": "software-install", "name": "Installation / Update", "active": true, "children": [] }
+      {
+        "id": "software-windows",
+        "name": "Windows",
+        "active": true,
+        "children": [
+          { "id": "software-windows-login", "name": "Windows Sign-in", "active": true, "children": [] },
+          { "id": "software-windows-update", "name": "Windows Update", "active": true, "children": [] },
+          { "id": "software-windows-profile", "name": "User Profile", "active": true, "children": [] },
+          { "id": "software-windows-error", "name": "Windows Error / BSOD", "active": true, "children": [] }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "m365",
+    "name": "Microsoft 365",
+    "active": true,
+    "children": [
+      {
+        "id": "m365-outlook",
+        "name": "Outlook / Email",
+        "active": true,
+        "children": [
+          { "id": "m365-outlook-send-receive", "name": "Send / Receive", "active": true, "children": [] },
+          { "id": "m365-outlook-mailbox", "name": "Mailbox / Shared Mailbox", "active": true, "children": [] },
+          { "id": "m365-outlook-calendar", "name": "Calendar", "active": true, "children": [] },
+          { "id": "m365-outlook-spam", "name": "Spam / Junk / Blocked Email", "active": true, "children": [] }
+        ]
+      },
+      {
+        "id": "m365-teams",
+        "name": "Teams",
+        "active": true,
+        "children": [
+          { "id": "m365-teams-chat", "name": "Chat / Messaging", "active": true, "children": [] },
+          { "id": "m365-teams-meeting", "name": "Meetings / Calling", "active": true, "children": [] },
+          { "id": "m365-teams-team-channel", "name": "Team / Channel", "active": true, "children": [] }
+        ]
+      },
+      {
+        "id": "m365-onedrive",
+        "name": "OneDrive",
+        "active": true,
+        "children": [
+          { "id": "m365-onedrive-sync", "name": "Sync", "active": true, "children": [] },
+          { "id": "m365-onedrive-file", "name": "File / Folder", "active": true, "children": [] },
+          { "id": "m365-onedrive-sharing", "name": "Sharing / Permissions", "active": true, "children": [] }
+        ]
+      },
+      {
+        "id": "m365-sharepoint",
+        "name": "SharePoint",
+        "active": true,
+        "children": [
+          { "id": "m365-sharepoint-access", "name": "Site Access", "active": true, "children": [] },
+          { "id": "m365-sharepoint-file", "name": "File / Library", "active": true, "children": [] },
+          { "id": "m365-sharepoint-permission", "name": "Permissions", "active": true, "children": [] }
+        ]
+      },
+      { "id": "m365-office", "name": "Word / Excel / PowerPoint", "active": true, "children": [] }
     ]
   },
   {
     "id": "access",
-    "name": "Access & Accounts",
+    "name": "Accounts & Access",
     "active": true,
     "children": [
-      { "id": "access-account", "name": "Account", "active": true, "children": [] },
-      { "id": "access-password", "name": "Password / Sign-in", "active": true, "children": [] },
-      { "id": "access-permission", "name": "Permissions", "active": true, "children": [] },
-      { "id": "access-mfa", "name": "MFA", "active": true, "children": [] }
+      { "id": "access-new-account", "name": "New Account", "active": true, "children": [] },
+      { "id": "access-password", "name": "Password Reset / Sign-in", "active": true, "children": [] },
+      { "id": "access-mfa", "name": "MFA / Authenticator", "active": true, "children": [] },
+      { "id": "access-permission", "name": "Permission / Access Request", "active": true, "children": [] },
+      { "id": "access-lockout", "name": "Locked / Disabled Account", "active": true, "children": [] },
+      { "id": "access-group", "name": "Group / Distribution List Membership", "active": true, "children": [] }
     ]
   },
   {
     "id": "network",
-    "name": "Network",
+    "name": "Network & Connectivity",
     "active": true,
     "children": [
-      { "id": "network-wired", "name": "Wired", "active": true, "children": [] },
+      { "id": "network-wired", "name": "Wired Network", "active": true, "children": [] },
       { "id": "network-wireless", "name": "Wi-Fi", "active": true, "children": [] },
-      { "id": "network-vpn", "name": "VPN", "active": true, "children": [] },
-      { "id": "network-internet", "name": "Internet", "active": true, "children": [] }
+      { "id": "network-vpn", "name": "VPN / Remote Access", "active": true, "children": [] },
+      { "id": "network-internet", "name": "Internet Access", "active": true, "children": [] },
+      { "id": "network-dns", "name": "DNS / Name Resolution", "active": true, "children": [] },
+      { "id": "network-drive", "name": "Network Drive / File Share", "active": true, "children": [] }
     ]
   },
   {
-    "id": "email-collaboration",
-    "name": "Email & Collaboration",
+    "id": "printing",
+    "name": "Printing & Scanning",
     "active": true,
     "children": [
-      { "id": "email-outlook", "name": "Outlook / Email", "active": true, "children": [] },
-      { "id": "email-teams", "name": "Teams", "active": true, "children": [] },
-      { "id": "email-onedrive", "name": "OneDrive", "active": true, "children": [] },
-      { "id": "email-sharepoint", "name": "SharePoint", "active": true, "children": [] }
+      { "id": "printing-printer", "name": "Printer", "active": true, "children": [] },
+      { "id": "printing-driver", "name": "Printer Driver / Setup", "active": true, "children": [] },
+      { "id": "printing-queue", "name": "Print Queue / Stuck Job", "active": true, "children": [] },
+      { "id": "printing-scan", "name": "Scanner / Scan to Email", "active": true, "children": [] },
+      { "id": "printing-supplies", "name": "Toner / Supplies", "active": true, "children": [] }
+    ]
+  },
+  {
+    "id": "mobile",
+    "name": "Mobile Devices",
+    "active": true,
+    "children": [
+      { "id": "mobile-phone", "name": "Phone", "active": true, "children": [] },
+      { "id": "mobile-tablet", "name": "Tablet", "active": true, "children": [] },
+      { "id": "mobile-email", "name": "Mobile Email", "active": true, "children": [] },
+      { "id": "mobile-app", "name": "Mobile App", "active": true, "children": [] },
+      { "id": "mobile-enrollment", "name": "Enrollment / Management", "active": true, "children": [] }
     ]
   },
   {
@@ -68,7 +178,54 @@
     "children": [
       { "id": "security-phishing", "name": "Phishing / Suspicious Email", "active": true, "children": [] },
       { "id": "security-malware", "name": "Malware / Antivirus", "active": true, "children": [] },
-      { "id": "security-device", "name": "Device Security", "active": true, "children": [] }
+      { "id": "security-compromised", "name": "Suspected Compromised Account", "active": true, "children": [] },
+      { "id": "security-device", "name": "Lost / Stolen Device", "active": true, "children": [] },
+      { "id": "security-block", "name": "Blocked Website / File", "active": true, "children": [] },
+      { "id": "security-policy", "name": "Security Policy / Exception", "active": true, "children": [] }
+    ]
+  },
+  {
+    "id": "telecom",
+    "name": "Phones & Conferencing",
+    "active": true,
+    "children": [
+      { "id": "telecom-desk-phone", "name": "Desk Phone", "active": true, "children": [] },
+      { "id": "telecom-voicemail", "name": "Voicemail", "active": true, "children": [] },
+      { "id": "telecom-number", "name": "Phone Number / Extension", "active": true, "children": [] },
+      { "id": "telecom-conference", "name": "Conference Room / AV", "active": true, "children": [] }
+    ]
+  },
+  {
+    "id": "lifecycle",
+    "name": "Employee Lifecycle",
+    "active": true,
+    "children": [
+      { "id": "lifecycle-onboarding", "name": "New Hire / Onboarding", "active": true, "children": [] },
+      { "id": "lifecycle-offboarding", "name": "Termination / Offboarding", "active": true, "children": [] },
+      { "id": "lifecycle-transfer", "name": "Transfer / Role Change", "active": true, "children": [] },
+      { "id": "lifecycle-name-change", "name": "Name / Account Change", "active": true, "children": [] }
+    ]
+  },
+  {
+    "id": "equipment",
+    "name": "Equipment & Purchasing",
+    "active": true,
+    "children": [
+      { "id": "equipment-new", "name": "New Equipment Request", "active": true, "children": [] },
+      { "id": "equipment-replacement", "name": "Replacement Equipment", "active": true, "children": [] },
+      { "id": "equipment-accessory", "name": "Accessory Request", "active": true, "children": [] },
+      { "id": "equipment-return", "name": "Equipment Return", "active": true, "children": [] }
+    ]
+  },
+  {
+    "id": "data",
+    "name": "Data & Files",
+    "active": true,
+    "children": [
+      { "id": "data-restore", "name": "File Restore / Recovery", "active": true, "children": [] },
+      { "id": "data-permission", "name": "File / Folder Permission", "active": true, "children": [] },
+      { "id": "data-move", "name": "File Move / Migration", "active": true, "children": [] },
+      { "id": "data-storage", "name": "Storage / Space", "active": true, "children": [] }
     ]
   }
 ]
