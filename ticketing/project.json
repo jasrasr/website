@@ -1,6 +1,6 @@
 {
   "name": "Ticketing",
-  "revision": "1.3.0",
+  "revision": "1.3.1",
   "modified": "2026-09-14",
   "revisionPolicy": "Project and file revisions start at 1.0.0 and never use values below 1.0.0.",
   "files": {
@@ -25,9 +25,10 @@
       ]
     },
     "styles.css": {
-      "revision": "1.1.0",
+      "revision": "1.1.1",
       "modified": "2026-09-14",
       "history": [
+        "1.1.1 - Fixed mobile vertical scrolling by removing the full sticky sidebar, preventing horizontal page overflow, and improving touch scrolling for tables/dialogs.",
         "1.1.0 - Added avatar, profile editor, and test-mode notice styling.",
         "1.0.0 - Added login, signed-in identity, person-directory dialog, and authenticated portal styling."
       ]
@@ -54,9 +55,10 @@
       "history": ["1.0.0 - Documented authentication, directories, revision policy, and current architecture."]
     },
     "CHANGELOG.md": {
-      "revision": "1.3.0",
+      "revision": "1.3.1",
       "modified": "2026-09-14",
       "history": [
+        "1.3.1 - Documented mobile scrolling and responsive sidebar fix.",
         "1.3.0 - Documented hierarchical categories and stable ticket category references.",
         "1.2.0 - Documented CSV import/export tools and sequential numbering behavior.",
         "1.1.1 - Documented password confirmation behavior for account creation.",
@@ -70,9 +72,10 @@
       "history": ["1.0.0 - Maintained future feature backlog and marked authentication foundation implemented."]
     },
     "project.json": {
-      "revision": "1.3.0",
+      "revision": "1.3.1",
       "modified": "2026-09-14",
       "history": [
+        "1.3.1 - Advanced project revision for the mobile scrolling fix.",
         "1.3.0 - Added categories datastore to the manifest and advanced project revision.",
         "1.2.0 - Added CSV tools and sample-template files to the manifest.",
         "1.1.1 - Updated manifest for password confirmation patch.",
