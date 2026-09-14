@@ -1,10 +1,11 @@
 <?php
 /**
  * Ticketing - index.php
- * File Revision: 1.1.0
+ * File Revision: 1.1.1
  * Modified: 2026-09-14
  *
  * Revision History:
+ * 1.1.1 - Added password confirmation validation for requester and agent account creation.
  * 1.1.0 - Added passwordless test mode, email usernames, display names, profile avatars, and profile API.
  * 1.0.0 - Added session authentication, requester/agent authorization, persistent people lists, and protected ticket APIs.
  * Initial build - JSON-backed tickets, requester/agent views, and public/private replies.
@@ -19,7 +20,7 @@ const DIRECTORY_FILE = __DIR__ . '/data/directory.json';
 const PROJECT_FILE = __DIR__ . '/project.json';
 const AVATAR_DIR = __DIR__ . '/avatars';
 const TEST_MODE = true;
-const PROJECT_REVISION = '1.1.0';
+const PROJECT_REVISION = '1.1.1';
 const PROJECT_MODIFIED = '2026-09-14';
 
 function jsonResponse(array $data, int $status = 200): never {
@@ -95,6 +96,9 @@ function saveAvatarData(string $userId,string $dataUrl): string {
     if(file_put_contents(AVATAR_DIR.'/'.$filename,$raw)===false) jsonResponse(['error'=>'Could not save avatar.'],500);
     return 'avatars/'.$filename;
 }
+function validatePasswordConfirmation(string $password,string $confirmation): void {
+    if($password!==$confirmation) jsonResponse(['error'=>'Password and confirmation password do not match.'],422);
+}
 
 if(isset($_GET['api'])){
     $method=$_SERVER['REQUEST_METHOD']??'GET';
@@ -130,9 +134,13 @@ if(isset($_GET['api'])){
         $role=$action==='bootstrap-agent'?'agent':'requester';
         if($role==='agent'&&hasAgent($users)) jsonResponse(['error'=>'The first agent account has already been created.'],403);
         $displayName=trim((string)($payload['displayName']??$payload['name']??''));
-        $email=normalizeEmail((string)($payload['email']??'')); $password=(string)($payload['password']??'');
+        $email=normalizeEmail((string)($payload['email']??''));
+        $password=(string)($payload['password']??'');
+        $passwordConfirm=(string)($payload['passwordConfirm']??'');
+        validatePasswordConfirmation($password,$passwordConfirm);
         if($displayName===''||!filter_var($email,FILTER_VALIDATE_EMAIL)) jsonResponse(['error'=>'Display name and valid email are required.'],422);
         if(!TEST_MODE&&strlen($password)<8) jsonResponse(['error'=>'Password must be at least 8 characters.'],422);
+        if($password!==''&&strlen($password)<8) jsonResponse(['error'=>'If a password is provided, it must be at least 8 characters.'],422);
         if(findUserByEmail($users,$email)!==null) jsonResponse(['error'=>'An account with that email already exists.'],409);
         $id=bin2hex(random_bytes(8)); $avatar=saveAvatarData($id,(string)($payload['avatarData']??''));
         $user=['id'=>$id,'role'=>$role,'name'=>$displayName,'displayName'=>$displayName,'email'=>$email,'passwordHash'=>$password!==''?password_hash($password,PASSWORD_DEFAULT):'','avatar'=>$avatar,'active'=>true,'createdAt'=>gmdate('c')];
@@ -165,15 +173,29 @@ if(isset($_GET['api'])){
             jsonResponse(['directory'=>array_values($directory)]);
         }
         if($method==='POST'){
-            requireAgent(); $role=validChoice(strtolower((string)($payload['role']??'requester')),['requester','agent'],'requester');
-            $displayName=trim((string)($payload['displayName']??$payload['name']??'')); $email=normalizeEmail((string)($payload['email']??''));
+            requireAgent();
+            $role=validChoice(strtolower((string)($payload['role']??'requester')),['requester','agent'],'requester');
+            $displayName=trim((string)($payload['displayName']??$payload['name']??''));
+            $email=normalizeEmail((string)($payload['email']??''));
+            $password=(string)($payload['password']??'');
+            $passwordConfirm=(string)($payload['passwordConfirm']??'');
+            validatePasswordConfirmation($password,$passwordConfirm);
+            if($password!==''&&strlen($password)<8) jsonResponse(['error'=>'If a password is provided, it must be at least 8 characters.'],422);
             if($displayName===''||!filter_var($email,FILTER_VALIDATE_EMAIL)) jsonResponse(['error'=>'Display name and valid email are required.'],422);
             $directory=readDirectory(); $entry=upsertDirectory($directory,$role,$displayName,$email);
             if(!writeJsonFile(DIRECTORY_FILE,$directory)) jsonResponse(['error'=>'Could not save directory entry.'],500);
             $users=readUsers();
-            if(findUserByEmail($users,$email)===null){
-                $users[]=['id'=>bin2hex(random_bytes(8)),'role'=>$role,'name'=>$displayName,'displayName'=>$displayName,'email'=>$email,'passwordHash'=>'','avatar'=>'','active'=>true,'createdAt'=>gmdate('c')];
+            $existingIndex=findUserIndexByEmail($users,$email);
+            if($existingIndex===null){
+                $users[]=['id'=>bin2hex(random_bytes(8)),'role'=>$role,'name'=>$displayName,'displayName'=>$displayName,'email'=>$email,'passwordHash'=>$password!==''?password_hash($password,PASSWORD_DEFAULT):'','avatar'=>'','active'=>true,'createdAt'=>gmdate('c')];
                 if(!writeJsonFile(USERS_FILE,$users)) jsonResponse(['error'=>'Directory saved, but login account could not be saved.'],500);
+            } elseif($password!=='') {
+                $users[$existingIndex]['passwordHash']=password_hash($password,PASSWORD_DEFAULT);
+                $users[$existingIndex]['displayName']=$displayName;
+                $users[$existingIndex]['name']=$displayName;
+                $users[$existingIndex]['role']=$role;
+                $users[$existingIndex]['updatedAt']=gmdate('c');
+                if(!writeJsonFile(USERS_FILE,$users)) jsonResponse(['error'=>'Directory saved, but login password could not be updated.'],500);
             }
             jsonResponse(['entry'=>$entry],201);
         }
@@ -215,10 +237,10 @@ if(isset($_GET['api'])){
 }
 ?>
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Lightweight JSON-backed ticketing system"><title>Ticketing</title><link rel="stylesheet" href="styles.css?v=1.1.0"></head><body>
-<div id="loginScreen" class="login-screen"><div class="login-card"><div class="brand login-brand">Ticketing</div><h1>Sign in</h1><p class="muted">Your email address is your username.</p><div id="testModeNotice" class="notice warning hidden"><strong>Testing mode:</strong> passwords are temporarily disabled.</div><div class="portal-switch login-switch"><button type="button" class="portal-button active" data-login-role="requester">Requester</button><button type="button" class="portal-button" data-login-role="agent">Agent</button></div><form id="loginForm"><label id="loginNameWrap" class="hidden">Display name<input id="loginName" autocomplete="name"></label><label>Email / username<input id="loginEmail" type="email" autocomplete="email" required></label><label id="loginPasswordWrap">Password<input id="loginPassword" type="password" autocomplete="current-password"></label><label id="loginAvatarWrap" class="hidden">Profile picture<input id="loginAvatar" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label><button class="button primary full-button" type="submit" id="loginSubmitButton">Sign in</button></form><button type="button" class="link-button" id="registerRequesterButton">Create requester account</button><button type="button" class="link-button hidden" id="bootstrapAgentButton">Create first agent account</button><button type="button" class="link-button hidden" id="backToLoginButton">Back to sign in</button><div id="loginMessage" class="form-message"></div></div></div>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Lightweight JSON-backed ticketing system"><title>Ticketing</title><link rel="stylesheet" href="styles.css?v=1.1.1"></head><body>
+<div id="loginScreen" class="login-screen"><div class="login-card"><div class="brand login-brand">Ticketing</div><h1>Sign in</h1><p class="muted">Your email address is your username.</p><div id="testModeNotice" class="notice warning hidden"><strong>Testing mode:</strong> passwords are temporarily disabled for sign-in.</div><div class="portal-switch login-switch"><button type="button" class="portal-button active" data-login-role="requester">Requester</button><button type="button" class="portal-button" data-login-role="agent">Agent</button></div><form id="loginForm"><label id="loginNameWrap" class="hidden">Display name<input id="loginName" autocomplete="name"></label><label>Email / username<input id="loginEmail" type="email" autocomplete="email" required></label><label id="loginPasswordWrap">Password <span class="muted small">optional while testing</span><input id="loginPassword" type="password" autocomplete="new-password"></label><label id="loginPasswordConfirmWrap" class="hidden">Confirm password<input id="loginPasswordConfirm" type="password" autocomplete="new-password"></label><label id="loginAvatarWrap" class="hidden">Profile picture<input id="loginAvatar" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label><button class="button primary full-button" type="submit" id="loginSubmitButton">Sign in</button></form><button type="button" class="link-button" id="registerRequesterButton">Create requester account</button><button type="button" class="link-button hidden" id="bootstrapAgentButton">Create first agent account</button><button type="button" class="link-button hidden" id="backToLoginButton">Back to sign in</button><div id="loginMessage" class="form-message"></div></div></div>
 <div class="app-shell hidden" id="appShell"><aside class="sidebar"><div class="brand">Ticketing</div><div class="signed-in"><img id="signedInAvatar" class="avatar" alt=""><div><span id="signedInName"></span><small id="signedInRole"></small><small id="signedInEmail"></small></div></div><button class="button secondary profile-button" id="profileButton">Edit Profile</button><nav id="requesterNav" class="hidden"><button class="nav-button active" data-requester-view="requesterDashboard">My Dashboard</button><button class="nav-button" data-requester-view="myTickets">My Tickets</button><button class="nav-button primary" id="requesterNewTicketButton">+ Submit Ticket</button></nav><nav id="agentNav" class="hidden"><button class="nav-button active" data-agent-view="agentDashboard">Agent Dashboard</button><button class="nav-button" data-agent-view="allTickets">All Tickets</button><button class="nav-button primary" id="agentNewTicketButton">+ New Ticket</button></nav><div class="sidebar-footer"><a href="CHANGELOG.md" target="_blank" rel="noopener">View Changelog</a><a href="TODO.md" target="_blank" rel="noopener">Future Features</a><button class="link-button sidebar-link" id="logoutButton">Sign out</button></div></aside><main class="main-content"><header class="topbar"><div><h1 id="pageTitle">Dashboard</h1><p class="muted" id="pageSubtitle"></p></div><button class="button" id="refreshButton">Refresh</button></header><section id="requesterDashboardView" class="hidden"><div class="stats" id="requesterStats"></div><div class="panel"><div class="panel-heading"><h2>My Recent Tickets</h2></div><div id="requesterRecentTickets"></div></div></section><section id="myTicketsView" class="hidden"><div class="toolbar requester-toolbar"><input id="requesterSearchInput" type="search" placeholder="Search my tickets..."><select id="requesterStatusFilter"><option value="">All statuses</option><option>Open</option><option>Pending</option><option>Resolved</option><option>Closed</option></select></div><div class="panel"><div id="myTicketList"></div></div></section><section id="agentDashboardView" class="hidden"><div class="stats" id="agentStats"></div><div class="panel"><div class="panel-heading"><h2>Recently Updated</h2></div><div id="agentRecentTickets"></div></div></section><section id="allTicketsView" class="hidden"><div class="toolbar agent-toolbar"><input id="agentSearchInput" type="search" placeholder="Search ticket, requester, email, agent..."><select id="agentStatusFilter"><option value="">All statuses</option><option>Open</option><option>Pending</option><option>Resolved</option><option>Closed</option></select><select id="agentPriorityFilter"><option value="">All priorities</option><option>Low</option><option>Medium</option><option>High</option><option>Urgent</option></select><select id="agentFilter"><option value="">All agents</option></select></div><div class="panel"><div id="agentTicketList"></div></div></section><footer class="project-footer"><span id="projectRevision">Project rev --</span><span id="projectModified">Modified --</span><a href="CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></footer></main></div>
 <dialog id="ticketDialog"><form method="dialog" id="ticketForm"><div class="dialog-header"><div><div class="eyebrow" id="ticketEyebrow">New ticket</div><h2 id="dialogTitle">Create Ticket</h2></div><button type="button" class="icon-button" id="closeDialogButton">×</button></div><input type="hidden" id="ticketId"><div class="form-grid"><label class="full">Subject<input id="subject" required></label><label class="agent-field">Requester<select id="requesterSelect"></select></label><label class="agent-field">Requester Email<input id="email" type="email"></label><label>Priority<select id="priority"><option>Low</option><option selected>Medium</option><option>High</option><option>Urgent</option></select></label><label class="agent-field">Status<select id="status"><option>Open</option><option>Pending</option><option>Resolved</option><option>Closed</option></select></label><label>Category<input id="category" value="General"></label><label class="agent-field">Assigned To<select id="assignedTo"></select></label><label class="agent-field">Source<input id="source" value="Portal"></label><label class="full">Description<textarea id="description" rows="5" required></textarea></label></div><div id="replySection" class="reply-section hidden"><div class="reply-heading"><h3>Reply</h3><div id="visibilityControl" class="visibility-control"><label><input type="radio" name="replyVisibility" value="public" checked> Public reply</label><label><input type="radio" name="replyVisibility" value="private"> Private note</label></div></div><p class="muted small" id="replyHint"></p><textarea id="comment" rows="4"></textarea></div><div id="commentHistory" class="comments hidden"></div><div class="dialog-actions"><button type="button" class="button secondary" id="cancelButton">Cancel</button><button type="submit" class="button primary" id="saveButton">Create Ticket</button></div></form></dialog>
-<dialog id="personDialog"><form method="dialog" id="personForm"><div class="dialog-header"><div><div class="eyebrow">Directory</div><h2 id="personDialogTitle">Add Person</h2></div><button type="button" class="icon-button" id="closePersonDialogButton">×</button></div><input type="hidden" id="personRole"><div class="form-grid"><label>Display name<input id="personName" required></label><label>Email / username<input id="personEmail" type="email" required></label></div><p class="muted small">In test mode the new person can sign in with this email without a password.</p><div class="dialog-actions"><button type="button" class="button secondary" id="cancelPersonButton">Cancel</button><button type="submit" class="button primary">Save</button></div></form></dialog>
+<dialog id="personDialog"><form method="dialog" id="personForm"><div class="dialog-header"><div><div class="eyebrow">Directory</div><h2 id="personDialogTitle">Add Person</h2></div><button type="button" class="icon-button" id="closePersonDialogButton">×</button></div><input type="hidden" id="personRole"><div class="form-grid"><label>Display name<input id="personName" required></label><label>Email / username<input id="personEmail" type="email" required></label><label>Password <span class="muted small">optional while testing</span><input id="personPassword" type="password" autocomplete="new-password"></label><label>Confirm password<input id="personPasswordConfirm" type="password" autocomplete="new-password"></label></div><p class="muted small">Both password fields may be blank in test mode. If you enter a password, enter the same value twice.</p><div class="dialog-actions"><button type="button" class="button secondary" id="cancelPersonButton">Cancel</button><button type="submit" class="button primary">Save</button></div></form></dialog>
 <dialog id="profileDialog"><form method="dialog" id="profileForm"><div class="dialog-header"><div><div class="eyebrow">Account</div><h2>Edit Profile</h2></div><button type="button" class="icon-button" id="closeProfileDialogButton">×</button></div><div class="profile-editor"><img id="profileAvatarPreview" class="avatar avatar-large" alt=""><div class="form-grid"><label class="full">Email / username<input id="profileEmail" disabled></label><label class="full">Display name<input id="profileDisplayName" required></label><label class="full">Profile picture<input id="profileAvatar" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label></div></div><div class="dialog-actions"><button type="button" class="button secondary" id="cancelProfileButton">Cancel</button><button type="submit" class="button primary">Save Profile</button></div></form></dialog>
-<script src="app.js?v=1.1.0"></script></body></html>
+<script src="app.js?v=1.1.1"></script></body></html>
