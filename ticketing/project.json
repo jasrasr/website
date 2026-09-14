@@ -1,29 +1,32 @@
 {
   "name": "Ticketing",
-  "revision": "1.0.0",
+  "revision": "1.1.0",
   "modified": "2026-09-14",
   "revisionPolicy": "Project and file revisions start at 1.0.0 and never use values below 1.0.0.",
   "files": {
     "index.php": {
-      "revision": "1.0.0",
+      "revision": "1.1.0",
       "modified": "2026-09-14",
       "history": [
+        "1.1.0 - Added passwordless test mode, email usernames, display names, avatar uploads, and profile editing API.",
         "1.0.0 - Added PHP-session authentication, requester/agent authorization, protected ticket APIs, and persistent people directory support.",
         "Initial build - JSON-backed ticket API, requester/agent views, and public/private replies."
       ]
     },
     "app.js": {
-      "revision": "1.0.0",
+      "revision": "1.1.0",
       "modified": "2026-09-14",
       "history": [
+        "1.1.0 - Added no-password testing login, display-name profiles, avatar upload/preview, and profile editor.",
         "1.0.0 - Added requester/agent login flows, persistent dropdown lists, add-new actions, and session-aware UI behavior.",
         "Initial build - Dashboards, sortable ticket table, create/edit flow, and public/private replies."
       ]
     },
     "styles.css": {
-      "revision": "1.0.0",
+      "revision": "1.1.0",
       "modified": "2026-09-14",
       "history": [
+        "1.1.0 - Added avatar, profile editor, and test-mode notice styling.",
         "1.0.0 - Added login, signed-in identity, person-directory dialog, and authenticated portal styling.",
         "Initial build - Responsive dark ticketing interface."
       ]
@@ -34,9 +37,12 @@
       "history": ["1.0.0 - Documented authentication, directories, revision policy, and current architecture."]
     },
     "CHANGELOG.md": {
-      "revision": "1.0.0",
+      "revision": "1.1.0",
       "modified": "2026-09-14",
-      "history": ["1.0.0 - Established production revision baseline and documented authentication/directory release."]
+      "history": [
+        "1.1.0 - Documented passwordless test mode and user profile/avatar support.",
+        "1.0.0 - Established production revision baseline and documented authentication/directory release."
+      ]
     },
     "TODO.md": {
       "revision": "1.0.0",
@@ -44,24 +50,27 @@
       "history": ["1.0.0 - Maintained future feature backlog and marked authentication foundation implemented."]
     },
     "project.json": {
-      "revision": "1.0.0",
+      "revision": "1.1.0",
       "modified": "2026-09-14",
-      "history": ["1.0.0 - Established manifest and minimum revision policy of 1.0.0."]
+      "history": [
+        "1.1.0 - Updated manifest for passwordless test mode and profile/avatar release.",
+        "1.0.0 - Established manifest and minimum revision policy of 1.0.0."
+      ]
     },
     "data/tickets.json": {
       "revision": "1.0.0",
       "modified": "2026-09-14",
-      "history": ["1.0.0 - JSON ticket datastore. Data content changes do not increment source revision."]
+      "history": ["1.0.0 - Single JSON ticket datastore containing all ticket records. Data content changes do not increment source revision."]
     },
     "data/users.json": {
       "revision": "1.0.0",
       "modified": "2026-09-14",
-      "history": ["1.0.0 - Added password-hashed requester and agent login account datastore."]
+      "history": ["1.0.0 - Requester and agent account datastore; supports optional password hashes during test mode plus display name/avatar metadata."]
     },
     "data/directory.json": {
       "revision": "1.0.0",
       "modified": "2026-09-14",
-      "history": ["1.0.0 - Added persistent requester and agent directory datastore."]
+      "history": ["1.0.0 - Persistent requester and agent directory datastore."]
     },
     "data/.htaccess": {
       "revision": "1.0.0",
