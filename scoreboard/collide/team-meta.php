@@ -1,15 +1,16 @@
 <?php declare(strict_types=1);
 /**
  * Filename: collide/team-meta.php
- * Revision : 1.1.0
+ * Revision : 1.2.0
  * Description : Collide-only API for per-team motto text, walk-up song uploads,
- *               and full-screen hurray triggers.
+ *               existing walk-up song selection, and full-screen hurray triggers.
  * Author : Jason Lamb (with help from ChatGPT)
  * Created Date : 2026-09-13
- * Modified Date : 2026-09-13
+ * Modified Date : 2026-09-14
  * Changelog :
  * 1.0.0 Initial Collide motto and walk-up song metadata endpoint
  * 1.1.0 Add authenticated hurray trigger event for the public viewer
+ * 1.2.0 Add reusable uploaded-audio library listing and existing-file selection
  */
 
 require __DIR__ . '/scoreboard_lib.php';
@@ -50,6 +51,39 @@ function ensureWalkupAudioDir(): void
     }
 }
 
+function walkupAudioExtensions(): array
+{
+    return array_values(array_unique(array_values(WALKUP_ALLOWED_MIME_TO_EXT)));
+}
+
+function isAllowedWalkupAudioFilename(string $filename): bool
+{
+    $basename = basename($filename);
+    if ($basename === '' || $basename !== $filename) {
+        return false;
+    }
+
+    $ext = strtolower(pathinfo($basename, PATHINFO_EXTENSION));
+    return $ext !== '' && in_array($ext, walkupAudioExtensions(), true);
+}
+
+function cleanAudioSlug(string $name): string
+{
+    $stem = pathinfo($name, PATHINFO_FILENAME);
+    $slug = strtolower((string) preg_replace('/[^a-zA-Z0-9_-]+/', '-', $stem));
+    $slug = trim($slug, '-_');
+    return substr($slug !== '' ? $slug : 'walkup-song', 0, 60);
+}
+
+function walkupAudioUrl(string $filename, ?int $version = null): string
+{
+    $url = 'media/walkup/' . rawurlencode(basename($filename));
+    if ($version !== null && $version > 0) {
+        $url .= '?v=' . rawurlencode((string) $version);
+    }
+    return $url;
+}
+
 function detectUploadedAudioMime(string $tmpName): string
 {
     if (function_exists('finfo_open')) {
@@ -73,15 +107,81 @@ function detectUploadedAudioMime(string $tmpName): string
     return '';
 }
 
-function removeExistingWalkupFiles(string $teamId): void
+function listWalkupAudioLibrary(): array
 {
-    $safeTeamId = cleanTeamId($teamId);
-    foreach (array_unique(array_values(WALKUP_ALLOWED_MIME_TO_EXT)) as $ext) {
-        $path = WALKUP_AUDIO_DIR . '/' . $safeTeamId . '.' . $ext;
-        if (is_file($path)) {
-            @unlink($path);
+    ensureWalkupAudioDir();
+
+    $files = [];
+    foreach (glob(WALKUP_AUDIO_DIR . '/*') ?: [] as $path) {
+        if (!is_file($path)) {
+            continue;
         }
+
+        $filename = basename($path);
+        if (!isAllowedWalkupAudioFilename($filename)) {
+            continue;
+        }
+
+        $mtime = (int) (filemtime($path) ?: 0);
+        $files[] = [
+            'file' => $filename,
+            'url' => walkupAudioUrl($filename, $mtime),
+            'label' => $filename,
+            'size_bytes' => (int) (filesize($path) ?: 0),
+            'modified_at' => $mtime > 0 ? gmdate('c', $mtime) : '',
+        ];
     }
+
+    usort($files, static function (array $a, array $b): int {
+        $timeCompare = strcmp((string) ($b['modified_at'] ?? ''), (string) ($a['modified_at'] ?? ''));
+        if ($timeCompare !== 0) {
+            return $timeCompare;
+        }
+        return strcasecmp((string) ($a['file'] ?? ''), (string) ($b['file'] ?? ''));
+    });
+
+    return $files;
+}
+
+function buildExistingWalkupSong(string $filename, string $username): array
+{
+    $filename = basename($filename);
+    if (!isAllowedWalkupAudioFilename($filename)) {
+        throw new InvalidArgumentException('Selected audio file is not a supported walk-up song type.');
+    }
+
+    $path = WALKUP_AUDIO_DIR . '/' . $filename;
+    if (!is_file($path)) {
+        throw new InvalidArgumentException('Selected audio file was not found.');
+    }
+
+    $mtime = (int) (filemtime($path) ?: time());
+
+    return [
+        'file' => $filename,
+        'url' => walkupAudioUrl($filename, $mtime),
+        'original_name' => $filename,
+        'mime_type' => '',
+        'size_bytes' => (int) (filesize($path) ?: 0),
+        'uploaded_at' => gmdate('c', $mtime),
+        'uploaded_by' => $username,
+        'source' => 'existing-library-file',
+    ];
+}
+
+function uniqueWalkupFilename(string $teamId, string $originalName, string $ext): string
+{
+    $prefix = cleanTeamId($teamId);
+    $slug = cleanAudioSlug($originalName);
+    $timestamp = gmdate('Ymd-His');
+    $filename = $prefix . '-' . $timestamp . '-' . $slug . '.' . $ext;
+    $path = WALKUP_AUDIO_DIR . '/' . $filename;
+
+    if (!is_file($path)) {
+        return $filename;
+    }
+
+    return $prefix . '-' . $timestamp . '-' . bin2hex(random_bytes(3)) . '-' . $slug . '.' . $ext;
 }
 
 function handleWalkupUpload(string $teamId, array $file, string $username): ?array
@@ -118,9 +218,8 @@ function handleWalkupUpload(string $teamId, array $file, string $username): ?arr
     }
 
     ensureWalkupAudioDir();
-    removeExistingWalkupFiles($teamId);
 
-    $filename = cleanTeamId($teamId) . '.' . $ext;
+    $filename = uniqueWalkupFilename($teamId, $originalName, $ext);
     $targetPath = WALKUP_AUDIO_DIR . '/' . $filename;
 
     if (!move_uploaded_file($tmpName, $targetPath)) {
@@ -133,12 +232,13 @@ function handleWalkupUpload(string $teamId, array $file, string $username): ?arr
 
     return [
         'file' => $filename,
-        'url' => 'media/walkup/' . rawurlencode($filename) . '?v=' . rawurlencode($uploadedAt),
+        'url' => walkupAudioUrl($filename, time()),
         'original_name' => $originalName,
         'mime_type' => $mime,
         'size_bytes' => $size,
         'uploaded_at' => $uploadedAt,
         'uploaded_by' => $username,
+        'source' => 'upload',
     ];
 }
 
@@ -147,28 +247,39 @@ try {
         jsonResponse(['error' => 'Method not allowed.'], 405);
     }
 
+    if ($action === 'audio-library') {
+        jsonResponse(['files' => listWalkupAudioLibrary()]);
+    }
+
     if ($action === 'save') {
         $teamId = trim((string) ($_POST['team_id'] ?? ''));
         $motto = substr(trim((string) ($_POST['motto'] ?? '')), 0, 160);
+        $existingWalkupFile = trim((string) ($_POST['existing_walkup_file'] ?? ''));
 
         if ($teamId === '') {
             jsonResponse(['error' => 'Team is required.'], 400);
         }
+
+        $selectedSong = $existingWalkupFile !== ''
+            ? buildExistingWalkupSong($existingWalkupFile, (string) $currentUser['username'])
+            : null;
 
         $uploadedSong = null;
         if (isset($_FILES['walkup_audio'])) {
             $uploadedSong = handleWalkupUpload($teamId, $_FILES['walkup_audio'], (string) $currentUser['username']);
         }
 
-        $saved = writeScoreboardData(function (array $data) use ($teamId, $motto, $uploadedSong): array {
+        $nextSong = $uploadedSong ?? $selectedSong;
+
+        $saved = writeScoreboardData(function (array $data) use ($teamId, $motto, $nextSong): array {
             $teamIndex = findTeamIndex($data, $teamId);
             if ($teamIndex === null) {
                 throw new InvalidArgumentException('Team not found.');
             }
 
             $data['teams'][$teamIndex]['motto'] = $motto;
-            if ($uploadedSong !== null) {
-                $data['teams'][$teamIndex]['walkup_song'] = $uploadedSong;
+            if ($nextSong !== null) {
+                $data['teams'][$teamIndex]['walkup_song'] = $nextSong;
             }
 
             return $data;
@@ -182,10 +293,17 @@ try {
             }
         }
 
+        $auditAction = 'update-team-motto';
+        if ($uploadedSong !== null) {
+            $auditAction = 'update-team-motto-and-song-upload';
+        } elseif ($selectedSong !== null) {
+            $auditAction = 'update-team-motto-and-existing-song';
+        }
+
         logAudit($auditFile, [
             'timestamp'  => gmdate('c'),
             'username'   => $currentUser['username'],
-            'action'     => $uploadedSong === null ? 'update-team-motto' : 'update-team-motto-and-song',
+            'action'     => $auditAction,
             'team_id'    => $teamId,
             'team_name'  => $teamName,
             'amount'     => null,
@@ -203,9 +321,6 @@ try {
         if ($teamId === '') {
             jsonResponse(['error' => 'Team is required.'], 400);
         }
-
-        ensureWalkupAudioDir();
-        removeExistingWalkupFiles($teamId);
 
         $saved = writeScoreboardData(function (array $data) use ($teamId): array {
             $teamIndex = findTeamIndex($data, $teamId);
@@ -228,7 +343,7 @@ try {
         logAudit($auditFile, [
             'timestamp'  => gmdate('c'),
             'username'   => $currentUser['username'],
-            'action'     => 'delete-walkup-song',
+            'action'     => 'remove-walkup-song-from-team',
             'team_id'    => $teamId,
             'team_name'  => $teamName,
             'amount'     => null,
