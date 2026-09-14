@@ -1,0 +1,75 @@
+{
+  "name": "Ticketing",
+  "revision": "0.2.0",
+  "modified": "2026-09-14",
+  "files": {
+    "index.php": {
+      "revision": "0.2.0",
+      "modified": "2026-09-14",
+      "history": [
+        "0.2.0 - Added requester and agent portals, public/private replies, project metadata API.",
+        "0.1.1 - Fixed PUT response to return updated ticket.",
+        "0.1.0 - Initial JSON-backed ticket API and interface."
+      ]
+    },
+    "app.js": {
+      "revision": "0.2.0",
+      "modified": "2026-09-14",
+      "history": [
+        "0.2.0 - Added requester/agent portal behavior, sortable agent table, public/private replies.",
+        "0.1.0 - Initial dashboard, ticket list, create/edit flow."
+      ]
+    },
+    "styles.css": {
+      "revision": "0.2.0",
+      "modified": "2026-09-14",
+      "history": [
+        "0.2.0 - Added portal switcher, sortable tables, requester identity card, reply visibility styles.",
+        "0.1.0 - Initial responsive dark interface."
+      ]
+    },
+    "README.md": {
+      "revision": "0.2.0",
+      "modified": "2026-09-14",
+      "history": [
+        "0.2.0 - Documented two-portal architecture, revisions, and current capabilities.",
+        "0.1.0 - Initial project documentation."
+      ]
+    },
+    "CHANGELOG.md": {
+      "revision": "0.1.0",
+      "modified": "2026-09-14",
+      "history": [
+        "0.1.0 - Created project changelog covering revisions 0.1.0 through 0.2.0."
+      ]
+    },
+    "TODO.md": {
+      "revision": "0.1.0",
+      "modified": "2026-09-14",
+      "history": [
+        "0.1.0 - Created future-features and task backlog."
+      ]
+    },
+    "project.json": {
+      "revision": "0.1.0",
+      "modified": "2026-09-14",
+      "history": [
+        "0.1.0 - Created project/file revision manifest."
+      ]
+    },
+    "data/tickets.json": {
+      "revision": "0.1.0",
+      "modified": "2026-09-14",
+      "history": [
+        "0.1.0 - JSON ticket datastore. Data content changes do not increment source revision."
+      ]
+    },
+    "data/.htaccess": {
+      "revision": "0.1.0",
+      "modified": "2026-09-14",
+      "history": [
+        "0.1.0 - Blocks direct browser access to ticket JSON data."
+      ]
+    }
+  }
+}
