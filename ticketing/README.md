@@ -1,8 +1,9 @@
 <!--
 File: README.md
-File Revision: 1.0.0
+File Revision: 1.1.0
 Modified: 2026-09-14
 History:
+1.1.0 - Documented Hostinger-only runtime JSON storage with GitHub sample files and ignore rules.
 1.0.0 - Documented authenticated requester/agent portals, persistent directories, and revision policy.
 -->
 
@@ -12,50 +13,56 @@ A lightweight Freshservice-style ticketing system built with PHP, JavaScript, CS
 
 ## Project revision
 
-Current project revision: **1.0.0**  
+Current project revision: **1.5.0**  
 Modified: **2026-09-14**
 
 Revision policy: project and file revisions start at `1.0.0` and do not use revision numbers below `1.0.0`.
 
 ## Authentication
 
-- Requesters sign in with email and password.
-- Requesters can self-register.
-- Agents sign in with email and password.
-- When no agent account exists, the Agent login screen exposes a one-time **Create first agent account** option.
+- Email is the username for requesters and agents.
 - PHP sessions enforce the signed-in role.
+- Test mode currently allows sign-in without requiring a password.
 - Requesters can only retrieve tickets associated with their authenticated email address.
 - Private agent notes are filtered server-side and never returned to requester sessions.
 
+## Data storage
+
+Live mutable data is intentionally **not tracked by GitHub**:
+
+- `data/tickets.json` — live ticket database on Hostinger only.
+- `data/users.json` — live requester and agent accounts on Hostinger only.
+- `data/directory.json` — live requester and agent directory on Hostinger only.
+
+GitHub contains empty templates instead:
+
+- `data/tickets.json.sample`
+- `data/users.json.sample`
+- `data/directory.json.sample`
+
+`ticketing/.gitignore` excludes the live JSON files so normal Git pulls do not overwrite them. PHP creates the live files automatically when data is first written, so after deployment the first-agent setup can create `users.json` and `directory.json` directly on Hostinger.
+
+Configuration data remains tracked in GitHub:
+
+- `data/categories.json` — hierarchical ticket categories.
+- `data/.htaccess` — blocks direct browser access to the data directory.
+
 ## Requester portal
 
-- Requester dashboard with Open, Pending, Resolved, Closed, and Total counts.
-- My Tickets list.
-- Submit new tickets.
+- Dashboard and My Tickets list.
+- Submit tickets.
 - View public replies.
-- Send replies to agents.
-- Requester replies are always public.
+- Send public replies to agents.
 
 ## Agent portal
 
 - Dashboard across all tickets.
-- All Tickets table.
-- Sort by ticket number, requester, status, priority, assigned agent, created date, and updated date.
-- Search and filter tickets.
-- Edit ticket subject, description, requester, email, status, priority, category, assigned agent, and source.
-- Public replies visible to requesters.
-- Private notes visible only to agents.
-- Persistent requester dropdown.
-- Persistent agent assignment dropdown.
-- `+ Add new requester...` and `+ Add new agent...` entries save new directory records to JSON.
-- When adding a person, an optional 8+ character password also creates login access for that person.
-
-## Data files
-
-- `data/tickets.json` — ticket database.
-- `data/users.json` — requester and agent login accounts with PHP password hashes.
-- `data/directory.json` — persistent requester and agent directory.
-- `data/.htaccess` — blocks direct web access to the data directory.
+- Sort/filter/search ticket table.
+- Edit ticket metadata.
+- Public replies and private agent notes.
+- Persistent requester and agent dropdowns.
+- Add new requesters and agents.
+- CSV import/export tools.
 
 ## Source files
 
@@ -70,19 +77,18 @@ Revision policy: project and file revisions start at `1.0.0` and do not use revi
 
 - PHP 8.1+
 - PHP sessions enabled.
-- `password_hash()` / `password_verify()` support.
 - `ticketing/data/` writable by PHP.
 - Apache/Hostinger configuration that honors `.htaccess`.
+- Deployment must preserve ignored/untracked runtime files. Avoid a deployment mode that deletes the entire destination directory before copying the repository.
 
 ## First setup
 
-1. Open the application.
-2. Select **Agent** on the login screen.
-3. If no agent exists, choose **Create first agent account**.
-4. Enter a name, email, and password of at least 8 characters.
-5. The account is saved to `data/users.json` and the person is added to `data/directory.json`.
-6. Additional agents or requesters can be added from ticket dropdowns after signing in as an agent.
+1. Deploy the application.
+2. Open the application and choose Agent.
+3. Choose **Create first agent account**.
+4. The application creates Hostinger-only `data/users.json` and `data/directory.json` as needed.
+5. Those live files remain untracked and are not replaced by later normal Git pulls.
 
 ## Security notes
 
-This is intentionally a lightweight JSON-backed application. Passwords are hashed before storage and ticket authorization is enforced server-side, but features such as password reset, MFA, lockout/rate limiting, CSRF tokens, and centralized identity are still future work and should be added before treating the system as a production help desk exposed to untrusted users.
+This remains a lightweight JSON-backed application. Before production use with sensitive ticket data, test mode should be disabled and password reset, MFA, lockout/rate limiting, CSRF protection, and stronger centralized identity controls should be considered.
