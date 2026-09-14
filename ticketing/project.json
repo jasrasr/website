@@ -1,13 +1,14 @@
 {
   "name": "Ticketing",
-  "revision": "1.5.0",
+  "revision": "1.6.0",
   "modified": "2026-09-14",
   "revisionPolicy": "Project and file revisions start at 1.0.0 and never use values below 1.0.0.",
   "files": {
     "index.php": {
-      "revision": "1.3.0",
+      "revision": "1.4.0",
       "modified": "2026-09-14",
       "history": [
+        "1.4.0 - Added Hostinger-only category runtime bootstrap from sample data and Manage Categories navigation.",
         "1.3.0 - Added hierarchical category JSON API, category reference validation, and controlled ticket category selection.",
         "1.1.1 - Added server-side password confirmation validation for requester and agent account creation.",
         "1.1.0 - Added passwordless test mode, email usernames, display names, avatar uploads, and profile editing API.",
@@ -35,11 +36,19 @@
       ]
     },
     "csv.php": {
-      "revision": "1.1.0",
+      "revision": "1.2.0",
       "modified": "2026-09-14",
       "history": [
+        "1.2.0 - Added runtime category bootstrap from categories.json.sample.",
         "1.1.0 - Added categoryId and hierarchical category-path round-trip support.",
         "1.0.0 - Added agent-only CSV import/export, metadata/comments round-trip support, validation, and sequential ticket numbering."
+      ]
+    },
+    "categories.php": {
+      "revision": "1.0.0",
+      "modified": "2026-09-14",
+      "history": [
+        "1.0.0 - Added agent-only web category management with add, rename, move, enable/disable, and sibling ordering controls."
       ]
     },
     "sample-ticket-import.csv": {
@@ -51,17 +60,19 @@
       ]
     },
     "README.md": {
-      "revision": "1.1.0",
+      "revision": "1.2.0",
       "modified": "2026-09-14",
       "history": [
+        "1.2.0 - Documented web category management, stable category IDs, and runtime category storage.",
         "1.1.0 - Documented Hostinger-only runtime JSON storage, sample files, and deployment preservation requirement.",
         "1.0.0 - Documented authentication, directories, revision policy, and architecture."
       ]
     },
     "CHANGELOG.md": {
-      "revision": "1.5.0",
+      "revision": "1.6.0",
       "modified": "2026-09-14",
       "history": [
+        "1.6.0 - Documented web category management and Hostinger-only category runtime storage.",
         "1.5.0 - Documented separation of live runtime JSON from GitHub-tracked sample files.",
         "1.4.0 - Documented compact mobile header/navigation redesign.",
         "1.3.1 - Documented mobile scrolling and responsive sidebar fix.",
@@ -78,9 +89,10 @@
       "history": ["1.0.0 - Maintained future feature backlog."]
     },
     "project.json": {
-      "revision": "1.5.0",
+      "revision": "1.6.0",
       "modified": "2026-09-14",
       "history": [
+        "1.6.0 - Added category manager, category sample/runtime split, and stable-ID category editing architecture.",
         "1.5.0 - Updated manifest for Hostinger-only runtime storage and GitHub sample datastores.",
         "1.4.0 - Advanced project revision for compact mobile interface redesign.",
         "1.3.1 - Advanced project revision for mobile scrolling fix.",
@@ -92,14 +104,17 @@
       ]
     },
     ".gitignore": {
-      "revision": "1.0.0",
+      "revision": "1.1.0",
       "modified": "2026-09-14",
-      "history": ["1.0.0 - Excluded live users, directory, tickets, and uploaded avatars from Git tracking."]
+      "history": [
+        "1.1.0 - Added live categories.json to Hostinger-only ignored runtime data.",
+        "1.0.0 - Excluded live users, directory, tickets, and uploaded avatars from Git tracking."
+      ]
     },
-    "data/categories.json": {
+    "data/categories.json.sample": {
       "revision": "1.0.0",
       "modified": "2026-09-14",
-      "history": ["1.0.0 - Added hierarchical ticket category datastore with stable IDs and nested child categories."]
+      "history": ["1.0.0 - Added seeded IT-helpdesk category hierarchy used to initialize Hostinger runtime categories.json."]
     },
     "data/users.json.sample": {
       "revision": "1.0.0",
@@ -119,13 +134,13 @@
     "data/.htaccess": {
       "revision": "1.0.0",
       "modified": "2026-09-14",
-      "history": ["1.0.0 - Blocks direct browser access to JSON data files."
-      ]
+      "history": ["1.0.0 - Blocks direct browser access to JSON data files."]
     }
   },
   "runtimeData": {
     "data/users.json": "Hostinger-only; ignored by Git; created automatically when account data is first written.",
     "data/directory.json": "Hostinger-only; ignored by Git; created automatically when directory data is first written.",
-    "data/tickets.json": "Hostinger-only; ignored by Git; created automatically when ticket data is first written."
+    "data/tickets.json": "Hostinger-only; ignored by Git; created automatically when ticket data is first written.",
+    "data/categories.json": "Hostinger-only; ignored by Git; initialized automatically from data/categories.json.sample and then editable from categories.php."
   }
 }
