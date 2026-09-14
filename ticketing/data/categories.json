@@ -1,0 +1,74 @@
+[
+  {
+    "id": "general",
+    "name": "General",
+    "active": true,
+    "children": []
+  },
+  {
+    "id": "hardware",
+    "name": "Hardware",
+    "active": true,
+    "children": [
+      { "id": "hardware-computer", "name": "Computer", "active": true, "children": [] },
+      { "id": "hardware-monitor", "name": "Monitor", "active": true, "children": [] },
+      { "id": "hardware-printer", "name": "Printer", "active": true, "children": [] },
+      { "id": "hardware-mobile", "name": "Mobile Device", "active": true, "children": [] },
+      { "id": "hardware-peripheral", "name": "Peripheral", "active": true, "children": [] }
+    ]
+  },
+  {
+    "id": "software",
+    "name": "Software",
+    "active": true,
+    "children": [
+      { "id": "software-microsoft-365", "name": "Microsoft 365", "active": true, "children": [] },
+      { "id": "software-windows", "name": "Windows", "active": true, "children": [] },
+      { "id": "software-business-app", "name": "Business Application", "active": true, "children": [] },
+      { "id": "software-install", "name": "Installation / Update", "active": true, "children": [] }
+    ]
+  },
+  {
+    "id": "access",
+    "name": "Access & Accounts",
+    "active": true,
+    "children": [
+      { "id": "access-account", "name": "Account", "active": true, "children": [] },
+      { "id": "access-password", "name": "Password / Sign-in", "active": true, "children": [] },
+      { "id": "access-permission", "name": "Permissions", "active": true, "children": [] },
+      { "id": "access-mfa", "name": "MFA", "active": true, "children": [] }
+    ]
+  },
+  {
+    "id": "network",
+    "name": "Network",
+    "active": true,
+    "children": [
+      { "id": "network-wired", "name": "Wired", "active": true, "children": [] },
+      { "id": "network-wireless", "name": "Wi-Fi", "active": true, "children": [] },
+      { "id": "network-vpn", "name": "VPN", "active": true, "children": [] },
+      { "id": "network-internet", "name": "Internet", "active": true, "children": [] }
+    ]
+  },
+  {
+    "id": "email-collaboration",
+    "name": "Email & Collaboration",
+    "active": true,
+    "children": [
+      { "id": "email-outlook", "name": "Outlook / Email", "active": true, "children": [] },
+      { "id": "email-teams", "name": "Teams", "active": true, "children": [] },
+      { "id": "email-onedrive", "name": "OneDrive", "active": true, "children": [] },
+      { "id": "email-sharepoint", "name": "SharePoint", "active": true, "children": [] }
+    ]
+  },
+  {
+    "id": "security",
+    "name": "Security",
+    "active": true,
+    "children": [
+      { "id": "security-phishing", "name": "Phishing / Suspicious Email", "active": true, "children": [] },
+      { "id": "security-malware", "name": "Malware / Antivirus", "active": true, "children": [] },
+      { "id": "security-device", "name": "Device Security", "active": true, "children": [] }
+    ]
+  }
+]
