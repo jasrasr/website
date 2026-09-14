@@ -1,27 +1,27 @@
 {
   "name": "Ticketing",
-  "revision": "1.2.0",
+  "revision": "1.3.0",
   "modified": "2026-09-14",
   "revisionPolicy": "Project and file revisions start at 1.0.0 and never use values below 1.0.0.",
   "files": {
     "index.php": {
-      "revision": "1.1.1",
+      "revision": "1.3.0",
       "modified": "2026-09-14",
       "history": [
+        "1.3.0 - Added hierarchical category JSON API, category reference validation, and controlled ticket category selection.",
         "1.1.1 - Added server-side password confirmation validation for requester and agent account creation.",
         "1.1.0 - Added passwordless test mode, email usernames, display names, avatar uploads, and profile editing API.",
-        "1.0.0 - Added PHP-session authentication, requester/agent authorization, protected ticket APIs, and persistent people directory support.",
-        "Initial build - JSON-backed ticket API, requester/agent views, and public/private replies."
+        "1.0.0 - Added PHP-session authentication, requester/agent authorization, protected ticket APIs, and persistent people directory support."
       ]
     },
     "app.js": {
-      "revision": "1.1.1",
+      "revision": "1.3.0",
       "modified": "2026-09-14",
       "history": [
+        "1.3.0 - Added category hierarchy loading and controlled category dropdown using stable category IDs.",
         "1.1.1 - Added confirmation-password fields and client-side matching validation for requester/agent creation.",
         "1.1.0 - Added no-password testing login, display-name profiles, avatar upload/preview, and profile editor.",
-        "1.0.0 - Added requester/agent login flows, persistent dropdown lists, add-new actions, and session-aware UI behavior.",
-        "Initial build - Dashboards, sortable ticket table, create/edit flow, and public/private replies."
+        "1.0.0 - Added requester/agent login flows, persistent dropdown lists, add-new actions, and session-aware UI behavior."
       ]
     },
     "styles.css": {
@@ -29,21 +29,22 @@
       "modified": "2026-09-14",
       "history": [
         "1.1.0 - Added avatar, profile editor, and test-mode notice styling.",
-        "1.0.0 - Added login, signed-in identity, person-directory dialog, and authenticated portal styling.",
-        "Initial build - Responsive dark ticketing interface."
+        "1.0.0 - Added login, signed-in identity, person-directory dialog, and authenticated portal styling."
       ]
     },
     "csv.php": {
-      "revision": "1.0.0",
+      "revision": "1.1.0",
       "modified": "2026-09-14",
       "history": [
-        "1.0.0 - Added agent-only CSV import/export, full ticket metadata and comments round-trip support, validation, and sequential ticket numbering based on the live highest ticket number."
+        "1.1.0 - Added categoryId and hierarchical category-path round-trip support.",
+        "1.0.0 - Added agent-only CSV import/export, full ticket metadata and comments round-trip support, validation, and sequential ticket numbering."
       ]
     },
     "sample-ticket-import.csv": {
-      "revision": "1.0.0",
+      "revision": "1.1.0",
       "modified": "2026-09-14",
       "history": [
+        "1.1.0 - Added categoryId and hierarchical category-path examples.",
         "1.0.0 - Added downloadable CSV import template with metadata, public reply, and private-note examples."
       ]
     },
@@ -53,9 +54,10 @@
       "history": ["1.0.0 - Documented authentication, directories, revision policy, and current architecture."]
     },
     "CHANGELOG.md": {
-      "revision": "1.2.0",
+      "revision": "1.3.0",
       "modified": "2026-09-14",
       "history": [
+        "1.3.0 - Documented hierarchical categories and stable ticket category references.",
         "1.2.0 - Documented CSV import/export tools and sequential numbering behavior.",
         "1.1.1 - Documented password confirmation behavior for account creation.",
         "1.1.0 - Documented passwordless test mode and user profile/avatar support.",
@@ -68,19 +70,25 @@
       "history": ["1.0.0 - Maintained future feature backlog and marked authentication foundation implemented."]
     },
     "project.json": {
-      "revision": "1.2.0",
+      "revision": "1.3.0",
       "modified": "2026-09-14",
       "history": [
-        "1.2.0 - Added CSV tools and sample-template files to the manifest and advanced the project revision.",
+        "1.3.0 - Added categories datastore to the manifest and advanced project revision.",
+        "1.2.0 - Added CSV tools and sample-template files to the manifest.",
         "1.1.1 - Updated manifest for password confirmation patch.",
         "1.1.0 - Updated manifest for passwordless test mode and profile/avatar release.",
         "1.0.0 - Established manifest and minimum revision policy of 1.0.0."
       ]
     },
+    "data/categories.json": {
+      "revision": "1.0.0",
+      "modified": "2026-09-14",
+      "history": ["1.0.0 - Added hierarchical ticket category datastore with stable IDs and nested child categories."]
+    },
     "data/tickets.json": {
       "revision": "1.0.0",
       "modified": "2026-09-14",
-      "history": ["1.0.0 - Single JSON ticket datastore containing all ticket records. Data content changes do not increment source revision."]
+      "history": ["1.0.0 - Single JSON ticket datastore containing all ticket records. Ticket records may include categoryId plus category path snapshot."]
     },
     "data/users.json": {
       "revision": "1.0.0",
