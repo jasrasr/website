@@ -1,0 +1,8 @@
+# Runtime ticketing data - exists only on the deployed server
+data/users.json
+data/directory.json
+data/tickets.json
+
+# Uploaded profile images are runtime content
+avatars/*
+!avatars/.gitkeep
