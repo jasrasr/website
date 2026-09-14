@@ -1,85 +1,88 @@
 <!--
 File: README.md
-File Revision: 0.2.0
+File Revision: 1.0.0
 Modified: 2026-09-14
 History:
-0.2.0 - Documented requester/agent portals, reply visibility, revision tracking, and backlog.
-0.1.0 - Initial project documentation.
+1.0.0 - Documented authenticated requester/agent portals, persistent directories, and revision policy.
 -->
 
 # Ticketing
 
-Project revision **0.2.0** — modified **2026-09-14**.
-
 A lightweight Freshservice-style ticketing system built with PHP, JavaScript, CSS, and JSON file storage.
 
-## Current features
+## Project revision
 
-### Requester portal
-- Requester dashboard showing only tickets submitted with the entered requester email
-- My Tickets view
-- Submit new tickets
-- View ticket status, priority, assigned agent, and conversation
-- Submit public replies
-- Private agent notes are stripped from requester API responses and are not sent to the requester browser
+Current project revision: **1.0.0**  
+Modified: **2026-09-14**
 
-### Agent portal
-- Dashboard across all tickets
-- All Tickets queue
-- Search and filtering by status, priority, and assigned agent
-- Sort ticket table by ticket number, requester, status, priority, agent, created date, or updated date
-- Edit ticket subject, description, requester, requester email, status, priority, category, assigned agent, and source
-- Post public replies visible to requesters
-- Post private notes visible only to agents
+Revision policy: project and file revisions start at `1.0.0` and do not use revision numbers below `1.0.0`.
 
-### General
-- Statuses: Open, Pending, Resolved, Closed
-- Priorities: Low, Medium, High, Urgent
-- JSON persistence in `data/tickets.json`
-- File locking during JSON writes
-- Direct browser access to the ticket data folder blocked by `.htaccess`
-- Project revision and modified date shown in the application footer
-- Dashboard links to `CHANGELOG.md` and `TODO.md`
-- Per-file revisions and revision histories tracked in `project.json`
+## Authentication
 
-## Important security status
+- Requesters sign in with email and password.
+- Requesters can self-register.
+- Agents sign in with email and password.
+- When no agent account exists, the Agent login screen exposes a one-time **Create first agent account** option.
+- PHP sessions enforce the signed-in role.
+- Requesters can only retrieve tickets associated with their authenticated email address.
+- Private agent notes are filtered server-side and never returned to requester sessions.
 
-Authentication is **not implemented yet**. Requester identity is currently based on an entered email address, and the agent portal is not protected by login. This is appropriate for development/testing but not yet for production use with sensitive ticket data.
+## Requester portal
 
-Authentication and role enforcement are the highest-priority future feature in `TODO.md`.
+- Requester dashboard with Open, Pending, Resolved, Closed, and Total counts.
+- My Tickets list.
+- Submit new tickets.
+- View public replies.
+- Send replies to agents.
+- Requester replies are always public.
 
-## Files
+## Agent portal
 
-- `index.php` — page markup and JSON API endpoints
-- `app.js` — requester/agent UI behavior, sorting, filtering, and ticket workflow
-- `styles.css` — responsive interface styling
-- `project.json` — project revision, modified date, and per-file revision history
-- `CHANGELOG.md` — overall project revision history
-- `TODO.md` — future features and development backlog
-- `data/tickets.json` — ticket datastore
-- `data/.htaccess` — blocks direct web access to ticket JSON data
+- Dashboard across all tickets.
+- All Tickets table.
+- Sort by ticket number, requester, status, priority, assigned agent, created date, and updated date.
+- Search and filter tickets.
+- Edit ticket subject, description, requester, email, status, priority, category, assigned agent, and source.
+- Public replies visible to requesters.
+- Private notes visible only to agents.
+- Persistent requester dropdown.
+- Persistent agent assignment dropdown.
+- `+ Add new requester...` and `+ Add new agent...` entries save new directory records to JSON.
+- When adding a person, an optional 8+ character password also creates login access for that person.
 
-## Revision policy
+## Data files
 
-The overall application uses a project revision such as `0.2.0`. Source/documentation files also carry their own file revision and modified date. `project.json` is the central manifest for these revisions and includes each file's change history.
+- `data/tickets.json` — ticket database.
+- `data/users.json` — requester and agent login accounts with PHP password hashes.
+- `data/directory.json` — persistent requester and agent directory.
+- `data/.htaccess` — blocks direct web access to the data directory.
 
-Ticket data changes inside `data/tickets.json` do not increment the source-file revision because normal ticket activity changes that file continuously.
+## Source files
+
+- `index.php` — application markup, JSON API, sessions, authentication, authorization, and persistence.
+- `app.js` — login UI, dashboards, ticket interactions, sorting/filtering, directory dropdowns, and dialogs.
+- `styles.css` — responsive application styles.
+- `project.json` — project revision and per-file revision/history manifest.
+- `CHANGELOG.md` — project release history.
+- `TODO.md` — future feature and development backlog.
 
 ## Hosting requirements
 
 - PHP 8.1+
-- `ticketing/data/` must be writable by PHP
-- Apache/Hostinger hosting should honor `.htaccess`
+- PHP sessions enabled.
+- `password_hash()` / `password_verify()` support.
+- `ticketing/data/` writable by PHP.
+- Apache/Hostinger configuration that honors `.htaccess`.
 
-## API
+## First setup
 
-The browser uses `index.php?api=1`.
+1. Open the application.
+2. Select **Agent** on the login screen.
+3. If no agent exists, choose **Create first agent account**.
+4. Enter a name, email, and password of at least 8 characters.
+5. The account is saved to `data/users.json` and the person is added to `data/directory.json`.
+6. Additional agents or requesters can be added from ticket dropdowns after signing in as an agent.
 
-- `GET &portal=agent` — all ticket data, including private notes
-- `GET &portal=requester&email=user@example.com` — tickets for that requester with private notes removed
-- `POST` — create a ticket
-- `PUT` — update ticket metadata and/or add a public/private response
+## Security notes
 
-## Backlog
-
-See [`TODO.md`](TODO.md) for the maintained future-features list. Major future areas include authentication, email integration, attachments, SLA management, automation, reporting, asset linking, knowledge base, service catalog, Microsoft 365/Entra integration, and a PowerShell API helper.
+This is intentionally a lightweight JSON-backed application. Passwords are hashed before storage and ticket authorization is enforced server-side, but features such as password reset, MFA, lockout/rate limiting, CSRF tokens, and centralized identity are still future work and should be added before treating the system as a production help desk exposed to untrusted users.
