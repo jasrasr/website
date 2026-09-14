@@ -1,8 +1,9 @@
 <!--
 File: CHANGELOG.md
-File Revision: 1.3.0
+File Revision: 1.3.1
 Modified: 2026-09-14
 History:
+1.3.1 - Fixed mobile scrolling and responsive sidebar behavior.
 1.3.0 - Added hierarchical ticket categories with stable category references.
 1.2.0 - Added CSV import/export tools and sample import template.
 1.1.1 - Added password confirmation validation for requester and agent account creation.
@@ -11,6 +12,16 @@ History:
 -->
 
 # Ticketing Changelog
+
+## Project Revision 1.3.1 — 2026-09-14
+
+### Fixed
+- Removed the full-page sticky sidebar behavior on tablet and mobile layouts.
+- Profile, navigation, changelog/future-feature links, and sign-out now scroll normally with the page instead of remaining pinned over the ticket content.
+- Added horizontal page overflow protection so wide ticket tables do not interfere with normal vertical scrolling.
+- Enabled smooth touch scrolling inside horizontally scrollable ticket tables.
+- Improved dialog scrolling on mobile by using dynamic viewport height where supported.
+- Tightened signed-in profile text wrapping so long display names and email addresses do not force the mobile layout wider than the viewport.
 
 ## Project Revision 1.3.0 — 2026-09-14
 
