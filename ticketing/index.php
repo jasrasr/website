@@ -115,7 +115,7 @@ if (isset($_GET['api'])) {
 
     if ($method === 'PUT') {
         $id = trim((string)($payload['id'] ?? ''));
-        $found = false;
+        $updatedTicket = null;
 
         foreach ($tickets as &$ticket) {
             if (($ticket['id'] ?? '') !== $id) {
@@ -139,18 +139,18 @@ if (isset($_GET['api'])) {
             }
 
             $ticket['updatedAt'] = gmdate('c');
-            $found = true;
+            $updatedTicket = $ticket;
             break;
         }
         unset($ticket);
 
-        if (!$found) {
+        if ($updatedTicket === null) {
             jsonResponse(['error' => 'Ticket not found.'], 404);
         }
         if (!writeTickets($tickets)) {
             jsonResponse(['error' => 'Could not save ticket data.'], 500);
         }
-        jsonResponse(['ticket' => $ticket ?? null]);
+        jsonResponse(['ticket' => $updatedTicket]);
     }
 
     jsonResponse(['error' => 'Method not allowed.'], 405);
