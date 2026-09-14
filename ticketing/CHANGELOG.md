@@ -1,8 +1,9 @@
 <!--
 File: CHANGELOG.md
-File Revision: 1.5.0
+File Revision: 1.6.0
 Modified: 2026-09-14
 History:
+1.6.0 - Added web category management and moved live categories to Hostinger-only runtime storage.
 1.5.0 - Moved mutable ticketing data out of GitHub tracking and added sample datastore files.
 1.4.0 - Redesigned the mobile header, profile, navigation, and dashboard spacing.
 1.3.1 - Fixed mobile scrolling and responsive sidebar behavior.
@@ -15,6 +16,31 @@ History:
 
 # Ticketing Changelog
 
+## Project Revision 1.6.0 — 2026-09-14
+
+### Added
+- Agent-only **Manage Categories** page at `categories.php`.
+- Add a top-level category or add a category beneath any existing category.
+- Rename categories without changing their stable IDs.
+- Move categories to a different parent while preserving the category ID.
+- Enable or disable categories instead of deleting historical references.
+- Move categories up or down within their current sibling group.
+- Display each category's current hierarchy path and permanent category ID.
+- CSRF protection on category-management changes.
+
+### Category ID behavior
+- Category IDs are permanent references used by tickets and reporting.
+- Existing seeded IDs are descriptive, such as `hardware-computer-laptop`.
+- New category IDs are initially generated from the category name for readability; a short suffix is added if necessary to avoid a duplicate ID.
+- Renaming or moving a category does **not** change its ID.
+- This means a category can move from one part of the hierarchy to another without breaking tickets that already reference it.
+
+### Runtime category storage
+- Live `data/categories.json` is now Hostinger-only runtime data and is ignored by Git, matching users, directory, and tickets.
+- GitHub now contains `data/categories.json.sample`, populated with the starter IT-helpdesk hierarchy.
+- If live `categories.json` does not exist, `index.php`, `csv.php`, or `categories.php` automatically initializes it from the sample file.
+- The seeded hierarchy therefore appears automatically on a new deployment but subsequent web edits are not overwritten by normal Git pulls.
+
 ## Project Revision 1.5.0 — 2026-09-14
 
 ### Changed
@@ -22,15 +48,14 @@ History:
 - Added `data/users.json.sample`, `data/directory.json.sample`, and `data/tickets.json.sample` as empty templates.
 - Added `ticketing/.gitignore` rules so live runtime JSON files cannot be accidentally recommitted.
 - Uploaded profile images under `avatars/` are also treated as runtime content.
-- `data/categories.json` remains source-controlled because categories are application configuration rather than live transactional data.
 
 ### Why
 Previously, creating an agent on Hostinger wrote that account into `data/users.json`, but a later deployment could replace the live file with GitHub's empty `[]` copy. This caused the application to repeatedly offer **Create first agent account** even after an agent had already been created.
 
 ### Runtime behavior
-- The application continues reading and writing `data/users.json`, `data/directory.json`, and `data/tickets.json` on Hostinger.
-- If those files do not exist, PHP creates them automatically the first time data is written.
-- Normal Git pulls should leave these ignored/untracked files alone.
+- The application continues reading and writing live JSON on Hostinger.
+- If runtime files do not exist, PHP creates or initializes them when needed.
+- Normal Git pulls should leave ignored/untracked runtime files alone.
 - A deployment process that completely deletes the destination directory before copying the repository would still remove runtime files and should not be used without moving runtime storage outside the deployment directory.
 
 ## Project Revision 1.4.0 — 2026-09-14
@@ -51,8 +76,7 @@ Previously, creating an agent on Hostinger wrote that account into `data/users.j
 ## Project Revision 1.3.0 — 2026-09-14
 
 ### Added
-- Hierarchical categories stored in `data/categories.json`.
-- Stable `categoryId` plus human-readable category paths on tickets.
+- Hierarchical categories with stable `categoryId` plus human-readable category paths on tickets.
 - Controlled category selection and CSV category round-trip support.
 
 ## Project Revision 1.2.0 — 2026-09-14
