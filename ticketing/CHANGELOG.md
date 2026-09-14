@@ -1,14 +1,38 @@
 <!--
 File: CHANGELOG.md
-File Revision: 1.1.1
+File Revision: 1.2.0
 Modified: 2026-09-14
 History:
+1.2.0 - Added CSV import/export tools and sample import template.
 1.1.1 - Added password confirmation validation for requester and agent account creation.
 1.1.0 - Added passwordless testing mode and user profile/avatar support.
 1.0.0 - Established the project revision baseline and documented authentication and directory features.
 -->
 
 # Ticketing Changelog
+
+## Project Revision 1.2.0 — 2026-09-14
+
+### Added
+- Agent-only CSV Import / Export page at `csv.php`.
+- Downloadable CSV export of the complete ticket queue.
+- Downloadable `sample-ticket-import.csv` template.
+- CSV import support for subject, description, requester, requester email, status, priority, category, assigned agent, source, created date, updated date, and complete comment/reply history.
+- `commentsJson` column for round-tripping public replies and private agent notes with author, role, visibility, body, and timestamp metadata.
+- Row-level validation with skipped-row error reporting instead of failing the entire import when one row is invalid.
+- UTF-8 BOM on exported CSV files for spreadsheet compatibility.
+- Basic spreadsheet-formula injection protection on exported text cells, with matching normalization during re-import.
+
+### Ticket numbering
+- Imported CSV ticket numbers are intentionally ignored to avoid duplicate or conflicting ticket numbers.
+- At import time the system locks `data/tickets.json`, reads the live ticket data, finds the highest existing ticket number, and assigns imported tickets sequentially from the next number.
+- Example: if the current highest ticket is `#00127`, the next three successfully imported rows become `#00128`, `#00129`, and `#00130`.
+- Internal ticket IDs and imported comment IDs are regenerated during import to avoid collisions with existing records.
+
+### CSV columns
+- Required: `subject`, `description`, `requester`, `email`
+- Optional: `status`, `priority`, `category`, `assignedTo`, `source`, `createdAt`, `updatedAt`, `commentsJson`
+- Informational only: `ticketNumber`
 
 ## Project Revision 1.1.1 — 2026-09-14
 
