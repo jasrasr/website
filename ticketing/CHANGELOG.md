@@ -1,8 +1,9 @@
 <!--
 File: CHANGELOG.md
-File Revision: 1.3.1
+File Revision: 1.4.0
 Modified: 2026-09-14
 History:
+1.4.0 - Redesigned the mobile header, profile, navigation, and dashboard spacing.
 1.3.1 - Fixed mobile scrolling and responsive sidebar behavior.
 1.3.0 - Added hierarchical ticket categories with stable category references.
 1.2.0 - Added CSV import/export tools and sample import template.
@@ -12,6 +13,19 @@ History:
 -->
 
 # Ticketing Changelog
+
+## Project Revision 1.4.0 — 2026-09-14
+
+### Changed
+- Reworked the mobile top section so it no longer resembles a vertically expanded desktop sidebar.
+- Kept the signed-in user's display name on one line next to the avatar, with role and email compactly underneath.
+- Placed the Edit Profile control beside the identity card instead of giving it a full-width row.
+- Changed agent/requester navigation to a two-column mobile button grid so related actions share rows.
+- Kept New Ticket visually prominent while placing CSV Import / Export alongside the other agent navigation options.
+- Combined View Changelog, Future Features, and Sign out into one compact utility row.
+- Reduced mobile header, navigation, title, subtitle, statistics-card, and general dashboard spacing.
+- Kept Agent Dashboard / page title and Refresh on one compact row.
+- Added extra small-screen handling for narrow phones while preserving readable email/profile information.
 
 ## Project Revision 1.3.1 — 2026-09-14
 
