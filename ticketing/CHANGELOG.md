@@ -1,8 +1,9 @@
 <!--
 File: CHANGELOG.md
-File Revision: 1.2.0
+File Revision: 1.3.0
 Modified: 2026-09-14
 History:
+1.3.0 - Added hierarchical ticket categories with stable category references.
 1.2.0 - Added CSV import/export tools and sample import template.
 1.1.1 - Added password confirmation validation for requester and agent account creation.
 1.1.0 - Added passwordless testing mode and user profile/avatar support.
@@ -11,86 +12,82 @@ History:
 
 # Ticketing Changelog
 
+## Project Revision 1.3.0 — 2026-09-14
+
+### Added
+- Hierarchical category datastore at `data/categories.json`.
+- Stable `categoryId` references on ticket records.
+- Human-readable category path snapshot on each ticket, such as `Hardware > Printer`.
+- Controlled category dropdown in the ticket form instead of free-text category entry.
+- Category API that exposes the hierarchy and a flattened path list to authenticated users.
+- Initial category hierarchy for General, Hardware, Software, Access & Accounts, Network, Email & Collaboration, and Security.
+
+### Category behavior
+- New and edited tickets resolve the selected category against `data/categories.json`.
+- Tickets store both `categoryId` and `category` so reporting can use the stable ID while the readable path remains visible even if labels later change.
+- Existing legacy tickets that only contain a text category continue to display; when edited, the system attempts to match the old path and otherwise falls back to General.
+- CSV export now includes both `categoryId` and `category`.
+- CSV import prefers `categoryId`, can fall back to the category path, and defaults invalid/missing values to General.
+
+### Existing ticket metadata
+- Internal ticket ID
+- Ticket number
+- Subject
+- Description
+- Requester display name
+- Requester email
+- Status
+- Priority
+- Category ID
+- Category path
+- Assigned agent
+- Source
+- Created timestamp
+- Updated timestamp
+- Comment/reply history, including comment ID, author, role, public/private visibility, body, and timestamp
+
 ## Project Revision 1.2.0 — 2026-09-14
 
 ### Added
 - Agent-only CSV Import / Export page at `csv.php`.
 - Downloadable CSV export of the complete ticket queue.
 - Downloadable `sample-ticket-import.csv` template.
-- CSV import support for subject, description, requester, requester email, status, priority, category, assigned agent, source, created date, updated date, and complete comment/reply history.
-- `commentsJson` column for round-tripping public replies and private agent notes with author, role, visibility, body, and timestamp metadata.
-- Row-level validation with skipped-row error reporting instead of failing the entire import when one row is invalid.
-- UTF-8 BOM on exported CSV files for spreadsheet compatibility.
-- Basic spreadsheet-formula injection protection on exported text cells, with matching normalization during re-import.
+- CSV import support for ticket metadata, timestamps, and complete comment/reply history.
+- `commentsJson` column for round-tripping public replies and private agent notes.
+- Row-level validation and sequential ticket numbering based on the live highest ticket number.
 
 ### Ticket numbering
-- Imported CSV ticket numbers are intentionally ignored to avoid duplicate or conflicting ticket numbers.
-- At import time the system locks `data/tickets.json`, reads the live ticket data, finds the highest existing ticket number, and assigns imported tickets sequentially from the next number.
-- Example: if the current highest ticket is `#00127`, the next three successfully imported rows become `#00128`, `#00129`, and `#00130`.
-- Internal ticket IDs and imported comment IDs are regenerated during import to avoid collisions with existing records.
-
-### CSV columns
-- Required: `subject`, `description`, `requester`, `email`
-- Optional: `status`, `priority`, `category`, `assignedTo`, `source`, `createdAt`, `updatedAt`, `commentsJson`
-- Informational only: `ticketNumber`
+- Imported CSV ticket numbers are ignored to avoid duplicates.
+- The importer locks `data/tickets.json`, finds the highest existing ticket number, and assigns imported tickets sequentially from the next number.
 
 ## Project Revision 1.1.1 — 2026-09-14
 
 ### Changed
-- Requester account creation now includes both Password and Confirm Password fields.
-- First-agent account creation now includes both Password and Confirm Password fields.
-- The agent-side Add Requester and Add Agent dialog now includes both Password and Confirm Password fields.
+- Requester account creation, first-agent creation, Add Requester, and Add Agent require matching password confirmation when a password is supplied.
 - In test mode, both password fields may remain blank.
-- If a password is entered, both fields must match and the password must be at least 8 characters.
-- Password matching is validated in the browser and again by PHP on the server.
 
 ## Project Revision 1.1.0 — 2026-09-14
 
 ### Added
-- Email address is the login username for requesters and agents.
-- Optional display name separate from the login email.
-- Profile editor for changing display name.
-- Profile-picture/avatar upload for requester and agent accounts.
-- Avatar files are stored under `ticketing/avatars/`; the relative avatar path is stored with the user record.
-- Avatars are limited to PNG, JPEG, WEBP, or GIF files up to 2 MB.
-- Test-mode login that keeps PHP sessions and role authorization but temporarily bypasses password verification.
-- New requesters and agents created while testing can log in using their email without a password.
-- Visible testing-mode notice on the login screen.
-
-### Changed
-- Requester and agent identity now uses `displayName` for visible names and email for the account username.
-- New directory entries automatically receive a login account during test mode, so they can immediately be used for role testing.
-- Ticket requester names and reply authors use the account display name.
-- Project revision advanced to `1.1.0`.
+- Email address as username.
+- Display names and avatar/profile pictures.
+- Passwordless test-mode sign-in while retaining PHP sessions and role authorization.
 
 ### Storage clarification
-- Tickets continue to be stored together in one file: `data/tickets.json`.
-- The file contains a JSON array with one object per ticket, including that ticket's comments/replies.
-- Login accounts are stored separately in `data/users.json`.
+- Tickets are stored together in `data/tickets.json`.
+- Login accounts are stored in `data/users.json`.
 - Requester/agent directory entries are stored in `data/directory.json`.
-- Uploaded profile pictures are stored as image files under `avatars/`, not embedded into the ticket JSON.
-
-### Testing warning
-`TEST_MODE` is currently enabled in `index.php`. Password checks are intentionally bypassed while it is enabled. Disable test mode before using the site with real or sensitive ticket data.
+- Categories are stored in `data/categories.json`.
+- Profile pictures are image files under `avatars/`.
 
 ## Project Revision 1.0.0 — 2026-09-14
 
 ### Added
-- Requester login with email and password architecture.
-- Requester self-registration.
-- Agent login and first-agent bootstrap flow.
-- PHP session enforcement for authenticated access.
-- Server-side role authorization for requester and agent operations.
-- Requesters can only retrieve and reply to tickets associated with their authenticated email address.
-- Private agent notes are never returned to requester sessions.
-- Persistent requester and agent directory stored in `data/directory.json`.
-- Persistent login accounts stored in `data/users.json`.
-- Agent ticket form requester dropdown populated from the persistent requester directory.
-- Agent assignment dropdown populated from the persistent agent directory.
-- `+ Add new requester...` and `+ Add new agent...` dropdown entries.
+- Requester and agent authentication architecture.
+- Separate requester and agent dashboards.
 - Public replies and private agent notes.
 - Sortable/filterable agent ticket table.
-- Project and file revision policy requiring all revisions to begin at `1.0.0` or higher.
+- JSON-backed storage and project/file revision tracking.
 
 ### Revision policy
 This project does not use revision numbers below `1.0.0`. Early prototype work is treated as pre-release development and is not part of the numbered revision history.
