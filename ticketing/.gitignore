@@ -2,6 +2,7 @@
 data/users.json
 data/directory.json
 data/tickets.json
+data/categories.json
 
 # Uploaded profile images are runtime content
 avatars/*
