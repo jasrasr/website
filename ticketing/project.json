@@ -1,13 +1,14 @@
 {
   "name": "Ticketing",
-  "revision": "1.7.1",
+  "revision": "1.7.2",
   "modified": "2026-09-15",
   "revisionPolicy": "Project and file revisions start at 1.0.0 and never use values below 1.0.0.",
   "files": {
     "index.php": {
-      "revision": "1.4.0",
-      "modified": "2026-09-14",
+      "revision": "1.4.1",
+      "modified": "2026-09-15",
       "history": [
+        "1.4.1 - Updated frontend asset revisions so searchable requester/category controls load instead of cached native selects.",
         "1.4.0 - Added instance-local category runtime bootstrap from sample data and Manage Categories navigation.",
         "1.3.0 - Added hierarchical category JSON API, category reference validation, and controlled ticket category selection.",
         "1.1.1 - Added server-side password confirmation validation for requester and agent account creation.",
@@ -29,9 +30,7 @@
     "autocomplete.css": {
       "revision": "1.0.0",
       "modified": "2026-09-15",
-      "history": [
-        "1.0.0 - Added desktop/mobile searchable combobox styling for requester and category selection."
-      ]
+      "history": ["1.0.0 - Added desktop/mobile searchable combobox styling for requester and category selection."]
     },
     "styles.css": {
       "revision": "1.2.1",
@@ -82,14 +81,13 @@
     "INSTALL.md": {
       "revision": "1.0.0",
       "modified": "2026-09-14",
-      "history": [
-        "1.0.0 - Added generic host-agnostic installation and fork deployment instructions."
-      ]
+      "history": ["1.0.0 - Added generic host-agnostic installation and fork deployment instructions."]
     },
     "CHANGELOG.md": {
-      "revision": "1.7.1",
+      "revision": "1.7.2",
       "modified": "2026-09-15",
       "history": [
+        "1.7.2 - Fixed stale asset version references that prevented the autocomplete UI from loading on cached clients.",
         "1.7.1 - Documented compact category-management rows and on-demand editing.",
         "1.7.0 - Documented searchable category/requester autocomplete and usage-aware suggestions.",
         "1.6.2 - Documented iOS form-focus zoom and mobile viewport overflow fix after first-agent setup.",
@@ -105,15 +103,12 @@
         "1.0.0 - Established production revision baseline."
       ]
     },
-    "TODO.md": {
-      "revision": "1.0.0",
-      "modified": "2026-09-14",
-      "history": ["1.0.0 - Maintained future feature backlog."]
-    },
+    "TODO.md": {"revision": "1.0.0", "modified": "2026-09-14", "history": ["1.0.0 - Maintained future feature backlog."]},
     "project.json": {
-      "revision": "1.7.1",
+      "revision": "1.7.2",
       "modified": "2026-09-15",
       "history": [
+        "1.7.2 - Advanced project revision for autocomplete asset cache-busting fix.",
         "1.7.1 - Advanced project revision for the compact category-management interface.",
         "1.7.0 - Advanced project revision for searchable category and requester ticket-entry controls.",
         "1.6.2 - Advanced project revision for the iOS mobile zoom and viewport containment fix.",
@@ -137,31 +132,11 @@
         "1.0.0 - Excluded live users, directory, tickets, and uploaded avatars from Git tracking."
       ]
     },
-    "data/categories.json.sample": {
-      "revision": "1.0.0",
-      "modified": "2026-09-14",
-      "history": ["1.0.0 - Added seeded IT-helpdesk category hierarchy used to initialize each installation's runtime categories.json."]
-    },
-    "data/users.json.sample": {
-      "revision": "1.0.0",
-      "modified": "2026-09-14",
-      "history": ["1.0.0 - Empty sample for each installation's users.json runtime datastore."]
-    },
-    "data/directory.json.sample": {
-      "revision": "1.0.0",
-      "modified": "2026-09-14",
-      "history": ["1.0.0 - Empty sample for each installation's directory.json runtime datastore."]
-    },
-    "data/tickets.json.sample": {
-      "revision": "1.0.0",
-      "modified": "2026-09-14",
-      "history": ["1.0.0 - Empty sample for each installation's tickets.json runtime datastore."]
-    },
-    "data/.htaccess": {
-      "revision": "1.0.0",
-      "modified": "2026-09-14",
-      "history": ["1.0.0 - Blocks direct browser access to JSON data files on Apache-compatible hosts."]
-    }
+    "data/categories.json.sample": {"revision": "1.0.0", "modified": "2026-09-14", "history": ["1.0.0 - Added seeded IT-helpdesk category hierarchy used to initialize each installation's runtime categories.json."]},
+    "data/users.json.sample": {"revision": "1.0.0", "modified": "2026-09-14", "history": ["1.0.0 - Empty sample for each installation's users.json runtime datastore."]},
+    "data/directory.json.sample": {"revision": "1.0.0", "modified": "2026-09-14", "history": ["1.0.0 - Empty sample for each installation's directory.json runtime datastore."]},
+    "data/tickets.json.sample": {"revision": "1.0.0", "modified": "2026-09-14", "history": ["1.0.0 - Empty sample for each installation's tickets.json runtime datastore."]},
+    "data/.htaccess": {"revision": "1.0.0", "modified": "2026-09-14", "history": ["1.0.0 - Blocks direct browser access to JSON data files on Apache-compatible hosts."]}
   },
   "runtimeData": {
     "data/users.json": "Instance-local; ignored by Git; created automatically when account data is first written.",
