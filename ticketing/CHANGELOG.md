@@ -1,8 +1,9 @@
 <!--
 File: CHANGELOG.md
-File Revision: 1.7.0
+File Revision: 1.7.1
 Modified: 2026-09-15
 History:
+1.7.1 - Compacted category management into one-line rows with on-demand editing.
 1.7.0 - Added searchable requester/category autocomplete with usage-aware suggestions.
 1.6.2 - Fixed iOS form-focus zoom and mobile dashboard viewport overflow after first-agent setup.
 1.6.1 - Clarified fork/host independence and added generic installation guidance.
@@ -18,6 +19,20 @@ History:
 -->
 
 # Ticketing Changelog
+
+## Project Revision 1.7.1 — 2026-09-15
+
+### Changed
+- Reworked **Manage Categories** so each category is a compact single row instead of permanently displaying all editing controls.
+- Kept category name and hierarchy path visible at a glance while moving the stable ID and detailed controls into an expandable **Edit** area.
+- Kept move-up and move-down controls directly on each row for fast hierarchy ordering.
+- Rename, change-parent, and enable/disable controls now appear only when that category is being edited.
+- Opening one category editor automatically closes another open editor.
+- Collapsed **Add Category** into an expandable panel so it no longer consumes screen space when not being used.
+- Reduced mobile padding, row height, action-button size, and hierarchy indentation for iPhone portrait layouts.
+
+### Result
+The category list now fits substantially more categories on a phone screen while preserving the same stable-ID, rename, re-parent, ordering, and enable/disable behavior.
 
 ## Project Revision 1.7.0 — 2026-09-15
 
