@@ -1,6 +1,6 @@
 {
   "name": "Ticketing",
-  "revision": "1.7.0",
+  "revision": "1.7.1",
   "modified": "2026-09-15",
   "revisionPolicy": "Project and file revisions start at 1.0.0 and never use values below 1.0.0.",
   "files": {
@@ -54,9 +54,10 @@
       ]
     },
     "categories.php": {
-      "revision": "1.0.0",
-      "modified": "2026-09-14",
+      "revision": "1.1.0",
+      "modified": "2026-09-15",
       "history": [
+        "1.1.0 - Reworked category management into compact rows with on-demand editing for mobile and desktop.",
         "1.0.0 - Added agent-only web category management with add, rename, move, enable/disable, and sibling ordering controls."
       ]
     },
@@ -86,9 +87,10 @@
       ]
     },
     "CHANGELOG.md": {
-      "revision": "1.7.0",
+      "revision": "1.7.1",
       "modified": "2026-09-15",
       "history": [
+        "1.7.1 - Documented compact category-management rows and on-demand editing.",
         "1.7.0 - Documented searchable category/requester autocomplete and usage-aware suggestions.",
         "1.6.2 - Documented iOS form-focus zoom and mobile viewport overflow fix after first-agent setup.",
         "1.6.1 - Clarified that every fork/deployment is independent of the original GitHub account and hosting provider.",
@@ -109,9 +111,10 @@
       "history": ["1.0.0 - Maintained future feature backlog."]
     },
     "project.json": {
-      "revision": "1.7.0",
+      "revision": "1.7.1",
       "modified": "2026-09-15",
       "history": [
+        "1.7.1 - Advanced project revision for the compact category-management interface.",
         "1.7.0 - Advanced project revision for searchable category and requester ticket-entry controls.",
         "1.6.2 - Advanced project revision for the iOS mobile zoom and viewport containment fix.",
         "1.6.1 - Reframed runtime data and deployment metadata as independent per-installation storage.",
