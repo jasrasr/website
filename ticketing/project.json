@@ -1,6 +1,6 @@
 {
   "name": "Ticketing",
-  "revision": "1.6.2",
+  "revision": "1.7.0",
   "modified": "2026-09-15",
   "revisionPolicy": "Project and file revisions start at 1.0.0 and never use values below 1.0.0.",
   "files": {
@@ -16,13 +16,21 @@
       ]
     },
     "app.js": {
-      "revision": "1.3.0",
-      "modified": "2026-09-14",
+      "revision": "1.4.0",
+      "modified": "2026-09-15",
       "history": [
+        "1.4.0 - Added searchable requester/category autocomplete with usage-aware suggestions and hierarchy-friendly category results.",
         "1.3.0 - Added category hierarchy loading and controlled category dropdown using stable category IDs.",
         "1.1.1 - Added confirmation-password fields and client-side matching validation for requester/agent creation.",
         "1.1.0 - Added no-password testing login, display-name profiles, avatar upload/preview, and profile editor.",
         "1.0.0 - Added requester/agent login flows, persistent dropdown lists, add-new actions, and session-aware ticket access."
+      ]
+    },
+    "autocomplete.css": {
+      "revision": "1.0.0",
+      "modified": "2026-09-15",
+      "history": [
+        "1.0.0 - Added desktop/mobile searchable combobox styling for requester and category selection."
       ]
     },
     "styles.css": {
@@ -78,9 +86,10 @@
       ]
     },
     "CHANGELOG.md": {
-      "revision": "1.6.2",
+      "revision": "1.7.0",
       "modified": "2026-09-15",
       "history": [
+        "1.7.0 - Documented searchable category/requester autocomplete and usage-aware suggestions.",
         "1.6.2 - Documented iOS form-focus zoom and mobile viewport overflow fix after first-agent setup.",
         "1.6.1 - Clarified that every fork/deployment is independent of the original GitHub account and hosting provider.",
         "1.6.0 - Documented web category management and instance-local category runtime storage.",
@@ -100,9 +109,10 @@
       "history": ["1.0.0 - Maintained future feature backlog."]
     },
     "project.json": {
-      "revision": "1.6.2",
+      "revision": "1.7.0",
       "modified": "2026-09-15",
       "history": [
+        "1.7.0 - Advanced project revision for searchable category and requester ticket-entry controls.",
         "1.6.2 - Advanced project revision for the iOS mobile zoom and viewport containment fix.",
         "1.6.1 - Reframed runtime data and deployment metadata as independent per-installation storage.",
         "1.6.0 - Added category manager, category sample/runtime split, and stable-ID category editing architecture.",
