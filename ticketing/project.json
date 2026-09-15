@@ -1,6 +1,6 @@
 {
   "name": "Ticketing",
-  "revision": "1.7.2",
+  "revision": "1.7.3",
   "modified": "2026-09-15",
   "revisionPolicy": "Project and file revisions start at 1.0.0 and never use values below 1.0.0.",
   "files": {
@@ -83,10 +83,16 @@
       "modified": "2026-09-14",
       "history": ["1.0.0 - Added generic host-agnostic installation and fork deployment instructions."]
     },
+    "EMAIL-SETUP.md": {
+      "revision": "1.0.0",
+      "modified": "2026-09-15",
+      "history": ["1.0.0 - Added Microsoft 365 shared-mailbox, Entra app, Exchange Online RBAC, Graph testing, and Hostinger configuration steps."]
+    },
     "CHANGELOG.md": {
-      "revision": "1.7.2",
+      "revision": "1.7.3",
       "modified": "2026-09-15",
       "history": [
+        "1.7.3 - Added Microsoft 365 and Entra application email setup documentation.",
         "1.7.2 - Fixed stale asset version references that prevented the autocomplete UI from loading on cached clients.",
         "1.7.1 - Documented compact category-management rows and on-demand editing.",
         "1.7.0 - Documented searchable category/requester autocomplete and usage-aware suggestions.",
@@ -105,9 +111,10 @@
     },
     "TODO.md": {"revision": "1.0.0", "modified": "2026-09-14", "history": ["1.0.0 - Maintained future feature backlog."]},
     "project.json": {
-      "revision": "1.7.2",
+      "revision": "1.7.3",
       "modified": "2026-09-15",
       "history": [
+        "1.7.3 - Advanced project revision for Microsoft 365 email integration setup documentation.",
         "1.7.2 - Advanced project revision for autocomplete asset cache-busting fix.",
         "1.7.1 - Advanced project revision for the compact category-management interface.",
         "1.7.0 - Advanced project revision for searchable category and requester ticket-entry controls.",
