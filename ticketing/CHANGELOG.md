@@ -1,8 +1,9 @@
 <!--
 File: CHANGELOG.md
-File Revision: 1.7.2
+File Revision: 1.7.3
 Modified: 2026-09-15
 History:
+1.7.3 - Added Microsoft 365 and Entra application email setup documentation.
 1.7.2 - Fixed stale frontend asset revisions that kept cached native requester/category selects instead of the new searchable controls.
 1.7.1 - Compacted category management into one-line rows with on-demand editing.
 1.7.0 - Added searchable requester/category autocomplete with usage-aware suggestions.
@@ -20,6 +21,17 @@ History:
 -->
 
 # Ticketing Changelog
+
+## Project Revision 1.7.3 — 2026-09-15
+
+### Added
+- Added `EMAIL-SETUP.md` with the complete Microsoft 365 email-integration setup procedure.
+- Documented creating an unlicensed `tickets@jasr.me` shared mailbox.
+- Documented creating the Microsoft Entra application and client secret.
+- Documented Exchange Online RBAC for Applications so `Application Mail.Send` is scoped only to the Ticketing mailbox.
+- Added PowerShell commands to verify the shared mailbox, create the Exchange service principal, create the management scope, test authorization, obtain a Graph token, and send a test message.
+- Documented the future Hostinger `config/mail.json` layout and the requirement to keep credentials out of Git.
+- Documented the next application-development sequence for outbound notifications and future inbound reply-by-email processing.
 
 ## Project Revision 1.7.2 — 2026-09-15
 
