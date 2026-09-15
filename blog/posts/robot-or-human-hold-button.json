@@ -1,0 +1,26 @@
+{
+  "_meta": {
+    "filename": "robot-or-human-hold-button.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.0",
+    "changelog": [
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "robot-or-human-hold-button",
+  "title": "Robot or Human? A Playful Press-and-Hold Web Experiment",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "Browser experiments"
+  ],
+  "excerpt": "A press-and-hold interaction with a comic robot, keyboard support, and a clear distinction between a visual gate and server-side access checks.",
+  "cover": {
+    "src": "/media/derivatives/2026/09/robot-or-human-hold-button_640w.jpg",
+    "alt": "Robot or Human? A Playful Press-and-Hold Web Experiment cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"/media/derivatives/2026/09/robot-or-human-hold-button_640w.jpg\" alt=\"Robot or Human? A Playful Press-and-Hold Web Experiment cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>My Robot or Human? page asks a very serious question using a very unserious robot. The visitor holds a button until a progress bar fills, while a disguised cartoon robot adds some personality to the test.</p>\n<p>The interaction is deliberately forgiving. Releasing early drains the progress instead of immediately resetting it, so the visitor can resume. Moving the pointer while holding gives the bar a boost. Keyboard users can use Space or Enter, and the page respects reduced-motion preferences.</p>\n<p>There are two modes, and they do different jobs. In the static version, the page is a visual interaction. Any destination encoded in client-side code is still discoverable by someone inspecting that code. It is suitable as a playful speed bump, not a private-content boundary.</p>\n<p>The PHP version adds a server-checked session and a protected next page. That addresses direct navigation to the destination without completing the configured flow. It still should not be described as a sophisticated test that reliably proves a visitor is human rather than automated software.</p>\n<p>That distinction is part of what makes this project interesting. A screen can look like verification while doing very different things behind the scenes. Naming the actual behavior helps keep the joke from turning into an accidental security claim.</p>\n<p>The project is a small exercise in feedback, pacing, and personality. The progress bar tells someone what to do, the animation gives it character, and the code offers a chance to explore where browser interaction ends and server-side state begins.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/human-proof\">Explore the project on GitHub</a></p>\n"
+}

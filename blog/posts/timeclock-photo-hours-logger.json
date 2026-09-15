@@ -1,0 +1,26 @@
+{
+  "_meta": {
+    "filename": "timeclock-photo-hours-logger.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.0",
+    "changelog": [
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "timeclock-photo-hours-logger",
+  "title": "From Clock-Out Slip to Work-Hours Log",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "Everyday tools"
+  ],
+  "excerpt": "A photo and manual-entry work-hours logger with reviewed OCR, overnight-shift calculations, and employee summaries.",
+  "cover": {
+    "src": "/media/derivatives/2026/09/timeclock-photo-hours-logger_640w.jpg",
+    "alt": "From Clock-Out Slip to Work-Hours Log cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"/media/derivatives/2026/09/timeclock-photo-hours-logger_640w.jpg\" alt=\"From Clock-Out Slip to Work-Hours Log cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>A clock-out slip records a useful fact, but a pile of slip photos does not automatically become a useful history. My Timeclock Photo Logger gives those records a more consistent path.</p>\n<p>A user can upload a photo, optionally run text recognition, review the parsed fields, and save the shift. Manual entry is available when there is no photo or no configured OCR service. The review step keeps the source image and the final record from being treated as the same thing.</p>\n<p>The project supports manual, local Tesseract, and OCR.Space modes. A hosted installation can use the option its environment supports instead of requiring local software that shared hosting may not provide.</p>\n<p>Once the fields are entered, the app recalculates shift minutes from the start and end times, including overnight shifts. It can compare the calculated duration with printed shift hours and includes duplicate-shift protection. The resulting history can be viewed by employee, week, or month.</p>\n<p>PHP stores the records in per-employee JSON files, while uploaded images and intermediate extraction results have separate storage. That keeps the application small while retaining a connection to how an entry was created.</p>\n<p>This is a logging and review tool, not a claim to reproduce every payroll rule. Its purpose is to organize the entered time records and make discrepancies easier to notice.</p>\n<p>I like the workflow because it gives automation an appropriate role. OCR can save typing, but the user gets a chance to correct the fields before they become part of the history. The final record should be more dependable than the first guess.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/how-much-time-worked\">Explore the project on GitHub</a></p>\n"
+}

@@ -1,0 +1,26 @@
+{
+  "_meta": {
+    "filename": "tv-binge-board-watch-tracker.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.0",
+    "changelog": [
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "tv-binge-board-watch-tracker",
+  "title": "TV Binge Board: Remembering What I Was Watching",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "Everyday tools"
+  ],
+  "excerpt": "A self-hosted watch tracker for TV and movies, with episode progress, next-up information, imports, and sharing.",
+  "cover": {
+    "src": "/media/derivatives/2026/09/tv-binge-board-watch-tracker_640w.jpg",
+    "alt": "TV Binge Board: Remembering What I Was Watching cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"/media/derivatives/2026/09/tv-binge-board-watch-tracker_640w.jpg\" alt=\"TV Binge Board: Remembering What I Was Watching cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>There is a particular kind of entertainment problem where the hard part is remembering which episode comes next. TV Binge Board gives that information a home.</p>\n<p>The app tracks shows and movies a user wants to watch, is watching, has completed, or has dropped. It also supports ratings and notes. It is an organizer for watching, not a service that streams the content.</p>\n<p>The workflow brings search, manual entry, imports, and screenshot uploads into the same general area. TMDB-linked items can refresh their available episode information, while next-up and caught-up labels make progress easier to interpret. An episode becoming available does not automatically mean it has been watched.</p>\n<p>There are useful controls for avoiding clutter. Smart sorting favors active items, finished or caught-up shows can be hidden, and compact mobile cards keep the list manageable. A text-only episode mode gives another way to view progress without relying on picture cards.</p>\n<p>Sharing and mutual connections add a social layer. Users can expose appropriate lists and see activity from connected or public lists. Import review also matters: staged entries and duplicate checks give someone a chance to correct a guess before it joins the collection.</p>\n<p>The project uses PHP and JSON, with file locking, atomic writes, and restore points. It includes home-screen installation support, but the web interface remains the center of the experience.</p>\n<p>Feedback has shaped the project. The documentation credits Matt's early testing with improvements to sorting, progress controls, compact views, and next-episode behavior. That is a good example of how real use reveals needs that a feature checklist misses.</p>\n<p>The goal is simple: spend less time reconstructing the watchlist and more time actually watching something.</p>\n<p><a href=\"https://jasr.me/github/tv-binge-board/\">Open the hosted project</a> · <a href=\"https://github.com/jasrasr/website/tree/main/tv-binge-board\">Explore the project on GitHub</a></p>\n"
+}

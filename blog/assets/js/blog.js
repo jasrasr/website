@@ -92,8 +92,12 @@
       .map((t) => `<span class="pill" title="Tag">${escHtml(t)}</span>`)
       .join("");
 
+    const cover = p.cover && p.cover.src
+      ? `<img class="post-card-cover" src="${escHtml(p.cover.src)}" alt="${escHtml(p.cover.alt || p.title + " cover image")}" loading="lazy" decoding="async">`
+      : "";
     return `
       <div class="card">
+        ${cover}
         <h2><a href="post.html?p=${encodeURIComponent(p.slug)}">${safeTitle}</a></h2>
         <div class="post-meta">
           <time class="muted">${escHtml(date)}</time>
