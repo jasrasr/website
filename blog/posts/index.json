@@ -615,6 +615,40 @@
         "alt": "A Webhook Idea That Has Not Become an App Yet cover image"
       },
       "_searchText": "a webhook idea that has not become an app yet project sketches project sketch a brief development note on the visual ping webhook placeholder and the questions that need answers before implementation.    \n not every folder in a project repository represents a finished application. my visual-ping-webhook-api folder is a clear example: the reviewed snapshot contains a readme with the words first file, and no implemented endpoint. \n the repository index identifies it as an early webhook idea. that is the current status, not evidence that requests are already being received, stored, or forwarded. \n for a future implementation, i would start by defining a few practical boundaries: what information a request contains, how an authorized sender is recognized, what needs to be retained, and what response indicates success. those are proposed design questions, not existing capabilities. \n a webhook project becomes useful when the event arriving at the endpoint leads to a clear next action. until that behavior is defined and implemented, the honest description is an idea awaiting development. \n i am keeping this note short for the same reason. a placeholder deserves an accurate label, not a feature list assembled from what the folder name suggests. \n  explore the project on github  \n"
+    },
+    {
+      "slug": "hello-world",
+      "title": "Hello, flat-file world",
+      "date": "2026-02-03",
+      "tags": [
+        "meta",
+        "setup"
+      ],
+      "excerpt": "",
+      "_searchText": "hello, flat-file world meta setup   welcome to the blog that refuses to pay the database tax.  each post is a  .json  file. the homepage reads  posts/index.json  and builds the list. clicking a post loads  posts/&lt;slug&gt;.json .  how to add a new post   copy  posts/_template.json  to  posts/my-new-post.json   change the  slug ,  title , dates, tags, and html  add the post entry to  posts/index.json  (or run the build script)   that’s it. no admin panel. no plugins. no mysterious tables named  wp_options  doing eldritch things. "
+    },
+    {
+      "slug": "notepadpp-caution",
+      "title": "Supply-chain paranoia: a practical Notepad++ sanity check",
+      "date": "2026-02-02",
+      "tags": [
+        "security",
+        "windows"
+      ],
+      "excerpt": "",
+      "_searchText": "supply-chain paranoia: a practical notepad++ sanity check security windows   security is mostly being annoyingly consistent.  basic checks that actually matter   download from the official site (or a trusted package manager)  verify the digital signature if present  compare hashes when the vendor provides them  keep it updated, but don’t auto-trust random mirrors   bonus points: treat “portable exes from forum posts” as guilty until proven innocent.   # example idea (conceptual)\\n# - get file signature\\n# - validate chain\\n# - compare known hash\\n  "
+    },
+    {
+      "slug": "homelab-notes",
+      "title": "Homelab notes: logs, backups, and the art of not losing your mind",
+      "date": "2026-01-28",
+      "tags": [
+        "homelab",
+        "ops",
+        "backup"
+      ],
+      "excerpt": "",
+      "_searchText": "homelab notes: logs, backups, and the art of not losing your mind homelab ops backup   your homelab will eventually betray you. the only question is whether you left yourself a note.  three rules    logs or it didn’t happen.  centralize where possible.   backups or it didn’t matter.  3-2-1 beats hope.   documentation or it didn’t belong in prod.  yes, your lab has prod now.   make future-you smug instead of furious. "
     }
   ]
 }
