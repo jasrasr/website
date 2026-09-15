@@ -4,6 +4,9 @@ All notable changes to this project are documented here. Format is loosely based
 
 ## Unreleased
 
+## 2026-09-15
+- Added a day-of-week abbreviation (M/T/W/TH/F/SA/SU) under each x-axis date label on both dashboards' charts. (Rev 1.3)
+
 ## 2026-09-10
 - Added `index-simple.php`: a lightweight, read-only dashboard showing one chart of daily unresolved, new, and closed/resolved ticket counts. Does not modify or depend on `index.php`.
 - Added `lib/version.php`: shared `APP_REVISION`/`APP_UPDATED` constants, surfaced in the footer of both dashboards.

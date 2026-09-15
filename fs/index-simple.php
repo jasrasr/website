@@ -83,7 +83,7 @@ $latest = $dayCount ? $days[$dayCount - 1] : null;
 
 // SVG layout.
 $width = 900; $height = 340;
-$padL = 46; $padR = 16; $padT = 30; $padB = 40;
+$padL = 46; $padR = 16; $padT = 30; $padB = 54;
 $plotW = $width - $padL - $padR;
 $plotH = $height - $padT - $padB;
 
@@ -91,6 +91,12 @@ function xFor(int $index, int $count, float $plotW, float $padL): float
 {
     if ($count <= 1) return $padL + $plotW / 2;
     return $padL + $plotW * $index / ($count - 1);
+}
+
+function dayOfWeekAbbr(DateTimeImmutable $date): string
+{
+    static $map = [1 => 'M', 2 => 'T', 3 => 'W', 4 => 'TH', 5 => 'F', 6 => 'SA', 7 => 'SU'];
+    return $map[(int) $date->format('N')];
 }
 
 function yFor(?int $value, int $maxValue, float $plotH, float $padT): ?float
@@ -189,8 +195,10 @@ $labelStep = $dayCount > 14 ? (int) ceil($dayCount / 10) : 1;
                     $x = xFor($index, $dayCount, (float) $plotW, (float) $padL);
                     $date = DateTimeImmutable::createFromFormat('Y-m-d', $day['date']);
                     $label = $date ? $date->format('M j') : $day['date'];
+                    $dowLabel = $date ? dayOfWeekAbbr($date) : '';
                 ?>
                     <text x="<?= $x ?>" y="<?= $height - $padB + 18 ?>" text-anchor="middle" font-size="11" fill="#93a4ba"><?= e($label) ?></text>
+                    <text x="<?= $x ?>" y="<?= $height - $padB + 32 ?>" text-anchor="middle" font-size="10" fill="#6b7d96"><?= e($dowLabel) ?></text>
                 <?php endforeach; ?>
 
                 <?php foreach ($series as $config): ?>
