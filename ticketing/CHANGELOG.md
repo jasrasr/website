@@ -1,8 +1,9 @@
 <!--
 File: CHANGELOG.md
-File Revision: 1.7.1
+File Revision: 1.7.2
 Modified: 2026-09-15
 History:
+1.7.2 - Fixed stale frontend asset revisions that kept cached native requester/category selects instead of the new searchable controls.
 1.7.1 - Compacted category management into one-line rows with on-demand editing.
 1.7.0 - Added searchable requester/category autocomplete with usage-aware suggestions.
 1.6.2 - Fixed iOS form-focus zoom and mobile dashboard viewport overflow after first-agent setup.
@@ -19,6 +20,18 @@ History:
 -->
 
 # Ticketing Changelog
+
+## Project Revision 1.7.2 — 2026-09-15
+
+### Fixed
+- `app.js` already contained the searchable requester/category autocomplete implementation, but `index.php` was still loading `app.js?v=1.3.0`.
+- Mobile browsers could therefore continue using the cached pre-autocomplete script and show the original native `<select>` controls.
+- Updated `index.php` to load `app.js?v=1.4.0`, `styles.css?v=1.2.1`, and `autocomplete.css?v=1.0.0` explicitly.
+- This forces clients to request the current autocomplete code and styling after deployment.
+
+### Verified in source
+- Requester autocomplete searches display name and email, ranks common/recent requesters, and keeps **+ Add new requester…** available.
+- Category autocomplete searches any part of the category name or hierarchy and displays the leaf category prominently with parent hierarchy as secondary text.
 
 ## Project Revision 1.7.1 — 2026-09-15
 
