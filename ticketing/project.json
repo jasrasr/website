@@ -1,7 +1,7 @@
 {
   "name": "Ticketing",
-  "revision": "1.6.1",
-  "modified": "2026-09-14",
+  "revision": "1.6.2",
+  "modified": "2026-09-15",
   "revisionPolicy": "Project and file revisions start at 1.0.0 and never use values below 1.0.0.",
   "files": {
     "index.php": {
@@ -9,7 +9,7 @@
       "modified": "2026-09-14",
       "history": [
         "1.4.0 - Added instance-local category runtime bootstrap from sample data and Manage Categories navigation.",
-        "1.3.0 - Added hierarchical category JSON API, category reference validation, and controlled category selection.",
+        "1.3.0 - Added hierarchical category JSON API, category reference validation, and controlled ticket category selection.",
         "1.1.1 - Added server-side password confirmation validation for requester and agent account creation.",
         "1.1.0 - Added passwordless test mode, email usernames, display names, avatar uploads, and profile editing API.",
         "1.0.0 - Added PHP-session authentication, requester/agent authorization, protected ticket APIs, and persistent people directory support."
@@ -22,13 +22,14 @@
         "1.3.0 - Added category hierarchy loading and controlled category dropdown using stable category IDs.",
         "1.1.1 - Added confirmation-password fields and client-side matching validation for requester/agent creation.",
         "1.1.0 - Added no-password testing login, display-name profiles, avatar upload/preview, and profile editor.",
-        "1.0.0 - Added requester/agent login flows, persistent dropdown lists, add-new actions, and session-aware UI behavior."
+        "1.0.0 - Added requester/agent login flows, persistent dropdown lists, add-new actions, and session-aware ticket access."
       ]
     },
     "styles.css": {
-      "revision": "1.2.0",
-      "modified": "2026-09-14",
+      "revision": "1.2.1",
+      "modified": "2026-09-15",
       "history": [
+        "1.2.1 - Prevented iOS form-focus zoom from leaving the dashboard enlarged/panned and tightened viewport overflow containment.",
         "1.2.0 - Redesigned the mobile header, profile identity, navigation, utility links, page title row, and dashboard spacing for a compact layout.",
         "1.1.1 - Fixed mobile vertical scrolling and touch behavior.",
         "1.1.0 - Added avatar, profile editor, and test-mode notice styling.",
@@ -77,9 +78,10 @@
       ]
     },
     "CHANGELOG.md": {
-      "revision": "1.6.1",
-      "modified": "2026-09-14",
+      "revision": "1.6.2",
+      "modified": "2026-09-15",
       "history": [
+        "1.6.2 - Documented iOS form-focus zoom and mobile viewport overflow fix after first-agent setup.",
         "1.6.1 - Clarified that every fork/deployment is independent of the original GitHub account and hosting provider.",
         "1.6.0 - Documented web category management and instance-local category runtime storage.",
         "1.5.0 - Documented separation of live runtime JSON from Git-tracked sample files.",
@@ -98,9 +100,10 @@
       "history": ["1.0.0 - Maintained future feature backlog."]
     },
     "project.json": {
-      "revision": "1.6.1",
-      "modified": "2026-09-14",
+      "revision": "1.6.2",
+      "modified": "2026-09-15",
       "history": [
+        "1.6.2 - Advanced project revision for the iOS mobile zoom and viewport containment fix.",
         "1.6.1 - Reframed runtime data and deployment metadata as independent per-installation storage.",
         "1.6.0 - Added category manager, category sample/runtime split, and stable-ID category editing architecture.",
         "1.5.0 - Updated manifest for instance-local runtime storage and repository sample datastores.",
