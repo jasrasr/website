@@ -1,8 +1,9 @@
 <!--
 File: CHANGELOG.md
-File Revision: 1.6.2
+File Revision: 1.7.0
 Modified: 2026-09-15
 History:
+1.7.0 - Added searchable requester/category autocomplete with usage-aware suggestions.
 1.6.2 - Fixed iOS form-focus zoom and mobile dashboard viewport overflow after first-agent setup.
 1.6.1 - Clarified fork/host independence and added generic installation guidance.
 1.6.0 - Added web category management and moved live categories to instance-local runtime storage.
@@ -17,6 +18,25 @@ History:
 -->
 
 # Ticketing Changelog
+
+## Project Revision 1.7.0 — 2026-09-15
+
+### Added
+- Replaced the long native requester selection workflow with a searchable autocomplete field.
+- Requester search matches both display name and email address.
+- Opening requester search without typing prioritizes frequently used requesters, with recent ticket activity used as a secondary ranking signal.
+- **+ Add new requester…** remains available directly from the requester suggestions.
+- Replaced the long hierarchical category dropdown workflow with searchable autocomplete.
+- Category search matches any portion of the category name or full hierarchy path, so searches such as `printer`, `battery`, `Teams`, or `laptop` find the appropriate category immediately.
+- Category suggestions display the specific category name prominently and its parent hierarchy as smaller secondary text rather than repeating a long `Parent > Child > Grandchild` string as the primary label.
+- Category suggestions use existing ticket history to prioritize frequently/recently used categories when the field is opened without a search term.
+- Added keyboard support for Arrow Up/Down, Enter, and Escape.
+- Added `autocomplete.css` with mobile-specific suggestion presentation that avoids the large native iOS select sheet.
+
+### Data behavior
+- The autocomplete UI still writes the existing requester email and stable `categoryId` values to the ticket API.
+- No ticket schema changes were required.
+- Requester popularity and category popularity are calculated from the local ticket history; no new tracking datastore is required.
 
 ## Project Revision 1.6.2 — 2026-09-15
 
