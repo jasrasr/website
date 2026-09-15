@@ -1,0 +1,26 @@
+{
+  "_meta": {
+    "filename": "two-pane-ai-writing-tool.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.0",
+    "changelog": [
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "two-pane-ai-writing-tool",
+  "title": "A Two-Pane Writing Tool That Keeps the Draft in View",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "Everyday tools"
+  ],
+  "excerpt": "My browser writing experiment puts the draft beside AI suggestions, with local autosave and a PHP request proxy.",
+  "cover": {
+    "src": "/media/derivatives/2026/09/two-pane-ai-writing-tool_640w.jpg",
+    "alt": "A Two-Pane Writing Tool That Keeps the Draft in View cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"/media/derivatives/2026/09/two-pane-ai-writing-tool_640w.jpg\" alt=\"A Two-Pane Writing Tool That Keeps the Draft in View cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>When I ask for help with a piece of writing, I still want to keep the actual draft in front of me. My AI Writing Tool is built around a two-pane layout: writing on one side, suggestions on the other.</p>\n<p>The browser editor keeps the draft in local storage and maintains a local change log. That makes the page useful before an AI request is involved. Writing, revising, and keeping the current text available are the basic jobs.</p>\n<p>When suggestions are requested, the page sends the draft to a PHP endpoint that calls the AI service. The API key stays in server-side configuration rather than being placed in the browser code. The project also includes basic request throttling and a health-check endpoint for setup.</p>\n<p>The separation between local storage and an AI request is worth understanding. Local autosave means the draft is stored in that browser; it does not mean every device automatically shares it. Requesting AI suggestions also means submitting the selected draft content through the configured service. Those are two different parts of the workflow.</p>\n<p>The interface is intentionally smaller than a full document platform. It is a place to develop a piece of text and compare suggestions without constantly moving between windows.</p>\n<p>I like the idea of assistance that leaves the working document visible. The suggestions can be useful without becoming the whole experience. The person writing still has to decide whether a change preserves the meaning, sounds natural, and actually improves the paragraph.</p>\n<p>This project gives that decision a straightforward place to happen: the draft and the advice, side by side.</p>\n<p><a href=\"https://jasr.me/github/ai-writing-tool/\">Open the hosted project</a> · <a href=\"https://github.com/jasrasr/website/tree/main/ai-writing-tool\">Explore the project on GitHub</a></p>\n"
+}

@@ -1,0 +1,26 @@
+{
+  "_meta": {
+    "filename": "qr-box-inventory-system.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.0",
+    "changelog": [
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "qr-box-inventory-system",
+  "title": "QR Labels for the Boxes I Would Otherwise Open One by One",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "Family and home"
+  ],
+  "excerpt": "My QR box inventory connects printable labels to editable contents lists, with stable box IDs and a simple PHP backend.",
+  "cover": {
+    "src": "/media/derivatives/2026/09/qr-box-inventory-system_640w.jpg",
+    "alt": "QR Labels for the Boxes I Would Otherwise Open One by One cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"/media/derivatives/2026/09/qr-box-inventory-system_640w.jpg\" alt=\"QR Labels for the Boxes I Would Otherwise Open One by One cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>A storage box labeled miscellaneous is technically accurate and almost completely unhelpful. The QR Box Inventory System makes the label a doorway to a more useful description.</p>\n<p>Each box gets a unique ID, a printable QR code, and a mobile-friendly contents page. Scanning the label opens that page, where the item list, count, and last-updated information can be viewed. An authenticated administrator can maintain the contents as the box changes.</p>\n<p>The stable ID is an important design choice. Renaming a box does not change its QR code. That means a label can remain attached while the description becomes more specific or the purpose of the box changes. Printing a new label for every wording improvement would defeat some of the convenience.</p>\n<p>The project supports multiple printable label layouts and per-user ownership. Administrators can manage the collection, and missing QR images can be regenerated. Records are stored in JSON, with PHP handling the application and PDF label generation.</p>\n<p>One characteristic to understand is that the scan destination is a public contents page in the documented design. It is a useful inventory label, but it is not a private document vault. The items listed should fit that sharing model.</p>\n<p>What I like is the connection between a physical workflow and a small web application. The phone becomes the viewer, the label stays simple, and the detailed list can be updated without squeezing another handwritten line onto a piece of tape.</p>\n<p>The project does not organize the boxes for me. It does make the next search less dependent on remembering which identical bin contains the thing I need.</p>\n<p><a href=\"https://jasr.me/github/box/\">Open the hosted project</a> · <a href=\"https://github.com/jasrasr/website/tree/main/box\">Explore the project on GitHub</a></p>\n"
+}

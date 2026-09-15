@@ -1,0 +1,26 @@
+{
+  "_meta": {
+    "filename": "powershell-web-file-manager.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.0",
+    "changelog": [
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "powershell-web-file-manager",
+  "title": "Connecting PowerShell Uploads to a Web File Manager",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "IT and automation"
+  ],
+  "excerpt": "A PHP file manager that gives PowerShell-generated files an upload endpoint, browser administration, and version history.",
+  "cover": {
+    "src": "/media/derivatives/2026/09/powershell-web-file-manager_640w.jpg",
+    "alt": "Connecting PowerShell Uploads to a Web File Manager cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"/media/derivatives/2026/09/powershell-web-file-manager_640w.jpg\" alt=\"Connecting PowerShell Uploads to a Web File Manager cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>A script can create a useful file and still leave one job unfinished: getting that file somewhere I can find and manage it later. My Upload &amp; File Manager project connects automated uploads with a browser-based administration workflow.</p>\n<p>The PowerShell side sends files to an HTTP upload endpoint. The web side lists files, supports text-file creation, and provides version-related actions. That gives automated output and manual administration a shared destination.</p>\n<p>Versioning is especially useful when a filename stays the same while its contents change. The project keeps numbered versions and supports promoting an older version back to the current file. Restoring a previous result should not require remembering which download folder happened to contain it.</p>\n<p>The documented design includes upload authentication, IP allowlisting, request limits, logging, and multi-factor checks around selected administrative actions. It also describes an optional deployment dependency for geographic IP filtering. These are configuration and implementation features, not a claim that the app has passed a security certification.</p>\n<p>Keeping the upload API usable from PowerShell is central to the project. A script should be able to report success or failure from the server response, rather than depend on driving a browser interface. Meanwhile, the browser gives a person a convenient way to inspect and manage what arrived.</p>\n<p>The most useful part is the handoff. Automation produces the file; the web application supplies a place to keep its versions and work with it. That makes this project less about uploading for its own sake and more about finishing the last practical step of an automated task.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/file-manager\">Explore the project on GitHub</a></p>\n"
+}

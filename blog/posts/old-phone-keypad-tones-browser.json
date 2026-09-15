@@ -1,0 +1,26 @@
+{
+  "_meta": {
+    "filename": "old-phone-keypad-tones-browser.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.0",
+    "changelog": [
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "old-phone-keypad-tones-browser",
+  "title": "Recreating Old Phone Keypad Tones in the Browser",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "Browser experiments"
+  ],
+  "excerpt": "A small Web Audio experiment that recreates a telephone keypad with mouse, touch, and keyboard input.",
+  "cover": {
+    "src": "/media/derivatives/2026/09/old-phone-keypad-tones-browser_640w.jpg",
+    "alt": "Recreating Old Phone Keypad Tones in the Browser cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"/media/derivatives/2026/09/old-phone-keypad-tones-browser_640w.jpg\" alt=\"Recreating Old Phone Keypad Tones in the Browser cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>A telephone keypad has a sound that is recognizable before anyone sees the device. My Old Phone Tone Number Pad recreates that interaction in a browser.</p>\n<p>The page provides the familiar digits, star, and hash keys, plus a display and clear and backspace controls. It accepts clicks, taps, and keyboard input, so the interaction is not tied to one kind of screen.</p>\n<p>The tones are generated using the browser's audio capabilities. Each keypad entry uses a pair of frequencies, with oscillators starting and stopping as the input is pressed and released. That creates the familiar dual-tone behavior rather than playing a separate recording for every button.</p>\n<p>Keeping the input state clear is part of the job. The visible button, displayed digits, and active sound should agree about what is being pressed. Releasing the input should stop the tone instead of leaving an oscillator playing in the background.</p>\n<p>This is an audio keypad demonstration. It does not place calls or turn the browser into a telephone service. Its value is in recreating a familiar interface and exploring the mechanics behind the sound.</p>\n<p>I like that the feedback is immediate. Press a key and the browser produces something recognizable from a small amount of code. It is a good example of a project that can be both nostalgic and technically interesting without growing into a larger app.</p>\n<p>The result is a tiny bit of old-phone behavior on a modern screen, complete with the ability to clear whatever number the experiment produced.</p>\n<p><a href=\"https://github.com/jasrasr/website/blob/main/phone-dialer.html\">Explore the project on GitHub</a></p>\n"
+}

@@ -239,7 +239,7 @@ $posts = foreach ($f in $postFiles) {
             }
         }
 
-        $searchText = ("0 1 2 3" -f $p.title, ($p.tags -join ' '), $excerpt, $bodyText).ToLower()
+        $searchText = ("{0} {1} {2} {3}" -f $p.title, ($p.tags -join ' '), $excerpt, $bodyText).ToLower()
 
         [pscustomobject]@{
             slug        = [string]$p.slug
@@ -376,7 +376,7 @@ $urls = @(
 )
 
 foreach ($p in $postsSorted) {
-    $urls += ("0/post.html?p=1" -f $SiteBaseUrl.TrimEnd('/'), $p.slug)
+    $urls += ("{0}/post.html?p={1}" -f $SiteBaseUrl.TrimEnd('/'), $p.slug)
 }
 
 $urlNodes = $urls | ForEach-Object { "  <url><loc>$(XmlEscape $_)</loc></url>" }
@@ -419,3 +419,4 @@ EXAMPLE USAGE:
 # - The build script additionally refreshes "used_in" links by scanning post content_html for /media/derivatives/... references.
 
 #>
+

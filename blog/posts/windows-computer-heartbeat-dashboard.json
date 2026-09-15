@@ -1,0 +1,26 @@
+{
+  "_meta": {
+    "filename": "windows-computer-heartbeat-dashboard.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.0",
+    "changelog": [
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "windows-computer-heartbeat-dashboard",
+  "title": "Computer Heartbeats: Making Windows Device Check-Ins Easier to See",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "IT and automation"
+  ],
+  "excerpt": "A dashboard-side look at the documented PowerShell-to-PHP heartbeat workflow, including what the current repository package contains.",
+  "cover": {
+    "src": "/media/derivatives/2026/09/windows-computer-heartbeat-dashboard_640w.jpg",
+    "alt": "Computer Heartbeats: Making Windows Device Check-Ins Easier to See cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"/media/derivatives/2026/09/windows-computer-heartbeat-dashboard_640w.jpg\" alt=\"Computer Heartbeats: Making Windows Device Check-Ins Easier to See cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Knowing that a computer existed in an inventory last month is different from knowing it has checked in recently. The Computer Heartbeat project is built around that second question.</p>\n<p>The documented design connects a PowerShell report to a PHP receiver and JSON history, then presents those records in a browser dashboard. Reports include device and operating-system details, user context, and timestamps. The dashboard brings the latest observations into a searchable, sortable table.</p>\n<p>The useful distinction is between an observation and an assumption. A recent check-in tells me the reporting path worked at that moment. An old check-in tells me the information is stale; it does not, by itself, explain whether the device is powered off, disconnected, or having trouble reporting.</p>\n<p>The project documentation describes online and offline counts, model and serial information, relative timestamps, and a historical view. Those elements make it easier to move from a broad list to the individual machine that deserves attention.</p>\n<p>There is also a packaging detail in the current repository snapshot: the computers folder contains dashboard-side files and documentation, while some documented client and receiver components are not included there. I would treat the folder as part of the documented system, not promise that downloading it alone creates a complete installation.</p>\n<p>What interests me here is the connection between a small PowerShell report and a useful web view. The report does not have to be complicated to be valuable. It needs consistent fields, meaningful timestamps, and somewhere those observations can be reviewed without opening a pile of raw files.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/computers\">Explore the project on GitHub</a></p>\n"
+}
