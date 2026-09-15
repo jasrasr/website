@@ -1,8 +1,9 @@
 <!--
 File: CHANGELOG.md
-File Revision: 1.6.1
-Modified: 2026-09-14
+File Revision: 1.6.2
+Modified: 2026-09-15
 History:
+1.6.2 - Fixed iOS form-focus zoom and mobile dashboard viewport overflow after first-agent setup.
 1.6.1 - Clarified fork/host independence and added generic installation guidance.
 1.6.0 - Added web category management and moved live categories to instance-local runtime storage.
 1.5.0 - Moved mutable ticketing data out of Git tracking and added sample datastore files.
@@ -16,6 +17,19 @@ History:
 -->
 
 # Ticketing Changelog
+
+## Project Revision 1.6.2 — 2026-09-15
+
+### Fixed
+- Prevented iOS Safari/Chrome from automatically zooming the first-agent/login forms by forcing mobile text inputs, selects, and textareas to a minimum 16px font size.
+- Fixed the post-registration dashboard appearing enlarged and horizontally panned, which could clip the left side of **Agent Dashboard**, the right side of **Refresh**, and project-footer content.
+- Added stricter width/max-width containment to the application shell, sidebar, main content, dashboard statistics, panels, tables, and footer.
+- Added `-webkit-text-size-adjust: 100%` / `text-size-adjust: 100%` to prevent mobile text inflation from changing the intended layout.
+- Kept wide ticket tables horizontally scrollable inside their own container instead of allowing the entire page to become wider than the viewport.
+- Added safer flex sizing to the page-title area so the title/subtitle and Refresh button remain inside the screen.
+
+### Root cause
+On iOS, form controls rendered below 16px can trigger browser focus zoom. The account-creation form inherited the smaller label font, so after creating the first agent the browser could remain zoomed/panned when the login screen was hidden and the dashboard was displayed. The layout itself was then rendered correctly but viewed through a magnified visual viewport.
 
 ## Project Revision 1.6.1 — 2026-09-14
 
