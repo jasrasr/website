@@ -1,0 +1,28 @@
+/*
+ * Ticketing - autocomplete.css
+ * File Revision: 1.0.0
+ * Modified: 2026-09-15
+ *
+ * Revision History:
+ * 1.0.0 - Added searchable requester/category combobox styles for desktop and mobile.
+ */
+
+.combobox{position:relative;width:100%}
+.combo-native{display:none!important}
+.combo-input{width:100%;padding-right:38px}
+.combo-suggestions{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:10000;max-height:min(340px,46vh);overflow:auto;-webkit-overflow-scrolling:touch;background:#111827;border:1px solid #475569;border-radius:12px;box-shadow:0 18px 48px rgba(0,0,0,.45);padding:6px}
+.combo-heading{padding:7px 10px 6px;color:#94a3b8;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.combo-option{width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 11px;border:0;border-radius:8px;background:transparent;color:#e5e7eb;text-align:left}
+.combo-option:hover,.combo-option.active{background:#1f2937}
+.combo-primary{font-size:.92rem;font-weight:600;line-height:1.25}
+.combo-secondary{font-size:.76rem;color:#94a3b8;line-height:1.25;white-space:normal;overflow-wrap:anywhere}
+.combo-action{margin-top:4px;border-top:1px solid #334155;border-radius:0 0 8px 8px;color:#7dd3fc}
+.combo-empty{padding:12px;color:#94a3b8;font-size:.85rem;text-align:center}
+
+@media(max-width:560px){
+  .combo-input{font-size:16px;min-height:48px}
+  .combo-suggestions{position:fixed;left:14px;right:14px;top:auto;bottom:max(14px,env(safe-area-inset-bottom));max-height:min(52vh,430px);border-radius:16px;padding:8px;z-index:2147483000}
+  .combo-option{padding:12px 13px}
+  .combo-primary{font-size:1rem}
+  .combo-secondary{font-size:.8rem}
+}
