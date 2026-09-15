@@ -1,10 +1,11 @@
 <?php
 /**
  * Ticketing - categories.php
- * File Revision: 1.0.0
- * Modified: 2026-09-14
+ * File Revision: 1.1.0
+ * Modified: 2026-09-15
  *
  * Revision History:
+ * 1.1.0 - Reworked category management into compact rows with on-demand editing for mobile and desktop.
  * 1.0.0 - Added agent-only web category management with add, rename, move, enable/disable, and ordering controls.
  */
 
@@ -13,7 +14,7 @@ session_start();
 
 const CATEGORIES_FILE = __DIR__ . '/data/categories.json';
 const CATEGORIES_SAMPLE_FILE = __DIR__ . '/data/categories.json.sample';
-const PROJECT_REVISION = '1.6.0';
+const PROJECT_REVISION = '1.7.1';
 
 function currentUser(): ?array
 {
@@ -381,57 +382,115 @@ $flat = flattenCategories($categories);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Manage Categories</title>
-    <link rel="stylesheet" href="styles.css?v=1.2.0">
+    <link rel="stylesheet" href="styles.css?v=1.2.1">
     <style>
-        .category-shell{max-width:1100px;margin:0 auto;padding:24px}.category-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.category-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:16px}.category-row{display:grid;grid-template-columns:minmax(220px,1.6fr) minmax(220px,1.1fr) auto;gap:12px;align-items:center;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}.category-name{font-weight:700}.category-path{color:var(--muted);font-size:.78rem;margin-top:3px;overflow-wrap:anywhere}.category-id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);font-size:.72rem;margin-top:4px}.category-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.category-actions form{display:inline}.category-actions button{padding:7px 9px}.category-editor{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}.category-editor label{display:grid;gap:6px}.status-off{opacity:.55}.indent{display:inline-block;width:calc(var(--depth) * 18px)}.flash{padding:12px;border-radius:9px;margin:12px 0}.flash.ok{border:1px solid var(--success);background:rgba(34,197,94,.08)}.flash.err{border:1px solid var(--danger);background:rgba(239,68,68,.08)}.note{padding:12px;border:1px solid var(--border);border-radius:9px;background:rgba(56,189,248,.05);color:var(--muted);margin-top:14px}.row-edit{display:grid;grid-template-columns:minmax(150px,1fr) minmax(180px,1fr);gap:8px}.row-edit form{display:flex;gap:6px}.row-edit input,.row-edit select{min-width:0}.row-edit button{white-space:nowrap}@media(max-width:760px){.category-shell{padding:14px}.category-row{grid-template-columns:1fr}.category-actions{justify-content:flex-start}.category-editor{grid-template-columns:1fr}.row-edit{grid-template-columns:1fr}.topbar{align-items:flex-start}.indent{width:calc(var(--depth) * 10px)}}
+        .category-shell{max-width:1100px;margin:0 auto;padding:20px}
+        .category-grid{display:grid;gap:6px;margin-top:12px}
+        .category-row{border:1px solid var(--border);border-radius:10px;background:var(--surface);overflow:hidden}
+        .category-summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 10px 9px calc(10px + (var(--depth) * 14px));min-height:52px}
+        .category-main{min-width:0}
+        .category-name{font-weight:700;line-height:1.15;display:flex;gap:7px;align-items:center;min-width:0}
+        .category-name-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .category-path{color:var(--muted);font-size:.72rem;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .category-tools{display:flex;gap:4px;align-items:center}
+        .category-tools form{margin:0}
+        .category-tools .button,.edit-toggle{min-width:34px;padding:6px 8px;font-size:.8rem;line-height:1.1}
+        .edit-toggle{white-space:nowrap}
+        .category-edit{display:none;padding:10px;border-top:1px solid var(--border);background:rgba(15,23,42,.35)}
+        .category-row.editing .category-edit{display:grid;gap:8px}
+        .category-edit form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center}
+        .category-edit input,.category-edit select{min-width:0}
+        .category-id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);font-size:.68rem;overflow-wrap:anywhere}
+        .status-off{opacity:.55}
+        .status-pill{font-size:.62rem;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:2px 5px;flex:0 0 auto}
+        .flash{padding:10px;border-radius:9px;margin:10px 0}.flash.ok{border:1px solid var(--success);background:rgba(34,197,94,.08)}.flash.err{border:1px solid var(--danger);background:rgba(239,68,68,.08)}
+        .add-panel{padding:12px}
+        .add-panel summary{cursor:pointer;font-weight:700;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px}
+        .add-panel summary::-webkit-details-marker{display:none}
+        .add-panel summary::after{content:'+';font-size:1.2rem;color:var(--accent)}
+        .add-panel[open] summary::after{content:'−'}
+        .category-editor{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-top:10px}
+        .category-editor label{display:grid;gap:5px;font-size:.82rem;color:#cbd5e1}
+        .note{color:var(--muted);font-size:.72rem;line-height:1.35;margin-top:8px}
+        .compact-heading{margin-bottom:8px}
+        @media(max-width:760px){
+            .category-shell{padding:10px 10px 22px}
+            .topbar{margin-bottom:10px}
+            .topbar h1{font-size:1.3rem}
+            .topbar .muted{font-size:.72rem;margin-bottom:0}
+            .topbar>.button{padding:7px 9px;font-size:.76rem}
+            .category-grid{gap:5px}
+            .category-summary{padding-top:7px;padding-bottom:7px;min-height:46px;padding-left:calc(8px + (var(--depth) * 10px))}
+            .category-path{font-size:.68rem}
+            .category-tools .button,.edit-toggle{padding:5px 7px;min-width:31px;font-size:.76rem}
+            .category-editor{grid-template-columns:1fr}
+            .category-editor input,.category-editor select,.category-edit input,.category-edit select{font-size:16px}
+            .category-edit{padding:8px}
+            .category-edit form{grid-template-columns:1fr auto}
+            .add-panel{padding:10px}
+        }
+        @media(max-width:390px){
+            .category-path{max-width:210px}
+            .category-tools{gap:3px}
+            .category-tools .button,.edit-toggle{padding:5px 6px;min-width:29px}
+        }
     </style>
 </head>
 <body>
 <main class="category-shell">
-    <div class="topbar">
+    <div class="topbar compact-heading">
         <div>
             <h1>Manage Categories</h1>
             <p class="muted">Agent tools · Project rev <?= htmlspecialchars(PROJECT_REVISION) ?></p>
         </div>
-        <a class="button secondary" href="index.php">Back to Ticketing</a>
+        <a class="button secondary" href="index.php">Back</a>
     </div>
 
     <?php if ($message !== ''): ?><div class="flash ok"><?= htmlspecialchars($message) ?></div><?php endif; ?>
     <?php if ($error !== ''): ?><div class="flash err"><?= htmlspecialchars($error) ?></div><?php endif; ?>
 
-    <section class="panel" style="padding:18px">
-        <h2>Add Category</h2>
+    <details class="panel add-panel">
+        <summary>Add Category</summary>
         <form method="post" class="category-editor">
             <input type="hidden" name="csrf" value="<?= htmlspecialchars((string)$_SESSION['ticketing_categories_csrf']) ?>">
             <input type="hidden" name="action" value="add">
             <label>Name<input name="name" required placeholder="Example: Adobe Acrobat"></label>
             <label>Parent<select name="parentId"><option value="">Top level</option><?php foreach ($flat as $cat): ?><option value="<?= htmlspecialchars($cat['id']) ?>"><?= htmlspecialchars($cat['path']) ?></option><?php endforeach; ?></select></label>
-            <button class="button primary" type="submit">Add Category</button>
+            <button class="button primary" type="submit">Add</button>
         </form>
-        <div class="note">Category IDs are permanent references. New IDs are created from the category name for readability, but moving or renaming a category does not change its ID.</div>
-    </section>
+        <div class="note">IDs remain permanent even when a category is renamed or moved.</div>
+    </details>
 
     <section class="category-grid">
         <?php foreach ($flat as $cat): ?>
-            <article class="category-row <?= $cat['active'] ? '' : 'status-off' ?>">
-                <div>
-                    <div class="category-name"><span class="indent" style="--depth:<?= (int)$cat['depth'] ?>"></span><?= htmlspecialchars($cat['name']) ?> <?= $cat['active'] ? '' : '<span class="muted small">(disabled)</span>' ?></div>
-                    <div class="category-path"><?= htmlspecialchars($cat['path']) ?></div>
-                    <div class="category-id">ID: <?= htmlspecialchars($cat['id']) ?></div>
+            <article class="category-row <?= $cat['active'] ? '' : 'status-off' ?>" style="--depth:<?= (int)$cat['depth'] ?>" data-category-row>
+                <div class="category-summary">
+                    <div class="category-main">
+                        <div class="category-name">
+                            <span class="category-name-text"><?= htmlspecialchars($cat['name']) ?></span>
+                            <?php if (!$cat['active']): ?><span class="status-pill">Disabled</span><?php endif; ?>
+                        </div>
+                        <div class="category-path"><?= htmlspecialchars($cat['path']) ?></div>
+                    </div>
+                    <div class="category-tools">
+                        <form method="post"><input type="hidden" name="csrf" value="<?= htmlspecialchars((string)$_SESSION['ticketing_categories_csrf']) ?>"><input type="hidden" name="action" value="reorder"><input type="hidden" name="id" value="<?= htmlspecialchars($cat['id']) ?>"><input type="hidden" name="direction" value="up"><button class="button" type="submit" title="Move up" aria-label="Move <?= htmlspecialchars($cat['name']) ?> up">↑</button></form>
+                        <form method="post"><input type="hidden" name="csrf" value="<?= htmlspecialchars((string)$_SESSION['ticketing_categories_csrf']) ?>"><input type="hidden" name="action" value="reorder"><input type="hidden" name="id" value="<?= htmlspecialchars($cat['id']) ?>"><input type="hidden" name="direction" value="down"><button class="button" type="submit" title="Move down" aria-label="Move <?= htmlspecialchars($cat['name']) ?> down">↓</button></form>
+                        <button class="button edit-toggle" type="button" data-edit-toggle aria-expanded="false">Edit</button>
+                    </div>
                 </div>
-                <div class="row-edit">
+                <div class="category-edit">
                     <form method="post">
                         <input type="hidden" name="csrf" value="<?= htmlspecialchars((string)$_SESSION['ticketing_categories_csrf']) ?>">
                         <input type="hidden" name="action" value="rename">
                         <input type="hidden" name="id" value="<?= htmlspecialchars($cat['id']) ?>">
-                        <input name="name" value="<?= htmlspecialchars($cat['name']) ?>" required>
+                        <input name="name" value="<?= htmlspecialchars($cat['name']) ?>" required aria-label="Category name">
                         <button class="button" type="submit">Rename</button>
                     </form>
                     <form method="post">
                         <input type="hidden" name="csrf" value="<?= htmlspecialchars((string)$_SESSION['ticketing_categories_csrf']) ?>">
                         <input type="hidden" name="action" value="move">
                         <input type="hidden" name="id" value="<?= htmlspecialchars($cat['id']) ?>">
-                        <select name="parentId">
+                        <select name="parentId" aria-label="Parent category">
                             <option value="">Top level</option>
                             <?php foreach ($flat as $parent): if ($parent['id'] === $cat['id']) continue; ?>
                                 <option value="<?= htmlspecialchars($parent['id']) ?>" <?= $parent['id'] === $cat['parentId'] ? 'selected' : '' ?>><?= htmlspecialchars($parent['path']) ?></option>
@@ -439,15 +498,33 @@ $flat = flattenCategories($categories);
                         </select>
                         <button class="button" type="submit">Move</button>
                     </form>
-                </div>
-                <div class="category-actions">
-                    <form method="post"><input type="hidden" name="csrf" value="<?= htmlspecialchars((string)$_SESSION['ticketing_categories_csrf']) ?>"><input type="hidden" name="action" value="reorder"><input type="hidden" name="id" value="<?= htmlspecialchars($cat['id']) ?>"><input type="hidden" name="direction" value="up"><button class="button" type="submit" title="Move up">↑</button></form>
-                    <form method="post"><input type="hidden" name="csrf" value="<?= htmlspecialchars((string)$_SESSION['ticketing_categories_csrf']) ?>"><input type="hidden" name="action" value="reorder"><input type="hidden" name="id" value="<?= htmlspecialchars($cat['id']) ?>"><input type="hidden" name="direction" value="down"><button class="button" type="submit" title="Move down">↓</button></form>
-                    <form method="post"><input type="hidden" name="csrf" value="<?= htmlspecialchars((string)$_SESSION['ticketing_categories_csrf']) ?>"><input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="<?= htmlspecialchars($cat['id']) ?>"><button class="button" type="submit"><?= $cat['active'] ? 'Disable' : 'Enable' ?></button></form>
+                    <div class="category-id">ID: <?= htmlspecialchars($cat['id']) ?></div>
+                    <form method="post">
+                        <input type="hidden" name="csrf" value="<?= htmlspecialchars((string)$_SESSION['ticketing_categories_csrf']) ?>">
+                        <input type="hidden" name="action" value="toggle">
+                        <input type="hidden" name="id" value="<?= htmlspecialchars($cat['id']) ?>">
+                        <span></span>
+                        <button class="button" type="submit"><?= $cat['active'] ? 'Disable Category' : 'Enable Category' ?></button>
+                    </form>
                 </div>
             </article>
         <?php endforeach; ?>
     </section>
 </main>
+<script>
+document.querySelectorAll('[data-edit-toggle]').forEach(button=>{
+    button.addEventListener('click',()=>{
+        const row=button.closest('[data-category-row]');
+        const opening=!row.classList.contains('editing');
+        document.querySelectorAll('[data-category-row].editing').forEach(other=>{
+            if(other!==row){other.classList.remove('editing');const b=other.querySelector('[data-edit-toggle]');if(b){b.textContent='Edit';b.setAttribute('aria-expanded','false');}}
+        });
+        row.classList.toggle('editing',opening);
+        button.textContent=opening?'Close':'Edit';
+        button.setAttribute('aria-expanded',opening?'true':'false');
+        if(opening){row.scrollIntoView({block:'nearest',behavior:'smooth'});}
+    });
+});
+</script>
 </body>
 </html>
