@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "filename": "visual-ping-webhook-project-sketch.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.1",
+    "changelog": [
+      "1.0.1: Resolve cover media relative to the blog directory.",
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "visual-ping-webhook-project-sketch",
+  "title": "A Webhook Idea That Has Not Become an App Yet",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "Project sketches",
+    "project sketch"
+  ],
+  "excerpt": "A brief development note on the Visual Ping webhook placeholder and the questions that need answers before implementation.",
+  "cover": {
+    "src": "media/derivatives/2026/09/visual-ping-webhook-project-sketch_640w.jpg",
+    "alt": "A Webhook Idea That Has Not Become an App Yet cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/visual-ping-webhook-project-sketch_640w.jpg\" alt=\"A Webhook Idea That Has Not Become an App Yet cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Not every folder in a project repository represents a finished application. My visual-ping-webhook-api folder is a clear example: the reviewed snapshot contains a README with the words first file, and no implemented endpoint.</p>\n<p>The repository index identifies it as an early webhook idea. That is the current status, not evidence that requests are already being received, stored, or forwarded.</p>\n<p>For a future implementation, I would start by defining a few practical boundaries: what information a request contains, how an authorized sender is recognized, what needs to be retained, and what response indicates success. Those are proposed design questions, not existing capabilities.</p>\n<p>A webhook project becomes useful when the event arriving at the endpoint leads to a clear next action. Until that behavior is defined and implemented, the honest description is an idea awaiting development.</p>\n<p>I am keeping this note short for the same reason. A placeholder deserves an accurate label, not a feature list assembled from what the folder name suggests.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/visual-ping-webhook-api\">Explore the project on GitHub</a></p>\n"
+}

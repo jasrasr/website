@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "filename": "simple-links-page-template.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.1",
+    "changelog": [
+      "1.0.1: Resolve cover media relative to the blog directory.",
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "simple-links-page-template",
+  "title": "A Simple Links-Page Template with Room to Grow",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "Project sketches"
+  ],
+  "excerpt": "A small navigation template with placeholder destinations, commented expansion slots, and visible revision information.",
+  "cover": {
+    "src": "media/derivatives/2026/09/simple-links-page-template_640w.jpg",
+    "alt": "A Simple Links-Page Template with Room to Grow cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/simple-links-page-template_640w.jpg\" alt=\"A Simple Links-Page Template with Room to Grow cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>A useful links page does not need much ceremony. It needs readable choices and destinations that take people where the labels say they will go. The standalone links.html file in this repository is a small template for that job.</p>\n<p>The current file contains generic Page 1 through Page 4 entries and commented placeholders for additional choices. It also includes footer information for the filename, revision, year, and modification date.</p>\n<p>Those generic destinations are important context. This source file is a starting layout, not a verified directory of my current live projects. It should not be confused with a separate links page maintained elsewhere. Before publishing a copy as navigation, the labels and URLs need to be replaced and checked.</p>\n<p>What the template offers is a visible pattern for extending a small page without starting over. Additional entries can follow the existing structure, and the footer makes a revision identifiable during iteration.</p>\n<p>A navigation page is only as helpful as its links. The interesting work is therefore less about adding decoration and more about choosing the right destinations, keeping the list current, and making each choice easy to recognize.</p>\n<p><a href=\"https://github.com/jasrasr/website/blob/main/links.html\">Explore the project on GitHub</a></p>\n"
+}

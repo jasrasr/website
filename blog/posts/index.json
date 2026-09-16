@@ -3,15 +3,621 @@
     "filename": "posts/index.json",
     "author": "Jason Lamb (with help from ChatGPT)",
     "created_date": "2026-02-03",
-    "modified_date": "2026-02-04",
-    "revision": "1.2",
+    "modified_date": "2026-09-16",
+    "revision": "1.3.1",
     "changelog": [
-      "1.2: Adds embedded _meta header; posts array includes _searchText for deterministic full-text search"
+      "1.3.1: Preserves cover metadata and fallback excerpts during generated index rebuilds",
+      "1.3.0: Added 43 project articles and cover metadata.",
+      "1.2: Adds embedded _meta header; build still uses posts array with _searchText for deterministic full-text search"
     ]
   },
   "blog_title": "Jason’s Flat-File Blog",
-  "generated": "2026-02-04T11:34:49Z",
+  "generated": "2026-09-16T11:41:26.0785735Z",
   "posts": [
+    {
+      "slug": "authenticated-directory-viewer",
+      "title": "A File Listing with Favorites, Sorting, and Useful Context",
+      "date": "2026-09-16",
+      "tags": [
+        "Web foundations"
+      ],
+      "excerpt": "A directory-viewer experiment that adds favorites, file details, and interaction counts to a live filesystem listing.",
+      "cover": {
+        "src": "media/derivatives/2026/09/authenticated-directory-viewer_640w.jpg",
+        "alt": "A File Listing with Favorites, Sorting, and Useful Context cover image"
+      },
+      "_searchText": "a file listing with favorites, sorting, and useful context web foundations a directory-viewer experiment that adds favorites, file details, and interaction counts to a live filesystem listing. a raw directory listing answers what files exist. my standalone directory-viewer project explores the next questions: which files matter, which are recent, and how are people interacting with them? the php viewer scans its directory and presents a sortable table with file types, modification dates, sizes, and download links. favorites rise to the top, followed by newer files, making a repeatedly used item easier to find without renaming it to start with a dozen underscores. the project also includes interaction tracking for views, clicks, and downloads, using json data and related helper endpoints. a download proxy gives the application a place to record a download action rather than relying only on a visible link. file icons and colored type badges make the list easier to scan. exclusion rules control which filenames and extensions are omitted, and the footer displays revision and timestamp information. these are modest details, but they turn a filesystem listing into a more intentional interface. the authentication model depends on the hosting environment's directory protection, and the viewer expects supporting helpers for features such as favorites and downloads. the single php file should not be mistaken for a complete, independently configured access-control system. this is related to the centralized directory-browser project, but it is a separate implementation with its own focus on file information and interaction counts. the attraction is making an existing collection easier to use without importing every file into a larger content-management system. the files remain files; the page adds a more helpful way to inspect them. explore the project on github"
+    },
+    {
+      "slug": "link-hub-project-notes",
+      "title": "A Link Hub on the Drawing Board",
+      "date": "2026-09-16",
+      "tags": [
+        "Project sketches",
+        "project sketch"
+      ],
+      "excerpt": "An honest starting-point note for the Linktree-inspired folder: the idea is documented, but the planned app files are not there yet.",
+      "cover": {
+        "src": "media/derivatives/2026/09/link-hub-project-notes_640w.jpg",
+        "alt": "A Link Hub on the Drawing Board cover image"
+      },
+      "_searchText": "a link hub on the drawing board project sketches project sketch an honest starting-point note for the linktree-inspired folder: the idea is documented, but the planned app files are not there yet. a growing collection of web projects eventually creates another problem: giving people one useful place to find them. the linktree folder in my repository records the start of that idea. its readme describes a linktree-inspired landing page and lists planned php, css, javascript, and asset files. in the reviewed snapshot, those application files are not present. this is a project sketch rather than a finished launch. the interesting question is what a link hub should emphasize. a short list of current destinations can be more useful than a complete inventory of everything ever uploaded. names need to be understandable, links need clear destinations, and the page needs to work comfortably on a phone. those are design considerations for the project, not features i am claiming it already has. the repository also has a separate standalone links-page template, which should not be confused with this planned folder. keeping that distinction visible is part of documenting a workshop honestly. for now, this one is an idea with a place to grow. the first meaningful milestone will be a working page that helps someone choose where to go next. explore the project on github"
+    },
+    {
+      "slug": "mpg-tracker-partial-fill-ups",
+      "title": "Building an MPG Tracker That Understands Partial Fill-Ups",
+      "date": "2026-09-16",
+      "tags": [
+        "Money and travel"
+      ],
+      "excerpt": "Fuel tracking gets more useful when partial fills, station details, photos, and corrections all work together.",
+      "cover": {
+        "src": "media/derivatives/2026/09/mpg-tracker-partial-fill-ups_640w.jpg",
+        "alt": "Building an MPG Tracker That Understands Partial Fill-Ups cover image"
+      },
+      "_searchText": "building an mpg tracker that understands partial fill-ups money and travel fuel tracking gets more useful when partial fills, station details, photos, and corrections all work together. a fuel log sounds simple: enter the odometer, enter the gallons, calculate miles per gallon. then real life shows up with a partial fill, a blurry receipt, and an entry you forgot to make until you got home. my mpg fuel log tracker is built around those less tidy situations. it keeps per-vehicle records for mileage, gallons, price, total cost, station, location, and comments. entries can be made manually or with a photo-assisted workflow that accepts up to four images, such as the odometer, pump totals, and station signage. the calculation i care most about is full-to-full mpg. a partial fill remains in the history as a real purchase, but it does not receive a misleading standalone mpg value. when the next full fill arrives, the app uses the distance since the previous full fill and all the gallons added in between. corrections need the same care. editing or deleting an older entry rebuilds dependent mileage and mpg results. otherwise, fixing one typo could leave the rest of the chart quietly wrong. station information has grown beyond a free-text label. the app supports learned brands and reusable physical station profiles, including nicknames and addresses. optional browser gps or available jpeg location metadata can help locate nearby stations, but the user confirms the actual station before it is saved. saved stations also make later entry possible without pretending the phone is still at the pump. a map adds context to the history, while station analytics help compare recorded prices and spending. export keeps the information available outside the app. what i like about this project is how small details reinforce one another. better entry produces better records; correct calculations make the chart worth looking at. the dashboard is the visible result, but handling an ordinary partial fill correctly is the part that earns my trust. open the hosted project · explore the project on github"
+    },
+    {
+      "slug": "old-phone-keypad-tones-browser",
+      "title": "Recreating Old Phone Keypad Tones in the Browser",
+      "date": "2026-09-16",
+      "tags": [
+        "Browser experiments"
+      ],
+      "excerpt": "A small Web Audio experiment that recreates a telephone keypad with mouse, touch, and keyboard input.",
+      "cover": {
+        "src": "media/derivatives/2026/09/old-phone-keypad-tones-browser_640w.jpg",
+        "alt": "Recreating Old Phone Keypad Tones in the Browser cover image"
+      },
+      "_searchText": "recreating old phone keypad tones in the browser browser experiments a small web audio experiment that recreates a telephone keypad with mouse, touch, and keyboard input. a telephone keypad has a sound that is recognizable before anyone sees the device. my old phone tone number pad recreates that interaction in a browser. the page provides the familiar digits, star, and hash keys, plus a display and clear and backspace controls. it accepts clicks, taps, and keyboard input, so the interaction is not tied to one kind of screen. the tones are generated using the browser's audio capabilities. each keypad entry uses a pair of frequencies, with oscillators starting and stopping as the input is pressed and released. that creates the familiar dual-tone behavior rather than playing a separate recording for every button. keeping the input state clear is part of the job. the visible button, displayed digits, and active sound should agree about what is being pressed. releasing the input should stop the tone instead of leaving an oscillator playing in the background. this is an audio keypad demonstration. it does not place calls or turn the browser into a telephone service. its value is in recreating a familiar interface and exploring the mechanics behind the sound. i like that the feedback is immediate. press a key and the browser produces something recognizable from a small amount of code. it is a good example of a project that can be both nostalgic and technically interesting without growing into a larger app. the result is a tiny bit of old-phone behavior on a modern screen, complete with the ability to clear whatever number the experiment produced. explore the project on github"
+    },
+    {
+      "slug": "personal-budget-tracker-php-json",
+      "title": "A Personal Budget Tracker Built Around Everyday Numbers",
+      "date": "2026-09-16",
+      "tags": [
+        "Money and travel"
+      ],
+      "excerpt": "A private budget page for income, recurring expenses, and monthly and annual projections, built with PHP and JSON.",
+      "cover": {
+        "src": "media/derivatives/2026/09/personal-budget-tracker-php-json_640w.jpg",
+        "alt": "A Personal Budget Tracker Built Around Everyday Numbers cover image"
+      },
+      "_searchText": "a personal budget tracker built around everyday numbers money and travel a private budget page for income, recurring expenses, and monthly and annual projections, built with php and json. a budget gets harder to understand when every number speaks a different language. income might arrive every two weeks, insurance might be billed monthly, and another expense shows up once a year. my budget tracker puts those amounts into a common view. the app lets a user model hourly or fixed-paycheck income, withholding, savings goals, recurring expenses, and one-time costs. it rolls the information into monthly and annual projections so the relationship between income and spending is easier to see. expenses can be categorized, and the interface highlights areas such as food, car costs, and subscriptions. the point is to make a collection of individual entries easier to review, rather than leave the user doing the frequency conversions in their head. each configured user has a separate budget stored in a json file. the project is designed for a private php page on shared hosting, with editing, deletion, import, and export available through the application. it does not need a database server to support that basic workflow. this is a planning tool based on the information entered. it does not automatically know about a new bill or a changed paycheck. that boundary keeps the job understandable: record the assumptions, compare the resulting totals, and update the inputs when life changes. i like projects that make a familiar task less scattered. a budget page does not have to predict the future to help. sometimes it is enough to put the recurring numbers in one place and make it obvious which ones deserve another look. open the hosted project · explore the project on github"
+    },
+    {
+      "slug": "powershell-numbered-web-test-pages",
+      "title": "A Tiny PowerShell Script for Numbered Web Test Pages",
+      "date": "2026-09-16",
+      "tags": [
+        "Browser experiments"
+      ],
+      "excerpt": "A small collection of numbered landing pages demonstrates how a few lines of PowerShell can remove repetitive file creation.",
+      "cover": {
+        "src": "media/derivatives/2026/09/powershell-numbered-web-test-pages_640w.jpg",
+        "alt": "A Tiny PowerShell Script for Numbered Web Test Pages cover image"
+      },
+      "_searchText": "a tiny powershell script for numbered web test pages browser experiments a small collection of numbered landing pages demonstrates how a few lines of powershell can remove repetitive file creation. not every repository folder needs a grand origin story. the random-url folder contains numbered landing pages, and its powershell helper is short enough to understand at a glance. the helper iterates through a range of numbers and writes a matching html filename containing a simple marker. the directory contains pages numbered zero through nine. these give a test link or qr destination a recognizable response when it is opened. the distinction between a destination and a qr image matters here. the script creates the little web pages; it is not a qr-code rendering library. a separate code or link can point at those pages when a test needs distinct targets. that is enough to make the files useful in a larger workflow. if several labels or redirects are being checked, landing on different markers makes it easier to see which destination was reached. there is no need to design ten complete sites just to tell the results apart. the script is also an example of why i like powershell for repetitive setup. the task is not intellectually difficult, but manually creating similar files adds chances for inconsistent names and copy-paste mistakes. a loop makes the pattern explicit. this is a small utility rather than a full application. its value is proportional to the task it removes: create predictable targets, give each one an identifiable value, and move on to the thing those targets help test. explore the project on github"
+    },
+    {
+      "slug": "powershell-web-file-manager",
+      "title": "Connecting PowerShell Uploads to a Web File Manager",
+      "date": "2026-09-16",
+      "tags": [
+        "IT and automation"
+      ],
+      "excerpt": "A PHP file manager that gives PowerShell-generated files an upload endpoint, browser administration, and version history.",
+      "cover": {
+        "src": "media/derivatives/2026/09/powershell-web-file-manager_640w.jpg",
+        "alt": "Connecting PowerShell Uploads to a Web File Manager cover image"
+      },
+      "_searchText": "connecting powershell uploads to a web file manager it and automation a php file manager that gives powershell-generated files an upload endpoint, browser administration, and version history. a script can create a useful file and still leave one job unfinished: getting that file somewhere i can find and manage it later. my upload & file manager project connects automated uploads with a browser-based administration workflow. the powershell side sends files to an http upload endpoint. the web side lists files, supports text-file creation, and provides version-related actions. that gives automated output and manual administration a shared destination. versioning is especially useful when a filename stays the same while its contents change. the project keeps numbered versions and supports promoting an older version back to the current file. restoring a previous result should not require remembering which download folder happened to contain it. the documented design includes upload authentication, ip allowlisting, request limits, logging, and multi-factor checks around selected administrative actions. it also describes an optional deployment dependency for geographic ip filtering. these are configuration and implementation features, not a claim that the app has passed a security certification. keeping the upload api usable from powershell is central to the project. a script should be able to report success or failure from the server response, rather than depend on driving a browser interface. meanwhile, the browser gives a person a convenient way to inspect and manage what arrived. the most useful part is the handoff. automation produces the file; the web application supplies a place to keep its versions and work with it. that makes this project less about uploading for its own sake and more about finishing the last practical step of an automated task. explore the project on github"
+    },
+    {
+      "slug": "psnotify-powershell-job-notifications",
+      "title": "PSNotify: Giving Long-Running PowerShell Scripts Somewhere to Report Back",
+      "date": "2026-09-16",
+      "tags": [
+        "IT and automation"
+      ],
+      "excerpt": "A small self-hosted notification endpoint and web viewer for progress and completion messages from PowerShell jobs.",
+      "cover": {
+        "src": "media/derivatives/2026/09/psnotify-powershell-job-notifications_640w.jpg",
+        "alt": "PSNotify: Giving Long-Running PowerShell Scripts Somewhere to Report Back cover image"
+      },
+      "_searchText": "psnotify: giving long-running powershell scripts somewhere to report back it and automation a small self-hosted notification endpoint and web viewer for progress and completion messages from powershell jobs. a long-running script has an awkward communication style. it can be doing useful work for ages while saying nothing to the person waiting for it. psnotify gives that script a simple way to report back. the project is a small self-hosted http endpoint paired with a web viewer. a powershell job sends a post request containing a message and optional details such as a title, priority, or tags. the server stores messages in a json log, and the viewer makes them available from a browser. that is useful for checkpoints as well as completion. a script can report that a phase has started, that a batch finished, or that an error needs attention. the notification does not replace the detailed job log; it points me toward the moment when that log might need a look. recent changes move private settings into a local configuration file and use header-based publish authentication. the implementation also includes message-size limits, a retained-message cap, and request throttling. those details help keep a small notification endpoint from becoming an unlimited dumping ground. one boundary is worth being clear about: browser notifications require the page to remain open and permission to be granted. background web push for an iphone is a later upgrade, not something this version magically gains from having an installable-looking page. i like the small interface between the two sides. powershell knows how to send an http request, and php knows how to receive and store it. neither side needs to understand the internals of every job. psnotify is a modest tool, but the purpose is practical: let the automation keep working while giving me a reason to check in when something meaningful happens. open the hosted project · explore the project on github"
+    },
+    {
+      "slug": "qr-box-inventory-system",
+      "title": "QR Labels for the Boxes I Would Otherwise Open One by One",
+      "date": "2026-09-16",
+      "tags": [
+        "Family and home"
+      ],
+      "excerpt": "My QR box inventory connects printable labels to editable contents lists, with stable box IDs and a simple PHP backend.",
+      "cover": {
+        "src": "media/derivatives/2026/09/qr-box-inventory-system_640w.jpg",
+        "alt": "QR Labels for the Boxes I Would Otherwise Open One by One cover image"
+      },
+      "_searchText": "qr labels for the boxes i would otherwise open one by one family and home my qr box inventory connects printable labels to editable contents lists, with stable box ids and a simple php backend. a storage box labeled miscellaneous is technically accurate and almost completely unhelpful. the qr box inventory system makes the label a doorway to a more useful description. each box gets a unique id, a printable qr code, and a mobile-friendly contents page. scanning the label opens that page, where the item list, count, and last-updated information can be viewed. an authenticated administrator can maintain the contents as the box changes. the stable id is an important design choice. renaming a box does not change its qr code. that means a label can remain attached while the description becomes more specific or the purpose of the box changes. printing a new label for every wording improvement would defeat some of the convenience. the project supports multiple printable label layouts and per-user ownership. administrators can manage the collection, and missing qr images can be regenerated. records are stored in json, with php handling the application and pdf label generation. one characteristic to understand is that the scan destination is a public contents page in the documented design. it is a useful inventory label, but it is not a private document vault. the items listed should fit that sharing model. what i like is the connection between a physical workflow and a small web application. the phone becomes the viewer, the label stays simple, and the detailed list can be updated without squeezing another handwritten line onto a piece of tape. the project does not organize the boxes for me. it does make the next search less dependent on remembering which identical bin contains the thing i need. open the hosted project · explore the project on github"
+    },
+    {
+      "slug": "random-wheel-choice-picker",
+      "title": "Random Wheel: Sometimes the Right App Is Just a Spinning Wheel",
+      "date": "2026-09-16",
+      "tags": [
+        "Church and games"
+      ],
+      "excerpt": "A focused browser choice picker with editable entries, a five-second spin, and recent winner history.",
+      "cover": {
+        "src": "media/derivatives/2026/09/random-wheel-choice-picker_640w.jpg",
+        "alt": "Random Wheel: Sometimes the Right App Is Just a Spinning Wheel cover image"
+      },
+      "_searchText": "random wheel: sometimes the right app is just a spinning wheel church and games a focused browser choice picker with editable entries, a five-second spin, and recent winner history. not every decision needs a spreadsheet. some need a list, a wheel, and enough suspense for everyone to lean toward the screen. that is the entire premise of random wheel. the page accepts one choice per line. blank lines are ignored, while duplicate entries remain separate chances. that behavior is stated directly beneath the editor, because repeating a name should not silently mean something different from what the person running the wheel expects. each spin lasts five seconds. the page displays the result and keeps a list of the last ten winners, giving a group a little context when several selections happen in a row. the wheel and entry controls use a responsive layout so the tool can work on different screen sizes. the best part of a small project like this is knowing what to leave out. there is no need to turn a list picker into an account-management system just because the next feature is imaginable. entering choices and seeing the result are the main jobs. it is useful for casual selections, games, and low-stakes group activities. a repeated entry changes the chance structure, so that is something the person preparing the list should choose intentionally. random wheel belongs in the same repository as much more complicated applications, and i think that is appropriate. the amount of code does not determine whether a tool fits its purpose. sometimes the useful solution really is a colorful circle that spins for five seconds and ends the debate. explore the project on github"
+    },
+    {
+      "slug": "raspberry-pi-time-clock-kiosk",
+      "title": "Turning a Raspberry Pi into a Clock, Weather, and Notice Display",
+      "date": "2026-09-16",
+      "tags": [
+        "IT and automation"
+      ],
+      "excerpt": "My Raspberry Pi kiosk project combines a readable clock, weather, scrolling notices, and developing alert-display features.",
+      "cover": {
+        "src": "media/derivatives/2026/09/raspberry-pi-time-clock-kiosk_640w.jpg",
+        "alt": "Turning a Raspberry Pi into a Clock, Weather, and Notice Display cover image"
+      },
+      "_searchText": "turning a raspberry pi into a clock, weather, and notice display it and automation my raspberry pi kiosk project combines a readable clock, weather, scrolling notices, and developing alert-display features. a wall display has a different job from a desktop dashboard. someone should be able to glance at it and understand what matters without opening a menu or leaning in to read tiny text. my time clock project starts with that idea. the page combines a large clock, the date, local weather, and a scrolling alerts area. the documented deployment runs on a raspberry pi cm4 kiosk, with a full-screen browser presenting the page. the same layout also adapts to smaller screens for checking it elsewhere. notices are maintained through an administration page. they can be added, removed, reordered, and published to the display. different notice types have distinct visual treatments, helping routine information and more prominent messages read differently. the later revision history adds weather-alert integration and full-screen overlay experiments. it also includes a powershell path for fetching weather alert data and posting it to the kiosk. that makes the project another example of a web interface and an administration script working together. the alert work remains a prototype display workflow. i would not describe this browser page as a certified emergency notification system or assume that a visible pin gate establishes production-grade access control. the current revision notes explicitly include demo behavior. for everyday use, the appeal is straightforward: a small computer, a screen, and a page that keeps useful information visible. the project also makes layout decisions very concrete. large digits, readable spacing, and clear updates matter more than how impressive the page looks in a development screenshot. a clock is a simple starting point. giving it useful context turns it into a small communication surface. open the hosted project · explore the project on github"
+    },
+    {
+      "slug": "reusable-php-json-project-foundation",
+      "title": "1-Framework: Finding the Parts I Should Stop Rebuilding",
+      "date": "2026-09-16",
+      "tags": [
+        "Web foundations"
+      ],
+      "excerpt": "My architectural baseline for sharing PHP and JSON conventions across small apps without forcing every project into a rewrite.",
+      "cover": {
+        "src": "media/derivatives/2026/09/reusable-php-json-project-foundation_640w.jpg",
+        "alt": "1-Framework: Finding the Parts I Should Stop Rebuilding cover image"
+      },
+      "_searchText": "1-framework: finding the parts i should stop rebuilding web foundations my architectural baseline for sharing php and json conventions across small apps without forcing every project into a rewrite. after building several small applications, the repeated work becomes hard to ignore. authentication, configuration, logging, audit records, and shared styling keep returning under different project names. 1-framework is where i am organizing a more reusable approach. the goal is a php and json foundation that fits shared hosting and does not require a database server. the project separates responsibilities into core utilities, configuration, authentication, logging, auditing, assets, and storage conventions. the current status needs to be stated plainly: this is an architectural baseline. the documentation defines responsibilities and a path toward extracting functional modules. it is not a finished framework whose features have already been rolled into every app in the repository. the adoption plan is deliberately incremental. identify a reusable component, extract it without changing the original project, remove project-specific assumptions, document it, and validate it independently. then integrate it into a small application before trying broader adoption. one rule is particularly useful: a shared component must not depend on a specific application. a warranty tracker can depend on the foundation; the foundation should not secretly depend on the warranty tracker's field names. this project also gives ai-assisted development clearer conventions to work within. a consistent response format or storage rule is easier to follow when it is written down instead of rediscovered in each conversation. the aim is less repeated setup and fewer slightly different solutions to the same backend problem. it is the workshop organization project behind the other workshop projects—and, like organizing a real workshop, it has to make the next job easier to justify its own space. explore the project on github"
+    },
+    {
+      "slug": "robot-or-human-hold-button",
+      "title": "Robot or Human? A Playful Press-and-Hold Web Experiment",
+      "date": "2026-09-16",
+      "tags": [
+        "Browser experiments"
+      ],
+      "excerpt": "A press-and-hold interaction with a comic robot, keyboard support, and a clear distinction between a visual gate and server-side access checks.",
+      "cover": {
+        "src": "media/derivatives/2026/09/robot-or-human-hold-button_640w.jpg",
+        "alt": "Robot or Human? A Playful Press-and-Hold Web Experiment cover image"
+      },
+      "_searchText": "robot or human? a playful press-and-hold web experiment browser experiments a press-and-hold interaction with a comic robot, keyboard support, and a clear distinction between a visual gate and server-side access checks. my robot or human? page asks a very serious question using a very unserious robot. the visitor holds a button until a progress bar fills, while a disguised cartoon robot adds some personality to the test. the interaction is deliberately forgiving. releasing early drains the progress instead of immediately resetting it, so the visitor can resume. moving the pointer while holding gives the bar a boost. keyboard users can use space or enter, and the page respects reduced-motion preferences. there are two modes, and they do different jobs. in the static version, the page is a visual interaction. any destination encoded in client-side code is still discoverable by someone inspecting that code. it is suitable as a playful speed bump, not a private-content boundary. the php version adds a server-checked session and a protected next page. that addresses direct navigation to the destination without completing the configured flow. it still should not be described as a sophisticated test that reliably proves a visitor is human rather than automated software. that distinction is part of what makes this project interesting. a screen can look like verification while doing very different things behind the scenes. naming the actual behavior helps keep the joke from turning into an accidental security claim. the project is a small exercise in feedback, pacing, and personality. the progress bar tells someone what to do, the animation gives it character, and the code offers a chance to explore where browser interaction ends and server-side state begins. explore the project on github"
+    },
+    {
+      "slug": "shared-text-between-devices",
+      "title": "Shared Text: A Small Scratch Pad for Moving Text Between Devices",
+      "date": "2026-09-16",
+      "tags": [
+        "Everyday tools"
+      ],
+      "excerpt": "A PHP scratch pad for saving a piece of text on one device and loading it on another, with a small snapshot history.",
+      "cover": {
+        "src": "media/derivatives/2026/09/shared-text-between-devices_640w.jpg",
+        "alt": "Shared Text: A Small Scratch Pad for Moving Text Between Devices cover image"
+      },
+      "_searchText": "shared text: a small scratch pad for moving text between devices everyday tools a php scratch pad for saving a piece of text on one device and loading it on another, with a small snapshot history. sometimes i do not need a document system. i need the text on this computer to be available on that one. shared text is a small web page for exactly that kind of handoff. the workflow is simple: type or paste text, enter the save password, and save it. on another device, open the page and load the latest version. it avoids turning every short transfer into an email to myself or another temporary file. the latest text lives in a json file on the web server. each save also writes a timestamped snapshot, and the application keeps the ten newest history files. that gives the latest value a modest recovery trail instead of making each overwrite the only remaining copy. the documentation distinguishes the save password from the password used to inspect raw json through the page. the storage directory has an apache access rule, and live data and local password files are intended to stay outside version control. these are specific access behaviors, not a claim that every way of viewing shared text is private. the project uses php and a small amount of storage because the task is small. there is one current shared text value to retrieve, rather than a collection of notebooks and collaborative workspaces. that narrow focus is the point. a scratch pad should be easy to find, easy to save, and easy to reload. if it removes a few unnecessary steps from moving a snippet between devices, it has done the job i built it to do. open the hosted project · explore the project on github"
+    },
+    {
+      "slug": "simple-links-page-template",
+      "title": "A Simple Links-Page Template with Room to Grow",
+      "date": "2026-09-16",
+      "tags": [
+        "Project sketches"
+      ],
+      "excerpt": "A small navigation template with placeholder destinations, commented expansion slots, and visible revision information.",
+      "cover": {
+        "src": "media/derivatives/2026/09/simple-links-page-template_640w.jpg",
+        "alt": "A Simple Links-Page Template with Room to Grow cover image"
+      },
+      "_searchText": "a simple links-page template with room to grow project sketches a small navigation template with placeholder destinations, commented expansion slots, and visible revision information. a useful links page does not need much ceremony. it needs readable choices and destinations that take people where the labels say they will go. the standalone links.html file in this repository is a small template for that job. the current file contains generic page 1 through page 4 entries and commented placeholders for additional choices. it also includes footer information for the filename, revision, year, and modification date. those generic destinations are important context. this source file is a starting layout, not a verified directory of my current live projects. it should not be confused with a separate links page maintained elsewhere. before publishing a copy as navigation, the labels and urls need to be replaced and checked. what the template offers is a visible pattern for extending a small page without starting over. additional entries can follow the existing structure, and the footer makes a revision identifiable during iteration. a navigation page is only as helpful as its links. the interesting work is therefore less about adding decoration and more about choosing the right destinations, keeping the list current, and making each choice easy to recognize. explore the project on github"
+    },
+    {
+      "slug": "smart-404-redirect-manager",
+      "title": "Making a 404 Page Useful Without Guessing Too Aggressively",
+      "date": "2026-09-16",
+      "tags": [
+        "Web foundations"
+      ],
+      "excerpt": "My Smart 404 project logs missing URLs and supports deliberate mappings alongside conservative matching for hosted projects.",
+      "cover": {
+        "src": "media/derivatives/2026/09/smart-404-redirect-manager_640w.jpg",
+        "alt": "Making a 404 Page Useful Without Guessing Too Aggressively cover image"
+      },
+      "_searchText": "making a 404 page useful without guessing too aggressively web foundations my smart 404 project logs missing urls and supports deliberate mappings alongside conservative matching for hosted projects. a missing page can come from an old bookmark, a typo, or a link that once pointed somewhere useful. my smart 404 project makes those misses visible and gives me a way to handle them deliberately. the handler logs the requested path, checks configured mappings, and can attempt conservative matching against hosted project paths. a protected administration page lets me inspect the misses and create a site-local mapping from a log entry or a manual form. the word conservative matters. a redirect is only helpful when it sends someone to the right place. automatically treating every unfamiliar address as a near match would create a different kind of confusion. the documentation keeps new mappings temporary while they are being tested. there is also a routing detail specific to jasr.me. yourls handles shortlink requests, including unknown keywords, before a normal web-server error document necessarily gets involved. the project includes a plugin to pass those unknown keywords into the smart 404 workflow. the administration view can classify recurring unwanted request patterns, with exact, prefix, and contains matches. those patterns are handled separately from ordinary recovery mappings. this provides visibility into the requests; it is not a claim that a 404 handler replaces a broader security system. live logs, mappings, and the administrator password configuration are managed separately from the source files. fixing a routing bug should not wipe out the useful mappings already collected on the server. the appeal is turning a dead end into a maintainable feedback loop: see what people request, decide what should happen, and keep the decision explicit enough to revisit later. explore the project on github"
+    },
+    {
+      "slug": "timeclock-photo-hours-logger",
+      "title": "From Clock-Out Slip to Work-Hours Log",
+      "date": "2026-09-16",
+      "tags": [
+        "Everyday tools"
+      ],
+      "excerpt": "A photo and manual-entry work-hours logger with reviewed OCR, overnight-shift calculations, and employee summaries.",
+      "cover": {
+        "src": "media/derivatives/2026/09/timeclock-photo-hours-logger_640w.jpg",
+        "alt": "From Clock-Out Slip to Work-Hours Log cover image"
+      },
+      "_searchText": "from clock-out slip to work-hours log everyday tools a photo and manual-entry work-hours logger with reviewed ocr, overnight-shift calculations, and employee summaries. a clock-out slip records a useful fact, but a pile of slip photos does not automatically become a useful history. my timeclock photo logger gives those records a more consistent path. a user can upload a photo, optionally run text recognition, review the parsed fields, and save the shift. manual entry is available when there is no photo or no configured ocr service. the review step keeps the source image and the final record from being treated as the same thing. the project supports manual, local tesseract, and ocr.space modes. a hosted installation can use the option its environment supports instead of requiring local software that shared hosting may not provide. once the fields are entered, the app recalculates shift minutes from the start and end times, including overnight shifts. it can compare the calculated duration with printed shift hours and includes duplicate-shift protection. the resulting history can be viewed by employee, week, or month. php stores the records in per-employee json files, while uploaded images and intermediate extraction results have separate storage. that keeps the application small while retaining a connection to how an entry was created. this is a logging and review tool, not a claim to reproduce every payroll rule. its purpose is to organize the entered time records and make discrepancies easier to notice. i like the workflow because it gives automation an appropriate role. ocr can save typing, but the user gets a chance to correct the fields before they become part of the history. the final record should be more dependable than the first guess. explore the project on github"
+    },
+    {
+      "slug": "tv-binge-board-watch-tracker",
+      "title": "TV Binge Board: Remembering What I Was Watching",
+      "date": "2026-09-16",
+      "tags": [
+        "Everyday tools"
+      ],
+      "excerpt": "A self-hosted watch tracker for TV and movies, with episode progress, next-up information, imports, and sharing.",
+      "cover": {
+        "src": "media/derivatives/2026/09/tv-binge-board-watch-tracker_640w.jpg",
+        "alt": "TV Binge Board: Remembering What I Was Watching cover image"
+      },
+      "_searchText": "tv binge board: remembering what i was watching everyday tools a self-hosted watch tracker for tv and movies, with episode progress, next-up information, imports, and sharing. there is a particular kind of entertainment problem where the hard part is remembering which episode comes next. tv binge board gives that information a home. the app tracks shows and movies a user wants to watch, is watching, has completed, or has dropped. it also supports ratings and notes. it is an organizer for watching, not a service that streams the content. the workflow brings search, manual entry, imports, and screenshot uploads into the same general area. tmdb-linked items can refresh their available episode information, while next-up and caught-up labels make progress easier to interpret. an episode becoming available does not automatically mean it has been watched. there are useful controls for avoiding clutter. smart sorting favors active items, finished or caught-up shows can be hidden, and compact mobile cards keep the list manageable. a text-only episode mode gives another way to view progress without relying on picture cards. sharing and mutual connections add a social layer. users can expose appropriate lists and see activity from connected or public lists. import review also matters: staged entries and duplicate checks give someone a chance to correct a guess before it joins the collection. the project uses php and json, with file locking, atomic writes, and restore points. it includes home-screen installation support, but the web interface remains the center of the experience. feedback has shaped the project. the documentation credits matt's early testing with improvements to sorting, progress controls, compact views, and next-episode behavior. that is a good example of how real use reveals needs that a feature checklist misses. the goal is simple: spend less time reconstructing the watchlist and more time actually watching something. open the hosted project · explore the project on github"
+    },
+    {
+      "slug": "two-pane-ai-writing-tool",
+      "title": "A Two-Pane Writing Tool That Keeps the Draft in View",
+      "date": "2026-09-16",
+      "tags": [
+        "Everyday tools"
+      ],
+      "excerpt": "My browser writing experiment puts the draft beside AI suggestions, with local autosave and a PHP request proxy.",
+      "cover": {
+        "src": "media/derivatives/2026/09/two-pane-ai-writing-tool_640w.jpg",
+        "alt": "A Two-Pane Writing Tool That Keeps the Draft in View cover image"
+      },
+      "_searchText": "a two-pane writing tool that keeps the draft in view everyday tools my browser writing experiment puts the draft beside ai suggestions, with local autosave and a php request proxy. when i ask for help with a piece of writing, i still want to keep the actual draft in front of me. my ai writing tool is built around a two-pane layout: writing on one side, suggestions on the other. the browser editor keeps the draft in local storage and maintains a local change log. that makes the page useful before an ai request is involved. writing, revising, and keeping the current text available are the basic jobs. when suggestions are requested, the page sends the draft to a php endpoint that calls the ai service. the api key stays in server-side configuration rather than being placed in the browser code. the project also includes basic request throttling and a health-check endpoint for setup. the separation between local storage and an ai request is worth understanding. local autosave means the draft is stored in that browser; it does not mean every device automatically shares it. requesting ai suggestions also means submitting the selected draft content through the configured service. those are two different parts of the workflow. the interface is intentionally smaller than a full document platform. it is a place to develop a piece of text and compare suggestions without constantly moving between windows. i like the idea of assistance that leaves the working document visible. the suggestions can be useful without becoming the whole experience. the person writing still has to decide whether a change preserves the meaning, sounds natural, and actually improves the paragraph. this project gives that decision a straightforward place to happen: the draft and the advice, side by side. open the hosted project · explore the project on github"
+    },
+    {
+      "slug": "visual-ping-webhook-project-sketch",
+      "title": "A Webhook Idea That Has Not Become an App Yet",
+      "date": "2026-09-16",
+      "tags": [
+        "Project sketches",
+        "project sketch"
+      ],
+      "excerpt": "A brief development note on the Visual Ping webhook placeholder and the questions that need answers before implementation.",
+      "cover": {
+        "src": "media/derivatives/2026/09/visual-ping-webhook-project-sketch_640w.jpg",
+        "alt": "A Webhook Idea That Has Not Become an App Yet cover image"
+      },
+      "_searchText": "a webhook idea that has not become an app yet project sketches project sketch a brief development note on the visual ping webhook placeholder and the questions that need answers before implementation. not every folder in a project repository represents a finished application. my visual-ping-webhook-api folder is a clear example: the reviewed snapshot contains a readme with the words first file, and no implemented endpoint. the repository index identifies it as an early webhook idea. that is the current status, not evidence that requests are already being received, stored, or forwarded. for a future implementation, i would start by defining a few practical boundaries: what information a request contains, how an authorized sender is recognized, what needs to be retained, and what response indicates success. those are proposed design questions, not existing capabilities. a webhook project becomes useful when the event arriving at the endpoint leads to a clear next action. until that behavior is defined and implemented, the honest description is an idea awaiting development. i am keeping this note short for the same reason. a placeholder deserves an accurate label, not a feature list assembled from what the folder name suggests. explore the project on github"
+    },
+    {
+      "slug": "life-group-attendance-portal",
+      "title": "Building a Life Group Attendance Portal for the People Behind the Check-In",
+      "date": "2026-09-16",
+      "tags": [
+        "Church and games"
+      ],
+      "excerpt": "A church attendance portal that connects check-in, student profiles, sibling links, leader access, and historical attendance.",
+      "cover": {
+        "src": "media/derivatives/2026/09/life-group-attendance-portal_640w.jpg",
+        "alt": "Building a Life Group Attendance Portal for the People Behind the Check-In cover image"
+      },
+      "_searchText": "building a life group attendance portal for the people behind the check-in church and games a church attendance portal that connects check-in, student profiles, sibling links, leader access, and historical attendance. attendance starts with a simple question: who is here? running a group also means finding names quickly, keeping profiles current, and understanding participation over time. my life group attendance portal brings those jobs together. the application supports multiple church life groups with reusable student profiles. leaders can search by first or last name, filter by grade or gender, and connect siblings. student records also include serving and baptism fields, alongside attendance history. the roles reflect the work people need to do. attendance users can check students in and maintain student profiles. super administrators manage users, groups, imports, and administrative reports. giving a volunteer the ability to fix a student's information does not need to mean giving them every setting in the system. new leader accounts go through approval. registration creates a pending account, and an administrator reviews it before granting active access. recent changes make that state clearer, including fresh account reads and an explicit pending-approval message. a registration that disappears into an ambiguous error is a frustrating way to welcome a volunteer. student removal is a soft delete. it removes the student from active lists while retaining prior attendance for historical totals and audits. that preserves the meaning of an older report even as the current roster changes. mobile usability has also shaped the project. navigation wraps on smaller screens, and the active section is represented in the url so refreshing the users page keeps someone on the users page. those are small details until you are the person doing the check-in. the portal uses php and json storage. its value comes from keeping the workflow understandable: find the student, record attendance, maintain the profile, and let the history accumulate into something useful. explore the project on github"
+    },
+    {
+      "slug": "weather-dashboard-location-accuracy",
+      "title": "A Weather Dashboard That Knows Which City I Mean",
+      "date": "2026-09-16",
+      "tags": [
+        "Everyday tools"
+      ],
+      "excerpt": "A lightweight weather dashboard built around explicit locations, cached updates, and a readable multi-city view.",
+      "cover": {
+        "src": "media/derivatives/2026/09/weather-dashboard-location-accuracy_640w.jpg",
+        "alt": "A Weather Dashboard That Knows Which City I Mean cover image"
+      },
+      "_searchText": "a weather dashboard that knows which city i mean everyday tools a lightweight weather dashboard built around explicit locations, cached updates, and a readable multi-city view. a weather dashboard can be beautifully designed and still be useless if it picked the wrong city. my weather dashboard starts with a simple rule: location should be explicit. the application uses latitude and longitude as the authoritative location. city and state labels help people read the results, while zip and city searches help with setup or a temporary lookup. a familiar city name alone is not enough to identify a unique place. the page shows current temperature, feels-like conditions, high and low values, and other current weather information from openweather. it can also sort locations by distance when browser location access is allowed. if access is declined, the original order remains. updates use a server-side cache, and an open browser page refreshes periodically. per-city json history retains observations without requiring a database or a background scheduler for the basic workflow. the api key belongs in private server configuration. temporary searches are kept separate from the configured base cities. trying a location should not quietly rewrite the saved dashboard. that distinction makes experimentation less likely to change the view someone expects to see the next time they open it. the project is small, but it highlights something i care about across my tools: the data must deserve the confidence of the interface. a precise-looking temperature for the wrong location is worse than a clear request to fix the location. the useful result is a readable view of selected places, with fewer assumptions hiding behind their names. open the hosted project · explore the project on github"
+    },
+    {
+      "slug": "license-plate-photo-logger",
+      "title": "Turning License Plate Photos into Searchable Records",
+      "date": "2026-09-16",
+      "tags": [
+        "Everyday tools"
+      ],
+      "excerpt": "My photo-logging experiment combines text extraction, metadata, duplicate detection, and an editable search view.",
+      "cover": {
+        "src": "media/derivatives/2026/09/license-plate-photo-logger_640w.jpg",
+        "alt": "Turning License Plate Photos into Searchable Records cover image"
+      },
+      "_searchText": "turning license plate photos into searchable records everyday tools my photo-logging experiment combines text extraction, metadata, duplicate detection, and an editable search view. a folder of photos can contain useful information without making that information easy to find. the license plate photo logger explores how to turn one part of an image into a searchable record. the app accepts uploaded plate photos, extracts a proposed plate value, and stores a json log. its documented scan modes include ai vision, ocr services, local tesseract when available, and manual logging. that makes extraction a configurable step rather than a requirement that every installation use the same service. the photos themselves can be difficult inputs. angles, reflections, cropping, and surrounding text all affect what a scanner sees. the project keeps editing and reprocessing available so an extracted value is something that can be corrected, not an unquestionable fact. duplicate handling works at two levels. a file hash identifies the same uploaded image, while normalized plate values allow repeated plate records to be grouped. those are different questions: whether a file has already been processed and whether another image appears to show the same plate. available photo metadata can add dates and location information, but that information is conditional. a photo without gps metadata does not suddenly gain a reliable capture location. the app can also record a plate's visible state separately from other image metadata. later changes focus on making the log manageable: live search, compact columns, detail overlays, and individual or bulk reprocessing. this project is an image-to-record experiment, not a vehicle-owner lookup service. the interesting work is building a reviewable path from an imperfect image to a useful entry, while preserving enough context to revisit the result. explore the project on github"
+    },
+    {
+      "slug": "json-flat-file-blog-powershell",
+      "title": "A Blog Made of JSON Files—and a Little PowerShell",
+      "date": "2026-09-16",
+      "tags": [
+        "Web foundations"
+      ],
+      "excerpt": "An experiment in storing posts as JSON and using PowerShell to build the index, RSS feed, and sitemap.",
+      "cover": {
+        "src": "media/derivatives/2026/09/json-flat-file-blog-powershell_640w.jpg",
+        "alt": "A Blog Made of JSON Files—and a Little PowerShell cover image"
+      },
+      "_searchText": "a blog made of json files—and a little powershell web foundations an experiment in storing posts as json and using powershell to build the index, rss feed, and sitemap. a blog can be a surprisingly good place to experiment with how much infrastructure a small website actually needs. my json flat-file blog stores each post as an individual json file. the browser renders the posts with html and javascript. a powershell builder creates the shared pieces: the post index used for listing and search, the rss feed, and the sitemap. adding content becomes a matter of creating a post file, rebuilding those generated outputs, and uploading the result. that puts the content and the generation steps in fairly visible places. a post has a title, date, slug, and html content. the builder has a specific job instead of requiring the web server to assemble every supporting file dynamically. media adds another layer. the project includes an administrator-protected upload workflow, image derivatives, and a private manifest. the manifest dashboard can flag unused media, missing alt text, missing files, or images referenced by posts but absent from the manifest. those checks matter because a small blog still accumulates housekeeping. images need readable alternatives, files can go missing, and a deleted post can leave media behind. a database-free design does not mean there is nothing to maintain. the documented media workflow has real hosting dependencies, including php, image processing, and access protection. this is an architectural experiment with its own setup, not a claim that every feature is just static html. what i enjoy is the division of labor: json holds the content, powershell builds the shared outputs, and the browser presents the result. it is another way to explore publishing with tools i can inspect and understand. explore the project on github"
+    },
+    {
+      "slug": "browser-gps-trip-eta-tracker",
+      "title": "Building a Browser Trip Tracker That Shows Its Assumptions",
+      "date": "2026-09-16",
+      "tags": [
+        "Money and travel"
+      ],
+      "excerpt": "A mobile GPS experiment for speed, heading, trip progress, ETA, and saved sessions—with visible signal and freshness information.",
+      "cover": {
+        "src": "media/derivatives/2026/09/browser-gps-trip-eta-tracker_640w.jpg",
+        "alt": "Building a Browser Trip Tracker That Shows Its Assumptions cover image"
+      },
+      "_searchText": "building a browser trip tracker that shows its assumptions money and travel a mobile gps experiment for speed, heading, trip progress, eta, and saved sessions—with visible signal and freshness information. an eta can look wonderfully precise even when the information behind it is not. my gps speed + eta tracker explores how to show trip progress while keeping those assumptions visible. the app uses browser location information to display speed, heading, and distance progress. an entered remaining distance can be counted down using the gps breadcrumb distance, and the interface includes moving time, stopped time, average speed, and other trip metrics. the project also saves history and trip sessions through php. manual or automatic snapshots can become a record of the journey, and csv export makes the observations available outside the page. device history uses a browser-generated identifier, with separate server-side storage for saved sessions. gps quality is presented as an estimate based on information the browser exposes, such as accuracy and update age. the page cannot inspect satellite counts or raw receiver signal data. showing the age of an update is more honest than letting an old reading look current simply because the digits are large. the eta is also different from a routing service's promise of traffic-aware directions. the core calculation is driven by the app's entered distance and observed movement. changes in stops or speed can change the result. later revisions focus on how the controls read on a phone: clear tracking-state labels, explicit drive-mode state, reachable map controls, and less intrusive changelog content. a button should tell me whether tracking is active without requiring a guess. this project is an experiment in presenting travel observations clearly. its most useful feature may be the context around the numbers, because understanding how fresh and how approximate a reading is helps make the whole dashboard more meaningful. open the hosted project · explore the project on github"
+    },
+    {
+      "slug": "browser-odometer-speedometer-emulator",
+      "title": "Building an Odometer That Rolls Forward in the Browser",
+      "date": "2026-09-16",
+      "tags": [
+        "Browser experiments"
+      ],
+      "excerpt": "A simulated odometer and speedometer with a configurable starting reading, animated digits, and MPH/KPH modes.",
+      "cover": {
+        "src": "media/derivatives/2026/09/browser-odometer-speedometer-emulator_640w.jpg",
+        "alt": "Building an Odometer That Rolls Forward in the Browser cover image"
+      },
+      "_searchText": "building an odometer that rolls forward in the browser browser experiments a simulated odometer and speedometer with a configurable starting reading, animated digits, and mph/kph modes. there is something satisfying about a mechanical-looking counter rolling into the next digit. my odometer emulator turns that small visual detail into an interactive browser experiment. the page lets someone set a starting reading, choose a simulated speed, and start or stop the display. as time passes, the odometer accumulates distance, while an animated speedometer needle provides another view of the current setting. the implementation includes mph and kph modes, generated gauge marks, leading-zero formatting, and a flip animation when a digit changes. the continuous calculation connects the visual movement to elapsed time, rather than simply advancing the number by a fixed amount on each screen refresh. this is a simulator. it is not reading an actual vehicle odometer, measuring mileage from the phone's gps, or changing a device's recorded mileage. the inputs on the page drive the demonstration. my separate gps trip tracker serves a different purpose. the interesting challenge is making the moving parts agree. the numeric speed, needle, units, and distance accumulation should feel like one display. an animation can look smooth while its calculation is inconsistent, so both sides need attention. i enjoy this kind of project because the feedback is immediate. change a value, start the emulator, and watch the result. a few familiar dashboard elements become a compact way to experiment with timing, units, animation, and interface state—without needing to go anywhere. explore the project on github"
+    },
+    {
+      "slug": "browser-password-generator-experiment",
+      "title": "Inside My Browser Password Generator Experiment",
+      "date": "2026-09-16",
+      "tags": [
+        "Everyday tools"
+      ],
+      "excerpt": "A look at the controls and implementation boundaries of my client-side password generator experiment.",
+      "cover": {
+        "src": "media/derivatives/2026/09/browser-password-generator-experiment_640w.jpg",
+        "alt": "Inside My Browser Password Generator Experiment cover image"
+      },
+      "_searchText": "inside my browser password generator experiment everyday tools a look at the controls and implementation boundaries of my client-side password generator experiment. a password generator has a tiny interface and some surprisingly important behavior behind it. my browser experiment provides a length control and options for uppercase letters, lowercase letters, numbers, and symbols. it also has an option to exclude ambiguous characters. when someone has to read a value from one screen and type it into another, telling a capital i from a lowercase l is not always a fun recreational activity. making the available character set explicit helps explain what the tool is producing. the reviewed working copy generates values in the browser using web crypto's random-value api. there is no server-side generation step in that file. that is a concrete implementation detail, not an automatic guarantee that every aspect of the generator has been independently audited. one subtle point is that selecting a character class adds it to the available pool. it does not require every generated value to include at least one character from each selected class. a site with a strict composition rule may therefore need more than simply checking the matching boxes. the repository also contains testing and working variants, so the distinction between a source copy and the currently deployed page matters. the hosted shortcut is /pw; i would not assume that every experimental file represents a separate production release. what interests me about this project is how much clarity can fit into a small tool. the controls should describe what the code really does, and the description should avoid promising more than the implementation establishes. even a single-button utility benefits from that discipline. open the hosted project · explore the project on github"
+    },
+    {
+      "slug": "browser-screen-size-debugging-tool",
+      "title": "A Screen-Size Page for the Layout That Looks Fine on My Computer",
+      "date": "2026-09-16",
+      "tags": [
+        "Web foundations"
+      ],
+      "excerpt": "A small viewport-inspection page that displays browser dimensions, pixel ratio, and orientation while the window changes.",
+      "cover": {
+        "src": "media/derivatives/2026/09/browser-screen-size-debugging-tool_640w.jpg",
+        "alt": "A Screen-Size Page for the Layout That Looks Fine on My Computer cover image"
+      },
+      "_searchText": "a screen-size page for the layout that looks fine on my computer web foundations a small viewport-inspection page that displays browser dimensions, pixel ratio, and orientation while the window changes. there is a classic stage in web development where a layout looks fine on my computer and mysterious everywhere else. my screen size page gives that conversation some numbers. the page shows the current viewport dimensions alongside the browser's inner and outer window sizes, screen dimensions, device pixel ratio, and orientation. as the window changes, the readout updates. those measurements describe related but different things. the viewport is the area available to the page; the physical screen and the browser's outer window are not necessarily the same size. browser controls, resizing, zoom, and device scaling can all affect what someone is actually looking at. for a support or layout discussion, the useful result is a compact page someone can open and report back from. instead of only saying that a button is off-screen, there is a specific browser view to compare with the layout's assumptions. the page does not fix responsive css on its own. it makes a few otherwise hidden conditions visible, which helps narrow the next question. a screenshot and the relevant dimensions can be much more informative together than either one alone. i keep small tools like this because they reduce guesswork around other projects. a one-purpose diagnostic page does not need accounts, saved dashboards, or an elaborate setup to be worth using. sometimes the fastest path to fixing an interface is first finding out how much room the interface really has. explore the project on github"
+    },
+    {
+      "slug": "building-my-own-ticketing-app",
+      "title": "Building My Own Ticketing App: From Request to Resolution",
+      "date": "2026-09-16",
+      "tags": [
+        "IT and automation"
+      ],
+      "excerpt": "A look at my PHP ticketing project, including requester and agent dashboards, public replies, private notes, and searchable categories.",
+      "cover": {
+        "src": "media/derivatives/2026/09/building-my-own-ticketing-app_640w.jpg",
+        "alt": "Building My Own Ticketing App: From Request to Resolution cover image"
+      },
+      "_searchText": "building my own ticketing app: from request to resolution it and automation a look at my php ticketing project, including requester and agent dashboards, public replies, private notes, and searchable categories. a support request needs somewhere better to live than a message that gets buried halfway down a conversation. my ticketing project gives those requests a place to be submitted, assigned, discussed, and tracked. the app has two distinct views. requesters can submit tickets and follow their own conversations. agents can work across the ticket list, search and sort it, update metadata, and manage the people and categories behind it. public replies are part of the requester conversation; private notes are for agents. the application filters those notes on the server before returning ticket data to a requester. the recent work has focused on making a growing ticket list easier to use. requester search matches names and email addresses. category search can find a term anywhere in a hierarchy, so someone looking for a printer issue does not have to work through every branch of a giant dropdown. category ids stay stable when a category is renamed or moved, preserving the connection to existing tickets. mobile behavior has needed attention too. smaller category rows, expandable editing controls, and fixes for iphone form zoom all address the difference between a page that technically fits and a page someone can comfortably use. the app uses php and json files. each installation maintains its own tickets, accounts, directory, and categories, separate from the source repository. that makes preserving runtime data during deployment part of the design. release 1.7.3 adds microsoft 365 email setup documentation. actual outbound notifications and inbound email replies remain future application work. passwordless test mode is also a development convenience, not a finished production identity system. for me, this project is about understanding the whole support workflow. the ticket form is the beginning; the interesting work is everything needed to keep the conversation organized afterward. explore the project on github"
+    },
+    {
+      "slug": "centralized-php-directory-browser",
+      "title": "One PHP Directory Browser, Many Folders",
+      "date": "2026-09-16",
+      "tags": [
+        "Web foundations"
+      ],
+      "excerpt": "A shared directory renderer with thin folder wrappers, path-based favorites, sorting, and downloads.",
+      "cover": {
+        "src": "media/derivatives/2026/09/centralized-php-directory-browser_640w.jpg",
+        "alt": "One PHP Directory Browser, Many Folders cover image"
+      },
+      "_searchText": "one php directory browser, many folders web foundations a shared directory renderer with thin folder wrappers, path-based favorites, sorting, and downloads. a directory listing is convenient until every folder has its own slightly different copy of the same viewer. my custom directory browser centralizes that work in one renderer. each folder can use a small wrapper that loads the shared php file. the wrapper gives the renderer the local context, while the main implementation controls how the listing looks and behaves. an improvement to the shared view can then reach multiple directories without editing each copy. the browser supports subdirectories, upward navigation, downloads, and favorites. favorites are stored by full relative path rather than just a filename. that matters when several folders contain a file named notes.txt; the name alone does not identify the same item. sorting puts folders and useful entries in a predictable order, and the layout is intended to remain usable on a phone. the project also normalizes and sorts saved favorites so the stored data stays consistent. path handling is part of the implementation, not just presentation. the documented browser resolves paths and restricts navigation to its allowed root. those boundaries deserve care because a useful file listing should show the intended directory tree, not whatever a crafted path happens to request. the project runs on php without a required database, with a writable location for favorite data. a visible revision and modification timestamp help identify the shared renderer in use. the main idea is simple reuse: put the common behavior in one place and let each folder supply the context. it is a small example of the same maintenance problem that shows up in much larger applications. explore the project on github"
+    },
+    {
+      "slug": "church-youth-live-scoreboard",
+      "title": "Building a Scoreboard That Works for the Room and the Scorekeeper",
+      "date": "2026-09-16",
+      "tags": [
+        "Church and games"
+      ],
+      "excerpt": "My church scoreboard project separates spectator displays from score entry and supports different ministry instances.",
+      "cover": {
+        "src": "media/derivatives/2026/09/church-youth-live-scoreboard_640w.jpg",
+        "alt": "Building a Scoreboard That Works for the Room and the Scorekeeper cover image"
+      },
+      "_searchText": "building a scoreboard that works for the room and the scorekeeper church and games my church scoreboard project separates spectator displays from score entry and supports different ministry instances. a scoreboard has two audiences. the room needs to see the score clearly. the person entering points needs to change it quickly without navigating through a display designed for spectators. my live game scoreboard separates those jobs. the application has read-only viewer pages and dedicated score-entry screens, including a compact entry view. it supports default, collide, youth, and frontlines instances, each with its own teams and runtime data. that lets different group activities share an approach without sharing one live score file. some features are specific to an instance. frontlines includes predefined category scoring and a searchable roster. collide includes team mottos, uploaded walk-up songs, and a separate celebration-screen action. these are useful additions because the events do not all work the same way. the viewer refreshes automatically, giving scorekeepers a way to update the room without touching the display computer. source files and sample data are kept separate from live score and audit records, which matters when the code changes during an ongoing season of activities. a practical design question is how much information each screen should carry. a roster search can help locate a person, but the scoreboard itself should still read like a scoreboard. likewise, score-entry controls should make the next action obvious rather than mirror every decorative part of the public view. this project is about fitting the software to a real group activity. the points are only one piece. team identity, readable displays, quick entry, and a reliable record of changes all contribute to keeping the game moving. and yes, sometimes the correct feature is a large celebration on the screen. not every requirement arrives wearing a business suit. open the hosted project · explore the project on github"
+    },
+    {
+      "slug": "construction-sign-text-generator",
+      "title": "I Built a Construction Sign for Messages That Need More Orange",
+      "date": "2026-09-16",
+      "tags": [
+        "Browser experiments"
+      ],
+      "excerpt": "A browser generator for LED-style highway signs, with live previews, adjustable styling, and image or HTML export.",
+      "cover": {
+        "src": "media/derivatives/2026/09/construction-sign-text-generator_640w.jpg",
+        "alt": "I Built a Construction Sign for Messages That Need More Orange cover image"
+      },
+      "_searchText": "i built a construction sign for messages that need more orange browser experiments a browser generator for led-style highway signs, with live previews, adjustable styling, and image or html export. some messages deserve more presence than a plain paragraph. apparently, my solution was to build a miniature highway construction sign in the browser. the construction sign text generator turns entered text into an led-style message board. it uses a custom 5-by-7 dot-matrix renderer and supports one to four lines, with manual line breaks or automatic wrapping. the controls make the appearance part of the fun. led color, bulb size, spacing, glow, alignment, and the frame can all be adjusted. a live preview shows the result while the wording and layout change. it is a useful little exercise in making typography out of something other than ordinary font glyphs. export makes the preview reusable. the page can download a png image, copy self-contained embed code, or copy a complete standalone html document. someone can use a static picture or keep the generated sign as a web element. the project runs client-side and does not store entered text on a server. the files are ordinary html, css, and javascript, which fits the scale of the experiment. what i like is the combination of a recognizable visual language and a very small task. a familiar road-sign style makes an ordinary message feel immediately different. the controls then turn that idea into something another person can customize. it is not intended to manage an actual highway sign. it is a browser toy with a practical export button—and sometimes that is an entirely sufficient project brief. explore the project on github"
+    },
+    {
+      "slug": "cooper-integration-countdown-page",
+      "title": "A Countdown Page for a Milestone with a Specific Date",
+      "date": "2026-09-16",
+      "tags": [
+        "Browser experiments"
+      ],
+      "excerpt": "A retrospective on a focused countdown display built around the Cooper integration milestone.",
+      "cover": {
+        "src": "media/derivatives/2026/09/cooper-integration-countdown-page_640w.jpg",
+        "alt": "A Countdown Page for a Milestone with a Specific Date cover image"
+      },
+      "_searchText": "a countdown page for a milestone with a specific date browser experiments a retrospective on a focused countdown display built around the cooper integration milestone. a countdown page does one thing particularly well: it makes a date feel visible. my cooper integration countdown was built around august 10, 2026, at 8:00 am. the page displays days, hours, minutes, and seconds, with branding for the milestone. the repository also includes an alternate standalone countdown file. it is a focused display rather than a general project-management system. that focus is useful. a deadline in a calendar entry is something a person has to open or remember. a countdown is designed to be glanced at. large numbers and a clear target make the remaining interval the main content of the page. the target date has now passed, so i see this project as a record of an event-specific tool and a reusable interface pattern. it should not be presented as a currently upcoming integration countdown. a future adaptation would need its own target date and event context. the project is also a reminder that dates deserve precision in both code and copy. if a display is used by people in different time zones, the intended interpretation of a stated time needs to be explicit. that is a consideration for reuse, not a claim that every version already handles every timezone scenario. there is no need to make every useful page permanent. sometimes a small tool belongs to one moment. afterward, the code remains as a starting point for the next milestone that needs something more visible than a calendar square. explore the project on github"
+    },
+    {
+      "slug": "khootish-multiplayer-quiz-game",
+      "title": "Khootish: Building a Reusable Quiz Game for a Room Full of Players",
+      "date": "2026-09-16",
+      "tags": [
+        "Church and games"
+      ],
+      "excerpt": "A PHP quiz engine with reusable questions, join codes, phone answer pads, a projector display, and timed scoring.",
+      "cover": {
+        "src": "media/derivatives/2026/09/khootish-multiplayer-quiz-game_640w.jpg",
+        "alt": "Khootish: Building a Reusable Quiz Game for a Room Full of Players cover image"
+      },
+      "_searchText": "khootish: building a reusable quiz game for a room full of players church and games a php quiz engine with reusable questions, join codes, phone answer pads, a projector display, and timed scoring. a group quiz has more moving parts than a question and four buttons. people need to join, the host needs to control the room, and everybody needs to agree on when time is up. khootish is my project for bringing those pieces together. the app provides separate administration, host, projector, and mobile answer views. a reusable quiz library and question bank allow questions to be written once and used in different games. players join with a six-digit code and can choose a team color. questions have four choices and one correct answer. the documented timer is 30 seconds, with correct-answer points declining as time passes. wrong answers receive zero points, and results and standings appear after each question. completed games can be kept in history and replayed. the timer and score decisions are controlled on the server. that is important when several phones are responding at nearly the same time. a browser's display should not independently decide whether an answer is valid after the round has ended. the json storage uses dedicated locks around game changes, including joins, answers, and state transitions. duplicate-answer validation and scoring happen together. these are less visible features than the leaderboard, but they help the leaderboard mean something. the documented design targets dozens of contestants on shared hosting. a much larger event would be a different infrastructure problem, and i am not treating a configured player limit as a benchmark result. the appeal of this project is reuse. a good set of questions should be easy to bring back, and the host should spend the session running the game rather than rebuilding the mechanics. the technology should keep the pace, then get out of the room's way. explore the project on github"
+    },
+    {
+      "slug": "cross-country-trip-timeline-dashboard",
+      "title": "Turning a Cross-Country Trip into a Readable Timeline",
+      "date": "2026-09-16",
+      "tags": [
+        "Money and travel"
+      ],
+      "excerpt": "A retrospective on a trip dashboard that separates reported checkpoints, map observations, estimates, and calculations.",
+      "cover": {
+        "src": "media/derivatives/2026/09/cross-country-trip-timeline-dashboard_640w.jpg",
+        "alt": "Turning a Cross-Country Trip into a Readable Timeline cover image"
+      },
+      "_searchText": "turning a cross-country trip into a readable timeline money and travel a retrospective on a trip dashboard that separates reported checkpoints, map observations, estimates, and calculations. a long trip produces a trail of updates: a message from the road, a map observation, another checkpoint, and a revised guess about arrival. my cross-country trip page brings those pieces into one readable timeline. the project in the jeremy folder records a completed journey from california to the cleveland area. it combines a route map, checkpoints, progress information, segment summaries, and an arrival result. it is a retrospective dashboard built from recorded observations, not a live tracking service that is still following the trip. one feature i particularly like is the data key. the page distinguishes direct reports, shared-map observations, estimates, and values calculated from those observations. those categories keep a convenient chart from making every point look equally certain. the segment table also distinguishes elapsed progress from driving speed. an average that includes an overnight stop or a visit can be much lower than the speed of the vehicle while moving. labeling that difference makes the information easier to interpret. the final record allows an arrival estimate to be compared with what actually happened. that is useful feedback for the assumptions behind a trip model, especially when stops and changing plans are part of the journey. for this article, the point is the structure rather than anybody's exact address or minute-by-minute movements. a public example can explain the timeline without republishing those personal details. this project shows how a one-off family question can become a small data-presentation exercise: collect observations, preserve their origin, and make the uncertainty visible alongside the progress. explore the project on github"
+    },
+    {
+      "slug": "debt-payoff-planner-scenarios",
+      "title": "Building a Debt Payoff Planner That Makes Scenarios Easier to Compare",
+      "date": "2026-09-16",
+      "tags": [
+        "Money and travel"
+      ],
+      "excerpt": "A look at my loan-tracking app, with payoff comparisons, private records, controlled sharing, and recoverable changes.",
+      "cover": {
+        "src": "media/derivatives/2026/09/debt-payoff-planner-scenarios_640w.jpg",
+        "alt": "Building a Debt Payoff Planner That Makes Scenarios Easier to Compare cover image"
+      },
+      "_searchText": "building a debt payoff planner that makes scenarios easier to compare money and travel a look at my loan-tracking app, with payoff comparisons, private records, controlled sharing, and recoverable changes. a loan balance tells only part of the story. the payment amount, interest, and order of repayment all affect the picture someone is trying to understand. my debt payoff planner gives those inputs a place to be compared. the app tracks individual loans and provides amortization and accelerated-payoff tables. it also includes snowball and avalanche strategy comparisons, allowing different approaches to be explored with the same underlying records. the purpose is to make the scenario visible, not to claim one result is automatically right for every person. the records are private to each user, with owner-controlled viewer and editor sharing. that lets a person choose whether another account can look at the plan or help maintain it. administration includes user management without making the administrator's normal view a dashboard of everybody else's balances. recoverability is a significant part of the project. it keeps per-user audit history, creates a backup on the first successful login of the day, and supports manual backup and recovery. when an audit action is reverted, the documented behavior restores the whole saved dataset snapshot for that event. that is different from undoing one isolated field. the storage is plain json, separated into accounts, user datasets, audits, and backups. it is a small application architecture with explicit files rather than a required database service. the result is a workspace for comparing assumptions and keeping track of changes. i am interested in making the inputs and history understandable, because a payoff chart is only useful when someone can see where its numbers came from. this is a software project for modeling scenarios, not a promise about financial outcomes. explore the project on github"
+    },
+    {
+      "slug": "dell-service-tag-lookup-tool",
+      "title": "A Small Shortcut for a Repetitive IT Task: Dell Service Tag Lookup",
+      "date": "2026-09-16",
+      "tags": [
+        "IT and automation"
+      ],
+      "excerpt": "A lightweight support-page shortcut with service-tag entry, photo scanning, and a shared recent-tag list.",
+      "cover": {
+        "src": "media/derivatives/2026/09/dell-service-tag-lookup-tool_640w.jpg",
+        "alt": "A Small Shortcut for a Repetitive IT Task: Dell Service Tag Lookup cover image"
+      },
+      "_searchText": "a small shortcut for a repetitive it task: dell service tag lookup it and automation a lightweight support-page shortcut with service-tag entry, photo scanning, and a shared recent-tag list. some tools earn their place by removing just a few repetitive steps. my dell service tag lookup page is one of them. the basic workflow is deliberately short: enter a service tag and open the matching dell support page. the page checks the input and builds the destination, putting the official product support information a little closer to the task at hand. it is an independent shortcut, not a replacement for dell's support site. there is also a photo-scanning option. that makes the project more useful when the tag is on a device label instead of already sitting in the clipboard. a scan still needs a readable image and a sensible result; the convenience is in reducing transcription, not declaring every photograph infallible. recent tags appear in a shared history list. the page explicitly says that everyone using it can see those recent tags. that distinction matters: this is a shared shortcut history, not an individual user's private equipment inventory. the interface uses large controls and a layout that adapts to a phone. for a page with one main task, the design should make that task obvious. a service-tag helper does not need six tabs and a welcome tour. this project is a good reminder that useful development is not measured by the number of screens. if a small page helps someone get from a device in front of them to its support information with less typing, it has a clear job and a clear reason to exist. open the hosted project · explore the project on github"
+    },
+    {
+      "slug": "family-gps-tracker-web-app",
+      "title": "Family GPS Tracker: Shared Location with Clear Boundaries",
+      "date": "2026-09-16",
+      "tags": [
+        "Family and home"
+      ],
+      "excerpt": "A consent-based family and friend location-sharing experiment with groups, check-ins, account controls, and browser limitations.",
+      "cover": {
+        "src": "media/derivatives/2026/09/family-gps-tracker-web-app_640w.jpg",
+        "alt": "Family GPS Tracker: Shared Location with Clear Boundaries cover image"
+      },
+      "_searchText": "family gps tracker: shared location with clear boundaries family and home a consent-based family and friend location-sharing experiment with groups, check-ins, account controls, and browser limitations. sharing a location can be helpful when people are coordinating a trip or trying to meet up. a useful location-sharing app also needs to make the sharing relationship understandable. that is the direction of my family gps tracker. the project uses php and json to support separate family, friend, or trip groups. members can view an active-group map, send check-ins, share a destination and eta, and inspect last-known information. an account can belong to more than one circle. group ownership and account controls are part of the design. owners can manage membership and transfer ownership, while users can change passwords, manage remembered devices, export their own data, and review their account's stored-data summary. deleting an account requires resolving any groups it still owns. the app also supports named geofence places. arrival and departure evaluation happens through the browser while the signed-in group page remains open. that detail matters: this is not a guarantee of continuous tracking in the background. mobile browsers and operating systems control what can keep running when a page is no longer active. a stale location also needs context. last-known details, update health, and trail information help distinguish an observation from an assumption about where someone is now. the app includes home-screen installation support and appearance options, but those conveniences do not erase the underlying browser limits. i want the project described as it works, rather than as a native tracking service it has not become. the interesting challenge is keeping coordination useful without making the controls mysterious. groups, consent, visibility, and account lifecycle all belong in the same conversation as the map. explore the project on github"
+    },
+    {
+      "slug": "freshservice-ticket-progress-dashboard",
+      "title": "Beyond the Ticket Count: Building a Freshservice Progress Dashboard",
+      "date": "2026-09-16",
+      "tags": [
+        "IT and automation"
+      ],
+      "excerpt": "My Freshservice dashboard puts unresolved tickets, new work, completed work, and historical trends into one view.",
+      "cover": {
+        "src": "media/derivatives/2026/09/freshservice-ticket-progress-dashboard_640w.jpg",
+        "alt": "Beyond the Ticket Count: Building a Freshservice Progress Dashboard cover image"
+      },
+      "_searchText": "beyond the ticket count: building a freshservice progress dashboard it and automation my freshservice dashboard puts unresolved tickets, new work, completed work, and historical trends into one view. an unresolved-ticket count tells me how much is waiting. it does not tell me how much work arrived today, how much left the queue, or whether the backlog is moving in the right direction. that is the question behind my freshservice ticket tracker. the project began with manually recorded history and now includes a server-side api collector. the collector compares ticket states between pulls, recording changes such as new work, assignments, reopenings, completions, and reassignments. the dashboard brings that activity together with the unresolved balance. one lesson is that a dashboard needs to explain its time window. at the start of a workday, today's activity is naturally incomplete. recent changes default the activity cards to the latest completed workday, which makes a quick morning glance more useful. missing data also needs to stay distinguishable from a measured zero. no observation is not the same thing as no work. the charts have evolved around readability. unresolved tickets have their own vertical scale, while new and completed activity share another. both scales remain visible when the plot scrolls on a phone. there is also a simpler dashboard for viewing the daily series without the rest of the detail. trend cards cover 7, 14, and 30 calendar days. they provide changes, coverage, and a fitted slope rather than turning two isolated numbers into a confident prediction. the estimate to reach zero is guarded and depends on the available history. the tracker also records collector attempts, including failures. that matters because stale information can look convincing when it is presented neatly. this is an aggregate view of progress, not a substitute for working the tickets themselves. my goal is to make the queue easier to understand—and eventually give that zero-ticket celebration something to do. open the hosted project · explore the project on github"
+    },
+    {
+      "slug": "home-warranty-tracker",
+      "title": "Building a Warranty Tracker Before I Need the Warranty",
+      "date": "2026-09-16",
+      "tags": [
+        "Family and home"
+      ],
+      "excerpt": "A household warranty portal that keeps product details, receipt links, costs, and expiration dates together.",
+      "cover": {
+        "src": "media/derivatives/2026/09/home-warranty-tracker_640w.jpg",
+        "alt": "Building a Warranty Tracker Before I Need the Warranty cover image"
+      },
+      "_searchText": "building a warranty tracker before i need the warranty family and home a household warranty portal that keeps product details, receipt links, costs, and expiration dates together. the best time to find a warranty receipt is before something breaks. unfortunately, that is also the time when finding the receipt feels least urgent. my warranty tracker gives the information a consistent home. a record can include the product, category, manufacturer, model, serial number, seller, warranty provider, costs, dates, receipt url, and notes. instead of reconstructing the purchase later, the details can be captured while they are still easy to find. the dashboard summarizes active, expiring, and expired warranties along with tracked value. a continuous color cue changes as expiration approaches, and the app treats warranties within 90 days as expiring soon. that makes the date visible without requiring a separate mental calculation for every row. household sharing is part of the workflow. accounts can keep a record private or share it with the household, and an administrator can create one-time invitation codes for additional members. the person who bought an item does not have to be the only person who can find its information later. the application supports search, filtering, sorting, and editing on both phone and desktop. underneath, php stores the records in json with locking and atomic replacement. it follows conventions from the repository's shared foundation work. a tracked expiration date is an organizing aid, not a verdict on what a provider will cover. the policy terms and purchase records still matter. the app's job is to make those supporting details easier to locate. this is a practical home project: fewer scattered notes, a clearer view of upcoming dates, and one less search to perform while dealing with an already inconvenient broken item. explore the project on github"
+    },
+    {
+      "slug": "impossible-click-browser-game",
+      "title": "Impossible Click: Building a Button That Refuses to Cooperate",
+      "date": "2026-09-16",
+      "tags": [
+        "Browser experiments"
+      ],
+      "excerpt": "A deliberately uncooperative browser game that explores pointer movement, feedback, and the line between a joke and a usability bug.",
+      "cover": {
+        "src": "media/derivatives/2026/09/impossible-click-browser-game_640w.jpg",
+        "alt": "Impossible Click: Building a Button That Refuses to Cooperate cover image"
+      },
+      "_searchText": "impossible click: building a button that refuses to cooperate browser experiments a deliberately uncooperative browser game that explores pointer movement, feedback, and the line between a joke and a usability bug. most interface work is about making a button easy to use. impossible click takes that rule, grins, and runs in the other direction. the premise is simple: try to click a button that moves away from the cursor. the page keeps caught and missed counts and displays an accuracy figure. success gets a visible celebration, making the result feel like a small game rather than an ordinary form submission. the javascript handles movement, boundaries, and the score display. the button has to evade the pointer without disappearing beyond the area where the game takes place. particle effects and feedback add personality to what is otherwise a very small interaction. this is intentionally adversarial behavior in a play context. it would be terrible on a save button, a checkout form, or a control someone needs to use quickly. the same movement that makes the game entertaining would be a usability bug in an ordinary application. that contrast is why experiments like this are useful. they make pointer behavior, spatial constraints, and feedback easy to observe. a small change in movement or distance can noticeably change how the page feels. the project lives in one standalone html file, so it is easy to inspect without a larger application setup. it is one of the deliberately silly corners of my repository. sometimes the point of building something is to solve a task. sometimes it is to make a button act like it knows exactly what you are trying to do. explore the project on github"
+    },
+    {
+      "slug": "daily-babe-daily-photo-tracker",
+      "title": "Daily-babe: Turning One Photo a Day into a Growing Story",
+      "date": "2026-09-16",
+      "tags": [
+        "Family and home"
+      ],
+      "excerpt": "A private daily baby-photo gallery with backdated uploads, day labels, separate galleries, and collage and GIF exports.",
+      "cover": {
+        "src": "media/derivatives/2026/09/daily-babe-daily-photo-tracker_640w.jpg",
+        "alt": "Daily-babe: Turning One Photo a Day into a Growing Story cover image"
+      },
+      "_searchText": "daily-babe: turning one photo a day into a growing story family and home a private daily baby-photo gallery with backdated uploads, day labels, separate galleries, and collage and gif exports. a phone can hold thousands of photos and still make it surprisingly difficult to follow one simple story: how a baby changes from day to day. daily-babe is my attempt to give that story a little structure. the app is a private, mobile-first gallery built around one photo per calendar date. it accepts daily or backdated uploads, so missing the upload is not the same thing as losing the memory. notes, a full-photo viewer, a photo count, and a missing-date view help make the collection manageable. day numbering has an important rule. the due date can power the countdown before the baby arrives, but the actual birth date becomes the source for day 1 and age calculations afterward. changing a due date should not unexpectedly renumber an established gallery. the project also supports multiple baby galleries. account information lives in one protected authentication file, while each gallery has its own settings, entries, uploads, and backups. a baby's sign-in name does not have to become the underlying storage folder name. for sharing a sequence, the app includes browser-generated collages and animated gif slideshows with day labels. the documented export limit is up to 100 photos. these outputs turn a set of individual uploads into something that shows change over time. the gallery uses php and json, with private image delivery and password-protected sessions. runtime photos and account information are separate from the application source and need their own backups. this is one of the more personal projects in my repository. the interesting technical decisions all serve the same purpose: make the daily habit manageable, keep the order meaningful, and make it easier to enjoy the photos later. explore the project on github"
+    },
+    {
+      "slug": "windows-computer-heartbeat-dashboard",
+      "title": "Computer Heartbeats: Making Windows Device Check-Ins Easier to See",
+      "date": "2026-09-16",
+      "tags": [
+        "IT and automation"
+      ],
+      "excerpt": "A dashboard-side look at the documented PowerShell-to-PHP heartbeat workflow, including what the current repository package contains.",
+      "cover": {
+        "src": "media/derivatives/2026/09/windows-computer-heartbeat-dashboard_640w.jpg",
+        "alt": "Computer Heartbeats: Making Windows Device Check-Ins Easier to See cover image"
+      },
+      "_searchText": "computer heartbeats: making windows device check-ins easier to see it and automation a dashboard-side look at the documented powershell-to-php heartbeat workflow, including what the current repository package contains. knowing that a computer existed in an inventory last month is different from knowing it has checked in recently. the computer heartbeat project is built around that second question. the documented design connects a powershell report to a php receiver and json history, then presents those records in a browser dashboard. reports include device and operating-system details, user context, and timestamps. the dashboard brings the latest observations into a searchable, sortable table. the useful distinction is between an observation and an assumption. a recent check-in tells me the reporting path worked at that moment. an old check-in tells me the information is stale; it does not, by itself, explain whether the device is powered off, disconnected, or having trouble reporting. the project documentation describes online and offline counts, model and serial information, relative timestamps, and a historical view. those elements make it easier to move from a broad list to the individual machine that deserves attention. there is also a packaging detail in the current repository snapshot: the computers folder contains dashboard-side files and documentation, while some documented client and receiver components are not included there. i would treat the folder as part of the documented system, not promise that downloading it alone creates a complete installation. what interests me here is the connection between a small powershell report and a useful web view. the report does not have to be complicated to be valuable. it needs consistent fields, meaningful timestamps, and somewhere those observations can be reviewed without opening a pile of raw files. explore the project on github"
+    },
     {
       "slug": "hello-world",
       "title": "Hello, flat-file world",
@@ -20,8 +626,8 @@
         "meta",
         "setup"
       ],
-      "excerpt": "Welcome to the blog that refuses to pay the database tax. Each post is a .json file. The homepage reads posts/index.json and builds the list. Clicking a post lo…",
-      "_searchText": "hello, flat-file world meta setup welcome to the blog that refuses to pay the database tax. each post is a .json file. the homepage reads posts/index.json and builds the list. clicking a post lo… welcome to the blog that refuses to pay the database tax. each post is a .json file. the homepage reads posts/index.json and builds the list. clicking a post loads posts/&lt;slug&gt;.json . how to add a new post copy posts/_template.json to posts/my-new-post.json change the slug , title , dates, tags, and html add the post entry to posts/index.json (or run the build script) that’s it. no admin panel. no plugins. no mysterious tables named wp_options doing eldritch things."
+      "excerpt": "Welcome to the blog that refuses to pay the database tax. Each post is a .json file and the homepage reads posts/index.json to build the list.",
+      "_searchText": "hello, flat-file world meta setup welcome to the blog that refuses to pay the database tax. each post is a .json file and the homepage reads posts/index.json to build the list. welcome to the blog that refuses to pay the database tax. each post is a .json file. the homepage reads posts/index.json and builds the list. clicking a post loads posts/<slug>.json . how to add a new post copy posts/_template.json to posts/my-new-post.json change the slug , title , dates, tags, and html add the post entry to posts/index.json (or run the build script) that’s it. no admin panel. no plugins. no mysterious tables named wp_options doing eldritch things."
     },
     {
       "slug": "notepadpp-caution",
@@ -31,8 +637,8 @@
         "security",
         "windows"
       ],
-      "excerpt": "Security is mostly being annoyingly consistent. Basic checks that actually matter Download from the official site (or a trusted package manager) Verify the digi…",
-      "_searchText": "supply-chain paranoia: a practical notepad++ sanity check security windows security is mostly being annoyingly consistent. basic checks that actually matter download from the official site (or a trusted package manager) verify the digi… security is mostly being annoyingly consistent. basic checks that actually matter download from the official site (or a trusted package manager) verify the digital signature if present compare hashes when the vendor provides them keep it updated, but don’t auto-trust random mirrors bonus points: treat “portable exes from forum posts” as guilty until proven innocent. # example idea (conceptual)\\n# - get file signature\\n# - validate chain\\n# - compare known hash\\n"
+      "excerpt": "A practical reminder to download from trusted sources, verify signatures or hashes where available, and avoid blindly trusting random mirrors.",
+      "_searchText": "supply-chain paranoia: a practical notepad++ sanity check security windows a practical reminder to download from trusted sources, verify signatures or hashes where available, and avoid blindly trusting random mirrors. security is mostly being annoyingly consistent. basic checks that actually matter download from the official site (or a trusted package manager) verify the digital signature if present compare hashes when the vendor provides them keep it updated, but don’t auto-trust random mirrors bonus points: treat “portable exes from forum posts” as guilty until proven innocent. # example idea (conceptual)\\n# - get file signature\\n# - validate chain\\n# - compare known hash\\n"
     },
     {
       "slug": "homelab-notes",
@@ -43,8 +649,8 @@
         "ops",
         "backup"
       ],
-      "excerpt": "Your homelab will eventually betray you. The only question is whether you left yourself a note. Three rules Logs or it didn’t happen. Centralize where possible.…",
-      "_searchText": "homelab notes: logs, backups, and the art of not losing your mind homelab ops backup your homelab will eventually betray you. the only question is whether you left yourself a note. three rules logs or it didn’t happen. centralize where possible.… your homelab will eventually betray you. the only question is whether you left yourself a note. three rules logs or it didn’t happen. centralize where possible. backups or it didn’t matter. 3-2-1 beats hope. documentation or it didn’t belong in prod. yes, your lab has prod now. make future-you smug instead of furious."
+      "excerpt": "Homelab notes on logs, backups, and documentation so future troubleshooting has a record instead of relying on memory.",
+      "_searchText": "homelab notes: logs, backups, and the art of not losing your mind homelab ops backup homelab notes on logs, backups, and documentation so future troubleshooting has a record instead of relying on memory. your homelab will eventually betray you. the only question is whether you left yourself a note. three rules logs or it didn’t happen. centralize where possible. backups or it didn’t matter. 3-2-1 beats hope. documentation or it didn’t belong in prod. yes, your lab has prod now. make future-you smug instead of furious."
     }
   ]
 }

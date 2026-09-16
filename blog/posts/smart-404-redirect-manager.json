@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "filename": "smart-404-redirect-manager.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.1",
+    "changelog": [
+      "1.0.1: Resolve cover media relative to the blog directory.",
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "smart-404-redirect-manager",
+  "title": "Making a 404 Page Useful Without Guessing Too Aggressively",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "Web foundations"
+  ],
+  "excerpt": "My Smart 404 project logs missing URLs and supports deliberate mappings alongside conservative matching for hosted projects.",
+  "cover": {
+    "src": "media/derivatives/2026/09/smart-404-redirect-manager_640w.jpg",
+    "alt": "Making a 404 Page Useful Without Guessing Too Aggressively cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/smart-404-redirect-manager_640w.jpg\" alt=\"Making a 404 Page Useful Without Guessing Too Aggressively cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>A missing page can come from an old bookmark, a typo, or a link that once pointed somewhere useful. My Smart 404 project makes those misses visible and gives me a way to handle them deliberately.</p>\n<p>The handler logs the requested path, checks configured mappings, and can attempt conservative matching against hosted project paths. A protected administration page lets me inspect the misses and create a site-local mapping from a log entry or a manual form.</p>\n<p>The word conservative matters. A redirect is only helpful when it sends someone to the right place. Automatically treating every unfamiliar address as a near match would create a different kind of confusion. The documentation keeps new mappings temporary while they are being tested.</p>\n<p>There is also a routing detail specific to jasr.me. YOURLS handles shortlink requests, including unknown keywords, before a normal web-server error document necessarily gets involved. The project includes a plugin to pass those unknown keywords into the Smart 404 workflow.</p>\n<p>The administration view can classify recurring unwanted request patterns, with exact, prefix, and contains matches. Those patterns are handled separately from ordinary recovery mappings. This provides visibility into the requests; it is not a claim that a 404 handler replaces a broader security system.</p>\n<p>Live logs, mappings, and the administrator password configuration are managed separately from the source files. Fixing a routing bug should not wipe out the useful mappings already collected on the server.</p>\n<p>The appeal is turning a dead end into a maintainable feedback loop: see what people request, decide what should happen, and keep the decision explicit enough to revisit later.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/smart-404\">Explore the project on GitHub</a></p>\n"
+}

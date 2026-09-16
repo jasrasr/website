@@ -3,9 +3,10 @@
 # filename: view-media.php
 # author: Jason Lamb (with help from ChatGPT)
 # created date: 2026-02-04
-# modified date: 2026-02-04
-# revision: 1.0
+# modified date: 2026-09-16
+# revision: 1.1.0
 # changelog:
+# - 1.1.0: Resolves blog-relative media in disk checks and dashboard thumbnails.
 # - 1.0: Admin dashboard for media-manifest.json (usage, unused warnings, alt-text warnings, integrity checks, copy srcset helper)
 */
 
@@ -39,7 +40,7 @@ if (is_dir($postsDir)) {
         $html = $p["content_html"] ?? "";
         if (!$html) continue;
 
-        if (preg_match_all('#/media/derivatives/\d{4}/\d{2}/([a-zA-Z0-9_-]+)_\d+w\.jpg#', $html, $m)) {
+        if (preg_match_all('#/?media/derivatives/\d{4}/\d{2}/([a-zA-Z0-9_-]+)_\d+w\.jpg#', $html, $m)) {
             foreach ($m[1] as $key) {
                 if (!isset($refs[$key])) $refs[$key] = [];
                 if (!in_array($slug, $refs[$key], true)) $refs[$key][] = $slug;
@@ -58,8 +59,7 @@ foreach ($refs as $k => $slugs) {
 function disk_path($blogRoot, $webPath) {
     // Convert a web path like "/media/derivatives/..." to a filesystem path.
     if (!$webPath) return "";
-    if (strpos($webPath, "/") !== 0) return $webPath;
-    return $blogRoot . $webPath;
+    return $blogRoot . "/" . ltrim($webPath, "/");
 }
 
 function build_srcset_snippet($itemKey, $item) {
@@ -231,7 +231,7 @@ foreach ($items as $key => $item) {
       <tr class="<?php echo esc($cls); ?>">
         <td>
           <?php if ($r["thumb"]): ?>
-            <img class="thumb" src="<?php echo esc($r["thumb"]); ?>" alt="" />
+            <img class="thumb" src="<?php echo esc("../" . ltrim($r["thumb"], "/")); ?>" alt="" />
           <?php else: ?>
             —
           <?php endif; ?>

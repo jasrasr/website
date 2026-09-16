@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "filename": "shared-text-between-devices.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.1",
+    "changelog": [
+      "1.0.1: Resolve cover media relative to the blog directory.",
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "shared-text-between-devices",
+  "title": "Shared Text: A Small Scratch Pad for Moving Text Between Devices",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "Everyday tools"
+  ],
+  "excerpt": "A PHP scratch pad for saving a piece of text on one device and loading it on another, with a small snapshot history.",
+  "cover": {
+    "src": "media/derivatives/2026/09/shared-text-between-devices_640w.jpg",
+    "alt": "Shared Text: A Small Scratch Pad for Moving Text Between Devices cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/shared-text-between-devices_640w.jpg\" alt=\"Shared Text: A Small Scratch Pad for Moving Text Between Devices cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Sometimes I do not need a document system. I need the text on this computer to be available on that one. Shared Text is a small web page for exactly that kind of handoff.</p>\n<p>The workflow is simple: type or paste text, enter the save password, and save it. On another device, open the page and load the latest version. It avoids turning every short transfer into an email to myself or another temporary file.</p>\n<p>The latest text lives in a JSON file on the web server. Each save also writes a timestamped snapshot, and the application keeps the ten newest history files. That gives the latest value a modest recovery trail instead of making each overwrite the only remaining copy.</p>\n<p>The documentation distinguishes the save password from the password used to inspect raw JSON through the page. The storage directory has an Apache access rule, and live data and local password files are intended to stay outside version control. These are specific access behaviors, not a claim that every way of viewing shared text is private.</p>\n<p>The project uses PHP and a small amount of storage because the task is small. There is one current shared text value to retrieve, rather than a collection of notebooks and collaborative workspaces.</p>\n<p>That narrow focus is the point. A scratch pad should be easy to find, easy to save, and easy to reload. If it removes a few unnecessary steps from moving a snippet between devices, it has done the job I built it to do.</p>\n<p><a href=\"https://jasr.me/github/text/\">Open the hosted project</a> · <a href=\"https://github.com/jasrasr/website/tree/main/text\">Explore the project on GitHub</a></p>\n"
+}

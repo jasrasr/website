@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "filename": "raspberry-pi-time-clock-kiosk.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.1",
+    "changelog": [
+      "1.0.1: Resolve cover media relative to the blog directory.",
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "raspberry-pi-time-clock-kiosk",
+  "title": "Turning a Raspberry Pi into a Clock, Weather, and Notice Display",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "IT and automation"
+  ],
+  "excerpt": "My Raspberry Pi kiosk project combines a readable clock, weather, scrolling notices, and developing alert-display features.",
+  "cover": {
+    "src": "media/derivatives/2026/09/raspberry-pi-time-clock-kiosk_640w.jpg",
+    "alt": "Turning a Raspberry Pi into a Clock, Weather, and Notice Display cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/raspberry-pi-time-clock-kiosk_640w.jpg\" alt=\"Turning a Raspberry Pi into a Clock, Weather, and Notice Display cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>A wall display has a different job from a desktop dashboard. Someone should be able to glance at it and understand what matters without opening a menu or leaning in to read tiny text. My Time Clock project starts with that idea.</p>\n<p>The page combines a large clock, the date, local weather, and a scrolling alerts area. The documented deployment runs on a Raspberry Pi CM4 kiosk, with a full-screen browser presenting the page. The same layout also adapts to smaller screens for checking it elsewhere.</p>\n<p>Notices are maintained through an administration page. They can be added, removed, reordered, and published to the display. Different notice types have distinct visual treatments, helping routine information and more prominent messages read differently.</p>\n<p>The later revision history adds weather-alert integration and full-screen overlay experiments. It also includes a PowerShell path for fetching weather alert data and posting it to the kiosk. That makes the project another example of a web interface and an administration script working together.</p>\n<p>The alert work remains a prototype display workflow. I would not describe this browser page as a certified emergency notification system or assume that a visible PIN gate establishes production-grade access control. The current revision notes explicitly include demo behavior.</p>\n<p>For everyday use, the appeal is straightforward: a small computer, a screen, and a page that keeps useful information visible. The project also makes layout decisions very concrete. Large digits, readable spacing, and clear updates matter more than how impressive the page looks in a development screenshot.</p>\n<p>A clock is a simple starting point. Giving it useful context turns it into a small communication surface.</p>\n<p><a href=\"https://jasr.me/github/time-clock/\">Open the hosted project</a> · <a href=\"https://github.com/jasrasr/website/tree/main/time-clock\">Explore the project on GitHub</a></p>\n"
+}

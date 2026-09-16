@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "filename": "browser-gps-trip-eta-tracker.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.1",
+    "changelog": [
+      "1.0.1: Resolve cover media relative to the blog directory.",
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "browser-gps-trip-eta-tracker",
+  "title": "Building a Browser Trip Tracker That Shows Its Assumptions",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "Money and travel"
+  ],
+  "excerpt": "A mobile GPS experiment for speed, heading, trip progress, ETA, and saved sessions—with visible signal and freshness information.",
+  "cover": {
+    "src": "media/derivatives/2026/09/browser-gps-trip-eta-tracker_640w.jpg",
+    "alt": "Building a Browser Trip Tracker That Shows Its Assumptions cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/browser-gps-trip-eta-tracker_640w.jpg\" alt=\"Building a Browser Trip Tracker That Shows Its Assumptions cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>An ETA can look wonderfully precise even when the information behind it is not. My GPS Speed + ETA Tracker explores how to show trip progress while keeping those assumptions visible.</p>\n<p>The app uses browser location information to display speed, heading, and distance progress. An entered remaining distance can be counted down using the GPS breadcrumb distance, and the interface includes moving time, stopped time, average speed, and other trip metrics.</p>\n<p>The project also saves history and trip sessions through PHP. Manual or automatic snapshots can become a record of the journey, and CSV export makes the observations available outside the page. Device history uses a browser-generated identifier, with separate server-side storage for saved sessions.</p>\n<p>GPS quality is presented as an estimate based on information the browser exposes, such as accuracy and update age. The page cannot inspect satellite counts or raw receiver signal data. Showing the age of an update is more honest than letting an old reading look current simply because the digits are large.</p>\n<p>The ETA is also different from a routing service's promise of traffic-aware directions. The core calculation is driven by the app's entered distance and observed movement. Changes in stops or speed can change the result.</p>\n<p>Later revisions focus on how the controls read on a phone: clear tracking-state labels, explicit drive-mode state, reachable map controls, and less intrusive changelog content. A button should tell me whether tracking is active without requiring a guess.</p>\n<p>This project is an experiment in presenting travel observations clearly. Its most useful feature may be the context around the numbers, because understanding how fresh and how approximate a reading is helps make the whole dashboard more meaningful.</p>\n<p><a href=\"https://jasr.me/github/gps-eta/\">Open the hosted project</a> · <a href=\"https://github.com/jasrasr/website/tree/main/gps-eta\">Explore the project on GitHub</a></p>\n"
+}

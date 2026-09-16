@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "filename": "psnotify-powershell-job-notifications.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.1",
+    "changelog": [
+      "1.0.1: Resolve cover media relative to the blog directory.",
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "psnotify-powershell-job-notifications",
+  "title": "PSNotify: Giving Long-Running PowerShell Scripts Somewhere to Report Back",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "IT and automation"
+  ],
+  "excerpt": "A small self-hosted notification endpoint and web viewer for progress and completion messages from PowerShell jobs.",
+  "cover": {
+    "src": "media/derivatives/2026/09/psnotify-powershell-job-notifications_640w.jpg",
+    "alt": "PSNotify: Giving Long-Running PowerShell Scripts Somewhere to Report Back cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/psnotify-powershell-job-notifications_640w.jpg\" alt=\"PSNotify: Giving Long-Running PowerShell Scripts Somewhere to Report Back cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>A long-running script has an awkward communication style. It can be doing useful work for ages while saying nothing to the person waiting for it. PSNotify gives that script a simple way to report back.</p>\n<p>The project is a small self-hosted HTTP endpoint paired with a web viewer. A PowerShell job sends a POST request containing a message and optional details such as a title, priority, or tags. The server stores messages in a JSON log, and the viewer makes them available from a browser.</p>\n<p>That is useful for checkpoints as well as completion. A script can report that a phase has started, that a batch finished, or that an error needs attention. The notification does not replace the detailed job log; it points me toward the moment when that log might need a look.</p>\n<p>Recent changes move private settings into a local configuration file and use header-based publish authentication. The implementation also includes message-size limits, a retained-message cap, and request throttling. Those details help keep a small notification endpoint from becoming an unlimited dumping ground.</p>\n<p>One boundary is worth being clear about: browser notifications require the page to remain open and permission to be granted. Background Web Push for an iPhone is a later upgrade, not something this version magically gains from having an installable-looking page.</p>\n<p>I like the small interface between the two sides. PowerShell knows how to send an HTTP request, and PHP knows how to receive and store it. Neither side needs to understand the internals of every job.</p>\n<p>PSNotify is a modest tool, but the purpose is practical: let the automation keep working while giving me a reason to check in when something meaningful happens.</p>\n<p><a href=\"https://jasr.me/github/psnotify/\">Open the hosted project</a> · <a href=\"https://github.com/jasrasr/website/tree/main/psnotify\">Explore the project on GitHub</a></p>\n"
+}

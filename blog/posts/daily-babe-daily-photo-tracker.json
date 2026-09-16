@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "filename": "daily-babe-daily-photo-tracker.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.1",
+    "changelog": [
+      "1.0.1: Resolve cover media relative to the blog directory.",
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "daily-babe-daily-photo-tracker",
+  "title": "Daily-babe: Turning One Photo a Day into a Growing Story",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "Family and home"
+  ],
+  "excerpt": "A private daily baby-photo gallery with backdated uploads, day labels, separate galleries, and collage and GIF exports.",
+  "cover": {
+    "src": "media/derivatives/2026/09/daily-babe-daily-photo-tracker_640w.jpg",
+    "alt": "Daily-babe: Turning One Photo a Day into a Growing Story cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/daily-babe-daily-photo-tracker_640w.jpg\" alt=\"Daily-babe: Turning One Photo a Day into a Growing Story cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>A phone can hold thousands of photos and still make it surprisingly difficult to follow one simple story: how a baby changes from day to day. Daily-babe is my attempt to give that story a little structure.</p>\n<p>The app is a private, mobile-first gallery built around one photo per calendar date. It accepts daily or backdated uploads, so missing the upload is not the same thing as losing the memory. Notes, a full-photo viewer, a photo count, and a missing-date view help make the collection manageable.</p>\n<p>Day numbering has an important rule. The due date can power the countdown before the baby arrives, but the actual birth date becomes the source for Day 1 and age calculations afterward. Changing a due date should not unexpectedly renumber an established gallery.</p>\n<p>The project also supports multiple baby galleries. Account information lives in one protected authentication file, while each gallery has its own settings, entries, uploads, and backups. A baby's sign-in name does not have to become the underlying storage folder name.</p>\n<p>For sharing a sequence, the app includes browser-generated collages and animated GIF slideshows with day labels. The documented export limit is up to 100 photos. These outputs turn a set of individual uploads into something that shows change over time.</p>\n<p>The gallery uses PHP and JSON, with private image delivery and password-protected sessions. Runtime photos and account information are separate from the application source and need their own backups.</p>\n<p>This is one of the more personal projects in my repository. The interesting technical decisions all serve the same purpose: make the daily habit manageable, keep the order meaningful, and make it easier to enjoy the photos later.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/daily-babe\">Explore the project on GitHub</a></p>\n"
+}

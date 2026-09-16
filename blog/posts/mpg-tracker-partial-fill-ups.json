@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "filename": "mpg-tracker-partial-fill-ups.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.1",
+    "changelog": [
+      "1.0.1: Resolve cover media relative to the blog directory.",
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "mpg-tracker-partial-fill-ups",
+  "title": "Building an MPG Tracker That Understands Partial Fill-Ups",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "Money and travel"
+  ],
+  "excerpt": "Fuel tracking gets more useful when partial fills, station details, photos, and corrections all work together.",
+  "cover": {
+    "src": "media/derivatives/2026/09/mpg-tracker-partial-fill-ups_640w.jpg",
+    "alt": "Building an MPG Tracker That Understands Partial Fill-Ups cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/mpg-tracker-partial-fill-ups_640w.jpg\" alt=\"Building an MPG Tracker That Understands Partial Fill-Ups cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>A fuel log sounds simple: enter the odometer, enter the gallons, calculate miles per gallon. Then real life shows up with a partial fill, a blurry receipt, and an entry you forgot to make until you got home.</p>\n<p>My MPG Fuel Log Tracker is built around those less tidy situations. It keeps per-vehicle records for mileage, gallons, price, total cost, station, location, and comments. Entries can be made manually or with a photo-assisted workflow that accepts up to four images, such as the odometer, pump totals, and station signage.</p>\n<p>The calculation I care most about is full-to-full MPG. A partial fill remains in the history as a real purchase, but it does not receive a misleading standalone MPG value. When the next full fill arrives, the app uses the distance since the previous full fill and all the gallons added in between.</p>\n<p>Corrections need the same care. Editing or deleting an older entry rebuilds dependent mileage and MPG results. Otherwise, fixing one typo could leave the rest of the chart quietly wrong.</p>\n<p>Station information has grown beyond a free-text label. The app supports learned brands and reusable physical station profiles, including nicknames and addresses. Optional browser GPS or available JPEG location metadata can help locate nearby stations, but the user confirms the actual station before it is saved. Saved stations also make later entry possible without pretending the phone is still at the pump.</p>\n<p>A map adds context to the history, while station analytics help compare recorded prices and spending. Export keeps the information available outside the app.</p>\n<p>What I like about this project is how small details reinforce one another. Better entry produces better records; correct calculations make the chart worth looking at. The dashboard is the visible result, but handling an ordinary partial fill correctly is the part that earns my trust.</p>\n<p><a href=\"https://jasr.me/github/mpg/\">Open the hosted project</a> · <a href=\"https://github.com/jasrasr/website/tree/main/mpg\">Explore the project on GitHub</a></p>\n"
+}

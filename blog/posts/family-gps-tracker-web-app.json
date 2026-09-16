@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "filename": "family-gps-tracker-web-app.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.1",
+    "changelog": [
+      "1.0.1: Resolve cover media relative to the blog directory.",
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "family-gps-tracker-web-app",
+  "title": "Family GPS Tracker: Shared Location with Clear Boundaries",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "Family and home"
+  ],
+  "excerpt": "A consent-based family and friend location-sharing experiment with groups, check-ins, account controls, and browser limitations.",
+  "cover": {
+    "src": "media/derivatives/2026/09/family-gps-tracker-web-app_640w.jpg",
+    "alt": "Family GPS Tracker: Shared Location with Clear Boundaries cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/family-gps-tracker-web-app_640w.jpg\" alt=\"Family GPS Tracker: Shared Location with Clear Boundaries cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Sharing a location can be helpful when people are coordinating a trip or trying to meet up. A useful location-sharing app also needs to make the sharing relationship understandable. That is the direction of my Family GPS Tracker.</p>\n<p>The project uses PHP and JSON to support separate family, friend, or trip groups. Members can view an active-group map, send check-ins, share a destination and ETA, and inspect last-known information. An account can belong to more than one circle.</p>\n<p>Group ownership and account controls are part of the design. Owners can manage membership and transfer ownership, while users can change passwords, manage remembered devices, export their own data, and review their account's stored-data summary. Deleting an account requires resolving any groups it still owns.</p>\n<p>The app also supports named geofence places. Arrival and departure evaluation happens through the browser while the signed-in group page remains open. That detail matters: this is not a guarantee of continuous tracking in the background. Mobile browsers and operating systems control what can keep running when a page is no longer active.</p>\n<p>A stale location also needs context. Last-known details, update health, and trail information help distinguish an observation from an assumption about where someone is now.</p>\n<p>The app includes home-screen installation support and appearance options, but those conveniences do not erase the underlying browser limits. I want the project described as it works, rather than as a native tracking service it has not become.</p>\n<p>The interesting challenge is keeping coordination useful without making the controls mysterious. Groups, consent, visibility, and account lifecycle all belong in the same conversation as the map.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/family-tracker\">Explore the project on GitHub</a></p>\n"
+}

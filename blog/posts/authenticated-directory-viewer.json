@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "filename": "authenticated-directory-viewer.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.1",
+    "changelog": [
+      "1.0.1: Resolve cover media relative to the blog directory.",
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "authenticated-directory-viewer",
+  "title": "A File Listing with Favorites, Sorting, and Useful Context",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "Web foundations"
+  ],
+  "excerpt": "A directory-viewer experiment that adds favorites, file details, and interaction counts to a live filesystem listing.",
+  "cover": {
+    "src": "media/derivatives/2026/09/authenticated-directory-viewer_640w.jpg",
+    "alt": "A File Listing with Favorites, Sorting, and Useful Context cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/authenticated-directory-viewer_640w.jpg\" alt=\"A File Listing with Favorites, Sorting, and Useful Context cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>A raw directory listing answers what files exist. My standalone directory-viewer project explores the next questions: which files matter, which are recent, and how are people interacting with them?</p>\n<p>The PHP viewer scans its directory and presents a sortable table with file types, modification dates, sizes, and download links. Favorites rise to the top, followed by newer files, making a repeatedly used item easier to find without renaming it to start with a dozen underscores.</p>\n<p>The project also includes interaction tracking for views, clicks, and downloads, using JSON data and related helper endpoints. A download proxy gives the application a place to record a download action rather than relying only on a visible link.</p>\n<p>File icons and colored type badges make the list easier to scan. Exclusion rules control which filenames and extensions are omitted, and the footer displays revision and timestamp information. These are modest details, but they turn a filesystem listing into a more intentional interface.</p>\n<p>The authentication model depends on the hosting environment's directory protection, and the viewer expects supporting helpers for features such as favorites and downloads. The single PHP file should not be mistaken for a complete, independently configured access-control system.</p>\n<p>This is related to the centralized directory-browser project, but it is a separate implementation with its own focus on file information and interaction counts.</p>\n<p>The attraction is making an existing collection easier to use without importing every file into a larger content-management system. The files remain files; the page adds a more helpful way to inspect them.</p>\n<p><a href=\"https://github.com/jasrasr/website/blob/main/Custom-HTML-Directory-Viewer.php\">Explore the project on GitHub</a></p>\n"
+}

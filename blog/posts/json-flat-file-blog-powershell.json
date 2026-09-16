@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "filename": "json-flat-file-blog-powershell.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-09-16",
+    "modified_date": "2026-09-16",
+    "revision": "1.0.1",
+    "changelog": [
+      "1.0.1: Resolve cover media relative to the blog directory.",
+      "1.0.0: Added project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "json-flat-file-blog-powershell",
+  "title": "A Blog Made of JSON Files—and a Little PowerShell",
+  "date": "2026-09-16",
+  "updated": "2026-09-16",
+  "author": "Jason Lamb",
+  "tags": [
+    "Web foundations"
+  ],
+  "excerpt": "An experiment in storing posts as JSON and using PowerShell to build the index, RSS feed, and sitemap.",
+  "cover": {
+    "src": "media/derivatives/2026/09/json-flat-file-blog-powershell_640w.jpg",
+    "alt": "A Blog Made of JSON Files—and a Little PowerShell cover image"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/json-flat-file-blog-powershell_640w.jpg\" alt=\"A Blog Made of JSON Files—and a Little PowerShell cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>A blog can be a surprisingly good place to experiment with how much infrastructure a small website actually needs. My JSON Flat-File Blog stores each post as an individual JSON file.</p>\n<p>The browser renders the posts with HTML and JavaScript. A PowerShell builder creates the shared pieces: the post index used for listing and search, the RSS feed, and the sitemap. Adding content becomes a matter of creating a post file, rebuilding those generated outputs, and uploading the result.</p>\n<p>That puts the content and the generation steps in fairly visible places. A post has a title, date, slug, and HTML content. The builder has a specific job instead of requiring the web server to assemble every supporting file dynamically.</p>\n<p>Media adds another layer. The project includes an administrator-protected upload workflow, image derivatives, and a private manifest. The manifest dashboard can flag unused media, missing alt text, missing files, or images referenced by posts but absent from the manifest.</p>\n<p>Those checks matter because a small blog still accumulates housekeeping. Images need readable alternatives, files can go missing, and a deleted post can leave media behind. A database-free design does not mean there is nothing to maintain.</p>\n<p>The documented media workflow has real hosting dependencies, including PHP, image processing, and access protection. This is an architectural experiment with its own setup, not a claim that every feature is just static HTML.</p>\n<p>What I enjoy is the division of labor: JSON holds the content, PowerShell builds the shared outputs, and the browser presents the result. It is another way to explore publishing with tools I can inspect and understand.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/blog\">Explore the project on GitHub</a></p>\n"
+}
