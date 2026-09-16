@@ -14,7 +14,7 @@
 
     function startCountdown() {
         stopCountdown();
-        let remaining = 10;
+        let remaining = 20;
         loading.textContent = `Reading photos with AI… ${remaining}s`;
 
         timer = setInterval(() => {
