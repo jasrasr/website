@@ -2,22 +2,23 @@
   "slug": "notepadpp-caution",
   "title": "Supply-chain paranoia: a practical Notepad++ sanity check",
   "date": "2026-02-02",
-  "updated": "2026-02-02",
+  "updated": "2026-09-16",
   "author": "Jason Lamb",
   "tags": [
     "security",
     "windows"
   ],
+  "excerpt": "A practical reminder to download from trusted sources, verify signatures or hashes where available, and avoid blindly trusting random mirrors.",
   "content_html": "<p>Security is mostly being annoyingly consistent.</p><h2>Basic checks that actually matter</h2><ul><li>Download from the official site (or a trusted package manager)</li><li>Verify the digital signature if present</li><li>Compare hashes when the vendor provides them</li><li>Keep it updated, but don’t auto-trust random mirrors</li></ul><p>Bonus points: treat “portable EXEs from forum posts” as guilty until proven innocent.</p><pre><code># Example idea (conceptual)\\n# - get file signature\\n# - validate chain\\n# - compare known hash\\n</code></pre>",
   "_meta": {
     "filename": "notepadpp-caution.json",
     "author": "Jason Lamb (with help from ChatGPT)",
     "created_date": "2026-02-02",
-    "modified_date": "2026-02-04",
-    "revision": "1.0",
+    "modified_date": "2026-09-16",
+    "revision": "1.1.0",
     "changelog": [
+      "1.1.0: Adds explicit excerpt so generated indexes do not blank the card description.",
       "1.0: Post content file (data)"
     ]
   }
 }
-
