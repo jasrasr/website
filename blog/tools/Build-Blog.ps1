@@ -2,9 +2,10 @@
 # filename: Build-Blog.ps1
 # author: Jason Lamb (with help from ChatGPT)
 # created date: 2026-02-03
-# modified date: 2026-02-04
-# revision: 1.2
+# modified date: 2026-09-16
+# revision: 1.3.0
 # changelog:
+# - 1.3.0: Preserves cover metadata in the generated index, fixes RSS/sitemap URL formatting, decodes HTML entities for search text, and creates manifest records for committed derivative images.
 # - 1.2: Adds optional media processing + manifest maintenance (usage scan, backups, integrity + alt warnings); generates index/rss/sitemap with embedded _meta headers
 # - 1.1: Adds build-time full-text search indexing (_searchText), and regenerates rss.xml + sitemap.xml with jasr.me/blog base URLs
 # - 1.0: Generate posts/index.json from individual post JSON files
@@ -37,7 +38,7 @@ $manifestPath  = Join-Path $RootPath $ManifestRelative
 $backupsFolder = Join-Path (Split-Path $manifestPath -Parent) "backups"
 
 if (-not (Test-Path $postsFolder)) {
-    throw ("Posts folder not found: 0" -f $postsFolder)
+    throw ("Posts folder not found: {0}" -f $postsFolder)
 }
 
 function Convert-HtmlToText {
@@ -48,6 +49,7 @@ function Convert-HtmlToText {
     $text = $Html -replace '<script[\s\S]*?</script>', ' '
     $text = $text -replace '<style[\s\S]*?</style>', ' '
     $text = $text -replace '<[^>]*>', ' '
+    $text = [System.Net.WebUtility]::HtmlDecode($text)
     $text = $text -replace '\s+', ' '
     return $text.Trim()
 }
@@ -82,19 +84,22 @@ function Load-Manifest {
         try {
             return (Get-Content -Path $manifestPath -Raw | ConvertFrom-Json -ErrorAction Stop)
         } catch {
-            Write-Host ("Manifest JSON invalid; starting fresh: 0" -f $manifestPath)
+            Write-Host ("Manifest JSON invalid; starting fresh: {0}" -f $manifestPath)
         }
     }
 
-    # Minimal skeleton (data file; not strict “code header”)
+    # Minimal skeleton (data file; not strict code header)
     return [pscustomobject]@{
         _meta = [pscustomobject]@{
             filename      = "media-manifest.json"
             author        = "Jason Lamb (with help from ChatGPT)"
             created_date  = "2026-02-04"
-            modified_date = "2026-02-04"
-            revision      = "1.0"
-            changelog     = @("1.0: Initial admin-protected media manifest (non-public unless authenticated)")
+            modified_date = "2026-09-16"
+            revision      = "1.1.0"
+            changelog     = @(
+                "1.1.0: Adds committed derivative image manifest records from post cover references",
+                "1.0: Initial admin-protected media manifest (non-public unless authenticated)"
+            )
         }
         items = [pscustomobject]@{}
     }
@@ -109,18 +114,81 @@ function Save-Manifest {
 
     if (Test-Path $manifestPath) {
         $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
-        $backup = Join-Path $backupsFolder ("media-manifest-0.json" -f $stamp)
+        $backup = Join-Path $backupsFolder ("media-manifest-{0}.json" -f $stamp)
         Copy-Item -Path $manifestPath -Destination $backup -Force
-        Write-Host ("Backed up manifest: 0" -f $backup)
+        Write-Host ("Backed up manifest: {0}" -f $backup)
     }
 
     if ($Manifest._meta) {
-        $Manifest._meta.modified_date = "2026-02-04"
+        $Manifest._meta.modified_date = "2026-09-16"
+        $Manifest._meta.revision = "1.1.0"
+        $Manifest._meta.changelog = @(
+            "1.1.0: Adds committed derivative image manifest records from post cover references",
+            "1.0: Initial admin-protected media manifest (non-public unless authenticated)"
+        )
     }
 
     $json = $Manifest | ConvertTo-Json -Depth 10
     $json | Set-Content -Path $manifestPath -Encoding UTF8
-    Write-Host ("Wrote manifest: 0" -f $manifestPath)
+    Write-Host ("Wrote manifest: {0}" -f $manifestPath)
+}
+
+function Ensure-MediaManifestEntry {
+    param(
+        [Parameter(Mandatory = $true)]
+        [object]$Manifest,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Key,
+
+        [Parameter(Mandatory = $true)]
+        [string]$WebPath,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Slug,
+
+        [Parameter(Mandatory = $false)]
+        [string]$Alt = ""
+    )
+
+    $entry = $null
+    try { $entry = $Manifest.items.$Key } catch { $entry = $null }
+
+    if (-not $entry) {
+        $Manifest.items | Add-Member -MemberType NoteProperty -Name $Key -Value ([pscustomobject]@{
+            original    = ""
+            derivatives = [pscustomobject]@{
+                "640" = $WebPath
+            }
+            uploaded    = ""
+            used_in     = @()
+            alt         = $Alt
+            credit      = ""
+            source      = "committed-derivative"
+        }) -Force
+
+        $entry = $Manifest.items.$Key
+    }
+
+    if (-not ($entry.PSObject.Properties.Name -contains "used_in")) {
+        $entry | Add-Member -MemberType NoteProperty -Name used_in -Value @() -Force
+    }
+
+    if (-not ($entry.used_in -contains $Slug)) {
+        $entry.used_in += $Slug
+    }
+
+    if (($entry.PSObject.Properties.Name -contains "alt") -and [string]::IsNullOrWhiteSpace([string]$entry.alt) -and -not [string]::IsNullOrWhiteSpace($Alt)) {
+        $entry.alt = $Alt
+    }
+
+    if (-not ($entry.PSObject.Properties.Name -contains "derivatives") -or -not $entry.derivatives) {
+        $entry | Add-Member -MemberType NoteProperty -Name derivatives -Value ([pscustomobject]@{}) -Force
+    }
+
+    if (-not ($entry.derivatives.PSObject.Properties.Name -contains "640")) {
+        $entry.derivatives | Add-Member -MemberType NoteProperty -Name "640" -Value $WebPath -Force
+    }
 }
 
 # ------------------------------------------------------------
@@ -138,19 +206,19 @@ if ($ProcessMedia) {
     $processor = Join-Path (Join-Path $RootPath "tools") "Build-Media.ps1"
 
     if (-not (Test-Path $inbox)) {
-        Write-Host ("Media inbox not found (skipping): 0" -f $inbox)
+        Write-Host ("Media inbox not found (skipping): {0}" -f $inbox)
     } elseif (-not (Test-Path $processor)) {
-        Write-Host ("Build-Media.ps1 not found (skipping): 0" -f $processor)
+        Write-Host ("Build-Media.ps1 not found (skipping): {0}" -f $processor)
     } else {
         $files = Get-ChildItem -Path $inbox -File | Where-Object { $_.Name -ne ".gitkeep" }
         if ($files.Count -eq 0) {
-            Write-Host ("No files in inbox: 0" -f $inbox)
+            Write-Host ("No files in inbox: {0}" -f $inbox)
         } else {
             $processedDir = Join-Path $inbox "_processed"
             if (-not (Test-Path $processedDir)) { New-Item -ItemType Directory -Path $processedDir -Force | Out-Null }
 
             foreach ($f in $files) {
-                Write-Host ("Processing media file: 0" -f $f.FullName)
+                Write-Host ("Processing media file: {0}" -f $f.FullName)
                 try {
                     $res = & $processor -InputPath $f.FullName -RootPath $RootPath
                     if ($res -and $res.key) {
@@ -174,10 +242,10 @@ if ($ProcessMedia) {
 
                         $dest = Join-Path $processedDir $f.Name
                         Move-Item -Path $f.FullName -Destination $dest -Force
-                        Write-Host ("Moved inbox file to: 0" -f $dest)
+                        Write-Host ("Moved inbox file to: {0}" -f $dest)
                     }
                 } catch {
-                    Write-Host ("Media processing failed for 0" -f $f.FullName)
+                    Write-Host ("Media processing failed for {0}" -f $f.FullName)
                 }
             }
         }
@@ -221,36 +289,48 @@ $posts = foreach ($f in $postFiles) {
             $excerpt = $text
         }
 
-        # Update media usage from content_html
+        # Update media usage from content_html and create manifest entries for
+        # committed derivatives that were added directly to the repository.
         if ($p.content_html) {
             $matches = [regex]::Matches([string]$p.content_html, $mediaRefRegex)
             foreach ($m in $matches) {
                 $k = Get-SafeKey $m.Groups["key"].Value
                 if (-not $k) { continue }
 
-                $entry = $null
-                try { $entry = $manifest.items.$k } catch { $entry = $null }
-
-                if ($entry -and $entry.used_in) {
-                    if (-not ($entry.used_in -contains $p.slug)) {
-                        $entry.used_in += $p.slug
-                    }
+                $alt = ""
+                if ($p.cover -and [string]$p.cover.alt) {
+                    $alt = [string]$p.cover.alt
                 }
+
+                Ensure-MediaManifestEntry -Manifest $manifest -Key $k -WebPath $m.Value -Slug ([string]$p.slug) -Alt $alt
             }
         }
 
         $searchText = ("{0} {1} {2} {3}" -f $p.title, ($p.tags -join ' '), $excerpt, $bodyText).ToLower()
 
-        [pscustomobject]@{
+        $postEntry = [ordered]@{
             slug        = [string]$p.slug
             title       = [string]$p.title
             date        = [string]$p.date
             tags        = @($p.tags)
             excerpt     = [string]$excerpt
-            _searchText = [string]$searchText
         }
+
+        if ($p.cover -and $p.cover.src) {
+            $coverAlt = [string]$p.cover.alt
+            if ([string]::IsNullOrWhiteSpace($coverAlt)) {
+                $coverAlt = "{0} cover image" -f $p.title
+            }
+            $postEntry['cover'] = [pscustomobject]@{
+                src = [string]$p.cover.src
+                alt = $coverAlt
+            }
+        }
+
+        $postEntry['_searchText'] = [string]$searchText
+        [pscustomobject]$postEntry
     } catch {
-        Write-Host ("Skipping invalid JSON: 0" -f $f.FullName)
+        Write-Host ("Skipping invalid JSON: {0}" -f $f.FullName)
     }
 }
 
@@ -261,9 +341,11 @@ $indexObj = [pscustomobject]@{
         filename      = "posts/index.json"
         author        = "Jason Lamb (with help from ChatGPT)"
         created_date  = "2026-02-03"
-        modified_date = "2026-02-04"
-        revision      = "1.2"
+        modified_date = "2026-09-16"
+        revision      = "1.3.1"
         changelog     = @(
+            "1.3.1: Preserves cover metadata and fallback excerpts during generated index rebuilds",
+            "1.3.0: Added 43 project articles and cover metadata.",
             "1.2: Adds embedded _meta header; build still uses posts array with _searchText for deterministic full-text search"
         )
     }
@@ -274,7 +356,7 @@ $indexObj = [pscustomobject]@{
 
 $indexJson = $indexObj | ConvertTo-Json -Depth 8
 $indexJson | Set-Content -Path $indexPath -Encoding UTF8
-Write-Host ("Wrote index: 0" -f $indexPath)
+Write-Host ("Wrote index: {0}" -f $indexPath)
 
 # ------------------------------------------------------------
 # Manifest integrity + warnings (written into manifest items as health)
@@ -320,7 +402,7 @@ Save-Manifest -Manifest $manifest
 # Generate rss.xml (with header comment)
 # ------------------------------------------------------------
 $itemsXml = foreach ($p in $postsSorted) {
-    $link = "0/post.html?p=1" -f $SiteBaseUrl.TrimEnd('/'), $p.slug
+    $link = "{0}/post.html?p={1}" -f $SiteBaseUrl.TrimEnd('/'), $p.slug
 
     $pub = $p.date
     try {
@@ -345,9 +427,10 @@ $rss = @"
 # filename: rss.xml
 # author: Jason Lamb (with help from ChatGPT)
 # created date: 2026-02-03
-# modified date: 2026-02-04
-# revision: 1.2
+# modified date: 2026-09-16
+# revision: 1.3.0
 # changelog:
+# - 1.3.0: Regenerates RSS links with correct PowerShell format placeholders
 # - 1.2: Preserves header metadata while generating RSS items from post JSON
 # - 1.1: Updated base links to https://jasr.me/blog and added items for posts
 # - 1.0: Basic RSS shell
@@ -364,15 +447,15 @@ $($itemsXml -join "`n")
 "@
 
 $rss | Set-Content -Path $rssPath -Encoding UTF8
-Write-Host ("Wrote RSS: 0" -f $rssPath)
+Write-Host ("Wrote RSS: {0}" -f $rssPath)
 
 # ------------------------------------------------------------
 # Generate sitemap.xml (with header comment)
 # ------------------------------------------------------------
 $urls = @(
-    "0/index.html" -f $SiteBaseUrl.TrimEnd('/'),
-    "0/about.html" -f $SiteBaseUrl.TrimEnd('/'),
-    "0/rss.xml" -f $SiteBaseUrl.TrimEnd('/')
+    "{0}/index.html" -f $SiteBaseUrl.TrimEnd('/'),
+    "{0}/about.html" -f $SiteBaseUrl.TrimEnd('/'),
+    "{0}/rss.xml" -f $SiteBaseUrl.TrimEnd('/')
 )
 
 foreach ($p in $postsSorted) {
@@ -387,9 +470,10 @@ $sitemap = @"
 # filename: sitemap.xml
 # author: Jason Lamb (with help from ChatGPT)
 # created date: 2026-02-03
-# modified date: 2026-02-04
-# revision: 1.2
+# modified date: 2026-09-16
+# revision: 1.3.0
 # changelog:
+# - 1.3.0: Regenerates sitemap links with correct PowerShell format placeholders
 # - 1.2: Preserves header metadata while generating sitemap URLs from post JSON
 # - 1.1: Updated base links to https://jasr.me/blog and added post URLs
 # - 1.0: Basic sitemap shell
@@ -400,7 +484,7 @@ $($urlNodes -join "`n")
 "@
 
 $sitemap | Set-Content -Path $sitemapPath -Encoding UTF8
-Write-Host ("Wrote Sitemap: 0" -f $sitemapPath)
+Write-Host ("Wrote Sitemap: {0}" -f $sitemapPath)
 
 <#
 EXAMPLE USAGE:
@@ -419,4 +503,3 @@ EXAMPLE USAGE:
 # - The build script additionally refreshes "used_in" links by scanning post content_html for /media/derivatives/... references.
 
 #>
-
