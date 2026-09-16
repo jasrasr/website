@@ -1,0 +1,8 @@
+{
+  "_meta": {
+    "schema_version": "1.0.0",
+    "purpose": "WordPress-only publication state for blog/posts JSON sources. This file is not used by the static blog build.",
+    "modified_date": "2026-09-16"
+  },
+  "posts": {}
+}
