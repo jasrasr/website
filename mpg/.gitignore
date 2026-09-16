@@ -9,3 +9,4 @@ logs/
 pictures/
 device_whitelist.json
 dashboard_attempts.json
+stations.json
