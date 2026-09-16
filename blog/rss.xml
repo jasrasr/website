@@ -6,7 +6,7 @@
 # modified date: 2026-09-16
 # revision: 1.3.0
 # changelog:
-# - 1.3.0: Adds project-series items and uses correctly formatted RSS item links.
+# - 1.3.0: Regenerates RSS links with correct PowerShell format placeholders
 # - 1.2: Preserves header metadata while generating RSS items from post JSON
 # - 1.1: Updated base links to https://jasr.me/blog and added items for posts
 # - 1.0: Basic RSS shell
@@ -18,280 +18,326 @@
     <description>Database-free blog powered by JSON files.</description>
     <language>en-us</language>
     <item>
-      <title>Building My Own Ticketing App: From Request to Resolution</title>
-      <link>https://jasr.me/blog/post.html?p=building-my-own-ticketing-app</link>
-      <guid>https://jasr.me/blog/post.html?p=building-my-own-ticketing-app</guid>
+      <title>A File Listing with Favorites, Sorting, and Useful Context</title>
+      <link>https://jasr.me/blog/post.html?p=authenticated-directory-viewer</link>
+      <guid>https://jasr.me/blog/post.html?p=authenticated-directory-viewer</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A directory-viewer experiment that adds favorites, file details, and interaction counts to a live filesystem listing.</description>
     </item>
     <item>
-      <title>Beyond the Ticket Count: Building a Freshservice Progress Dashboard</title>
-      <link>https://jasr.me/blog/post.html?p=freshservice-ticket-progress-dashboard</link>
-      <guid>https://jasr.me/blog/post.html?p=freshservice-ticket-progress-dashboard</guid>
+      <title>A Link Hub on the Drawing Board</title>
+      <link>https://jasr.me/blog/post.html?p=link-hub-project-notes</link>
+      <guid>https://jasr.me/blog/post.html?p=link-hub-project-notes</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>An honest starting-point note for the Linktree-inspired folder: the idea is documented, but the planned app files are not there yet.</description>
     </item>
     <item>
       <title>Building an MPG Tracker That Understands Partial Fill-Ups</title>
       <link>https://jasr.me/blog/post.html?p=mpg-tracker-partial-fill-ups</link>
       <guid>https://jasr.me/blog/post.html?p=mpg-tracker-partial-fill-ups</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>Fuel tracking gets more useful when partial fills, station details, photos, and corrections all work together.</description>
     </item>
     <item>
-      <title>Daily-babe: Turning One Photo a Day into a Growing Story</title>
-      <link>https://jasr.me/blog/post.html?p=daily-babe-daily-photo-tracker</link>
-      <guid>https://jasr.me/blog/post.html?p=daily-babe-daily-photo-tracker</guid>
+      <title>Recreating Old Phone Keypad Tones in the Browser</title>
+      <link>https://jasr.me/blog/post.html?p=old-phone-keypad-tones-browser</link>
+      <guid>https://jasr.me/blog/post.html?p=old-phone-keypad-tones-browser</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A small Web Audio experiment that recreates a telephone keypad with mouse, touch, and keyboard input.</description>
     </item>
     <item>
-      <title>Building a Life Group Attendance Portal for the People Behind the Check-In</title>
-      <link>https://jasr.me/blog/post.html?p=life-group-attendance-portal</link>
-      <guid>https://jasr.me/blog/post.html?p=life-group-attendance-portal</guid>
+      <title>A Personal Budget Tracker Built Around Everyday Numbers</title>
+      <link>https://jasr.me/blog/post.html?p=personal-budget-tracker-php-json</link>
+      <guid>https://jasr.me/blog/post.html?p=personal-budget-tracker-php-json</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A private budget page for income, recurring expenses, and monthly and annual projections, built with PHP and JSON.</description>
+    </item>
+    <item>
+      <title>A Tiny PowerShell Script for Numbered Web Test Pages</title>
+      <link>https://jasr.me/blog/post.html?p=powershell-numbered-web-test-pages</link>
+      <guid>https://jasr.me/blog/post.html?p=powershell-numbered-web-test-pages</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A small collection of numbered landing pages demonstrates how a few lines of PowerShell can remove repetitive file creation.</description>
+    </item>
+    <item>
+      <title>Connecting PowerShell Uploads to a Web File Manager</title>
+      <link>https://jasr.me/blog/post.html?p=powershell-web-file-manager</link>
+      <guid>https://jasr.me/blog/post.html?p=powershell-web-file-manager</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A PHP file manager that gives PowerShell-generated files an upload endpoint, browser administration, and version history.</description>
     </item>
     <item>
       <title>PSNotify: Giving Long-Running PowerShell Scripts Somewhere to Report Back</title>
       <link>https://jasr.me/blog/post.html?p=psnotify-powershell-job-notifications</link>
       <guid>https://jasr.me/blog/post.html?p=psnotify-powershell-job-notifications</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A small self-hosted notification endpoint and web viewer for progress and completion messages from PowerShell jobs.</description>
     </item>
     <item>
-      <title>A Small Shortcut for a Repetitive IT Task: Dell Service Tag Lookup</title>
-      <link>https://jasr.me/blog/post.html?p=dell-service-tag-lookup-tool</link>
-      <guid>https://jasr.me/blog/post.html?p=dell-service-tag-lookup-tool</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>QR Box Inventory System</title>
+      <title>QR Labels for the Boxes I Would Otherwise Open One by One</title>
       <link>https://jasr.me/blog/post.html?p=qr-box-inventory-system</link>
       <guid>https://jasr.me/blog/post.html?p=qr-box-inventory-system</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>My QR box inventory connects printable labels to editable contents lists, with stable box IDs and a simple PHP backend.</description>
     </item>
     <item>
-      <title>Church Youth Live Scoreboard</title>
-      <link>https://jasr.me/blog/post.html?p=church-youth-live-scoreboard</link>
-      <guid>https://jasr.me/blog/post.html?p=church-youth-live-scoreboard</guid>
+      <title>Random Wheel: Sometimes the Right App Is Just a Spinning Wheel</title>
+      <link>https://jasr.me/blog/post.html?p=random-wheel-choice-picker</link>
+      <guid>https://jasr.me/blog/post.html?p=random-wheel-choice-picker</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A focused browser choice picker with editable entries, a five-second spin, and recent winner history.</description>
     </item>
     <item>
-      <title>Home Warranty Tracker</title>
-      <link>https://jasr.me/blog/post.html?p=home-warranty-tracker</link>
-      <guid>https://jasr.me/blog/post.html?p=home-warranty-tracker</guid>
+      <title>Turning a Raspberry Pi into a Clock, Weather, and Notice Display</title>
+      <link>https://jasr.me/blog/post.html?p=raspberry-pi-time-clock-kiosk</link>
+      <guid>https://jasr.me/blog/post.html?p=raspberry-pi-time-clock-kiosk</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>My Raspberry Pi kiosk project combines a readable clock, weather, scrolling notices, and developing alert-display features.</description>
     </item>
     <item>
-      <title>Personal Budget Tracker PHP JSON</title>
-      <link>https://jasr.me/blog/post.html?p=personal-budget-tracker-php-json</link>
-      <guid>https://jasr.me/blog/post.html?p=personal-budget-tracker-php-json</guid>
+      <title>1-Framework: Finding the Parts I Should Stop Rebuilding</title>
+      <link>https://jasr.me/blog/post.html?p=reusable-php-json-project-foundation</link>
+      <guid>https://jasr.me/blog/post.html?p=reusable-php-json-project-foundation</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>My architectural baseline for sharing PHP and JSON conventions across small apps without forcing every project into a rewrite.</description>
     </item>
     <item>
-      <title>Debt Payoff Planner Scenarios</title>
-      <link>https://jasr.me/blog/post.html?p=debt-payoff-planner-scenarios</link>
-      <guid>https://jasr.me/blog/post.html?p=debt-payoff-planner-scenarios</guid>
+      <title>Robot or Human? A Playful Press-and-Hold Web Experiment</title>
+      <link>https://jasr.me/blog/post.html?p=robot-or-human-hold-button</link>
+      <guid>https://jasr.me/blog/post.html?p=robot-or-human-hold-button</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A press-and-hold interaction with a comic robot, keyboard support, and a clear distinction between a visual gate and server-side access checks.</description>
     </item>
     <item>
-      <title>PowerShell Web File Manager</title>
-      <link>https://jasr.me/blog/post.html?p=powershell-web-file-manager</link>
-      <guid>https://jasr.me/blog/post.html?p=powershell-web-file-manager</guid>
+      <title>Shared Text: A Small Scratch Pad for Moving Text Between Devices</title>
+      <link>https://jasr.me/blog/post.html?p=shared-text-between-devices</link>
+      <guid>https://jasr.me/blog/post.html?p=shared-text-between-devices</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A PHP scratch pad for saving a piece of text on one device and loading it on another, with a small snapshot history.</description>
     </item>
     <item>
-      <title>Family GPS Tracker Web App</title>
-      <link>https://jasr.me/blog/post.html?p=family-gps-tracker-web-app</link>
-      <guid>https://jasr.me/blog/post.html?p=family-gps-tracker-web-app</guid>
+      <title>A Simple Links-Page Template with Room to Grow</title>
+      <link>https://jasr.me/blog/post.html?p=simple-links-page-template</link>
+      <guid>https://jasr.me/blog/post.html?p=simple-links-page-template</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A small navigation template with placeholder destinations, commented expansion slots, and visible revision information.</description>
+    </item>
+    <item>
+      <title>Making a 404 Page Useful Without Guessing Too Aggressively</title>
+      <link>https://jasr.me/blog/post.html?p=smart-404-redirect-manager</link>
+      <guid>https://jasr.me/blog/post.html?p=smart-404-redirect-manager</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>My Smart 404 project logs missing URLs and supports deliberate mappings alongside conservative matching for hosted projects.</description>
+    </item>
+    <item>
+      <title>From Clock-Out Slip to Work-Hours Log</title>
+      <link>https://jasr.me/blog/post.html?p=timeclock-photo-hours-logger</link>
+      <guid>https://jasr.me/blog/post.html?p=timeclock-photo-hours-logger</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A photo and manual-entry work-hours logger with reviewed OCR, overnight-shift calculations, and employee summaries.</description>
+    </item>
+    <item>
+      <title>TV Binge Board: Remembering What I Was Watching</title>
+      <link>https://jasr.me/blog/post.html?p=tv-binge-board-watch-tracker</link>
+      <guid>https://jasr.me/blog/post.html?p=tv-binge-board-watch-tracker</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A self-hosted watch tracker for TV and movies, with episode progress, next-up information, imports, and sharing.</description>
+    </item>
+    <item>
+      <title>A Two-Pane Writing Tool That Keeps the Draft in View</title>
+      <link>https://jasr.me/blog/post.html?p=two-pane-ai-writing-tool</link>
+      <guid>https://jasr.me/blog/post.html?p=two-pane-ai-writing-tool</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>My browser writing experiment puts the draft beside AI suggestions, with local autosave and a PHP request proxy.</description>
+    </item>
+    <item>
+      <title>A Webhook Idea That Has Not Become an App Yet</title>
+      <link>https://jasr.me/blog/post.html?p=visual-ping-webhook-project-sketch</link>
+      <guid>https://jasr.me/blog/post.html?p=visual-ping-webhook-project-sketch</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A brief development note on the Visual Ping webhook placeholder and the questions that need answers before implementation.</description>
+    </item>
+    <item>
+      <title>Building a Life Group Attendance Portal for the People Behind the Check-In</title>
+      <link>https://jasr.me/blog/post.html?p=life-group-attendance-portal</link>
+      <guid>https://jasr.me/blog/post.html?p=life-group-attendance-portal</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A church attendance portal that connects check-in, student profiles, sibling links, leader access, and historical attendance.</description>
+    </item>
+    <item>
+      <title>A Weather Dashboard That Knows Which City I Mean</title>
+      <link>https://jasr.me/blog/post.html?p=weather-dashboard-location-accuracy</link>
+      <guid>https://jasr.me/blog/post.html?p=weather-dashboard-location-accuracy</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A lightweight weather dashboard built around explicit locations, cached updates, and a readable multi-city view.</description>
+    </item>
+    <item>
+      <title>Turning License Plate Photos into Searchable Records</title>
+      <link>https://jasr.me/blog/post.html?p=license-plate-photo-logger</link>
+      <guid>https://jasr.me/blog/post.html?p=license-plate-photo-logger</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>My photo-logging experiment combines text extraction, metadata, duplicate detection, and an editable search view.</description>
+    </item>
+    <item>
+      <title>A Blog Made of JSON Files—and a Little PowerShell</title>
+      <link>https://jasr.me/blog/post.html?p=json-flat-file-blog-powershell</link>
+      <guid>https://jasr.me/blog/post.html?p=json-flat-file-blog-powershell</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>An experiment in storing posts as JSON and using PowerShell to build the index, RSS feed, and sitemap.</description>
     </item>
     <item>
       <title>Building a Browser Trip Tracker That Shows Its Assumptions</title>
       <link>https://jasr.me/blog/post.html?p=browser-gps-trip-eta-tracker</link>
       <guid>https://jasr.me/blog/post.html?p=browser-gps-trip-eta-tracker</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Cross Country Trip Timeline Dashboard</title>
-      <link>https://jasr.me/blog/post.html?p=cross-country-trip-timeline-dashboard</link>
-      <guid>https://jasr.me/blog/post.html?p=cross-country-trip-timeline-dashboard</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Link Hub Project Notes</title>
-      <link>https://jasr.me/blog/post.html?p=link-hub-project-notes</link>
-      <guid>https://jasr.me/blog/post.html?p=link-hub-project-notes</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Random Wheel Choice Picker</title>
-      <link>https://jasr.me/blog/post.html?p=random-wheel-choice-picker</link>
-      <guid>https://jasr.me/blog/post.html?p=random-wheel-choice-picker</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Khootish Multiplayer Quiz Game</title>
-      <link>https://jasr.me/blog/post.html?p=khootish-multiplayer-quiz-game</link>
-      <guid>https://jasr.me/blog/post.html?p=khootish-multiplayer-quiz-game</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Old Phone Keypad Tones Browser</title>
-      <link>https://jasr.me/blog/post.html?p=old-phone-keypad-tones-browser</link>
-      <guid>https://jasr.me/blog/post.html?p=old-phone-keypad-tones-browser</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A mobile GPS experiment for speed, heading, trip progress, ETA, and saved sessions—with visible signal and freshness information.</description>
     </item>
     <item>
       <title>Building an Odometer That Rolls Forward in the Browser</title>
       <link>https://jasr.me/blog/post.html?p=browser-odometer-speedometer-emulator</link>
       <guid>https://jasr.me/blog/post.html?p=browser-odometer-speedometer-emulator</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A simulated odometer and speedometer with a configurable starting reading, animated digits, and MPH/KPH modes.</description>
     </item>
     <item>
       <title>Inside My Browser Password Generator Experiment</title>
       <link>https://jasr.me/blog/post.html?p=browser-password-generator-experiment</link>
       <guid>https://jasr.me/blog/post.html?p=browser-password-generator-experiment</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A look at the controls and implementation boundaries of my client-side password generator experiment.</description>
     </item>
     <item>
-      <title>Timeclock Photo Hours Logger</title>
-      <link>https://jasr.me/blog/post.html?p=timeclock-photo-hours-logger</link>
-      <guid>https://jasr.me/blog/post.html?p=timeclock-photo-hours-logger</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Raspberry Pi Time Clock Kiosk</title>
-      <link>https://jasr.me/blog/post.html?p=raspberry-pi-time-clock-kiosk</link>
-      <guid>https://jasr.me/blog/post.html?p=raspberry-pi-time-clock-kiosk</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>License Plate Photo Logger</title>
-      <link>https://jasr.me/blog/post.html?p=license-plate-photo-logger</link>
-      <guid>https://jasr.me/blog/post.html?p=license-plate-photo-logger</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Windows Computer Heartbeat Dashboard</title>
-      <link>https://jasr.me/blog/post.html?p=windows-computer-heartbeat-dashboard</link>
-      <guid>https://jasr.me/blog/post.html?p=windows-computer-heartbeat-dashboard</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Weather Dashboard Location Accuracy</title>
-      <link>https://jasr.me/blog/post.html?p=weather-dashboard-location-accuracy</link>
-      <guid>https://jasr.me/blog/post.html?p=weather-dashboard-location-accuracy</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Tv Binge Board Watch Tracker</title>
-      <link>https://jasr.me/blog/post.html?p=tv-binge-board-watch-tracker</link>
-      <guid>https://jasr.me/blog/post.html?p=tv-binge-board-watch-tracker</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Two Pane AI Writing Tool</title>
-      <link>https://jasr.me/blog/post.html?p=two-pane-ai-writing-tool</link>
-      <guid>https://jasr.me/blog/post.html?p=two-pane-ai-writing-tool</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Smart 404 Redirect Manager</title>
-      <link>https://jasr.me/blog/post.html?p=smart-404-redirect-manager</link>
-      <guid>https://jasr.me/blog/post.html?p=smart-404-redirect-manager</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Simple Links Page Template</title>
-      <link>https://jasr.me/blog/post.html?p=simple-links-page-template</link>
-      <guid>https://jasr.me/blog/post.html?p=simple-links-page-template</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Shared Text Between Devices</title>
-      <link>https://jasr.me/blog/post.html?p=shared-text-between-devices</link>
-      <guid>https://jasr.me/blog/post.html?p=shared-text-between-devices</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Robot Or Human Hold Button</title>
-      <link>https://jasr.me/blog/post.html?p=robot-or-human-hold-button</link>
-      <guid>https://jasr.me/blog/post.html?p=robot-or-human-hold-button</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Reusable PHP JSON Project Foundation</title>
-      <link>https://jasr.me/blog/post.html?p=reusable-php-json-project-foundation</link>
-      <guid>https://jasr.me/blog/post.html?p=reusable-php-json-project-foundation</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>PowerShell Numbered Web Test Pages</title>
-      <link>https://jasr.me/blog/post.html?p=powershell-numbered-web-test-pages</link>
-      <guid>https://jasr.me/blog/post.html?p=powershell-numbered-web-test-pages</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>JSON Flat File Blog PowerShell</title>
-      <link>https://jasr.me/blog/post.html?p=json-flat-file-blog-powershell</link>
-      <guid>https://jasr.me/blog/post.html?p=json-flat-file-blog-powershell</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Impossible Click Browser Game</title>
-      <link>https://jasr.me/blog/post.html?p=impossible-click-browser-game</link>
-      <guid>https://jasr.me/blog/post.html?p=impossible-click-browser-game</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Construction Sign Text Generator</title>
-      <link>https://jasr.me/blog/post.html?p=construction-sign-text-generator</link>
-      <guid>https://jasr.me/blog/post.html?p=construction-sign-text-generator</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Cooper Integration Countdown Page</title>
-      <link>https://jasr.me/blog/post.html?p=cooper-integration-countdown-page</link>
-      <guid>https://jasr.me/blog/post.html?p=cooper-integration-countdown-page</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Centralized PHP Directory Browser</title>
-      <link>https://jasr.me/blog/post.html?p=centralized-php-directory-browser</link>
-      <guid>https://jasr.me/blog/post.html?p=centralized-php-directory-browser</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-    </item>
-    <item>
-      <title>Browser Screen Size Debugging Tool</title>
+      <title>A Screen-Size Page for the Layout That Looks Fine on My Computer</title>
       <link>https://jasr.me/blog/post.html?p=browser-screen-size-debugging-tool</link>
       <guid>https://jasr.me/blog/post.html?p=browser-screen-size-debugging-tool</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A small viewport-inspection page that displays browser dimensions, pixel ratio, and orientation while the window changes.</description>
     </item>
     <item>
-      <title>Visual Ping Webhook Project Sketch</title>
-      <link>https://jasr.me/blog/post.html?p=visual-ping-webhook-project-sketch</link>
-      <guid>https://jasr.me/blog/post.html?p=visual-ping-webhook-project-sketch</guid>
+      <title>Building My Own Ticketing App: From Request to Resolution</title>
+      <link>https://jasr.me/blog/post.html?p=building-my-own-ticketing-app</link>
+      <guid>https://jasr.me/blog/post.html?p=building-my-own-ticketing-app</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A look at my PHP ticketing project, including requester and agent dashboards, public replies, private notes, and searchable categories.</description>
     </item>
     <item>
-      <title>Authenticated Directory Viewer</title>
-      <link>https://jasr.me/blog/post.html?p=authenticated-directory-viewer</link>
-      <guid>https://jasr.me/blog/post.html?p=authenticated-directory-viewer</guid>
+      <title>One PHP Directory Browser, Many Folders</title>
+      <link>https://jasr.me/blog/post.html?p=centralized-php-directory-browser</link>
+      <guid>https://jasr.me/blog/post.html?p=centralized-php-directory-browser</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A shared directory renderer with thin folder wrappers, path-based favorites, sorting, and downloads.</description>
+    </item>
+    <item>
+      <title>Building a Scoreboard That Works for the Room and the Scorekeeper</title>
+      <link>https://jasr.me/blog/post.html?p=church-youth-live-scoreboard</link>
+      <guid>https://jasr.me/blog/post.html?p=church-youth-live-scoreboard</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>My church scoreboard project separates spectator displays from score entry and supports different ministry instances.</description>
+    </item>
+    <item>
+      <title>I Built a Construction Sign for Messages That Need More Orange</title>
+      <link>https://jasr.me/blog/post.html?p=construction-sign-text-generator</link>
+      <guid>https://jasr.me/blog/post.html?p=construction-sign-text-generator</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A browser generator for LED-style highway signs, with live previews, adjustable styling, and image or HTML export.</description>
+    </item>
+    <item>
+      <title>A Countdown Page for a Milestone with a Specific Date</title>
+      <link>https://jasr.me/blog/post.html?p=cooper-integration-countdown-page</link>
+      <guid>https://jasr.me/blog/post.html?p=cooper-integration-countdown-page</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A retrospective on a focused countdown display built around the Cooper integration milestone.</description>
+    </item>
+    <item>
+      <title>Khootish: Building a Reusable Quiz Game for a Room Full of Players</title>
+      <link>https://jasr.me/blog/post.html?p=khootish-multiplayer-quiz-game</link>
+      <guid>https://jasr.me/blog/post.html?p=khootish-multiplayer-quiz-game</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A PHP quiz engine with reusable questions, join codes, phone answer pads, a projector display, and timed scoring.</description>
+    </item>
+    <item>
+      <title>Turning a Cross-Country Trip into a Readable Timeline</title>
+      <link>https://jasr.me/blog/post.html?p=cross-country-trip-timeline-dashboard</link>
+      <guid>https://jasr.me/blog/post.html?p=cross-country-trip-timeline-dashboard</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A retrospective on a trip dashboard that separates reported checkpoints, map observations, estimates, and calculations.</description>
+    </item>
+    <item>
+      <title>Building a Debt Payoff Planner That Makes Scenarios Easier to Compare</title>
+      <link>https://jasr.me/blog/post.html?p=debt-payoff-planner-scenarios</link>
+      <guid>https://jasr.me/blog/post.html?p=debt-payoff-planner-scenarios</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A look at my loan-tracking app, with payoff comparisons, private records, controlled sharing, and recoverable changes.</description>
+    </item>
+    <item>
+      <title>A Small Shortcut for a Repetitive IT Task: Dell Service Tag Lookup</title>
+      <link>https://jasr.me/blog/post.html?p=dell-service-tag-lookup-tool</link>
+      <guid>https://jasr.me/blog/post.html?p=dell-service-tag-lookup-tool</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A lightweight support-page shortcut with service-tag entry, photo scanning, and a shared recent-tag list.</description>
+    </item>
+    <item>
+      <title>Family GPS Tracker: Shared Location with Clear Boundaries</title>
+      <link>https://jasr.me/blog/post.html?p=family-gps-tracker-web-app</link>
+      <guid>https://jasr.me/blog/post.html?p=family-gps-tracker-web-app</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A consent-based family and friend location-sharing experiment with groups, check-ins, account controls, and browser limitations.</description>
+    </item>
+    <item>
+      <title>Beyond the Ticket Count: Building a Freshservice Progress Dashboard</title>
+      <link>https://jasr.me/blog/post.html?p=freshservice-ticket-progress-dashboard</link>
+      <guid>https://jasr.me/blog/post.html?p=freshservice-ticket-progress-dashboard</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>My Freshservice dashboard puts unresolved tickets, new work, completed work, and historical trends into one view.</description>
+    </item>
+    <item>
+      <title>Building a Warranty Tracker Before I Need the Warranty</title>
+      <link>https://jasr.me/blog/post.html?p=home-warranty-tracker</link>
+      <guid>https://jasr.me/blog/post.html?p=home-warranty-tracker</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A household warranty portal that keeps product details, receipt links, costs, and expiration dates together.</description>
+    </item>
+    <item>
+      <title>Impossible Click: Building a Button That Refuses to Cooperate</title>
+      <link>https://jasr.me/blog/post.html?p=impossible-click-browser-game</link>
+      <guid>https://jasr.me/blog/post.html?p=impossible-click-browser-game</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A deliberately uncooperative browser game that explores pointer movement, feedback, and the line between a joke and a usability bug.</description>
+    </item>
+    <item>
+      <title>Daily-babe: Turning One Photo a Day into a Growing Story</title>
+      <link>https://jasr.me/blog/post.html?p=daily-babe-daily-photo-tracker</link>
+      <guid>https://jasr.me/blog/post.html?p=daily-babe-daily-photo-tracker</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A private daily baby-photo gallery with backdated uploads, day labels, separate galleries, and collage and GIF exports.</description>
+    </item>
+    <item>
+      <title>Computer Heartbeats: Making Windows Device Check-Ins Easier to See</title>
+      <link>https://jasr.me/blog/post.html?p=windows-computer-heartbeat-dashboard</link>
+      <guid>https://jasr.me/blog/post.html?p=windows-computer-heartbeat-dashboard</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A dashboard-side look at the documented PowerShell-to-PHP heartbeat workflow, including what the current repository package contains.</description>
     </item>
     <item>
       <title>Hello, flat-file world</title>
       <link>https://jasr.me/blog/post.html?p=hello-world</link>
       <guid>https://jasr.me/blog/post.html?p=hello-world</guid>
       <pubDate>Tue, 03 Feb 2026 00:00:00 +0000</pubDate>
+      <description>Welcome to the blog that refuses to pay the database tax. Each post is a .json file and the homepage reads posts/index.json to build the list.</description>
     </item>
     <item>
       <title>Supply-chain paranoia: a practical Notepad++ sanity check</title>
       <link>https://jasr.me/blog/post.html?p=notepadpp-caution</link>
       <guid>https://jasr.me/blog/post.html?p=notepadpp-caution</guid>
       <pubDate>Mon, 02 Feb 2026 00:00:00 +0000</pubDate>
+      <description>A practical reminder to download from trusted sources, verify signatures or hashes where available, and avoid blindly trusting random mirrors.</description>
     </item>
     <item>
       <title>Homelab notes: logs, backups, and the art of not losing your mind</title>
       <link>https://jasr.me/blog/post.html?p=homelab-notes</link>
       <guid>https://jasr.me/blog/post.html?p=homelab-notes</guid>
       <pubDate>Wed, 28 Jan 2026 00:00:00 +0000</pubDate>
+      <description>Homelab notes on logs, backups, and documentation so future troubleshooting has a record instead of relying on memory.</description>
     </item>
   </channel>
 </rss>

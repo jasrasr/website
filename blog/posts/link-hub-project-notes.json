@@ -4,8 +4,9 @@
     "author": "Jason Lamb (with help from ChatGPT)",
     "created_date": "2026-09-16",
     "modified_date": "2026-09-16",
-    "revision": "1.0.0",
+    "revision": "1.0.1",
     "changelog": [
+      "1.0.1: Resolve cover media relative to the blog directory.",
       "1.0.0: Added project article to the JSON blog with generated cover image."
     ]
   },
@@ -20,8 +21,8 @@
   ],
   "excerpt": "An honest starting-point note for the Linktree-inspired folder: the idea is documented, but the planned app files are not there yet.",
   "cover": {
-    "src": "/media/derivatives/2026/09/link-hub-project-notes_640w.jpg",
+    "src": "media/derivatives/2026/09/link-hub-project-notes_640w.jpg",
     "alt": "A Link Hub on the Drawing Board cover image"
   },
-  "content_html": "<figure class=\"post-cover\"><img src=\"/media/derivatives/2026/09/link-hub-project-notes_640w.jpg\" alt=\"A Link Hub on the Drawing Board cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>A growing collection of web projects eventually creates another problem: giving people one useful place to find them. The linktree folder in my repository records the start of that idea.</p>\n<p>Its README describes a Linktree-inspired landing page and lists planned PHP, CSS, JavaScript, and asset files. In the reviewed snapshot, those application files are not present. This is a project sketch rather than a finished launch.</p>\n<p>The interesting question is what a link hub should emphasize. A short list of current destinations can be more useful than a complete inventory of everything ever uploaded. Names need to be understandable, links need clear destinations, and the page needs to work comfortably on a phone. Those are design considerations for the project, not features I am claiming it already has.</p>\n<p>The repository also has a separate standalone links-page template, which should not be confused with this planned folder. Keeping that distinction visible is part of documenting a workshop honestly.</p>\n<p>For now, this one is an idea with a place to grow. The first meaningful milestone will be a working page that helps someone choose where to go next.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/linktree\">Explore the project on GitHub</a></p>\n"
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/link-hub-project-notes_640w.jpg\" alt=\"A Link Hub on the Drawing Board cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>A growing collection of web projects eventually creates another problem: giving people one useful place to find them. The linktree folder in my repository records the start of that idea.</p>\n<p>Its README describes a Linktree-inspired landing page and lists planned PHP, CSS, JavaScript, and asset files. In the reviewed snapshot, those application files are not present. This is a project sketch rather than a finished launch.</p>\n<p>The interesting question is what a link hub should emphasize. A short list of current destinations can be more useful than a complete inventory of everything ever uploaded. Names need to be understandable, links need clear destinations, and the page needs to work comfortably on a phone. Those are design considerations for the project, not features I am claiming it already has.</p>\n<p>The repository also has a separate standalone links-page template, which should not be confused with this planned folder. Keeping that distinction visible is part of documenting a workshop honestly.</p>\n<p>For now, this one is an idea with a place to grow. The first meaningful milestone will be a working page that helps someone choose where to go next.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/linktree\">Explore the project on GitHub</a></p>\n"
 }

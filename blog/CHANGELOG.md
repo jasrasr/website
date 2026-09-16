@@ -2,15 +2,24 @@
 # filename: CHANGELOG.md
 # author: Jason Lamb (with help from ChatGPT)
 # created date: 2026-02-03
-# modified date: 2026-02-04
-# revision: 1.3
+# modified date: 2026-09-16
+# revision: 1.4.0
 # changelog:
+# - 1.4.0: Documents project-series integration and review fixes.
 # - 1.1: Added v1.2 release notes (admin media workflow + manifest)
 # - 1.2: Minor doc corrections (asset/log filenames)
 # - 1.3: Minor README fix (style.css filename)
 # - 1.0: Initial changelog
 -->
 # Changelog
+
+## v1.4.0 — 2026-09-16
+
+- Add 43 project articles and cover images alongside the three existing posts.
+- Resolve images relative to the blog directory and correct the Screen Size and Time Clock Kiosk covers.
+- Rebuild index, RSS, sitemap, and media usage from source posts; retain excerpts and cover metadata.
+- Detect derivative widths from filenames and fix the sitemap base-page array.
+
 
 ## v1.2 — 2026-02-04
 

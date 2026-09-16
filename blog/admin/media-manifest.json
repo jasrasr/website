@@ -1,1 +1,832 @@
-{"_meta":{"filename":"media-manifest.json","author":"Jason Lamb (with help from ChatGPT)","created_date":"2026-02-04","modified_date":"2026-09-16","revision":"1.1.0","changelog":["1.1.0: Adds manifest records for the committed 2026-09 project cover derivatives.","1.0: Initial admin-protected media manifest (non-public unless authenticated)"]},"items":{"authenticated-directory-viewer":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/authenticated-directory-viewer_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["authenticated-directory-viewer"],"alt":"Authenticated Directory Viewer cover image","credit":"","source":"committed-derivative"},"browser-gps-trip-eta-tracker":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/browser-gps-trip-eta-tracker_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["browser-gps-trip-eta-tracker"],"alt":"Browser GPS Trip ETA Tracker cover image","credit":"","source":"committed-derivative"},"browser-odometer-speedometer-emulator":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/browser-odometer-speedometer-emulator_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["browser-odometer-speedometer-emulator"],"alt":"Browser Odometer Speedometer Emulator cover image","credit":"","source":"committed-derivative"},"browser-password-generator-experiment":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/browser-password-generator-experiment_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["browser-password-generator-experiment"],"alt":"Browser Password Generator Experiment cover image","credit":"","source":"committed-derivative"},"browser-screen-size-debugging-tool":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/browser-screen-size-debugging-tool_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["browser-screen-size-debugging-tool"],"alt":"Browser Screen Size Debugging Tool cover image","credit":"","source":"committed-derivative"},"building-my-own-ticketing-app":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/building-my-own-ticketing-app_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["building-my-own-ticketing-app"],"alt":"Building My Own Ticketing App cover image","credit":"","source":"committed-derivative"},"centralized-php-directory-browser":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/centralized-php-directory-browser_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["centralized-php-directory-browser"],"alt":"Centralized PHP Directory Browser cover image","credit":"","source":"committed-derivative"},"church-youth-live-scoreboard":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/church-youth-live-scoreboard_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["church-youth-live-scoreboard"],"alt":"Church Youth Live Scoreboard cover image","credit":"","source":"committed-derivative"},"construction-sign-text-generator":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/construction-sign-text-generator_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["construction-sign-text-generator"],"alt":"Construction Sign Text Generator cover image","credit":"","source":"committed-derivative"},"cooper-integration-countdown-page":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/cooper-integration-countdown-page_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["cooper-integration-countdown-page"],"alt":"Cooper Integration Countdown Page cover image","credit":"","source":"committed-derivative"},"cross-country-trip-timeline-dashboard":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/cross-country-trip-timeline-dashboard_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["cross-country-trip-timeline-dashboard"],"alt":"Cross Country Trip Timeline Dashboard cover image","credit":"","source":"committed-derivative"},"daily-babe-daily-photo-tracker":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/daily-babe-daily-photo-tracker_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["daily-babe-daily-photo-tracker"],"alt":"Daily Babe Daily Photo Tracker cover image","credit":"","source":"committed-derivative"},"debt-payoff-planner-scenarios":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/debt-payoff-planner-scenarios_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["debt-payoff-planner-scenarios"],"alt":"Debt Payoff Planner Scenarios cover image","credit":"","source":"committed-derivative"},"dell-service-tag-lookup-tool":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/dell-service-tag-lookup-tool_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["dell-service-tag-lookup-tool"],"alt":"Dell Service Tag Lookup Tool cover image","credit":"","source":"committed-derivative"},"family-gps-tracker-web-app":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/family-gps-tracker-web-app_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["family-gps-tracker-web-app"],"alt":"Family GPS Tracker Web App cover image","credit":"","source":"committed-derivative"},"freshservice-ticket-progress-dashboard":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/freshservice-ticket-progress-dashboard_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["freshservice-ticket-progress-dashboard"],"alt":"Freshservice Ticket Progress Dashboard cover image","credit":"","source":"committed-derivative"},"home-warranty-tracker":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/home-warranty-tracker_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["home-warranty-tracker"],"alt":"Home Warranty Tracker cover image","credit":"","source":"committed-derivative"},"impossible-click-browser-game":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/impossible-click-browser-game_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["impossible-click-browser-game"],"alt":"Impossible Click Browser Game cover image","credit":"","source":"committed-derivative"},"json-flat-file-blog-powershell":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/json-flat-file-blog-powershell_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["json-flat-file-blog-powershell"],"alt":"JSON Flat File Blog PowerShell cover image","credit":"","source":"committed-derivative"},"khootish-multiplayer-quiz-game":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/khootish-multiplayer-quiz-game_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["khootish-multiplayer-quiz-game"],"alt":"Khootish Multiplayer Quiz Game cover image","credit":"","source":"committed-derivative"},"license-plate-photo-logger":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/license-plate-photo-logger_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["license-plate-photo-logger"],"alt":"License Plate Photo Logger cover image","credit":"","source":"committed-derivative"},"life-group-attendance-portal":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/life-group-attendance-portal_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["life-group-attendance-portal"],"alt":"Life Group Attendance Portal cover image","credit":"","source":"committed-derivative"},"link-hub-project-notes":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/link-hub-project-notes_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["link-hub-project-notes"],"alt":"Link Hub Project Notes cover image","credit":"","source":"committed-derivative"},"mpg-tracker-partial-fill-ups":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/mpg-tracker-partial-fill-ups_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["mpg-tracker-partial-fill-ups"],"alt":"MPG Tracker Partial Fill Ups cover image","credit":"","source":"committed-derivative"},"old-phone-keypad-tones-browser":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/old-phone-keypad-tones-browser_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["old-phone-keypad-tones-browser"],"alt":"Old Phone Keypad Tones Browser cover image","credit":"","source":"committed-derivative"},"personal-budget-tracker-php-json":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/personal-budget-tracker-php-json_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["personal-budget-tracker-php-json"],"alt":"Personal Budget Tracker PHP JSON cover image","credit":"","source":"committed-derivative"},"powershell-numbered-web-test-pages":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/powershell-numbered-web-test-pages_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["powershell-numbered-web-test-pages"],"alt":"PowerShell Numbered Web Test Pages cover image","credit":"","source":"committed-derivative"},"powershell-web-file-manager":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/powershell-web-file-manager_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["powershell-web-file-manager"],"alt":"PowerShell Web File Manager cover image","credit":"","source":"committed-derivative"},"psnotify-powershell-job-notifications":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/psnotify-powershell-job-notifications_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["psnotify-powershell-job-notifications"],"alt":"PSNotify PowerShell Job Notifications cover image","credit":"","source":"committed-derivative"},"qr-box-inventory-system":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/qr-box-inventory-system_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["qr-box-inventory-system"],"alt":"QR Box Inventory System cover image","credit":"","source":"committed-derivative"},"random-wheel-choice-picker":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/random-wheel-choice-picker_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["random-wheel-choice-picker"],"alt":"Random Wheel Choice Picker cover image","credit":"","source":"committed-derivative"},"raspberry-pi-time-clock-kiosk":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/raspberry-pi-time-clock-kiosk_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["raspberry-pi-time-clock-kiosk"],"alt":"Raspberry Pi Time Clock Kiosk cover image","credit":"","source":"committed-derivative"},"reusable-php-json-project-foundation":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/reusable-php-json-project-foundation_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["reusable-php-json-project-foundation"],"alt":"Reusable PHP JSON Project Foundation cover image","credit":"","source":"committed-derivative"},"robot-or-human-hold-button":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/robot-or-human-hold-button_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["robot-or-human-hold-button"],"alt":"Robot Or Human Hold Button cover image","credit":"","source":"committed-derivative"},"shared-text-between-devices":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/shared-text-between-devices_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["shared-text-between-devices"],"alt":"Shared Text Between Devices cover image","credit":"","source":"committed-derivative"},"simple-links-page-template":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/simple-links-page-template_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["simple-links-page-template"],"alt":"Simple Links Page Template cover image","credit":"","source":"committed-derivative"},"smart-404-redirect-manager":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/smart-404-redirect-manager_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["smart-404-redirect-manager"],"alt":"Smart 404 Redirect Manager cover image","credit":"","source":"committed-derivative"},"timeclock-photo-hours-logger":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/timeclock-photo-hours-logger_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["timeclock-photo-hours-logger"],"alt":"Timeclock Photo Hours Logger cover image","credit":"","source":"committed-derivative"},"tv-binge-board-watch-tracker":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/tv-binge-board-watch-tracker_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["tv-binge-board-watch-tracker"],"alt":"TV Binge Board Watch Tracker cover image","credit":"","source":"committed-derivative"},"two-pane-ai-writing-tool":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/two-pane-ai-writing-tool_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["two-pane-ai-writing-tool"],"alt":"Two Pane AI Writing Tool cover image","credit":"","source":"committed-derivative"},"visual-ping-webhook-project-sketch":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/visual-ping-webhook-project-sketch_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["visual-ping-webhook-project-sketch"],"alt":"Visual Ping Webhook Project Sketch cover image","credit":"","source":"committed-derivative"},"weather-dashboard-location-accuracy":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/weather-dashboard-location-accuracy_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["weather-dashboard-location-accuracy"],"alt":"Weather Dashboard Location Accuracy cover image","credit":"","source":"committed-derivative"},"windows-computer-heartbeat-dashboard":{"original":"","derivatives":{"640":"/media/derivatives/2026/09/windows-computer-heartbeat-dashboard_640w.jpg"},"uploaded":"2026-09-16T00:00:00Z","used_in":["windows-computer-heartbeat-dashboard"],"alt":"Windows Computer Heartbeat Dashboard cover image","credit":"","source":"committed-derivative"}}}
+{
+  "_meta": {
+    "filename": "media-manifest.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-02-04",
+    "modified_date": "2026-09-16",
+    "revision": "1.1.0",
+    "changelog": [
+      "1.1.0: Adds committed derivative image manifest records from post cover references",
+      "1.0: Initial admin-protected media manifest (non-public unless authenticated)"
+    ]
+  },
+  "items": {
+    "authenticated-directory-viewer": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/authenticated-directory-viewer_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "authenticated-directory-viewer"
+      ],
+      "alt": "Authenticated Directory Viewer cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1465161-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "browser-gps-trip-eta-tracker": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/browser-gps-trip-eta-tracker_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "browser-gps-trip-eta-tracker"
+      ],
+      "alt": "Browser GPS Trip ETA Tracker cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1534759-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "browser-odometer-speedometer-emulator": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/browser-odometer-speedometer-emulator_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "browser-odometer-speedometer-emulator"
+      ],
+      "alt": "Browser Odometer Speedometer Emulator cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1544638-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "browser-password-generator-experiment": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/browser-password-generator-experiment_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "browser-password-generator-experiment"
+      ],
+      "alt": "Browser Password Generator Experiment cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1554125-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "browser-screen-size-debugging-tool": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/browser-screen-size-debugging-tool_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "browser-screen-size-debugging-tool"
+      ],
+      "alt": "Browser Screen Size Debugging Tool cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1563539-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "building-my-own-ticketing-app": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/building-my-own-ticketing-app_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "building-my-own-ticketing-app"
+      ],
+      "alt": "Building My Own Ticketing App cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1572819-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "centralized-php-directory-browser": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/centralized-php-directory-browser_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "centralized-php-directory-browser"
+      ],
+      "alt": "Centralized PHP Directory Browser cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1580621-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "church-youth-live-scoreboard": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/church-youth-live-scoreboard_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "church-youth-live-scoreboard"
+      ],
+      "alt": "Church Youth Live Scoreboard cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1588870-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "construction-sign-text-generator": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/construction-sign-text-generator_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "construction-sign-text-generator"
+      ],
+      "alt": "Construction Sign Text Generator cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1598442-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "cooper-integration-countdown-page": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/cooper-integration-countdown-page_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "cooper-integration-countdown-page"
+      ],
+      "alt": "Cooper Integration Countdown Page cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1606901-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "cross-country-trip-timeline-dashboard": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/cross-country-trip-timeline-dashboard_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "cross-country-trip-timeline-dashboard"
+      ],
+      "alt": "Cross Country Trip Timeline Dashboard cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1615386-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "daily-babe-daily-photo-tracker": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/daily-babe-daily-photo-tracker_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "daily-babe-daily-photo-tracker"
+      ],
+      "alt": "Daily Babe Daily Photo Tracker cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1623270-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "debt-payoff-planner-scenarios": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/debt-payoff-planner-scenarios_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "debt-payoff-planner-scenarios"
+      ],
+      "alt": "Debt Payoff Planner Scenarios cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1630869-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "dell-service-tag-lookup-tool": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/dell-service-tag-lookup-tool_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "dell-service-tag-lookup-tool"
+      ],
+      "alt": "Dell Service Tag Lookup Tool cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1639469-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "family-gps-tracker-web-app": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/family-gps-tracker-web-app_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "family-gps-tracker-web-app"
+      ],
+      "alt": "Family GPS Tracker Web App cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1647467-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "freshservice-ticket-progress-dashboard": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/freshservice-ticket-progress-dashboard_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "freshservice-ticket-progress-dashboard"
+      ],
+      "alt": "Freshservice Ticket Progress Dashboard cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1655520-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "home-warranty-tracker": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/home-warranty-tracker_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "home-warranty-tracker"
+      ],
+      "alt": "Home Warranty Tracker cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1664577-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "impossible-click-browser-game": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/impossible-click-browser-game_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "impossible-click-browser-game"
+      ],
+      "alt": "Impossible Click Browser Game cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1673553-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "json-flat-file-blog-powershell": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/json-flat-file-blog-powershell_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "json-flat-file-blog-powershell"
+      ],
+      "alt": "JSON Flat File Blog PowerShell cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1681775-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "khootish-multiplayer-quiz-game": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/khootish-multiplayer-quiz-game_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "khootish-multiplayer-quiz-game"
+      ],
+      "alt": "Khootish Multiplayer Quiz Game cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1691727-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "license-plate-photo-logger": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/license-plate-photo-logger_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "license-plate-photo-logger"
+      ],
+      "alt": "License Plate Photo Logger cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1700003-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "life-group-attendance-portal": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/life-group-attendance-portal_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "life-group-attendance-portal"
+      ],
+      "alt": "Life Group Attendance Portal cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1707896-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "link-hub-project-notes": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/link-hub-project-notes_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "link-hub-project-notes"
+      ],
+      "alt": "Link Hub Project Notes cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1715738-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "mpg-tracker-partial-fill-ups": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/mpg-tracker-partial-fill-ups_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "mpg-tracker-partial-fill-ups"
+      ],
+      "alt": "MPG Tracker Partial Fill Ups cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1724734-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "old-phone-keypad-tones-browser": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/old-phone-keypad-tones-browser_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "old-phone-keypad-tones-browser"
+      ],
+      "alt": "Old Phone Keypad Tones Browser cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1732120-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "personal-budget-tracker-php-json": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/personal-budget-tracker-php-json_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "personal-budget-tracker-php-json"
+      ],
+      "alt": "Personal Budget Tracker PHP JSON cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1739919-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "powershell-numbered-web-test-pages": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/powershell-numbered-web-test-pages_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "powershell-numbered-web-test-pages"
+      ],
+      "alt": "PowerShell Numbered Web Test Pages cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1747743-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "powershell-web-file-manager": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/powershell-web-file-manager_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "powershell-web-file-manager"
+      ],
+      "alt": "PowerShell Web File Manager cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1755580-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "psnotify-powershell-job-notifications": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/psnotify-powershell-job-notifications_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "psnotify-powershell-job-notifications"
+      ],
+      "alt": "PSNotify PowerShell Job Notifications cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1764321-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "qr-box-inventory-system": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/qr-box-inventory-system_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "qr-box-inventory-system"
+      ],
+      "alt": "QR Box Inventory System cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1772203-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "random-wheel-choice-picker": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/random-wheel-choice-picker_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "random-wheel-choice-picker"
+      ],
+      "alt": "Random Wheel Choice Picker cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1812772-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "raspberry-pi-time-clock-kiosk": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/raspberry-pi-time-clock-kiosk_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "raspberry-pi-time-clock-kiosk"
+      ],
+      "alt": "Raspberry Pi Time Clock Kiosk cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1821913-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "reusable-php-json-project-foundation": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/reusable-php-json-project-foundation_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "reusable-php-json-project-foundation"
+      ],
+      "alt": "Reusable PHP JSON Project Foundation cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1865577-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "robot-or-human-hold-button": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/robot-or-human-hold-button_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "robot-or-human-hold-button"
+      ],
+      "alt": "Robot Or Human Hold Button cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1876629-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "shared-text-between-devices": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/shared-text-between-devices_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "shared-text-between-devices"
+      ],
+      "alt": "Shared Text Between Devices cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1891210-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "simple-links-page-template": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/simple-links-page-template_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "simple-links-page-template"
+      ],
+      "alt": "Simple Links Page Template cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1949007-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "smart-404-redirect-manager": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/smart-404-redirect-manager_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "smart-404-redirect-manager"
+      ],
+      "alt": "Smart 404 Redirect Manager cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1959906-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "timeclock-photo-hours-logger": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/timeclock-photo-hours-logger_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "timeclock-photo-hours-logger"
+      ],
+      "alt": "Timeclock Photo Hours Logger cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1981350-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "tv-binge-board-watch-tracker": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/tv-binge-board-watch-tracker_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "tv-binge-board-watch-tracker"
+      ],
+      "alt": "TV Binge Board Watch Tracker cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.1989626-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "two-pane-ai-writing-tool": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/two-pane-ai-writing-tool_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "two-pane-ai-writing-tool"
+      ],
+      "alt": "Two Pane AI Writing Tool cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.2043652-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "visual-ping-webhook-project-sketch": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/visual-ping-webhook-project-sketch_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "visual-ping-webhook-project-sketch"
+      ],
+      "alt": "Visual Ping Webhook Project Sketch cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.2052399-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "weather-dashboard-location-accuracy": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/weather-dashboard-location-accuracy_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "weather-dashboard-location-accuracy"
+      ],
+      "alt": "Weather Dashboard Location Accuracy cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.2060588-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "windows-computer-heartbeat-dashboard": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/09/windows-computer-heartbeat-dashboard_640w.jpg"
+      },
+      "uploaded": "2026-09-16T00:00:00Z",
+      "used_in": [
+        "windows-computer-heartbeat-dashboard"
+      ],
+      "alt": "Windows Computer Heartbeat Dashboard cover image",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-09-16T07:41:26.2075642-04:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    }
+  }
+}

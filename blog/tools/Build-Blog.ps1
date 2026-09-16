@@ -3,8 +3,9 @@
 # author: Jason Lamb (with help from ChatGPT)
 # created date: 2026-02-03
 # modified date: 2026-09-16
-# revision: 1.3.0
+# revision: 1.3.1
 # changelog:
+# - 1.3.1: Supports blog-relative media, extracts derivative widths, and fixes sitemap array construction.
 # - 1.3.0: Preserves cover metadata in the generated index, fixes RSS/sitemap URL formatting, decodes HTML entities for search text, and creates manifest records for committed derivative images.
 # - 1.2: Adds optional media processing + manifest maintenance (usage scan, backups, integrity + alt warnings); generates index/rss/sitemap with embedded _meta headers
 # - 1.1: Adds build-time full-text search indexing (_searchText), and regenerates rss.xml + sitemap.xml with jasr.me/blog base URLs
@@ -94,7 +95,7 @@ function Load-Manifest {
             filename      = "media-manifest.json"
             author        = "Jason Lamb (with help from ChatGPT)"
             created_date  = "2026-02-04"
-            modified_date = "2026-09-16"
+            modified_date = (Get-Date -Format "yyyy-MM-dd")
             revision      = "1.1.0"
             changelog     = @(
                 "1.1.0: Adds committed derivative image manifest records from post cover references",
@@ -120,7 +121,7 @@ function Save-Manifest {
     }
 
     if ($Manifest._meta) {
-        $Manifest._meta.modified_date = "2026-09-16"
+        $Manifest._meta.modified_date = (Get-Date -Format "yyyy-MM-dd")
         $Manifest._meta.revision = "1.1.0"
         $Manifest._meta.changelog = @(
             "1.1.0: Adds committed derivative image manifest records from post cover references",
@@ -147,6 +148,9 @@ function Ensure-MediaManifestEntry {
         [Parameter(Mandatory = $true)]
         [string]$Slug,
 
+        [Parameter(Mandatory = $true)]
+        [int]$Width,
+
         [Parameter(Mandatory = $false)]
         [string]$Alt = ""
     )
@@ -158,7 +162,7 @@ function Ensure-MediaManifestEntry {
         $Manifest.items | Add-Member -MemberType NoteProperty -Name $Key -Value ([pscustomobject]@{
             original    = ""
             derivatives = [pscustomobject]@{
-                "640" = $WebPath
+                ([string]$Width) = $WebPath
             }
             uploaded    = ""
             used_in     = @()
@@ -186,8 +190,8 @@ function Ensure-MediaManifestEntry {
         $entry | Add-Member -MemberType NoteProperty -Name derivatives -Value ([pscustomobject]@{}) -Force
     }
 
-    if (-not ($entry.derivatives.PSObject.Properties.Name -contains "640")) {
-        $entry.derivatives | Add-Member -MemberType NoteProperty -Name "640" -Value $WebPath -Force
+    if (-not ($entry.derivatives.PSObject.Properties.Name -contains ([string]$Width))) {
+        $entry.derivatives | Add-Member -MemberType NoteProperty -Name ([string]$Width) -Value $WebPath -Force
     }
 }
 
@@ -270,7 +274,7 @@ try {
     }
 } catch {}
 
-$mediaRefRegex = '/media/derivatives/\d{4}/\d{2}/(?<key>[a-zA-Z0-9_-]+)_\d+w\.jpg'
+$mediaRefRegex = '/?media/derivatives/\d{4}/\d{2}/(?<key>[a-zA-Z0-9_-]+)_(?<width>\d+)w\.jpg'
 
 $posts = foreach ($f in $postFiles) {
     try {
@@ -302,7 +306,7 @@ $posts = foreach ($f in $postFiles) {
                     $alt = [string]$p.cover.alt
                 }
 
-                Ensure-MediaManifestEntry -Manifest $manifest -Key $k -WebPath $m.Value -Slug ([string]$p.slug) -Alt $alt
+                Ensure-MediaManifestEntry -Manifest $manifest -Key $k -WebPath $m.Value -Width ([int]$m.Groups["width"].Value) -Slug ([string]$p.slug) -Alt $alt
             }
         }
 
@@ -341,7 +345,7 @@ $indexObj = [pscustomobject]@{
         filename      = "posts/index.json"
         author        = "Jason Lamb (with help from ChatGPT)"
         created_date  = "2026-02-03"
-        modified_date = "2026-09-16"
+        modified_date = (Get-Date -Format "yyyy-MM-dd")
         revision      = "1.3.1"
         changelog     = @(
             "1.3.1: Preserves cover metadata and fallback excerpts during generated index rebuilds",
@@ -453,9 +457,9 @@ Write-Host ("Wrote RSS: {0}" -f $rssPath)
 # Generate sitemap.xml (with header comment)
 # ------------------------------------------------------------
 $urls = @(
-    "{0}/index.html" -f $SiteBaseUrl.TrimEnd('/'),
-    "{0}/about.html" -f $SiteBaseUrl.TrimEnd('/'),
-    "{0}/rss.xml" -f $SiteBaseUrl.TrimEnd('/')
+    ("{0}/index.html" -f $SiteBaseUrl.TrimEnd('/'))
+    ("{0}/about.html" -f $SiteBaseUrl.TrimEnd('/'))
+    ("{0}/rss.xml" -f $SiteBaseUrl.TrimEnd('/'))
 )
 
 foreach ($p in $postsSorted) {
