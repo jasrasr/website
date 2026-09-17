@@ -1,5 +1,15 @@
-<!-- File revision 1.0.0 | Modified 2026-09-17 | Initial project changelog. -->
+<!-- File revision 1.1.0 | Modified 2026-09-17 | Initial project changelog. -->
 # Changelog
+
+## 1.1.0 — 2026-09-17
+
+- Separate required public display names from optional private names, phone numbers, and email addresses, with explicit privacy labels.
+- Enforce event-specific admin/response-token access and exclude private fields from public API responses.
+- Add optional public adult/kid counts and food contributions, plus per-option reported headcounts.
+- Add a tentative location, proposed date/time slots, and an explicit event time zone; no schedule is marked confirmed.
+- Add optional voting expiration enforced by the server, with admin extension/removal and live expired-state updates.
+- Preserve date-only events and private details when older clients omit the new fields.
+- Extend API/browser coverage for privacy, authorization, counts, time options, expiry, and recovery.
 
 ## 1.0.0 — 2026-09-17
 
