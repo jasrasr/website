@@ -2,6 +2,7 @@
 'use strict';
 (() => {
   const nativeFetch = window.fetch.bind(window);
+  const declined = new Set();
   const passwordIds = {admin: 'admin-password', event: 'event-password'};
   const confirmIds = {admin: 'admin-password-confirm', event: 'event-password-confirm'};
 
@@ -101,10 +102,14 @@
     try { error = await response.clone().json(); } catch { return response; }
     const kind = error.passwordRequired;
     if (kind !== 'admin' && kind !== 'event') return response;
+    const declineKey = `${id || ''}:${kind}`;
+    if (declined.has(declineKey)) return response;
 
     const entered = window.prompt(kind === 'admin' ? 'Enter the admin password for this event:' : 'Enter the password to view this event:');
-    if (entered === null || entered.length < 4) return response;
+    if (entered === null) { declined.add(declineKey); return response; }
+    if (entered.length < 4) return response;
 
+    declined.delete(declineKey);
     secrets = loadSecrets(id);
     secrets[`${kind}Password`] = entered;
     saveSecrets(id, secrets);
