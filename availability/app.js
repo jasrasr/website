@@ -1,21 +1,26 @@
-/* Revision 1.1.1 | 2026-09-17 | Private contacts, household/food details, proposed times and expiry.
- * History: 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Event creation, voting, live rankings and response matrix. */
+/* Revision 1.3.0 | 2026-09-17 | Admin-controlled attendee-added date/time options.
+ * History: 1.3.0 — Allow organizers to let attendees add options; 1.1.2 — Separate invite/public mode from remembered admin access; 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Event creation, voting, live rankings and response matrix. */
 'use strict';
 const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 let eventId = params.get('event'), event = null, editing = false, dirty = false, sequence = 0;
-let chosenDates = [], answers = {}, formRevision = 0, savingVote = false;
+let inviteMode = params.get('view') === 'invite';
+let chosenDates = [], answers = {}, formRevision = 0, savingVote = false, addingDate = false;
 const storageKey = () => `availability:${eventId}`;
 let credentials = {};
+
 function remember() {
-  try { localStorage.setItem(storageKey(), JSON.stringify(credentials)); }
-  catch { message('Browser storage is unavailable. Save your private link to return later.'); }
+  try {
+    let stored = {};
+    try { stored = JSON.parse(localStorage.getItem(storageKey()) || '{}') || {}; } catch { stored = {}; }
+    const next = inviteMode && stored.adminToken ? {...stored, ...credentials, adminToken: stored.adminToken} : credentials;
+    localStorage.setItem(storageKey(), JSON.stringify(next));
+  } catch { message('Browser storage is unavailable. Save your private link to return later.'); }
 }
 function message(text, error = false) { $('message').textContent = text; $('message').classList.toggle('error', error); }
 function node(tag, text, className) { const element = document.createElement(tag); if (text !== undefined) element.textContent = text; if (className) element.className = className; return element; }
 function dateLabel(date) {
   const [day, time] = date.split('T');
-  // Format calendar components in UTC to avoid shifting an event option into the viewer's time zone.
   const label = new Intl.DateTimeFormat(undefined, {weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'}).format(new Date(`${day}T12:00:00Z`));
   return `${label} · ${time || 'Time undecided'}`;
 }
@@ -24,13 +29,16 @@ const partyFields = {adults: 'adults', kids: 'kids', foodType: 'food-type', food
 const zones = typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'Europe/London'];
 for (const zone of [...new Set(['America/New_York', 'UTC', ...zones])]) { const option = node('option', zone); option.value = zone; $('timezone').append(option); }
 $('timezone').value = 'America/New_York';
+
 function link(kind) {
   const url = new URL(location.pathname, location.origin);
   url.searchParams.set('event', eventId);
+  if (kind === 'invite') url.searchParams.set('view', 'invite');
   const fragment = new URLSearchParams();
   if (kind === 'admin') fragment.set('admin', credentials.adminToken);
   if (kind === 'response') { fragment.set('response', credentials.responseId); fragment.set('key', credentials.responseToken); }
-  url.hash = fragment.toString(); return url.href;
+  url.hash = fragment.toString();
+  return url.href;
 }
 async function api(body) {
   if (!body && (credentials.adminToken || credentials.responseToken)) body = {action: 'view', id: eventId, ...credentials};
@@ -46,16 +54,18 @@ async function copy(text) {
   catch { window.prompt('Copy this link:', text); }
 }
 function renderLinks() {
-  $('admin-link-row').hidden = !credentials.adminToken;
+  const hasAdmin = !inviteMode && !!credentials.adminToken;
+  $('admin-link-row').hidden = !hasAdmin;
   $('response-link-row').hidden = !credentials.responseToken;
-  $('private-links').hidden = !credentials.adminToken && !credentials.responseToken;
-  if (credentials.adminToken) $('admin-link').value = link('admin');
+  $('private-links').hidden = !hasAdmin && !credentials.responseToken;
+  if (hasAdmin) $('admin-link').value = link('admin');
   if (credentials.responseToken) $('response-link').value = link('response');
-  $('edit-event').hidden = !credentials.adminToken;
+  $('edit-event').hidden = !hasAdmin;
 }
 function renderChips() {
   $('date-chips').replaceChildren(...chosenDates.map(date => {
-    const button = node('button', `${dateLabel(date)} ×`, 'date-chip'); button.type = 'button';
+    const button = node('button', `${dateLabel(date)} ×`, 'date-chip');
+    button.type = 'button';
     button.setAttribute('aria-label', `Remove ${dateLabel(date)}`);
     button.onclick = () => { chosenDates = chosenDates.filter(item => item !== date); renderChips(); };
     return button;
@@ -67,43 +77,66 @@ $('add-date').onclick = () => {
   if (chosenDates.length >= 60) { message('Choose up to 60 dates.', true); return; }
   const option = input.value + ($('time-input').value ? `T${$('time-input').value}` : '');
   if (!chosenDates.includes(option)) chosenDates.push(option);
-  chosenDates.sort(); input.value = ''; renderChips();
+  chosenDates.sort();
+  input.value = '';
+  renderChips();
 };
 $('date-input').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); $('add-date').click(); } };
+
 $('event-form').onsubmit = async e => {
   e.preventDefault();
   if (!chosenDates.length) { message('Add at least one date.', true); return; }
   const form = new FormData(e.target);
-  const body = {action: editing ? 'update' : 'create', title: form.get('title'), adminName: form.get('adminName'), description: form.get('description'), dates: chosenDates,
-    location: form.get('location'), timezone: $('timezone').value, expiresLocal: form.get('expiresLocal')};
+  const body = {
+    action: editing ? 'update' : 'create',
+    title: form.get('title'), adminName: form.get('adminName'), description: form.get('description'), dates: chosenDates,
+    location: form.get('location'), timezone: $('timezone').value, expiresLocal: form.get('expiresLocal'),
+    allowAttendeeDates: form.get('allowAttendeeDates') === 'on'
+  };
   if (editing) Object.assign(body, {id: eventId, adminToken: credentials.adminToken, revision: formRevision, closed: form.get('closed') === 'on'});
-  $('save-event').disabled = true; ++sequence;
+  $('save-event').disabled = true;
+  ++sequence;
   try {
     const data = await api(body);
     eventId = data.event.id;
     if (data.adminToken) credentials.adminToken = data.adminToken;
-    remember(); history.replaceState(null, '', link());
-    editing = false; $('setup').hidden = true; $('poll').hidden = false;
-    applyEvent(data.event, data); renderLinks();
+    inviteMode = false;
+    remember();
+    history.replaceState(null, '', link());
+    editing = false;
+    $('setup').hidden = true;
+    $('poll').hidden = false;
+    applyEvent(data.event, data);
+    renderLinks();
     message(data.adminToken ? 'Your event is ready. Save your private admin link, then share the invite link.' : 'Event updated.');
   } catch (err) { message(err.message, true); }
   finally { $('save-event').disabled = false; }
 };
 $('edit-event').onclick = () => {
-  editing = true; formRevision = event.revision; chosenDates = [...event.dates];
+  editing = true;
+  formRevision = event.revision;
+  chosenDates = [...event.dates];
   const form = $('event-form');
   for (const key of ['title', 'adminName', 'description', 'location', 'expiresLocal']) form.elements[key].value = event[key] || '';
+  form.elements.allowAttendeeDates.checked = !!event.allowAttendeeDates;
   if (![...$('timezone').options].some(option => option.value === event.timezone) && event.timezone) { const option = node('option', event.timezone); option.value = event.timezone; $('timezone').append(option); }
-  $('timezone').value = event.timezone || 'America/New_York'; $('timezone').disabled = event.responses.length > 0;
+  $('timezone').value = event.timezone || 'America/New_York';
+  $('timezone').disabled = event.responses.length > 0;
   form.elements.closed.checked = event.closed;
-  $('setup').hidden = false; $('closed-label').hidden = false; $('edit-note').hidden = false; $('cancel-edit').hidden = false;
-  $('setup').querySelector('h2').textContent = 'Edit your event'; $('save-event').textContent = 'Save event changes';
-  renderChips(); $('setup').scrollIntoView({behavior: 'smooth'});
+  $('setup').hidden = false;
+  $('closed-label').hidden = false;
+  $('edit-note').hidden = false;
+  $('cancel-edit').hidden = false;
+  $('setup').querySelector('h2').textContent = 'Edit your event';
+  $('save-event').textContent = 'Save event changes';
+  renderChips();
+  $('setup').scrollIntoView({behavior: 'smooth'});
 };
 $('cancel-edit').onclick = () => { editing = false; $('setup').hidden = true; };
-$('copy-public').onclick = () => copy(link());
+$('copy-public').onclick = () => copy(link('invite'));
 $('copy-admin').onclick = () => copy(link('admin'));
 $('copy-response').onclick = () => copy(link('response'));
+
 function summary() {
   const yes = Object.values(answers).filter(value => value === 'yes').length;
   const no = Object.values(answers).filter(value => value === 'no').length;
@@ -112,54 +145,104 @@ function summary() {
 }
 function renderVote() {
   $('vote-dates').replaceChildren(...event.dates.map(date => {
-    const row = node('label', undefined, 'vote-date'); row.append(node('span', dateLabel(date)));
-    const select = node('select'); select.setAttribute('aria-label', `Availability on ${dateLabel(date)}`);
+    const row = node('label', undefined, 'vote-date');
+    row.append(node('span', dateLabel(date)));
+    const select = node('select');
+    select.setAttribute('aria-label', `Availability on ${dateLabel(date)}`);
     for (const [value, label] of [['', '— Not answered'], ['yes', '✓ Can attend'], ['no', '✕ Can’t attend']]) {
       const option = node('option', label); option.value = value; select.append(option);
     }
-    select.value = answers[date] || ''; select.className = select.value;
+    select.value = answers[date] || '';
+    select.className = select.value;
     select.onchange = () => { if (select.value) answers[date] = select.value; else delete answers[date]; select.className = select.value; dirty = true; summary(); };
-    row.append(select); return row;
+    row.append(select);
+    return row;
   }));
   for (const control of $('vote-form').elements) control.disabled = event.closed || event.expired || savingVote;
   summary();
+  renderAttendeeDateAdder();
 }
 for (const button of document.querySelectorAll('[data-fill]')) button.onclick = () => {
   answers = button.dataset.fill ? Object.fromEntries(event.dates.map(date => [date, button.dataset.fill])) : {};
-  dirty = true; renderVote();
+  dirty = true;
+  renderVote();
 };
 $('voter-name').oninput = () => { dirty = true; summary(); };
 for (const id of [...Object.values(privateFields), ...Object.values(partyFields)]) $(id).oninput = () => { dirty = true; summary(); };
+
+function renderAttendeeDateAdder() {
+  const panel = $('attendee-date-panel');
+  const enabled = !!event?.allowAttendeeDates && !event.closed && !event.expired && event.dates.length < 60;
+  panel.hidden = !event?.allowAttendeeDates;
+  $('attendee-date').disabled = !enabled || addingDate;
+  $('attendee-time').disabled = !enabled || addingDate;
+  $('attendee-add-date').disabled = !enabled || addingDate;
+  $('attendee-date-state').textContent = !event?.allowAttendeeDates ? '' : event.closed ? 'The poll is closed, so new options cannot be added.' : event.expired ? 'Voting has expired, so new options cannot be added.' : event.dates.length >= 60 ? 'This poll already has the maximum of 60 options.' : 'Added options become available to everyone immediately.';
+}
+$('attendee-add-date').onclick = async () => {
+  const dateInput = $('attendee-date');
+  if (!dateInput.value || !dateInput.checkValidity()) { dateInput.reportValidity(); return; }
+  const candidate = dateInput.value + ($('attendee-time').value ? `T${$('attendee-time').value}` : '');
+  addingDate = true;
+  renderAttendeeDateAdder();
+  ++sequence;
+  try {
+    const data = await api({action: 'suggest_date', id: eventId, revision: event.revision, date: candidate});
+    dateInput.value = '';
+    $('attendee-time').value = '';
+    applyEvent(data.event, data);
+    renderLinks();
+    message(`${dateLabel(candidate)} was added as an option for everyone.`);
+  } catch (err) {
+    message(err.message, true);
+    if (/changed|Reload/i.test(err.message)) await refresh();
+  } finally {
+    addingDate = false;
+    renderAttendeeDateAdder();
+  }
+};
+
 $('vote-form').onsubmit = async e => {
-  e.preventDefault(); savingVote = true; $('save-vote').disabled = true; ++sequence;
-  // Freeze the submitted form until the server confirms it so edits cannot be overwritten.
+  e.preventDefault();
+  savingVote = true;
+  $('save-vote').disabled = true;
+  ++sequence;
   for (const control of $('vote-form').elements) control.disabled = true;
   try {
     const details = Object.fromEntries(Object.entries({...privateFields, ...partyFields}).map(([key, id]) => [key, ['adults', 'kids'].includes(key) ? ($(id).value === '' ? null : Number($(id).value)) : $(id).value]));
     const data = await api({action: 'vote', id: eventId, revision: event.revision, name: $('voter-name').value, ...details, answers, responseId: credentials.responseId || '', responseToken: credentials.responseToken || ''});
-    Object.assign(credentials, {responseId: data.responseId, responseToken: data.responseToken}); remember(); dirty = false;
-    applyEvent(data.event, data); renderLinks(); message('Your availability is saved. The group results are up to date.');
+    Object.assign(credentials, {responseId: data.responseId, responseToken: data.responseToken});
+    remember();
+    dirty = false;
+    applyEvent(data.event, data);
+    renderLinks();
+    message('Your availability is saved. The group results are up to date.');
   } catch (err) { message(err.message, true); }
   finally { savingVote = false; renderVote(); }
 };
+
 function applyEvent(next, access = {}) {
   const changedDates = event && event.revision !== next.revision;
   const changedStatus = event && (event.expired !== next.expired || event.closed !== next.closed);
-  const first = !event; event = next;
+  const first = !event;
+  event = next;
   document.title = `${event.title} · Availability`;
-  $('title').textContent = event.title; $('description').textContent = event.description || 'Find the date that works for your group.';
+  $('title').textContent = event.title;
+  $('description').textContent = event.description || 'Find the date that works for your group.';
   $('event-meta').textContent = `Organized by ${event.adminName} · ${event.dates.length} proposed options · ${event.expired ? 'Voting expired' : event.closed ? 'Closed' : 'Open for responses'}`;
   const deadline = event.expiresAt ? new Intl.DateTimeFormat(undefined, {year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short', timeZone: event.timezone || 'America/New_York'}).format(new Date(event.expiresAt)) : 'No deadline';
-  $('schedule-note').textContent = `Date and time are not confirmed. ${event.location ? `Location: ${event.location}. ` : 'Location: still deciding. '}All times: ${event.timezone || 'America/New_York'}. Voting expiration: ${deadline}.`;
+  $('schedule-note').textContent = `Date and time are not confirmed. ${event.location ? `Location: ${event.location}. ` : 'Location: still deciding. '}All times: ${event.timezone || 'America/New_York'}. Voting expiration: ${deadline}.${event.allowAttendeeDates ? ' Attendees may add additional options.' : ''}`;
   const mine = access.myResponse || event.responses.find(response => response.id === credentials.responseId);
   if (!dirty && mine) {
-    answers = {...mine.answers}; $('voter-name').value = mine.name;
+    answers = {...mine.answers};
+    $('voter-name').value = mine.name;
     for (const [key, id] of Object.entries(partyFields)) $(id).value = mine[key] ?? '';
     if (access.myResponse) for (const [key, id] of Object.entries(privateFields)) $(id).value = mine[key] || '';
   }
   answers = Object.fromEntries(Object.entries(answers).filter(([date]) => event.dates.includes(date)));
-  if (changedDates) message('The organizer updated this event. Review the current dates before saving.');
+  if (changedDates) message('The event options changed. Review the current dates before saving.');
   if (first || changedDates || changedStatus || !dirty) renderVote();
+  else renderAttendeeDateAdder();
   renderResults();
   renderAdmin(access.adminResponses);
 }
@@ -175,7 +258,8 @@ function renderAdmin(responses) {
     for (const value of [response.name, response.phone, response.email, response.adults, response.kids, [response.foodType, response.foodNote].filter(Boolean).join(' — ')]) row.append(node('td', value ?? '—'));
     body.append(row);
   }
-  table.append(body); $('admin-contact-table').replaceChildren(responses.length ? table : node('p', 'No attendee details yet.', 'muted'));
+  table.append(body);
+  $('admin-contact-table').replaceChildren(responses.length ? table : node('p', 'No attendee details yet.', 'muted'));
 }
 function renderResults() {
   const total = event.responses.length;
@@ -186,16 +270,20 @@ function renderResults() {
       adults: available.reduce((sum, r) => sum + (r.adults ?? 0), 0), kids: available.reduce((sum, r) => sum + (r.kids ?? 0), 0),
       unspecified: available.filter(r => r.adults == null || r.kids == null).length};
   }).sort((a, b) => b.yes - a.yes || a.date.localeCompare(b.date));
-  const top = ranked[0].yes, winners = ranked.filter(row => row.yes === top);
+  const top = ranked[0]?.yes ?? 0;
+  const winners = ranked.filter(row => row.yes === top);
   $('best-summary').textContent = !total ? 'Share your invite link to get the first response.' : !top ? 'No date has a “can attend” response yet.' : `${winners.length > 1 ? `${winners.length} dates tied for best` : `Best date: ${dateLabel(winners[0].date)}`} · ${top} of ${total} can attend`;
   $('results').replaceChildren(...ranked.map(row => {
     const item = node('div', undefined, 'result');
-    const heading = node('div', undefined, 'result-heading'); heading.append(node('strong', dateLabel(row.date)));
+    const heading = node('div', undefined, 'result-heading');
+    heading.append(node('strong', dateLabel(row.date)));
     if (row.yes === top && top > 0) heading.append(node('span', 'Best fit', 'best-tag'));
-    const meter = node('meter'); meter.min = 0; meter.max = total || 1; meter.value = row.yes;
+    const meter = node('meter');
+    meter.min = 0; meter.max = total || 1; meter.value = row.yes;
     meter.setAttribute('aria-label', `${dateLabel(row.date)}: ${row.yes} of ${total} can attend`);
     item.append(heading, meter, node('p', `${row.yes} responses can attend · ${row.no} can’t · ${total - row.yes - row.no} unanswered`, 'muted'),
-      node('p', `Reported headcount: ${row.adults} adults + ${row.kids} kids${row.unspecified ? ` · ${row.unspecified} available response(s) with incomplete counts` : ''}`, 'muted')); return item;
+      node('p', `Reported headcount: ${row.adults} adults + ${row.kids} kids${row.unspecified ? ` · ${row.unspecified} available response(s) with incomplete counts` : ''}`, 'muted'));
+    return item;
   }));
   const table = node('table'), head = node('thead'), header = node('tr');
   const nameHeader = node('th', 'Name'); nameHeader.scope = 'col'; header.append(nameHeader);
@@ -206,33 +294,44 @@ function renderResults() {
   for (const response of event.responses) {
     const row = node('tr'), name = node('th', response.name); name.scope = 'row'; row.append(name);
     for (const date of event.dates) {
-      const answer = response.answers[date]; const cell = node('td', answer === 'yes' ? '✓ Yes' : answer === 'no' ? '✕ No' : '—', answer === 'yes' ? 'yes-text' : answer === 'no' ? 'no-text' : 'muted');
-      cell.setAttribute('aria-label', answer === 'yes' ? 'Can attend' : answer === 'no' ? 'Cannot attend' : 'Not answered'); row.append(cell);
+      const answer = response.answers[date];
+      const cell = node('td', answer === 'yes' ? '✓ Yes' : answer === 'no' ? '✕ No' : '—', answer === 'yes' ? 'yes-text' : answer === 'no' ? 'no-text' : 'muted');
+      cell.setAttribute('aria-label', answer === 'yes' ? 'Can attend' : answer === 'no' ? 'Cannot attend' : 'Not answered');
+      row.append(cell);
     }
     for (const value of [response.adults ?? '—', response.kids ?? '—', [response.foodType, response.foodNote].filter(Boolean).join(' — ') || 'Not decided']) row.append(node('td', value));
     body.append(row);
   }
-  table.append(body); $('response-table').replaceChildren(total ? table : node('p', 'No responses yet. Yours can be the first.', 'muted'));
+  table.append(body);
+  $('response-table').replaceChildren(total ? table : node('p', 'No responses yet. Yours can be the first.', 'muted'));
 }
+
 async function refresh() {
   if (!eventId || document.hidden) return;
   const request = ++sequence;
   try {
-    const data = await api(); if (request !== sequence) return;
-    $('setup').hidden = !editing; $('poll').hidden = false;
-    applyEvent(data.event, data); renderLinks();
+    const data = await api();
+    if (request !== sequence) return;
+    $('setup').hidden = !editing;
+    $('poll').hidden = false;
+    applyEvent(data.event, data);
+    renderLinks();
     $('live-state').textContent = `Live · Updated ${new Date().toLocaleTimeString()} · Refreshes every 5 seconds`;
-  } catch (err) { if (request !== sequence) return; $('live-state').textContent = 'Connection interrupted. Retrying…'; message(err.message, true); }
+  } catch (err) {
+    if (request !== sequence) return;
+    $('live-state').textContent = 'Connection interrupted. Retrying…';
+    message(err.message, true);
+  }
 }
 if (eventId) {
   $('setup').hidden = true;
   try { credentials = JSON.parse(localStorage.getItem(storageKey()) || '{}') || {}; } catch { credentials = {}; }
   const fragment = new URLSearchParams(location.hash.slice(1));
-  if (fragment.get('admin')) credentials.adminToken = fragment.get('admin');
+  if (fragment.get('admin')) { credentials.adminToken = fragment.get('admin'); inviteMode = false; }
+  else if (inviteMode) delete credentials.adminToken;
   if (fragment.get('response') && fragment.get('key')) { credentials.responseId = fragment.get('response'); credentials.responseToken = fragment.get('key'); }
-  // Tokens stay out of server URLs, access logs, referrers and the address bar.
   if (location.hash) { remember(); history.replaceState(null, '', link()); }
   refresh();
 }
-setInterval(() => { if (!editing && !savingVote) refresh(); }, 5000);
+setInterval(() => { if (!editing && !savingVote && !addingDate) refresh(); }, 5000);
 window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });

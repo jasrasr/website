@@ -1,5 +1,30 @@
-<!-- File revision 1.1.1 | Modified 2026-09-17 | Initial project changelog. -->
+<!-- File revision 1.3.0 | Modified 2026-09-17 | Optional attendee-added date/time options. -->
 # Changelog
+
+## 1.3.0 — 2026-09-17
+
+- Add an organizer-controlled **Allow attendees to add additional date/time options** setting at event creation and on later edits.
+- When enabled, anyone who can access the poll can add another date or date/time option; protected events still require the event password.
+- New attendee-added options become available to everyone immediately, start unanswered for all existing responses, and increment the event revision so stale forms cannot silently overwrite changes.
+- Reject duplicate options, stale revisions, additions to closed/expired polls, and additions beyond the 60-option limit.
+- Existing events default to attendee-added dates disabled until an admin explicitly enables the setting.
+- Add regression coverage for disabled/enabled polls, password protection, duplicate/stale additions, timed options, and disabling the feature again.
+
+## 1.2.0 — 2026-09-17
+
+- Add an optional admin password at event creation. When configured, the private admin link and the password are both required before event settings or private attendee contact details can be accessed.
+- Add a separate optional event/invite password. When configured, attendees must enter it before viewing event details/results or submitting and editing responses.
+- Store passwords only as PHP password hashes in event storage; plaintext passwords are never returned by the API.
+- Remember entered passwords only in browser session storage, not persistent local storage. A new browser/session asks again.
+- Keep admin and attendee passwords independent, so an organizer can protect either area or both.
+- Preserve the explicit invite mode from 1.1.2 so a browser that remembers an admin link still behaves as an attendee when the invite link is opened.
+
+## 1.1.2 — 2026-09-17
+
+- Generate invite links with an explicit attendee/public mode so they do not inherit locally remembered admin access.
+- Keep the private admin token stored for recovery while ignoring it for the active invite session.
+- Keep response-link recovery working in invite mode and hide event editing/private admin contacts unless the admin link is explicitly opened.
+- Bump the client script cache version so deployed browsers receive the corrected behavior.
 
 ## 1.1.1 — 2026-09-17
 
