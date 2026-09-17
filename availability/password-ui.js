@@ -21,8 +21,14 @@
     try { sessionStorage.setItem(secretKey(id), JSON.stringify(secrets)); } catch {}
   }
   function fieldValue(id) { return document.getElementById(id)?.value || ''; }
-  function creationPasswords() {
+  function formPasswords() {
     return {adminPassword: fieldValue(passwordIds.admin), eventPassword: fieldValue(passwordIds.event)};
+  }
+  function clearPasswordFields() {
+    for (const id of [...Object.values(passwordIds), ...Object.values(confirmIds)]) {
+      const field = document.getElementById(id);
+      if (field) { field.value = ''; field.setCustomValidity(''); }
+    }
   }
   function installConfirmation(kind) {
     const first = document.getElementById(passwordIds[kind]);
@@ -54,14 +60,20 @@
     let secrets = loadSecrets(id);
     let requestInput = input;
     let requestInit = init;
+    let submittedPasswords = null;
 
     if (body?.action === 'create') {
-      const creation = creationPasswords();
-      body = {...body, ...creation};
+      submittedPasswords = formPasswords();
+      body = {...body, ...submittedPasswords};
       requestInit = buildJsonInit(init, body);
     } else if (body) {
       if (body.adminToken && secrets.adminPassword) body.adminPassword = secrets.adminPassword;
       else if (!body.adminToken && secrets.eventPassword) body.eventPassword = secrets.eventPassword;
+      if (body.action === 'update') {
+        submittedPasswords = formPasswords();
+        if (submittedPasswords.adminPassword) body.newAdminPassword = submittedPasswords.adminPassword;
+        if (submittedPasswords.eventPassword) body.newEventPassword = submittedPasswords.eventPassword;
+      }
       requestInit = buildJsonInit(init, body);
     } else if ((init?.method || 'GET').toUpperCase() === 'GET' && secrets.eventPassword && id) {
       body = {action: 'view', id, eventPassword: secrets.eventPassword};
@@ -71,15 +83,15 @@
 
     let response = await nativeFetch(requestInput, requestInit);
 
-    if (body?.action === 'create' && response.ok) {
+    if ((body?.action === 'create' || body?.action === 'update') && response.ok) {
       try {
         const data = await response.clone().json();
         id = data.event?.id || id;
-        const creation = creationPasswords();
-        const next = {};
-        if (creation.adminPassword) next.adminPassword = creation.adminPassword;
-        if (creation.eventPassword) next.eventPassword = creation.eventPassword;
+        const next = loadSecrets(id);
+        if (submittedPasswords?.adminPassword) next.adminPassword = submittedPasswords.adminPassword;
+        if (submittedPasswords?.eventPassword) next.eventPassword = submittedPasswords.eventPassword;
         saveSecrets(id, next);
+        clearPasswordFields();
       } catch {}
       return response;
     }
@@ -91,8 +103,7 @@
     if (kind !== 'admin' && kind !== 'event') return response;
 
     const entered = window.prompt(kind === 'admin' ? 'Enter the admin password for this event:' : 'Enter the password to view this event:');
-    if (entered === null) return response;
-    if (entered.length < 4) return response;
+    if (entered === null || entered.length < 4) return response;
 
     secrets = loadSecrets(id);
     secrets[`${kind}Password`] = entered;
