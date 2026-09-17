@@ -1,0 +1,48 @@
+// Revision 1.0.0 | 2026-09-17 | API integration regressions; disposable local server only.
+import assert from 'node:assert/strict';
+const base = process.argv[2] || 'http://127.0.0.1:8090';
+if (!['127.0.0.1', 'localhost', '[::1]'].includes(new URL(base).hostname)) throw Error('Use a local disposable server.');
+let checks = 0;
+async function post(body, status = 200) {
+  const response = await fetch(`${base}/api.php`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const data = await response.json(); assert.equal(response.status,status,JSON.stringify(data)); checks++; return data;
+}
+const definition = {action:'create',title:'Team dinner',adminName:'Jason',description:'Pick a day',dates:['2026-11-01','2026-11-02','2026-11-03']};
+await post({...definition,adminName:' '},422);
+await post({...definition,dates:['2026-02-30']},422);
+await post({...definition,dates:[]},422);
+const created = await post(definition), id = created.event.id;
+assert.equal(created.event.adminHash,undefined);
+const vote = {action:'vote',id,revision:1,name:'Hannah',answers:{'2026-11-01':'yes','2026-11-02':'no'}};
+await post({...vote,name:''},422);
+await post({...vote,answers:{'2026-11-04':'yes'}},422);
+await post({...vote,answers:{'2026-11-01':'maybe'}},422);
+const first = await post(vote);
+assert.equal(first.event.responses[0].answers['2026-11-03'],undefined);
+await post({...vote,name:'HANNAH'},409);
+await post({...vote,responseId:first.responseId,responseToken:'wrong'},403);
+const revised = await post({...vote,responseId:first.responseId,responseToken:first.responseToken,answers:{'2026-11-01':'no','2026-11-02':'yes'}});
+assert.equal(revised.event.responses.length,1);
+assert.equal(revised.event.responses[0].answers['2026-11-01'],'no');
+await Promise.all(Array.from({length:12},(_,i)=>post({...vote,name:`Guest ${i}`})));
+let publicData = await (await fetch(`${base}/api.php?id=${id}`)).json();
+assert.equal(publicData.event.responses.length,13);
+assert.ok(!JSON.stringify(publicData).includes('Hash'));
+assert.ok(!JSON.stringify(publicData).includes(created.adminToken));
+const update = {...definition,action:'update',id,revision:1,adminToken:created.adminToken,closed:false,dates:['2026-11-02','2026-11-04']};
+await post({...update,adminToken:'wrong'},403);
+const edited = await post(update);
+assert.equal(edited.event.revision,2);
+assert.equal(edited.event.responses[0].answers['2026-11-01'],undefined);
+assert.equal(edited.event.responses[0].answers['2026-11-04'],undefined);
+await post({...vote,name:'Stale response'},409);
+await post(update,409);
+await post({...update,revision:2,closed:true});
+await post({...vote,revision:3,name:'Closed response',answers:{}},409);
+await post({...update,revision:3,closed:false});
+await post({...vote,revision:4,name:'No answers yet',answers:{}});
+const other = await post({...definition,title:'Separate event'});
+await post({...update,id:other.event.id,revision:1},403);
+const direct = await fetch(`${base}/data/${id}.php`);
+assert.equal(direct.status,404); assert.ok(!(await direct.text()).includes('adminHash'));
+console.log(`${checks} API checks passed; authorization, concurrency, revisions, isolation and storage protection verified.`);
