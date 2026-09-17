@@ -285,6 +285,22 @@
       Array.from(pressedDigits).forEach(releasePressedDigit);
     }
 
+    function releaseFromGlobalEvent(event) {
+      const keyButton = event.target?.closest?.(".key");
+      const keyDigit = keyButton?.dataset?.digit;
+
+      if (keyDigit) {
+        releasePressedDigit(keyDigit);
+        return;
+      }
+
+      if (event.type.startsWith("touch") && event.touches && event.touches.length > 0) {
+        return;
+      }
+
+      releaseAllPressedDigits();
+    }
+
     function normalizeKeyboardKey(event) {
       if (event.key >= "0" && event.key <= "9") {
         return event.key;
@@ -343,13 +359,10 @@
       }
     });
 
-    if (supportsPointerEvents) {
-      document.addEventListener("pointerup", releaseAllPressedDigits);
-      document.addEventListener("pointercancel", releaseAllPressedDigits);
-    } else {
-      document.addEventListener("touchend", releaseAllPressedDigits);
-      document.addEventListener("touchcancel", releaseAllPressedDigits);
-      document.addEventListener("mouseup", releaseAllPressedDigits);
+    if (!supportsPointerEvents) {
+      document.addEventListener("touchend", releaseFromGlobalEvent);
+      document.addEventListener("touchcancel", releaseFromGlobalEvent);
+      document.addEventListener("mouseup", releaseFromGlobalEvent);
     }
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
