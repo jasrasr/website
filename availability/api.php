@@ -1,15 +1,15 @@
 <?php
-/** Revision 1.1.1 | 2026-09-17 | Private contacts, party details, proposed times and voting deadlines.
- * History: 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Initial event polling API and protected JSON storage. */
+/** Revision 1.2.0 | 2026-09-17 | Optional admin and invite passwords.
+ * History: 1.2.0 — Optional hashed passwords for admin access and event/invite access; 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Initial event polling API and protected JSON storage. */
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 
-function fail(int $status, string $message): never {
+function fail(int $status, string $message, array $extra = []): never {
     http_response_code($status);
-    echo json_encode(['error' => $message]);
+    echo json_encode(['error' => $message] + $extra);
     exit;
 }
 function field(array $input, string $key, int $max, bool $required = true): string {
@@ -18,6 +18,46 @@ function field(array $input, string $key, int $max, bool $required = true): stri
         fail(422, 'Please provide a valid ' . $key . '.');
     }
     return trim($value);
+}
+function passwordField(array $input, string $key): string {
+    $value = $input[$key] ?? '';
+    if (!is_string($value) || strlen($value) > 200) fail(422, 'Please provide a valid password.');
+    if ($value !== '' && strlen($value) < 4) fail(422, 'Passwords must be at least 4 characters.');
+    return $value;
+}
+function passwordRequired(string $kind, bool $invalid = false): never {
+    $label = $kind === 'admin' ? 'admin' : 'event';
+    fail(401, $invalid ? 'Incorrect ' . $label . ' password.' : ucfirst($label) . ' password required.', ['passwordRequired' => $kind]);
+}
+function passwordMatches(array $event, array $input, string $kind): bool {
+    $hashKey = $kind === 'admin' ? 'adminPasswordHash' : 'eventPasswordHash';
+    $inputKey = $kind === 'admin' ? 'adminPassword' : 'eventPassword';
+    $hash = $event[$hashKey] ?? '';
+    if ($hash === '') return true;
+    $value = $input[$inputKey] ?? '';
+    return is_string($value) && $value !== '' && password_verify($value, $hash);
+}
+function requirePassword(array $event, array $input, string $kind): void {
+    $hashKey = $kind === 'admin' ? 'adminPasswordHash' : 'eventPasswordHash';
+    if (($event[$hashKey] ?? '') === '') return;
+    $inputKey = $kind === 'admin' ? 'adminPassword' : 'eventPassword';
+    $supplied = isset($input[$inputKey]) && is_string($input[$inputKey]) && $input[$inputKey] !== '';
+    if (!passwordMatches($event, $input, $kind)) passwordRequired($kind, $supplied);
+}
+function applyPasswordSettings(array $input, array $event, bool $creating = false): array {
+    foreach (['admin', 'event'] as $kind) {
+        $hashKey = $kind . 'PasswordHash';
+        $passwordKey = $creating ? $kind . 'Password' : 'new' . ucfirst($kind) . 'Password';
+        $removeKey = 'remove' . ucfirst($kind) . 'Password';
+        $password = passwordField($input, $passwordKey);
+        $remove = $input[$removeKey] ?? false;
+        if (!is_bool($remove)) fail(422, 'Invalid password setting.');
+        if ($password !== '' && $remove) fail(422, 'Choose either a new password or remove the existing password.');
+        if ($password !== '') $event[$hashKey] = password_hash($password, PASSWORD_DEFAULT);
+        elseif ($remove) unset($event[$hashKey]);
+        elseif ($creating) unset($event[$hashKey]);
+    }
+    return $event;
 }
 function dates(array $input): array {
     $values = $input['dates'] ?? null;
@@ -38,8 +78,6 @@ function requireUnicode(): void {
 }
 function nameKey(string $name): string {
     requireUnicode();
-    // Canonical caseless matching: normalize before AND after full Unicode folding.
-    // Keep the user's original spelling for display; accents are not stripped.
     $normalized = Normalizer::normalize($name, Normalizer::FORM_D);
     if ($normalized === false) fail(422, 'Please provide a valid UTF-8 name.');
     $folded = Normalizer::normalize(mb_convert_case($normalized, MB_CASE_FOLD, 'UTF-8'), Normalizer::FORM_D);
@@ -82,7 +120,6 @@ function validateTimes(array $event): void {
     }
 }
 function safeResponse(array $response, bool $private = false): array {
-    // Explicit allowlists prevent new private storage fields leaking through future changes.
     $keys = ['id', 'name', 'answers', 'adults', 'kids', 'foodType', 'foodNote', 'updatedAt'];
     if ($private) $keys = array_merge($keys, ['phone', 'email']);
     return array_intersect_key($response, array_flip($keys));
@@ -91,6 +128,8 @@ function publicEvent(array $event): array {
     $public = array_intersect_key($event, array_flip(['id', 'title', 'description', 'adminName', 'dates', 'closed', 'revision', 'createdAt', 'updatedAt', 'location', 'timezone', 'expiresLocal', 'expiresAt']));
     $public['responses'] = array_values(array_map(fn(array $r): array => safeResponse($r), $event['responses']));
     $public['expired'] = expired($event);
+    $public['adminPasswordRequired'] = !empty($event['adminPasswordHash']);
+    $public['eventPasswordRequired'] = !empty($event['eventPasswordHash']);
     return $public;
 }
 
@@ -98,7 +137,6 @@ $method = $_SERVER['REQUEST_METHOD'];
 if (!in_array($method, ['GET', 'POST'], true)) fail(405, 'Method not supported.');
 $input = [];
 if ($method === 'POST') {
-    // JSON-only writes and no CORS prevent cross-origin browser form submissions.
     if (strtolower(trim(explode(';', $_SERVER['CONTENT_TYPE'] ?? '')[0])) !== 'application/json') fail(415, 'Send JSON.');
     $raw = file_get_contents('php://input', false, null, 0, 65537);
     if ($raw === false || strlen($raw) > 65536) fail(413, 'Request too large.');
@@ -112,47 +150,62 @@ if ($method === 'POST' && !in_array($action, ['view', 'create', 'update', 'vote'
 if (in_array($action, ['create', 'vote'], true)) requireUnicode();
 $id = $action === 'create' ? bin2hex(random_bytes(16)) : ($input['id'] ?? $_GET['id'] ?? '');
 if (!is_string($id) || !preg_match('/^[a-f0-9]{32}$/D', $id)) fail(404, 'Event not found.');
+
 $directory = getenv('AVAILABILITY_DATA_DIR') ?: __DIR__ . '/data';
 $lock = null;
 $temporary = null;
+
 try {
     if (!is_dir($directory) && !mkdir($directory, 0700, true) && !is_dir($directory)) throw new RuntimeException('Create storage failed.');
-    // A stable lock file survives atomic event-file replacement.
     $lock = fopen($directory . '/events.lock.php', 'c');
     if ($lock === false || !flock($lock, in_array($action, ['get', 'view'], true) ? LOCK_SH : LOCK_EX)) throw new RuntimeException('Lock failed.');
     $path = $directory . '/' . $id . '.php';
     $prefix = "<?php http_response_code(404); exit; ?>\n";
     $extra = [];
+    $adminAccess = false;
+
     if ($action === 'create') {
         $adminToken = bin2hex(random_bytes(32));
         $event = ['id' => $id, 'title' => field($input, 'title', 150), 'description' => field($input, 'description', 2000, false),
             'adminName' => field($input, 'adminName', 100), 'dates' => dates($input), 'closed' => false,
             'revision' => 1, 'adminHash' => hash('sha256', $adminToken), 'responses' => [], 'createdAt' => gmdate('c')];
-        $extra['adminToken'] = $adminToken;
         $event = array_merge($event, settings($input));
+        $event = applyPasswordSettings($input, $event, true);
+        $extra['adminToken'] = $adminToken;
+        $adminAccess = true;
     } else {
         if (!is_file($path)) fail(404, 'Event not found.');
         $stored = file_get_contents($path);
         if ($stored === false || !str_starts_with($stored, $prefix)) throw new RuntimeException('Invalid storage.');
         $event = json_decode(substr($stored, strlen($prefix)), true, 64, JSON_THROW_ON_ERROR);
         if (!is_array($event) || !isset($event['responses'], $event['dates'], $event['adminHash'])) throw new RuntimeException('Invalid event.');
+
+        $adminCredential = field($input, 'adminToken', 64, false);
+        if ($adminCredential !== '') {
+            if (!authorized($adminCredential, $event['adminHash'])) fail(403, 'Invalid admin link for this event.');
+            requirePassword($event, $input, 'admin');
+            $adminAccess = true;
+        }
+
+        if (!$adminAccess && in_array($action, ['get', 'view', 'vote'], true)) requirePassword($event, $input, 'event');
     }
+
     if ($action === 'update') {
-        if (!authorized(field($input, 'adminToken', 64), $event['adminHash'])) fail(403, 'The private admin link is required.');
+        if (!$adminAccess) fail(403, 'The private admin link is required.');
         if (($input['revision'] ?? null) !== $event['revision']) fail(409, 'Event settings changed. Reload before editing.');
         $event = array_merge($event, settings($input, $event));
+        $event = applyPasswordSettings($input, $event);
         $event['title'] = field($input, 'title', 150);
         $event['description'] = field($input, 'description', 2000, false);
         $event['adminName'] = field($input, 'adminName', 100);
         $event['dates'] = dates($input);
         if (!is_bool($input['closed'] ?? null)) fail(422, 'Invalid poll status.');
         $event['closed'] = $input['closed'];
-        foreach ($event['responses'] as &$response) {
-            $response['answers'] = array_intersect_key($response['answers'], array_flip($event['dates']));
-        }
+        foreach ($event['responses'] as &$response) $response['answers'] = array_intersect_key($response['answers'], array_flip($event['dates']));
         unset($response);
         $event['revision']++;
     }
+
     if ($action === 'vote') {
         if ($event['closed'] || expired($event)) fail(409, expired($event) ? 'Voting has expired. Results remain visible.' : 'This poll is closed.');
         if (($input['revision'] ?? null) !== $event['revision']) fail(409, 'The organizer changed the dates. Reload to review them before saving.');
@@ -168,7 +221,6 @@ try {
         if ($responseId !== '' && (!isset($event['responses'][$responseId]) || !authorized($token, $event['responses'][$responseId]['tokenHash']))) {
             fail(403, 'Use your original browser or private response link to edit.');
         }
-        // Missing fields from an older client preserve stored details; explicit blanks clear them.
         $detailInput = $input + ($event['responses'][$responseId] ?? []);
         $email = field($detailInput, 'email', 254, false);
         if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) fail(422, 'Enter a valid email address.');
@@ -188,26 +240,25 @@ try {
             'tokenHash' => hash('sha256', $token), 'updatedAt' => gmdate('c')] + $details;
         $extra = ['responseId' => $responseId, 'responseToken' => $token];
     }
-    $adminCredential = $extra['adminToken'] ?? field($input, 'adminToken', 64, false);
-    if ($adminCredential !== '') {
-        if (!authorized($adminCredential, $event['adminHash'])) fail(403, 'Invalid admin link for this event.');
-        $extra['adminResponses'] = array_values(array_map(fn(array $r): array => safeResponse($r, true), $event['responses']));
-    }
+
+    if ($adminAccess) $extra['adminResponses'] = array_values(array_map(fn(array $r): array => safeResponse($r, true), $event['responses']));
+
     $ownId = $extra['responseId'] ?? field($input, 'responseId', 32, false);
     $ownToken = $extra['responseToken'] ?? field($input, 'responseToken', 64, false);
     if ($ownId !== '' || $ownToken !== '') {
         if (!isset($event['responses'][$ownId]) || !authorized($ownToken, $event['responses'][$ownId]['tokenHash'])) fail(403, 'Invalid private response link.');
         $extra['myResponse'] = safeResponse($event['responses'][$ownId], true);
     }
+
     if (in_array($action, ['create', 'update', 'vote'], true)) {
         validateTimes($event);
         $event['updatedAt'] = gmdate('c');
-        // The temporary file also has a PHP extension and a guard; interrupted writes cannot leak JSON.
         $temporary = $directory . '/tmp-' . bin2hex(random_bytes(16)) . '.php';
         $contents = $prefix . json_encode($event, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
         if (file_put_contents($temporary, $contents) !== strlen($contents) || !rename($temporary, $path)) throw new RuntimeException('Save failed.');
         $temporary = null;
     }
+
     echo json_encode(['event' => publicEvent($event)] + $extra, JSON_THROW_ON_ERROR);
 } catch (Throwable $e) {
     error_log('Availability: ' . $e->getMessage());
