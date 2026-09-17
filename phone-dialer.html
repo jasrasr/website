@@ -328,6 +328,8 @@
     document.addEventListener("touchend", releaseAllPressedDigits);
     document.addEventListener("touchcancel", releaseAllPressedDigits);
     document.addEventListener("mouseup", releaseAllPressedDigits);
+    document.addEventListener("pointerup", releaseAllPressedDigits);
+    document.addEventListener("pointercancel", releaseAllPressedDigits);
     window.addEventListener("blur", releaseAllPressedDigits);
 
     document.addEventListener("keydown", event => {
