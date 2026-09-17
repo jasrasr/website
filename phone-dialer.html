@@ -449,11 +449,7 @@
     if (supportsPointerEvents) {
       document.addEventListener("pointerup", releaseDigitForPointerEvent);
       document.addEventListener("pointercancel", releaseDigitForPointerEvent);
-      window.addEventListener("pointerout", event => {
-        if (!event.relatedTarget) {
-          releaseAllPressedDigits();
-        }
-      });
+      window.addEventListener("pointerleave", releaseAllPressedDigits);
     } else {
       document.addEventListener("touchend", releaseFromGlobalEvent);
       document.addEventListener("touchcancel", releaseFromGlobalEvent);
@@ -475,6 +471,9 @@
       const digit = normalizeKeyboardKey(event);
 
       if (digit && !activeKeys.has(digit)) {
+        if (activeKeys.size > 0) {
+          releaseAllKeyboardDigits();
+        }
         activeKeys.add(digit);
         pressDigit(digit);
         return;
