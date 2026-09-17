@@ -429,7 +429,6 @@
       if (supportsPointerEvents) {
         button.addEventListener("pointerdown", onPress);
         button.addEventListener("pointerup", onRelease);
-        button.addEventListener("pointerleave", onRelease);
         button.addEventListener("pointercancel", onRelease);
         button.addEventListener("lostpointercapture", onRelease);
       } else {
@@ -445,6 +444,8 @@
     if (supportsPointerEvents) {
       document.addEventListener("pointerup", releaseDigitForPointerEvent);
       document.addEventListener("pointercancel", releaseDigitForPointerEvent);
+      window.addEventListener("pointerup", releaseDigitForPointerEvent);
+      window.addEventListener("pointercancel", releaseDigitForPointerEvent);
     } else {
       document.addEventListener("touchend", releaseFromGlobalEvent);
       document.addEventListener("touchcancel", releaseFromGlobalEvent);
