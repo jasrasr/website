@@ -312,6 +312,13 @@
         if (event.type.startsWith("touch")) {
           ignoreSyntheticMouseUntil = Date.now() + 750;
         }
+        if (event.type === "pointerdown" && typeof event.currentTarget?.setPointerCapture === "function") {
+          try {
+            event.currentTarget.setPointerCapture(event.pointerId);
+          } catch {
+            // Ignore unsupported capture errors.
+          }
+        }
         if (pressedDigits.has(digit)) return;
         pressedDigits.add(digit);
         pressDigit(digit);
@@ -324,7 +331,6 @@
       if (supportsPointerEvents) {
         button.addEventListener("pointerdown", onPress);
         button.addEventListener("pointerup", onRelease);
-        button.addEventListener("pointerleave", onRelease);
         button.addEventListener("pointercancel", onRelease);
       } else {
         button.addEventListener("touchstart", onPress, { passive: false });
