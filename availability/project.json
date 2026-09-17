@@ -1,8 +1,13 @@
 {
   "name": "Availability",
-  "revision": "1.1.1",
+  "revision": "1.1.2",
   "modified": "2026-09-17",
   "history": [
+    {
+      "revision": "1.1.2",
+      "date": "2026-09-17",
+      "changes": "Separate attendee invite/public mode from locally remembered admin access."
+    },
     {
       "revision": "1.1.1",
       "date": "2026-09-17",
@@ -21,9 +26,13 @@
   ],
   "files": {
     "index.php": {
-      "revision": "1.1.1",
+      "revision": "1.1.2",
       "modified": "2026-09-17",
       "history": [
+        {
+          "revision": "1.1.2",
+          "changes": "Load the invite-mode client fix and update the visible project revision."
+        },
         {
           "revision": "1.1.1",
           "changes": "Simplify attendee names and fix Unicode duplicate matching."
@@ -57,9 +66,13 @@
       ]
     },
     "app.js": {
-      "revision": "1.1.1",
+      "revision": "1.1.2",
       "modified": "2026-09-17",
       "history": [
+        {
+          "revision": "1.1.2",
+          "changes": "Generate explicit invite-mode links, suppress remembered admin access in invite sessions, and preserve stored admin recovery credentials."
+        },
         {
           "revision": "1.1.1",
           "changes": "Simplify attendee names and fix Unicode duplicate matching."
@@ -107,9 +120,13 @@
       ]
     },
     "CHANGELOG.md": {
-      "revision": "1.1.1",
+      "revision": "1.1.2",
       "modified": "2026-09-17",
       "history": [
+        {
+          "revision": "1.1.2",
+          "changes": "Document the invite/admin session-separation fix."
+        },
         {
           "revision": "1.1.1",
           "changes": "Simplify attendee names and fix Unicode duplicate matching."
@@ -125,9 +142,13 @@
       ]
     },
     "project.json": {
-      "revision": "1.1.1",
+      "revision": "1.1.2",
       "modified": "2026-09-17",
       "history": [
+        {
+          "revision": "1.1.2",
+          "changes": "Track the invite/public access-mode fix."
+        },
         {
           "revision": "1.1.1",
           "changes": "Simplify attendee names and fix Unicode duplicate matching."
