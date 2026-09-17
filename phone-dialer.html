@@ -299,6 +299,11 @@
       Array.from(pressedDigits).forEach(releasePressedDigit);
     }
 
+    function releaseAllKeyboardDigits() {
+      Array.from(activeKeys).forEach(releaseDigit);
+      activeKeys.clear();
+    }
+
     function releaseFromGlobalEvent(event) {
       const keyButton = event.target?.closest?.(".key");
       const keyDigit = keyButton?.dataset?.digit;
@@ -394,11 +399,12 @@
           registerTouchPress(digit, event);
         }
         if (event.type === "pointerdown" && typeof event.currentTarget?.setPointerCapture === "function") {
-          pointerDigitById.set(event.pointerId, digit);
           try {
+            pointerDigitById.set(event.pointerId, digit);
             event.currentTarget.setPointerCapture(event.pointerId);
           } catch {
             // Ignore unsupported capture errors.
+            pointerDigitById.delete(event.pointerId);
           }
         }
         if (pressedDigits.has(digit)) return;
@@ -449,9 +455,13 @@
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         releaseAllPressedDigits();
+        releaseAllKeyboardDigits();
       }
     });
-    window.addEventListener("blur", releaseAllPressedDigits);
+    window.addEventListener("blur", () => {
+      releaseAllPressedDigits();
+      releaseAllKeyboardDigits();
+    });
 
     document.addEventListener("keydown", event => {
       const digit = normalizeKeyboardKey(event);
