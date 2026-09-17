@@ -350,6 +350,11 @@
       document.addEventListener("touchcancel", releaseAllPressedDigits);
       document.addEventListener("mouseup", releaseAllPressedDigits);
     }
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        releaseAllPressedDigits();
+      }
+    });
     window.addEventListener("blur", releaseAllPressedDigits);
 
     document.addEventListener("keydown", event => {
