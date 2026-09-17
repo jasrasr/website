@@ -410,9 +410,6 @@
       };
 
       const onRelease = event => {
-        if (event.type === "lostpointercapture") {
-          if (event.buttons) return;
-        }
         if (event.type.startsWith("pointer")) {
           const mappedDigit = pointerDigitById.get(event.pointerId);
           if (mappedDigit !== digit) {
@@ -430,7 +427,6 @@
         button.addEventListener("pointerdown", onPress);
         button.addEventListener("pointerup", onRelease);
         button.addEventListener("pointercancel", onRelease);
-        button.addEventListener("lostpointercapture", onRelease);
       } else {
         button.addEventListener("touchstart", onPress, { passive: false });
         button.addEventListener("touchend", onRelease);
