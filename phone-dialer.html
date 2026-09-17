@@ -348,13 +348,6 @@
         return;
       }
 
-      function releaseDigitForPointerEvent(event) {
-        const digit = pointerDigitById.get(event.pointerId);
-        if (!digit) return;
-        pointerDigitById.delete(event.pointerId);
-        releasePressedDigit(digit);
-      }
-
       Array.from(touchIdsByDigit.entries()).forEach(([digit, touchIds]) => {
         endedTouchIds.forEach(touchId => touchIds.delete(touchId));
         if (touchIds.size === 0) {
@@ -363,6 +356,13 @@
           touchIdsByDigit.set(digit, touchIds);
         }
       });
+    }
+
+    function releaseDigitForPointerEvent(event) {
+      const digit = pointerDigitById.get(event.pointerId);
+      if (!digit) return;
+      pointerDigitById.delete(event.pointerId);
+      releasePressedDigit(digit);
     }
 
     function normalizeKeyboardKey(event) {
