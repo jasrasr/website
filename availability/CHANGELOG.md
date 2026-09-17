@@ -1,5 +1,14 @@
-<!-- File revision 1.1.2 | Modified 2026-09-17 | Invite/public mode separated from remembered admin sessions. -->
+<!-- File revision 1.2.0 | Modified 2026-09-17 | Optional admin and event password protection. -->
 # Changelog
+
+## 1.2.0 — 2026-09-17
+
+- Add an optional admin password at event creation. When configured, the private admin link and the password are both required before event settings or private attendee contact details can be accessed.
+- Add a separate optional event/invite password. When configured, attendees must enter it before viewing event details/results or submitting and editing responses.
+- Store passwords only as PHP password hashes in event storage; plaintext passwords are never returned by the API.
+- Remember entered passwords only in browser session storage, not persistent local storage. A new browser/session asks again.
+- Keep admin and attendee passwords independent, so an organizer can protect either area or both.
+- Preserve the explicit invite mode from 1.1.2 so a browser that remembers an admin link still behaves as an attendee when the invite link is opened.
 
 ## 1.1.2 — 2026-09-17
 
