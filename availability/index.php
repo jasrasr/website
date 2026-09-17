@@ -1,6 +1,6 @@
 <?php
-/** Revision 1.1.1 | 2026-09-17 | Private contact fields, party details, proposed times and deadlines.
- * History: 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Initial responsive availability poll interface. */
+/** Revision 1.1.2 | 2026-09-17 | Separate attendee invite mode from remembered admin sessions.
+ * History: 1.1.2 — Invite links now force attendee mode even in a browser that remembers admin access; 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Initial responsive availability poll interface. */
 declare(strict_types=1);
 header('Referrer-Policy: no-referrer');
 header('X-Content-Type-Options: nosniff');
@@ -11,7 +11,7 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-sr
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Availability · Find a day that works</title>
-  <link rel="stylesheet" href="styles.css?v=1.1.1"><script src="app.js?v=1.1.1" defer></script>
+  <link rel="stylesheet" href="styles.css?v=1.1.1"><script src="app.js?v=1.1.2" defer></script>
 </head>
 <body>
 <header><a class="brand" href="./"><span class="brand-icon">✓</span> availability</a><a href="./" class="new-link">+ New event</a></header>
@@ -54,5 +54,5 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-sr
     <section id="admin-contacts" class="panel" hidden><h2>Private attendee details</h2><p class="muted">Visible only to this event’s admin. These details are not included in public results.</p><div id="admin-contact-table" class="table-scroll" tabindex="0" aria-label="Private attendee details"></div></section>
   </div>
 </main>
-<footer>availability <span>v1.1.1 · Updated September 17, 2026</span></footer>
+<footer>availability <span>v1.1.2 · Updated September 17, 2026</span></footer>
 </body></html>
