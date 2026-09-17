@@ -1,5 +1,5 @@
-/* Revision 1.1.0 | 2026-09-17 | Private contacts, household/food details, proposed times and expiry.
- * History: 1.0.0 — Event creation, voting, live rankings and response matrix. */
+/* Revision 1.1.1 | 2026-09-17 | Private contacts, household/food details, proposed times and expiry.
+ * History: 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Event creation, voting, live rankings and response matrix. */
 'use strict';
 const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -19,7 +19,7 @@ function dateLabel(date) {
   const label = new Intl.DateTimeFormat(undefined, {weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'}).format(new Date(`${day}T12:00:00Z`));
   return `${label} · ${time || 'Time undecided'}`;
 }
-const privateFields = {privateName: 'private-name', phone: 'phone', email: 'email'};
+const privateFields = {phone: 'phone', email: 'email'};
 const partyFields = {adults: 'adults', kids: 'kids', foodType: 'food-type', foodNote: 'food-note'};
 const zones = typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'Europe/London'];
 for (const zone of [...new Set(['America/New_York', 'UTC', ...zones])]) { const option = node('option', zone); option.value = zone; $('timezone').append(option); }
@@ -167,12 +167,12 @@ function renderAdmin(responses) {
   $('admin-contacts').hidden = !responses;
   if (!responses) { $('admin-contact-table').replaceChildren(); return; }
   const table = node('table'), head = node('thead'), heading = node('tr');
-  for (const title of ['Public name', 'Private name', 'Phone', 'Email', 'Adults', 'Kids', 'Food']) { const cell = node('th', title); cell.scope = 'col'; heading.append(cell); }
+  for (const title of ['Name', 'Phone', 'Email', 'Adults', 'Kids', 'Food']) { const cell = node('th', title); cell.scope = 'col'; heading.append(cell); }
   head.append(heading); table.append(head);
   const body = node('tbody');
   for (const response of responses) {
     const row = node('tr');
-    for (const value of [response.name, response.privateName, response.phone, response.email, response.adults, response.kids, [response.foodType, response.foodNote].filter(Boolean).join(' — ')]) row.append(node('td', value ?? '—'));
+    for (const value of [response.name, response.phone, response.email, response.adults, response.kids, [response.foodType, response.foodNote].filter(Boolean).join(' — ')]) row.append(node('td', value ?? '—'));
     body.append(row);
   }
   table.append(body); $('admin-contact-table').replaceChildren(responses.length ? table : node('p', 'No attendee details yet.', 'muted'));

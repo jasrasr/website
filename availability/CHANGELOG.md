@@ -1,5 +1,12 @@
-<!-- File revision 1.1.0 | Modified 2026-09-17 | Initial project changelog. -->
+<!-- File revision 1.1.1 | Modified 2026-09-17 | Initial project changelog. -->
 # Changelog
+
+## 1.1.1 — 2026-09-17
+
+- Use a single required public attendee name; remove the redundant private-name field without exposing legacy private values. Phone/email stay private.
+- Fix Copilot’s valid Unicode uniqueness finding using canonical normalization and full Unicode case folding, preserving display spelling and accents.
+- Require PHP intl/mbstring with an explicit setup error if missing.
+- Add accented, decomposed, German, Greek, Cyrillic, and authorized-edit regression coverage.
 
 ## 1.1.0 — 2026-09-17
 

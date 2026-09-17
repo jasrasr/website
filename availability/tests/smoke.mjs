@@ -1,4 +1,4 @@
-// Revision 1.1.0 | 2026-09-17 | Privacy, party planning and expiration regressions.
+// Revision 1.1.1 | 2026-09-17 | Privacy, party planning and expiration regressions.
 // History: 1.0.0 — API integration regressions; disposable local server only.
 import assert from 'node:assert/strict';
 const base = process.argv[2] || 'http://127.0.0.1:8090';
@@ -74,7 +74,8 @@ const anonymous=await (await fetch(`${base}/api.php?id=${planning.event.id}&admi
 noSecrets(anonymous); // Query-string tokens never authorize private data.
 noSecrets(await post({action:'view',id:planning.event.id}));
 const adminView=await post({action:'view',id:planning.event.id,adminToken:planning.adminToken});
-assert.equal(adminView.adminResponses[0].privateName,'Private person');
+assert.equal(adminView.adminResponses[0].privateName,undefined);
+assert.equal(privateSaved.myResponse.privateName,undefined); // Obsolete private names are ignored, never publicized.
 assert.equal(adminView.adminResponses[0].email,'private@example.test');
 noSecrets(adminView.event);
 await post({action:'view',id:planning.event.id,adminToken:other.adminToken},403);
@@ -95,3 +96,25 @@ assert.equal(legacyEdit.myResponse.email,'private@example.test');
 const cleared=await post({...privateVote,revision:3,responseId:privateSaved.responseId,responseToken:privateSaved.responseToken,privateName:'',email:'',phone:'',adults:null,kids:0,foodType:'',foodNote:''});
 assert.equal(cleared.myResponse.email,'');assert.equal(cleared.event.responses[0].adults,null);assert.equal(cleared.event.responses[0].kids,0);
 console.log(`${checks} total API checks passed, including 1.1.0 privacy, cross-event access, proposed times, household counts, deadlines and legacy edits.`);
+
+// Unicode canonical caseless matching, including existing records and authorized edits.
+const unicodeEvent = await post(definition);
+const unicodeVote = {action:'vote',id:unicodeEvent.event.id,revision:1,answers:{},name:'Élodie'};
+const unicodeSaved = await post(unicodeVote);
+assert.equal(unicodeSaved.event.responses[0].name,'Élodie');
+await post({...unicodeVote,name:'élodie'},409);
+await post({...unicodeVote,name:'E\u0301LODIE'},409);
+const unicodeEdited = await post({...unicodeVote,name:'éLODIE',responseId:unicodeSaved.responseId,responseToken:unicodeSaved.responseToken});
+assert.equal(unicodeEdited.event.responses.length,1);
+assert.equal(unicodeEdited.event.responses[0].name,'éLODIE');
+await post({...unicodeVote,name:'Elodie'}); // Different accent remains a different name.
+await post({...unicodeVote,name:'Straße'});
+await post({...unicodeVote,name:'STRASSE'},409);
+await post({...unicodeVote,name:'ΟΣ'});
+await post({...unicodeVote,name:'ος'},409); // Final sigma folds to ordinary sigma.
+await post({...unicodeVote,name:'οσ'},409);
+await post({...unicodeVote,name:'ИВАН'});
+await post({...unicodeVote,name:'иван'},409);
+await post({...unicodeVote,name:'José'});
+await post({...unicodeVote,name:'JOSE\u0301'},409);
+console.log(`${checks} total API checks passed, including Unicode duplicates and the single-name form contract.`);

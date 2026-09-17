@@ -1,6 +1,6 @@
 <?php
-/** Revision 1.1.0 | 2026-09-17 | Private contact fields, party details, proposed times and deadlines.
- * History: 1.0.0 — Initial responsive availability poll interface. */
+/** Revision 1.1.1 | 2026-09-17 | Private contact fields, party details, proposed times and deadlines.
+ * History: 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Initial responsive availability poll interface. */
 declare(strict_types=1);
 header('Referrer-Policy: no-referrer');
 header('X-Content-Type-Options: nosniff');
@@ -11,7 +11,7 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-sr
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Availability · Find a day that works</title>
-  <link rel="stylesheet" href="styles.css?v=1.1.0"><script src="app.js?v=1.1.0" defer></script>
+  <link rel="stylesheet" href="styles.css?v=1.1.1"><script src="app.js?v=1.1.1" defer></script>
 </head>
 <body>
 <header><a class="brand" href="./"><span class="brand-icon">✓</span> availability</a><a href="./" class="new-link">+ New event</a></header>
@@ -40,9 +40,8 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-sr
     <div class="poll-layout">
       <section class="panel vote-panel"><p class="eyebrow">YOUR TURN</p><h2>Your availability</h2><p class="muted">Answer each date, or use a shortcut and change the exceptions. Unanswered dates never count as a yes.</p>
         <form id="vote-form">
-          <label>Public display name <span class="muted">(required; visible to everyone)</span><input id="voter-name" required maxlength="100" autocomplete="nickname" placeholder="Name others will see"></label>
+          <label>Your name <span class="muted">(required; visible to everyone)</span><input id="voter-name" required maxlength="100" autocomplete="name" placeholder="Name others will see"></label>
           <fieldset class="private-fields"><legend>Private contact details (optional)</legend><p id="private-notice" class="muted">Only you and the admin of this event can see these details. Other attendees cannot see them.</p>
-            <label>Private name <span class="muted">· only you and this event’s admin</span><input id="private-name" maxlength="100" autocomplete="name" aria-describedby="private-notice" placeholder="Your full name (optional)"></label>
             <label>Phone <span class="muted">· only you and this event’s admin</span><input id="phone" type="tel" maxlength="50" autocomplete="tel" aria-describedby="private-notice" placeholder="Phone number (optional)"></label>
             <label>Email <span class="muted">· only you and this event’s admin</span><input id="email" type="email" maxlength="254" autocomplete="email" aria-describedby="private-notice" placeholder="Email address (optional)"></label>
           </fieldset>
@@ -51,9 +50,9 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-sr
       </section>
       <section class="panel results-panel"><div class="section-heading"><div><p class="eyebrow">THE GROUP AT A GLANCE</p><h2>What’s looking good?</h2></div><span class="pill" id="response-count">0 responses</span></div><p id="live-state" class="muted" aria-live="polite">Refreshing every 5 seconds</p><div id="best-summary" class="best-summary"></div><div id="results"></div><p class="legend"><span class="yes-text">✓ Can attend</span> <span class="no-text">✕ Can’t attend</span> <span>— Unanswered</span></p></section>
     </div>
-    <section class="panel"><h2>Everyone’s availability</h2><p class="muted">Public display names, availability, group counts, and food contributions are visible to anyone with this event’s invite link. Private names, phone numbers, and emails are never shown here.</p><div id="response-table" class="table-scroll" tabindex="0" aria-label="Scroll to see all dates"></div></section>
+    <section class="panel"><h2>Everyone’s availability</h2><p class="muted">Names, availability, group counts, and food contributions are visible to anyone with this event’s invite link. Phone numbers and emails are never shown here.</p><div id="response-table" class="table-scroll" tabindex="0" aria-label="Scroll to see all dates"></div></section>
     <section id="admin-contacts" class="panel" hidden><h2>Private attendee details</h2><p class="muted">Visible only to this event’s admin. These details are not included in public results.</p><div id="admin-contact-table" class="table-scroll" tabindex="0" aria-label="Private attendee details"></div></section>
   </div>
 </main>
-<footer>availability <span>v1.1.0 · Updated September 17, 2026</span></footer>
+<footer>availability <span>v1.1.1 · Updated September 17, 2026</span></footer>
 </body></html>

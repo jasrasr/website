@@ -1,6 +1,6 @@
 <?php
-/** Revision 1.1.0 | 2026-09-17 | Private contacts, party details, proposed times and voting deadlines.
- * History: 1.0.0 — Initial event polling API and protected JSON storage. */
+/** Revision 1.1.1 | 2026-09-17 | Private contacts, party details, proposed times and voting deadlines.
+ * History: 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Initial event polling API and protected JSON storage. */
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
@@ -30,6 +30,21 @@ function dates(array $input): array {
     $values = array_values(array_unique($values));
     sort($values);
     return $values;
+}
+function requireUnicode(): void {
+    if (!class_exists('Normalizer') || !function_exists('mb_convert_case')) {
+        fail(503, 'The host must enable PHP intl and mbstring for name matching before creating polls or saving responses.');
+    }
+}
+function nameKey(string $name): string {
+    requireUnicode();
+    // Canonical caseless matching: normalize before AND after full Unicode folding.
+    // Keep the user's original spelling for display; accents are not stripped.
+    $normalized = Normalizer::normalize($name, Normalizer::FORM_D);
+    if ($normalized === false) fail(422, 'Please provide a valid UTF-8 name.');
+    $folded = Normalizer::normalize(mb_convert_case($normalized, MB_CASE_FOLD, 'UTF-8'), Normalizer::FORM_D);
+    if ($folded === false) fail(422, 'Please provide a valid UTF-8 name.');
+    return $folded;
 }
 function authorized(string $token, string $hash): bool {
     return $token !== '' && hash_equals($hash, hash('sha256', $token));
@@ -69,7 +84,7 @@ function validateTimes(array $event): void {
 function safeResponse(array $response, bool $private = false): array {
     // Explicit allowlists prevent new private storage fields leaking through future changes.
     $keys = ['id', 'name', 'answers', 'adults', 'kids', 'foodType', 'foodNote', 'updatedAt'];
-    if ($private) $keys = array_merge($keys, ['privateName', 'phone', 'email']);
+    if ($private) $keys = array_merge($keys, ['phone', 'email']);
     return array_intersect_key($response, array_flip($keys));
 }
 function publicEvent(array $event): array {
@@ -93,6 +108,7 @@ if ($method === 'POST') {
 }
 $action = $method === 'GET' ? 'get' : ($input['action'] ?? '');
 if (!in_array($action, ['get', 'view', 'create', 'update', 'vote'], true)) fail(400, 'Unknown action.');
+if (in_array($action, ['create', 'vote'], true)) requireUnicode();
 $id = $action === 'create' ? bin2hex(random_bytes(16)) : ($input['id'] ?? $_GET['id'] ?? '');
 if (!is_string($id) || !preg_match('/^[a-f0-9]{32}$/D', $id)) fail(404, 'Event not found.');
 $directory = getenv('AVAILABILITY_DATA_DIR') ?: __DIR__ . '/data';
@@ -140,6 +156,7 @@ try {
         if ($event['closed'] || expired($event)) fail(409, expired($event) ? 'Voting has expired. Results remain visible.' : 'This poll is closed.');
         if (($input['revision'] ?? null) !== $event['revision']) fail(409, 'The organizer changed the dates. Reload to review them before saving.');
         $name = field($input, 'name', 100);
+        $key = nameKey($name);
         $answers = $input['answers'] ?? null;
         if (!is_array($answers) || count($answers) > count($event['dates'])) fail(422, 'Invalid answers.');
         foreach ($answers as $date => $answer) {
@@ -154,13 +171,12 @@ try {
         $detailInput = $input + ($event['responses'][$responseId] ?? []);
         $email = field($detailInput, 'email', 254, false);
         if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) fail(422, 'Enter a valid email address.');
-        $details = ['privateName' => field($detailInput, 'privateName', 100, false),
-            'phone' => field($detailInput, 'phone', 50, false), 'email' => $email,
+        $details = ['phone' => field($detailInput, 'phone', 50, false), 'email' => $email,
             'adults' => optionalCount($detailInput, 'adults'), 'kids' => optionalCount($detailInput, 'kids'),
             'foodType' => field($detailInput, 'foodType', 30, false), 'foodNote' => field($detailInput, 'foodNote', 300, false)];
         if (!in_array($details['foodType'], ['', 'Main dish', 'Side dish', 'Dessert', 'Snack', 'Drinks', 'Other', 'Not bringing food'], true)) fail(422, 'Choose a valid food type.');
         foreach ($event['responses'] as $existingId => $response) {
-            if ($existingId !== $responseId && strcasecmp($response['name'], $name) === 0) fail(409, 'That name has already responded. Use your response link to edit, or add an initial to distinguish yourself.');
+            if ($existingId !== $responseId && nameKey($response['name']) === $key) fail(409, 'That name has already responded. Use your response link to edit, or add an initial to distinguish yourself.');
         }
         if ($responseId === '') {
             if (count($event['responses']) >= 500) fail(422, 'This event has reached 500 responses.');

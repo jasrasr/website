@@ -1,8 +1,13 @@
 {
   "name": "Availability",
-  "revision": "1.1.0",
+  "revision": "1.1.1",
   "modified": "2026-09-17",
   "history": [
+    {
+      "revision": "1.1.1",
+      "date": "2026-09-17",
+      "changes": "Single attendee name and Unicode canonical caseless duplicate detection."
+    },
     {
       "revision": "1.1.0",
       "date": "2026-09-17",
@@ -16,9 +21,13 @@
   ],
   "files": {
     "index.php": {
-      "revision": "1.1.0",
+      "revision": "1.1.1",
       "modified": "2026-09-17",
       "history": [
+        {
+          "revision": "1.1.1",
+          "changes": "Simplify attendee names and fix Unicode duplicate matching."
+        },
         {
           "revision": "1.1.0",
           "changes": "Add private contact and event-planning features with validation and documentation."
@@ -30,9 +39,13 @@
       ]
     },
     "api.php": {
-      "revision": "1.1.0",
+      "revision": "1.1.1",
       "modified": "2026-09-17",
       "history": [
+        {
+          "revision": "1.1.1",
+          "changes": "Simplify attendee names and fix Unicode duplicate matching."
+        },
         {
           "revision": "1.1.0",
           "changes": "Add private contact and event-planning features with validation and documentation."
@@ -44,9 +57,13 @@
       ]
     },
     "app.js": {
-      "revision": "1.1.0",
+      "revision": "1.1.1",
       "modified": "2026-09-17",
       "history": [
+        {
+          "revision": "1.1.1",
+          "changes": "Simplify attendee names and fix Unicode duplicate matching."
+        },
         {
           "revision": "1.1.0",
           "changes": "Add private contact and event-planning features with validation and documentation."
@@ -72,9 +89,13 @@
       ]
     },
     "README.md": {
-      "revision": "1.1.0",
+      "revision": "1.1.1",
       "modified": "2026-09-17",
       "history": [
+        {
+          "revision": "1.1.1",
+          "changes": "Simplify attendee names and fix Unicode duplicate matching."
+        },
         {
           "revision": "1.1.0",
           "changes": "Add private contact and event-planning features with validation and documentation."
@@ -86,9 +107,13 @@
       ]
     },
     "CHANGELOG.md": {
-      "revision": "1.1.0",
+      "revision": "1.1.1",
       "modified": "2026-09-17",
       "history": [
+        {
+          "revision": "1.1.1",
+          "changes": "Simplify attendee names and fix Unicode duplicate matching."
+        },
         {
           "revision": "1.1.0",
           "changes": "Add private contact and event-planning features with validation and documentation."
@@ -100,9 +125,13 @@
       ]
     },
     "project.json": {
-      "revision": "1.1.0",
+      "revision": "1.1.1",
       "modified": "2026-09-17",
       "history": [
+        {
+          "revision": "1.1.1",
+          "changes": "Simplify attendee names and fix Unicode duplicate matching."
+        },
         {
           "revision": "1.1.0",
           "changes": "Add private contact and event-planning features with validation and documentation."
@@ -134,9 +163,13 @@
       ]
     },
     "tests/smoke.mjs": {
-      "revision": "1.1.0",
+      "revision": "1.1.1",
       "modified": "2026-09-17",
       "history": [
+        {
+          "revision": "1.1.1",
+          "changes": "Simplify attendee names and fix Unicode duplicate matching."
+        },
         {
           "revision": "1.1.0",
           "changes": "Add private contact and event-planning features with validation and documentation."
