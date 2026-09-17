@@ -622,7 +622,7 @@ if (dayPicker) dayPicker.addEventListener('change', () => {
 function drawChart() {
     const samples = dailyChartSamples(entries);
     const viewport = canvas.parentElement;
-    const p = {l:18, r:18, t:30, b:66}, h = 280;
+    const p = {l:18, r:18, t:30, b:52}, h = 280;
     const lastDay = samples.at(-1)?.day;
     const dayCount = samples.length;
     const dayIndexes = new Map(samples.map((sample, index) => [sample.day, index]));
@@ -681,8 +681,7 @@ function drawChart() {
     for (const {day} of samples) {
         const x = xFor(day), date = new Date(day);
         c.beginPath(); c.moveTo(x, h - p.b); c.lineTo(x, h - p.b + 6); c.stroke();
-        c.fillText(date.toLocaleDateString('en-US', {timeZone:'UTC', month:'short'}), x, h - 38);
-        c.fillText(String(date.getUTCDate()), x, h - 23);
+        c.fillText(`${date.getUTCMonth() + 1}/${date.getUTCDate()}`, x, h - 23);
         c.fillText(dowAbbr[date.getUTCDay()], x, h - 8);
     }
 

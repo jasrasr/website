@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 <!-- File revision 1.3.0 | Modified 2026-09-17 | Optional attendee-added date/time options. -->
 # Changelog
 
@@ -26,6 +27,11 @@
 - Keep response-link recovery working in invite mode and hide event editing/private admin contacts unless the admin link is explicitly opened.
 - Bump the client script cache version so deployed browsers receive the corrected behavior.
 
+=======
+<!-- File revision 1.1.1 | Modified 2026-09-17 | Initial project changelog. -->
+# Changelog
+
+>>>>>>> Stashed changes
 ## 1.1.1 — 2026-09-17
 
 - Use a single required public attendee name; remove the redundant private-name field without exposing legacy private values. Phone/email stay private.

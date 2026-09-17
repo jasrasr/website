@@ -194,7 +194,7 @@ $labelStep = $dayCount > 14 ? (int) ceil($dayCount / 10) : 1;
                     if ($index % $labelStep !== 0 && $index !== $dayCount - 1) continue;
                     $x = xFor($index, $dayCount, (float) $plotW, (float) $padL);
                     $date = DateTimeImmutable::createFromFormat('Y-m-d', $day['date']);
-                    $label = $date ? $date->format('M j') : $day['date'];
+                    $label = $date ? $date->format('n/j') : $day['date'];
                     $dowLabel = $date ? dayOfWeekAbbr($date) : '';
                 ?>
                     <text x="<?= $x ?>" y="<?= $height - $padB + 18 ?>" text-anchor="middle" font-size="11" fill="#93a4ba"><?= e($label) ?></text>

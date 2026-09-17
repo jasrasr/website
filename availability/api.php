@@ -1,15 +1,26 @@
 <?php
+<<<<<<< Updated upstream
 /** Revision 1.3.0 | 2026-09-17 | Optional attendee-added date/time options.
  * History: 1.3.0 — Admin-controlled attendee date suggestions; 1.2.0 — Optional hashed passwords for admin access and event/invite access; 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Initial event polling API and protected JSON storage. */
+=======
+/** Revision 1.1.1 | 2026-09-17 | Private contacts, party details, proposed times and voting deadlines.
+ * History: 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Initial event polling API and protected JSON storage. */
+>>>>>>> Stashed changes
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 
+<<<<<<< Updated upstream
 function fail(int $status, string $message, array $extra = []): never {
     http_response_code($status);
     echo json_encode(['error' => $message] + $extra);
+=======
+function fail(int $status, string $message): never {
+    http_response_code($status);
+    echo json_encode(['error' => $message]);
+>>>>>>> Stashed changes
     exit;
 }
 function field(array $input, string $key, int $max, bool $required = true): string {
@@ -19,6 +30,7 @@ function field(array $input, string $key, int $max, bool $required = true): stri
     }
     return trim($value);
 }
+<<<<<<< Updated upstream
 function boolField(array $input, string $key, bool $default = false): bool {
     if (!array_key_exists($key, $input)) return $default;
     if (!is_bool($input[$key])) fail(422, 'Invalid ' . $key . ' setting.');
@@ -64,6 +76,8 @@ function applyPasswordSettings(array $input, array $event, bool $creating = fals
     }
     return $event;
 }
+=======
+>>>>>>> Stashed changes
 function dates(array $input): array {
     $values = $input['dates'] ?? null;
     if (!is_array($values) || count($values) < 1 || count($values) > 60) fail(422, 'Choose 1–60 dates.');
@@ -83,6 +97,11 @@ function requireUnicode(): void {
 }
 function nameKey(string $name): string {
     requireUnicode();
+<<<<<<< Updated upstream
+=======
+    // Canonical caseless matching: normalize before AND after full Unicode folding.
+    // Keep the user's original spelling for display; accents are not stripped.
+>>>>>>> Stashed changes
     $normalized = Normalizer::normalize($name, Normalizer::FORM_D);
     if ($normalized === false) fail(422, 'Please provide a valid UTF-8 name.');
     $folded = Normalizer::normalize(mb_convert_case($normalized, MB_CASE_FOLD, 'UTF-8'), Normalizer::FORM_D);
@@ -125,17 +144,27 @@ function validateTimes(array $event): void {
     }
 }
 function safeResponse(array $response, bool $private = false): array {
+<<<<<<< Updated upstream
+=======
+    // Explicit allowlists prevent new private storage fields leaking through future changes.
+>>>>>>> Stashed changes
     $keys = ['id', 'name', 'answers', 'adults', 'kids', 'foodType', 'foodNote', 'updatedAt'];
     if ($private) $keys = array_merge($keys, ['phone', 'email']);
     return array_intersect_key($response, array_flip($keys));
 }
 function publicEvent(array $event): array {
+<<<<<<< Updated upstream
     $public = array_intersect_key($event, array_flip(['id', 'title', 'description', 'adminName', 'dates', 'closed', 'revision', 'createdAt', 'updatedAt', 'location', 'timezone', 'expiresLocal', 'expiresAt', 'allowAttendeeDates']));
     $public['responses'] = array_values(array_map(fn(array $r): array => safeResponse($r), $event['responses']));
     $public['expired'] = expired($event);
     $public['allowAttendeeDates'] = !empty($event['allowAttendeeDates']);
     $public['adminPasswordRequired'] = !empty($event['adminPasswordHash']);
     $public['eventPasswordRequired'] = !empty($event['eventPasswordHash']);
+=======
+    $public = array_intersect_key($event, array_flip(['id', 'title', 'description', 'adminName', 'dates', 'closed', 'revision', 'createdAt', 'updatedAt', 'location', 'timezone', 'expiresLocal', 'expiresAt']));
+    $public['responses'] = array_values(array_map(fn(array $r): array => safeResponse($r), $event['responses']));
+    $public['expired'] = expired($event);
+>>>>>>> Stashed changes
     return $public;
 }
 
@@ -143,6 +172,10 @@ $method = $_SERVER['REQUEST_METHOD'];
 if (!in_array($method, ['GET', 'POST'], true)) fail(405, 'Method not supported.');
 $input = [];
 if ($method === 'POST') {
+<<<<<<< Updated upstream
+=======
+    // JSON-only writes and no CORS prevent cross-origin browser form submissions.
+>>>>>>> Stashed changes
     if (strtolower(trim(explode(';', $_SERVER['CONTENT_TYPE'] ?? '')[0])) !== 'application/json') fail(415, 'Send JSON.');
     $raw = file_get_contents('php://input', false, null, 0, 65537);
     if ($raw === false || strlen($raw) > 65536) fail(413, 'Request too large.');
@@ -152,6 +185,7 @@ if ($method === 'POST') {
 }
 $action = $method === 'GET' ? 'get' : ($input['action'] ?? '');
 if ($method === 'GET' && $action !== 'get') fail(400, 'Unknown action.');
+<<<<<<< Updated upstream
 if ($method === 'POST' && !in_array($action, ['view', 'create', 'update', 'vote', 'suggest_date'], true)) fail(400, 'Unknown action.');
 if (in_array($action, ['create', 'vote'], true)) requireUnicode();
 $id = $action === 'create' ? bin2hex(random_bytes(16)) : ($input['id'] ?? $_GET['id'] ?? '');
@@ -163,29 +197,51 @@ $temporary = null;
 
 try {
     if (!is_dir($directory) && !mkdir($directory, 0700, true) && !is_dir($directory)) throw new RuntimeException('Create storage failed.');
+=======
+if ($method === 'POST' && !in_array($action, ['view', 'create', 'update', 'vote'], true)) fail(400, 'Unknown action.');
+if (in_array($action, ['create', 'vote'], true)) requireUnicode();
+$id = $action === 'create' ? bin2hex(random_bytes(16)) : ($input['id'] ?? $_GET['id'] ?? '');
+if (!is_string($id) || !preg_match('/^[a-f0-9]{32}$/D', $id)) fail(404, 'Event not found.');
+$directory = getenv('AVAILABILITY_DATA_DIR') ?: __DIR__ . '/data';
+$lock = null;
+$temporary = null;
+try {
+    if (!is_dir($directory) && !mkdir($directory, 0700, true) && !is_dir($directory)) throw new RuntimeException('Create storage failed.');
+    // A stable lock file survives atomic event-file replacement.
+>>>>>>> Stashed changes
     $lock = fopen($directory . '/events.lock.php', 'c');
     if ($lock === false || !flock($lock, in_array($action, ['get', 'view'], true) ? LOCK_SH : LOCK_EX)) throw new RuntimeException('Lock failed.');
     $path = $directory . '/' . $id . '.php';
     $prefix = "<?php http_response_code(404); exit; ?>\n";
     $extra = [];
+<<<<<<< Updated upstream
     $adminAccess = false;
 
+=======
+>>>>>>> Stashed changes
     if ($action === 'create') {
         $adminToken = bin2hex(random_bytes(32));
         $event = ['id' => $id, 'title' => field($input, 'title', 150), 'description' => field($input, 'description', 2000, false),
             'adminName' => field($input, 'adminName', 100), 'dates' => dates($input), 'closed' => false,
+<<<<<<< Updated upstream
             'allowAttendeeDates' => boolField($input, 'allowAttendeeDates'),
             'revision' => 1, 'adminHash' => hash('sha256', $adminToken), 'responses' => [], 'createdAt' => gmdate('c')];
         $event = array_merge($event, settings($input));
         $event = applyPasswordSettings($input, $event, true);
         $extra['adminToken'] = $adminToken;
         $adminAccess = true;
+=======
+            'revision' => 1, 'adminHash' => hash('sha256', $adminToken), 'responses' => [], 'createdAt' => gmdate('c')];
+        $extra['adminToken'] = $adminToken;
+        $event = array_merge($event, settings($input));
+>>>>>>> Stashed changes
     } else {
         if (!is_file($path)) fail(404, 'Event not found.');
         $stored = file_get_contents($path);
         if ($stored === false || !str_starts_with($stored, $prefix)) throw new RuntimeException('Invalid storage.');
         $event = json_decode(substr($stored, strlen($prefix)), true, 64, JSON_THROW_ON_ERROR);
         if (!is_array($event) || !isset($event['responses'], $event['dates'], $event['adminHash'])) throw new RuntimeException('Invalid event.');
+<<<<<<< Updated upstream
         if (!array_key_exists('allowAttendeeDates', $event)) $event['allowAttendeeDates'] = false;
 
         $adminCredential = field($input, 'adminToken', 64, false);
@@ -203,10 +259,18 @@ try {
         if (($input['revision'] ?? null) !== $event['revision']) fail(409, 'Event settings changed. Reload before editing.');
         $event = array_merge($event, settings($input, $event));
         $event = applyPasswordSettings($input, $event);
+=======
+    }
+    if ($action === 'update') {
+        if (!authorized(field($input, 'adminToken', 64), $event['adminHash'])) fail(403, 'The private admin link is required.');
+        if (($input['revision'] ?? null) !== $event['revision']) fail(409, 'Event settings changed. Reload before editing.');
+        $event = array_merge($event, settings($input, $event));
+>>>>>>> Stashed changes
         $event['title'] = field($input, 'title', 150);
         $event['description'] = field($input, 'description', 2000, false);
         $event['adminName'] = field($input, 'adminName', 100);
         $event['dates'] = dates($input);
+<<<<<<< Updated upstream
         $event['allowAttendeeDates'] = boolField($input, 'allowAttendeeDates', !empty($event['allowAttendeeDates']));
         if (!is_bool($input['closed'] ?? null)) fail(422, 'Invalid poll status.');
         $event['closed'] = $input['closed'];
@@ -227,6 +291,16 @@ try {
         $event['revision']++;
     }
 
+=======
+        if (!is_bool($input['closed'] ?? null)) fail(422, 'Invalid poll status.');
+        $event['closed'] = $input['closed'];
+        foreach ($event['responses'] as &$response) {
+            $response['answers'] = array_intersect_key($response['answers'], array_flip($event['dates']));
+        }
+        unset($response);
+        $event['revision']++;
+    }
+>>>>>>> Stashed changes
     if ($action === 'vote') {
         if ($event['closed'] || expired($event)) fail(409, expired($event) ? 'Voting has expired. Results remain visible.' : 'This poll is closed.');
         if (($input['revision'] ?? null) !== $event['revision']) fail(409, 'The organizer changed the dates. Reload to review them before saving.');
@@ -242,6 +316,10 @@ try {
         if ($responseId !== '' && (!isset($event['responses'][$responseId]) || !authorized($token, $event['responses'][$responseId]['tokenHash']))) {
             fail(403, 'Use your original browser or private response link to edit.');
         }
+<<<<<<< Updated upstream
+=======
+        // Missing fields from an older client preserve stored details; explicit blanks clear them.
+>>>>>>> Stashed changes
         $detailInput = $input + ($event['responses'][$responseId] ?? []);
         $email = field($detailInput, 'email', 254, false);
         if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) fail(422, 'Enter a valid email address.');
@@ -261,25 +339,43 @@ try {
             'tokenHash' => hash('sha256', $token), 'updatedAt' => gmdate('c')] + $details;
         $extra = ['responseId' => $responseId, 'responseToken' => $token];
     }
+<<<<<<< Updated upstream
 
     if ($adminAccess) $extra['adminResponses'] = array_values(array_map(fn(array $r): array => safeResponse($r, true), $event['responses']));
 
+=======
+    $adminCredential = $extra['adminToken'] ?? field($input, 'adminToken', 64, false);
+    if ($adminCredential !== '') {
+        if (!authorized($adminCredential, $event['adminHash'])) fail(403, 'Invalid admin link for this event.');
+        $extra['adminResponses'] = array_values(array_map(fn(array $r): array => safeResponse($r, true), $event['responses']));
+    }
+>>>>>>> Stashed changes
     $ownId = $extra['responseId'] ?? field($input, 'responseId', 32, false);
     $ownToken = $extra['responseToken'] ?? field($input, 'responseToken', 64, false);
     if ($ownId !== '' || $ownToken !== '') {
         if (!isset($event['responses'][$ownId]) || !authorized($ownToken, $event['responses'][$ownId]['tokenHash'])) fail(403, 'Invalid private response link.');
         $extra['myResponse'] = safeResponse($event['responses'][$ownId], true);
     }
+<<<<<<< Updated upstream
 
     if (in_array($action, ['create', 'update', 'vote', 'suggest_date'], true)) {
         validateTimes($event);
         $event['updatedAt'] = gmdate('c');
+=======
+    if (in_array($action, ['create', 'update', 'vote'], true)) {
+        validateTimes($event);
+        $event['updatedAt'] = gmdate('c');
+        // The temporary file also has a PHP extension and a guard; interrupted writes cannot leak JSON.
+>>>>>>> Stashed changes
         $temporary = $directory . '/tmp-' . bin2hex(random_bytes(16)) . '.php';
         $contents = $prefix . json_encode($event, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
         if (file_put_contents($temporary, $contents) !== strlen($contents) || !rename($temporary, $path)) throw new RuntimeException('Save failed.');
         $temporary = null;
     }
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     echo json_encode(['event' => publicEvent($event)] + $extra, JSON_THROW_ON_ERROR);
 } catch (Throwable $e) {
     error_log('Availability: ' . $e->getMessage());
