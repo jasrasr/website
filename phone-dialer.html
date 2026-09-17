@@ -421,6 +421,7 @@
       document.addEventListener("touchend", releaseFromGlobalEvent);
       document.addEventListener("touchcancel", releaseFromGlobalEvent);
       document.addEventListener("mouseup", releaseFromGlobalEvent);
+      window.addEventListener("mouseleave", releaseAllPressedDigits);
     }
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
