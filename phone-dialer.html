@@ -156,7 +156,10 @@
     let enteredNumber = "";
     let audioContext;
     let activeOscillators = [];
+    let activeGainNode = null;
+    let toneToken = 0;
     const activeKeys = new Set();
+    const pressedDigits = new Set();
 
     const dtmf = {
       "1": [697, 1209],
@@ -180,11 +183,6 @@
       if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
       }
-
-      if (audioContext.state === "suspended") {
-        audioContext.resume();
-      }
-
       return audioContext;
     }
 
@@ -197,25 +195,37 @@
     }
 
     function startTone(digit) {
+      const currentToken = ++toneToken;
       stopTone();
 
       const frequencies = dtmf[digit];
       if (!frequencies) return;
 
       const ctx = getAudioContext();
+      const beginTone = () => {
+        if (currentToken !== toneToken) return;
 
-      const gainNode = ctx.createGain();
-      gainNode.gain.setValueAtTime(0.16, ctx.currentTime);
-      gainNode.connect(ctx.destination);
+        const gainNode = ctx.createGain();
+        gainNode.gain.setValueAtTime(0.16, ctx.currentTime);
+        gainNode.connect(ctx.destination);
+        activeGainNode = gainNode;
 
-      activeOscillators = frequencies.map(freq => {
-        const oscillator = ctx.createOscillator();
-        oscillator.type = "sine";
-        oscillator.frequency.setValueAtTime(freq, ctx.currentTime);
-        oscillator.connect(gainNode);
-        oscillator.start();
-        return oscillator;
-      });
+        activeOscillators = frequencies.map(freq => {
+          const oscillator = ctx.createOscillator();
+          oscillator.type = "sine";
+          oscillator.frequency.setValueAtTime(freq, ctx.currentTime);
+          oscillator.connect(gainNode);
+          oscillator.start();
+          return oscillator;
+        });
+      };
+
+      if (ctx.state !== "running") {
+        ctx.resume().then(beginTone).catch(() => {});
+        return;
+      }
+
+      beginTone();
     }
 
     function stopTone() {
@@ -229,6 +239,15 @@
       });
 
       activeOscillators = [];
+
+      if (activeGainNode) {
+        try {
+          activeGainNode.disconnect();
+        } catch {
+          // Already disconnected.
+        }
+        activeGainNode = null;
+      }
     }
 
     function pressDigit(digit) {
@@ -245,6 +264,7 @@
     }
 
     function releaseDigit(digit) {
+      toneToken++;
       stopTone();
 
       const button = getButton(digit);
@@ -272,14 +292,29 @@
     buttons.forEach(button => {
       const digit = button.dataset.digit;
 
-      button.addEventListener("pointerdown", event => {
+      const onPress = event => {
         event.preventDefault();
+        if (pressedDigits.has(digit)) return;
+        pressedDigits.add(digit);
         pressDigit(digit);
-      });
+      };
 
-      button.addEventListener("pointerup", () => releaseDigit(digit));
-      button.addEventListener("pointerleave", () => releaseDigit(digit));
-      button.addEventListener("pointercancel", () => releaseDigit(digit));
+      const onRelease = () => {
+        if (!pressedDigits.has(digit)) return;
+        pressedDigits.delete(digit);
+        releaseDigit(digit);
+      };
+
+      button.addEventListener("pointerdown", onPress);
+      button.addEventListener("pointerup", onRelease);
+      button.addEventListener("pointerleave", onRelease);
+      button.addEventListener("pointercancel", onRelease);
+      button.addEventListener("touchstart", onPress, { passive: false });
+      button.addEventListener("touchend", onRelease);
+      button.addEventListener("touchcancel", onRelease);
+      button.addEventListener("mousedown", onPress);
+      button.addEventListener("mouseup", onRelease);
+      button.addEventListener("mouseleave", onRelease);
     });
 
     document.addEventListener("keydown", event => {
