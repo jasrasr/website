@@ -157,11 +157,12 @@
     let audioContext;
     let activeOscillators = [];
     let activeGainNode = null;
+    let currentToneDigit = null;
     let toneToken = 0;
     const activeKeys = new Set();
     const pressedDigits = new Set();
     const supportsPointerEvents = "PointerEvent" in window;
-    const touchCountsByDigit = new Map();
+    const touchIdsByDigit = new Map();
     let ignoreSyntheticMouseUntil = 0;
 
     const dtmf = {
@@ -207,6 +208,7 @@
       const ctx = getAudioContext();
       const beginTone = () => {
         if (currentToken !== toneToken) return;
+        currentToneDigit = digit;
 
         const gainNode = ctx.createGain();
         gainNode.gain.setValueAtTime(0.16, ctx.currentTime);
@@ -251,6 +253,8 @@
         }
         activeGainNode = null;
       }
+
+      currentToneDigit = null;
     }
 
     function pressDigit(digit) {
@@ -267,8 +271,10 @@
     }
 
     function releaseDigit(digit) {
-      toneToken++;
-      stopTone();
+      if (digit === currentToneDigit) {
+        toneToken++;
+        stopTone();
+      }
 
       const button = getButton(digit);
       if (button) {
@@ -279,7 +285,7 @@
     function releasePressedDigit(digit) {
       if (!pressedDigits.has(digit)) return;
       pressedDigits.delete(digit);
-      touchCountsByDigit.delete(digit);
+      touchIdsByDigit.delete(digit);
       releaseDigit(digit);
     }
 
@@ -297,34 +303,53 @@
       }
 
       if (event.type.startsWith("touch")) {
-        const trackedTouches = Array.from(touchCountsByDigit.values()).reduce((sum, count) => sum + count, 0);
-        const releasedTouches = event.changedTouches?.length || 1;
-        if (trackedTouches > releasedTouches) return;
+        releaseDigitsForChangedTouches(event);
+        return;
       }
 
       releaseAllPressedDigits();
     }
 
     function registerTouchPress(digit, event) {
-      const currentCount = touchCountsByDigit.get(digit) || 0;
-      const touchCount = event.changedTouches?.length || 1;
-      touchCountsByDigit.set(digit, currentCount + touchCount);
+      const touchIds = touchIdsByDigit.get(digit) || new Set();
+      Array.from(event.changedTouches || []).forEach(touch => {
+        touchIds.add(touch.identifier);
+      });
+      touchIdsByDigit.set(digit, touchIds);
     }
 
     function shouldReleaseTouchDigit(digit, event) {
-      const currentCount = touchCountsByDigit.get(digit) || 0;
-      if (currentCount === 0) return true;
+      const touchIds = touchIdsByDigit.get(digit);
+      if (!touchIds || touchIds.size === 0) return true;
 
-      const touchCount = event.changedTouches?.length || 1;
-      const nextCount = currentCount - touchCount;
+      Array.from(event.changedTouches || []).forEach(touch => {
+        touchIds.delete(touch.identifier);
+      });
 
-      if (nextCount > 0) {
-        touchCountsByDigit.set(digit, nextCount);
+      if (touchIds.size > 0) {
+        touchIdsByDigit.set(digit, touchIds);
         return false;
       }
 
-      touchCountsByDigit.delete(digit);
+      touchIdsByDigit.delete(digit);
       return true;
+    }
+
+    function releaseDigitsForChangedTouches(event) {
+      const endedTouchIds = new Set(Array.from(event.changedTouches || []).map(touch => touch.identifier));
+      if (endedTouchIds.size === 0) {
+        releaseAllPressedDigits();
+        return;
+      }
+
+      Array.from(touchIdsByDigit.entries()).forEach(([digit, touchIds]) => {
+        endedTouchIds.forEach(touchId => touchIds.delete(touchId));
+        if (touchIds.size === 0) {
+          releasePressedDigit(digit);
+        } else {
+          touchIdsByDigit.set(digit, touchIds);
+        }
+      });
     }
 
     function normalizeKeyboardKey(event) {
@@ -368,6 +393,9 @@
       };
 
       const onRelease = event => {
+        if (event.type === "lostpointercapture" && !pressedDigits.has(digit)) {
+          return;
+        }
         if (event.type.startsWith("touch") && !shouldReleaseTouchDigit(digit, event)) {
           return;
         }
