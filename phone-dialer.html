@@ -317,7 +317,6 @@
       if (supportsPointerEvents) {
         button.addEventListener("pointerdown", onPress);
         button.addEventListener("pointerup", onRelease);
-        button.addEventListener("pointerleave", onRelease);
         button.addEventListener("pointercancel", onRelease);
       } else {
         button.addEventListener("touchstart", onPress, { passive: false });
@@ -325,7 +324,6 @@
         button.addEventListener("touchcancel", onRelease);
         button.addEventListener("mousedown", onPress);
         button.addEventListener("mouseup", onRelease);
-        button.addEventListener("mouseleave", onRelease);
       }
     });
 
