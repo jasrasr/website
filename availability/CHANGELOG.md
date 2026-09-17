@@ -1,5 +1,12 @@
-<!-- File revision 1.1.1 | Modified 2026-09-17 | Initial project changelog. -->
+<!-- File revision 1.1.2 | Modified 2026-09-17 | Invite/public mode separated from remembered admin sessions. -->
 # Changelog
+
+## 1.1.2 — 2026-09-17
+
+- Generate invite links with an explicit attendee/public mode so they do not inherit locally remembered admin access.
+- Keep the private admin token stored for recovery while ignoring it for the active invite session.
+- Keep response-link recovery working in invite mode and hide event editing/private admin contacts unless the admin link is explicitly opened.
+- Bump the client script cache version so deployed browsers receive the corrected behavior.
 
 ## 1.1.1 — 2026-09-17
 
