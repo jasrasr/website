@@ -1,6 +1,6 @@
 <?php
-/** Revision 1.2.0 | 2026-09-17 | Optional admin and invite passwords.
- * History: 1.2.0 — Optional hashed passwords for admin access and event/invite access; 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Initial event polling API and protected JSON storage. */
+/** Revision 1.3.0 | 2026-09-17 | Optional attendee-added date/time options.
+ * History: 1.3.0 — Admin-controlled attendee date suggestions; 1.2.0 — Optional hashed passwords for admin access and event/invite access; 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Initial event polling API and protected JSON storage. */
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
@@ -18,6 +18,11 @@ function field(array $input, string $key, int $max, bool $required = true): stri
         fail(422, 'Please provide a valid ' . $key . '.');
     }
     return trim($value);
+}
+function boolField(array $input, string $key, bool $default = false): bool {
+    if (!array_key_exists($key, $input)) return $default;
+    if (!is_bool($input[$key])) fail(422, 'Invalid ' . $key . ' setting.');
+    return $input[$key];
 }
 function passwordField(array $input, string $key): string {
     $value = $input[$key] ?? '';
@@ -125,9 +130,10 @@ function safeResponse(array $response, bool $private = false): array {
     return array_intersect_key($response, array_flip($keys));
 }
 function publicEvent(array $event): array {
-    $public = array_intersect_key($event, array_flip(['id', 'title', 'description', 'adminName', 'dates', 'closed', 'revision', 'createdAt', 'updatedAt', 'location', 'timezone', 'expiresLocal', 'expiresAt']));
+    $public = array_intersect_key($event, array_flip(['id', 'title', 'description', 'adminName', 'dates', 'closed', 'revision', 'createdAt', 'updatedAt', 'location', 'timezone', 'expiresLocal', 'expiresAt', 'allowAttendeeDates']));
     $public['responses'] = array_values(array_map(fn(array $r): array => safeResponse($r), $event['responses']));
     $public['expired'] = expired($event);
+    $public['allowAttendeeDates'] = !empty($event['allowAttendeeDates']);
     $public['adminPasswordRequired'] = !empty($event['adminPasswordHash']);
     $public['eventPasswordRequired'] = !empty($event['eventPasswordHash']);
     return $public;
@@ -146,7 +152,7 @@ if ($method === 'POST') {
 }
 $action = $method === 'GET' ? 'get' : ($input['action'] ?? '');
 if ($method === 'GET' && $action !== 'get') fail(400, 'Unknown action.');
-if ($method === 'POST' && !in_array($action, ['view', 'create', 'update', 'vote'], true)) fail(400, 'Unknown action.');
+if ($method === 'POST' && !in_array($action, ['view', 'create', 'update', 'vote', 'suggest_date'], true)) fail(400, 'Unknown action.');
 if (in_array($action, ['create', 'vote'], true)) requireUnicode();
 $id = $action === 'create' ? bin2hex(random_bytes(16)) : ($input['id'] ?? $_GET['id'] ?? '');
 if (!is_string($id) || !preg_match('/^[a-f0-9]{32}$/D', $id)) fail(404, 'Event not found.');
@@ -168,6 +174,7 @@ try {
         $adminToken = bin2hex(random_bytes(32));
         $event = ['id' => $id, 'title' => field($input, 'title', 150), 'description' => field($input, 'description', 2000, false),
             'adminName' => field($input, 'adminName', 100), 'dates' => dates($input), 'closed' => false,
+            'allowAttendeeDates' => boolField($input, 'allowAttendeeDates'),
             'revision' => 1, 'adminHash' => hash('sha256', $adminToken), 'responses' => [], 'createdAt' => gmdate('c')];
         $event = array_merge($event, settings($input));
         $event = applyPasswordSettings($input, $event, true);
@@ -179,6 +186,7 @@ try {
         if ($stored === false || !str_starts_with($stored, $prefix)) throw new RuntimeException('Invalid storage.');
         $event = json_decode(substr($stored, strlen($prefix)), true, 64, JSON_THROW_ON_ERROR);
         if (!is_array($event) || !isset($event['responses'], $event['dates'], $event['adminHash'])) throw new RuntimeException('Invalid event.');
+        if (!array_key_exists('allowAttendeeDates', $event)) $event['allowAttendeeDates'] = false;
 
         $adminCredential = field($input, 'adminToken', 64, false);
         if ($adminCredential !== '') {
@@ -187,7 +195,7 @@ try {
             $adminAccess = true;
         }
 
-        if (!$adminAccess && in_array($action, ['get', 'view', 'vote'], true)) requirePassword($event, $input, 'event');
+        if (!$adminAccess && in_array($action, ['get', 'view', 'vote', 'suggest_date'], true)) requirePassword($event, $input, 'event');
     }
 
     if ($action === 'update') {
@@ -199,10 +207,23 @@ try {
         $event['description'] = field($input, 'description', 2000, false);
         $event['adminName'] = field($input, 'adminName', 100);
         $event['dates'] = dates($input);
+        $event['allowAttendeeDates'] = boolField($input, 'allowAttendeeDates', !empty($event['allowAttendeeDates']));
         if (!is_bool($input['closed'] ?? null)) fail(422, 'Invalid poll status.');
         $event['closed'] = $input['closed'];
         foreach ($event['responses'] as &$response) $response['answers'] = array_intersect_key($response['answers'], array_flip($event['dates']));
         unset($response);
+        $event['revision']++;
+    }
+
+    if ($action === 'suggest_date') {
+        if ($event['closed'] || expired($event)) fail(409, expired($event) ? 'Voting has expired. New date options cannot be added.' : 'This poll is closed.');
+        if (empty($event['allowAttendeeDates']) && !$adminAccess) fail(403, 'The organizer has not enabled attendee-added dates.');
+        if (($input['revision'] ?? null) !== $event['revision']) fail(409, 'The event changed. Reload before adding another date.');
+        if (count($event['dates']) >= 60) fail(422, 'This poll already has the maximum of 60 date/time options.');
+        $candidate = dates(['dates' => [field($input, 'date', 16)]])[0];
+        if (in_array($candidate, $event['dates'], true)) fail(409, 'That date/time is already an option.');
+        $event['dates'][] = $candidate;
+        sort($event['dates']);
         $event['revision']++;
     }
 
@@ -250,7 +271,7 @@ try {
         $extra['myResponse'] = safeResponse($event['responses'][$ownId], true);
     }
 
-    if (in_array($action, ['create', 'update', 'vote'], true)) {
+    if (in_array($action, ['create', 'update', 'vote', 'suggest_date'], true)) {
         validateTimes($event);
         $event['updatedAt'] = gmdate('c');
         $temporary = $directory . '/tmp-' . bin2hex(random_bytes(16)) . '.php';
