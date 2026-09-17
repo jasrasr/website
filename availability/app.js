@@ -1,15 +1,21 @@
-/* Revision 1.1.1 | 2026-09-17 | Private contacts, household/food details, proposed times and expiry.
- * History: 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Event creation, voting, live rankings and response matrix. */
+/* Revision 1.1.2 | 2026-09-17 | Explicit attendee invite mode keeps saved admin access out of shared invite sessions.
+ * History: 1.1.2 — Separate invite/public mode from locally remembered admin access; 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Event creation, voting, live rankings and response matrix. */
 'use strict';
 const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 let eventId = params.get('event'), event = null, editing = false, dirty = false, sequence = 0;
+let inviteMode = params.get('view') === 'invite';
 let chosenDates = [], answers = {}, formRevision = 0, savingVote = false;
 const storageKey = () => `availability:${eventId}`;
 let credentials = {};
 function remember() {
-  try { localStorage.setItem(storageKey(), JSON.stringify(credentials)); }
-  catch { message('Browser storage is unavailable. Save your private link to return later.'); }
+  try {
+    let stored = {};
+    try { stored = JSON.parse(localStorage.getItem(storageKey()) || '{}') || {}; } catch { stored = {}; }
+    // Opening an invite link must not erase admin recovery data already saved in this browser.
+    const next = inviteMode && stored.adminToken ? {...stored, ...credentials, adminToken: stored.adminToken} : credentials;
+    localStorage.setItem(storageKey(), JSON.stringify(next));
+  } catch { message('Browser storage is unavailable. Save your private link to return later.'); }
 }
 function message(text, error = false) { $('message').textContent = text; $('message').classList.toggle('error', error); }
 function node(tag, text, className) { const element = document.createElement(tag); if (text !== undefined) element.textContent = text; if (className) element.className = className; return element; }
@@ -27,6 +33,7 @@ $('timezone').value = 'America/New_York';
 function link(kind) {
   const url = new URL(location.pathname, location.origin);
   url.searchParams.set('event', eventId);
+  if (kind === 'invite') url.searchParams.set('view', 'invite');
   const fragment = new URLSearchParams();
   if (kind === 'admin') fragment.set('admin', credentials.adminToken);
   if (kind === 'response') { fragment.set('response', credentials.responseId); fragment.set('key', credentials.responseToken); }
@@ -46,12 +53,13 @@ async function copy(text) {
   catch { window.prompt('Copy this link:', text); }
 }
 function renderLinks() {
-  $('admin-link-row').hidden = !credentials.adminToken;
+  const hasAdmin = !inviteMode && !!credentials.adminToken;
+  $('admin-link-row').hidden = !hasAdmin;
   $('response-link-row').hidden = !credentials.responseToken;
-  $('private-links').hidden = !credentials.adminToken && !credentials.responseToken;
-  if (credentials.adminToken) $('admin-link').value = link('admin');
+  $('private-links').hidden = !hasAdmin && !credentials.responseToken;
+  if (hasAdmin) $('admin-link').value = link('admin');
   if (credentials.responseToken) $('response-link').value = link('response');
-  $('edit-event').hidden = !credentials.adminToken;
+  $('edit-event').hidden = !hasAdmin;
 }
 function renderChips() {
   $('date-chips').replaceChildren(...chosenDates.map(date => {
@@ -82,6 +90,7 @@ $('event-form').onsubmit = async e => {
     const data = await api(body);
     eventId = data.event.id;
     if (data.adminToken) credentials.adminToken = data.adminToken;
+    inviteMode = false;
     remember(); history.replaceState(null, '', link());
     editing = false; $('setup').hidden = true; $('poll').hidden = false;
     applyEvent(data.event, data); renderLinks();
@@ -101,7 +110,7 @@ $('edit-event').onclick = () => {
   renderChips(); $('setup').scrollIntoView({behavior: 'smooth'});
 };
 $('cancel-edit').onclick = () => { editing = false; $('setup').hidden = true; };
-$('copy-public').onclick = () => copy(link());
+$('copy-public').onclick = () => copy(link('invite'));
 $('copy-admin').onclick = () => copy(link('admin'));
 $('copy-response').onclick = () => copy(link('response'));
 function summary() {
@@ -228,7 +237,8 @@ if (eventId) {
   $('setup').hidden = true;
   try { credentials = JSON.parse(localStorage.getItem(storageKey()) || '{}') || {}; } catch { credentials = {}; }
   const fragment = new URLSearchParams(location.hash.slice(1));
-  if (fragment.get('admin')) credentials.adminToken = fragment.get('admin');
+  if (fragment.get('admin')) { credentials.adminToken = fragment.get('admin'); inviteMode = false; }
+  else if (inviteMode) delete credentials.adminToken;
   if (fragment.get('response') && fragment.get('key')) { credentials.responseId = fragment.get('response'); credentials.responseToken = fragment.get('key'); }
   // Tokens stay out of server URLs, access logs, referrers and the address bar.
   if (location.hash) { remember(); history.replaceState(null, '', link()); }
