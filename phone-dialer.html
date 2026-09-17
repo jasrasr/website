@@ -410,15 +410,15 @@
       };
 
       const onRelease = event => {
+        if (event.type === "lostpointercapture") {
+          return;
+        }
         if (event.type.startsWith("pointer")) {
           const mappedDigit = pointerDigitById.get(event.pointerId);
           if (mappedDigit !== digit) {
             return;
           }
           pointerDigitById.delete(event.pointerId);
-        }
-        if (event.type === "lostpointercapture" && !pressedDigits.has(digit)) {
-          return;
         }
         if (event.type.startsWith("touch") && !shouldReleaseTouchDigit(digit, event)) {
           return;
