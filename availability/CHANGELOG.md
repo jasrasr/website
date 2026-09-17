@@ -1,5 +1,14 @@
-<!-- File revision 1.2.0 | Modified 2026-09-17 | Optional admin and event password protection. -->
+<!-- File revision 1.3.0 | Modified 2026-09-17 | Optional attendee-added date/time options. -->
 # Changelog
+
+## 1.3.0 — 2026-09-17
+
+- Add an organizer-controlled **Allow attendees to add additional date/time options** setting at event creation and on later edits.
+- When enabled, anyone who can access the poll can add another date or date/time option; protected events still require the event password.
+- New attendee-added options become available to everyone immediately, start unanswered for all existing responses, and increment the event revision so stale forms cannot silently overwrite changes.
+- Reject duplicate options, stale revisions, additions to closed/expired polls, and additions beyond the 60-option limit.
+- Existing events default to attendee-added dates disabled until an admin explicitly enables the setting.
+- Add regression coverage for disabled/enabled polls, password protection, duplicate/stale additions, timed options, and disabling the feature again.
 
 ## 1.2.0 — 2026-09-17
 
