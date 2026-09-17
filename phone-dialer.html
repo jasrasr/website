@@ -347,6 +347,7 @@
       if (supportsPointerEvents) {
         button.addEventListener("pointerdown", onPress);
         button.addEventListener("pointerup", onRelease);
+        button.addEventListener("pointerleave", onRelease);
         button.addEventListener("pointercancel", onRelease);
         button.addEventListener("lostpointercapture", onRelease);
       } else {
