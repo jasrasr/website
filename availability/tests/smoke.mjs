@@ -22,6 +22,7 @@ const first = await post(vote);
 assert.equal(first.event.responses[0].answers['2026-11-03'],undefined);
 await post({...vote,name:'HANNAH'},409);
 await post({...vote,responseId:first.responseId,responseToken:'wrong'},403);
+await post({action:'get',id},400);
 const revised = await post({...vote,responseId:first.responseId,responseToken:first.responseToken,answers:{'2026-11-01':'no','2026-11-02':'yes'}});
 assert.equal(revised.event.responses.length,1);
 assert.equal(revised.event.responses[0].answers['2026-11-01'],'no');

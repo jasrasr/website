@@ -107,7 +107,8 @@ if ($method === 'POST') {
     if (!is_array($input)) fail(400, 'Invalid request.');
 }
 $action = $method === 'GET' ? 'get' : ($input['action'] ?? '');
-if (!in_array($action, ['get', 'view', 'create', 'update', 'vote'], true)) fail(400, 'Unknown action.');
+if ($method === 'GET' && $action !== 'get') fail(400, 'Unknown action.');
+if ($method === 'POST' && !in_array($action, ['view', 'create', 'update', 'vote'], true)) fail(400, 'Unknown action.');
 if (in_array($action, ['create', 'vote'], true)) requireUnicode();
 $id = $action === 'create' ? bin2hex(random_bytes(16)) : ($input['id'] ?? $_GET['id'] ?? '');
 if (!is_string($id) || !preg_match('/^[a-f0-9]{32}$/D', $id)) fail(404, 'Event not found.');
