@@ -161,6 +161,7 @@
     const activeKeys = new Set();
     const pressedDigits = new Set();
     const supportsPointerEvents = "PointerEvent" in window;
+    let ignoreSyntheticMouseUntil = 0;
 
     const dtmf = {
       "1": [697, 1209],
@@ -305,6 +306,12 @@
 
       const onPress = event => {
         event.preventDefault();
+        if (event.type.startsWith("mouse") && Date.now() < ignoreSyntheticMouseUntil) {
+          return;
+        }
+        if (event.type.startsWith("touch")) {
+          ignoreSyntheticMouseUntil = Date.now() + 750;
+        }
         if (pressedDigits.has(digit)) return;
         pressedDigits.add(digit);
         pressDigit(digit);
@@ -317,6 +324,7 @@
       if (supportsPointerEvents) {
         button.addEventListener("pointerdown", onPress);
         button.addEventListener("pointerup", onRelease);
+        button.addEventListener("pointerleave", onRelease);
         button.addEventListener("pointercancel", onRelease);
       } else {
         button.addEventListener("touchstart", onPress, { passive: false });
@@ -324,6 +332,7 @@
         button.addEventListener("touchcancel", onRelease);
         button.addEventListener("mousedown", onPress);
         button.addEventListener("mouseup", onRelease);
+        button.addEventListener("mouseleave", onRelease);
       }
     });
 
