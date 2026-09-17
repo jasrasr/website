@@ -161,6 +161,7 @@
     const activeKeys = new Set();
     const pressedDigits = new Set();
     const supportsPointerEvents = "PointerEvent" in window;
+    const touchCountsByDigit = new Map();
     let ignoreSyntheticMouseUntil = 0;
 
     const dtmf = {
@@ -278,6 +279,7 @@
     function releasePressedDigit(digit) {
       if (!pressedDigits.has(digit)) return;
       pressedDigits.delete(digit);
+      touchCountsByDigit.delete(digit);
       releaseDigit(digit);
     }
 
@@ -290,7 +292,7 @@
       const keyDigit = keyButton?.dataset?.digit;
 
       if (keyDigit) {
-        releasePressedDigit(keyDigit);
+        // Key-level listeners handle normal key releases.
         return;
       }
 
@@ -299,6 +301,28 @@
       }
 
       releaseAllPressedDigits();
+    }
+
+    function registerTouchPress(digit, event) {
+      const currentCount = touchCountsByDigit.get(digit) || 0;
+      const touchCount = event.changedTouches?.length || 1;
+      touchCountsByDigit.set(digit, currentCount + touchCount);
+    }
+
+    function shouldReleaseTouchDigit(digit, event) {
+      const currentCount = touchCountsByDigit.get(digit) || 0;
+      if (currentCount === 0) return true;
+
+      const touchCount = event.changedTouches?.length || 1;
+      const nextCount = currentCount - touchCount;
+
+      if (nextCount > 0) {
+        touchCountsByDigit.set(digit, nextCount);
+        return false;
+      }
+
+      touchCountsByDigit.delete(digit);
+      return true;
     }
 
     function normalizeKeyboardKey(event) {
@@ -327,6 +351,7 @@
         }
         if (event.type.startsWith("touch")) {
           ignoreSyntheticMouseUntil = Date.now() + 750;
+          registerTouchPress(digit, event);
         }
         if (event.type === "pointerdown" && typeof event.currentTarget?.setPointerCapture === "function") {
           try {
@@ -340,7 +365,10 @@
         pressDigit(digit);
       };
 
-      const onRelease = () => {
+      const onRelease = event => {
+        if (event.type.startsWith("touch") && !shouldReleaseTouchDigit(digit, event)) {
+          return;
+        }
         releasePressedDigit(digit);
       };
 
