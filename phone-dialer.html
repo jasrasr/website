@@ -332,6 +332,7 @@
         button.addEventListener("pointerdown", onPress);
         button.addEventListener("pointerup", onRelease);
         button.addEventListener("pointercancel", onRelease);
+        button.addEventListener("lostpointercapture", onRelease);
       } else {
         button.addEventListener("touchstart", onPress, { passive: false });
         button.addEventListener("touchend", onRelease);
