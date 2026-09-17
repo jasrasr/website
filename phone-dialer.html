@@ -296,8 +296,10 @@
         return;
       }
 
-      if (event.type.startsWith("touch") && event.touches && event.touches.length > 0) {
-        return;
+      if (event.type.startsWith("touch")) {
+        const trackedTouches = Array.from(touchCountsByDigit.values()).reduce((sum, count) => sum + count, 0);
+        const releasedTouches = event.changedTouches?.length || 1;
+        if (trackedTouches > releasedTouches) return;
       }
 
       releaseAllPressedDigits();
