@@ -398,6 +398,9 @@
           ignoreSyntheticMouseUntil = Date.now() + 750;
           registerTouchPress(digit, event);
         }
+        if (event.type === "pointerdown" && event.pointerType === "touch") {
+          ignoreSyntheticMouseUntil = Date.now() + 750;
+        }
         if (event.type === "pointerdown" && typeof event.currentTarget?.setPointerCapture === "function") {
           try {
             pointerDigitById.set(event.pointerId, digit);
@@ -446,6 +449,11 @@
     if (supportsPointerEvents) {
       document.addEventListener("pointerup", releaseDigitForPointerEvent);
       document.addEventListener("pointercancel", releaseDigitForPointerEvent);
+      window.addEventListener("pointerout", event => {
+        if (!event.relatedTarget) {
+          releaseAllPressedDigits();
+        }
+      });
     } else {
       document.addEventListener("touchend", releaseFromGlobalEvent);
       document.addEventListener("touchcancel", releaseFromGlobalEvent);
