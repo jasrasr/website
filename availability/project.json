@@ -1,8 +1,13 @@
 {
   "name": "Availability",
-  "revision": "1.1.2",
+  "revision": "1.2.0",
   "modified": "2026-09-17",
   "history": [
+    {
+      "revision": "1.2.0",
+      "date": "2026-09-17",
+      "changes": "Optional independent admin and event/invite password protection using server-side password hashes and session-only browser password storage."
+    },
     {
       "revision": "1.1.2",
       "date": "2026-09-17",
@@ -25,181 +30,17 @@
     }
   ],
   "files": {
-    "index.php": {
-      "revision": "1.1.2",
-      "modified": "2026-09-17",
-      "history": [
-        {
-          "revision": "1.1.2",
-          "changes": "Load the invite-mode client fix and update the visible project revision."
-        },
-        {
-          "revision": "1.1.1",
-          "changes": "Simplify attendee names and fix Unicode duplicate matching."
-        },
-        {
-          "revision": "1.1.0",
-          "changes": "Add private contact and event-planning features with validation and documentation."
-        },
-        {
-          "revision": "1.0.0",
-          "changes": "Initial implementation."
-        }
-      ]
-    },
-    "api.php": {
-      "revision": "1.1.1",
-      "modified": "2026-09-17",
-      "history": [
-        {
-          "revision": "1.1.1",
-          "changes": "Simplify attendee names and fix Unicode duplicate matching."
-        },
-        {
-          "revision": "1.1.0",
-          "changes": "Add private contact and event-planning features with validation and documentation."
-        },
-        {
-          "revision": "1.0.0",
-          "changes": "Initial implementation."
-        }
-      ]
-    },
-    "app.js": {
-      "revision": "1.1.2",
-      "modified": "2026-09-17",
-      "history": [
-        {
-          "revision": "1.1.2",
-          "changes": "Generate explicit invite-mode links, suppress remembered admin access in invite sessions, and preserve stored admin recovery credentials."
-        },
-        {
-          "revision": "1.1.1",
-          "changes": "Simplify attendee names and fix Unicode duplicate matching."
-        },
-        {
-          "revision": "1.1.0",
-          "changes": "Add private contact and event-planning features with validation and documentation."
-        },
-        {
-          "revision": "1.0.0",
-          "changes": "Initial implementation."
-        }
-      ]
-    },
-    "styles.css": {
-      "revision": "1.1.0",
-      "modified": "2026-09-17",
-      "history": [
-        {
-          "revision": "1.1.0",
-          "changes": "Add private contact and event-planning features with validation and documentation."
-        },
-        {
-          "revision": "1.0.0",
-          "changes": "Initial implementation."
-        }
-      ]
-    },
-    "README.md": {
-      "revision": "1.1.1",
-      "modified": "2026-09-17",
-      "history": [
-        {
-          "revision": "1.1.1",
-          "changes": "Simplify attendee names and fix Unicode duplicate matching."
-        },
-        {
-          "revision": "1.1.0",
-          "changes": "Add private contact and event-planning features with validation and documentation."
-        },
-        {
-          "revision": "1.0.0",
-          "changes": "Initial implementation."
-        }
-      ]
-    },
-    "CHANGELOG.md": {
-      "revision": "1.1.2",
-      "modified": "2026-09-17",
-      "history": [
-        {
-          "revision": "1.1.2",
-          "changes": "Document the invite/admin session-separation fix."
-        },
-        {
-          "revision": "1.1.1",
-          "changes": "Simplify attendee names and fix Unicode duplicate matching."
-        },
-        {
-          "revision": "1.1.0",
-          "changes": "Add private contact and event-planning features with validation and documentation."
-        },
-        {
-          "revision": "1.0.0",
-          "changes": "Initial implementation."
-        }
-      ]
-    },
-    "project.json": {
-      "revision": "1.1.2",
-      "modified": "2026-09-17",
-      "history": [
-        {
-          "revision": "1.1.2",
-          "changes": "Track the invite/public access-mode fix."
-        },
-        {
-          "revision": "1.1.1",
-          "changes": "Simplify attendee names and fix Unicode duplicate matching."
-        },
-        {
-          "revision": "1.1.0",
-          "changes": "Add private contact and event-planning features with validation and documentation."
-        },
-        {
-          "revision": "1.0.0",
-          "changes": "Initial implementation."
-        }
-      ]
-    },
-    ".gitignore": {
-      "revision": "1.0.0",
-      "modified": "2026-09-17",
-      "history": [
-        {
-          "revision": "1.0.0",
-          "changes": "Initial implementation."
-        }
-      ]
-    },
-    "data/.htaccess": {
-      "revision": "1.0.0",
-      "modified": "2026-09-17",
-      "history": [
-        {
-          "revision": "1.0.0",
-          "changes": "Initial implementation."
-        }
-      ]
-    },
-    "tests/smoke.mjs": {
-      "revision": "1.1.1",
-      "modified": "2026-09-17",
-      "history": [
-        {
-          "revision": "1.1.1",
-          "changes": "Simplify attendee names and fix Unicode duplicate matching."
-        },
-        {
-          "revision": "1.1.0",
-          "changes": "Add private contact and event-planning features with validation and documentation."
-        },
-        {
-          "revision": "1.0.0",
-          "changes": "Initial implementation."
-        }
-      ]
-    }
+    "index.php": {"revision":"1.2.0","modified":"2026-09-17","history":[{"revision":"1.2.0","changes":"Add optional admin and event password fields and load password handling."},{"revision":"1.1.2","changes":"Load the invite-mode client fix and update the visible project revision."},{"revision":"1.0.0","changes":"Initial implementation."}]},
+    "api.php": {"revision":"1.2.0","modified":"2026-09-17","history":[{"revision":"1.2.0","changes":"Enforce optional hashed admin/event passwords without exposing password hashes."},{"revision":"1.1.1","changes":"Simplify attendee names and fix Unicode duplicate matching."},{"revision":"1.0.0","changes":"Initial implementation."}]},
+    "app.js": {"revision":"1.1.2","modified":"2026-09-17","history":[{"revision":"1.1.2","changes":"Generate explicit invite-mode links, suppress remembered admin access in invite sessions, and preserve stored admin recovery credentials."},{"revision":"1.0.0","changes":"Initial implementation."}]},
+    "password-ui.js": {"revision":"1.2.0","modified":"2026-09-17","history":[{"revision":"1.2.0","changes":"Handle password prompts, session-only password storage, protected API retries, and password replacement."}]},
+    "styles.css": {"revision":"1.1.0","modified":"2026-09-17","history":[{"revision":"1.1.0","changes":"Add private contact and event-planning features with validation and documentation."},{"revision":"1.0.0","changes":"Initial implementation."}]},
+    "README.md": {"revision":"1.1.1","modified":"2026-09-17","history":[{"revision":"1.1.1","changes":"Simplify attendee names and fix Unicode duplicate matching."},{"revision":"1.0.0","changes":"Initial implementation."}]},
+    "CHANGELOG.md": {"revision":"1.2.0","modified":"2026-09-17","history":[{"revision":"1.2.0","changes":"Document optional password protection."},{"revision":"1.1.2","changes":"Document the invite/admin session-separation fix."},{"revision":"1.0.0","changes":"Initial implementation."}]},
+    "project.json": {"revision":"1.2.0","modified":"2026-09-17","history":[{"revision":"1.2.0","changes":"Track password-protection files and project revision."},{"revision":"1.1.2","changes":"Track the invite/public access-mode fix."},{"revision":"1.0.0","changes":"Initial implementation."}]},
+    ".gitignore": {"revision":"1.0.0","modified":"2026-09-17","history":[{"revision":"1.0.0","changes":"Initial implementation."}]},
+    "data/.htaccess": {"revision":"1.0.0","modified":"2026-09-17","history":[{"revision":"1.0.0","changes":"Initial implementation."}]},
+    "tests/smoke.mjs": {"revision":"1.1.1","modified":"2026-09-17","history":[{"revision":"1.1.1","changes":"Simplify attendee names and fix Unicode duplicate matching."},{"revision":"1.0.0","changes":"Initial implementation."}]},
+    "tests/passwords.mjs": {"revision":"1.2.0","modified":"2026-09-17","history":[{"revision":"1.2.0","changes":"Add regression checks for event and admin passwords, unauthorized access, voting protection, and password replacement."}]}
   }
 }
