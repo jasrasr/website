@@ -388,6 +388,9 @@
           }
         }
         if (pressedDigits.has(digit)) return;
+        if (pressedDigits.size > 0) {
+          releaseAllPressedDigits();
+        }
         pressedDigits.add(digit);
         pressDigit(digit);
       };
