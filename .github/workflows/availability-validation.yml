@@ -1,0 +1,30 @@
+# Revision 1.0.0 | 2026-09-17 | Catch Availability conflict markers and syntax failures.
+name: Availability validation
+on:
+  pull_request:
+    paths: ['availability/**', '.github/workflows/availability-validation.yml']
+  push:
+    branches: [main]
+    paths: ['availability/**', '.github/workflows/availability-validation.yml']
+permissions:
+  contents: read
+jobs:
+  source-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject committed conflict markers
+        run: |
+          if git grep -n -E '^(<{7}|={7}|>{7})( |$)' -- availability; then
+            echo 'Unresolved conflict markers found in Availability source.'
+            exit 1
+          fi
+      - name: Validate PHP entry points
+        run: |
+          php -l availability/index.php
+          php -l availability/api.php
+      - name: Validate JavaScript and project metadata
+        run: |
+          node --check availability/app.js
+          node --check availability/password-ui.js
+          node -e "JSON.parse(require('fs').readFileSync('availability/project.json','utf8'))"

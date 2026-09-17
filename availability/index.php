@@ -1,11 +1,6 @@
 <?php
-<<<<<<< Updated upstream
-/** Revision 1.3.0 | 2026-09-17 | Optional attendee-added date/time options.
- * History: 1.3.0 — Organizer-controlled attendee-added options; 1.2.0 — Independent optional admin and invite/event passwords; 1.1.2 — Invite links force attendee mode even in a browser that remembers admin access; 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Initial responsive availability poll interface. */
-=======
-/** Revision 1.1.1 | 2026-09-17 | Private contact fields, party details, proposed times and deadlines.
- * History: 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Initial responsive availability poll interface. */
->>>>>>> Stashed changes
+/** Revision 1.3.1 | 2026-09-17 | Optional attendee-added date/time options.
+ * History: 1.3.1 — Remove committed conflict markers while preserving all 1.3.0 features; 1.3.0 — Organizer-controlled attendee-added options; 1.2.0 — Independent optional admin and invite/event passwords; 1.1.2 — Invite links force attendee mode even in a browser that remembers admin access; 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Initial responsive availability poll interface. */
 declare(strict_types=1);
 header('Referrer-Policy: no-referrer');
 header('X-Content-Type-Options: nosniff');
@@ -16,11 +11,7 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-sr
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Availability · Find a day that works</title>
-<<<<<<< Updated upstream
-  <link rel="stylesheet" href="styles.css?v=1.1.1"><script src="password-ui.js?v=1.2.0"></script><script src="app.js?v=1.3.0" defer></script>
-=======
-  <link rel="stylesheet" href="styles.css?v=1.1.1"><script src="app.js?v=1.1.1" defer></script>
->>>>>>> Stashed changes
+  <link rel="stylesheet" href="styles.css?v=1.1.1"><script src="password-ui.js?v=1.2.0"></script><script src="app.js?v=1.3.1" defer></script>
 </head>
 <body>
 <header><a class="brand" href="./"><span class="brand-icon">✓</span> availability</a><a href="./" class="new-link">+ New event</a></header>
@@ -36,14 +27,10 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-sr
       <label>A little context <span class="muted">(optional)</span><textarea name="description" maxlength="2000" rows="2" placeholder="Where, what time, or anything people should know"></textarea></label>
       <label>Location <span class="muted">(optional; can be tentative)</span><input name="location" maxlength="300" placeholder="Park, restaurant, address, or still deciding"></label>
       <div class="two-columns"><label>Event time zone<select name="timezone" id="timezone"></select><span class="muted">All proposed times and the voting deadline use this zone. Locked after the first response.</span></label><label>Voting expiration <span class="muted">(optional)</span><input name="expiresLocal" type="datetime-local"><span class="muted">Leave blank for no deadline. Voting closes automatically at this time in the event time zone.</span></label></div>
-<<<<<<< Updated upstream
       <fieldset><legend>Optional password protection</legend><p class="muted">Passwords are stored as secure hashes. Entered passwords are remembered only for the current browser tab/session.</p><div class="two-columns"><label>Admin password <span class="muted">(optional)</span><input id="admin-password" type="password" minlength="4" maxlength="200" autocomplete="new-password"><span class="muted">Requires both the private admin link and this password before editing the event or viewing private attendee details.</span></label><label>Confirm admin password<input id="admin-password-confirm" type="password" minlength="4" maxlength="200" autocomplete="new-password"></label></div><div class="two-columns"><label>Event / invite password <span class="muted">(optional)</span><input id="event-password" type="password" minlength="4" maxlength="200" autocomplete="new-password"><span class="muted">Attendees must enter this before viewing event details, results, or submitting a response.</span></label><label>Confirm event / invite password<input id="event-password-confirm" type="password" minlength="4" maxlength="200" autocomplete="new-password"></label></div><p class="muted">There is no password-reset service, so keep the password somewhere safe.</p></fieldset>
       <fieldset><legend>Proposed dates and times — not a confirmed schedule</legend><div class="date-add"><input id="date-input" type="date" aria-label="Add an event date"><input id="time-input" type="time" aria-label="Proposed time (optional)"><button id="add-date" type="button" class="secondary">+ Add option</button></div><div id="date-chips" class="chips"></div><p class="muted">Add the same date with different times to compare options, or leave time blank to vote on the day only. Up to 60 options. Click an option below to remove it.</p></fieldset>
       <label class="inline"><input type="checkbox" name="allowAttendeeDates"> Allow attendees to add additional date/time options</label>
       <p class="muted">When enabled, anyone who can access the poll can add another option. Existing responses remain unchanged and the new option starts unanswered for everyone.</p>
-=======
-      <fieldset><legend>Proposed dates and times — not a confirmed schedule</legend><div class="date-add"><input id="date-input" type="date" aria-label="Add an event date"><input id="time-input" type="time" aria-label="Proposed time (optional)"><button id="add-date" type="button" class="secondary">+ Add option</button></div><div id="date-chips" class="chips"></div><p class="muted">Add the same date with different times to compare options, or leave time blank to vote on the day only. Up to 60 options. Click an option below to remove it.</p></fieldset>
->>>>>>> Stashed changes
       <label id="closed-label" class="inline" hidden><input type="checkbox" name="closed"> Close this poll to new or updated responses</label>
       <p id="edit-note" class="muted" hidden>Existing answers stay on retained dates. New dates start unanswered; removing a date discards its answers.</p>
       <button id="save-event" type="submit">Create event &amp; get links →</button><button id="cancel-edit" type="button" class="secondary" hidden>Cancel</button>
@@ -51,11 +38,7 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-sr
   </section>
   <div id="poll" hidden>
     <div class="toolbar"><span id="event-meta" class="muted"></span><div><button id="copy-public" class="secondary">Copy invite link</button> <button id="edit-event" class="secondary" hidden>Edit event</button></div></div>
-<<<<<<< Updated upstream
     <section id="private-links" class="panel" hidden><h2>Keep your private links</h2><p class="muted">Save these to return from another device. Only share the invite link with attendees. An admin password, if configured, is required in addition to the admin link.</p><div id="admin-link-row" hidden><label>Private admin link<input id="admin-link" readonly></label><button id="copy-admin" class="secondary">Copy admin link</button></div><div id="response-link-row" hidden><label>Your private response link<input id="response-link" readonly></label><button id="copy-response" class="secondary">Copy response link</button></div></section>
-=======
-    <section id="private-links" class="panel" hidden><h2>Keep your private links</h2><p class="muted">Save these to return from another device. Only share the invite link with attendees.</p><div id="admin-link-row" hidden><label>Private admin link<input id="admin-link" readonly></label><button id="copy-admin" class="secondary">Copy admin link</button></div><div id="response-link-row" hidden><label>Your private response link<input id="response-link" readonly></label><button id="copy-response" class="secondary">Copy response link</button></div></section>
->>>>>>> Stashed changes
     <div id="schedule-note" class="best-summary"></div>
     <div class="poll-layout">
       <section class="panel vote-panel"><p class="eyebrow">YOUR TURN</p><h2>Your availability</h2><p class="muted">Answer each date, or use a shortcut and change the exceptions. Unanswered dates never count as a yes.</p>
@@ -66,7 +49,6 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-sr
             <label>Email <span class="muted">· only you and this event’s admin</span><input id="email" type="email" maxlength="254" autocomplete="email" aria-describedby="private-notice" placeholder="Email address (optional)"></label>
           </fieldset>
           <fieldset><legend>Your group (optional; visible to everyone)</legend><p class="muted">Include yourself. These counts apply to each option you mark available. Leave blank if not known yet.</p><div class="two-columns"><label>Total adults<input id="adults" type="number" min="0" max="1000" step="1" placeholder="Not specified"></label><label>Total kids<input id="kids" type="number" min="0" max="1000" step="1" placeholder="Not specified"></label></div></fieldset>
-<<<<<<< Updated upstream
           <fieldset><legend>Food to share (optional; visible to everyone)</legend><label>Food type<select id="food-type"><option value="">Not decided</option><option>Main dish</option><option>Side dish</option><option>Dessert</option><option>Snack</option><option>Drinks</option><option>Other</option><option>Not bringing food</option></select></label><label>What are you bringing?<input id="food-note" maxlength="300" placeholder="For example: pasta salad for 8"></label></fieldset>
           <div class="shortcuts"><button type="button" data-fill="yes" class="secondary">Can attend all</button><button type="button" data-fill="no" class="secondary">Can’t attend any</button><button type="button" data-fill="" class="text-button">Clear</button></div><div id="vote-dates"></div><p id="answer-summary" class="muted"></p><button id="save-vote" type="submit">Save my availability</button><p id="vote-state" class="muted" aria-live="polite"></p>
         </form>
@@ -78,16 +60,5 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-sr
     <section id="admin-contacts" class="panel" hidden><h2>Private attendee details</h2><p class="muted">Visible only to this event’s admin. These details are not included in public results.</p><div id="admin-contact-table" class="table-scroll" tabindex="0" aria-label="Private attendee details"></div></section>
   </div>
 </main>
-<footer>availability <span>v1.3.0 · Updated September 17, 2026</span></footer>
-=======
-          <fieldset><legend>Food to share (optional; visible to everyone)</legend><label>Food type<select id="food-type"><option value="">Not decided</option><option>Main dish</option><option>Side dish</option><option>Dessert</option><option>Snack</option><option>Drinks</option><option>Other</option><option>Not bringing food</option></select></label><label>What are you bringing?<input id="food-note" maxlength="300" placeholder="For example: pasta salad for 8"></label></fieldset><div class="shortcuts"><button type="button" data-fill="yes" class="secondary">Can attend all</button><button type="button" data-fill="no" class="secondary">Can’t attend any</button><button type="button" data-fill="" class="text-button">Clear</button></div><div id="vote-dates"></div><p id="answer-summary" class="muted"></p><button id="save-vote" type="submit">Save my availability</button><p id="vote-state" class="muted" aria-live="polite"></p></form>
-      </section>
-      <section class="panel results-panel"><div class="section-heading"><div><p class="eyebrow">THE GROUP AT A GLANCE</p><h2>What’s looking good?</h2></div><span class="pill" id="response-count">0 responses</span></div><p id="live-state" class="muted" aria-live="polite">Refreshing every 5 seconds</p><div id="best-summary" class="best-summary"></div><div id="results"></div><p class="legend"><span class="yes-text">✓ Can attend</span> <span class="no-text">✕ Can’t attend</span> <span>— Unanswered</span></p></section>
-    </div>
-    <section class="panel"><h2>Everyone’s availability</h2><p class="muted">Names, availability, group counts, and food contributions are visible to anyone with this event’s invite link. Phone numbers and emails are never shown here.</p><div id="response-table" class="table-scroll" tabindex="0" aria-label="Scroll to see all dates"></div></section>
-    <section id="admin-contacts" class="panel" hidden><h2>Private attendee details</h2><p class="muted">Visible only to this event’s admin. These details are not included in public results.</p><div id="admin-contact-table" class="table-scroll" tabindex="0" aria-label="Private attendee details"></div></section>
-  </div>
-</main>
-<footer>availability <span>v1.1.1 · Updated September 17, 2026</span></footer>
->>>>>>> Stashed changes
+<footer>availability <span>v1.3.1 · Updated September 17, 2026</span></footer>
 </body></html>
