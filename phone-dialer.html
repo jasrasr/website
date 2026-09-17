@@ -160,6 +160,7 @@
     let toneToken = 0;
     const activeKeys = new Set();
     const pressedDigits = new Set();
+    const supportsPointerEvents = "PointerEvent" in window;
 
     const dtmf = {
       "1": [697, 1209],
@@ -313,23 +314,29 @@
         releasePressedDigit(digit);
       };
 
-      button.addEventListener("pointerdown", onPress);
-      button.addEventListener("pointerup", onRelease);
-      button.addEventListener("pointerleave", onRelease);
-      button.addEventListener("pointercancel", onRelease);
-      button.addEventListener("touchstart", onPress, { passive: false });
-      button.addEventListener("touchend", onRelease);
-      button.addEventListener("touchcancel", onRelease);
-      button.addEventListener("mousedown", onPress);
-      button.addEventListener("mouseup", onRelease);
-      button.addEventListener("mouseleave", onRelease);
+      if (supportsPointerEvents) {
+        button.addEventListener("pointerdown", onPress);
+        button.addEventListener("pointerup", onRelease);
+        button.addEventListener("pointerleave", onRelease);
+        button.addEventListener("pointercancel", onRelease);
+      } else {
+        button.addEventListener("touchstart", onPress, { passive: false });
+        button.addEventListener("touchend", onRelease);
+        button.addEventListener("touchcancel", onRelease);
+        button.addEventListener("mousedown", onPress);
+        button.addEventListener("mouseup", onRelease);
+        button.addEventListener("mouseleave", onRelease);
+      }
     });
 
-    document.addEventListener("touchend", releaseAllPressedDigits);
-    document.addEventListener("touchcancel", releaseAllPressedDigits);
-    document.addEventListener("mouseup", releaseAllPressedDigits);
-    document.addEventListener("pointerup", releaseAllPressedDigits);
-    document.addEventListener("pointercancel", releaseAllPressedDigits);
+    if (supportsPointerEvents) {
+      document.addEventListener("pointerup", releaseAllPressedDigits);
+      document.addEventListener("pointercancel", releaseAllPressedDigits);
+    } else {
+      document.addEventListener("touchend", releaseAllPressedDigits);
+      document.addEventListener("touchcancel", releaseAllPressedDigits);
+      document.addEventListener("mouseup", releaseAllPressedDigits);
+    }
     window.addEventListener("blur", releaseAllPressedDigits);
 
     document.addEventListener("keydown", event => {
