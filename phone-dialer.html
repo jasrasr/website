@@ -273,6 +273,16 @@
       }
     }
 
+    function releasePressedDigit(digit) {
+      if (!pressedDigits.has(digit)) return;
+      pressedDigits.delete(digit);
+      releaseDigit(digit);
+    }
+
+    function releaseAllPressedDigits() {
+      Array.from(pressedDigits).forEach(releasePressedDigit);
+    }
+
     function normalizeKeyboardKey(event) {
       if (event.key >= "0" && event.key <= "9") {
         return event.key;
@@ -300,9 +310,7 @@
       };
 
       const onRelease = () => {
-        if (!pressedDigits.has(digit)) return;
-        pressedDigits.delete(digit);
-        releaseDigit(digit);
+        releasePressedDigit(digit);
       };
 
       button.addEventListener("pointerdown", onPress);
@@ -316,6 +324,11 @@
       button.addEventListener("mouseup", onRelease);
       button.addEventListener("mouseleave", onRelease);
     });
+
+    document.addEventListener("touchend", releaseAllPressedDigits);
+    document.addEventListener("touchcancel", releaseAllPressedDigits);
+    document.addEventListener("mouseup", releaseAllPressedDigits);
+    window.addEventListener("blur", releaseAllPressedDigits);
 
     document.addEventListener("keydown", event => {
       const digit = normalizeKeyboardKey(event);
