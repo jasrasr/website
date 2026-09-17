@@ -163,6 +163,7 @@
     const pressedDigits = new Set();
     const supportsPointerEvents = "PointerEvent" in window;
     const touchIdsByDigit = new Map();
+    const pointerDigitById = new Map();
     let ignoreSyntheticMouseUntil = 0;
 
     const dtmf = {
@@ -286,6 +287,11 @@
       if (!pressedDigits.has(digit)) return;
       pressedDigits.delete(digit);
       touchIdsByDigit.delete(digit);
+      Array.from(pointerDigitById.entries()).forEach(([pointerId, pointerDigit]) => {
+        if (pointerDigit === digit) {
+          pointerDigitById.delete(pointerId);
+        }
+      });
       releaseDigit(digit);
     }
 
@@ -342,6 +348,13 @@
         return;
       }
 
+      function releaseDigitForPointerEvent(event) {
+        const digit = pointerDigitById.get(event.pointerId);
+        if (!digit) return;
+        pointerDigitById.delete(event.pointerId);
+        releasePressedDigit(digit);
+      }
+
       Array.from(touchIdsByDigit.entries()).forEach(([digit, touchIds]) => {
         endedTouchIds.forEach(touchId => touchIds.delete(touchId));
         if (touchIds.size === 0) {
@@ -381,6 +394,7 @@
           registerTouchPress(digit, event);
         }
         if (event.type === "pointerdown" && typeof event.currentTarget?.setPointerCapture === "function") {
+          pointerDigitById.set(event.pointerId, digit);
           try {
             event.currentTarget.setPointerCapture(event.pointerId);
           } catch {
@@ -396,6 +410,13 @@
       };
 
       const onRelease = event => {
+        if (event.type.startsWith("pointer")) {
+          const mappedDigit = pointerDigitById.get(event.pointerId);
+          if (mappedDigit !== digit) {
+            return;
+          }
+          pointerDigitById.delete(event.pointerId);
+        }
         if (event.type === "lostpointercapture" && !pressedDigits.has(digit)) {
           return;
         }
@@ -420,7 +441,10 @@
       }
     });
 
-    if (!supportsPointerEvents) {
+    if (supportsPointerEvents) {
+      document.addEventListener("pointerup", releaseDigitForPointerEvent);
+      document.addEventListener("pointercancel", releaseDigitForPointerEvent);
+    } else {
       document.addEventListener("touchend", releaseFromGlobalEvent);
       document.addEventListener("touchcancel", releaseFromGlobalEvent);
       document.addEventListener("mouseup", releaseFromGlobalEvent);
