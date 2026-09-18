@@ -1,6 +1,6 @@
 <?php
-/** Revision 1.3.1 | 2026-09-17 | Optional attendee-added date/time options.
- * History: 1.3.1 — Remove committed conflict markers while preserving all 1.3.0 features; 1.3.0 — Organizer-controlled attendee-added options; 1.2.0 — Independent optional admin and invite/event passwords; 1.1.2 — Invite links force attendee mode even in a browser that remembers admin access; 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Initial responsive availability poll interface. */
+/** Revision 1.3.2 | 2026-09-18 | Optional attendee-added date/time options.
+ * History: 1.3.2 — Attendee response recovery, link placement and return focus; 1.3.1 — Remove committed conflict markers while preserving all 1.3.0 features; 1.3.0 — Organizer-controlled attendee-added options; 1.2.0 — Independent optional admin and invite/event passwords; 1.1.2 — Invite links force attendee mode even in a browser that remembers admin access; 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Initial responsive availability poll interface. */
 declare(strict_types=1);
 header('Referrer-Policy: no-referrer');
 header('X-Content-Type-Options: nosniff');
@@ -11,7 +11,7 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-sr
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Availability · Find a day that works</title>
-  <link rel="stylesheet" href="styles.css?v=1.1.1"><script src="password-ui.js?v=1.2.0"></script><script src="app.js?v=1.3.1" defer></script>
+  <link rel="stylesheet" href="styles.css?v=1.3.2"><script src="password-ui.js?v=1.2.0"></script><script src="app.js?v=1.3.2" defer></script>
 </head>
 <body>
 <header><a class="brand" href="./"><span class="brand-icon">✓</span> availability</a><a href="./" class="new-link">+ New event</a></header>
@@ -38,10 +38,10 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-sr
   </section>
   <div id="poll" hidden>
     <div class="toolbar"><span id="event-meta" class="muted"></span><div><button id="copy-public" class="secondary">Copy invite link</button> <button id="edit-event" class="secondary" hidden>Edit event</button></div></div>
-    <section id="private-links" class="panel" hidden><h2>Keep your private links</h2><p class="muted">Save these to return from another device. Only share the invite link with attendees. An admin password, if configured, is required in addition to the admin link.</p><div id="admin-link-row" hidden><label>Private admin link<input id="admin-link" readonly></label><button id="copy-admin" class="secondary">Copy admin link</button></div><div id="response-link-row" hidden><label>Your private response link<input id="response-link" readonly></label><button id="copy-response" class="secondary">Copy response link</button></div></section>
+    <section id="private-links" class="panel" hidden><h2>Keep your private admin link</h2><p class="muted">Save these to return from another device. Only share the invite link with attendees. An admin password, if configured, is required in addition to the admin link.</p><div id="admin-link-row" hidden><label>Private admin link<input id="admin-link" readonly></label><button id="copy-admin" class="secondary">Copy admin link</button></div></section>
     <div id="schedule-note" class="best-summary"></div>
     <div class="poll-layout">
-      <section class="panel vote-panel"><p class="eyebrow">YOUR TURN</p><h2>Your availability</h2><p class="muted">Answer each date, or use a shortcut and change the exceptions. Unanswered dates never count as a yes.</p>
+      <section id="response-section" class="panel vote-panel" tabindex="-1" aria-label="Your availability"><p class="eyebrow">YOUR TURN</p><h2>Your availability</h2><p class="muted">Answer each date, or use a shortcut and change the exceptions. Unanswered dates never count as a yes.</p>
         <form id="vote-form">
           <label>Your name <span class="muted">(required; visible to everyone)</span><input id="voter-name" required maxlength="100" autocomplete="name" placeholder="Name others will see"></label>
           <fieldset class="private-fields"><legend>Private contact details (optional)</legend><p id="private-notice" class="muted">Only you and the admin of this event can see these details. Other attendees cannot see them.</p>
@@ -50,8 +50,10 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-sr
           </fieldset>
           <fieldset><legend>Your group (optional; visible to everyone)</legend><p class="muted">Include yourself. These counts apply to each option you mark available. Leave blank if not known yet.</p><div class="two-columns"><label>Total adults<input id="adults" type="number" min="0" max="1000" step="1" placeholder="Not specified"></label><label>Total kids<input id="kids" type="number" min="0" max="1000" step="1" placeholder="Not specified"></label></div></fieldset>
           <fieldset><legend>Food to share (optional; visible to everyone)</legend><label>Food type<select id="food-type"><option value="">Not decided</option><option>Main dish</option><option>Side dish</option><option>Dessert</option><option>Snack</option><option>Drinks</option><option>Other</option><option>Not bringing food</option></select></label><label>What are you bringing?<input id="food-note" maxlength="300" placeholder="For example: pasta salad for 8"></label></fieldset>
-          <div class="shortcuts"><button type="button" data-fill="yes" class="secondary">Can attend all</button><button type="button" data-fill="no" class="secondary">Can’t attend any</button><button type="button" data-fill="" class="text-button">Clear</button></div><div id="vote-dates"></div><p id="answer-summary" class="muted"></p><button id="save-vote" type="submit">Save my availability</button><p id="vote-state" class="muted" aria-live="polite"></p>
+          <div class="shortcuts"><button type="button" data-fill="yes" class="secondary">Can attend all</button><button type="button" data-fill="no" class="secondary">Can’t attend any</button><button type="button" data-fill="" class="text-button">Clear</button></div><div id="vote-dates"></div><p id="answer-summary" class="muted"></p><button id="save-vote" type="submit">Save my availability</button>
         </form>
+        <div id="response-link-row" hidden><label>Your private response link<input id="response-link" readonly></label><p class="muted">Save this link to restore and edit your availability on another device. Keep it private. If this event has a password, you’ll need that too.</p><button id="copy-response" type="button" class="secondary">Copy response link</button></div>
+        <p id="vote-state" class="muted" aria-live="polite"></p>
         <section id="attendee-date-panel" hidden><hr><h3>Add another option</h3><p class="muted">The organizer has allowed attendees to add additional date/time choices.</p><div class="date-add"><input id="attendee-date" type="date" aria-label="Additional event date"><input id="attendee-time" type="time" aria-label="Additional proposed time (optional)"><button id="attendee-add-date" type="button" class="secondary">+ Add option</button></div><p id="attendee-date-state" class="muted" aria-live="polite"></p></section>
       </section>
       <section class="panel results-panel"><div class="section-heading"><div><p class="eyebrow">THE GROUP AT A GLANCE</p><h2>What’s looking good?</h2></div><span class="pill" id="response-count">0 responses</span></div><p id="live-state" class="muted" aria-live="polite">Refreshing every 5 seconds</p><div id="best-summary" class="best-summary"></div><div id="results"></div><p class="legend"><span class="yes-text">✓ Can attend</span> <span class="no-text">✕ Can’t attend</span> <span>— Unanswered</span></p></section>
@@ -60,5 +62,5 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-sr
     <section id="admin-contacts" class="panel" hidden><h2>Private attendee details</h2><p class="muted">Visible only to this event’s admin. These details are not included in public results.</p><div id="admin-contact-table" class="table-scroll" tabindex="0" aria-label="Private attendee details"></div></section>
   </div>
 </main>
-<footer>availability <span>v1.3.1 · Updated September 17, 2026</span></footer>
+<footer>availability <span>v1.3.2 · Updated September 18, 2026</span></footer>
 </body></html>

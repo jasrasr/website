@@ -1,10 +1,12 @@
-/* Revision 1.3.1 | 2026-09-17 | Admin-controlled attendee-added date/time options.
- * History: 1.3.1 — Remove committed conflict markers while preserving all 1.3.0 features; 1.3.0 — Allow organizers to let attendees add options; 1.1.2 — Separate invite/public mode from remembered admin access; 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Event creation, voting, live rankings and response matrix. */
+/* Revision 1.3.2 | 2026-09-18 | Admin-controlled attendee-added date/time options.
+ * History: 1.3.2 — Attendee response recovery, link placement and return focus; 1.3.1 — Remove committed conflict markers while preserving all 1.3.0 features; 1.3.0 — Allow organizers to let attendees add options; 1.1.2 — Separate invite/public mode from remembered admin access; 1.1.1 — Single attendee name and Unicode-safe matching; 1.1.0 — Private contacts and event planning; 1.0.0 — Event creation, voting, live rankings and response matrix. */
 'use strict';
 const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 let eventId = params.get('event'), event = null, editing = false, dirty = false, sequence = 0;
-let inviteMode = params.get('view') === 'invite';
+let responseMode = params.get('view') === 'response';
+let inviteMode = params.get('view') === 'invite' || responseMode;
+let focusResponseOnLoad = false;
 let chosenDates = [], answers = {}, formRevision = 0, savingVote = false, addingDate = false;
 const storageKey = () => `availability:${eventId}`;
 let credentials = {};
@@ -15,7 +17,8 @@ function remember() {
     try { stored = JSON.parse(localStorage.getItem(storageKey()) || '{}') || {}; } catch { stored = {}; }
     const next = inviteMode && stored.adminToken ? {...stored, ...credentials, adminToken: stored.adminToken} : credentials;
     localStorage.setItem(storageKey(), JSON.stringify(next));
-  } catch { message('Browser storage is unavailable. Save your private link to return later.'); }
+    return true;
+  } catch { message('Browser storage is unavailable. Save your private link to return later.'); return false; }
 }
 function message(text, error = false) { $('message').textContent = text; $('message').classList.toggle('error', error); }
 function node(tag, text, className) { const element = document.createElement(tag); if (text !== undefined) element.textContent = text; if (className) element.className = className; return element; }
@@ -34,6 +37,8 @@ function link(kind) {
   const url = new URL(location.pathname, location.origin);
   url.searchParams.set('event', eventId);
   if (kind === 'invite') url.searchParams.set('view', 'invite');
+  else if (kind === 'response' || (kind === undefined && responseMode)) url.searchParams.set('view', 'response');
+  else if (kind === undefined && inviteMode) url.searchParams.set('view', 'invite');
   const fragment = new URLSearchParams();
   if (kind === 'admin') fragment.set('admin', credentials.adminToken);
   if (kind === 'response') { fragment.set('response', credentials.responseId); fragment.set('key', credentials.responseToken); }
@@ -57,7 +62,7 @@ function renderLinks() {
   const hasAdmin = !inviteMode && !!credentials.adminToken;
   $('admin-link-row').hidden = !hasAdmin;
   $('response-link-row').hidden = !credentials.responseToken;
-  $('private-links').hidden = !hasAdmin && !credentials.responseToken;
+  $('private-links').hidden = !hasAdmin;
   if (hasAdmin) $('admin-link').value = link('admin');
   if (credentials.responseToken) $('response-link').value = link('response');
   $('edit-event').hidden = !hasAdmin;
@@ -101,6 +106,7 @@ $('event-form').onsubmit = async e => {
     eventId = data.event.id;
     if (data.adminToken) credentials.adminToken = data.adminToken;
     inviteMode = false;
+    responseMode = false;
     remember();
     history.replaceState(null, '', link());
     editing = false;
@@ -212,7 +218,13 @@ $('vote-form').onsubmit = async e => {
     const details = Object.fromEntries(Object.entries({...privateFields, ...partyFields}).map(([key, id]) => [key, ['adults', 'kids'].includes(key) ? ($(id).value === '' ? null : Number($(id).value)) : $(id).value]));
     const data = await api({action: 'vote', id: eventId, revision: event.revision, name: $('voter-name').value, ...details, answers, responseId: credentials.responseId || '', responseToken: credentials.responseToken || ''});
     Object.assign(credentials, {responseId: data.responseId, responseToken: data.responseToken});
-    remember();
+    const remembered = remember();
+    if (inviteMode || !credentials.adminToken) {
+      inviteMode = true;
+      responseMode = true;
+      // Preserve recovery across reloads even when browser storage is blocked.
+      history.replaceState(null, '', remembered ? link() : link('response'));
+    }
     dirty = false;
     applyEvent(data.event, data);
     renderLinks();
@@ -316,6 +328,13 @@ async function refresh() {
     $('poll').hidden = false;
     applyEvent(data.event, data);
     renderLinks();
+    if (focusResponseOnLoad && data.myResponse) {
+      focusResponseOnLoad = false;
+      requestAnimationFrame(() => {
+        $('response-section').focus({preventScroll: true});
+        $('response-section').scrollIntoView({block: 'start'});
+      });
+    }
     $('live-state').textContent = `Live · Updated ${new Date().toLocaleTimeString()} · Refreshes every 5 seconds`;
   } catch (err) {
     if (request !== sequence) return;
@@ -327,10 +346,23 @@ if (eventId) {
   $('setup').hidden = true;
   try { credentials = JSON.parse(localStorage.getItem(storageKey()) || '{}') || {}; } catch { credentials = {}; }
   const fragment = new URLSearchParams(location.hash.slice(1));
-  if (fragment.get('admin')) { credentials.adminToken = fragment.get('admin'); inviteMode = false; }
-  else if (inviteMode) delete credentials.adminToken;
-  if (fragment.get('response') && fragment.get('key')) { credentials.responseId = fragment.get('response'); credentials.responseToken = fragment.get('key'); }
-  if (location.hash) { remember(); history.replaceState(null, '', link()); }
+  if (fragment.get('response') && fragment.get('key')) {
+    // Response links (including older links without view=response) take precedence
+    // over saved admin credentials and any stale response from this browser.
+    responseMode = true;
+    inviteMode = true;
+    credentials.responseId = fragment.get('response');
+    credentials.responseToken = fragment.get('key');
+  } else if (fragment.get('admin')) {
+    credentials.adminToken = fragment.get('admin');
+    inviteMode = false;
+    responseMode = false;
+  }
+  if (inviteMode) delete credentials.adminToken;
+  focusResponseOnLoad = !!credentials.responseId && !!credentials.responseToken;
+  if (focusResponseOnLoad) history.scrollRestoration = 'manual';
+  // Without persistence, retain the original fragment so refresh can recover it.
+  if (location.hash && remember()) history.replaceState(null, '', link());
   refresh();
 }
 setInterval(() => { if (!editing && !savingVote && !addingDate) refresh(); }, 5000);
