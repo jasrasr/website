@@ -132,7 +132,9 @@ function Resolve-WpTagIds {
         if ([string]::IsNullOrWhiteSpace($tagName)) { continue }
 
         $encoded = [uri]::EscapeDataString($tagName)
-        $matches = @(Invoke-WpJson -Method Get -Path "tags?search=$encoded&per_page=100&_fields=id,name")
+        # Force REST collection responses through the pipeline so PowerShell
+        # does not retain the response array as one nested item.
+        $matches = @(Invoke-WpJson -Method Get -Path "tags?search=$encoded&per_page=100&_fields=id,name" | ForEach-Object { $_ })
         $exact = $matches | Where-Object { $_.name -ieq $tagName } | Select-Object -First 1
 
         if (-not $exact -and $CreateMissingTags) {
@@ -356,7 +358,9 @@ if (-not [string]::IsNullOrWhiteSpace($Username) -and -not [string]::IsNullOrWhi
     $serverExistingSlugs = @()
     foreach ($item in @($ready)) {
         $encodedSlug = [uri]::EscapeDataString([string]$item.Data.slug)
-        $found = @(Invoke-WpJson -Method Get -Path "posts?slug=$encodedSlug&status=any&per_page=1&_fields=id,slug,status,link,date")
+        # WordPress returns a JSON array for this endpoint.  Enumerate it before
+        # wrapping it so $found[0] is a post object, not an Object[] container.
+        $found = @(Invoke-WpJson -Method Get -Path "posts?slug=$encodedSlug&status=any&per_page=1&_fields=id,slug,status,link,date" | ForEach-Object { $_ })
 
         if ($found.Count -gt 0) {
             $serverExistingSlugs += [string]$item.Data.slug
