@@ -1,5 +1,13 @@
-<!-- File revision 1.3.1 | Modified 2026-09-17 | Optional attendee-added date/time options. -->
+<!-- File revision 1.3.2 | Modified 2026-09-18 | Optional attendee-added date/time options. -->
 # Changelog
+
+## 1.3.2 — 2026-09-18
+
+- Fix attendee recovery links to force response mode, override stale response credentials, and exclude remembered admin credentials, including after reload.
+- Preserve legacy response links and retain token fragments when browser storage is unavailable.
+- Move the private response link immediately below Save my availability, keeping it copyable for closed polls.
+- Focus/scroll to the saved availability section once on recovery, without disrupting background refreshes.
+- Add browser regressions for recovery, passwords, privacy, storage failure, link placement and focus.
 
 ## 1.3.1 — 2026-09-17
 

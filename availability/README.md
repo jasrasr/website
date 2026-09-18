@@ -1,7 +1,7 @@
-<!-- Revision 1.3.1 | 2026-09-17 | Attendee-added options, optional password protection, privacy, party planning, proposed times and deadlines. -->
+<!-- Revision 1.3.2 | 2026-09-18 | Attendee-added options, optional password protection, privacy, party planning, proposed times and deadlines. -->
 # Availability
 
-**Project revision 1.3.1 · Updated 2026-09-17**
+**Project revision 1.3.2 · Updated 2026-09-18**
 
 A shared date poll for family events, group outings, and team meetups. Built with PHP, vanilla JavaScript, CSS, and one protected JSON document per event. No database, build step, account, or external service is required.
 
@@ -73,3 +73,11 @@ node availability/tests/suggestions.mjs http://127.0.0.1:8090
 Browser checklist: create events with attendee-added options disabled and enabled; verify the attendee add-option area appears only when enabled; add date-only and date/time options; verify duplicate and stale additions are rejected; confirm existing answers remain intact and new options start unanswered; disable the feature again as admin; then repeat on an event protected with an event password. Also test no-password, admin-only, invite-only, and dual-password events; confirm invite mode never exposes admin editing; verify wrong/missing passwords cannot read protected data; verify the admin password plus private admin link reveals private attendee details; verify event-password attendees can vote and edit their own response; and verify a new browser/session asks for the password again.
 
 GitHub Actions validates PHP syntax, JavaScript syntax, project JSON, and committed conflict markers on Availability changes. A deployment must use source that passes these checks; never commit unresolved stash/merge markers.
+
+## Attendee response recovery
+
+After saving, the private response link appears directly below **Save my availability**. It restores that attendee’s saved name, contact details, headcounts, food contribution, and answers, even in a new browser. It selects explicit response mode so remembered organizer credentials cannot override it. Older response links are accepted too. An event password is still required when configured; a response link does not grant admin access.
+
+Opening the private response link or reloading a page with a remembered response focuses and scrolls to **Your availability** once after successful recovery. Background refreshes leave focus and scrolling alone. The link stays copyable on closed/expired polls. If browser storage is blocked, the token fragment stays in the URL so reload can still recover; keep that URL private. Other users’ details are never recovered through an attendee link.
+
+The browser regression suite requires Playwright and Chromium and a disposable local PHP server: `node availability/tests/response-recovery.cjs http://127.0.0.1:8090`. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` if using a separately installed Chromium binary. It covers fresh browsers, protected events, remembered admin credentials, legacy links, reloads, blocked storage, editing the same response, placement, focus, and closed polls.
