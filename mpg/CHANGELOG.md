@@ -10,6 +10,10 @@ The project uses a lightweight semantic-versioning approach:
 
 ## [Unreleased]
 
+### Added
+
+- Visible OpenAI/OCR.space extraction-provider status on the photo review screen
+
 ### Planned
 
 - Search/recent ordering for saved station profiles
