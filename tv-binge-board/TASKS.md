@@ -5,7 +5,7 @@ Description: Restart-friendly task list and implementation plan for continuing d
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-05
-Revision: 1.5.23
+Revision: 1.5.24
 -->
 
 # TV Binge Board Task List
@@ -51,6 +51,7 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] rev 1.5.21 - PNG/JPG screenshot attachments for suggestions.
 - [x] rev 1.5.22 - gap-aware episode/season prior-progress prompts.
 - [x] rev 1.5.23 - Matt list/detail/home progress cleanup.
+- [x] rev 1.5.24 - focus episode detail on the season containing the next episode to watch.
 
 ## Matt feedback
 
@@ -61,6 +62,7 @@ The project has one overall revision in `APP_VERSION`, `CHANGELOG.md`, and the R
 - [x] Auto-scroll to the selected unwatched season on first item-detail load.
 - [x] Keep the List page Hide 100% / caught-up / finished setting persistent per user.
 - [x] Hide 100% watched/caught-up/finished shows from Home screen media sections.
+- [x] Open the episode detail page at the season containing the next episode to watch, not the latest season with any unwatched episode.
 
 ## Suggestion board
 
