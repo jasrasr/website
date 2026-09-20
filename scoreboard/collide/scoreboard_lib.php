@@ -1,21 +1,22 @@
 <?php declare(strict_types=1);
 /**
  * Filename: collide/scoreboard_lib.php
- * Revision : 1.3.0
+ * Revision : 1.4.0
  * Description : Core library for CVC Collide Scoreboard. Defines 6 teams
  *               (6th-8th Boys/Girls), handles JSON file read/write with file locking,
  *               and normalizes Collide-only motto, walk-up song, and hurray metadata.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-09
- * Modified Date : 2026-09-13
+ * Modified Date : 2026-09-20
  * Changelog :
  * 1.0.0 Initial release for Collide scoreboard instance
  * 1.1.0 Add per-team motto and walk-up song metadata defaults/normalization
  * 1.2.0 Add placeholder quick-song keys for every Collide team
  * 1.3.0 Add hurray event default and normalization
+ * 1.4.0 Store live scores/mottos in a persistent runtime folder outside the deployed Git path
  */
 
-const SCOREBOARD_DATA_FILE = __DIR__ . '/data/scores.json';
+const SCOREBOARD_LEGACY_DATA_FILE = __DIR__ . '/data/scores.json';
 
 function defaultCollidePlaceholderSong(string $teamId): string
 {
@@ -197,15 +198,105 @@ function scoreboardNormalizeData(array $data): array
     return $data;
 }
 
+function scoreboardEnsureDirectory(string $directory): bool
+{
+    if (!is_dir($directory) && !@mkdir($directory, 0775, true)) {
+        return false;
+    }
+
+    return is_dir($directory) && is_writable($directory);
+}
+
+function scoreboardWriteDenyHtaccess(string $directory): void
+{
+    if (!is_dir($directory) || !is_writable($directory)) {
+        return;
+    }
+
+    $path = $directory . '/.htaccess';
+    if (is_file($path)) {
+        return;
+    }
+
+    @file_put_contents($path, "Require all denied\n", LOCK_EX);
+}
+
+function scoreboardProtectRuntimeDirectories(string $runtimeDirectory, string $runtimeBaseDirectory): void
+{
+    scoreboardWriteDenyHtaccess($runtimeBaseDirectory);
+    scoreboardWriteDenyHtaccess(dirname($runtimeDirectory));
+    scoreboardWriteDenyHtaccess($runtimeDirectory);
+}
+
+function scoreboardMigrateLegacyDataFile(string $targetFile): void
+{
+    if (is_file($targetFile) || !is_file(SCOREBOARD_LEGACY_DATA_FILE)) {
+        return;
+    }
+
+    $targetReal = realpath($targetFile);
+    $legacyReal = realpath(SCOREBOARD_LEGACY_DATA_FILE);
+    if ($targetReal !== false && $legacyReal !== false && $targetReal === $legacyReal) {
+        return;
+    }
+
+    $raw = file_get_contents(SCOREBOARD_LEGACY_DATA_FILE);
+    $decoded = json_decode($raw ?: '', true);
+    if (!is_array($decoded)) {
+        return;
+    }
+
+    $encoded = json_encode(scoreboardNormalizeData($decoded), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    if ($encoded === false) {
+        return;
+    }
+
+    @file_put_contents($targetFile, $encoded . PHP_EOL, LOCK_EX);
+}
+
+function scoreboardDataFilePath(): string
+{
+    static $path = null;
+    if ($path !== null) {
+        return $path;
+    }
+
+    $explicitFile = trim((string) (getenv('COLLIDE_SCOREBOARD_DATA_FILE') ?: getenv('SCOREBOARD_DATA_FILE') ?: ''));
+    if ($explicitFile !== '' && scoreboardEnsureDirectory(dirname($explicitFile))) {
+        scoreboardMigrateLegacyDataFile($explicitFile);
+        return $path = $explicitFile;
+    }
+
+    $runtimeBaseDirectory = trim((string) (getenv('SCOREBOARD_RUNTIME_DIR') ?: ''));
+    if ($runtimeBaseDirectory === '') {
+        // __DIR__ normally resolves to public_html/github/scoreboard/collide on Hostinger.
+        // Three levels up is public_html, so this keeps live JSON outside the deployed /github tree.
+        $runtimeBaseDirectory = dirname(__DIR__, 3) . '/.scoreboard-runtime';
+    }
+
+    $runtimeBaseDirectory = rtrim($runtimeBaseDirectory, '/\\');
+    $runtimeDirectory = $runtimeBaseDirectory . '/scoreboard/collide';
+    if (scoreboardEnsureDirectory($runtimeDirectory)) {
+        scoreboardProtectRuntimeDirectories($runtimeDirectory, $runtimeBaseDirectory);
+        $targetFile = $runtimeDirectory . '/scores.json';
+        scoreboardMigrateLegacyDataFile($targetFile);
+        return $path = $targetFile;
+    }
+
+    // Last-resort fallback for local/dev installs that cannot write outside the deployed tree.
+    return $path = SCOREBOARD_LEGACY_DATA_FILE;
+}
+
 function ensureScoreboardDataFile(): void
 {
-    $directory = dirname(SCOREBOARD_DATA_FILE);
+    $dataFile = scoreboardDataFilePath();
+    $directory = dirname($dataFile);
     if (!is_dir($directory)) {
         mkdir($directory, 0775, true);
     }
 
-    if (!is_file(SCOREBOARD_DATA_FILE)) {
-        file_put_contents(SCOREBOARD_DATA_FILE, json_encode(scoreboardDefaultData(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL, LOCK_EX);
+    if (!is_file($dataFile)) {
+        file_put_contents($dataFile, json_encode(scoreboardDefaultData(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL, LOCK_EX);
     }
 }
 
@@ -213,7 +304,7 @@ function readScoreboardData(): array
 {
     ensureScoreboardDataFile();
 
-    $raw = file_get_contents(SCOREBOARD_DATA_FILE);
+    $raw = file_get_contents(scoreboardDataFilePath());
     $decoded = json_decode($raw ?: '', true);
 
     return scoreboardNormalizeData(is_array($decoded) ? $decoded : scoreboardDefaultData());
@@ -223,7 +314,7 @@ function writeScoreboardData(callable $callback): array
 {
     ensureScoreboardDataFile();
 
-    $handle = fopen(SCOREBOARD_DATA_FILE, 'c+');
+    $handle = fopen(scoreboardDataFilePath(), 'c+');
     if ($handle === false) {
         throw new RuntimeException('Unable to open the scoreboard data file.');
     }
