@@ -21,13 +21,23 @@ function config(): array {
     return $config;
 }
 
-function storage(): string {
-    $dir = realpath(config()['storage']);
-    $root = realpath($_SERVER['DOCUMENT_ROOT'] ?? '') ?: null;
-    if (!$dir || ($root && ($dir === $root || str_starts_with($dir, $root . '/')))) {
-        throw new RuntimeException('Storage must exist outside the document root.');
+/** Resolve symlinks and reject runtime data within source or publicly served trees. */
+function validate_storage_path(string $path): string {
+    $dir = realpath($path);
+    if (!$dir || !is_dir($dir)) throw new RuntimeException('Storage directory must exist.');
+    $roots = [realpath(dirname(__DIR__))]; // repository/deployment root, including CLI use
+    $documentRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
+    if ($documentRoot !== '') $roots[] = realpath($documentRoot);
+    foreach ($roots as $root) {
+        if ($root && ($dir === $root || str_starts_with($dir, rtrim($root, '/') . '/'))) {
+            throw new RuntimeException('Storage must be outside the source checkout and document root.');
+        }
     }
     return $dir;
+}
+
+function storage(): string {
+    return validate_storage_path(config()['storage']);
 }
 
 function allowance(string $key, int $limit, int $seconds): bool {

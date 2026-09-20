@@ -56,5 +56,36 @@ test('collector, dashboard authentication, filtering, escaping and storage prote
   for(const filename of ['index.html','page.php']) assert.match(fs.readFileSync(path.join(fixture,filename),'utf8'),/script defer src=/);
   execFileSync('php',[root+'/webstats/install.php',fixture,tracker,'--write']);
   assert.equal(fs.readFileSync(path.join(fixture,'index.html'),'utf8').split(tracker).length,2);
+  // Demo pages must remain outside the dashboard's excluded path.
+  for (const [file,id] of [['index.html','e'],['sample.php','f']]) {
+    const sample=await fetch(base+'../webstats-demo/'+file);
+    assert.equal(sample.status,200);
+    const markup=await sample.text();
+    assert.match(markup,/assets\/js\/tracker.js/);
+    assert.match(markup,/data-analytics-event="demo-primary"/);
+    assert.match(markup,/data-analytics-ignore id="ignored-button"/);
+    assert.equal((await send({...event,id:id.repeat(32),page:'https://source.test/github/webstats-demo/'+file})).status,200);
+  }
+  const boot=quote(root+'/webstats/bootstrap.php');
+  const reject = candidate => execFileSync('php',['-r',
+    'require '+boot+'; try {validate_storage_path('+quote(candidate)+'); exit(2);} catch (RuntimeException $e) {echo "rejected";}'], {encoding:'utf8'});
+  assert.equal(reject(root+'/webstats'),'rejected');
+  const symlink=path.join(temp,'unsafe-link');fs.symlinkSync(root+'/webstats',symlink);
+  assert.equal(reject(symlink),'rejected');
+
+  // Replace a disposable source deployment; retain and reread external events.
+  const deploy=path.join(temp,'deployment'), persistent=path.join(temp,'private-data');
+  fs.mkdirSync(persistent);const externalConfig=path.join(temp,'persistent-config.php');
+  const copySource=()=>{fs.mkdirSync(deploy,{recursive:true}); for(const dir of ['webstats','1-Framework']) fs.cpSync(path.join(root,dir),path.join(deploy,dir),{recursive:true});};
+  copySource();
+  execFileSync('php',['-r', '$c=require '+quote(config)+'; $c["storage"]='+quote(persistent)+'; file_put_contents('+quote(externalConfig)+',"<?php return ".var_export($c,true).";");']);
+  const env={...process.env,JASR_WEBSTATS_CONFIG:externalConfig};
+  const prefix='require '+quote(deploy+'/webstats/bootstrap.php')+'; ';
+  execFileSync('php',['-r',prefix+'save_event(normalize_event(json_decode('+quote(JSON.stringify(event))+',true),"https://source.test"));'],{env});
+  const stored=fs.readdirSync(persistent).find(x=>/^events-.*json$/.test(x));
+  const before=fs.readFileSync(path.join(persistent,stored),'utf8');
+  fs.rmSync(deploy,{recursive:true,force:true});copySource();
+  assert.equal(fs.readFileSync(path.join(persistent,stored),'utf8'),before);
+  assert.equal(execFileSync('php',['-r',prefix+'echo count(iterator_to_array(events_between(time()-60,time()+60,"")));'],{env,encoding:'utf8'}),'1');
   assert.doesNotMatch(logs,/Fatal error|Warning:/);
 });

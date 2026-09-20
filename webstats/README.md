@@ -45,6 +45,37 @@ No SSH? Generate `config.local.php` by running setup locally with PHP, then uplo
 
 To change the password, generate a replacement hash privately using PHP's `password_hash()` and update `password_hash`; remove active `jasr_webstats` session files through your hosting tools if you need immediate revocation. There is no public registration or default password.
 
+## Test the dashboard with the sample pages
+
+After deployment and initial setup, open **https://jasr.me/github/webstats-demo/**.
+It loads the real tracker and provides named buttons, an excluded button, links between HTML and PHP samples, and a query-string privacy test. The PHP version is at **https://jasr.me/github/webstats-demo/sample.php**. Both use relative script URLs and share the same test controls.
+
+1. Open the sample page to generate a page view.
+2. Click each named button once and try the HTML/PHP links.
+3. Use “Open Webstats in a new tab,” sign in, choose the current site and today, and refresh the report.
+4. Look for the demo paths in Top pages / Recent activity and named actions in Clicked destinations & actions. The excluded button must not create an event; query strings and fragments must not appear.
+
+These are real test events, not fabricated history. They count in totals and remain until normal retention. Loading the tracker alone does not confirm receipt: check the dashboard. Existing privacy settings and owner opt-out are respected. The sample folder intentionally sits outside the excluded dashboard path; no exclusion settings need changing.
+
+## Keep stats safe during GitHub updates
+
+Runtime stats **must remain outside both the source/deployment directory and every public web root**. The collector, dashboard and CLI reject storage inside the source checkout, including symlinks pointing back into it. Setup also rejects such storage before writing the config.
+
+Example layout (replace ACCOUNT with your actual hosting account):
+
+| Purpose | Location | Part of GitHub deployment? |
+|---|---|---|
+| Source and dashboard | /home/ACCOUNT/domains/jasr.me/public_html/github/webstats/ | Yes |
+| Sample pages | /home/ACCOUNT/domains/jasr.me/public_html/github/webstats-demo/ | Yes |
+| Stats, rate limits and locks | /home/ACCOUNT/private/webstats-data/ | No |
+| Optional external config | /home/ACCOUNT/private/webstats-config.php | No |
+
+Keep the configured `storage` path the same across releases. Deploy only the source checkout; do not include the private parent directory in upload/delete/sync jobs. A code update never initializes or clears the event store. The automated regression test replaces a disposable deployment directory and verifies that externally stored events survive and remain readable.
+
+For configuration that also survives clean deployments, set `JASR_WEBSTATS_CONFIG` to the external config path in the hosting PHP environment. Setup now honors this variable when generating config; the destination directory must already exist. Set the same variable for the retention cron job. An environment variable set only in your SSH shell does not automatically apply to web requests. Existing local config remains supported, but a deployment tool using deletion can remove ignored files: preserve `config.local.php` explicitly if you keep that option. Missing configuration fails closed; it does not erase stats.
+
+There is no automatic migration: if you already have stats, back them up and retain their configured external path. Moving to a different private path requires copying the existing event files while collection is stopped. Retention still deliberately deletes expired events; backups are separate from GitHub updates.
+
 ## Install on all your pages
 
 For **HTML or PHP output**, include this once near `</body>` (or in a shared rendered header/footer):
