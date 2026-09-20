@@ -1,6 +1,6 @@
 /*
  * Filename: collide/collide-viewer-polish.css
- * Revision : 1.0.2
+ * Revision : 1.0.3
  * Description : Collide-only public viewer typography overrides.
  * Author : Jason Lamb (with help from ChatGPT)
  * Created Date : 2026-09-20
@@ -9,6 +9,7 @@
  * 1.0.0 Make team names visually dominate the shortened walk-up song cue
  * 1.0.1 Enlarge the public viewer motto/subtitle text while keeping it below the team name
  * 1.0.2 Make motto/subtitle substantially larger than the Tap for song cue
+ * 1.0.3 Make the public viewer motto/subtitle italic
  */
 
 body.viewer-body[data-page-type="viewer"] .viewer-card .team-name {
@@ -22,6 +23,7 @@ body.viewer-body[data-page-type="viewer"] .viewer-card .collide-team-motto {
   margin: 0.1rem 0 0;
   color: color-mix(in srgb, var(--text-main) 88%, var(--team-color) 12%);
   font-size: clamp(1rem, min(2.15vw, 3vh), 1.45rem);
+  font-style: italic;
   font-weight: 900;
   line-height: 1.02;
   letter-spacing: 0;
