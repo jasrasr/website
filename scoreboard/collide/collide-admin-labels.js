@@ -1,26 +1,41 @@
 // Filename: collide-admin-labels.js
-// Revision : 1.0.0
+// Revision : 1.0.1
 // Description : Collide-only admin label overrides for clearer score-reset wording.
 // Author : Jason Lamb (with help from ChatGPT)
 // Created Date : 2026-09-13
-// Modified Date : 2026-09-13
+// Modified Date : 2026-09-20
 // Changelog :
+// 1.0.1 Avoid MutationObserver relabel loops by only writing labels when text actually changes
 // 1.0.0 Rename reset labels so they clearly refer to scores, not team names or metadata
 
-function collideRelabelResetButtons() {
-  document.querySelectorAll('button[data-action="reset-team"]').forEach((button) => {
-    button.textContent = 'Reset Team Scores';
-    button.setAttribute('aria-label', 'Reset this team score to zero');
-  });
+function collideSetButtonText(button, text, ariaLabel) {
+  if (!button) return;
 
-  const resetAllButton = document.querySelector('#reset-all-button');
-  if (resetAllButton) {
-    resetAllButton.textContent = 'Reset All Team Scores';
-    resetAllButton.setAttribute('aria-label', 'Reset all team scores to zero');
+  if (button.textContent !== text) {
+    button.textContent = text;
+  }
+
+  if (button.getAttribute('aria-label') !== ariaLabel) {
+    button.setAttribute('aria-label', ariaLabel);
   }
 }
 
-const collideLabelObserver = new MutationObserver(collideRelabelResetButtons);
+function collideRelabelResetButtons() {
+  document.querySelectorAll('button[data-action="reset-team"]').forEach((button) => {
+    collideSetButtonText(button, 'Reset Team Scores', 'Reset this team score to zero');
+  });
+
+  collideSetButtonText(
+    document.querySelector('#reset-all-button'),
+    'Reset All Team Scores',
+    'Reset all team scores to zero'
+  );
+}
+
+const collideLabelObserver = new MutationObserver(() => {
+  window.requestAnimationFrame(collideRelabelResetButtons);
+});
+
 collideLabelObserver.observe(document.querySelector('#app') || document.body, {
   childList: true,
   subtree: true
