@@ -2,11 +2,11 @@
 /**
  * File: item.php
  * Project: TV Binge Board
- * Description: Media detail page with editable metadata, next-up/caught-up TV status, TMDB links, metadata refresh controls, local artwork refresh controls, host-friendly watch progress actions, watched episode checkmarks, current-show auto-refresh, spoiler-safe episode display modes, completion percentage, gap-aware prior-progress prompts, most-recent-unwatched season focus, and TMDB-backed TV episode grid.
+ * Description: Media detail page with editable metadata, next-up/caught-up TV status, TMDB links, metadata refresh controls, local artwork refresh controls, host-friendly watch progress actions, watched episode checkmarks, current-show auto-refresh, spoiler-safe episode display modes, completion percentage, gap-aware prior-progress prompts, next-episode season focus, and TMDB-backed TV episode grid.
  * Author: Jason Lamb / ChatGPT
  * Created: 2026-07-02
  * Modified: 2026-07-05
- * Revision: 1.5.23
+ * Revision: 1.5.24
  */
 declare(strict_types=1);
 
@@ -55,7 +55,7 @@ $baseItemQuery = 'item.php?uid=' . rawurlencode($uid) . (app_is_admin($user) ? '
 $tmdbUrl = app_tmdb_public_url_for_item($item);
 $artworkQuery = 'artwork.php?uid=' . rawurlencode($uid) . (app_is_admin($user) ? '&u=' . rawurlencode($targetUsername) : '');
 
-function app_item_most_recent_unwatched_season(array $seasonSummaries, array $watched): int
+function app_item_fallback_unwatched_season(array $seasonSummaries, array $watched): int
 {
     $fallbackSeason = 1;
     $targetSeason = 0;
@@ -73,6 +73,13 @@ function app_item_most_recent_unwatched_season(array $seasonSummaries, array $wa
         }
     }
     return $targetSeason > 0 ? $targetSeason : $fallbackSeason;
+}
+
+function app_item_focus_season(array $seasonSummaries, array $watched, array $nextUpSummary): int
+{
+    $nextSeason = (int)($nextUpSummary['season'] ?? 0);
+    if ($nextSeason > 0) { return $nextSeason; }
+    return app_item_fallback_unwatched_season($seasonSummaries, $watched);
 }
 
 $seasonSummaries = [];
@@ -93,7 +100,7 @@ if (($item['type'] ?? '') === 'tv') {
     }
     usort($seasonSummaries, static fn($left, $right) => (int)($left['season_number'] ?? 0) <=> (int)($right['season_number'] ?? 0));
     if ($requestedSeason <= 0) {
-        $requestedSeason = app_item_most_recent_unwatched_season($seasonSummaries, $watched);
+        $requestedSeason = app_item_focus_season($seasonSummaries, $watched, $nextUpSummary);
         $autoScrollSeason = $requestedSeason > 1;
     }
 }
@@ -167,7 +174,7 @@ app_page_header((string)($item['title'] ?? 'Item'));
     </div>
     <p class="muted">Text-only mode is more compact and avoids episode stills that may reveal spoilers.</p>
     <p class="muted">Green with ✓ Watched = watched. Gray/dark without a checkmark = unwatched.</p>
-    <p class="muted">Opening this page jumps to the most recent season with unwatched episodes. The prior-episode prompt appears only when a selected episode or season would skip over unwatched earlier progress.</p>
+    <p class="muted">Opening this page jumps to the season containing the next episode to watch. The prior-episode prompt appears only when a selected episode or season would skip over unwatched earlier progress.</p>
     <div id="episodes"></div>
     <?php $hasUnwatchedBeforeEpisode = false; foreach ($seasonSummaries as $summary): ?>
         <?php
