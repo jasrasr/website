@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Webstats test page</title>
+<link rel="stylesheet" href="../webstats/assets/css/app.css">
+<script defer src="../webstats/assets/js/tracker.js"></script>
+<script defer src="demo.js"></script>
+</head>
+<body><main>
+<header class="heading"><div><p class="eyebrow">JASR / TRACKING TEST</p><h1>Give it a click<span>.</span></h1><p class="muted">Real test traffic for your Webstats dashboard. No sample numbers or fake history.</p></div></header>
+<section class="panel"><h2>1. Check the page view</h2><p>Opening this page should add one page view. Reloading adds another. This page is served as HTML; use the PHP link below to test both types.</p><p id="tracker-status" role="status">Checking the tracker…</p><noscript>JavaScript is disabled. Enable it to run this tracking test.</noscript></section>
+<section class="panel"><h2>2. Try the buttons</h2><p>Each click should appear under “Clicked destinations &amp; actions.”</p>
+<button type="button" data-analytics-event="demo-primary">Track a primary click</button>
+<button type="button" class="secondary" data-analytics-event="demo-secondary">Track a second action</button>
+<button type="button" class="secondary" data-analytics-ignore id="ignored-button">Excluded click</button>
+<p id="click-status" class="muted" role="status">The excluded button should not add an event.</p></section>
+<section class="panel"><h2>3. Try the links</h2><ul>
+<li><a href="sample.php" data-analytics-event="demo-open-php">Open the PHP sample page</a> — adds a link click and a PHP page view.</li>
+<li><a href="index.html" data-analytics-event="demo-open-html">Open the HTML sample page</a> — adds a link click and an HTML page view.</li>
+<li><a href="index.html?demo_token=not-a-real-secret#privacy" data-analytics-event="demo-query-test">Test a URL with a query string and fragment</a> — neither should appear in saved URLs.</li>
+</ul></section>
+<section class="panel" id="privacy"><h2>4. Verify the dashboard</h2><p><a href="../webstats/" target="_blank" rel="noopener" data-analytics-ignore>Open Webstats in a new tab</a>, sign in, select this site and today's date, then update the view. Look for <code>/webstats-demo/index.html</code> or <code>/webstats-demo/sample.php</code> in Top pages and Recent activity.</p><p class="muted">These visits and clicks count as real events and remain until normal retention removes them. Tracker loading does not prove delivery: verify the dashboard. Privacy settings, owner opt-out, blockers, or missing server setup can prevent collection.</p></section>
+<footer>Webstats demo · Stats are stored separately from deployed source code.</footer>
+</main></body></html>

@@ -1,10 +1,10 @@
 name: Webstats validation
 on:
   pull_request:
-    paths: ['webstats/**', '1-Framework/**', '.github/workflows/webstats-validation.yml']
+    paths: ['webstats-demo/**', 'webstats/**', '1-Framework/**', '.github/workflows/webstats-validation.yml']
   push:
     branches: [main]
-    paths: ['webstats/**', '1-Framework/**', '.github/workflows/webstats-validation.yml']
+    paths: ['webstats-demo/**', 'webstats/**', '1-Framework/**', '.github/workflows/webstats-validation.yml']
 permissions:
   contents: read
 jobs:
@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: PHP syntax
-        run: find webstats 1-Framework -name '*.php' -print0 | xargs -0 -n1 php -l
+        run: find webstats webstats-demo 1-Framework -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Tracker behavior
         run: node --test webstats/tests/tracker.test.cjs
       - name: Collector and dashboard HTTP tests
