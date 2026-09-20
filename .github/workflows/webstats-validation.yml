@@ -1,0 +1,20 @@
+name: Webstats validation
+on:
+  pull_request:
+    paths: ['webstats/**', '1-Framework/**', '.github/workflows/webstats-validation.yml']
+  push:
+    branches: [main]
+    paths: ['webstats/**', '1-Framework/**', '.github/workflows/webstats-validation.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax
+        run: find webstats 1-Framework -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Tracker behavior
+        run: node --test webstats/tests/tracker.test.cjs
+      - name: Collector and dashboard HTTP tests
+        run: node --test webstats/tests/server.test.cjs

@@ -30,3 +30,9 @@ if (!is_array($frameworkConfig)) {
 }
 
 // Services and optional modules will be initialized here as they are added.
+
+
+// Class loading only: existing callers do not start sessions or create storage.
+require_once __DIR__ . '/core/JsonStore.php';
+require_once __DIR__ . '/core/Response.php';
+require_once __DIR__ . '/modules/Authentication/PasswordSession.php';
