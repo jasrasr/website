@@ -1,11 +1,11 @@
 // Filename: app.js
-// Revision : 1.36.0
+// Revision : 1.36.1
 // Description : Frontend logic for CVC Scoreboard. Handles score display,
 //               admin controls, polling, team/title renaming, and dynamic grid layout.
 //               Shared across all scoreboard instances (root, collide, youth, frontlines).
 // Author : Jason Lamb (with help from Claude Code)
 // Created Date : 2026-03-24
-// Modified Date : 2026-06-21
+// Modified Date : 2026-09-20
 // Changelog :
 // 1.0.0 Initial PHP release, converted from Node.js/Express
 // 1.1.0 Fixed API URL paths to use relative query params instead of REST-style paths
@@ -45,6 +45,7 @@
 // 1.34.0 Added in-UI "Undo Reset All" button (admin only). Renders in the admin footer next to Reset All Teams whenever data.hasPreviousSnapshot is true. Clicking it POSTs restore-previous-scores which writes data/scores.previous.json back to data/scores.json. Confirm dialog before firing.
 // 1.35.0 Added optional data-viewer-team-limit support so Frontlines can show only the top 3 public scoreboard teams.
 // 1.36.0 Viewer team limits now include teams tied at the cutoff score; three visible teams use a full-width 3x1 grid.
+// 1.36.1 Add optional data-disable-admin-polling flag so specific admin pages can opt out of background re-renders.
 
 const quickValues = [1, 10, 100, 1000];
 const viewerPollIntervalMs = 2000;
@@ -673,7 +674,10 @@ async function init() {
   }
 
   const pollIntervalMs = pageType === 'viewer' ? viewerPollIntervalMs : adminPollIntervalMs;
-  setInterval(async () => {
+  const disableAdminPolling = pageType === 'admin' && document.body.dataset.disableAdminPolling === 'true';
+
+  if (!disableAdminPolling) {
+    setInterval(async () => {
     try {
       const activeTag = document.activeElement?.tagName;
       const inputFocused = activeTag === 'INPUT' || activeTag === 'TEXTAREA';
@@ -691,7 +695,8 @@ async function init() {
         setStatus('Unable to refresh scores right now.');
       }
     }
-  }, pollIntervalMs);
+    }, pollIntervalMs);
+  }
 }
 
 init().catch((error) => {
