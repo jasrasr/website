@@ -1,0 +1,50 @@
+/*
+ * Filename: collide/collide-viewer-polish.css
+ * Revision : 1.0.0
+ * Description : Collide-only public viewer typography overrides.
+ * Author : Jason Lamb (with help from ChatGPT)
+ * Created Date : 2026-09-20
+ * Modified Date : 2026-09-20
+ * Changelog :
+ * 1.0.0 Make team names visually dominate the shortened walk-up song cue
+ */
+
+body.viewer-body[data-page-type="viewer"] .viewer-card .team-name {
+  font-size: clamp(1.15rem, min(3.25vw, 4.8vh), 2rem);
+  font-weight: 950;
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+}
+
+body.viewer-body[data-page-type="viewer"] .viewer-card .collide-song-hint {
+  min-height: 0.95rem;
+  padding: 0.06rem 0.34rem;
+  font-size: clamp(0.43rem, min(1.05vw, 1.35vh), 0.66rem);
+  font-weight: 850;
+  letter-spacing: 0.045em;
+  line-height: 1;
+}
+
+@media (max-width: 720px) {
+  body.viewer-body[data-page-type="viewer"] .viewer-card .team-name {
+    font-size: clamp(1.18rem, 4.15vw, 1.55rem);
+    line-height: 1;
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-card .collide-song-hint {
+    min-height: 0.78rem;
+    padding: 0.035rem 0.25rem;
+    font-size: clamp(0.34rem, 1.45vw, 0.52rem);
+    letter-spacing: 0.035em;
+  }
+}
+
+@media (max-width: 720px) and (max-height: 760px) {
+  body.viewer-body[data-page-type="viewer"] .viewer-card .team-name {
+    font-size: clamp(1.04rem, 3.85vw, 1.35rem);
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-card .collide-song-hint {
+    font-size: clamp(0.32rem, 1.3vw, 0.46rem);
+  }
+}
