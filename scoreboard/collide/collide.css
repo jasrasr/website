@@ -1,8 +1,8 @@
 /*
  * Filename: collide/collide.css
- * Revision : 1.3.1
+ * Revision : 1.4.0
  * Description : Collide-only styles for team mottos, walk-up song controls,
- *               existing audio picker, and hurray overlays.
+ *               existing audio picker, compact viewer layout, and hurray overlays.
  * Author : Jason Lamb (with help from ChatGPT)
  * Created Date : 2026-09-13
  * Modified Date : 2026-09-20
@@ -12,6 +12,7 @@
  * 1.2.0 Add full-screen dim hurray overlay styles
  * 1.3.0 Style existing uploaded-song picker controls
  * 1.3.1 Keep the public viewer song prompt visible on phones and style it as a small play cue
+ * 1.4.0 Compact the public viewer header and cards so all six Collide teams fit on one phone screen
  */
 
 .collide-team-motto {
@@ -158,6 +159,30 @@
   white-space: nowrap;
 }
 
+body.viewer-body[data-page-type="viewer"] .viewer-page {
+  min-height: 100dvh;
+}
+
+body.viewer-body[data-page-type="viewer"] .viewer-page .page-header {
+  gap: 0.2rem;
+}
+
+body.viewer-body[data-page-type="viewer"] .viewer-page .page-header > div {
+  display: grid;
+  gap: 0.12rem;
+}
+
+body.viewer-body[data-page-type="viewer"] .viewer-page .page-header h1,
+body.viewer-body[data-page-type="viewer"] .viewer-page .page-header p {
+  margin: 0;
+  line-height: 1.05;
+}
+
+body.viewer-body[data-page-type="viewer"] .viewer-card .team-title {
+  gap: 0;
+  line-height: 1.05;
+}
+
 .collide-hurray-overlay {
   position: fixed;
   inset: 0;
@@ -221,6 +246,108 @@
 }
 
 @media (max-width: 720px) {
+  body.viewer-body[data-page-type="viewer"] {
+    overflow: hidden;
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-page {
+    height: 100dvh;
+    min-height: 0;
+    padding: 0.35rem;
+    overflow: hidden;
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-page .page-header {
+    padding: 0.38rem 0.55rem;
+    margin: 0 0 0.35rem;
+    border-radius: 14px;
+    box-shadow: none;
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-page .page-header h1 {
+    font-size: clamp(1rem, 4.6vw, 1.45rem);
+    letter-spacing: -0.03em;
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-page .page-header p {
+    font-size: clamp(0.58rem, 2.15vw, 0.75rem);
+    line-height: 1.02;
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: unset;
+    gap: 0.35rem;
+    overflow: hidden;
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-card {
+    min-height: 0;
+    padding: 0.42rem 0.48rem;
+    gap: 0.2rem;
+    border-radius: 18px;
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-card .team-name {
+    padding-right: 2.25rem;
+    font-size: clamp(0.68rem, 3vw, 0.95rem);
+    line-height: 1.03;
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-card .rank-badge {
+    top: 0.28rem;
+    right: 0.28rem;
+    min-width: 1.82rem;
+    padding: 0.1rem 0.32rem;
+    font-size: 0.62rem;
+    line-height: 1.1;
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-card .score-box {
+    flex: 1 1 auto;
+    min-height: 0;
+    border-radius: 14px;
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-card .score-value {
+    font-size: clamp(1.7rem, 8vw, 3.15rem);
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-card .collide-team-motto {
+    margin: 0;
+    font-size: 0.5rem;
+    line-height: 1.02;
+    letter-spacing: 0.01em;
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-card .collide-viewer-extra {
+    gap: 0.06rem;
+    margin: 0;
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-card .collide-song-hint {
+    min-height: 0.95rem;
+    padding: 0.06rem 0.22rem;
+    font-size: 0.4rem;
+    letter-spacing: 0.025em;
+    line-height: 1;
+  }
+
+  body.viewer-body[data-page-type="viewer"] .theme-toggle {
+    right: 0.35rem;
+    bottom: 0.35rem;
+    min-height: 28px;
+    padding: 0.25rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.62rem;
+    opacity: 0.72;
+    box-shadow: none;
+  }
+
   .collide-meta-actions {
     flex-direction: column;
   }
@@ -233,19 +360,39 @@
     width: 100%;
   }
 
-  .viewer-card .collide-team-motto {
-    font-size: 0.64rem;
-    line-height: 1.12;
-  }
-
-  .collide-song-hint {
-    min-height: 1.35rem;
-    padding: 0.16rem 0.35rem;
-    font-size: 0.52rem;
-    letter-spacing: 0.035em;
-  }
-
   .collide-hurray-overlay {
     padding: 1rem;
+  }
+}
+
+@media (max-width: 720px) and (max-height: 760px) {
+  body.viewer-body[data-page-type="viewer"] .viewer-page .page-header {
+    padding: 0.3rem 0.48rem;
+    margin-bottom: 0.25rem;
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-page .page-header h1 {
+    font-size: clamp(0.92rem, 4.2vw, 1.25rem);
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-page .page-header p {
+    font-size: 0.54rem;
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-grid {
+    gap: 0.25rem;
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-card {
+    padding: 0.32rem 0.4rem;
+    border-radius: 14px;
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-card .team-name {
+    font-size: clamp(0.62rem, 2.8vw, 0.82rem);
+  }
+
+  body.viewer-body[data-page-type="viewer"] .viewer-card .score-value {
+    font-size: clamp(1.55rem, 7vw, 2.7rem);
   }
 }
