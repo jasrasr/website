@@ -1,13 +1,13 @@
 <?php declare(strict_types=1);
 /**
  * Filename: collide/enter-scores.php
- * Revision : 1.5.2
+ * Revision : 1.5.3
  * Description : Admin score entry page for CVC Collide Scoreboard.
  *               Allows authorized users to update, reset, rename team scores/title,
  *               and maintain Collide-only team mottos and walk-up songs.
  * Author : Jason Lamb (with help from Claude Code)
  * Created Date : 2026-04-09
- * Modified Date : 2026-09-14
+ * Modified Date : 2026-09-20
  * Changelog :
  * 1.0.0 Initial release for Collide scoreboard instance
  * 1.1.0 Added session authentication; passes username/role/urls to JS via data attrs
@@ -17,6 +17,7 @@
  * 1.5.0 Load Collide-only motto and walk-up song admin UI
  * 1.5.1 Load Collide-only reset-score label overrides
  * 1.5.2 Load Collide-only existing uploaded-song picker
+ * 1.5.3 Load Collide-only admin refresh guard so polling does not wipe in-progress edits
  */
 
 require __DIR__ . '/../auth.php';
@@ -52,6 +53,7 @@ $user = requireAuth('collide', '../login.php');
       <p class="status-text">Loading score entry...</p>
     </div>
     <script src="../public/app.js?v=<?= filemtime(__DIR__ . '/../public/app.js') ?>" defer></script>
+    <script src="collide-admin-stable-refresh.js?v=<?= filemtime(__DIR__ . '/collide-admin-stable-refresh.js') ?>" defer></script>
     <script src="collide-extras.js?v=<?= filemtime(__DIR__ . '/collide-extras.js') ?>" defer></script>
     <script src="collide-admin-labels.js?v=<?= filemtime(__DIR__ . '/collide-admin-labels.js') ?>" defer></script>
     <script src="collide-audio-library.js?v=<?= filemtime(__DIR__ . '/collide-audio-library.js') ?>" defer></script>
