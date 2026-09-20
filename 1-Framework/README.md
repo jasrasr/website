@@ -58,3 +58,10 @@ This is an architectural baseline. The files define responsibilities and convent
 ## Important rule
 
 Framework code must not directly depend on a specific project. Projects may depend on the framework, but the framework must remain portable.
+
+## Implemented components (2026-09-20)
+
+The initial baseline now includes `JsonStore`, `Response`, and `PasswordSession`.
+See [core/COMPONENTS.md](core/COMPONENTS.md),
+[Authentication](modules/Authentication/README.md), and [CHANGELOG.md](CHANGELOG.md).
+Webstats consumes these helpers; remaining framework roadmap items are still planned.

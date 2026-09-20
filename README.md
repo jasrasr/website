@@ -19,6 +19,7 @@ Folders in this repo sync under `https://jasr.me/github/<folder>/`, which is the
 
 | Project | Repo path / docs | Live or target URL | Notes |
 |---|---|---|---|
+| Webstats | [webstats/](webstats/) / [README](webstats/README.md) | <a href="https://jasr.me/github/webstats/" target="_new">jasr.me/github/webstats</a> | Custom multi-site page views and clicks with a private dashboard. Requires setup and tracker installation. |
 | Availability Poll | [availability/](availability/) / [README](availability/README.md) | <a href="https://jasr.me/github/availability/" target="_new">jasr.me/github/availability</a> | Named availability polls with admin-selected dates, private admin links, and live group results. |
 | YOURLS link shortener and tracker | External app | [jasr.me](https://jasr.me) | Fork of [YOURLS](https://github.com/YOURLS/YOURLS). |
 | Secure text sender | External app | [jasr.me/secure](https://jasr.me/secure) | Fork of [PrivateBin](https://github.com/PrivateBin/PrivateBin). |
@@ -67,3 +68,4 @@ Folders in this repo sync under `https://jasr.me/github/<folder>/`, which is the
 - Short paths like `jasr.me/<project>` redirect to the canonical `jasr.me/github/<folder>/`.
 - Runtime files such as logs, private config, API keys, uploaded files, and generated JSON data should stay out of Git unless they are public-safe samples.
 - Project-specific setup instructions live in the project README files linked above.
+
