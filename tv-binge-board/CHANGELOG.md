@@ -5,10 +5,18 @@ Description: Human-readable release history rendered by changelog.php.
 Author: Jason Lamb / ChatGPT
 Created: 2026-07-02
 Modified: 2026-07-05
-Revision: 1.5.23
+Revision: 1.5.24
 -->
 
 # Changelog
+
+## rev 1.5.24 - 2026-07-05
+
+- Adjusted the episode detail page season focus from most-recent-unwatched season to the season containing the next episode to watch.
+- Starting a show with multiple seasons now opens Season 1 when the next episode is S1E1 instead of jumping to a later unwatched season.
+- The most-recent-unwatched logic remains only as a fallback when next-up metadata is unavailable.
+- Updated the Episode grid helper text to describe next-episode season focus.
+- Bumped the visible project revision and service worker cache to 1.5.24.
 
 ## rev 1.5.23 - 2026-07-05
 
@@ -41,15 +49,4 @@ Revision: 1.5.23
 - HEIC is intentionally not accepted for this suggestion-board screenshot field; iPhone screenshots are normally PNG, while HEIC photos should be converted to PNG or JPG before upload.
 - Bumped the visible project revision and service worker cache to 1.5.21.
 
-## rev 1.5.20 - 2026-07-05
-
-- Added `suggestions.php`, a public suggestion and bug board that behaves like a lightweight issue tracker.
-- Suggestions require an email address and use the signed-in user's saved email when available.
-- If a signed-in user has no saved email, the first suggestion prompts for email and saves it to the user's profile.
-- Suggestions are stored in `data/suggestions.json` and listed publicly with type/status filters.
-- Public list entries show masked email addresses while keeping the full email in JSON for follow-up.
-- Added an email field and Suggestions link to Settings.
-- Queued the next list-page update in `TASKS.md`.
-- Bumped the visible project revision and service worker cache to 1.5.20.
-
-Older entries are available in Git history before rev 1.5.20.
+Older entries are available in Git history before rev 1.5.21.
