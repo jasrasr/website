@@ -1,6 +1,6 @@
 /*
  * Filename: collide/collide-viewer-polish.css
- * Revision : 1.0.1
+ * Revision : 1.0.2
  * Description : Collide-only public viewer typography overrides.
  * Author : Jason Lamb (with help from ChatGPT)
  * Created Date : 2026-09-20
@@ -8,6 +8,7 @@
  * Changelog :
  * 1.0.0 Make team names visually dominate the shortened walk-up song cue
  * 1.0.1 Enlarge the public viewer motto/subtitle text while keeping it below the team name
+ * 1.0.2 Make motto/subtitle substantially larger than the Tap for song cue
  */
 
 body.viewer-body[data-page-type="viewer"] .viewer-card .team-name {
@@ -18,22 +19,22 @@ body.viewer-body[data-page-type="viewer"] .viewer-card .team-name {
 }
 
 body.viewer-body[data-page-type="viewer"] .viewer-card .collide-team-motto {
-  margin: 0.08rem 0 0;
-  color: color-mix(in srgb, var(--text-main) 82%, var(--team-color) 18%);
-  font-size: clamp(0.78rem, min(1.7vw, 2.35vh), 1.05rem);
-  font-weight: 850;
-  line-height: 1.04;
-  letter-spacing: 0.01em;
+  margin: 0.1rem 0 0;
+  color: color-mix(in srgb, var(--text-main) 88%, var(--team-color) 12%);
+  font-size: clamp(1rem, min(2.15vw, 3vh), 1.45rem);
+  font-weight: 900;
+  line-height: 1.02;
+  letter-spacing: 0;
   text-align: center;
-  opacity: 0.96;
+  opacity: 1;
 }
 
 body.viewer-body[data-page-type="viewer"] .viewer-card .collide-song-hint {
-  min-height: 0.95rem;
-  padding: 0.06rem 0.34rem;
-  font-size: clamp(0.43rem, min(1.05vw, 1.35vh), 0.66rem);
+  min-height: 0.82rem;
+  padding: 0.04rem 0.3rem;
+  font-size: clamp(0.38rem, min(0.8vw, 1.05vh), 0.56rem);
   font-weight: 850;
-  letter-spacing: 0.045em;
+  letter-spacing: 0.04em;
   line-height: 1;
 }
 
@@ -44,16 +45,16 @@ body.viewer-body[data-page-type="viewer"] .viewer-card .collide-song-hint {
   }
 
   body.viewer-body[data-page-type="viewer"] .viewer-card .collide-team-motto {
-    margin-top: 0.05rem;
-    font-size: clamp(0.64rem, 2.25vw, 0.9rem);
-    line-height: 1.02;
+    margin-top: 0.06rem;
+    font-size: clamp(0.86rem, 3vw, 1.15rem);
+    line-height: 1;
   }
 
   body.viewer-body[data-page-type="viewer"] .viewer-card .collide-song-hint {
-    min-height: 0.78rem;
-    padding: 0.035rem 0.25rem;
-    font-size: clamp(0.34rem, 1.45vw, 0.52rem);
-    letter-spacing: 0.035em;
+    min-height: 0.68rem;
+    padding: 0.025rem 0.22rem;
+    font-size: clamp(0.3rem, 1.2vw, 0.42rem);
+    letter-spacing: 0.03em;
   }
 }
 
@@ -63,10 +64,10 @@ body.viewer-body[data-page-type="viewer"] .viewer-card .collide-song-hint {
   }
 
   body.viewer-body[data-page-type="viewer"] .viewer-card .collide-team-motto {
-    font-size: clamp(0.56rem, 1.95vw, 0.78rem);
+    font-size: clamp(0.76rem, 2.55vw, 1rem);
   }
 
   body.viewer-body[data-page-type="viewer"] .viewer-card .collide-song-hint {
-    font-size: clamp(0.32rem, 1.3vw, 0.46rem);
+    font-size: clamp(0.28rem, 1.1vw, 0.38rem);
   }
 }
