@@ -1,21 +1,32 @@
 // Filename: collide-admin-stable-refresh.js
-// Revision : 1.0.0
-// Description : Collide-only admin refresh guard that prevents polling re-renders while editing.
+// Revision : 1.1.0
+// Description : Collide-only admin refresh guard that prevents unnecessary polling re-renders.
 // Author : Jason Lamb (with help from ChatGPT)
 // Created Date : 2026-09-20
 // Modified Date : 2026-09-20
 // Changelog :
 // 1.0.0 Pause admin auto-refresh while fields are focused or forms have unsaved edits
+// 1.1.0 Skip unchanged admin re-renders entirely so background polling no longer flashes the page
 
 (function () {
   if (window.__collideAdminStableRefreshLoaded) return;
   window.__collideAdminStableRefreshLoaded = true;
 
   const originalRefreshPage = window.refreshPage;
-  if (typeof originalRefreshPage !== 'function') return;
+  const originalFetchScores = window.fetchScores;
+  const originalRenderAdmin = window.renderAdmin;
+
+  if (
+    typeof originalRefreshPage !== 'function' ||
+    typeof originalFetchScores !== 'function' ||
+    typeof originalRenderAdmin !== 'function'
+  ) {
+    return;
+  }
 
   let dirtySince = 0;
   let saveInProgress = false;
+  let lastAdminSignature = '';
 
   function now() {
     return Date.now ? Date.now() : new Date().getTime();
@@ -41,6 +52,7 @@
   function markSaveStart(event) {
     if (!isAdminPage()) return;
     if (!event.target.closest('form')) return;
+
     saveInProgress = true;
     window.setTimeout(() => {
       saveInProgress = false;
@@ -56,16 +68,75 @@
     return isAdminPage() && (focusedEditor() || recentlyDirty() || saveInProgress);
   }
 
+  function normalizedSong(team) {
+    const song = team?.walkup_song || null;
+    if (!song) return '';
+
+    return [
+      song.file || '',
+      song.original_name || '',
+      song.uploaded_at || '',
+      song.size_bytes || 0
+    ].join('|');
+  }
+
+  function teamSignature(team) {
+    return [
+      team?.id || '',
+      team?.name || '',
+      Number(team?.score || 0),
+      team?.color || '',
+      team?.score_changed_at || '',
+      team?.motto || '',
+      team?.placeholder_song || '',
+      normalizedSong(team)
+    ].join('~');
+  }
+
+  function adminSignature(data) {
+    const teams = Array.isArray(data?.teams)
+      ? data.teams.map(teamSignature).join('||')
+      : '';
+
+    return [
+      data?.title || '',
+      data?.updatedAt || '',
+      data?.hasPreviousSnapshot ? '1' : '0',
+      teams
+    ].join('##');
+  }
+
+  async function seedAdminSignature() {
+    if (!isAdminPage()) return;
+
+    try {
+      const data = await originalFetchScores();
+      lastAdminSignature = adminSignature(data);
+    } catch {
+      // Initial app rendering owns user-facing error handling.
+    }
+  }
+
   async function collideAdminStableRefreshPage(pageType) {
-    if (pageType === 'admin' && shouldPauseAdminRefresh()) {
-      const statusText = document.querySelector('#status-text');
-      if (statusText) {
-        statusText.textContent = 'Auto-refresh paused while editing. Save or leave the field to resume.';
-      }
+    if (pageType !== 'admin') {
+      return originalRefreshPage(pageType);
+    }
+
+    if (shouldPauseAdminRefresh()) {
       return;
     }
 
-    return originalRefreshPage(pageType);
+    const data = await originalFetchScores();
+    const nextSignature = adminSignature(data);
+    const app = document.querySelector('#app');
+    const hasRenderedAdmin = Boolean(app?.querySelector('.team-grid'));
+
+    if (hasRenderedAdmin && lastAdminSignature !== '' && nextSignature === lastAdminSignature) {
+      return;
+    }
+
+    lastAdminSignature = nextSignature;
+    return originalRenderAdmin(data);
   }
 
   document.addEventListener('input', markDirty, true);
@@ -77,5 +148,13 @@
     refreshPage = collideAdminStableRefreshPage;
   } catch {
     // Some browsers may not allow assignment to the global binding.
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      window.setTimeout(seedAdminSignature, 500);
+    }, { once: true });
+  } else {
+    window.setTimeout(seedAdminSignature, 500);
   }
 }());
