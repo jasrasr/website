@@ -26,6 +26,9 @@ param(
 
     [switch]$PreservePostOrder,
     [switch]$CreateMissingTags,
+    [switch]$CreateMissingCategories,
+    [switch]$AddGitHubTag,
+    [switch]$UpdateExisting,
     [switch]$KeepCoverInContent,
     [switch]$Commit
 )
@@ -151,6 +154,37 @@ function Resolve-WpTagIds {
         }
         else {
             Write-Warning "WordPress tag '$tagName' was not found and will be omitted."
+        }
+    }
+
+    @($ids)
+}
+
+function Resolve-WpCategoryIds {
+    param([string[]]$CategoryNames)
+
+    $ids = @()
+    foreach ($categoryName in @($CategoryNames)) {
+        if ([string]::IsNullOrWhiteSpace($categoryName)) { continue }
+
+        $encoded = [uri]::EscapeDataString($categoryName)
+        $matches = @(Invoke-WpJson -Method Get -Path "categories?search=$encoded&per_page=100&_fields=id,name" | ForEach-Object { $_ })
+        $exact = $matches | Where-Object { $_.name -ieq $categoryName } | Select-Object -First 1
+
+        if (-not $exact -and $CreateMissingCategories) {
+            try {
+                $exact = Invoke-WpJson -Method Post -Path 'categories' -Body @{ name = $categoryName }
+            }
+            catch {
+                Write-Warning "Could not create WordPress category '$categoryName': $($_.Exception.Message)"
+            }
+        }
+
+        if ($exact) {
+            $ids += [int]$exact.id
+        }
+        else {
+            Write-Warning "WordPress category '$categoryName' was not found and will be omitted."
         }
     }
 
@@ -287,6 +321,7 @@ if (Test-Path -LiteralPath $StatePath -PathType Leaf) {
 $ready = @()
 $invalid = @()
 $alreadyTracked = @()
+$existingUpdates = @()
 
 foreach ($file in Get-ChildItem -LiteralPath $PostsPath -Filter '*.json' -File | Where-Object { $_.Name -notlike '_*' }) {
     try {
@@ -323,10 +358,21 @@ foreach ($file in Get-ChildItem -LiteralPath $PostsPath -Filter '*.json' -File |
     }
 
     if ($script:StatePosts.ContainsKey([string]$post.slug) -and $script:StatePosts[[string]$post.slug].wordpress_post_id) {
-        $alreadyTracked += [pscustomobject]@{
-            Slug        = $post.slug
-            WordPressId = $script:StatePosts[[string]$post.slug].wordpress_post_id
-            Source      = $file.Name
+        if ($UpdateExisting) {
+            $ready += [pscustomobject]@{
+                Data            = $post
+                File            = $file
+                CoverPath       = $coverPath
+                CoverAlt        = $coverAlt
+                ExistingPostId  = [int]$script:StatePosts[[string]$post.slug].wordpress_post_id
+            }
+        }
+        else {
+            $alreadyTracked += [pscustomobject]@{
+                Slug        = $post.slug
+                WordPressId = $script:StatePosts[[string]$post.slug].wordpress_post_id
+                Source      = $file.Name
+            }
         }
         continue
     }
@@ -339,7 +385,7 @@ foreach ($file in Get-ChildItem -LiteralPath $PostsPath -Filter '*.json' -File |
     }
 }
 
-if ($Commit -and ([string]::IsNullOrWhiteSpace($Username) -or [string]::IsNullOrWhiteSpace($AppPassword))) {
+if (($Commit -or $UpdateExisting) -and ([string]::IsNullOrWhiteSpace($Username) -or [string]::IsNullOrWhiteSpace($AppPassword))) {
     throw 'Commit mode requires a WordPress username and application password.'
 }
 
@@ -363,21 +409,44 @@ if (-not [string]::IsNullOrWhiteSpace($Username) -and -not [string]::IsNullOrWhi
         $found = @(Invoke-WpJson -Method Get -Path "posts?slug=$encodedSlug&status=any&per_page=1&_fields=id,slug,status,link,date" | ForEach-Object { $_ })
 
         if ($found.Count -gt 0) {
-            $serverExistingSlugs += [string]$item.Data.slug
-            $script:StatePosts[[string]$item.Data.slug] = [ordered]@{
-                source_file            = $item.File.Name
-                wordpress_post_id      = [int]$found[0].id
-                wordpress_media_id     = $null
-                scheduled_date_eastern = [string]$found[0].date
-                status                 = [string]$found[0].status
-                wordpress_url          = [string]$found[0].link
-                last_sync              = (Get-Date).ToString('o')
-                note                   = 'Discovered on WordPress by slug; duplicate creation skipped.'
+            $status = [string]$found[0].status
+            if ($UpdateExisting -and $status -in @('future','draft','pending')) {
+                $item | Add-Member -NotePropertyName ExistingPostId -NotePropertyValue ([int]$found[0].id) -Force
+                $existingUpdates += $item
+                $script:StatePosts[[string]$item.Data.slug] = [ordered]@{
+                    source_file            = $item.File.Name
+                    wordpress_post_id      = [int]$found[0].id
+                    wordpress_media_id     = $null
+                    scheduled_date_eastern = [string]$found[0].date
+                    status                 = $status
+                    wordpress_url          = [string]$found[0].link
+                    last_sync              = (Get-Date).ToString('o')
+                    note                   = 'Found for existing-post update.'
+                }
+            }
+            else {
+                $serverExistingSlugs += [string]$item.Data.slug
+                $script:StatePosts[[string]$item.Data.slug] = [ordered]@{
+                    source_file            = $item.File.Name
+                    wordpress_post_id      = [int]$found[0].id
+                    wordpress_media_id     = $null
+                    scheduled_date_eastern = [string]$found[0].date
+                    status                 = $status
+                    wordpress_url          = [string]$found[0].link
+                    last_sync              = (Get-Date).ToString('o')
+                    note                   = 'Discovered on WordPress by slug; duplicate creation skipped.'
+                }
             }
         }
     }
 
-    if ($serverExistingSlugs.Count -gt 0) {
+    if ($UpdateExisting) {
+        $updateIds = @($existingUpdates | ForEach-Object { [int]$_.ExistingPostId })
+        $ready = @($ready | Where-Object {
+            -not ($_.PSObject.Properties['ExistingPostId'] -and $_.ExistingPostId -and [int]$_.ExistingPostId -in $updateIds)
+        })
+    }
+    elseif ($serverExistingSlugs.Count -gt 0) {
         $ready = @($ready | Where-Object { [string]$_.Data.slug -notin $serverExistingSlugs })
         if ($Commit) { Save-State }
     }
@@ -391,6 +460,7 @@ $schedule = @(New-PostSchedule -Posts @($ready) -StartDate $startDate)
 Write-Host ''
 Write-Host 'WordPress scheduling preflight'
 Write-Host ('  Ready to schedule : {0}' -f $schedule.Count)
+Write-Host ('  Existing to update: {0}' -f $existingUpdates.Count)
 Write-Host ('  Already tracked   : {0}' -f $alreadyTracked.Count)
 Write-Host ('  Invalid/skipped   : {0}' -f $invalid.Count)
 
@@ -422,6 +492,41 @@ if (-not $Commit) {
     return
 }
 
+foreach ($item in @($existingUpdates)) {
+    $post = $item.Data
+    $slug = [string]$post.slug
+    Write-Host "Updating existing post: $($post.title)"
+
+    $tagNames = @()
+    if ($post.PSObject.Properties['tags'] -and $post.tags) { $tagNames = @($post.tags) }
+    if ($AddGitHubTag -and $tagNames -notcontains 'GitHub') { $tagNames += 'GitHub' }
+    $tagIds = @(Resolve-WpTagIds -TagNames $tagNames)
+
+    $body = [ordered]@{ tags = $tagIds }
+    if ($post.PSObject.Properties['categories'] -and $post.categories) {
+        $body.categories = @(Resolve-WpCategoryIds -CategoryNames @($post.categories))
+    }
+
+    try {
+        $updated = Invoke-WpJson -Method Post -Path "posts/$([int]$item.ExistingPostId)" -Body $body
+        $script:StatePosts[$slug] = [ordered]@{
+            source_file            = $item.File.Name
+            wordpress_post_id      = [int]$updated.id
+            wordpress_media_id     = if ($script:StatePosts.ContainsKey($slug)) { $script:StatePosts[$slug].wordpress_media_id } else { $null }
+            scheduled_date_eastern = [string]$updated.date
+            status                 = [string]$updated.status
+            wordpress_url          = [string]$updated.link
+            last_sync              = (Get-Date).ToString('o')
+            note                   = 'Updated by Publish-WordPress.ps1'
+        }
+        Save-State
+        Write-Host "  Updated post ID $($updated.id)."
+    }
+    catch {
+        Write-Error "Failed to update '$slug'. $($_.Exception.Message)"
+    }
+}
+
 foreach ($entry in $schedule) {
     $item = $entry.Post
     $post = $item.Data
@@ -451,7 +556,13 @@ foreach ($entry in $schedule) {
 
     $tagNames = @()
     if ($post.PSObject.Properties['tags'] -and $post.tags) { $tagNames = @($post.tags) }
+    if ($AddGitHubTag -and $tagNames -notcontains 'GitHub') { $tagNames += 'GitHub' }
     $tagIds = @(Resolve-WpTagIds -TagNames $tagNames)
+
+    $categoryIds = @()
+    if ($post.PSObject.Properties['categories'] -and $post.categories) {
+        $categoryIds = @(Resolve-WpCategoryIds -CategoryNames @($post.categories))
+    }
 
     $unspecified = [DateTime]::SpecifyKind($entry.Scheduled, [DateTimeKind]::Unspecified)
     $utc = [TimeZoneInfo]::ConvertTimeToUtc($unspecified, $timeZone)
@@ -467,6 +578,7 @@ foreach ($entry in $schedule) {
         featured_media = $mediaId
     }
     if ($tagIds.Count -gt 0) { $body.tags = $tagIds }
+    if ($categoryIds.Count -gt 0) { $body.categories = $categoryIds }
 
     try {
         $created = Invoke-WpJson -Method Post -Path 'posts' -Body $body

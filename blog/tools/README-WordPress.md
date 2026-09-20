@@ -17,6 +17,9 @@ Modified: 2026-09-16
 - Defaults to at most two posts per day, so about 40 posts span about four workweeks.
 - Keeps WordPress post IDs, media IDs, schedule dates, and status in `wordpress-state.json`.
 - Checks WordPress by slug before creating a post when credentials are supplied, providing a second duplicate-protection layer.
+- Can update existing draft, pending, or scheduled posts by slug without changing their schedule when `-UpdateExisting` is used.
+- Can append a standard `GitHub` tag to every processed post with `-AddGitHubTag`.
+- Reads an optional `categories` array from a source JSON file; categories are never created unless `-CreateMissingCategories` is explicitly supplied.
 - Runs as a dry run unless `-Commit` is specified.
 
 ## WordPress setup
@@ -53,6 +56,20 @@ If the WordPress account is also allowed to create tags:
 ```powershell
 ./blog/tools/Publish-WordPress.ps1 -SiteUrl 'https://your-wordpress-site.example' -CreateMissingTags -Commit
 ```
+
+To synchronize tags on existing scheduled or draft posts and append the `GitHub` tag:
+
+```powershell
+./blog/tools/Publish-WordPress.ps1 -SiteUrl 'https://your-wordpress-site.example' -UpdateExisting -AddGitHubTag -CreateMissingTags -Commit
+```
+
+Categories are opt-in per source article:
+
+```json
+"categories": ["Technology"]
+```
+
+The publisher resolves existing categories but does not create missing ones by default. Add `-CreateMissingCategories` only when the account has permission to manage categories and the new category is intentional.
 
 By default, posts are randomly assigned to schedule slots. Use `-PreservePostOrder` to schedule them in their existing article-date order instead.
 
