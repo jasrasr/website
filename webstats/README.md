@@ -1,4 +1,4 @@
-# Webstats 1.0.0
+# Webstats 1.1.0
 
 Your own multi-site page-view and click dashboard. Source lives in `jasrasr/website/webstats`; the intended dashboard URL is **https://jasr.me/github/webstats/**. Deploying this folder does not automatically instrument other pages.
 
@@ -20,30 +20,24 @@ Frontend assets are in `assets/css/` and `assets/js/`. Project-specific configur
 
 ## Hosting requirements
 
-- PHP **8.1+**, HTTPS, PHP sessions, a writable private directory outside **every domain's public document root**, and local filesystem support for `flock()` and atomic rename.
+- PHP **8.1+**, HTTPS, PHP sessions, a writable, HTTP-protected `webstats/data/` directory (or existing private external storage), and local filesystem support for `flock()` and atomic rename.
 - Deploy `webstats/` and updated `1-Framework/` together under the same parent directory.
-- Apache/LiteSpeed supports the included `.htaccess`. On other servers, disable directory listings and deny HTTP access to config, internal helpers, CLI scripts and tests. Storage must remain outside public directories regardless of `.htaccess` support.
+- Apache/LiteSpeed supports the included `.htaccess`. On other servers, disable directory listings and deny HTTP access to config, internal helpers, CLI scripts and tests. The complete runtime data URL prefix must be denied by the web server.
 - If HTTPS terminates at a proxy, configure the host to set PHP's `HTTPS` server variable correctly; this application intentionally does not trust arbitrary forwarded headers.
 
-## Initial setup (SSH/terminal)
+## First run — no terminal setup required
 
-1. Choose a private storage location outside all hosted sites, e.g. `/home/ACCOUNT/private/webstats-data`. The actual account path depends on your hosting account.
-2. From the deployed `webstats` directory, run the following in Bash. The password is read silently, passed on stdin, and never included in command history or PHP process arguments:
+Deploy the updated `webstats/` folder, including `data/.htaccess`, alongside `1-Framework/`. Open the HTTPS dashboard and sign in as **admin** using the temporary password supplied privately with this installation. Its plaintext is not stored in the repository.
 
-   ```bash
-   read -r -s -p 'Dashboard password (12–72 bytes): ' webstats_password
-   printf '\n'
-   printf '%s\n' "$webstats_password" | php setup.php /home/ACCOUNT/private/webstats-data YOUR_USERNAME
-   unset webstats_password
-   ```
+When no existing configuration is present, Webstats automatically saves its initial account and random application secret in `webstats/data/settings.json`. You must choose and confirm a new password before any reports are accessible. Use 12–72 bytes; the temporary password cannot be reused. After changing it, sign in again with your new password. Old temporary-password sessions are invalidated.
 
-3. Review the generated **private** `config.local.php`. Default origin examples cover `jasr.me`, `jasonlamb.me`, `justjason.fyi`, their `www` aliases, and `jasrasr.github.io`. Remove domains you do not use; add any other sites explicitly. Each exact HTTPS origin maps to a dashboard site label. No wildcard origins.
-4. Review `excluded_paths`. The dashboard, WordPress admin, and WordPress login are excluded by default. Add other private application paths when desired.
-5. Visit the HTTPS dashboard and sign in. Empty totals are expected until you install the tracker.
+The new password is stored as a password hash in ignored `data/admin.json`. Normal updates do not replace it. Webstats does not overwrite existing settings or rerun first-time account creation on every visit. If settings disappear while events or a changed administrator exist, initialization stops instead of resetting the account. Restore the files from backup.
 
-No SSH? Generate `config.local.php` by running setup locally with PHP, then upload it privately and edit `storage` to the server's actual private directory. Create that directory through the host's file manager. Never commit generated config. Alternatively set `JASR_WEBSTATS_CONFIG` to an absolute private config file path.
+Existing `config.local.php` or `JASR_WEBSTATS_CONFIG` installations keep their configured credentials and storage. No existing records are moved or deleted automatically. To intentionally move existing external data into the new default, stop collection, back up and copy all runtime files into `webstats/data/` (preserve its `.htaccess`), then set your existing configuration's `storage` to `__DIR__ . '/data'`. Do not discard the old configuration or secret.
 
-To change the password, generate a replacement hash privately using PHP's `password_hash()` and update `password_hash`; remove active `jasr_webstats` session files through your hosting tools if you need immediate revocation. There is no public registration or default password.
+The directory must be writable by PHP, and the web server must honor its access rules. Apache/LiteSpeed uses the shipped `.htaccess`. Nginx requires an equivalent deny rule for the entire data URL prefix before deployment. PHP's built-in development server does not honor `.htaccess`; do not publicly serve this application with it.
+
+Optional advanced configuration: create `config.local.php` from the example or use `JASR_WEBSTATS_CONFIG`. The CLI `setup.php` remains available for administrators who want custom credentials/storage. Default origins cover the previously configured example domains; customize the origin list if using another domain.
 
 ## Test the dashboard with the sample pages
 
@@ -59,22 +53,19 @@ These are real test events, not fabricated history. They count in totals and rem
 
 ## Keep stats safe during GitHub updates
 
-Runtime stats **must remain outside both the source/deployment directory and every public web root**. The collector, dashboard and CLI reject storage inside the source checkout, including symlinks pointing back into it. Setup also rejects such storage before writing the config.
+Runtime files now live **inside the deployed checkout at `webstats/data/`**, as requested. All contents are excluded by `webstats/.gitignore` except the tracked `data/.htaccess` protection file. Stats, settings, password changes, rate limits and locks are never tracked by Git.
 
-Example layout (replace ACCOUNT with your actual hosting account):
-
-| Purpose | Location | Part of GitHub deployment? |
+| File or directory | Tracked by Git? | Purpose |
 |---|---|---|
-| Source and dashboard | /home/ACCOUNT/domains/jasr.me/public_html/github/webstats/ | Yes |
-| Sample pages | /home/ACCOUNT/domains/jasr.me/public_html/github/webstats-demo/ | Yes |
-| Stats, rate limits and locks | /home/ACCOUNT/private/webstats-data/ | No |
-| Optional external config | /home/ACCOUNT/private/webstats-config.php | No |
+| `webstats/data/.htaccess` | Yes | Denies all direct HTTP access to runtime files |
+| `webstats/data/settings.json` | No | Initial account and generated secret |
+| `webstats/data/admin.json` | No | Changed password hash and reset state |
+| `webstats/data/events-*.json` | No | Daily statistics |
+| `webstats/data/limits.json`, lock and temporary files | No | Rate limits and atomic writes |
 
-Keep the configured `storage` path the same across releases. Deploy only the source checkout; do not include the private parent directory in upload/delete/sync jobs. A code update never initializes or clears the event store. The automated regression test replaces a disposable deployment directory and verifies that externally stored events survive and remain readable.
+Normal Git checkout/pull updates preserve these ignored files. **A destructive deployment can still delete them.** Preserve `webstats/data/` in hosting sync/deployment rules; do not run `git clean -fdx`, replace the entire checkout, or use `rsync --delete-excluded` against it. For FTP mirror jobs or delete-before-upload deployments, add an explicit preserve/exclude rule for runtime files. Back up this directory independently of Git. `.gitignore` controls version tracking; it is not a backup or a deployment exclusion setting.
 
-For configuration that also survives clean deployments, set `JASR_WEBSTATS_CONFIG` to the external config path in the hosting PHP environment. Setup now honors this variable when generating config; the destination directory must already exist. Set the same variable for the retention cron job. An environment variable set only in your SSH shell does not automatically apply to web requests. Existing local config remains supported, but a deployment tool using deletion can remove ignored files: preserve `config.local.php` explicitly if you keep that option. Missing configuration fails closed; it does not erase stats.
-
-There is no automatic migration: if you already have stats, back them up and retain their configured external path. Moving to a different private path requires copying the existing event files while collection is stopped. Retention still deliberately deletes expired events; backups are separate from GitHub updates.
+The tracked `.htaccess` must always be deployed, even when runtime files are excluded from upload. This app allows only that protected in-repo data directory; it still rejects arbitrary public storage paths. Existing private external storage remains supported. Retention deliberately removes expired event files, but never settings or admin records.
 
 ## Install on all your pages
 
@@ -125,29 +116,30 @@ To exclude your own browser, execute `JasrWebstats.exclude()` on each tracked or
 ## Data, limits, retention and security
 
 - No form values, cookies, raw IP addresses, user-agent strings, query strings, URL credentials or fragments are saved in event data. Referrers retain only their origin. **URL paths and explicit labels are retained**, so keep sensitive names/tokens out of them or exclude those pages. The web host may keep its own access logs independently.
-- Private daily UTC storage: `events-YYYY-MM-DD.json`, schema `{schemaVersion:1, updatedAt, records:{site:eventId: event}}`. Event fields: `id`, `occurred` (server Unix seconds), `site`, `kind`, `page`, `target`, `label`, `referrer`, `session` (site/day-scoped HMAC). Same-site retries with the same event ID are deduplicated within a UTC storage day.
+- HTTP-protected daily UTC storage: `events-YYYY-MM-DD.json`, schema `{schemaVersion:1, updatedAt, records:{site:eventId: event}}`. Event fields: `id`, `occurred` (server Unix seconds), `site`, `kind`, `page`, `target`, `label`, `referrer`, `session` (site/day-scoped HMAC). Same-site retries with the same event ID are deduplicated within a UTC storage day.
 - `limits.json` holds HMAC keys with counts and expiries for rate limits. Raw connection addresses are not stored. Expired limiter records are removed on subsequent updates. Dedicated `.lock` files coordinate atomic same-directory replacement; invalid JSON fails closed instead of resetting data.
 - Default limit: 120 events/minute/connection address and 10,000 events/UTC day across all sites. Login limits persist independently of session cookies. With a proxy/CDN, `REMOTE_ADDR` may be shared: tune the limit or configure trusted real-IP handling at the server, not from untrusted request headers.
 - Origin allowlisting and validation reduce accidental misuse; public browser analytics endpoints can still be spoofed by non-browser clients. These counts are not billing-grade, bot-proof or fraud-proof. Ad blockers, disabled JavaScript, offline requests and interrupted navigation can undercount. Failed events are not retried.
 - JSON is intended for modest personal-site traffic: each accepted event rewrites one bounded daily file. Reports allow up to 90 days. For sustained high traffic, migrate the storage adapter rather than raising limits indefinitely.
 - Configure a daily hosting cron job: `php /ABSOLUTE/PATH/github/webstats/prune.php`. It removes daily files older than `retention_days` (180 by default); without the cron job nothing is automatically deleted. Back up private config and storage independently of Git, with the same retention policy.
-- Authentication uses password hashing, strict scoped HttpOnly/Secure cookies in production, CSRF tokens, ID rotation, and 30-minute inactivity expiry. The dashboard has no public reporting API. Changing credentials does not automatically revoke already-active sessions.
+- Authentication uses password hashing, strict scoped HttpOnly/Secure cookies in production, CSRF tokens, ID rotation, and 30-minute inactivity expiry. The dashboard has no public reporting API. Password changes invalidate sessions using the previous credential version.
 
 ## Verification and rollout
 
 ```bash
 node --test webstats/tests/tracker.test.cjs
 node --test webstats/tests/server.test.cjs
+node --test webstats/tests/first-run.test.cjs
 ```
 
-The server suite requires PHP on PATH and uses temporary config/storage, a local PHP server on port 18765, and test-only credentials. GitHub Actions runs both suites plus PHP syntax checks.
+The server suite requires PHP on PATH and uses temporary config/storage, a local PHP server on port 18765, and test-only credentials. GitHub Actions runs the suites plus PHP syntax checks and an Apache HTTP test that confirms direct requests for settings, credentials, events, locks and temporary files are forbidden.
 
 Before broad deployment:
 1. Install on one HTML page and one PHP page; verify a page view and click appear under the correct site.
 2. Test another domain and WordPress while logged out. Check the collector network request succeeds with HTTP 200 and `success: true`.
 3. Open the dashboard on a phone; check site/date filters, top pages, recent activity and zero-data dates.
 4. Confirm query strings/fragments never appear in reports; try a named button and an excluded element.
-5. Confirm the dashboard requires login, direct storage URLs are impossible, and HTTPS/session cookies are correct.
+5. Confirm the dashboard requires login and the first password change, direct storage URLs return 403, and HTTPS/session cookies are correct.
 6. Inspect the installer diff, deploy remaining pages, and schedule retention. Roll back tracking by removing the script/plugin; stored data remains private.
 
 See `CHANGELOG.md` and `ROADMAP.md` for scope and next steps.

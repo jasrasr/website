@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0 — 2026-09-21
+
+- Default to protected webstats/data runtime storage inside the checkout, ignored by Git.
+- Automatically initialize an admin account and generated secret on fresh installations.
+- Require a password change before showing any reports; invalidate older sessions.
+- Preserve saved credentials across normal source updates and retain existing external configurations.
+- Add first-run/reset/persistence tests and real Apache runtime-file access tests.
+
 ## 1.0.1 — 2026-09-20
 
 - Added HTML and PHP demo pages with named clicks, excluded controls and URL privacy checks.

@@ -15,7 +15,7 @@ $config = require __DIR__ . '/config.example.php';
 try {
     $config['storage'] = validate_storage_path($argv[1]);
 } catch (RuntimeException $exception) {
-    fwrite(STDERR, "Choose storage outside the source checkout and public document root.\n");
+    fwrite(STDERR, "Choose protected webstats/data or private external storage.\n");
     exit(1);
 }
 $config['username'] = $argv[2];

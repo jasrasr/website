@@ -13,20 +13,34 @@ try {
     $secure = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
     if (!$secure && !in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], true)) fail(400, 'Use HTTPS for the dashboard.');
     $auth = new PasswordSession('jasr_webstats', rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/', $secure);
+    if ($auth->loggedIn() && !hash_equals(credential_version($cfg), (string)($_SESSION['webstats_credential_version'] ?? ''))) $auth->logout();
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$auth->validCsrf($_POST['csrf'] ?? null)) { http_response_code(403); $error = 'Your session changed. Please try again.'; }
         elseif (($_POST['action'] ?? '') === 'logout') { $auth->logout(); header('Location: ./', true, 303); exit; }
+        elseif (($_POST['action'] ?? '') === 'change-password') {
+            if (!$auth->loggedIn()) { http_response_code(401); $error = 'Sign in before changing your password.'; }
+            else {
+                try {
+                    $newPassword = is_string($_POST['new_password'] ?? null) ? $_POST['new_password'] : '';
+                    $confirmation = is_string($_POST['confirm_password'] ?? null) ? $_POST['confirm_password'] : '';
+                    change_initial_password($cfg, $newPassword, $confirmation);
+                    $auth->logout();
+                    header('Location: ./?password_changed=1', true, 303); exit;
+                } catch (InvalidArgumentException $exception) { http_response_code(400); $error = $exception->getMessage(); }
+            }
+        }
         else {
             $username = is_string($_POST['username'] ?? null) ? substr($_POST['username'], 0, 200) : '';
             $password = is_string($_POST['password'] ?? null) ? substr($_POST['password'], 0, 4096) : '';
             if ($auth->login($username, $password, $cfg['username'], $cfg['password_hash'],
                 static fn(): bool => allowance('login:' . ($_SERVER['REMOTE_ADDR'] ?? ''), 10, 900) && allowance('login:global', 100, 900))) {
+                $_SESSION['webstats_credential_version'] = credential_version($cfg);
                 header('Location: ./', true, 303); exit;
             }
             http_response_code(401); $error = 'Sign-in failed or temporarily rate limited.';
         }
     }
-    if ($auth->loggedIn()) {
+    if ($auth->loggedIn() && !$cfg['must_change_password']) {
         $tz = new DateTimeZone($cfg['timezone']);
         $today = new DateTimeImmutable('today', $tz);
         $date = static function (mixed $value, DateTimeImmutable $default) use ($tz): DateTimeImmutable {
@@ -87,11 +101,17 @@ function ranking(string $title, array $rows, string $unit): void { ?>
 <?php if ($error): ?><p class="alert" role="alert"><?= e($error) ?></p><?php endif; ?>
 <?php if (!empty($unavailable)): ?><p>Complete the setup in <code>webstats/README.md</code> before collecting traffic.</p>
 <?php elseif (!$auth->loggedIn()): ?>
-<section class="panel login"><h2>Sign in to your dashboard</h2><p class="muted">Your traffic reports stay private.</p>
+<section class="panel login"><h2>Sign in to your dashboard</h2><p class="muted"><?= isset($_GET['password_changed']) ? 'Password changed. Sign in with your new password.' : 'Your traffic reports stay private.' ?></p>
 <form method="post"><input type="hidden" name="csrf" value="<?= e($auth->csrf()) ?>">
 <label>Username<input name="username" autocomplete="username" maxlength="200" required></label>
 <label>Password<input type="password" name="password" autocomplete="current-password" maxlength="4096" required></label>
 <button>Sign in</button></form></section>
+<?php elseif ($cfg['must_change_password']): ?>
+<section class="panel login"><h2>Change your temporary password</h2><p>Set your own password before viewing reports. Use at least 12 characters.</p>
+<form method="post"><input type="hidden" name="csrf" value="<?= e($auth->csrf()) ?>"><input type="hidden" name="action" value="change-password">
+<label>New password<input type="password" name="new_password" autocomplete="new-password" minlength="12" maxlength="72" required></label>
+<label>Confirm new password<input type="password" name="confirm_password" autocomplete="new-password" minlength="12" maxlength="72" required></label>
+<button>Save password</button></form></section>
 <?php elseif (!empty($invalidFilters)): ?><a href="./">Reset filters</a>
 <?php else: ?>
 <form method="get" class="filters panel"><label>Website<select name="site"><option value="">All sites</option><?php foreach ($sites as $item): ?><option value="<?= e($item) ?>" <?= $site === $item ? 'selected' : '' ?>><?= e($item) ?></option><?php endforeach; ?></select></label>
@@ -106,4 +126,4 @@ function ranking(string $title, array $rows, string $unit): void { ?>
 <section class="panel"><h2>Recent activity</h2><div class="table-wrap"><table><thead><tr><th>Time</th><th>Site / page</th><th>Event</th></tr></thead><tbody>
 <?php foreach (array_reverse($recent) as $event): ?><tr><td><?= e((new DateTimeImmutable('@' . $event['occurred']))->setTimezone($tz)->format('M j, H:i:s T')) ?></td><td><?= e($event['page']) ?></td><td><?= e($event['kind'] . ($event['kind'] === 'click' ? ': ' . ($event['target'] ?: $event['label']) : '')) ?></td></tr><?php endforeach; ?>
 <?php if (!$recent): ?><tr><td colspan="3">No activity yet.</td></tr><?php endif; ?></tbody></table></div></section>
-<?php endif; ?><footer>Webstats 1.0.0 · Self-hosted · No form values or URL query strings collected</footer></main></body></html>
+<?php endif; ?><footer>Webstats 1.1.0 · Self-hosted · No form values or URL query strings collected</footer></main></body></html>

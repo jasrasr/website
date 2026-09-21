@@ -1,3 +1,5 @@
-config.local.php
+/config.local.php
+/data/*
+!/data/.htaccess
 *.sqlite*
 *.db*
