@@ -6,10 +6,38 @@ use Jasr\Framework\Response;
 function config(): array {
     static $config;
     if ($config !== null) return $config;
-    $path = getenv('JASR_WEBSTATS_CONFIG') ?: __DIR__ . '/config.local.php';
-    if (!is_file($path)) throw new RuntimeException('Webstats is not configured.');
-    $value = require $path;
-    if (!is_array($value) || strlen($value['secret'] ?? '') < 32 ||
+    $explicit = getenv('JASR_WEBSTATS_CONFIG');
+    $path = $explicit ?: __DIR__ . '/config.local.php';
+    if ($explicit && !is_file($path)) throw new RuntimeException('Configured settings file is missing.');
+    if (is_file($path)) {
+        $value = require $path; // Existing installations retain credentials, secret and storage.
+    } else {
+        $value = require __DIR__ . '/config.example.php';
+        $dir = validate_storage_path($value['storage']);
+        $settings = $dir . '/settings.json';
+        if (!is_file($settings)) {
+            JsonStore::update($settings, static function (array $records) use ($dir): array {
+                if ($records) return $records; // Another first request initialized it.
+                if (glob($dir . '/events-*.json') || is_file($dir . '/admin.json')) {
+                    throw new RuntimeException('Restore existing settings; refusing to reset an existing installation.');
+                }
+                $initial = require __DIR__ . '/initial-admin.php';
+                return $initial + ['secret' => bin2hex(random_bytes(32)), 'must_change_password' => true];
+            });
+        }
+        $settingsData = JsonStore::read($settings)['records'];
+        if (!$settingsData) throw new RuntimeException('Invalid saved settings.');
+        $value = array_replace($value, $settingsData);
+    }
+    if (!is_array($value)) throw new RuntimeException('Invalid configuration.');
+    $dir = validate_storage_path($value['storage'] ?? '');
+    // Password changes are stored separately so legacy config files need not be writable.
+    if (is_file($dir . '/admin.json')) {
+        $admin = JsonStore::read($dir . '/admin.json')['records'];
+        if (!isset($admin['username'], $admin['password_hash'], $admin['must_change_password'])) throw new RuntimeException('Invalid administrator record.');
+        $value = array_replace($value, $admin);
+    }
+    if (strlen($value['secret'] ?? '') < 32 ||
         empty(password_get_info($value['password_hash'] ?? '')['algo']) ||
         !is_string($value['username'] ?? null) || $value['username'] === '' || empty($value['origins']) ||
         !is_array($value['origins']) || !is_array($value['excluded_paths'] ?? null)) throw new RuntimeException('Invalid configuration.');
@@ -17,27 +45,51 @@ function config(): array {
     foreach (['retention_days', 'events_per_ip_per_minute', 'events_per_day'] as $key) {
         if (!is_int($value[$key] ?? null) || $value[$key] < 1) throw new RuntimeException('Invalid limit.');
     }
+    $value['must_change_password'] = (bool)($value['must_change_password'] ?? false);
     $config = $value;
     return $config;
 }
 
-/** Resolve symlinks and reject runtime data within source or publicly served trees. */
+/** Permit the protected, ignored data folder; retain existing external storage support. */
 function validate_storage_path(string $path): string {
     $dir = realpath($path);
     if (!$dir || !is_dir($dir)) throw new RuntimeException('Storage directory must exist.');
-    $roots = [realpath(dirname(__DIR__))]; // repository/deployment root, including CLI use
+    $local = realpath(__DIR__ . '/data');
+    if ($local && $dir === $local && !is_link(__DIR__ . '/data')) {
+        $rule = $dir . '/.htaccess';
+        if (!is_file($rule) || !preg_match('/^Require all denied\s*$/m', (string)file_get_contents($rule))) {
+            throw new RuntimeException('Runtime data access protection is missing.');
+        }
+        return $dir;
+    }
+    $roots = [realpath(dirname(__DIR__))];
     $documentRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
     if ($documentRoot !== '') $roots[] = realpath($documentRoot);
     foreach ($roots as $root) {
         if ($root && ($dir === $root || str_starts_with($dir, rtrim($root, '/') . '/'))) {
-            throw new RuntimeException('Storage must be outside the source checkout and document root.');
+            throw new RuntimeException('Use webstats/data or private external storage.');
         }
     }
     return $dir;
 }
 
-function storage(): string {
-    return validate_storage_path(config()['storage']);
+function storage(): string { return validate_storage_path(config()['storage']); }
+
+function credential_version(array $cfg): string {
+    return hash('sha256', $cfg['username'] . ':' . $cfg['password_hash']);
+}
+
+function change_initial_password(array $cfg, string $password, string $confirmation): void {
+    if (!$cfg['must_change_password']) throw new InvalidArgumentException('Initial password has already been changed.');
+    if ($password !== $confirmation) throw new InvalidArgumentException('Passwords do not match.');
+    if (strlen($password) < 12 || strlen($password) > 72) throw new InvalidArgumentException('Use a password between 12 and 72 bytes.');
+    if (password_verify($password, $cfg['password_hash'])) throw new InvalidArgumentException('Choose a different password from the temporary password.');
+    JsonStore::update(storage() . '/admin.json', static function (array $records) use ($cfg, $password): array {
+        if ($records && (!($records['must_change_password'] ?? false) || $records['password_hash'] !== $cfg['password_hash'])) {
+            throw new InvalidArgumentException('Credentials changed in another session. Sign in again.');
+        }
+        return ['username' => $cfg['username'], 'password_hash' => password_hash($password, PASSWORD_DEFAULT), 'must_change_password' => false];
+    });
 }
 
 function allowance(string $key, int $limit, int $seconds): bool {

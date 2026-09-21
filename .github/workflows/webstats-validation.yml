@@ -18,3 +18,9 @@ jobs:
         run: node --test webstats/tests/tracker.test.cjs
       - name: Collector and dashboard HTTP tests
         run: node --test webstats/tests/server.test.cjs
+      - name: First-run admin and forced password change
+        run: node --test webstats/tests/first-run.test.cjs
+      - name: Install Apache for runtime-file access check
+        run: sudo apt-get update -qq && sudo apt-get install -y apache2
+      - name: Deny direct access to runtime data
+        run: node --test webstats/tests/data-access.test.cjs
