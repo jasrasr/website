@@ -2,7 +2,438 @@
   "_meta": {
     "schema_version": "1.0.0",
     "purpose": "WordPress-only publication state for blog/posts JSON sources. This file is not used by the static blog build.",
-    "modified_date": "2026-09-16"
+    "modified_date": "2026-09-18"
   },
-  "posts": {}
+  "posts": {
+    "authenticated-directory-viewer": {
+      "source_file": "authenticated-directory-viewer.json",
+      "wordpress_post_id": 4294,
+      "wordpress_media_id": 4293,
+      "scheduled_date_eastern": "2026-09-30T08:32:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4294",
+      "last_sync": "2026-09-18T18:58:00.9206237-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "browser-gps-trip-eta-tracker": {
+      "source_file": "browser-gps-trip-eta-tracker.json",
+      "wordpress_post_id": 4336,
+      "wordpress_media_id": 4335,
+      "scheduled_date_eastern": "2026-10-14T16:09:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4336",
+      "last_sync": "2026-09-18T18:59:40.6292192-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "browser-odometer-speedometer-emulator": {
+      "source_file": "browser-odometer-speedometer-emulator.json",
+      "wordpress_post_id": 4274,
+      "wordpress_media_id": 4273,
+      "scheduled_date_eastern": "2026-09-22T15:59:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4274",
+      "last_sync": "2026-09-18T18:57:04.1066306-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "browser-password-generator-experiment": {
+      "source_file": "browser-password-generator-experiment.json",
+      "wordpress_post_id": 4296,
+      "wordpress_media_id": 4295,
+      "scheduled_date_eastern": "2026-09-30T16:32:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4296",
+      "last_sync": "2026-09-18T18:58:07.5704088-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "browser-screen-size-debugging-tool": {
+      "source_file": "browser-screen-size-debugging-tool.json",
+      "wordpress_post_id": 4332,
+      "wordpress_media_id": 4331,
+      "scheduled_date_eastern": "2026-10-13T11:56:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4332",
+      "last_sync": "2026-09-18T18:59:34.1602767-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "building-my-own-ticketing-app": {
+      "source_file": "building-my-own-ticketing-app.json",
+      "wordpress_post_id": 4328,
+      "wordpress_media_id": 4327,
+      "scheduled_date_eastern": "2026-10-12T15:10:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4328",
+      "last_sync": "2026-09-18T18:59:26.4450606-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "centralized-php-directory-browser": {
+      "source_file": "centralized-php-directory-browser.json",
+      "wordpress_post_id": 4318,
+      "wordpress_media_id": 4317,
+      "scheduled_date_eastern": "2026-10-08T12:38:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4318",
+      "last_sync": "2026-09-18T18:59:08.1700889-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "church-youth-live-scoreboard": {
+      "source_file": "church-youth-live-scoreboard.json",
+      "wordpress_post_id": 4288,
+      "wordpress_media_id": 4287,
+      "scheduled_date_eastern": "2026-09-28T14:55:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4288",
+      "last_sync": "2026-09-18T18:57:46.3542737-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "construction-sign-text-generator": {
+      "source_file": "construction-sign-text-generator.json",
+      "wordpress_post_id": 4352,
+      "wordpress_media_id": 4351,
+      "scheduled_date_eastern": "2026-10-20T13:19:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4352",
+      "last_sync": "2026-09-18T19:00:15.4699017-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "cooper-integration-countdown-page": {
+      "source_file": "cooper-integration-countdown-page.json",
+      "wordpress_post_id": 4314,
+      "wordpress_media_id": 4313,
+      "scheduled_date_eastern": "2026-10-07T09:11:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4314",
+      "last_sync": "2026-09-18T18:58:59.9470941-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "cross-country-trip-timeline-dashboard": {
+      "source_file": "cross-country-trip-timeline-dashboard.json",
+      "wordpress_post_id": 4298,
+      "wordpress_media_id": 4297,
+      "scheduled_date_eastern": "2026-10-01T09:53:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4298",
+      "last_sync": "2026-09-18T18:58:14.6786734-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "daily-babe-daily-photo-tracker": {
+      "source_file": "daily-babe-daily-photo-tracker.json",
+      "wordpress_post_id": 4346,
+      "wordpress_media_id": 4345,
+      "scheduled_date_eastern": "2026-10-19T08:10:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4346",
+      "last_sync": "2026-09-18T19:00:00.4674087-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "debt-payoff-planner-scenarios": {
+      "source_file": "debt-payoff-planner-scenarios.json",
+      "wordpress_post_id": 4340,
+      "wordpress_media_id": 4339,
+      "scheduled_date_eastern": "2026-10-15T16:33:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4340",
+      "last_sync": "2026-09-18T18:59:47.7025297-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "dell-service-tag-lookup-tool": {
+      "source_file": "dell-service-tag-lookup-tool.json",
+      "wordpress_post_id": 4348,
+      "wordpress_media_id": 4347,
+      "scheduled_date_eastern": "2026-10-19T14:15:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4348",
+      "last_sync": "2026-09-18T19:00:06.2134996-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "family-gps-tracker-web-app": {
+      "source_file": "family-gps-tracker-web-app.json",
+      "wordpress_post_id": 4282,
+      "wordpress_media_id": 4281,
+      "scheduled_date_eastern": "2026-09-25T08:56:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4282",
+      "last_sync": "2026-09-18T18:57:26.5918774-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "freshservice-ticket-progress-dashboard": {
+      "source_file": "freshservice-ticket-progress-dashboard.json",
+      "wordpress_post_id": 4310,
+      "wordpress_media_id": 4309,
+      "scheduled_date_eastern": "2026-10-06T11:10:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4310",
+      "last_sync": "2026-09-18T18:58:51.1078890-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "home-warranty-tracker": {
+      "source_file": "home-warranty-tracker.json",
+      "wordpress_post_id": 4312,
+      "wordpress_media_id": 4311,
+      "scheduled_date_eastern": "2026-10-06T16:37:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4312",
+      "last_sync": "2026-09-18T18:58:55.9283610-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "impossible-click-browser-game": {
+      "source_file": "impossible-click-browser-game.json",
+      "wordpress_post_id": 4272,
+      "wordpress_media_id": 4271,
+      "scheduled_date_eastern": "2026-09-22T11:54:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4272",
+      "last_sync": "2026-09-18T18:56:58.2934818-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "json-flat-file-blog-powershell": {
+      "source_file": "json-flat-file-blog-powershell.json",
+      "wordpress_post_id": 4306,
+      "wordpress_media_id": 4305,
+      "scheduled_date_eastern": "2026-10-05T09:21:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4306",
+      "last_sync": "2026-09-18T18:58:42.8487031-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "khootish-multiplayer-quiz-game": {
+      "source_file": "khootish-multiplayer-quiz-game.json",
+      "wordpress_post_id": 4292,
+      "wordpress_media_id": 4291,
+      "scheduled_date_eastern": "2026-09-29T16:01:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4292",
+      "last_sync": "2026-09-18T18:57:57.2242959-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "license-plate-photo-logger": {
+      "source_file": "license-plate-photo-logger.json",
+      "wordpress_post_id": 4302,
+      "wordpress_media_id": 4301,
+      "scheduled_date_eastern": "2026-10-02T08:23:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4302",
+      "last_sync": "2026-09-18T18:58:29.5678590-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "life-group-attendance-portal": {
+      "source_file": "life-group-attendance-portal.json",
+      "wordpress_post_id": 4322,
+      "wordpress_media_id": 4321,
+      "scheduled_date_eastern": "2026-10-09T09:50:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4322",
+      "last_sync": "2026-09-18T18:59:15.4521768-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "link-hub-project-notes": {
+      "source_file": "link-hub-project-notes.json",
+      "wordpress_post_id": 4304,
+      "wordpress_media_id": 4303,
+      "scheduled_date_eastern": "2026-10-02T12:25:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4304",
+      "last_sync": "2026-09-18T18:58:37.4614728-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "mpg-tracker-partial-fill-ups": {
+      "source_file": "mpg-tracker-partial-fill-ups.json",
+      "wordpress_post_id": 4342,
+      "wordpress_media_id": 4341,
+      "scheduled_date_eastern": "2026-10-16T08:17:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4342",
+      "last_sync": "2026-09-18T18:59:51.2965673-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "old-phone-keypad-tones-browser": {
+      "source_file": "old-phone-keypad-tones-browser.json",
+      "wordpress_post_id": 4350,
+      "wordpress_media_id": 4349,
+      "scheduled_date_eastern": "2026-10-20T08:11:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4350",
+      "last_sync": "2026-09-18T19:00:11.0706696-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "personal-budget-tracker-php-json": {
+      "source_file": "personal-budget-tracker-php-json.json",
+      "wordpress_post_id": 4290,
+      "wordpress_media_id": 4289,
+      "scheduled_date_eastern": "2026-09-29T08:43:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4290",
+      "last_sync": "2026-09-18T18:57:52.9529624-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "powershell-numbered-web-test-pages": {
+      "source_file": "powershell-numbered-web-test-pages.json",
+      "wordpress_post_id": 4338,
+      "wordpress_media_id": 4337,
+      "scheduled_date_eastern": "2026-10-15T12:35:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4338",
+      "last_sync": "2026-09-18T18:59:44.0117452-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "powershell-web-file-manager": {
+      "source_file": "powershell-web-file-manager.json",
+      "wordpress_post_id": 4320,
+      "wordpress_media_id": 4319,
+      "scheduled_date_eastern": "2026-10-08T15:09:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4320",
+      "last_sync": "2026-09-18T18:59:11.7022820-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "psnotify-powershell-job-notifications": {
+      "source_file": "psnotify-powershell-job-notifications.json",
+      "wordpress_post_id": 4286,
+      "wordpress_media_id": 4285,
+      "scheduled_date_eastern": "2026-09-28T12:48:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4286",
+      "last_sync": "2026-09-18T18:57:39.9160301-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "qr-box-inventory-system": {
+      "source_file": "qr-box-inventory-system.json",
+      "wordpress_post_id": 4344,
+      "wordpress_media_id": 4343,
+      "scheduled_date_eastern": "2026-10-16T13:58:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4344",
+      "last_sync": "2026-09-18T18:59:56.5241074-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "random-wheel-choice-picker": {
+      "source_file": "random-wheel-choice-picker.json",
+      "wordpress_post_id": 4300,
+      "wordpress_media_id": 4299,
+      "scheduled_date_eastern": "2026-10-01T15:19:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4300",
+      "last_sync": "2026-09-18T18:58:22.2283079-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "raspberry-pi-time-clock-kiosk": {
+      "source_file": "raspberry-pi-time-clock-kiosk.json",
+      "wordpress_post_id": 4270,
+      "wordpress_media_id": 4269,
+      "scheduled_date_eastern": "2026-09-21T15:58:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4270",
+      "last_sync": "2026-09-18T18:56:51.6147737-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "reusable-php-json-project-foundation": {
+      "source_file": "reusable-php-json-project-foundation.json",
+      "wordpress_post_id": 4326,
+      "wordpress_media_id": 4325,
+      "scheduled_date_eastern": "2026-10-12T08:16:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4326",
+      "last_sync": "2026-09-18T18:59:22.9886255-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "robot-or-human-hold-button": {
+      "source_file": "robot-or-human-hold-button.json",
+      "wordpress_post_id": 4284,
+      "wordpress_media_id": 4283,
+      "scheduled_date_eastern": "2026-09-25T11:06:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4284",
+      "last_sync": "2026-09-18T18:57:33.1460973-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "shared-text-between-devices": {
+      "source_file": "shared-text-between-devices.json",
+      "wordpress_post_id": 4330,
+      "wordpress_media_id": 4329,
+      "scheduled_date_eastern": "2026-10-13T09:28:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4330",
+      "last_sync": "2026-09-18T18:59:30.3726702-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "simple-links-page-template": {
+      "source_file": "simple-links-page-template.json",
+      "wordpress_post_id": 4278,
+      "wordpress_media_id": 4277,
+      "scheduled_date_eastern": "2026-09-23T12:51:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4278",
+      "last_sync": "2026-09-18T18:57:13.4380180-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "smart-404-redirect-manager": {
+      "source_file": "smart-404-redirect-manager.json",
+      "wordpress_post_id": 4334,
+      "wordpress_media_id": 4333,
+      "scheduled_date_eastern": "2026-10-14T08:17:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4334",
+      "last_sync": "2026-09-18T18:59:37.4084610-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "timeclock-photo-hours-logger": {
+      "source_file": "timeclock-photo-hours-logger.json",
+      "wordpress_post_id": 4316,
+      "wordpress_media_id": 4315,
+      "scheduled_date_eastern": "2026-10-07T12:15:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4316",
+      "last_sync": "2026-09-18T18:59:04.5359336-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "tv-binge-board-watch-tracker": {
+      "source_file": "tv-binge-board-watch-tracker.json",
+      "wordpress_post_id": 4324,
+      "wordpress_media_id": 4323,
+      "scheduled_date_eastern": "2026-10-09T16:56:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4324",
+      "last_sync": "2026-09-18T18:59:19.3829725-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "two-pane-ai-writing-tool": {
+      "source_file": "two-pane-ai-writing-tool.json",
+      "wordpress_post_id": 4276,
+      "wordpress_media_id": 4275,
+      "scheduled_date_eastern": "2026-09-23T08:26:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4276",
+      "last_sync": "2026-09-18T18:57:08.2432374-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "visual-ping-webhook-project-sketch": {
+      "source_file": "visual-ping-webhook-project-sketch.json",
+      "wordpress_post_id": 4268,
+      "wordpress_media_id": 4267,
+      "scheduled_date_eastern": "2026-09-21T10:14:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4268",
+      "last_sync": "2026-09-18T18:56:44.9627562-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "weather-dashboard-location-accuracy": {
+      "source_file": "weather-dashboard-location-accuracy.json",
+      "wordpress_post_id": 4308,
+      "wordpress_media_id": 4307,
+      "scheduled_date_eastern": "2026-10-05T15:27:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4308",
+      "last_sync": "2026-09-18T18:58:47.1131313-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
+    "windows-computer-heartbeat-dashboard": {
+      "source_file": "windows-computer-heartbeat-dashboard.json",
+      "wordpress_post_id": 4280,
+      "wordpress_media_id": 4279,
+      "scheduled_date_eastern": "2026-09-24T12:05:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4280",
+      "last_sync": "2026-09-18T18:57:20.1708281-04:00",
+      "note": "Created by Publish-WordPress.ps1"
+    }
+  }
 }
