@@ -3,9 +3,10 @@
     "filename": "debt-payoff-planner-scenarios.json",
     "author": "Jason Lamb (with help from ChatGPT)",
     "created_date": "2026-09-16",
-    "modified_date": "2026-09-16",
-    "revision": "1.0.1",
+    "modified_date": "2026-09-21",
+    "revision": "1.0.2",
     "changelog": [
+      "1.0.2: Add conservative WordPress category mapping.",
       "1.0.1: Resolve cover media relative to the blog directory.",
       "1.0.0: Added project article to the JSON blog with generated cover image."
     ]
@@ -18,6 +19,9 @@
   "tags": [
     "Money and travel"
   ],
+  "categories": [
+    "Informational"
+  ],
   "excerpt": "A look at my loan-tracking app, with payoff comparisons, private records, controlled sharing, and recoverable changes.",
   "cover": {
     "src": "media/derivatives/2026/09/debt-payoff-planner-scenarios_640w.jpg",
@@ -25,3 +29,4 @@
   },
   "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/debt-payoff-planner-scenarios_640w.jpg\" alt=\"Building a Debt Payoff Planner That Makes Scenarios Easier to Compare cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>A loan balance tells only part of the story. The payment amount, interest, and order of repayment all affect the picture someone is trying to understand. My Debt Payoff Planner gives those inputs a place to be compared.</p>\n<p>The app tracks individual loans and provides amortization and accelerated-payoff tables. It also includes snowball and avalanche strategy comparisons, allowing different approaches to be explored with the same underlying records. The purpose is to make the scenario visible, not to claim one result is automatically right for every person.</p>\n<p>The records are private to each user, with owner-controlled viewer and editor sharing. That lets a person choose whether another account can look at the plan or help maintain it. Administration includes user management without making the administrator's normal view a dashboard of everybody else's balances.</p>\n<p>Recoverability is a significant part of the project. It keeps per-user audit history, creates a backup on the first successful login of the day, and supports manual backup and recovery. When an audit action is reverted, the documented behavior restores the whole saved dataset snapshot for that event. That is different from undoing one isolated field.</p>\n<p>The storage is plain JSON, separated into accounts, user datasets, audits, and backups. It is a small application architecture with explicit files rather than a required database service.</p>\n<p>The result is a workspace for comparing assumptions and keeping track of changes. I am interested in making the inputs and history understandable, because a payoff chart is only useful when someone can see where its numbers came from. This is a software project for modeling scenarios, not a promise about financial outcomes.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/debt-payoff\">Explore the project on GitHub</a></p>\n"
 }
+

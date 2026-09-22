@@ -18,6 +18,7 @@ Modified: 2026-09-16
 - Keeps WordPress post IDs, media IDs, schedule dates, and status in `wordpress-state.json`.
 - Checks WordPress by slug before creating a post when credentials are supplied, providing a second duplicate-protection layer.
 - Can update existing draft, pending, or scheduled posts by slug without changing their schedule when `-UpdateExisting` is used.
+- In `-UpdateExisting` mode, published, deleted, missing, and otherwise ineligible posts are not scheduled or recreated.
 - Can append a standard `GitHub` tag to every processed post with `-AddGitHubTag`.
 - Reads an optional `categories` array from a source JSON file; categories are never created unless `-CreateMissingCategories` is explicitly supplied.
 - Runs as a dry run unless `-Commit` is specified.
@@ -62,6 +63,14 @@ To synchronize tags on existing scheduled or draft posts and append the `GitHub`
 ```powershell
 ./blog/tools/Publish-WordPress.ps1 -SiteUrl 'https://your-wordpress-site.example' -UpdateExisting -AddGitHubTag -CreateMissingTags -Commit
 ```
+
+To add one category to already-published WordPress posts that match local JSON slugs:
+
+```powershell
+./blog/tools/Add-WordPressCategoryToPublished.ps1 -SiteUrl 'https://your-wordpress-site.example' -CategoryName 'Technology'
+```
+
+The published-post category script is also dry-run by default. Add `-Commit` only after reviewing the table. It preserves existing categories and appends the requested category. Use `-ExcludeSlug` to skip specific posts. Use `-AllPublished` only when the category should be added to every published WordPress post, including posts that do not have a local JSON source.
 
 Categories are opt-in per source article:
 

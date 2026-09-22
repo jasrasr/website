@@ -3,9 +3,10 @@
     "filename": "building-my-own-ticketing-app.json",
     "author": "Jason Lamb (with help from ChatGPT)",
     "created_date": "2026-09-16",
-    "modified_date": "2026-09-16",
-    "revision": "1.0.1",
+    "modified_date": "2026-09-21",
+    "revision": "1.0.2",
     "changelog": [
+      "1.0.2: Add conservative WordPress category mapping.",
       "1.0.1: Resolve cover media relative to the blog directory.",
       "1.0.0: Added project article to the JSON blog with generated cover image."
     ]
@@ -18,6 +19,9 @@
   "tags": [
     "IT and automation"
   ],
+  "categories": [
+    "Technology"
+  ],
   "excerpt": "A look at my PHP ticketing project, including requester and agent dashboards, public replies, private notes, and searchable categories.",
   "cover": {
     "src": "media/derivatives/2026/09/building-my-own-ticketing-app_640w.jpg",
@@ -25,3 +29,4 @@
   },
   "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/building-my-own-ticketing-app_640w.jpg\" alt=\"Building My Own Ticketing App: From Request to Resolution cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>A support request needs somewhere better to live than a message that gets buried halfway down a conversation. My Ticketing project gives those requests a place to be submitted, assigned, discussed, and tracked.</p>\n<p>The app has two distinct views. Requesters can submit tickets and follow their own conversations. Agents can work across the ticket list, search and sort it, update metadata, and manage the people and categories behind it. Public replies are part of the requester conversation; private notes are for agents. The application filters those notes on the server before returning ticket data to a requester.</p>\n<p>The recent work has focused on making a growing ticket list easier to use. Requester search matches names and email addresses. Category search can find a term anywhere in a hierarchy, so someone looking for a printer issue does not have to work through every branch of a giant dropdown. Category IDs stay stable when a category is renamed or moved, preserving the connection to existing tickets.</p>\n<p>Mobile behavior has needed attention too. Smaller category rows, expandable editing controls, and fixes for iPhone form zoom all address the difference between a page that technically fits and a page someone can comfortably use.</p>\n<p>The app uses PHP and JSON files. Each installation maintains its own tickets, accounts, directory, and categories, separate from the source repository. That makes preserving runtime data during deployment part of the design.</p>\n<p>Release 1.7.3 adds Microsoft 365 email setup documentation. Actual outbound notifications and inbound email replies remain future application work. Passwordless test mode is also a development convenience, not a finished production identity system.</p>\n<p>For me, this project is about understanding the whole support workflow. The ticket form is the beginning; the interesting work is everything needed to keep the conversation organized afterward.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/ticketing\">Explore the project on GitHub</a></p>\n"
 }
+

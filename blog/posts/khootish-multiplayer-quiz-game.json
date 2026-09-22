@@ -3,9 +3,10 @@
     "filename": "khootish-multiplayer-quiz-game.json",
     "author": "Jason Lamb (with help from ChatGPT)",
     "created_date": "2026-09-16",
-    "modified_date": "2026-09-16",
-    "revision": "1.0.1",
+    "modified_date": "2026-09-21",
+    "revision": "1.0.2",
     "changelog": [
+      "1.0.2: Add conservative WordPress category mapping.",
       "1.0.1: Resolve cover media relative to the blog directory.",
       "1.0.0: Added project article to the JSON blog with generated cover image."
     ]
@@ -18,6 +19,9 @@
   "tags": [
     "Church and games"
   ],
+  "categories": [
+    "Fun"
+  ],
   "excerpt": "A PHP quiz engine with reusable questions, join codes, phone answer pads, a projector display, and timed scoring.",
   "cover": {
     "src": "media/derivatives/2026/09/khootish-multiplayer-quiz-game_640w.jpg",
@@ -25,3 +29,4 @@
   },
   "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/khootish-multiplayer-quiz-game_640w.jpg\" alt=\"Khootish: Building a Reusable Quiz Game for a Room Full of Players cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>A group quiz has more moving parts than a question and four buttons. People need to join, the host needs to control the room, and everybody needs to agree on when time is up. Khootish is my project for bringing those pieces together.</p>\n<p>The app provides separate administration, host, projector, and mobile answer views. A reusable quiz library and question bank allow questions to be written once and used in different games. Players join with a six-digit code and can choose a team color.</p>\n<p>Questions have four choices and one correct answer. The documented timer is 30 seconds, with correct-answer points declining as time passes. Wrong answers receive zero points, and results and standings appear after each question. Completed games can be kept in history and replayed.</p>\n<p>The timer and score decisions are controlled on the server. That is important when several phones are responding at nearly the same time. A browser's display should not independently decide whether an answer is valid after the round has ended.</p>\n<p>The JSON storage uses dedicated locks around game changes, including joins, answers, and state transitions. Duplicate-answer validation and scoring happen together. These are less visible features than the leaderboard, but they help the leaderboard mean something.</p>\n<p>The documented design targets dozens of contestants on shared hosting. A much larger event would be a different infrastructure problem, and I am not treating a configured player limit as a benchmark result.</p>\n<p>The appeal of this project is reuse. A good set of questions should be easy to bring back, and the host should spend the session running the game rather than rebuilding the mechanics. The technology should keep the pace, then get out of the room's way.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/khootish\">Explore the project on GitHub</a></p>\n"
 }
+

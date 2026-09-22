@@ -3,9 +3,10 @@
     "filename": "powershell-numbered-web-test-pages.json",
     "author": "Jason Lamb (with help from ChatGPT)",
     "created_date": "2026-09-16",
-    "modified_date": "2026-09-16",
-    "revision": "1.0.1",
+    "modified_date": "2026-09-21",
+    "revision": "1.0.2",
     "changelog": [
+      "1.0.2: Add conservative WordPress category mapping.",
       "1.0.1: Resolve cover media relative to the blog directory.",
       "1.0.0: Added project article to the JSON blog with generated cover image."
     ]
@@ -18,6 +19,9 @@
   "tags": [
     "Browser experiments"
   ],
+  "categories": [
+    "Powershell"
+  ],
   "excerpt": "A small collection of numbered landing pages demonstrates how a few lines of PowerShell can remove repetitive file creation.",
   "cover": {
     "src": "media/derivatives/2026/09/powershell-numbered-web-test-pages_640w.jpg",
@@ -25,3 +29,4 @@
   },
   "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/powershell-numbered-web-test-pages_640w.jpg\" alt=\"A Tiny PowerShell Script for Numbered Web Test Pages cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Not every repository folder needs a grand origin story. The random-url folder contains numbered landing pages, and its PowerShell helper is short enough to understand at a glance.</p>\n<p>The helper iterates through a range of numbers and writes a matching HTML filename containing a simple marker. The directory contains pages numbered zero through nine. These give a test link or QR destination a recognizable response when it is opened.</p>\n<p>The distinction between a destination and a QR image matters here. The script creates the little web pages; it is not a QR-code rendering library. A separate code or link can point at those pages when a test needs distinct targets.</p>\n<p>That is enough to make the files useful in a larger workflow. If several labels or redirects are being checked, landing on different markers makes it easier to see which destination was reached. There is no need to design ten complete sites just to tell the results apart.</p>\n<p>The script is also an example of why I like PowerShell for repetitive setup. The task is not intellectually difficult, but manually creating similar files adds chances for inconsistent names and copy-paste mistakes. A loop makes the pattern explicit.</p>\n<p>This is a small utility rather than a full application. Its value is proportional to the task it removes: create predictable targets, give each one an identifiable value, and move on to the thing those targets help test.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/random-url\">Explore the project on GitHub</a></p>\n"
 }
+

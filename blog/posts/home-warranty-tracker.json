@@ -3,9 +3,10 @@
     "filename": "home-warranty-tracker.json",
     "author": "Jason Lamb (with help from ChatGPT)",
     "created_date": "2026-09-16",
-    "modified_date": "2026-09-16",
-    "revision": "1.0.1",
+    "modified_date": "2026-09-21",
+    "revision": "1.0.2",
     "changelog": [
+      "1.0.2: Add conservative WordPress category mapping.",
       "1.0.1: Resolve cover media relative to the blog directory.",
       "1.0.0: Added project article to the JSON blog with generated cover image."
     ]
@@ -18,6 +19,9 @@
   "tags": [
     "Family and home"
   ],
+  "categories": [
+    "Informational"
+  ],
   "excerpt": "A household warranty portal that keeps product details, receipt links, costs, and expiration dates together.",
   "cover": {
     "src": "media/derivatives/2026/09/home-warranty-tracker_640w.jpg",
@@ -25,3 +29,4 @@
   },
   "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/home-warranty-tracker_640w.jpg\" alt=\"Building a Warranty Tracker Before I Need the Warranty cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>The best time to find a warranty receipt is before something breaks. Unfortunately, that is also the time when finding the receipt feels least urgent. My Warranty Tracker gives the information a consistent home.</p>\n<p>A record can include the product, category, manufacturer, model, serial number, seller, warranty provider, costs, dates, receipt URL, and notes. Instead of reconstructing the purchase later, the details can be captured while they are still easy to find.</p>\n<p>The dashboard summarizes active, expiring, and expired warranties along with tracked value. A continuous color cue changes as expiration approaches, and the app treats warranties within 90 days as expiring soon. That makes the date visible without requiring a separate mental calculation for every row.</p>\n<p>Household sharing is part of the workflow. Accounts can keep a record private or share it with the household, and an administrator can create one-time invitation codes for additional members. The person who bought an item does not have to be the only person who can find its information later.</p>\n<p>The application supports search, filtering, sorting, and editing on both phone and desktop. Underneath, PHP stores the records in JSON with locking and atomic replacement. It follows conventions from the repository's shared foundation work.</p>\n<p>A tracked expiration date is an organizing aid, not a verdict on what a provider will cover. The policy terms and purchase records still matter. The app's job is to make those supporting details easier to locate.</p>\n<p>This is a practical home project: fewer scattered notes, a clearer view of upcoming dates, and one less search to perform while dealing with an already inconvenient broken item.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/warranty-tracker\">Explore the project on GitHub</a></p>\n"
 }
+

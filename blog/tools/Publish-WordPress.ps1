@@ -297,6 +297,60 @@ function New-PostSchedule {
     @($result)
 }
 
+function Get-PostTagNames {
+    param([object]$Post)
+
+    $tagNames = @()
+    if ($Post.PSObject.Properties['tags'] -and $Post.tags) { $tagNames = @($Post.tags) }
+    if ($AddGitHubTag -and $tagNames -notcontains 'GitHub') { $tagNames += 'GitHub' }
+    @($tagNames)
+}
+
+function Get-PostCategoryNames {
+    param([object]$Post)
+
+    if ($Post.PSObject.Properties['categories'] -and $Post.categories) {
+        return @($Post.categories)
+    }
+    @()
+}
+
+function Format-ScheduledEastern {
+    param([object]$DateValue)
+
+    if ($null -eq $DateValue -or [string]::IsNullOrWhiteSpace([string]$DateValue)) { return '' }
+    try {
+        return ([datetime]$DateValue).ToString('yyyy-MM-dd h:mm tt')
+    }
+    catch {
+        return [string]$DateValue
+    }
+}
+
+function Get-TrackedScheduledEastern {
+    param([string]$Slug)
+
+    if ($script:StatePosts.ContainsKey($Slug)) {
+        return $script:StatePosts[$Slug].scheduled_date_eastern
+    }
+    $null
+}
+
+function New-PostSummaryRow {
+    param(
+        [object]$Post,
+        [object]$ScheduledEastern
+    )
+
+    [pscustomobject]@{
+        ScheduledEastern = Format-ScheduledEastern -DateValue $ScheduledEastern
+        Title            = [string]$Post.title
+        Slug             = [string]$Post.slug
+        Categories       = ((Get-PostCategoryNames -Post $Post) -join ', ')
+        Tags             = ((Get-PostTagNames -Post $Post) -join ', ')
+    }
+}
+
 $script:WpBase = $SiteUrl.TrimEnd('/')
 $timeZone = Get-EasternTimeZone
 $nowEastern = [TimeZoneInfo]::ConvertTime([DateTimeOffset]::UtcNow, $timeZone)
@@ -386,7 +440,7 @@ foreach ($file in Get-ChildItem -LiteralPath $PostsPath -Filter '*.json' -File |
 }
 
 if (($Commit -or $UpdateExisting) -and ([string]::IsNullOrWhiteSpace($Username) -or [string]::IsNullOrWhiteSpace($AppPassword))) {
-    throw 'Commit mode requires a WordPress username and application password.'
+    throw 'Commit or update-existing mode requires a WordPress username and application password.'
 }
 
 $script:AuthHeaders = @{}
@@ -441,10 +495,7 @@ if (-not [string]::IsNullOrWhiteSpace($Username) -and -not [string]::IsNullOrWhi
     }
 
     if ($UpdateExisting) {
-        $updateIds = @($existingUpdates | ForEach-Object { [int]$_.ExistingPostId })
-        $ready = @($ready | Where-Object {
-            -not ($_.PSObject.Properties['ExistingPostId'] -and $_.ExistingPostId -and [int]$_.ExistingPostId -in $updateIds)
-        })
+        $ready = @()
     }
     elseif ($serverExistingSlugs.Count -gt 0) {
         $ready = @($ready | Where-Object { [string]$_.Data.slug -notin $serverExistingSlugs })
@@ -478,12 +529,21 @@ if ($invalid.Count -gt 0) {
 if ($schedule.Count -gt 0) {
     Write-Host ''
     $schedule | ForEach-Object {
-        [pscustomobject]@{
-            ScheduledEastern = $_.Scheduled.ToString('yyyy-MM-dd h:mm tt')
-            Slug             = $_.Post.Data.slug
-            Title            = $_.Post.Data.title
-        }
-    } | Format-Table -AutoSize | Out-Host
+        New-PostSummaryRow -Post $_.Post.Data -ScheduledEastern $_.Scheduled
+    } | Format-Table -AutoSize -Wrap | Out-Host
+}
+
+if ($existingUpdates.Count -gt 0) {
+    Write-Host ''
+    Write-Host 'Existing posts to update:'
+    $existingUpdates | Sort-Object {
+        $scheduledEastern = Get-TrackedScheduledEastern -Slug ([string]$_.Data.slug)
+        if ($scheduledEastern) { [datetime]$scheduledEastern } else { [datetime]::MaxValue }
+    }, { [string]$_.Data.title } | ForEach-Object {
+        $slug = [string]$_.Data.slug
+        $scheduledEastern = Get-TrackedScheduledEastern -Slug $slug
+        New-PostSummaryRow -Post $_.Data -ScheduledEastern $scheduledEastern
+    } | Format-Table -AutoSize -Wrap | Out-Host
 }
 
 if (-not $Commit) {
@@ -492,14 +552,15 @@ if (-not $Commit) {
     return
 }
 
-foreach ($item in @($existingUpdates)) {
+foreach ($item in @($existingUpdates | Sort-Object {
+    $scheduledEastern = Get-TrackedScheduledEastern -Slug ([string]$_.Data.slug)
+    if ($scheduledEastern) { [datetime]$scheduledEastern } else { [datetime]::MaxValue }
+}, { [string]$_.Data.title })) {
     $post = $item.Data
     $slug = [string]$post.slug
     Write-Host "Updating existing post: $($post.title)"
 
-    $tagNames = @()
-    if ($post.PSObject.Properties['tags'] -and $post.tags) { $tagNames = @($post.tags) }
-    if ($AddGitHubTag -and $tagNames -notcontains 'GitHub') { $tagNames += 'GitHub' }
+    $tagNames = @(Get-PostTagNames -Post $post)
     $tagIds = @(Resolve-WpTagIds -TagNames $tagNames)
 
     $body = [ordered]@{ tags = $tagIds }
@@ -554,9 +615,7 @@ foreach ($entry in $schedule) {
         Save-State
     }
 
-    $tagNames = @()
-    if ($post.PSObject.Properties['tags'] -and $post.tags) { $tagNames = @($post.tags) }
-    if ($AddGitHubTag -and $tagNames -notcontains 'GitHub') { $tagNames += 'GitHub' }
+    $tagNames = @(Get-PostTagNames -Post $post)
     $tagIds = @(Resolve-WpTagIds -TagNames $tagNames)
 
     $categoryIds = @()

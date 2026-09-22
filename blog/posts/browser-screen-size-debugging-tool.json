@@ -3,9 +3,10 @@
     "filename": "browser-screen-size-debugging-tool.json",
     "author": "Jason Lamb (with help from ChatGPT)",
     "created_date": "2026-09-16",
-    "modified_date": "2026-09-16",
-    "revision": "1.0.1",
+    "modified_date": "2026-09-21",
+    "revision": "1.0.2",
     "changelog": [
+      "1.0.2: Add conservative WordPress category mapping.",
       "1.0.1: Resolve cover media relative to the blog directory.",
       "1.0.0: Added project article to the JSON blog with generated cover image."
     ]
@@ -18,6 +19,9 @@
   "tags": [
     "Web foundations"
   ],
+  "categories": [
+    "Technology"
+  ],
   "excerpt": "A small viewport-inspection page that displays browser dimensions, pixel ratio, and orientation while the window changes.",
   "cover": {
     "src": "media/derivatives/2026/09/browser-screen-size-debugging-tool_640w.jpg",
@@ -25,3 +29,4 @@
   },
   "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/browser-screen-size-debugging-tool_640w.jpg\" alt=\"A Screen-Size Page for the Layout That Looks Fine on My Computer cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>There is a classic stage in web development where a layout looks fine on my computer and mysterious everywhere else. My Screen Size page gives that conversation some numbers.</p>\n<p>The page shows the current viewport dimensions alongside the browser's inner and outer window sizes, screen dimensions, device pixel ratio, and orientation. As the window changes, the readout updates.</p>\n<p>Those measurements describe related but different things. The viewport is the area available to the page; the physical screen and the browser's outer window are not necessarily the same size. Browser controls, resizing, zoom, and device scaling can all affect what someone is actually looking at.</p>\n<p>For a support or layout discussion, the useful result is a compact page someone can open and report back from. Instead of only saying that a button is off-screen, there is a specific browser view to compare with the layout's assumptions.</p>\n<p>The page does not fix responsive CSS on its own. It makes a few otherwise hidden conditions visible, which helps narrow the next question. A screenshot and the relevant dimensions can be much more informative together than either one alone.</p>\n<p>I keep small tools like this because they reduce guesswork around other projects. A one-purpose diagnostic page does not need accounts, saved dashboards, or an elaborate setup to be worth using.</p>\n<p>Sometimes the fastest path to fixing an interface is first finding out how much room the interface really has.</p>\n<p><a href=\"https://github.com/jasrasr/website/blob/main/screensize.php\">Explore the project on GitHub</a></p>\n"
 }
+
