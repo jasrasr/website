@@ -39,7 +39,6 @@ final class FreshserviceClient
                 'query' => $query,
                 'page' => $page,
                 'per_page' => $perPage,
-                'include' => 'requester',
             ];
             $params['workspace_id'] = $this->workspaceId;
 
@@ -69,6 +68,27 @@ final class FreshserviceClient
             }
             throw $exception;
         }
+    }
+
+    /**
+     * The /api/v2/tickets/filter endpoint used by listTicketsForAgent() does not support
+     * ?include=requester, unlike the single-ticket endpoint. Fetch the requester's email
+     * with one extra call per ticket, so callers should restrict this to tickets that
+     * actually need it (e.g. tickets new to local state) rather than the full ticket list.
+     */
+    public function getTicketRequesterEmail(int $ticketId): ?string
+    {
+        try {
+            $response = $this->get('/api/v2/tickets/' . $ticketId . '?' . http_build_query([
+                'include' => 'requester',
+            ], '', '&', PHP_QUERY_RFC3986));
+        } catch (RuntimeException) {
+            return null;
+        }
+
+        $ticket = isset($response['ticket']) && is_array($response['ticket']) ? $response['ticket'] : null;
+        $email = $ticket['requester']['email'] ?? null;
+        return is_string($email) && $email !== '' ? $email : null;
     }
 
     /** @return array<int, string> */

@@ -73,7 +73,7 @@ function minimalTicket(array $ticket): array
         'status' => (int) ($ticket['status'] ?? 0),
         'responderId' => isset($ticket['responder_id']) ? (int) $ticket['responder_id'] : null,
         'requesterId' => isset($ticket['requester_id']) ? (int) $ticket['requester_id'] : null,
-        'requesterOrgDomain' => emailDomain($ticket['requester']['email'] ?? null),
+        'requesterOrgDomain' => 'Unknown',
         'priority' => (int) ($ticket['priority'] ?? 0),
         'category' => trim((string) ($ticket['category'] ?? '')),
         'subCategory' => trim((string) ($ticket['sub_category'] ?? '')),
@@ -239,7 +239,13 @@ try {
     $currentTickets = [];
     foreach ($client->listTicketsForAgent($agentId) as $ticket) {
         $minimal = minimalTicket($ticket);
-        if ($minimal['id'] > 0) $currentTickets[(string) $minimal['id']] = $minimal;
+        if ($minimal['id'] <= 0) continue;
+        // Only tickets new to local state can ever be counted as "new" activity, so restrict
+        // the extra per-ticket requester lookup to that small set instead of every ticket.
+        if (!isset($previousTickets[(string) $minimal['id']])) {
+            $minimal['requesterOrgDomain'] = emailDomain($client->getTicketRequesterEmail($minimal['id']));
+        }
+        $currentTickets[(string) $minimal['id']] = $minimal;
     }
 
     $activity = [
