@@ -64,7 +64,7 @@ During the folder rename, the collector can temporarily read an existing `FS/con
 
 ## Privacy and security
 
-`config.local.php`, `storage/api-state.json`, and `storage/api-snapshots.json` are ignored by Git and denied to web requests. The private state contains only ticket IDs, statuses, assignee IDs, and timestamps—no subjects, descriptions, requester names, or conversations. API snapshots contain aggregate counts only. Keeping runtime snapshots out of tracked files prevents deployment conflicts.
+`config.local.php`, `storage/api-state.json`, and `storage/api-snapshots.json` are ignored by Git and denied to web requests. The private state contains only ticket IDs, statuses, assignee IDs, requester email domains (never the full address or name), and timestamps—no subjects, descriptions, requester names, or conversations. API snapshots contain aggregate counts only, including new-ticket counts grouped by requester email domain (capped to the top 8 domains plus Other). Keeping runtime snapshots out of tracked files prevents deployment conflicts.
 
 ## How calculation works
 

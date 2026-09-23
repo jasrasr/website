@@ -39,6 +39,7 @@ final class FreshserviceClient
                 'query' => $query,
                 'page' => $page,
                 'per_page' => $perPage,
+                'include' => 'requester',
             ];
             $params['workspace_id'] = $this->workspaceId;
 

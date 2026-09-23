@@ -4,6 +4,9 @@ All notable changes to this project are documented here. Format is loosely based
 
 ## Unreleased
 
+## 2026-09-23
+- Added `index-org.php`: a read-only dashboard charting new tickets per day, stacked by requester organization (email domain only; full addresses are never stored). Does not modify or depend on `index.php`. Linked from the main dashboard's header. The collector now requests the requester's email from Freshservice and tallies new-ticket counts by domain per pull, capped to the top 8 domains plus Other. (Rev 1.4)
+
 ## 2026-09-15
 - Added a day-of-week abbreviation (M/T/W/TH/F/SA/SU) under each x-axis date label on both dashboards' charts. (Rev 1.3)
 

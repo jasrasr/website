@@ -195,6 +195,7 @@ function analyticsRows(array $analytics, string $key): array
         <div class="header-actions">
             <div class="badge">Goal: <?= $goal ?> unresolved</div>
             <a class="simple-link" href="index-simple.php">Simple view</a>
+            <a class="simple-link" href="index-org.php">By organization</a>
             <button type="button" class="pull-button" id="pull-tickets">Pull tickets now</button>
             <span class="pull-status" id="pull-status" role="status" aria-live="polite"></span>
         </div>

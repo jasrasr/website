@@ -57,6 +57,15 @@ function recordPull(string $path, array $entry): void
     }
 }
 
+function emailDomain(?string $email): string
+{
+    $email = trim((string) $email);
+    $at = strrpos($email, '@');
+    if ($at === false) return 'Unknown';
+    $domain = strtolower(trim(substr($email, $at + 1)));
+    return $domain !== '' ? $domain : 'Unknown';
+}
+
 function minimalTicket(array $ticket): array
 {
     return [
@@ -64,6 +73,7 @@ function minimalTicket(array $ticket): array
         'status' => (int) ($ticket['status'] ?? 0),
         'responderId' => isset($ticket['responder_id']) ? (int) $ticket['responder_id'] : null,
         'requesterId' => isset($ticket['requester_id']) ? (int) $ticket['requester_id'] : null,
+        'requesterOrgDomain' => emailDomain($ticket['requester']['email'] ?? null),
         'priority' => (int) ($ticket['priority'] ?? 0),
         'category' => trim((string) ($ticket['category'] ?? '')),
         'subCategory' => trim((string) ($ticket['sub_category'] ?? '')),
@@ -73,6 +83,19 @@ function minimalTicket(array $ticket): array
         'createdAt' => (string) ($ticket['created_at'] ?? ''),
         'updatedAt' => (string) ($ticket['updated_at'] ?? ''),
     ];
+}
+
+function boundedOrgCounts(array $counts, int $max = 8): array
+{
+    $sorted = sortedCounts($counts);
+    $bounded = [];
+    $other = 0;
+    foreach ($sorted as $label => $count) {
+        if (count($bounded) >= $max) $other += $count;
+        else $bounded[$label] = $count;
+    }
+    if ($other > 0) $bounded['Other'] = $other;
+    return $bounded;
 }
 
 function incrementCount(array &$counts, string $label): void
@@ -230,6 +253,7 @@ try {
         'reassignedAway' => 0,
         'otherExit' => 0,
     ];
+    $newTicketsByOrg = [];
     $startingUnresolved = 0;
     foreach ($previousTickets as $ticket) {
         if (!in_array((int) ($ticket['status'] ?? 0), $closedStatuses, true)) $startingUnresolved++;
@@ -243,8 +267,12 @@ try {
                 if ($isUnresolved) {
                     $activity['enteredUnresolved']++;
                     $createdAt = $ticket['createdAt'] !== '' ? new DateTimeImmutable($ticket['createdAt']) : null;
-                    if ($createdAt !== null && $lastRun !== null && $createdAt >= $lastRun) $activity['newTickets']++;
-                    else $activity['assignedIn']++;
+                    if ($createdAt !== null && $lastRun !== null && $createdAt >= $lastRun) {
+                        $activity['newTickets']++;
+                        incrementCount($newTicketsByOrg, $ticket['requesterOrgDomain'] ?? 'Unknown');
+                    } else {
+                        $activity['assignedIn']++;
+                    }
                 }
                 continue;
             }
@@ -281,6 +309,8 @@ try {
             }
         }
     }
+
+    $activity['newTicketsByOrg'] = boundedOrgCounts($newTicketsByOrg);
 
     $endingUnresolved = 0;
     foreach ($currentTickets as $ticket) {
