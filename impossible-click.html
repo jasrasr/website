@@ -1,4 +1,15 @@
 <!DOCTYPE html>
+<!--
+Impossible Click — standalone browser game (no build step or dependencies).
+Public URL: https://jasr.me/impossible-click.html
+Desktop: move the mouse to chase the fleeing target; click it to score.
+Mobile: tap the target before it jumps to a new position every 900 ms.
+Missed clicks/taps count toward accuracy; the public link does not.
+Maintenance: HTML, styles, and game logic all live in this file. Keep target
+positions between the public link and scoreboard when changing the layout.
+Deploy this file to the website root. Scores reset when the page reloads.
+Updated: 2026-09-22 — touch gameplay, responsive layout, and public link.
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,6 +21,7 @@
         body {
             overflow: hidden;
             height: 100vh;
+            height: 100dvh;
             width: 100vw;
             background: radial-gradient(ellipse at center, #0d1b2a 0%, #050a10 100%);
             font-family: 'Segoe UI', sans-serif;
@@ -23,7 +35,7 @@
             width: 100%;
             text-align: center;
             color: #ffffff;
-            font-size: 28px;
+            font-size: clamp(16px, 4.5vw, 28px);
             font-weight: 700;
             letter-spacing: 2px;
             text-shadow: 0 0 20px rgba(255, 100, 100, 0.8);
@@ -39,6 +51,19 @@
             font-size: 14px;
             letter-spacing: 1px;
             pointer-events: none;
+            padding: 0 16px;
+        }
+
+        #public-link {
+            position: fixed;
+            top: 104px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #8acbff;
+            padding: 12px;
+            white-space: nowrap;
+            z-index: 2;
+            touch-action: manipulation;
         }
 
         #target {
@@ -58,6 +83,7 @@
             cursor: pointer;
             transition: left 0.05s linear, top 0.05s linear, box-shadow 0.1s;
             will-change: left, top;
+            touch-action: manipulation;
         }
 
         #target:active {
@@ -73,15 +99,15 @@
 
         #scoreboard {
             position: fixed;
-            bottom: 28px;
+            bottom: max(12px, env(safe-area-inset-bottom));
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 40px;
+            gap: clamp(12px, 5vw, 40px);
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 12px;
-            padding: 12px 32px;
+            padding: 12px 20px;
             pointer-events: none;
         }
 
@@ -128,6 +154,15 @@
             opacity: 1;
         }
 
+        @media (max-height: 500px) {
+            #title { top: 8px; font-size: 16px; }
+            #subtitle { top: 32px; font-size: 12px; }
+            #public-link { top: 50px; }
+            #target { width: 90px; height: 90px; font-size: 38px; }
+            #scoreboard { padding: 4px 20px; }
+            .score-value { font-size: 20px; }
+        }
+
         /* trail particles */
         .particle {
             position: absolute;
@@ -146,6 +181,7 @@
 
     <div id="title">😈 CATCH ME IF YOU CAN</div>
     <div id="subtitle">Click the button — it moves away from your cursor</div>
+    <a id="public-link" href="https://jasr.me/impossible-click.html">Play at jasr.me/impossible-click.html</a>
 
     <div id="target">😈</div>
 
@@ -172,9 +208,19 @@
         const valMisses   = document.getElementById('val-misses');
         const valAccuracy = document.getElementById('val-accuracy');
         const toast       = document.getElementById('toast');
+        const publicLink  = document.getElementById('public-link');
+        const scoreboard  = document.getElementById('scoreboard');
+        const touchMode   = window.matchMedia('(hover: none) and (pointer: coarse)');
 
-        const SIZE          = 130;
-        const HALF          = SIZE / 2;
+        function updateInstructions() {
+            document.getElementById('subtitle').textContent = touchMode.matches
+                ? 'Tap the target before it jumps away!'
+                : 'Click the button — it moves away from your cursor';
+        }
+        updateInstructions();
+        touchMode.addEventListener('change', updateInstructions);
+
+        let HALF            = target.offsetWidth / 2;
         const FLEE_RADIUS   = 180;  // distance to start fleeing
         const FLEE_POWER    = 2.5;  // flee strength
         const WALL_MARGIN   = 160;  // distance from edge that triggers wall push
@@ -197,8 +243,22 @@
         function clamp(val, lo, hi) { return Math.max(lo, Math.min(hi, val)); }
 
         function place() {
+            const bounds = playBounds();
+            tx = clamp(tx, bounds.left, bounds.right);
+            ty = clamp(ty, bounds.top, bounds.bottom);
             target.style.left = (tx - HALF) + 'px';
             target.style.top  = (ty - HALF) + 'px';
+        }
+
+        function playBounds() {
+            const pad = HALF + 4;
+            const top = publicLink.getBoundingClientRect().bottom + pad;
+            return {
+                left: pad,
+                right: Math.max(pad, document.documentElement.clientWidth - pad),
+                top,
+                bottom: Math.max(top, scoreboard.getBoundingClientRect().top - pad)
+            };
         }
 
         place();
@@ -218,31 +278,31 @@
 
         function teleportToSafety() {
             // Divide screen into quadrants, pick the one farthest from the mouse
-            const W   = window.innerWidth;
-            const H   = window.innerHeight;
-            const cx  = W / 2;
-            const cy  = H / 2;
-            const pad = HALF + 80;
+            const bounds = playBounds();
+            const cx = (bounds.left + bounds.right) / 2;
+            const cy = (bounds.top + bounds.bottom) / 2;
+            const randomBetween = (lo, hi) => lo + Math.random() * (hi - lo);
 
             const quadrants = [
-                { x: pad + Math.random() * (cx - pad * 1.5),           y: pad + Math.random() * (cy - pad * 1.5) },
-                { x: cx + Math.random() * (W - cx - pad * 1.5),        y: pad + Math.random() * (cy - pad * 1.5) },
-                { x: pad + Math.random() * (cx - pad * 1.5),           y: cy + Math.random() * (H - cy - pad * 1.5) },
-                { x: cx + Math.random() * (W - cx - pad * 1.5),        y: cy + Math.random() * (H - cy - pad * 1.5) },
+                { x: randomBetween(bounds.left, cx), y: randomBetween(bounds.top, cy) },
+                { x: randomBetween(cx, bounds.right), y: randomBetween(bounds.top, cy) },
+                { x: randomBetween(bounds.left, cx), y: randomBetween(cy, bounds.bottom) },
+                { x: randomBetween(cx, bounds.right), y: randomBetween(cy, bounds.bottom) },
             ];
 
             let best = quadrants[0], bestDist = 0;
             for (const q of quadrants) {
-                const d = Math.hypot(q.x - mx, q.y - my);
+                const d = Math.hypot(q.x - (touchMode.matches ? tx : mx), q.y - (touchMode.matches ? ty : my));
                 if (d > bestDist) { bestDist = d; best = q; }
             }
 
-            tx = clamp(best.x, HALF + 4, W - HALF - 4);
-            ty = clamp(best.y, HALF + 4, H - HALF - 4);
+            tx = best.x;
+            ty = best.y;
             place();
         }
 
         document.addEventListener('mousemove', e => {
+            if (touchMode.matches) return;
             const now = performance.now();
             const dt  = Math.max(now - lastMoveTime, 1);
             prevMx = mx; prevMy = my;
@@ -303,7 +363,8 @@
         });
 
         // Missed click
-        document.addEventListener('click', () => {
+        document.addEventListener('click', e => {
+            if (e.target.closest('a')) return;
             misses++;
             updateScore();
         });
@@ -316,6 +377,11 @@
             showToast();
             setTimeout(teleportToSafety, 300);
         });
+
+        // Touchscreens cannot detect a hovering finger, so provide a moving target.
+        setInterval(() => {
+            if (touchMode.matches && !document.hidden) teleportToSafety();
+        }, 900);
 
         function updateScore() {
             valCaught.textContent   = caught;
@@ -333,6 +399,7 @@
         }
 
         window.addEventListener('resize', () => {
+            HALF = target.offsetWidth / 2;
             const pad = HALF + 4;
             tx = clamp(tx, pad, window.innerWidth  - pad);
             ty = clamp(ty, pad, window.innerHeight - pad);
