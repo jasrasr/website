@@ -1,0 +1,18 @@
+name: User management validation
+on:
+  pull_request:
+    paths: ['user-management/**', '1-Framework/**', '.github/workflows/user-management-validation.yml']
+  push:
+    branches: [main]
+    paths: ['user-management/**', '1-Framework/**', '.github/workflows/user-management-validation.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax
+        run: find user-management 1-Framework -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Shared account and authorization HTTP tests
+        run: node --test user-management/tests/auth.test.cjs

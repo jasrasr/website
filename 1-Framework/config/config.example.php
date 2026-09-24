@@ -22,5 +22,8 @@ return [
         'logging' => true,
         'audit' => false,
     ],
+    'authentication' => [
+        // Used only by explicit SharedIdentity::connect(); bootstrap remains inert.
+        'provider_bootstrap' => dirname(__DIR__, 2) . '/user-management/bootstrap.php',
+    ],
 ];
-

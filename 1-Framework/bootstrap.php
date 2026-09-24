@@ -36,3 +36,4 @@ if (!is_array($frameworkConfig)) {
 require_once __DIR__ . '/core/JsonStore.php';
 require_once __DIR__ . '/core/Response.php';
 require_once __DIR__ . '/modules/Authentication/PasswordSession.php';
+require_once __DIR__ . '/modules/Authentication/SharedIdentity.php';

@@ -12,7 +12,7 @@ These instructions apply to all AI-assisted changes inside `1-Framework` and to 
 
 ## Architecture rules
 
-- Keep framework code independent of individual projects.
+- Keep framework core independent of individual projects. Shared identity is the explicit exception: the optional adapter loads the configured user-management provider on demand.
 - Use `bootstrap.php` as the primary framework entry point.
 - Keep modules loosely coupled and document every dependency.
 - Put shared infrastructure in `core/` only when multiple modules genuinely require it.
@@ -52,7 +52,7 @@ Every functional change should include:
 
 ## Prohibited shortcuts
 
-- Do not create a second authentication system when one already exists.
+- Use `SharedIdentity::connect()` for new account-based projects; centrally managed accounts live in `user-management`. Do not create another user store. Keep `PasswordSession` for existing compatible callers.
 - Do not hard-code project URLs, filesystem paths, usernames, or credentials.
 - Do not silently change a public function or JSON response contract.
 - Do not copy an entire project into the framework and call it reusable.
