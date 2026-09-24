@@ -21,7 +21,13 @@ The constructor must run before output and requires no existing PHP session. Eac
 
 No public registration/default credentials. The caller supplies a privately stored username/password hash. Credential changes do not revoke existing sessions automatically. This is not yet a centrally managed user source, SSO, or role system. Future user records/roles must have an explicit migration contract.
 
-## Remaining roadmap
+## Shared identity provider (1.1.0)
+
+Use `Jasr\Framework\SharedIdentity::connect()` for shared accounts. The configured provider defaults to the sibling [user-management](../../../user-management/README.md) project. It reuses `PasswordSession` for cookie/CSRF/session rotation and `JsonStore` for private atomic records. It adds shared users, per-project roles, forced password change, throttling and session-version revocation. Connect before output and before any legacy session initialization; do not mix both auth initializers in one request.
+
+Bootstrap remains side-effect-free for existing callers. `authentication.provider_bootstrap` can point to a relocated provider, or pass an explicit path to `connect($path)`. An existing config file must add that key before calling `connect()`. Missing provider configuration fails closed.
+
+The items below are implemented by the provider (not by standalone `PasswordSession`):
 
 - shared user-record loading and schema
 - roles and permissions

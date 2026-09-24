@@ -57,7 +57,7 @@ This is an architectural baseline. The files define responsibilities and convent
 
 ## Important rule
 
-Framework code must not directly depend on a specific project. Projects may depend on the framework, but the framework must remain portable.
+Framework core stays independent of projects. Shared authentication uses an explicitly configured provider; the repository default points to `../user-management/bootstrap.php`. The provider is loaded only when a project calls `SharedIdentity::connect()`.
 
 ## Implemented components (2026-09-20)
 
@@ -65,3 +65,9 @@ The initial baseline now includes `JsonStore`, `Response`, and `PasswordSession`
 See [core/COMPONENTS.md](core/COMPONENTS.md),
 [Authentication](modules/Authentication/README.md), and [CHANGELOG.md](CHANGELOG.md).
 Webstats consumes these helpers; remaining framework roadmap items are still planned.
+
+## Shared user management (1.1.0)
+
+New account-based projects should use [User Management](../user-management/README.md) through `Jasr\Framework\SharedIdentity::connect()`. This replaces the plan for separate per-project user stores with centrally managed users and project roles. Configure `authentication.provider_bootstrap` if the provider is relocated. Existing `PasswordSession` integrations remain supported and are not silently migrated.
+
+See [the integration guide](../user-management/README.md#connect-a-php-project) for server-side gates, CSRF, stable user IDs, and deployment setup.

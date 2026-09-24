@@ -14,7 +14,7 @@ Optional modules
 Storage and external services
 ```
 
-The framework must never import or depend on a specific project.
+Framework core remains independent of project code. The optional `SharedIdentity` adapter loads a configured identity provider when explicitly connected. The repository default is `user-management/bootstrap.php`; it uses framework JSON/session primitives. Bootstrap alone loads classes and never connects, starts sessions, or creates storage.
 
 ## Responsibilities
 

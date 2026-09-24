@@ -22,12 +22,12 @@
 ## Phase 3 — Identity and access
 
 - [ ] Inventory authentication implementations in existing projects
-- [ ] Define the shared user-record schema
-- [ ] Implement login, logout, and session validation
-- [ ] Add roles and permissions
-- [ ] Add password-change workflow
-- [ ] Add rate limiting and lockout controls
-- [ ] Decide how projects consume one centrally managed user source
+- [x] Define the shared user-record schema
+- [x] Implement login, logout, and session validation
+- [x] Add roles and permissions
+- [x] Add password-change workflow
+- [x] Add rate limiting and lockout controls
+- [x] Decide how projects consume one centrally managed user source
 
 ## Phase 4 — Shared frontend
 
@@ -60,3 +60,4 @@
 ## Extraction rule
 
 An existing component is not framework-ready until project-specific paths, names, branding, credentials, data schemas, and assumptions have been removed or made configurable.
+Identity work is provided by the sibling `user-management` project through the framework’s configurable `SharedIdentity` adapter. Existing app migration/ownership mapping remains explicit, per app.

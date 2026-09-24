@@ -69,3 +69,7 @@ Folders in this repo sync under `https://jasr.me/github/<folder>/`, which is the
 - Runtime files such as logs, private config, API keys, uploaded files, and generated JSON data should stay out of Git unless they are public-safe samples.
 - Project-specific setup instructions live in the project README files linked above.
 
+
+## Shared user management
+
+[`user-management`](user-management/README.md) provides central accounts, same-host login and per-project access roles. [`1-Framework`](1-Framework/README.md) now exposes its configured integration through `SharedIdentity::connect()`. Existing projects can adopt it individually after mapping their users and protecting their PHP endpoints.
