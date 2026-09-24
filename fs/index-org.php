@@ -4,7 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/version.php';
 
 $dataFile = __DIR__ . '/data/ticket-counts.json';
-$apiDataFile = __DIR__ . '/storage/api-snapshots.json';
+$apiDataFile = __DIR__ . '/storage/org-api-snapshots.json';
 
 function e(string $value): string
 {

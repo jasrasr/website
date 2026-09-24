@@ -45,6 +45,16 @@ curl -fsS -H "Authorization: Bearer YOUR_COLLECTOR_TOKEN" https://jasr.me/github
 
 The scheduler pulls hourly on weekdays from 6:00 AM through 5:59 PM, every four hours on weekday nights, and every twelve hours on Saturdays and Sundays. All decisions use the configured timezone.
 
+### By-organization report (optional, separate from the main tracker)
+
+`index-org.php` charts new tickets per day by requester email domain. It is not linked from the main dashboard and is only reachable by its direct URL. It reads its own collector, `api/collect-org.php`, which pulls tickets for a configurable whitelist of agents (`org_agent_ids` in `config.local.php`) instead of the single `agent_id` the main dashboard tracks—so it can cover a small team without changing what the main dashboard's unresolved/goal numbers measure. Set `org_agent_ids` to the list of Freshservice agent IDs to include, then run it the same way as the main collector:
+
+```bash
+curl -fsS -H "Authorization: Bearer YOUR_COLLECTOR_TOKEN" https://jasr.me/github/fs/api/collect-org.php
+```
+
+It keeps its own state and snapshot files (`storage/org-api-state.json`, `storage/org-api-snapshots.json`) and pull log (`storage/org-pull-log.json`), independent of the main tracker's files.
+
 To verify API access without changing tracker state, call the protected diagnostic endpoint with the same token:
 
 ```bash
@@ -64,7 +74,7 @@ During the folder rename, the collector can temporarily read an existing `FS/con
 
 ## Privacy and security
 
-`config.local.php`, `storage/api-state.json`, and `storage/api-snapshots.json` are ignored by Git and denied to web requests. The private state contains only ticket IDs, statuses, assignee IDs, requester email domains (never the full address or name), and timestamps—no subjects, descriptions, requester names, or conversations. API snapshots contain aggregate counts only, including new-ticket counts grouped by requester email domain (capped to the top 8 domains plus Other). Keeping runtime snapshots out of tracked files prevents deployment conflicts.
+`config.local.php` and everything under `storage/` (including the by-organization report's `org-api-state.json` and `org-api-snapshots.json`) are ignored by Git and denied to web requests. The private state contains only ticket IDs, statuses, assignee IDs, requester email domains (never the full address or name), and timestamps—no subjects, descriptions, requester names, or conversations. API snapshots contain aggregate counts only, including new-ticket counts grouped by requester email domain (capped to the top 8 domains plus Other). Keeping runtime snapshots out of tracked files prevents deployment conflicts.
 
 ## How calculation works
 

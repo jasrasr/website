@@ -29,12 +29,37 @@ final class FreshserviceClient
     /** @return array<int, array<string, mixed>> */
     public function listTicketsForAgent(int $agentId): array
     {
+        return $this->listTicketsByQuery(sprintf('"agent_id:%d"', $agentId));
+    }
+
+    /**
+     * Same as listTicketsForAgent(), but matches any ticket assigned to any of several agents.
+     * @param array<int, int> $agentIds
+     * @return array<int, array<string, mixed>>
+     */
+    public function listTicketsForAgents(array $agentIds): array
+    {
+        $ids = array_values(array_unique(array_filter(
+            array_map('intval', $agentIds),
+            static fn(int $id): bool => $id > 0
+        )));
+        if ($ids === []) return [];
+
+        $query = '"' . implode(' OR ', array_map(
+            static fn(int $id): string => 'agent_id:' . $id,
+            $ids
+        )) . '"';
+        return $this->listTicketsByQuery($query);
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private function listTicketsByQuery(string $query): array
+    {
         $tickets = [];
         $page = 1;
         $perPage = 100;
 
         do {
-            $query = sprintf('"agent_id:%d"', $agentId);
             $params = [
                 'query' => $query,
                 'page' => $page,
