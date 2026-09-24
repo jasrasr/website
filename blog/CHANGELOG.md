@@ -2,9 +2,10 @@
 # filename: CHANGELOG.md
 # author: Jason Lamb (with help from ChatGPT)
 # created date: 2026-02-03
-# modified date: 2026-09-16
-# revision: 1.4.0
+# modified date: 2026-09-24
+# revision: 1.5.0
 # changelog:
+# - 1.5.0: Adds a dry-run-first WordPress category and tag maintenance tool.
 # - 1.4.0: Documents project-series integration and review fixes.
 # - 1.1: Added v1.2 release notes (admin media workflow + manifest)
 # - 1.2: Minor doc corrections (asset/log filenames)
@@ -12,6 +13,12 @@
 # - 1.0: Initial changelog
 -->
 # Changelog
+
+## v1.5.0 — 2026-09-24
+
+- Add a WordPress taxonomy tool for listing, renaming, merging, and deleting categories and tags.
+- Require explicit `-Commit` for mutations and preview affected posts before merges or deletes.
+- Allow term selection by numeric ID when WordPress contains duplicate names.
 
 ## v1.4.0 — 2026-09-16
 

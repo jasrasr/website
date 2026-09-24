@@ -95,3 +95,25 @@ If media upload succeeds but post creation fails, the media ID is written to sta
 The script will skip a source article if any required field or the local cover-image file is missing. In commit mode it also checks WordPress for the same slug before uploading media or creating a new post.
 
 The first run should be done as a dry run. After that, a useful test is to temporarily point `-PostsPath` to a folder containing one copied article and confirm the resulting scheduled post, excerpt, tags, and featured image before scheduling the full backlog.
+
+## Category and tag maintenance
+
+`Edit-WordPressTaxonomy.ps1` lists, renames, merges, and deletes WordPress categories or tags. It uses the same `WORDPRESS_USERNAME` and `WORDPRESS_APP_PASSWORD` environment variables as the publisher. Listing is read-only, and every other operation is a dry run unless `-Commit` is supplied.
+
+```powershell
+# List all tags.
+./blog/tools/Edit-WordPressTaxonomy.ps1 -SiteUrl 'https://your-wordpress-site.example' -Taxonomy Tag
+
+# Preview and then perform a rename.
+./blog/tools/Edit-WordPressTaxonomy.ps1 -SiteUrl 'https://your-wordpress-site.example' -Taxonomy Category -Operation Rename -SourceName 'Techy Tips' -TargetName 'Technology'
+./blog/tools/Edit-WordPressTaxonomy.ps1 -SiteUrl 'https://your-wordpress-site.example' -Taxonomy Category -Operation Rename -SourceName 'Techy Tips' -TargetName 'Technology' -Commit
+
+# Preview merging one tag into another. The committed run updates affected posts
+# before deleting the source tag.
+./blog/tools/Edit-WordPressTaxonomy.ps1 -SiteUrl 'https://your-wordpress-site.example' -Taxonomy Tag -Operation Merge -SourceName '#powershell' -TargetName 'PowerShell'
+
+# Preview deleting an unused category.
+./blog/tools/Edit-WordPressTaxonomy.ps1 -SiteUrl 'https://your-wordpress-site.example' -Taxonomy Category -Operation Delete -SourceName 'Testing'
+```
+
+For `Rename`, use `-NewSlug` only when the slug should be explicitly changed. A rename refuses to create a duplicate name; use `Merge` when the destination term already exists. If WordPress contains duplicate names, select terms unambiguously with `-SourceId` and, for a merge, `-TargetId`. Merge and delete previews show every affected post before any changes are made.
