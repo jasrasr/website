@@ -97,7 +97,13 @@ final class Accounts
             if ($mustExist && !is_file($path)) throw new \RuntimeException('Linked budget is missing. Restore it before saving.');
             if (is_file($path)) {
                 // Preserve legacy metadata that the current editing form does not expose.
-                $budget = array_replace(self::decode((string)file_get_contents($path)), $budget);
+                $existing = self::decode((string)file_get_contents($path));
+                // Income is an object of fields; preserve fields the form does not know.
+                // Expenses remain a replacement list so deleting an expense stays deleted.
+                if (isset($budget['income']) && is_array($budget['income'])) {
+                    $budget['income'] = array_replace($existing['income'], $budget['income']);
+                }
+                $budget = array_replace($existing, $budget);
             }
             $raw = json_encode($budget, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
             self::decode($raw);

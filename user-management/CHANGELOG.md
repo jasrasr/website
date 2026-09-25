@@ -34,3 +34,8 @@
 ### CI configuration reload
 - Disable OPcache only in the disposable Finances linking test server so legacy/shared/rollback configuration changes take effect immediately, independent of runner PHP defaults.
 - Reproduced the previous 200-versus-401 failure with OPcache enabled; keep the authentication assertion unchanged.
+
+### PR review regressions
+- Preserve unknown income fields, including nested metadata, during budget saves while keeping expense deletion effective.
+- Revoke target sessions after every successful ownership link, including accounts with existing project access.
+- Verify self-provisioning safely renders the existing sign-in branch after session invalidation, displays new credentials once, and permits reauthentication; no template change was needed.

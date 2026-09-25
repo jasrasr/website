@@ -86,6 +86,24 @@ test('scoped account roles, explicit all-project access, shared profile and safe
  // A legacy admin checkbox must not override an explicit scoped role selection.
  assert.equal((await owner.post({action:'create-user',username:'scoped',name:'Scoped Super',password:rootPassword,account_role:'super_admin',admin:'on'})).status,303);
  assert.equal(user('scoped').allProjects,false);assert.equal(user('scoped').admin,false);
+ // Self-provisioning may revoke the actor. The existing template must show sign-in safely.
+ await me.post({action:'profile',name:'Jason Before Provisioning',email:''});
+ const selfVersion=user('jasrasr').version;
+ // Remove a demo only inside the disposable fixture to exercise newly generated credentials too.
+ const selfFixture=JSON.parse(fs.readFileSync(directory,'utf8'));
+ delete selfFixture.records.users[user('demo-user').id];
+ fs.writeFileSync(directory,JSON.stringify(selfFixture));
+ const selfProvision=await me.request(portal,{action:'provision-requested',confirm_owner:'yes'});
+ assert.equal(selfProvision.status,200);
+ assert.equal(user('jasrasr').version,selfVersion+1);
+ assert.match(selfProvision.html,/<h2>Sign in<\/h2>/);
+ assert.doesNotMatch(selfProvision.html,/Signed in as|<h2>Accounts and access<\/h2>|Warning|Fatal error/);
+ const once=selfProvision.html.match(/<strong>demo-user<\/strong>: <code>([a-f0-9]+)<\/code>/)?.[1];
+ assert.ok(once);
+ assert.doesNotMatch((await me.request()).html,new RegExp(once));
+ assert.equal((await me.request('/alpha/')).status,401);
+ assert.equal((await me.login('jasrasr',jasonPassword+'-changed')).status,303);
+ assert.equal((await me.request('/alpha/?role=super_admin')).status,200);
  // Non-demo account occupying a demo name blocks the complete provisioning transaction.
  const collision=JSON.parse(fs.readFileSync(directory,'utf8'));collision.records.users[user('demo-admin').id].demo=false;
  fs.writeFileSync(directory,JSON.stringify(collision));const unchanged=fs.readFileSync(directory,'utf8');

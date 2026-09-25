@@ -19,7 +19,7 @@ function config(mode='legacy',extra=''){
 config();
 const budgetDir=path.join(temp,'finances/data'),linkDir=path.join(budgetDir,'identity');
 const jasonPath=path.join(budgetDir,'old-jason.json'),hannahPath=path.join(budgetDir,'old-hannah.json');
-const jasonBytes='{\n "income":{"hourlyRate":37.5}, "expenses":[{"id":"existing-123","name":"Existing expense","amount":140}], "legacyExtra":"preserve me"\n}\n';
+const jasonBytes='{\n "income":{"hourlyRate":37.5,"legacyPayroll":{"provider":"preserve","tags":["old"]}}, "expenses":[{"id":"existing-123","name":"Existing expense","amount":140}], "legacyExtra":"preserve me"\n}\n';
 const hannahBytes='{"income":{"hourlyRate":42},"expenses":[],"marker":"Hannah private"}\n';
 fs.writeFileSync(jasonPath,jasonBytes);fs.writeFileSync(hannahPath,hannahBytes);
 fs.writeFileSync(path.join(budgetDir,'broken.json'),'{invalid');
@@ -108,7 +108,11 @@ test('preview, stale rejection, explicit mapping, existing-data access, isolatio
  const otherAdmin=new Browser();await otherAdmin.login('admin',adminPassword);
  await admin.preview('old-hannah',id('new-hannah'));
  await otherAdmin.preview('old-hannah',id('new-hannah'));
+ const hannahVersion=state().users[id('new-hannah')].version;
  assert.equal((await otherAdmin.apply()).status,303);
+ assert.equal(state().users[id('new-hannah')].version,hannahVersion+1);
+ assert.match((await hannah.request()).html,/<h2>Sign in<\/h2>/);
+ await hannah.login('new-hannah',userPassword+'-changed');
  assert.equal((await admin.apply()).status,400);sameBudgets();
  assert.equal(mappings().links[id('new-hannah')].role,'viewer');
  assert.equal(state().users[id('new-hannah')].projects.finances,'viewer');
@@ -131,6 +135,10 @@ test('preview, stale rejection, explicit mapping, existing-data access, isolatio
  assert.equal((await jason.request('/finances/?api=budget',updated,true)).status,200);
  assert.equal(JSON.parse(fs.readFileSync(jasonPath)).income.hourlyRate,55);assert.equal(fs.readFileSync(hannahPath,'utf8'),hannahBytes);
  assert.equal(JSON.parse(fs.readFileSync(jasonPath)).legacyExtra,'preserve me');
+ assert.deepEqual(JSON.parse(fs.readFileSync(jasonPath)).income.legacyPayroll,{provider:'preserve',tags:['old']});
+ assert.equal((await jason.request('/finances/?api=budget',{income:{hourlyRate:55},expenses:[]},true)).status,200);
+ assert.deepEqual(JSON.parse(fs.readFileSync(jasonPath)).expenses,[]);
+ assert.deepEqual(JSON.parse(fs.readFileSync(jasonPath)).income.legacyPayroll,{provider:'preserve',tags:['old']});
  assert.equal(fs.existsSync(path.join(budgetDir,'new-jason.json')),false);
  // Loss/corruption never produces an empty replacement budget.
  const saved=fs.readFileSync(jasonPath,'utf8');fs.unlinkSync(jasonPath);
@@ -177,6 +185,7 @@ test('adapter permissions cap global roles, reject stale permissions, and commit
  $adapter->role = 'viewer'; $links->apply($id,$v,$links->preview($id,$v,'old-owner',$id,'member'));
  check($links->can($id,'viewer') && !$links->can($id,'member'));
  check($d->read()['users'][$id]['allProjects']);
+ $v = $d->read()['users'][$id]['version'];
  $adapter->role = 'member'; check(!$links->can($id,'member')); // Source increases cannot raise the stored ceiling.
  $d->administer($id,$v,'create-user',['username'=>'target','name'=>'Target','password'=>'a-unique-target-secret']);
  $target = array_values(array_filter($d->read()['users'],fn($u)=>$u['username']==='target'))[0]['id'];

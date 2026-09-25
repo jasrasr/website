@@ -97,8 +97,9 @@ final class AccountLinks
                 // Preserve existing grants and account type. Only add missing project membership.
                 if ($fresh['existingRole'] === null) {
                     $state['users'][$fresh['targetId']]['projects'][$fresh['project']] = $fresh['effectiveRole'];
-                    $state['users'][$fresh['targetId']]['version']++;
                 }
+                // New ownership changes data access even when a project grant already exists.
+                $state['users'][$fresh['targetId']]['version']++;
                 return $state;
             });
         });
