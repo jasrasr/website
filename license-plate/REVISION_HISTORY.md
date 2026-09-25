@@ -2,9 +2,23 @@
 
 ## Current Revision
 
-**Version:** 1.2.30  
-**Updated:** 2026-07-25  
+**Version:** 1.2.33  
+**Updated:** 2026-09-25  
 **Status:** Active development
+
+
+## Revision 1.2.33 — Resilient Mobile Batch Uploads
+
+Hardened large photo batches on iPhone/Safari so browser-level request failures are distinct from AI processing failures and can be retried without re-uploading successful files.
+
+Key implementation changes:
+
+- `index.php` resolves the upload endpoint with `new URL('./process_upload.php', window.location.href)`.
+- Browser/network failures automatically get one retry before being marked failed.
+- Non-JSON server responses are surfaced with HTTP status and a short response preview for diagnostics.
+- Failed request-layer files remain queued in memory and can be retried with a dedicated `Retry Failed Uploads (N)` button.
+- Successfully uploaded files are not included in that retry queue.
+- PHP-level scanner failures still save the photo and remain `Pending processing`, preserving the distinction between upload transport and AI/OCR processing.
 
 ## Revision 1.2.30 — Immediate Search Refresh
 
