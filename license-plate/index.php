@@ -1,8 +1,8 @@
 <?php
 /*
     License Plate Photo Logger
-    Revision: 1.2.29
-    Description: Front-page upload queue with a latest-upload preview card, project revision badge, cache-busted stylesheet loading, wider desktop layout, stats and deleted-audit navigation, mobile batch-layout fixes, and automatic queue reset after processing.
+    Revision: 1.2.33
+    Description: Front-page upload queue with resilient Safari/mobile uploads, explicit endpoint resolution, transient request retry, failed-file retry queue, latest-upload preview, and project status/navigation.
 */
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
@@ -123,7 +123,48 @@ const summary = document.getElementById('summary');
 const results = document.getElementById('results');
 const progress = document.getElementById('progress');
 const progressBar = document.getElementById('progressBar');
+const processUploadUrl = new URL('./process_upload.php', window.location.href).href;
 let queue = [];
+
+function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function uploadPhoto(form, maxAttempts = 2) {
+    let lastError = null;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            const resp = await fetch(processUploadUrl, {
+                method: 'POST',
+                body: form,
+                cache: 'no-store',
+                credentials: 'same-origin',
+            });
+
+            const responseText = await resp.text();
+            let data = {};
+
+            if (responseText !== '') {
+                try {
+                    data = JSON.parse(responseText);
+                } catch (parseError) {
+                    const preview = responseText.replace(/\s+/g, ' ').trim().slice(0, 180);
+                    throw new Error(`Server returned an invalid response (HTTP ${resp.status})${preview ? ': ' + preview : ''}`);
+                }
+            }
+
+            return { resp, data };
+        } catch (error) {
+            lastError = error;
+            if (attempt < maxAttempts) {
+                await wait(750);
+            }
+        }
+    }
+
+    throw lastError || new Error('Upload request failed.');
+}
 
 input.addEventListener('change', () => {
     queue = Array.from(input.files || []);
@@ -151,16 +192,17 @@ startBtn.addEventListener('click', async () => {
     let pending = 0;
     let dupes = 0;
     let failed = 0;
+    const failedFiles = [];
+    const batchQueue = [...queue];
 
-    for (let i = 0; i < queue.length; i++) {
+    for (let i = 0; i < batchQueue.length; i++) {
         const file = queue[i];
         const row = addRow(file.name, 'Scanning...', '', 'Working', '');
         const form = new FormData();
         form.append('photo', file);
 
         try {
-            const resp = await fetch('process_upload.php', { method: 'POST', body: form });
-            const data = await resp.json();
+            const { resp, data } = await uploadPhoto(form);
             if (!resp.ok || data.error) {
                 failed++;
                 updateRow(row, file.name, data.plate || '', data.confidence || '', data.error || `HTTP ${resp.status}`, '');
@@ -178,20 +220,29 @@ startBtn.addEventListener('click', async () => {
             }
         } catch (e) {
             failed++;
-            updateRow(row, file.name, '', '', 'Request failed: ' + e.message, '');
+            failedFiles.push(file);
+            updateRow(row, file.name, '', '', 'Upload request failed: ' + (e?.message || 'Unknown browser/network error'), '');
         }
 
-        const pct = Math.round(((i + 1) / queue.length) * 100);
+        const pct = Math.round(((i + 1) / batchQueue.length) * 100);
         progressBar.style.width = pct + '%';
-        summary.textContent = `${i + 1} of ${queue.length} processed. Logged: ${logged}. Pending processing: ${pending}. Duplicates flagged: ${dupes}. Failed uploads: ${failed}.`;
+        summary.textContent = `${i + 1} of ${batchQueue.length} processed. Logged: ${logged}. Pending processing: ${pending}. Duplicates flagged: ${dupes}. Failed uploads: ${failed}.`;
     }
 
-    input.value = '';
-    queue = [];
-    startBtn.disabled = true;
     clearBtn.disabled = false;
-    startBtn.textContent = 'Process Selected Photos';
-    summary.textContent = `Batch complete. Logged: ${logged}. Pending processing: ${pending}. Duplicates flagged: ${dupes}. Failed uploads: ${failed}. Choose new files to process another batch.`;
+
+    if (failedFiles.length > 0) {
+        queue = failedFiles;
+        startBtn.disabled = false;
+        startBtn.textContent = `Retry Failed Uploads (${failedFiles.length})`;
+        summary.textContent = `Batch complete. Logged: ${logged}. Pending processing: ${pending}. Duplicates flagged: ${dupes}. Failed uploads: ${failed}. The failed files are still queued; tap Retry Failed Uploads to retry only those files.`;
+    } else {
+        input.value = '';
+        queue = [];
+        startBtn.disabled = true;
+        startBtn.textContent = 'Process Selected Photos';
+        summary.textContent = `Batch complete. Logged: ${logged}. Pending processing: ${pending}. Duplicates flagged: ${dupes}. Failed uploads: 0. Choose new files to process another batch.`;
+    }
 });
 
 function addRow(file, plate, confidence, status, duplicate) {
