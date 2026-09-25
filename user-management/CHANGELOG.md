@@ -30,3 +30,7 @@
 - Add CI guards against tracked live data/private settings and editing/deleting the historical Finances configuration.
 - Back up the previous central directory alongside exact budget bytes before linking.
 - Document pre-deployment hosting backups, no-overwrite configuration handling, and separate server deployment verification.
+
+### CI configuration reload
+- Disable OPcache only in the disposable Finances linking test server so legacy/shared/rollback configuration changes take effect immediately, independent of runner PHP defaults.
+- Reproduced the previous 200-versus-401 failure with OPcache enabled; keep the authentication assertion unchanged.

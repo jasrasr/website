@@ -25,7 +25,9 @@ fs.writeFileSync(jasonPath,jasonBytes);fs.writeFileSync(hannahPath,hannahBytes);
 fs.writeFileSync(path.join(budgetDir,'broken.json'),'{invalid');
 fs.writeFileSync(path.join(budgetDir,'orphan.json'),'{"income":{},"expenses":[]}');
 const sessions=path.join(temp,'sessions');fs.mkdirSync(sessions);
-const server=spawn('php',['-d',`session.save_path=${sessions}`,'-S','127.0.0.1:18770','-t',temp],{stdio:['ignore','pipe','pipe']});
+// This suite rewrites PHP config between requests (legacy/shared/rollback).
+// Disable opcode caching in this disposable server so it always reads the current fixture.
+const server=spawn('php',['-d','opcache.enable=0','-d',`session.save_path=${sessions}`,'-S','127.0.0.1:18770','-t',temp],{stdio:['ignore','pipe','pipe']});
 let logs='';server.stderr.on('data',d=>logs+=d);
 after(()=>{server.kill();fs.rmSync(temp,{recursive:true,force:true});});
 const base='http://127.0.0.1:18770',portal='/user-management/',linkPage=portal+'links.php';
