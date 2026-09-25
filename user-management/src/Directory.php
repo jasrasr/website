@@ -54,6 +54,17 @@ final class Directory
             fclose($lock);
         }
     }
+    /** Commit link ownership and project access in one atomic directory write. */
+    public function updateAsAdministrator(string $id, int $version, callable $change): void
+    {
+        $this->update(function (array $state) use ($id, $version, $change): array {
+            $actor = $state['users'][$id] ?? null;
+            if (!$actor || !$actor['active'] || !$actor['admin'] || $actor['mustChangePassword'] || $actor['version'] !== $version) {
+                throw new \InvalidArgumentException('Administrator access required. Sign in again.');
+            }
+            return $change($state);
+        });
+    }
     public static function password(string $password): string
     {
         if (strlen($password) < 12 || strlen($password) > 72 || str_contains($password, "\0")) {

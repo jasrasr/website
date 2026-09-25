@@ -43,12 +43,12 @@ class Browser{
  }
  async adminPost(values){const r=await this.request(portal,values);await this.request(portal);return r;}
  async login(username,password=userPassword){await this.request();return this.adminPost({action:'login',username,password});}
- async preview(legacy,id){return this.request(linkPage,{action:'preview',project:'finances',legacy_id:legacy,target_id:id});}
+ async preview(legacy,id,role='member'){return this.request(linkPage,{action:'preview',project:'finances',legacy_id:legacy,target_id:id,reviewed_role:role});}
  async apply(extra={}){return this.request(linkPage,{action:'apply',project:'finances',nonce:this.nonce,confirm:'yes',...extra});}
 }
 function state(){return JSON.parse(fs.readFileSync(path.join(temp,'user-management/data/directory.json'),'utf8')).records;}
 function id(username){return Object.values(state().users).find(u=>u.username===username).id;}
-function mappings(){return JSON.parse(fs.readFileSync(path.join(linkDir,'links.json'),'utf8')).records;}
+function mappings(){return state().accountLinks.finances;}
 function sameBudgets(){assert.equal(fs.readFileSync(jasonPath,'utf8'),jasonBytes);assert.equal(fs.readFileSync(hannahPath,'utf8'),hannahBytes);}
 test('preview, stale rejection, explicit mapping, existing-data access, isolation and rollback',async()=>{
  let ready=false;for(let i=0;i<80;i++){try{await fetch(base+portal);ready=true;break;}catch{await new Promise(r=>setTimeout(r,100));}}assert.ok(ready,logs);
@@ -56,7 +56,7 @@ test('preview, stale rejection, explicit mapping, existing-data access, isolatio
  assert.equal((await admin.adminPost({action:'save-project',project:'finances',name:'Finances',path:'/finances/'})).status,303);
  for(const username of ['new-jason','new-hannah','unlinked','no-access']){
    assert.equal((await admin.adminPost({action:'create-user',username,name:username,password:userPassword})).status,303);
-   if(username!=='no-access')assert.equal((await admin.adminPost({action:'grant',id:id(username),project:'finances',role:username==='new-hannah'?'viewer':'member'})).status,303);
+   if(username!=='no-access' && username!=='new-jason')assert.equal((await admin.adminPost({action:'grant',id:id(username),project:'finances',role:username==='new-hannah'?'viewer':'member'})).status,303);
  }
  const jason=new Browser(),hannah=new Browser(),unlinked=new Browser();
  for(const [browser,username] of [[jason,'new-jason'],[hannah,'new-hannah'],[unlinked,'unlinked']]){
@@ -72,7 +72,10 @@ test('preview, stale rejection, explicit mapping, existing-data access, isolatio
  assert.equal((await admin.preview('missing',id('new-jason'))).status,400);
  assert.equal((await admin.preview('broken',id('new-jason'))).status,400);
  assert.equal((await admin.preview('../escape',id('new-jason'))).status,400);
- assert.equal((await admin.preview('old-jason',id('no-access'))).status,400);
+ assert.equal((await admin.preview('old-jason',id('no-access'),'')).status,400);
+ assert.equal((await admin.preview('old-jason',id('no-access'),'admin')).status,400);
+ assert.equal((await admin.preview('old-jason',id('no-access'),'viewer')).status,200);
+ assert.equal(state().users[id('no-access')].projects.finances,undefined);
  // Names whose sanitization collides are rejected.
  config('legacy',",'a.b'=>['password'=>'collision-test-password'],'a@b'=>['password'=>'collision-test-password']");
  fs.writeFileSync(path.join(budgetDir,'a_b.json'),'{"income":{},"expenses":[]}');
@@ -87,6 +90,9 @@ test('preview, stale rejection, explicit mapping, existing-data access, isolatio
  assert.equal((await admin.preview('old-jason',id('new-jason'))).status,200);
  const previewNonce=admin.nonce;
  assert.equal((await admin.apply()).status,303);sameBudgets();
+ assert.equal(state().users[id('new-jason')].projects.finances,'member');
+ assert.equal(state().users[id('new-jason')].role,'user');
+ await jason.login('new-jason',userPassword+'-changed');
  let links=mappings();assert.equal(links.links[id('new-jason')].legacyId,'old-jason');assert.equal(links.history.length,1);
  const backups=fs.readdirSync(linkDir).filter(n=>/^backup-.*\.json$/.test(n));assert.equal(backups.length,1);
  const backup=JSON.parse(fs.readFileSync(path.join(linkDir,backups[0]))).records;
@@ -100,6 +106,8 @@ test('preview, stale rejection, explicit mapping, existing-data access, isolatio
  await otherAdmin.preview('old-hannah',id('new-hannah'));
  assert.equal((await otherAdmin.apply()).status,303);
  assert.equal((await admin.apply()).status,400);sameBudgets();
+ assert.equal(mappings().links[id('new-hannah')].role,'viewer');
+ assert.equal(state().users[id('new-hannah')].projects.finances,'viewer');
  report=await admin.request(linkPage);assert.match(report.html,/Linked/);assert.doesNotMatch(report.html,/legacy-jason-password|Hannah private|Existing expense/);
  // Legacy login remains intact before the explicit mode switch.
  const legacy=new Browser();await legacy.request('/finances/');
@@ -133,4 +141,49 @@ test('preview, stale rejection, explicit mapping, existing-data access, isolatio
  const ignored=execFileSync('git',['check-ignore','finances/config.private.php','finances/data/identity/links.json','finances/data/identity/backup-test.json','finances/data/old-jason.json.lock'],{cwd:root,encoding:'utf8'});
  assert.equal(ignored.trim().split('\n').length,4);
  assert.doesNotMatch(logs,/PHP Warning|Fatal error|Uncaught/);
+});
+
+test('adapter permissions cap global roles, reject stale permissions, and commit access atomically',()=>{
+ const script=path.join(temp,'permission-check.php');
+ fs.writeFileSync(script,`<?php
+ require __DIR__ . '/user-management/bootstrap.php';
+ use Jasr\\Users\\{Directory,AccountLinks,AccountLinkAdapter};
+ final class PermissionAdapter implements AccountLinkAdapter {
+   public ?string $role = 'viewer';
+   public bool $blocked = false;
+   public function project(): string { return 'test'; }
+   public function storage(): string { return __DIR__ . ($this->blocked ? '/blocked/child' : '/permission-backups'); }
+   public function inventory(): array { return []; }
+   public function sourceRole(array $snapshot): ?string { return $this->role; }
+   public function supportedRoles(): array { return ['viewer','member']; }
+   public function withSnapshot(string $id, callable $callback): mixed { return $callback(['id'=>$id,'role'=>$this->role]); }
+ }
+ function check(bool $ok): void { if (!$ok) throw new RuntimeException('Permission assertion failed'); }
+ function rejected(callable $f): void { try { $f(); } catch (InvalidArgumentException $e) { return; } throw new RuntimeException('Expected rejection'); }
+ mkdir(__DIR__ . '/permission-directory');
+ $d = new Directory(__DIR__ . '/permission-directory');
+ $d->setup('owner','Owner','a-unique-owner-secret');
+ $owner = array_values($d->read()['users'])[0]; $id = $owner['id']; $v = $owner['version'];
+ $d->administer($id,$v,'save-project',['project'=>'test','name'=>'Test','path'=>'/test/']);
+ $adapter = new PermissionAdapter(); $links = new AccountLinks($d,$adapter);
+ $preview = $links->preview($id,$v,'old-owner',$id,'member');
+ check($preview['sourceRole'] === 'viewer' && $preview['effectiveRole'] === 'viewer');
+ $adapter->role = 'member'; rejected(fn()=>$links->apply($id,$v,$preview));
+ check(!isset($d->read()['accountLinks']));
+ $adapter->role = 'viewer'; $links->apply($id,$v,$links->preview($id,$v,'old-owner',$id,'member'));
+ check($links->can($id,'viewer') && !$links->can($id,'member'));
+ check($d->read()['users'][$id]['allProjects']);
+ $adapter->role = 'member'; check(!$links->can($id,'member')); // Source increases cannot raise the stored ceiling.
+ $d->administer($id,$v,'create-user',['username'=>'target','name'=>'Target','password'=>'a-unique-target-secret']);
+ $target = array_values(array_filter($d->read()['users'],fn($u)=>$u['username']==='target'))[0]['id'];
+ $adapter->role = 'unexpected'; rejected(fn()=>$links->preview($id,$v,'other',$target,'member'));
+ $adapter->role = null; rejected(fn()=>$links->preview($id,$v,'other',$target));
+ $preview = $links->preview($id,$v,'other',$target,'viewer');
+ file_put_contents(__DIR__ . '/blocked','file'); $adapter->blocked = true;
+ try { $links->apply($id,$v,$preview); throw new LogicException('Expected backup failure'); } catch (RuntimeException $e) {}
+ check(!isset($d->read()['users'][$target]['projects']['test']) && !isset($links->records()['links'][$target]));
+ $adapter->blocked = false; $links->apply($id,$v,$links->preview($id,$v,'other',$target,'viewer'));
+ check($d->read()['users'][$target]['projects']['test'] === 'viewer');
+ `);
+ execFileSync('php',['-d','display_errors=0',script],{stdio:['ignore','pipe','pipe']});
 });

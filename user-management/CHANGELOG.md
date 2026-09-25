@@ -19,3 +19,8 @@
 - Added private first-admin setup, forced temporary-password changes, persisted login throttling, CSRF checks and session revocation.
 - Added last-active-admin protection, ignored atomic JSON storage, framework adapter, setup and migration guide, and HTTP regression tests.
 - Existing applications retain their current authentication until explicitly integrated.
+
+### Linking permission preservation
+- Add missing project membership during linking without promoting account roles or existing grants.
+- Require explicit review for unspecified source permissions; enforce linked permission ceilings, including for global super admins.
+- Commit mappings and membership atomically in the central directory after private backup.

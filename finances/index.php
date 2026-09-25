@@ -154,7 +154,9 @@ if ($sharedMode) {
     }
     $row = \Jasr\Finances\Accounts::inventory()[$linkedUser] ?? null;
     if (!$row || $row['errors']) throw new RuntimeException('Linked account is unavailable.');
-    $canEdit = $auth->can('finances', 'member');
+    $accountLinks = finances_links($auth->directory);
+    if (!$accountLinks->can($centralUser['id'], 'viewer')) send_json(['ok' => false, 'error' => 'Linked permissions require review.'], 403);
+    $canEdit = $accountLinks->can($centralUser['id'], 'member');
 } else {
     session_start(['cookie_httponly' => true, 'cookie_samesite' => 'Lax']);
     $_SESSION['finance_csrf'] ??= bin2hex(random_bytes(32));

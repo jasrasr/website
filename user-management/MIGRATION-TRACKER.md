@@ -251,3 +251,5 @@ Remaining issues:
 ```
 
 No project completion records yet.
+
+Linking permission rule: add missing project access only after permission review; retain the lower existing permission and enforce a per-link ceiling even for global super admins. Finances requires an explicit viewer/member choice because its legacy login has no enforced roles. Mapping and new membership commit together. See [ACCOUNT-LINKING.md](ACCOUNT-LINKING.md).

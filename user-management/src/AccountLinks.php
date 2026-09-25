@@ -9,9 +9,9 @@ final class AccountLinks
 {
     public function __construct(private Directory $directory, private AccountLinkAdapter $adapter) {}
     private function path(): string { return $this->adapter->storage() . '/links.json'; }
-    public function records(): array
+    public function records(?array $state = null): array
     {
-        return $this->validateRecords(JsonStore::read($this->path())['records']);
+        return $this->validateRecords(($state ?? $this->directory->read())['accountLinks'][$this->adapter->project()] ?? JsonStore::read($this->path())['records']);
     }
     private function validateRecords(array $r): array
     {
@@ -36,57 +36,88 @@ final class AccountLinks
     {
         $user = $state['users'][$targetId] ?? null;
         $project = $this->adapter->project();
-        if (!isset($state['projects'][$project]) || !$user || !$user['active'] ||
-            Permissions::projectRole($user, $project) === null) {
-            throw new \InvalidArgumentException('The target must be active and have access to the registered project.');
+        if (!isset($state['projects'][$project]) || !$user || !$user['active']) {
+            throw new \InvalidArgumentException('The target must be active and the project must be registered.');
         }
         return $user;
     }
-    private function plan(array $state, array $records, string $legacyId, string $targetId, array $snapshot): array
+    private function plan(array $state, array $records, string $legacyId, string $targetId, array $snapshot, string $reviewedRole): array
     {
         $target = $this->target($state, $targetId);
         if (isset($records['links'][$targetId])) throw new \InvalidArgumentException('This central account is already linked. Reassignment is not allowed.');
         foreach ($records['links'] as $link) {
             if (($link['legacyId'] ?? null) === $legacyId) throw new \InvalidArgumentException('This legacy account is already linked.');
         }
-        return ['project' => $this->adapter->project(), 'legacyId' => $legacyId, 'targetId' => $targetId,
+        $sourceRole = $this->adapter->sourceRole($snapshot);
+        $chosen = $sourceRole ?? $reviewedRole;
+        if (!in_array($chosen, $this->adapter->supportedRoles(), true) || !isset(Permissions::RANKS[$chosen])) {
+            throw new \InvalidArgumentException('Review the existing project permissions and explicitly choose a supported role.');
+        }
+        $existing = Permissions::projectRole($target, $this->adapter->project());
+        $effective = $chosen;
+        foreach ([Permissions::maximum($target), $existing, $target['projects'][$this->adapter->project()] ?? null] as $cap) {
+            if ($cap !== null && isset(Permissions::RANKS[$cap]) && Permissions::RANKS[$cap] < Permissions::RANKS[$effective]) $effective = $cap;
+        }
+        return ['sourceRole' => $sourceRole, 'reviewedRole' => $reviewedRole, 'existingRole' => $existing,
+            'effectiveRole' => $effective, 'project' => $this->adapter->project(), 'legacyId' => $legacyId, 'targetId' => $targetId,
             'targetUsername' => $target['username'], 'targetName' => $target['name'],
-            'fingerprint' => hash('sha256', json_encode([$records, $target, $state['projects'][$this->adapter->project()], $snapshot], JSON_THROW_ON_ERROR))];
+            'fingerprint' => hash('sha256', json_encode([$records, $target, $state['projects'][$this->adapter->project()], $snapshot, $sourceRole, $reviewedRole, $effective], JSON_THROW_ON_ERROR))];
     }
-    public function preview(string $actorId, int $version, string $legacyId, string $targetId): array
+    public function preview(string $actorId, int $version, string $legacyId, string $targetId, string $reviewedRole = ''): array
     {
-        return $this->directory->withAdministrator($actorId, $version, function (array $state) use ($legacyId, $targetId): array {
+        return $this->directory->withAdministrator($actorId, $version, function (array $state) use ($legacyId, $targetId, $reviewedRole): array {
             return $this->adapter->withSnapshot($legacyId, fn(array $snapshot): array =>
-                $this->plan($state, $this->records(), $legacyId, $targetId, $snapshot));
+                $this->plan($state, $this->records($state), $legacyId, $targetId, $snapshot, $reviewedRole));
         });
     }
     public function apply(string $actorId, int $version, array $preview): void
     {
-        $this->directory->withAdministrator($actorId, $version, function (array $state) use ($actorId, $preview): void {
-            $this->adapter->withSnapshot($preview['legacyId'], function (array $snapshot) use ($state, $actorId, $preview): void {
+        $this->directory->updateAsAdministrator($actorId, $version, function (array $state) use ($actorId, $preview): array {
+            return $this->adapter->withSnapshot($preview['legacyId'], function (array $snapshot) use ($state, $actorId, $preview): array {
+                $r = $this->records($state);
+                $fresh = $this->plan($state, $r, $preview['legacyId'], $preview['targetId'], $snapshot, $preview['reviewedRole']);
+                if (!hash_equals($fresh['fingerprint'], $preview['fingerprint'])) {
+                    throw new \InvalidArgumentException('Accounts, permissions, data, or links changed. Run preview again.');
+                }
                 $storage = $this->adapter->storage();
                 if (!is_dir($storage) && !mkdir($storage, 0700, true)) throw new \RuntimeException('Cannot create private link storage.');
-                JsonStore::update($this->path(), function (array $r) use ($state, $actorId, $preview, $snapshot, $storage): array {
-                    $r = $this->validateRecords($r);
-                    $fresh = $this->plan($state, $r, $preview['legacyId'], $preview['targetId'], $snapshot);
-                    if (!hash_equals($fresh['fingerprint'], $preview['fingerprint'])) {
-                        throw new \InvalidArgumentException('Accounts, data, or links changed. Run preview again.');
-                    }
-                    // Backup must succeed before the mapping is committed. No legacy writes occur.
-                    $backupId = gmdate('Ymd-His') . '-' . bin2hex(random_bytes(8));
-                    $backup = $storage . '/backup-' . $backupId . '.json';
-                    JsonStore::update($backup, fn(array $unused): array => [
-                        'project' => $this->adapter->project(), 'actorId' => $actorId,
-                        'targetId' => $preview['targetId'], 'legacyId' => $preview['legacyId'],
-                        'snapshot' => $snapshot, 'previousLinks' => $r,
-                    ]);
-                    $link = ['legacyId' => $preview['legacyId'], 'linkedAt' => gmdate(DATE_ATOM),
-                        'linkedBy' => $actorId, 'backupId' => $backupId];
-                    $r['links'][$preview['targetId']] = $link;
-                    $r['history'][] = ['action' => 'link', 'targetId' => $preview['targetId']] + $link;
-                    return $r;
-                });
+                $backupId = gmdate('Ymd-His') . '-' . bin2hex(random_bytes(8));
+                JsonStore::update($storage . '/backup-' . $backupId . '.json', fn(array $unused): array => [
+                    'project' => $fresh['project'], 'actorId' => $actorId, 'targetId' => $fresh['targetId'],
+                    'legacyId' => $fresh['legacyId'], 'snapshot' => $snapshot, 'previousLinks' => $r,
+                    'previousProjectRole' => $fresh['existingRole'], 'effectiveRole' => $fresh['effectiveRole'],
+                ]);
+                $link = ['legacyId' => $fresh['legacyId'], 'linkedAt' => gmdate(DATE_ATOM),
+                    'linkedBy' => $actorId, 'backupId' => $backupId, 'role' => $fresh['effectiveRole'],
+                    'sourceRole' => $fresh['sourceRole'], 'reviewedRole' => $fresh['reviewedRole']];
+                $r['links'][$fresh['targetId']] = $link;
+                $r['history'][] = ['action' => 'link', 'targetId' => $fresh['targetId']] + $link;
+                $state['accountLinks'][$fresh['project']] = $r;
+                // Preserve existing grants and account type. Only add missing project membership.
+                if ($fresh['existingRole'] === null) {
+                    $state['users'][$fresh['targetId']]['projects'][$fresh['project']] = $fresh['effectiveRole'];
+                    $state['users'][$fresh['targetId']]['version']++;
+                }
+                return $state;
             });
+        });
+    }
+    /** A link is a permission ceiling even for global super administrators.
+     * Pre-permission links fail closed until reviewed separately.
+     */
+    public function can(string $centralId, string $minimum): bool
+    {
+        $state = $this->directory->read();
+        $link = $this->records($state)['links'][$centralId] ?? null;
+        $user = $state['users'][$centralId] ?? null;
+        if (!$link || !$user || !$user['active'] || $user['mustChangePassword'] || !isset(Permissions::RANKS[$minimum])) return false;
+        $centralRole = Permissions::projectRole($user, $this->adapter->project());
+        $role = $link['role'] ?? null;
+        if (!in_array($role, $this->adapter->supportedRoles(), true) || !isset(Permissions::RANKS[$centralRole ?? ''])) return false;
+        return $this->adapter->withSnapshot($link['legacyId'], function (array $snapshot) use ($role, $centralRole, $minimum): bool {
+            $source = $this->adapter->sourceRole($snapshot);
+            if ($source !== null && !in_array($source, $this->adapter->supportedRoles(), true)) return false;
+            return min(Permissions::RANKS[$role], Permissions::RANKS[$centralRole], Permissions::RANKS[$source ?? $role]) >= Permissions::RANKS[$minimum];
         });
     }
     /** Read-only validation; no folder, account, budget, backup, or mapping creation. */
@@ -103,6 +134,7 @@ final class AccountLinks
                 if (count($targets) > 1) $errors[] = 'Duplicate ownership links.';
                 foreach ($targets as $id) {
                     try { $this->target($state, $id); } catch (\InvalidArgumentException $e) { $errors[] = $e->getMessage(); }
+                    if (!in_array($records['links'][$id]['role'] ?? null, $this->adapter->supportedRoles(), true)) $errors[] = 'Linked permissions require review before shared access.';
                     $seen[$id] = true;
                 }
                 $rows[] = ['legacyId' => (string)$legacyId, 'targets' => $targets, 'errors' => $errors,

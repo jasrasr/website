@@ -94,3 +94,5 @@ Use the [account-linking guide](ACCOUNT-LINKING.md) and **Open account linking â
 ## Roles, demo accounts and Jasonâ€™s account
 
 [Roles and accounts](ROLES-AND-ACCOUNTS.md) explains JSON/session authentication, separate project scope, shared profiles, and the authenticated provisioning action for `jasrasr`, `demo-user`, `demo-admin`, and `demo-super-admin`. No live account is created by merging or deploying this code.
+
+Linking permission rule: add missing project access only after permission review; retain the lower existing permission and enforce a per-link ceiling even for global super admins. Finances requires an explicit viewer/member choice because its legacy login has no enforced roles. Mapping and new membership commit together. See [ACCOUNT-LINKING.md](ACCOUNT-LINKING.md).
