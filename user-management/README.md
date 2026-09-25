@@ -84,3 +84,7 @@ HTTP tests create isolated deployments and credentials; cover setup, shared logi
 ## Link existing logins to their data
 
 Use the [account-linking guide](ACCOUNT-LINKING.md) and **Open account linking — Finances pilot** in the administrator portal. It provides a dry-run report, explicit preview, administrator-approved one-to-one mappings and private backups. Finances can then use central login while retaining its existing local account IDs and budget files. Deployment does not enable shared login automatically. Other project adapters and self-service linking are future work.
+
+## Migration task tracker
+
+[Migration tracker](MIGRATION-TRACKER.md) lists every identified candidate, its status, project-specific tasks, rollout/completion criteria, and the remaining repository projects that need an access decision. Work through projects individually; update the tracker with each migration PR and live verification.
