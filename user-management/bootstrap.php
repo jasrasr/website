@@ -3,6 +3,8 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
 require_once __DIR__ . '/src/Directory.php';
 require_once __DIR__ . '/src/Auth.php';
+require_once __DIR__ . '/src/AccountLinkAdapter.php';
+require_once __DIR__ . '/src/AccountLinks.php';
 
 function jasr_users_config(): array
 {

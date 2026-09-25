@@ -81,6 +81,7 @@ function passwordFields(): void
 <?php endif ?>
 <section><h2>Change password</h2><p>Changing your password signs out every browser. Use 12–72 bytes.</p><?php form('change-password'); ?><label>Current password <input type="password" name="current_password" autocomplete="current-password" required></label><?php passwordFields(); ?><button>Change password and sign out</button></form></section>
 <?php if ($user['admin'] && !$user['mustChangePassword']): ?>
+<section><h2>Link existing project accounts</h2><p>Preview and validate account mappings before enabling shared login. Existing data stays in place.</p><p><a href="<?= e($auth->portal()) ?>links.php">Open account linking — Finances pilot</a></p></section>
 <section><h2>Register a project</h2><p>Register its URL, then add the framework guard to its PHP routes. This does not migrate an existing app automatically.</p><?php form('save-project'); ?><label>Project ID <input name="project" placeholder="mpg" pattern="[a-z0-9][a-z0-9_-]{0,63}" required></label><label>Display name <input name="name" placeholder="Fuel log" maxlength="120" required></label><label>Project path <input name="path" placeholder="/mpg/" required></label><button>Save project</button></form><ul><?php foreach ($state['projects'] as $id => $p): ?><li><code><?= e($id) ?></code> — <?= e($p['name']) ?> (<?= e($p['path']) ?>)</li><?php endforeach ?></ul></section>
 <section><h2>Add a user</h2><?php form('create-user'); ?><label>Username <input name="username" autocomplete="off" pattern="[a-zA-Z0-9][a-zA-Z0-9._-]{2,63}" required></label><label>Display name <input name="name" maxlength="120" required></label><label>Temporary password <input type="password" name="password" minlength="12" maxlength="72" autocomplete="new-password" required></label><label class="check"><input type="checkbox" name="admin"> Site administrator (all registered projects)</label><button>Create user</button></form></section>
 <section><h2>Accounts and access</h2><p>Account changes revoke all of that user’s sessions. Disabled accounts retain their ID and data associations.</p>
@@ -91,4 +92,4 @@ function passwordFields(): void
 <details><summary>Reset password</summary><?php form('reset-password'); ?><input type="hidden" name="id" value="<?= e($managed['id']) ?>"><label>Temporary password <input type="password" name="password" minlength="12" maxlength="72" autocomplete="new-password" required></label><button>Reset password and revoke sessions</button></form></details></article>
 <?php endforeach ?></section>
 <?php endif; endif ?>
-<footer>User Management · v1.0.0</footer></main></body></html>
+<footer>User Management · v1.1.0</footer></main></body></html>

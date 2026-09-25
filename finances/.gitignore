@@ -5,4 +5,9 @@
 # - 2026-05-15: Added revision metadata to the file header.
 
 /data/*.json
+/data/*.lock
+/data/identity/
+/data/.budget-*
+/config.local.php
+/config.private.php
 /security.md

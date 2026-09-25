@@ -34,6 +34,23 @@ final class Directory
             return $records;
         });
     }
+    /** Keep administrator/target validation stable throughout a linking transaction. */
+    public function withAdministrator(string $id, int $version, callable $callback): mixed
+    {
+        $lock = fopen($this->path . '.lock', 'c');
+        if (!$lock || !flock($lock, LOCK_SH)) throw new \RuntimeException('Identity lock failed.');
+        try {
+            $state = $this->read();
+            $actor = $state['users'][$id] ?? null;
+            if (!$actor || !$actor['active'] || !$actor['admin'] || $actor['mustChangePassword'] || $actor['version'] !== $version) {
+                throw new \InvalidArgumentException('Administrator access required. Sign in again.');
+            }
+            return $callback($state);
+        } finally {
+            flock($lock, LOCK_UN);
+            fclose($lock);
+        }
+    }
     public static function password(string $password): string
     {
         if (strlen($password) < 12 || strlen($password) > 72 || str_contains($password, "\0")) {

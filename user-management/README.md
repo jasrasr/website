@@ -80,3 +80,7 @@ node --test webstats/tests/server.test.cjs webstats/tests/first-run.test.cjs
 ```
 
 HTTP tests create isolated deployments and credentials; cover setup, shared login, password changes, permission isolation, CSRF, revocation, admin safeguards, throttling, and storage persistence. Manually verify HTTPS cookie flags, mobile layout, storage denial on the actual hosting server, and 30-minute idle expiry before rollout.
+
+## Link existing logins to their data
+
+Use the [account-linking guide](ACCOUNT-LINKING.md) and **Open account linking — Finances pilot** in the administrator portal. It provides a dry-run report, explicit preview, administrator-approved one-to-one mappings and private backups. Finances can then use central login while retaining its existing local account IDs and budget files. Deployment does not enable shared login automatically. Other project adapters and self-service linking are future work.

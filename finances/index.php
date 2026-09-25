@@ -1,18 +1,25 @@
 <?php
 // File: index.php
 // Purpose: Runs the shared finance budget tracker web interface.
-// Revision: 1.2
+// Revision: 1.3
 // Revision Log:
+// - 2026-09-25: Added explicit shared identity linking while preserving existing budgets.
 // - 2026-05-15: Added revision metadata to the file header.
 
 declare(strict_types=1);
 
-session_start([
-    'cookie_httponly' => true,
-    'cookie_samesite' => 'Lax',
-]);
+require_once __DIR__ . '/bootstrap.php';
+header('Cache-Control: no-store');
+set_exception_handler(static function (Throwable $e): void {
+    error_log('Finances: ' . $e->getMessage());
+    http_response_code(503);
+    if (isset($_GET['api'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => false, 'error' => 'Budget unavailable. Ask an administrator to check the account link and existing data.']);
+    } else echo 'Budget unavailable. Ask an administrator to check the account link and existing data.';
+});
 
-const APP_REVISION = '1.2';
+const APP_REVISION = '1.3';
 const DEFAULT_SAMPLE_PASSWORD = 'budget123';
 
 function app_modified_label(): string
@@ -28,30 +35,13 @@ function app_modified_label(): string
 
 function app_config(): array
 {
-    $config = [
-        'users' => [
-            'student' => ['password' => DEFAULT_SAMPLE_PASSWORD],
-            'parent' => ['password' => DEFAULT_SAMPLE_PASSWORD],
-        ],
-    ];
-
-    $localPath = __DIR__ . '/config.local.php';
-    if (is_file($localPath)) {
-        $local = require $localPath;
-        if (is_array($local)) {
-            if (isset($local['users']) && is_array($local['users'])) {
-                $config['users'] = $local['users'];
-                unset($local['users']);
-            }
-            $config = array_replace_recursive($config, $local);
-        }
-    }
-
-    return $config;
+    return \Jasr\Finances\Accounts::config();
 }
 
 function current_user(): ?string
 {
+    global $sharedMode, $linkedUser;
+    if ($sharedMode) return $linkedUser;
     return isset($_SESSION['budget_user']) && is_string($_SESSION['budget_user'])
         ? $_SESSION['budget_user']
         : null;
@@ -98,6 +88,8 @@ function default_budget(): array
 
 function read_budget(string $username): array
 {
+    global $sharedMode;
+    if ($sharedMode) return \Jasr\Finances\Accounts::read($username);
     $path = data_path($username);
     if (!is_file($path)) {
         $budget = default_budget();
@@ -105,16 +97,14 @@ function read_budget(string $username): array
         return $budget;
     }
 
-    $json = file_get_contents($path);
-    $decoded = json_decode($json ?: '', true);
-
-    return is_array($decoded) ? $decoded : default_budget();
+    return \Jasr\Finances\Accounts::read($username);
 }
 
 function write_budget(string $username, array $budget): void
 {
-    $path = data_path($username);
-    file_put_contents($path, json_encode($budget, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX);
+    global $sharedMode;
+    if (!$sharedMode) data_path($username); // Legacy first login may initialize its budget.
+    \Jasr\Finances\Accounts::write($username, $budget, $sharedMode);
 }
 
 function send_json(array $payload, int $status = 200): never
@@ -149,14 +139,43 @@ function valid_password(array $userConfig, string $password): bool
 
 $config = app_config();
 $loginError = '';
-
-if (isset($_GET['logout'])) {
-    session_destroy();
-    header('Location: index.php');
+$sharedMode = $config['authentication'] === 'shared';
+$linkedUser = null;
+$auth = null;
+$canEdit = true;
+if ($sharedMode) {
+    $auth = \Jasr\Framework\SharedIdentity::connect();
+    $centralUser = $auth->requireProject('finances', 'viewer', isset($_GET['api']));
+    $linkedUser = finances_links($auth->directory)->legacyId($centralUser['id']);
+    if ($linkedUser === null) {
+        if (isset($_GET['api'])) send_json(['ok' => false, 'error' => 'No existing Finances account is linked. Ask a site administrator to link your account.'], 403);
+        http_response_code(403);
+        exit('No existing Finances account is linked. Ask a site administrator to link your account in User Management.');
+    }
+    $row = \Jasr\Finances\Accounts::inventory()[$linkedUser] ?? null;
+    if (!$row || $row['errors']) throw new RuntimeException('Linked account is unavailable.');
+    $canEdit = $auth->can('finances', 'member');
+} else {
+    session_start(['cookie_httponly' => true, 'cookie_samesite' => 'Lax']);
+    $_SESSION['finance_csrf'] ??= bin2hex(random_bytes(32));
+}
+$csrf = $sharedMode ? $auth->csrf() : $_SESSION['finance_csrf'];
+function valid_finance_csrf(mixed $token): bool
+{
+    global $csrf;
+    return is_string($token) && hash_equals($csrf, $token);
+}
+if (isset($_GET['logout'])) { http_response_code(405); exit('Use the Sign Out button.'); }
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'logout') {
+    if (!valid_finance_csrf($_POST['csrf'] ?? null)) { http_response_code(403); exit('Invalid form token.'); }
+    if ($sharedMode) { $auth->logout(); header('Location: ' . $auth->portal(), true, 303); }
+    else { $_SESSION = []; session_regenerate_id(true); header('Location: index.php', true, 303); }
     exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'login') {
+    if ($sharedMode) { http_response_code(409); exit('Use User Management to sign in.'); }
+    if (!valid_finance_csrf($_POST['csrf'] ?? null)) { http_response_code(403); exit('Invalid form token.'); }
     $username = trim((string) ($_POST['username'] ?? ''));
     $password = (string) ($_POST['password'] ?? '');
     $userConfig = $config['users'][$username] ?? null;
@@ -164,6 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'login
     if (is_array($userConfig) && valid_password($userConfig, $password)) {
         session_regenerate_id(true);
         $_SESSION['budget_user'] = $username;
+        $_SESSION['finance_csrf'] = bin2hex(random_bytes(32));
         header('Location: index.php');
         exit;
     }
@@ -182,6 +202,8 @@ if (isset($_GET['api'])) {
     }
 
     if ($_GET['api'] === 'budget' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (!$canEdit) send_json(['ok' => false, 'error' => 'Member access is required to change a budget.'], 403);
+        if (!valid_finance_csrf($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null)) send_json(['ok' => false, 'error' => 'Invalid form token.'], 403);
         $payload = json_decode(file_get_contents('php://input') ?: '', true);
         if (!is_array($payload) || !isset($payload['income'], $payload['expenses']) || !is_array($payload['expenses'])) {
             send_json(['ok' => false, 'error' => 'Invalid budget payload.'], 400);
@@ -199,7 +221,7 @@ if (isset($_GET['api'])) {
 }
 
 $signedInUser = current_user();
-$defaultLoginActive = is_default_login_active($config);
+$defaultLoginActive = !$sharedMode && is_default_login_active($config);
 $appModifiedLabel = app_modified_label();
 ?>
 <!doctype html>
@@ -302,8 +324,9 @@ $appModifiedLabel = app_modified_label();
       <div class="panel-body">
         <form class="form-grid" method="post">
           <input type="hidden" name="action" value="login">
+          <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>">
           <?php if ($defaultLoginActive): ?>
-            <div class="login-warning">Default sample password is active. Create `config.local.php` before publishing this page.</div>
+            <div class="login-warning">Default sample password is active. Create `config.private.php` before publishing this page.</div>
           <?php endif; ?>
           <?php if ($loginError !== ''): ?>
             <div class="error"><?= htmlspecialchars($loginError, ENT_QUOTES, 'UTF-8') ?></div>
@@ -335,7 +358,8 @@ $appModifiedLabel = app_modified_label();
         <label class="button" for="importFile">Import</label>
         <input class="hidden" id="importFile" type="file" accept="application/json">
         <button class="button danger" id="resetButton" type="button">Reset</button>
-        <a class="button" href="?logout=1">Sign Out</a>
+        <form method="post"><input type="hidden" name="action" value="logout"><input type="hidden" name="csrf" value="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>"><button class="button" type="submit">Sign Out</button></form>
+        <?php if (!$canEdit): ?><span class="detail">Read-only access</span><?php endif ?>
       </div>
     </div>
   </header>
@@ -416,6 +440,8 @@ $appModifiedLabel = app_modified_label();
   </main>
 
   <script>
+    const canEditBudget = <?= $canEdit ? 'true' : 'false' ?>;
+    const financeCsrf = <?= json_encode($csrf, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
     const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
     const preciseCurrency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
     let state = { income: {}, expenses: [] };
@@ -509,16 +535,18 @@ $appModifiedLabel = app_modified_label();
     }
 
     function queueSave() {
+      if (!canEditBudget) return;
       setStatus("Saving...");
       clearTimeout(saveTimer);
       saveTimer = setTimeout(saveBudget, 350);
     }
 
     async function saveBudget() {
+      if (!canEditBudget) return;
       const response = await fetch("?api=budget", {
         method: "POST",
         credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": financeCsrf },
         body: JSON.stringify(state)
       });
       const payload = await response.json();
@@ -592,6 +620,7 @@ $appModifiedLabel = app_modified_label();
       renderExpenses();
       document.querySelector("#cancelEdit").classList.toggle("hidden", !editingExpenseId);
       document.querySelector("#expenseSubmit").textContent = editingExpenseId ? "Save Expense" : "Add Expense";
+      if (!canEditBudget) document.querySelectorAll('main input, main select, main button, #importFile, #resetButton').forEach(el => el.disabled = true);
     }
 
     function formatFrequency(frequency) {
@@ -719,6 +748,7 @@ $appModifiedLabel = app_modified_label();
     });
 
     loadBudget().catch((error) => setStatus(error.message));
+    if (!canEditBudget) document.querySelectorAll('main input, main select, main button, #importFile, #resetButton').forEach(el => el.disabled = true);
   </script>
 <?php endif; ?>
 </body>
