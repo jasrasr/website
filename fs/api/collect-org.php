@@ -140,9 +140,21 @@ try {
     $isInitialRun = empty($state['lastRun']);
     $lastRun = $isInitialRun ? null : new DateTimeImmutable((string) $state['lastRun']);
 
+    // Fetch one agent at a time and merge, rather than one combined "agent_id:A OR agent_id:B"
+    // query: Freshservice's ticket-filter endpoint caps any single query at 10,000 results,
+    // and combining several agents' full ticket history into one query can exceed that,
+    // silently dropping tickets (including recent ones) from the truncated result.
+    $fetchedTickets = [];
+    foreach ($orgAgentIds as $agentId) {
+        foreach ($client->listTicketsForAgent($agentId) as $ticket) {
+            $id = (int) ($ticket['id'] ?? 0);
+            if ($id > 0 && !isset($fetchedTickets[$id])) $fetchedTickets[$id] = $ticket;
+        }
+    }
+
     $currentTickets = [];
     $newTicketsByOrg = [];
-    foreach ($client->listTicketsForAgents($orgAgentIds) as $ticket) {
+    foreach ($fetchedTickets as $ticket) {
         $minimal = orgMinimalTicket($ticket);
         if ($minimal['id'] <= 0) continue;
         $id = (string) $minimal['id'];

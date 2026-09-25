@@ -4,6 +4,9 @@ All notable changes to this project are documented here. Format is loosely based
 
 ## Unreleased
 
+## 2026-09-25
+- Fixed the organization collector never detecting new tickets: it combined all whitelisted agents into one `agent_id:A OR agent_id:B ...` Freshservice filter query, and that endpoint silently caps any single query at 10,000 results. With 7 agents' full ticket history combined, the query exceeded the cap and the truncated result never included recent tickets. `api/collect-org.php` and `FreshserviceClient::listTicketsForAgent()` now query one agent at a time (each well under the cap, same as the main dashboard's own agent) and merge the results. (Rev 1.7)
+
 ## 2026-09-24
 - Removed the "By organization" link from the main dashboard's header; `index-org.php` still works, just unlinked.
 - Gave the organization report its own collector (`api/collect-org.php`) and storage files (`storage/org-api-state.json`, `storage/org-api-snapshots.json`), so it can track a configurable whitelist of agent IDs (`org_agent_ids`) instead of the single `agent_id` the main dashboard tracks. The main dashboard's unresolved/goal numbers are unaffected. (Rev 1.6)

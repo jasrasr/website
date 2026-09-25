@@ -26,40 +26,22 @@ final class FreshserviceClient
         $this->baseUrl = 'https://' . $host . (isset($parts['port']) ? ':' . (int) $parts['port'] : '');
     }
 
-    /** @return array<int, array<string, mixed>> */
-    public function listTicketsForAgent(int $agentId): array
-    {
-        return $this->listTicketsByQuery(sprintf('"agent_id:%d"', $agentId));
-    }
-
     /**
-     * Same as listTicketsForAgent(), but matches any ticket assigned to any of several agents.
-     * @param array<int, int> $agentIds
+     * Note: deliberately queries one agent at a time. Freshservice's ticket-filter endpoint
+     * silently caps any single query at 10,000 results; combining several agents into one
+     * "agent_id:A OR agent_id:B" query multiplies matched history and can blow past that cap,
+     * likely dropping recent tickets from the truncated result. Callers tracking several
+     * agents should call this once per agent and merge, not build a combined-agent query.
      * @return array<int, array<string, mixed>>
      */
-    public function listTicketsForAgents(array $agentIds): array
-    {
-        $ids = array_values(array_unique(array_filter(
-            array_map('intval', $agentIds),
-            static fn(int $id): bool => $id > 0
-        )));
-        if ($ids === []) return [];
-
-        $query = '"' . implode(' OR ', array_map(
-            static fn(int $id): string => 'agent_id:' . $id,
-            $ids
-        )) . '"';
-        return $this->listTicketsByQuery($query);
-    }
-
-    /** @return array<int, array<string, mixed>> */
-    private function listTicketsByQuery(string $query): array
+    public function listTicketsForAgent(int $agentId): array
     {
         $tickets = [];
         $page = 1;
         $perPage = 100;
 
         do {
+            $query = sprintf('"agent_id:%d"', $agentId);
             $params = [
                 'query' => $query,
                 'page' => $page,
