@@ -73,3 +73,5 @@ Folders in this repo sync under `https://jasr.me/github/<folder>/`, which is the
 ## Shared user management
 
 [`user-management`](user-management/README.md) provides central accounts, same-host login and per-project access roles. [`1-Framework`](1-Framework/README.md) now exposes its configured integration through `SharedIdentity::connect()`. Existing projects can adopt it individually after mapping their users and protecting their PHP endpoints.
+
+Track shared-login adoption in the [User Management migration tracker](user-management/MIGRATION-TRACKER.md). Each application has its own migration checklist; completion requires verified data preservation and live access checks.

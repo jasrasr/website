@@ -6,7 +6,7 @@ Shared PHP/JSON accounts for projects in this repository. PHP 8.1+, no database 
 
 - One same-host login/session for integrated projects.
 - Central account creation, disable/enable, temporary password reset and password change.
-- Site administrators manage all registered projects; other users receive explicit per-project Viewer, Member or Admin grants.
+- User, Admin and Super Admin account roles are separate from project scope. Any role can access multiple selected projects; all-project access is an explicit flag. Central directory administration is a separate permission.
 - Server-side permission checks, CSRF tokens, secure cookies, session rotation, 30-minute idle expiry and persisted account/IP login limits.
 - Password/account/access changes revoke the affected user's sessions; required password changes block project access.
 - Last active administrator protection. Users are disabled instead of deleted so project ownership remains stable.
@@ -19,7 +19,7 @@ Shared PHP/JSON accounts for projects in this repository. PHP 8.1+, no database 
 3. Storage defaults to `user-management/data/`. Apache/LiteSpeed must honor its `.htaccess`. Before adding accounts, request `/user-management/data/.htaccess` and a temporary test file under that directory and verify HTTP 403. Remove the test file. On nginx, configure a deny rule or set `data_path` to a private directory outside the web root. The configured directory must already exist and be writable only by the PHP/deployment user. Never use 0777. Disable `display_errors` in production.
 4. Create the first administrator using either method:
    - **Browser:** generate a random setup key (for example `php -r 'echo bin2hex(random_bytes(32)), PHP_EOL;'`), put it in `config.local.php` as `setup_key`, open `/user-management/`, then enter the key and your own username/password. Remove the setup key from configuration afterward. Setup rejects all further attempts once any account exists.
-   - **SSH/CLI:** store a password in a private temporary file, then run `php user-management/setup.php admin "Jason Lamb" < /private/path/password.txt`. Delete the temporary file. The script only reads stdin; do not put passwords in command-line arguments. Browser setup can stay disabled.
+   - **SSH/CLI:** store a password in a private temporary file, then run `php user-management/setup.php jasrasr "Jason Lamb" < /private/path/password.txt`. Delete the temporary file. The script only reads stdin; do not put passwords in command-line arguments. Browser setup can stay disabled.
 5. Sign in, register project IDs/paths, create users, and grant access. New users must change temporary passwords on first login.
 6. Install the integration below in each adopting project. Registering a project alone does **not** protect it or replace its old authentication.
 
@@ -51,7 +51,9 @@ Render `<input type="hidden" name="csrf" value="...">` with the HTML-escaped `$a
 | Viewer | Read | `viewer` |
 | Member | Read and ordinary writes | `member` |
 | Project admin | Project administration | `admin` |
-| Site administrator | All registered projects and account administration | Central `admin` flag |
+| Project super admin | Project-specific elevated administration | `super_admin` |
+
+Account role caps project grants; it does not assign project access. Central directory managers explicitly have Super Admin + all-project access + directory management. See [roles and accounts](ROLES-AND-ACCOUNTS.md).
 
 The provider enforces role hierarchy; each project must place gates on **every** protected page, API, download and write handler. Unknown projects/roles deny access even for site admins. Object ownership remains the project's responsibility. Store `$user['id']` as the stable ownership key; map legacy owners explicitly before removing old login code.
 
@@ -65,7 +67,7 @@ This is same-host, same-PHP-session-storage integration, not OAuth/OIDC or cross
 
 ## Storage / backup
 
-`data/directory.json`: framework schemaVersion 1 envelope, records `{users: {id: user}, projects: {slug: {name,path}}}`. Users contain immutable random `id`, normalized ASCII `username`, Unicode display `name`, password `hash`, `active`, site `admin`, `mustChangePassword`, integer session `version`, project-role map and UTC creation time. Usernames are deliberately ASCII; display names are not. Passwords are 12–72 bytes to avoid bcrypt truncation.
+`data/directory.json`: framework schemaVersion 1 envelope, records `{users: {id: user}, projects: {slug: {name,path}}}`. Users contain immutable random `id`, normalized ASCII `username`, Unicode display `name`, password `hash`, `active`, account `role`, `allProjects`, `directoryAdmin`, compatibility `admin`, `demo`, contact `email`, `mustChangePassword`, integer session `version`, project-role map and UTC creation time. Usernames are deliberately ASCII; display names are not. Passwords are 12–72 bytes to avoid bcrypt truncation.
 
 `data/attempts.json`: expiring hash-keyed account and direct peer-IP counters; 10 account attempts / 60 IP attempts per 15 minutes. Successful login clears only its account counter. No forwarded IP headers are trusted. A reverse proxy may group users under its peer IP; configure trusted proxy handling separately before high-volume use.
 
@@ -75,8 +77,24 @@ Writes use stable locks and atomic replacement. Back up the data directory and p
 
 ```sh
 find user-management 1-Framework -name '*.php' -print0 | xargs -0 -n1 php -l
-node --test user-management/tests/auth.test.cjs
+node --test user-management/tests/auth.test.cjs user-management/tests/roles.test.cjs
 node --test webstats/tests/server.test.cjs webstats/tests/first-run.test.cjs
 ```
 
 HTTP tests create isolated deployments and credentials; cover setup, shared login, password changes, permission isolation, CSRF, revocation, admin safeguards, throttling, and storage persistence. Manually verify HTTPS cookie flags, mobile layout, storage denial on the actual hosting server, and 30-minute idle expiry before rollout.
+
+## Link existing logins to their data
+
+Use the [account-linking guide](ACCOUNT-LINKING.md) and **Open account linking — Finances pilot** in the administrator portal. It provides a dry-run report, explicit preview, administrator-approved one-to-one mappings and private backups. Finances can then use central login while retaining its existing local account IDs and budget files. Deployment does not enable shared login automatically. Other project adapters and self-service linking are future work.
+
+## Migration task tracker
+
+[Migration tracker](MIGRATION-TRACKER.md) lists every identified candidate, its status, project-specific tasks, rollout/completion criteria, and the remaining repository projects that need an access decision. Work through projects individually; update the tracker with each migration PR and live verification.
+
+## Roles, demo accounts and Jason’s account
+
+[Roles and accounts](ROLES-AND-ACCOUNTS.md) explains JSON/session authentication, separate project scope, shared profiles, and the authenticated provisioning action for `jasrasr`, `demo-user`, `demo-admin`, and `demo-super-admin`. No live account is created by merging or deploying this code.
+
+Linking permission rule: add missing project access only after permission review; retain the lower existing permission and enforce a per-link ceiling even for global super admins. Finances requires an explicit viewer/member choice because its legacy login has no enforced roles. Mapping and new membership commit together. See [ACCOUNT-LINKING.md](ACCOUNT-LINKING.md).
+
+Hosting preservation: see [HOSTING-DATA-SAFETY.md](HOSTING-DATA-SAFETY.md) and [documentation-only examples](examples/README.md). Repository safeguards and isolated tests are implemented; verifying Hostinger deployment exclusions, taking a live backup, and checking each migrated account remain pending.

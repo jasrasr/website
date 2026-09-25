@@ -7,6 +7,7 @@ header("Content-Security-Policy: default-src 'none'; style-src 'self'; form-acti
 function e(string $value): string { return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 function field(array $input, string $key): string { return is_string($input[$key] ?? null) ? $input[$key] : ''; }
 $error = '';
+$newCredentials = null;
 try {
     $auth = jasr_users_auth();
     $config = jasr_users_config();
@@ -34,12 +35,17 @@ try {
             if (field($_POST, 'password') !== field($_POST, 'confirm_password')) throw new InvalidArgumentException('Passwords do not match.');
             $directory->changePassword($user['id'], $user['version'], field($_POST, 'current_password'), field($_POST, 'password'));
             $auth->logout(); // All browsers must sign in with the new password.
+        } elseif ($action === 'profile' && $user) {
+            $directory->updateProfile($user['id'], $user['version'], field($_POST, 'name'), field($_POST, 'email'));
+        } elseif ($action === 'provision-requested' && $user && $user['admin'] && !$user['mustChangePassword']) {
+            if (field($_POST, 'confirm_owner') !== 'yes') throw new InvalidArgumentException('Confirm that the jasrasr account belongs to Jason Lamb.');
+            $newCredentials = $directory->provisionRequestedAccounts($user['id'], $user['version']);
         } elseif ($user && $user['admin'] && !$user['mustChangePassword']) {
             $directory->administer($user['id'], $user['version'], $action, $_POST);
         } else {
             http_response_code(403); throw new InvalidArgumentException('Access denied.');
         }
-        header('Location: ' . $auth->portal(), true, 303); exit;
+        if ($newCredentials === null) { header('Location: ' . $auth->portal(), true, 303); exit; }
     }
     $state = $directory->read();
     $user = $auth->user();
@@ -62,10 +68,23 @@ function passwordFields(): void
 {
     echo '<label>New password <input type="password" name="password" minlength="12" maxlength="72" autocomplete="new-password" required></label><label>Confirm password <input type="password" name="confirm_password" minlength="12" maxlength="72" autocomplete="new-password" required></label>';
 }
+function roleFields(array $account): void
+{
+    echo '<label>Account role <select name="account_role">';
+    foreach (['user' => 'User', 'admin' => 'Admin', 'super_admin' => 'Super Admin'] as $value => $label) {
+        echo '<option value="' . $value . '"' . (($account['role'] ?? 'user') === $value ? ' selected' : '') . '>' . $label . '</option>';
+    }
+    echo '</select></label>';
+    if (empty($account['demo'])) {
+        echo '<label class="check"><input type="checkbox" name="all_projects"' . (!empty($account['allProjects']) ? ' checked' : '') . '> Access every registered project (including future projects)</label>';
+        echo '<label class="check"><input type="checkbox" name="directory_admin"' . (!empty($account['directoryAdmin']) ? ' checked' : '') . '> Manage central accounts and grants (requires Super Admin + all-project access)</label>';
+    } else echo '<p>Demo account: explicit project grants only; central directory management is unavailable.</p>';
+}
 ?>
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>User Management · JASR</title><link rel="stylesheet" href="<?= e($auth->portal()) ?>style.css"></head><body><main>
 <header><p class="eyebrow">JASR · Shared accounts</p><h1>User Management</h1><p>One account. Access to the projects you need.</p></header>
 <?php if ($error !== ''): ?><p class="notice" role="alert"><?= e($error) ?></p><?php endif ?>
+<?php if ($newCredentials !== null): ?><section><h2>Requested accounts provisioned</h2><p>Copy these randomly generated temporary passwords now. They are shown only in this response and must be changed on first login. Existing passwords were not reset. If your own account changed, sign in again.</p><?php if (!$newCredentials): ?><p>No new passwords were generated; the accounts already exist.</p><?php endif ?><?php foreach ($newCredentials as $credential): ?><p><strong><?= e($credential['username']) ?></strong>: <code><?= e($credential['password']) ?></code></p><?php endforeach ?></section><?php endif ?>
 <?php if (!$state['users']): ?>
 <section><h2>Create the first administrator</h2>
 <?php if (strlen((string)$config['setup_key']) >= 32): ?>
@@ -77,18 +96,21 @@ function passwordFields(): void
 <?php else: ?>
 <div class="account"><p>Signed in as <strong><?= e($user['name']) ?></strong></p><?php form('logout'); ?><button class="secondary">Sign out of all connected projects in this browser</button></form></div>
 <?php if ($user['mustChangePassword']): ?><p class="notice">Change your temporary password before opening a project or managing users.</p><?php else: ?>
-<section><h2>Your projects</h2><div class="projects"><?php foreach ($state['projects'] as $id => $project): if (!$auth->can($id)) continue; ?><a class="project" href="<?= e($project['path']) ?>"><strong><?= e($project['name']) ?></strong><span><?= e($user['admin'] ? 'Site administrator' : $user['projects'][$id]) ?></span></a><?php endforeach ?></div><p class="muted">An administrator grants access here. Each project must also install the server-side integration to enforce it.</p></section>
+<section><h2>Your projects</h2><div class="projects"><?php foreach ($state['projects'] as $id => $project): if (!$auth->can($id)) continue; ?><a class="project" href="<?= e($project['path']) ?>"><strong><?= e($project['name']) ?></strong><span><?= e(\Jasr\Users\Permissions::projectRole($user, $id) ?? '') ?></span></a><?php endforeach ?></div><p class="muted">An administrator grants access here. Each project must also install the server-side integration to enforce it.</p></section>
+<section><h2>Your shared profile</h2><p>This identity is available to every integrated project you can access. It does not automatically link existing project data.</p><?php form('profile'); ?><label>Username <input value="<?= e($user['username']) ?>" disabled></label><label>Display name <input name="name" value="<?= e($user['name']) ?>" maxlength="120" required></label><label>Contact email (optional) <input type="email" name="email" value="<?= e($user['email']) ?>" maxlength="254"></label><button>Save profile</button></form></section>
 <?php endif ?>
 <section><h2>Change password</h2><p>Changing your password signs out every browser. Use 12–72 bytes.</p><?php form('change-password'); ?><label>Current password <input type="password" name="current_password" autocomplete="current-password" required></label><?php passwordFields(); ?><button>Change password and sign out</button></form></section>
 <?php if ($user['admin'] && !$user['mustChangePassword']): ?>
+<section><h2>Link existing project accounts</h2><p>Preview and validate account mappings before enabling shared login. Existing data stays in place.</p><p><a href="<?= e($auth->portal()) ?>links.php">Open account linking — Finances pilot</a></p></section>
+<section><h2>Jason and demo accounts</h2><p>Provision <strong>jasrasr</strong> (Jason Lamb) as Super Admin with all-project access and central directory management. Provision <strong>demo-user</strong>, <strong>demo-admin</strong>, and <strong>demo-super-admin</strong> with their respective roles and no project access initially. Grant demos access only to projects with isolated demo data.</p><p>An existing jasrasr identity keeps its ID/password and receives the requested permissions. Existing demo accounts are left unchanged; an unrelated account using a demo name blocks provisioning.</p><?php form('provision-requested'); ?><label class="check"><input type="checkbox" name="confirm_owner" value="yes" required> I verified that the existing jasrasr account, if any, belongs to Jason Lamb.</label><button>Provision requested accounts</button></form></section>
 <section><h2>Register a project</h2><p>Register its URL, then add the framework guard to its PHP routes. This does not migrate an existing app automatically.</p><?php form('save-project'); ?><label>Project ID <input name="project" placeholder="mpg" pattern="[a-z0-9][a-z0-9_-]{0,63}" required></label><label>Display name <input name="name" placeholder="Fuel log" maxlength="120" required></label><label>Project path <input name="path" placeholder="/mpg/" required></label><button>Save project</button></form><ul><?php foreach ($state['projects'] as $id => $p): ?><li><code><?= e($id) ?></code> — <?= e($p['name']) ?> (<?= e($p['path']) ?>)</li><?php endforeach ?></ul></section>
-<section><h2>Add a user</h2><?php form('create-user'); ?><label>Username <input name="username" autocomplete="off" pattern="[a-zA-Z0-9][a-zA-Z0-9._-]{2,63}" required></label><label>Display name <input name="name" maxlength="120" required></label><label>Temporary password <input type="password" name="password" minlength="12" maxlength="72" autocomplete="new-password" required></label><label class="check"><input type="checkbox" name="admin"> Site administrator (all registered projects)</label><button>Create user</button></form></section>
+<section><h2>Add a user</h2><?php form('create-user'); ?><label>Username <input name="username" autocomplete="off" pattern="[a-zA-Z0-9][a-zA-Z0-9._-]{2,63}" required></label><label>Display name <input name="name" maxlength="120" required></label><label>Temporary password <input type="password" name="password" minlength="12" maxlength="72" autocomplete="new-password" required></label><?php roleFields([]); ?><button>Create user</button></form></section>
 <section><h2>Accounts and access</h2><p>Account changes revoke all of that user’s sessions. Disabled accounts retain their ID and data associations.</p>
 <?php foreach ($state['users'] as $managed): ?>
-<article><h3><?= e($managed['name']) ?> <small>@<?= e($managed['username']) ?></small></h3><p><?= $managed['active'] ? 'Active' : 'Disabled' ?> · <?= $managed['admin'] ? 'Site administrator' : 'Project user' ?><?= $managed['mustChangePassword'] ? ' · Password change required' : '' ?></p>
-<?php form('save-user'); ?><input type="hidden" name="id" value="<?= e($managed['id']) ?>"><label class="check"><input type="checkbox" name="active" <?= $managed['active'] ? 'checked' : '' ?>> Active</label><label class="check"><input type="checkbox" name="admin" <?= $managed['admin'] ? 'checked' : '' ?>> Site administrator</label><button>Save account</button></form>
-<?php form('grant'); ?><input type="hidden" name="id" value="<?= e($managed['id']) ?>"><label>Project <select name="project" required><option value="">Choose a project</option><?php foreach ($state['projects'] as $id => $p): ?><option value="<?= e($id) ?>"><?= e($p['name']) ?> — <?= e($managed['projects'][$id] ?? 'No access') ?></option><?php endforeach ?></select></label><label>Access <select name="role"><option value="">No access</option><option value="viewer">Viewer</option><option value="member">Member</option><option value="admin">Project admin</option></select></label><button>Save access</button></form>
+<article><h3><?= e($managed['name']) ?> <small>@<?= e($managed['username']) ?></small></h3><p><?= $managed['active'] ? 'Active' : 'Disabled' ?> · <?= e($managed['role']) ?><?= $managed['allProjects'] ? ' · All projects' : ' · Selected projects' ?><?= $managed['admin'] ? ' · Directory manager' : '' ?><?= $managed['demo'] ? ' · Demo' : '' ?><?= $managed['mustChangePassword'] ? ' · Password change required' : '' ?></p>
+<?php form('save-user'); ?><input type="hidden" name="id" value="<?= e($managed['id']) ?>"><label class="check"><input type="checkbox" name="active" <?= $managed['active'] ? 'checked' : '' ?>> Active</label><?php roleFields($managed); ?><button>Save account</button></form>
+<?php form('grant'); ?><input type="hidden" name="id" value="<?= e($managed['id']) ?>"><label>Project <select name="project" required><option value="">Choose a project</option><?php foreach ($state['projects'] as $id => $p): ?><option value="<?= e($id) ?>"><?= e($p['name']) ?> — <?= e($managed['projects'][$id] ?? 'No access') ?></option><?php endforeach ?></select></label><label>Access <select name="role"><option value="">Remove explicit grant</option><option value="viewer">Viewer</option><option value="member">Member</option><option value="admin">Project admin</option><option value="super_admin">Project super admin</option></select></label><button>Save access</button></form>
 <details><summary>Reset password</summary><?php form('reset-password'); ?><input type="hidden" name="id" value="<?= e($managed['id']) ?>"><label>Temporary password <input type="password" name="password" minlength="12" maxlength="72" autocomplete="new-password" required></label><button>Reset password and revoke sessions</button></form></details></article>
 <?php endforeach ?></section>
 <?php endif; endif ?>
-<footer>User Management · v1.0.0</footer></main></body></html>
+<footer>User Management · v1.2.0</footer></main></body></html>
