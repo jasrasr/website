@@ -67,11 +67,11 @@ final class Auth
     public function logout(): void { $this->session->logout(); }
     public function can(string $project, string $minimum = 'viewer'): bool
     {
-        $roles = ['viewer' => 1, 'member' => 2, 'admin' => 3];
+        $roles = Permissions::RANKS;
         if (!isset($roles[$minimum]) || !isset($this->directory->read()['projects'][$project])) return false;
         $user = $this->user();
         if (!$user || $user['mustChangePassword']) return false;
-        return $user['admin'] || ($roles[$user['projects'][$project] ?? ''] ?? 0) >= $roles[$minimum];
+        return ($roles[Permissions::projectRole($user, $project) ?? ''] ?? 0) >= $roles[$minimum];
     }
     /** Server-side gate for HTML or JSON routes. Call before output/session_start(). */
     public function requireProject(string $project, string $minimum = 'viewer', bool $json = false): array

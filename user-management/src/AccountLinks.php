@@ -37,7 +37,7 @@ final class AccountLinks
         $user = $state['users'][$targetId] ?? null;
         $project = $this->adapter->project();
         if (!isset($state['projects'][$project]) || !$user || !$user['active'] ||
-            (!$user['admin'] && !in_array($user['projects'][$project] ?? '', ['viewer', 'member', 'admin'], true))) {
+            Permissions::projectRole($user, $project) === null) {
             throw new \InvalidArgumentException('The target must be active and have access to the registered project.');
         }
         return $user;

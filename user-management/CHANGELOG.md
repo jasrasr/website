@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0 — 2026-09-25
+
+- Separated User/Admin/Super Admin account roles, selected/all-project scope and central directory management; retained existing explicit administrator rights.
+- Added scoped demo and jasrasr provisioning with random temporary passwords and existing-account preservation.
+- Added a shared editable display name/contact-email profile, project super-admin gates and role-scope regression tests.
+- Demo accounts cannot manage the central directory or receive all-project scope; application demo datasets remain separate migration work.
+
 ## 1.1.0 — 2026-09-25
 
 - Added administrator-approved account linking with dry-run inventory, explicit preview, stale/duplicate/replay rejection, backup-before-link and approval history.

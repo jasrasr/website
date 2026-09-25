@@ -48,6 +48,15 @@ Sequence is a suggested working order, not authorization to switch live authenti
 | 20 | [file-manager](../file-manager/) | Documented Basic Auth, IP rules, API keys, MFA | Queued | Verify missing deployment config; preserve MFA/uploads |
 | 21 | [blog/admin](../blog/admin/) | Documented HTTP Basic Auth | Queued | Verify host protection; keep public blog public |
 
+## Shared account setup — separate from app completion
+
+- [x] Implement User/Admin/Super Admin roles, separate project scope, and explicit central directory management.
+- [x] Implement shared profiles and authenticated owner/demo provisioning with no shipped passwords.
+- [ ] Deploy reviewed changes and provision the requested owner/demo accounts on the live server.
+- [ ] Assign demos only to projects with isolated demo data as each project is migrated.
+
+See [roles and accounts](ROLES-AND-ACCOUNTS.md). These foundation tasks do not mark any application migration complete.
+
 ## Per-project task checklists
 
 ### 1. Finances — in review
