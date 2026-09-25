@@ -2,6 +2,18 @@
 
 All notable changes to the License Plate Photo Logger are documented here.
 
+## [1.2.33] - 2026-09-25
+
+### Fixed
+- Mobile/Safari batch uploads now resolve `process_upload.php` to an explicit same-origin URL instead of relying on a relative fetch target.
+- Upload requests now read the raw response before parsing JSON so PHP/hosting error pages are reported as server-response errors instead of generic browser exceptions.
+- Each upload request automatically retries once after a short delay when the browser/network request itself fails.
+- Files that still fail at the request/upload layer remain in a client-side retry queue instead of being discarded at the end of the batch.
+
+### Changed
+- When any files fail before PHP can accept them, the main button becomes `Retry Failed Uploads (N)` and retries only those files.
+- AI/OCR failures that reached PHP remain separate from upload/request failures and continue to be saved as pending processing entries.
+
 ## [1.2.30] - 2026-07-25
 
 ### Changed
