@@ -24,3 +24,9 @@
 - Add missing project membership during linking without promoting account roles or existing grants.
 - Require explicit review for unspecified source permissions; enforce linked permission ceilings, including for global super admins.
 - Commit mappings and membership atomically in the central directory after private backup.
+
+### Hosting data preservation
+- Keep samples outside runtime folders; ignore the entire Finances runtime tree except HTTP protection.
+- Add CI guards against tracked live data/private settings and editing/deleting the historical Finances configuration.
+- Back up the previous central directory alongside exact budget bytes before linking.
+- Document pre-deployment hosting backups, no-overwrite configuration handling, and separate server deployment verification.

@@ -89,6 +89,7 @@ test('preview, stale rejection, explicit mapping, existing-data access, isolatio
  assert.equal((await admin.apply()).status,400); // consumed preview cannot be replayed
  assert.equal((await admin.preview('old-jason',id('new-jason'))).status,200);
  const previewNonce=admin.nonce;
+ const directoryBeforeLink=state();
  assert.equal((await admin.apply()).status,303);sameBudgets();
  assert.equal(state().users[id('new-jason')].projects.finances,'member');
  assert.equal(state().users[id('new-jason')].role,'user');
@@ -96,6 +97,7 @@ test('preview, stale rejection, explicit mapping, existing-data access, isolatio
  let links=mappings();assert.equal(links.links[id('new-jason')].legacyId,'old-jason');assert.equal(links.history.length,1);
  const backups=fs.readdirSync(linkDir).filter(n=>/^backup-.*\.json$/.test(n));assert.equal(backups.length,1);
  const backup=JSON.parse(fs.readFileSync(path.join(linkDir,backups[0]))).records;
+ assert.deepEqual(backup.previousDirectory,directoryBeforeLink);
  assert.equal(backup.snapshot.budget,jasonBytes);assert.equal(backup.snapshot.legacyAccount.password,'legacy-jason-password');
  assert.equal((await admin.apply({nonce:previewNonce})).status,400);
  assert.equal((await admin.preview('old-jason',id('new-hannah'))).status,400);

@@ -11,3 +11,7 @@
 /config.local.php
 /config.private.php
 /security.md
+
+# Entire runtime tree, including future migration files. Keep only HTTP protection.
+/data/*
+!/data/.htaccess

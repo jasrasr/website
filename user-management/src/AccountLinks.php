@@ -85,6 +85,7 @@ final class AccountLinks
                 JsonStore::update($storage . '/backup-' . $backupId . '.json', fn(array $unused): array => [
                     'project' => $fresh['project'], 'actorId' => $actorId, 'targetId' => $fresh['targetId'],
                     'legacyId' => $fresh['legacyId'], 'snapshot' => $snapshot, 'previousLinks' => $r,
+                    'previousDirectory' => $state,
                     'previousProjectRole' => $fresh['existingRole'], 'effectiveRole' => $fresh['effectiveRole'],
                 ]);
                 $link = ['legacyId' => $fresh['legacyId'], 'linkedAt' => gmdate(DATE_ATOM),
