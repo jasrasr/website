@@ -57,3 +57,5 @@ fs/storage/*
 # Example/sample files
 how-much-time-worked/example.jpg
 how-much-time-worked/Original HEIC/
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
