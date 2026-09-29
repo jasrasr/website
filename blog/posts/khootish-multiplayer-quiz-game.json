@@ -3,9 +3,10 @@
     "filename": "khootish-multiplayer-quiz-game.json",
     "author": "Jason Lamb (with help from ChatGPT)",
     "created_date": "2026-09-16",
-    "modified_date": "2026-09-21",
-    "revision": "1.0.2",
+    "modified_date": "2026-09-29",
+    "revision": "1.0.3",
     "changelog": [
+      "1.0.3: Rewrite automated article narration in neutral third person.",
       "1.0.2: Add conservative WordPress category mapping.",
       "1.0.1: Resolve cover media relative to the blog directory.",
       "1.0.0: Added project article to the JSON blog with generated cover image."
@@ -14,7 +15,7 @@
   "slug": "khootish-multiplayer-quiz-game",
   "title": "Khootish: Building a Reusable Quiz Game for a Room Full of Players",
   "date": "2026-09-16",
-  "updated": "2026-09-16",
+  "updated": "2026-09-29",
   "author": "Jason Lamb",
   "tags": [
     "Church and games"
@@ -27,6 +28,13 @@
     "src": "media/derivatives/2026/09/khootish-multiplayer-quiz-game_640w.jpg",
     "alt": "Khootish: Building a Reusable Quiz Game for a Room Full of Players cover image"
   },
-  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/khootish-multiplayer-quiz-game_640w.jpg\" alt=\"Khootish: Building a Reusable Quiz Game for a Room Full of Players cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>A group quiz has more moving parts than a question and four buttons. People need to join, the host needs to control the room, and everybody needs to agree on when time is up. Khootish is my project for bringing those pieces together.</p>\n<p>The app provides separate administration, host, projector, and mobile answer views. A reusable quiz library and question bank allow questions to be written once and used in different games. Players join with a six-digit code and can choose a team color.</p>\n<p>Questions have four choices and one correct answer. The documented timer is 30 seconds, with correct-answer points declining as time passes. Wrong answers receive zero points, and results and standings appear after each question. Completed games can be kept in history and replayed.</p>\n<p>The timer and score decisions are controlled on the server. That is important when several phones are responding at nearly the same time. A browser's display should not independently decide whether an answer is valid after the round has ended.</p>\n<p>The JSON storage uses dedicated locks around game changes, including joins, answers, and state transitions. Duplicate-answer validation and scoring happen together. These are less visible features than the leaderboard, but they help the leaderboard mean something.</p>\n<p>The documented design targets dozens of contestants on shared hosting. A much larger event would be a different infrastructure problem, and I am not treating a configured player limit as a benchmark result.</p>\n<p>The appeal of this project is reuse. A good set of questions should be easy to bring back, and the host should spend the session running the game rather than rebuilding the mechanics. The technology should keep the pace, then get out of the room's way.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/khootish\">Explore the project on GitHub</a></p>\n"
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/khootish-multiplayer-quiz-game_640w.jpg\" alt=\"Khootish: Building a Reusable Quiz Game for a Room Full of Players cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>A group quiz has more moving parts than a question and four buttons. People need to join, the host needs to control the room, and everybody needs to agree on when time is up. Khootish brings those pieces together.</p>\n<p>The app provides separate administration, host, projector, and mobile answer views. A reusable quiz library and question bank allow questions to be written once and used in different games. Players join with a six-digit code and can choose a team color.</p>\n<p>Questions have four choices and one correct answer. The documented timer is 30 seconds, with correct-answer points declining as time passes. Wrong answers receive zero points, and results and standings appear after each question. Completed games can be kept in history and replayed.</p>\n<p>The timer and score decisions are controlled on the server. That is important when several phones are responding at nearly the same time. A browser's display should not independently decide whether an answer is valid after the round has ended.</p>\n<p>The JSON storage uses dedicated locks around game changes, including joins, answers, and state transitions. Duplicate-answer validation and scoring happen together. These are less visible features than the leaderboard, but they help the leaderboard mean something.</p>\n<p>The documented design targets dozens of contestants on shared hosting. A much larger event would be a different infrastructure problem, and a configured player limit should not be treated as a benchmark result.</p>\n<p>The appeal of this project is reuse. A good set of questions should be easy to bring back, and the host should spend the session running the game rather than rebuilding the mechanics. The technology should keep the pace, then get out of the room's way.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/khootish\">Explore the project on GitHub</a></p>\n\n<!-- blog-revision-history:start -->\n<section class=\"revision-history\" aria-label=\"Article update history\">\n<h2>Update history</h2>\n<p>These notes record article updates associated with repository changes. The original publication date is retained.</p>\n<ul>\n<li id=\"revision-2026-09-29-editorial-third-person\"><time datetime=\"2026-09-29\">2026-09-29</time> — Converted automated article narration to neutral third person and added public update history. No application functionality changed. <a href=\"https://github.com/jasrasr/website/pull/90\">GitHub source</a></li>\n</ul>\n</section>\n<!-- blog-revision-history:end -->\n",
+  "revision_history": [
+    {
+      "id": "2026-09-29-editorial-third-person",
+      "date": "2026-09-29",
+      "summary": "Converted automated article narration to neutral third person and added public update history. No application functionality changed.",
+      "source_url": "https://github.com/jasrasr/website/pull/90"
+    }
+  ]
 }
-

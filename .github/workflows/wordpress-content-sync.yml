@@ -1,0 +1,98 @@
+name: Sync existing WordPress articles
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'blog/posts/**'
+      - 'blog/tools/Blog-Revisions.ps1'
+      - 'blog/tools/Sync-WordPressContent.ps1'
+      - 'blog/tools/wordpress-state.json'
+      - '.github/workflows/wordpress-content-sync.yml'
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: Apply updates (false previews only)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: wordpress-content-sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    # Secrets and writes are never available to pull-request-triggered code.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Always use the latest main after acquiring the concurrency slot.
+          # A queued old run must not revert newer article text.
+          ref: main
+          fetch-depth: 0
+      - name: Validate article voice and revision history
+        shell: pwsh
+        env:
+          BASE_REF: ${{ github.event.before }}
+        run: |
+          ./blog/tools/Test-AutomatedVoice.ps1
+          if ($env:BASE_REF -and $env:BASE_REF -notmatch '^0+$') {
+            ./blog/tools/Test-BlogRevisions.ps1 -BaseRef $env:BASE_REF
+          } else {
+            ./blog/tools/Test-BlogRevisions.ps1
+          }
+          ./blog/tools/Test-WordPressContentSync.ps1
+      - name: Verify required secrets are configured
+        shell: pwsh
+        env:
+          WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+          WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+          WORDPRESS_BACKUP_PASSWORD: ${{ secrets.WORDPRESS_BACKUP_PASSWORD }}
+        run: |
+          foreach ($name in @('WORDPRESS_USERNAME','WORDPRESS_APP_PASSWORD','WORDPRESS_BACKUP_PASSWORD')) {
+            if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) {
+              throw "Missing repository Actions secret: $name. Configure it and rerun this workflow."
+            }
+          }
+      - name: Sync text to existing posts
+        id: sync
+        shell: pwsh
+        env:
+          WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+          WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+          APPLY_CHANGES: ${{ github.event_name == 'push' || inputs.apply }}
+        run: |
+          $options = @{
+            SiteUrl = 'https://jasonlamb.me'
+            BackupPath = (Join-Path $env:RUNNER_TEMP 'wp-content-backups')
+          }
+          if ($env:APPLY_CHANGES -eq 'true') { $options.Commit = $true }
+          ./blog/tools/Sync-WordPressContent.ps1 @options
+      - name: Encrypt any pre-update backups
+        id: encrypt
+        if: always()
+        shell: bash
+        env:
+          WORDPRESS_BACKUP_PASSWORD: ${{ secrets.WORDPRESS_BACKUP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          backup_dir="$RUNNER_TEMP/wp-content-backups"
+          if [ -d "$backup_dir" ] && [ -n "$(ls -A "$backup_dir")" ]; then
+            test -n "$WORDPRESS_BACKUP_PASSWORD"
+            tar -czf "$RUNNER_TEMP/wp-content-backups.tar.gz" -C "$backup_dir" .
+            openssl enc -aes-256-cbc -salt -pbkdf2 -iter 200000 -md sha256 \
+              -in "$RUNNER_TEMP/wp-content-backups.tar.gz" \
+              -out "$RUNNER_TEMP/wp-content-backups.enc" \
+              -pass env:WORDPRESS_BACKUP_PASSWORD
+            echo 'created=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Retain encrypted recovery backup
+        if: always() && steps.encrypt.outputs.created == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: wordpress-content-backup-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/wp-content-backups.enc
+          retention-days: 30
+          if-no-files-found: error

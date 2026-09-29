@@ -3,18 +3,19 @@
     "filename": "browser-screen-size-debugging-tool.json",
     "author": "Jason Lamb (with help from ChatGPT)",
     "created_date": "2026-09-16",
-    "modified_date": "2026-09-21",
-    "revision": "1.0.2",
+    "modified_date": "2026-09-29",
+    "revision": "1.0.3",
     "changelog": [
+      "1.0.3: Rewrite automated article narration in neutral third person.",
       "1.0.2: Add conservative WordPress category mapping.",
       "1.0.1: Resolve cover media relative to the blog directory.",
       "1.0.0: Added project article to the JSON blog with generated cover image."
     ]
   },
   "slug": "browser-screen-size-debugging-tool",
-  "title": "A Screen-Size Page for the Layout That Looks Fine on My Computer",
+  "title": "A Screen-Size Page for Debugging Layout Differences",
   "date": "2026-09-16",
-  "updated": "2026-09-16",
+  "updated": "2026-09-29",
   "author": "Jason Lamb",
   "tags": [
     "Web foundations"
@@ -25,8 +26,15 @@
   "excerpt": "A small viewport-inspection page that displays browser dimensions, pixel ratio, and orientation while the window changes.",
   "cover": {
     "src": "media/derivatives/2026/09/browser-screen-size-debugging-tool_640w.jpg",
-    "alt": "A Screen-Size Page for the Layout That Looks Fine on My Computer cover image"
+    "alt": "A Screen-Size Page for Debugging Layout Differences cover image"
   },
-  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/browser-screen-size-debugging-tool_640w.jpg\" alt=\"A Screen-Size Page for the Layout That Looks Fine on My Computer cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>There is a classic stage in web development where a layout looks fine on my computer and mysterious everywhere else. My Screen Size page gives that conversation some numbers.</p>\n<p>The page shows the current viewport dimensions alongside the browser's inner and outer window sizes, screen dimensions, device pixel ratio, and orientation. As the window changes, the readout updates.</p>\n<p>Those measurements describe related but different things. The viewport is the area available to the page; the physical screen and the browser's outer window are not necessarily the same size. Browser controls, resizing, zoom, and device scaling can all affect what someone is actually looking at.</p>\n<p>For a support or layout discussion, the useful result is a compact page someone can open and report back from. Instead of only saying that a button is off-screen, there is a specific browser view to compare with the layout's assumptions.</p>\n<p>The page does not fix responsive CSS on its own. It makes a few otherwise hidden conditions visible, which helps narrow the next question. A screenshot and the relevant dimensions can be much more informative together than either one alone.</p>\n<p>I keep small tools like this because they reduce guesswork around other projects. A one-purpose diagnostic page does not need accounts, saved dashboards, or an elaborate setup to be worth using.</p>\n<p>Sometimes the fastest path to fixing an interface is first finding out how much room the interface really has.</p>\n<p><a href=\"https://github.com/jasrasr/website/blob/main/screensize.php\">Explore the project on GitHub</a></p>\n"
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/09/browser-screen-size-debugging-tool_640w.jpg\" alt=\"A Screen-Size Page for Debugging Layout Differences cover image\" loading=\"eager\" decoding=\"async\"></figure>\n<p>There is a classic stage in web development where a layout looks fine on one computer and mysterious everywhere else. The Screen Size page gives that conversation some numbers.</p>\n<p>The page shows the current viewport dimensions alongside the browser's inner and outer window sizes, screen dimensions, device pixel ratio, and orientation. As the window changes, the readout updates.</p>\n<p>Those measurements describe related but different things. The viewport is the area available to the page; the physical screen and the browser's outer window are not necessarily the same size. Browser controls, resizing, zoom, and device scaling can all affect what someone is actually looking at.</p>\n<p>For a support or layout discussion, the useful result is a compact page someone can open and report back from. Instead of only saying that a button is off-screen, there is a specific browser view to compare with the layout's assumptions.</p>\n<p>The page does not fix responsive CSS on its own. It makes a few otherwise hidden conditions visible, which helps narrow the next question. A screenshot and the relevant dimensions can be much more informative together than either one alone.</p>\n<p>Small tools like this reduce guesswork around other projects. A one-purpose diagnostic page does not need accounts, saved dashboards, or an elaborate setup to be worth using.</p>\n<p>Sometimes the fastest path to fixing an interface is first finding out how much room the interface really has.</p>\n<p><a href=\"https://github.com/jasrasr/website/blob/main/screensize.php\">Explore the project on GitHub</a></p>\n\n<!-- blog-revision-history:start -->\n<section class=\"revision-history\" aria-label=\"Article update history\">\n<h2>Update history</h2>\n<p>These notes record article updates associated with repository changes. The original publication date is retained.</p>\n<ul>\n<li id=\"revision-2026-09-29-editorial-third-person\"><time datetime=\"2026-09-29\">2026-09-29</time> — Converted automated article narration to neutral third person and added public update history. No application functionality changed. <a href=\"https://github.com/jasrasr/website/pull/90\">GitHub source</a></li>\n</ul>\n</section>\n<!-- blog-revision-history:end -->\n",
+  "revision_history": [
+    {
+      "id": "2026-09-29-editorial-third-person",
+      "date": "2026-09-29",
+      "summary": "Converted automated article narration to neutral third person and added public update history. No application functionality changed.",
+      "source_url": "https://github.com/jasrasr/website/pull/90"
+    }
+  ]
 }
-

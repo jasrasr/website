@@ -1,7 +1,85 @@
 # WordPress Scheduler
 
-Revision: 1.0.0  
-Modified: 2026-09-16
+## Automatic updates from repository changes
+
+One existing WordPress post is maintained per tracked project. For a reader-facing change, include a short public revision note in that article's source JSON in the same PR. A code-only commit without an article change does not trigger a WordPress update. The workflow does not infer features from code or generate new articles.
+
+1. Update `blog/posts/<slug>.json` if the project's description or instructions need to change.
+2. Add a factual third-person revision note with a unique stable ID and the relevant GitHub PR or full commit link. Example (replace the summary, ID and PR link for the actual change):
+
+```powershell
+./blog/tools/Add-BlogRevision.ps1 `
+    -Slug 'personal-budget-tracker-php-json' `
+    -Id '2026-09-29-budget-import-validation' `
+    -Summary 'Updated the budget import documentation to explain validation errors.' `
+    -SourceUrl 'https://github.com/jasrasr/website/pull/90'
+./blog/tools/Build-Blog.ps1 -RootPath './blog'
+./blog/tools/Test-AutomatedVoice.ps1
+./blog/tools/Test-BlogRevisions.ps1
+```
+
+3. Commit the article and generated index/RSS with the project change. Merge the reviewed PR into `main`.
+4. **Sync existing WordPress articles** automatically compares the tracked posts and updates only changed text. Scheduled posts keep their schedule; published posts stay published; both retain author, slug and original date.
+
+The `revision_history` array is the canonical public changelog. The helper writes its HTML footer into `content_html`, so the static blog and WordPress show the same history. Each entry displays a date, summary and GitHub source link. Never edit or delete old entries; append a correction with a new ID. Repeating an identical helper command is a no-op; reusing an ID for different text fails. Rendering replaces the existing generated footer, so retries never append a second copy.
+
+Article text changes require a new history entry in CI. Changes that do not affect readers can stay in the project's ordinary changelog without creating an article entry. The shared `website` repo is the scope of this workflow; updating another repository does not trigger it. Add the relevant article change to this repo to document an external update.
+
+### One-time GitHub setup
+
+In **jasrasr/website → Settings → Secrets and variables → Actions**, add these repository secrets:
+
+| Secret | Value |
+| --- | --- |
+| `WORDPRESS_USERNAME` | Existing integration account with permission to edit the tracked posts |
+| `WORDPRESS_APP_PASSWORD` | That account's WordPress application password |
+| `WORDPRESS_BACKUP_PASSWORD` | A separate strong password for encrypting recovery backups; retain it in a password manager |
+
+These secrets are not configured by this PR. Without them, the workflow fails before making WordPress writes. The first qualifying merge after setup syncs the current corrected text and its editorial revision note. If the merge occurs before setup, configure the secrets, then manually run **Sync existing WordPress articles** on `main`: leave **apply** false for a read-only preview, then run with **apply** true to update.
+
+The workflow is limited to `main`, serializes sync runs, checks out the latest `main` when each run starts, and never commits back to GitHub. It compares the current article text on every run, so unchanged posts are skipped and missed intermediate commits are reconciled. Manual edits made directly in WordPress can be overwritten by the source on a later sync; keep article text edits in GitHub. Concurrent edits during a run stop that post's update.
+
+Original WordPress content is saved before updates, encrypted, and retained as a workflow artifact for 30 days (including on a later sync failure). No plaintext draft backup is uploaded. To recover a downloaded `wp-content-backups.enc`, with `WORDPRESS_BACKUP_PASSWORD` loaded locally:
+
+```powershell
+openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -md sha256 -in wp-content-backups.enc -out wp-content-backups.tar.gz -pass env:WORDPRESS_BACKUP_PASSWORD
+tar -xzf wp-content-backups.tar.gz
+```
+
+The extracted JSON contains original raw post text for manual restoration. Changing the encryption secret requires retaining the previous password to open older backups.
+
+## Correcting article text on existing WordPress posts
+
+Automated project articles follow [the neutral third-person editorial policy](../EDITORIAL.md).
+Changing source JSON or deploying the static blog does **not** update existing WordPress text.
+`Publish-WordPress.ps1 -UpdateExisting` handles taxonomy, not article text.
+
+Use PowerShell 7 with the existing application-password environment variables to review text changes:
+
+```powershell
+./blog/tools/Test-AutomatedVoice.ps1
+./blog/tools/Sync-WordPressContent.ps1 -SiteUrl 'https://jasonlamb.me' -Slug 'personal-budget-tracker-php-json'
+```
+
+Then apply the reviewed correction to the example post:
+
+```powershell
+./blog/tools/Sync-WordPressContent.ps1 -SiteUrl 'https://jasonlamb.me' -Slug 'personal-budget-tracker-php-json' -Commit
+```
+
+Omit `-Slug` to preview all tracked project articles; add `-Commit` to apply that batch.
+The command reads each tracked ID using authenticated edit context and verifies its slug and site.
+The account must have edit permission for the existing posts; an Author account cannot necessarily edit posts belonging to a different author.
+Preflight failure stops the batch before any writes. Identical content is skipped.
+Only title, excerpt and body are updated. No posts are created, media uploaded, or author, slug, status, schedule, tags or categories sent in the update payload.
+The leading static cover figure is removed, as in the original publisher; the existing featured image stays assigned.
+
+Commit mode saves the original raw posts under `.wordpress-content-backups` in the user's home directory before the first write. `-BackupPath` can override this; keep backups outside a public web root and outside source control, since they can contain private drafts. Retain the backup for manual restoration if needed. Each post is reread immediately before its update and the command stops if it changed since preflight. This reduces concurrent-edit risk but is not a server-side transaction or an atomic batch: previous successful updates remain applied after a later failure. Rerunning skips text that already matches.
+
+The preview lists changed fields, not a full textual diff; review the source changes in the PR. Commit mode reads current source and WordPress content again, so rerun the preview if either has changed.
+
+Revision: 1.1.0
+Modified: 2026-09-29
 
 `Publish-WordPress.ps1` publishes the existing JSON articles in `blog/posts` to a self-hosted WordPress site through the built-in WordPress REST API. It is separate from the static blog build.
 

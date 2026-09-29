@@ -20,7 +20,7 @@
       "used_in": [
         "authenticated-directory-viewer"
       ],
-      "alt": "Authenticated Directory Viewer cover image",
+      "alt": "A File Listing with Favorites, Sorting, and Useful Context cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -39,7 +39,7 @@
       "used_in": [
         "browser-gps-trip-eta-tracker"
       ],
-      "alt": "Browser GPS Trip ETA Tracker cover image",
+      "alt": "Building a Browser Trip Tracker That Shows Its Assumptions cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -58,7 +58,7 @@
       "used_in": [
         "browser-odometer-speedometer-emulator"
       ],
-      "alt": "Browser Odometer Speedometer Emulator cover image",
+      "alt": "Building an Odometer That Rolls Forward in the Browser cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -77,7 +77,7 @@
       "used_in": [
         "browser-password-generator-experiment"
       ],
-      "alt": "Browser Password Generator Experiment cover image",
+      "alt": "Inside a Browser Password Generator Experiment cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -96,7 +96,7 @@
       "used_in": [
         "browser-screen-size-debugging-tool"
       ],
-      "alt": "Browser Screen Size Debugging Tool cover image",
+      "alt": "A Screen-Size Page for Debugging Layout Differences cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -115,7 +115,7 @@
       "used_in": [
         "building-my-own-ticketing-app"
       ],
-      "alt": "Building My Own Ticketing App cover image",
+      "alt": "Building a Ticketing App: From Request to Resolution cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -134,7 +134,7 @@
       "used_in": [
         "centralized-php-directory-browser"
       ],
-      "alt": "Centralized PHP Directory Browser cover image",
+      "alt": "One PHP Directory Browser, Many Folders cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -153,7 +153,7 @@
       "used_in": [
         "church-youth-live-scoreboard"
       ],
-      "alt": "Church Youth Live Scoreboard cover image",
+      "alt": "Building a Scoreboard That Works for the Room and the Scorekeeper cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -172,7 +172,7 @@
       "used_in": [
         "construction-sign-text-generator"
       ],
-      "alt": "Construction Sign Text Generator cover image",
+      "alt": "A Construction Sign Generator for Messages That Need More Orange cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -191,7 +191,7 @@
       "used_in": [
         "cooper-integration-countdown-page"
       ],
-      "alt": "Cooper Integration Countdown Page cover image",
+      "alt": "A Countdown Page for a Milestone with a Specific Date cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -210,7 +210,7 @@
       "used_in": [
         "cross-country-trip-timeline-dashboard"
       ],
-      "alt": "Cross Country Trip Timeline Dashboard cover image",
+      "alt": "Turning a Cross-Country Trip into a Readable Timeline cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -229,7 +229,7 @@
       "used_in": [
         "daily-babe-daily-photo-tracker"
       ],
-      "alt": "Daily Babe Daily Photo Tracker cover image",
+      "alt": "Daily-babe: Turning One Photo a Day into a Growing Story cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -248,7 +248,7 @@
       "used_in": [
         "debt-payoff-planner-scenarios"
       ],
-      "alt": "Debt Payoff Planner Scenarios cover image",
+      "alt": "Building a Debt Payoff Planner That Makes Scenarios Easier to Compare cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -267,7 +267,7 @@
       "used_in": [
         "dell-service-tag-lookup-tool"
       ],
-      "alt": "Dell Service Tag Lookup Tool cover image",
+      "alt": "A Small Shortcut for a Repetitive IT Task: Dell Service Tag Lookup cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -286,7 +286,7 @@
       "used_in": [
         "family-gps-tracker-web-app"
       ],
-      "alt": "Family GPS Tracker Web App cover image",
+      "alt": "Family GPS Tracker: Shared Location with Clear Boundaries cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -305,7 +305,7 @@
       "used_in": [
         "freshservice-ticket-progress-dashboard"
       ],
-      "alt": "Freshservice Ticket Progress Dashboard cover image",
+      "alt": "Beyond the Ticket Count: Building a Freshservice Progress Dashboard cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -324,7 +324,7 @@
       "used_in": [
         "home-warranty-tracker"
       ],
-      "alt": "Home Warranty Tracker cover image",
+      "alt": "Building a Warranty Tracker Before the Warranty Is Needed cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -343,7 +343,7 @@
       "used_in": [
         "impossible-click-browser-game"
       ],
-      "alt": "Impossible Click Browser Game cover image",
+      "alt": "Impossible Click: Building a Button That Refuses to Cooperate cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -362,7 +362,7 @@
       "used_in": [
         "json-flat-file-blog-powershell"
       ],
-      "alt": "JSON Flat File Blog PowerShell cover image",
+      "alt": "A Blog Made of JSON Files—and a Little PowerShell cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -381,7 +381,7 @@
       "used_in": [
         "khootish-multiplayer-quiz-game"
       ],
-      "alt": "Khootish Multiplayer Quiz Game cover image",
+      "alt": "Khootish: Building a Reusable Quiz Game for a Room Full of Players cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -400,7 +400,7 @@
       "used_in": [
         "license-plate-photo-logger"
       ],
-      "alt": "License Plate Photo Logger cover image",
+      "alt": "Turning License Plate Photos into Searchable Records cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -419,7 +419,7 @@
       "used_in": [
         "life-group-attendance-portal"
       ],
-      "alt": "Life Group Attendance Portal cover image",
+      "alt": "Building a Life Group Attendance Portal for the People Behind the Check-In cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -438,7 +438,7 @@
       "used_in": [
         "link-hub-project-notes"
       ],
-      "alt": "Link Hub Project Notes cover image",
+      "alt": "A Link Hub on the Drawing Board cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -457,7 +457,7 @@
       "used_in": [
         "mpg-tracker-partial-fill-ups"
       ],
-      "alt": "MPG Tracker Partial Fill Ups cover image",
+      "alt": "Building an MPG Tracker That Understands Partial Fill-Ups cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -476,7 +476,7 @@
       "used_in": [
         "old-phone-keypad-tones-browser"
       ],
-      "alt": "Old Phone Keypad Tones Browser cover image",
+      "alt": "Recreating Old Phone Keypad Tones in the Browser cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -495,7 +495,7 @@
       "used_in": [
         "personal-budget-tracker-php-json"
       ],
-      "alt": "Personal Budget Tracker PHP JSON cover image",
+      "alt": "A Personal Budget Tracker Built Around Everyday Numbers cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -514,7 +514,7 @@
       "used_in": [
         "powershell-numbered-web-test-pages"
       ],
-      "alt": "PowerShell Numbered Web Test Pages cover image",
+      "alt": "A Tiny PowerShell Script for Numbered Web Test Pages cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -533,7 +533,7 @@
       "used_in": [
         "powershell-web-file-manager"
       ],
-      "alt": "PowerShell Web File Manager cover image",
+      "alt": "Connecting PowerShell Uploads to a Web File Manager cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -552,7 +552,7 @@
       "used_in": [
         "psnotify-powershell-job-notifications"
       ],
-      "alt": "PSNotify PowerShell Job Notifications cover image",
+      "alt": "PSNotify: Giving Long-Running PowerShell Scripts Somewhere to Report Back cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -571,7 +571,7 @@
       "used_in": [
         "qr-box-inventory-system"
       ],
-      "alt": "QR Box Inventory System cover image",
+      "alt": "QR Labels for Finding Box Contents Without Opening Every Box cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -590,7 +590,7 @@
       "used_in": [
         "random-wheel-choice-picker"
       ],
-      "alt": "Random Wheel Choice Picker cover image",
+      "alt": "Random Wheel: Sometimes the Right App Is Just a Spinning Wheel cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -609,7 +609,7 @@
       "used_in": [
         "raspberry-pi-time-clock-kiosk"
       ],
-      "alt": "Raspberry Pi Time Clock Kiosk cover image",
+      "alt": "Turning a Raspberry Pi into a Clock, Weather, and Notice Display cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -628,7 +628,7 @@
       "used_in": [
         "reusable-php-json-project-foundation"
       ],
-      "alt": "Reusable PHP JSON Project Foundation cover image",
+      "alt": "1-Framework: Finding the Parts Worth Reusing cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -647,7 +647,7 @@
       "used_in": [
         "robot-or-human-hold-button"
       ],
-      "alt": "Robot Or Human Hold Button cover image",
+      "alt": "Robot or Human? A Playful Press-and-Hold Web Experiment cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -666,7 +666,7 @@
       "used_in": [
         "shared-text-between-devices"
       ],
-      "alt": "Shared Text Between Devices cover image",
+      "alt": "Shared Text: A Small Scratch Pad for Moving Text Between Devices cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -685,7 +685,7 @@
       "used_in": [
         "simple-links-page-template"
       ],
-      "alt": "Simple Links Page Template cover image",
+      "alt": "A Simple Links-Page Template with Room to Grow cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -704,7 +704,7 @@
       "used_in": [
         "smart-404-redirect-manager"
       ],
-      "alt": "Smart 404 Redirect Manager cover image",
+      "alt": "Making a 404 Page Useful Without Guessing Too Aggressively cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -723,7 +723,7 @@
       "used_in": [
         "timeclock-photo-hours-logger"
       ],
-      "alt": "Timeclock Photo Hours Logger cover image",
+      "alt": "From Clock-Out Slip to Work-Hours Log cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -742,7 +742,7 @@
       "used_in": [
         "tv-binge-board-watch-tracker"
       ],
-      "alt": "TV Binge Board Watch Tracker cover image",
+      "alt": "TV Binge Board: Keeping Track of Shows in Progress cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -761,7 +761,7 @@
       "used_in": [
         "two-pane-ai-writing-tool"
       ],
-      "alt": "Two Pane AI Writing Tool cover image",
+      "alt": "A Two-Pane Writing Tool That Keeps the Draft in View cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -780,7 +780,7 @@
       "used_in": [
         "visual-ping-webhook-project-sketch"
       ],
-      "alt": "Visual Ping Webhook Project Sketch cover image",
+      "alt": "A Webhook Idea That Has Not Become an App Yet cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -799,7 +799,7 @@
       "used_in": [
         "weather-dashboard-location-accuracy"
       ],
-      "alt": "Weather Dashboard Location Accuracy cover image",
+      "alt": "A Weather Dashboard with Explicit Location Selection cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
@@ -818,7 +818,7 @@
       "used_in": [
         "windows-computer-heartbeat-dashboard"
       ],
-      "alt": "Windows Computer Heartbeat Dashboard cover image",
+      "alt": "Computer Heartbeats: Making Windows Device Check-Ins Easier to See cover image",
       "credit": "",
       "source": "committed-derivative",
       "health": {
