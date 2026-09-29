@@ -22,6 +22,9 @@
 - Add an editorial policy and automated-series voice check.
 - Add a dry-run-first content sync for existing WordPress posts, with ID/slug/site checks, original-text backups and concurrent-edit detection. Preserve live authors and schedules.
 - Add isolated API-mock tests and blog validation CI.
+- Add append-only public article revision records with unique IDs, dates, summaries and GitHub links; render a single deterministic history footer in the static blog and WordPress.
+- Add a local revision-note helper and validation requiring a new note when article text changes.
+- Automatically sync existing posts after relevant article changes reach `main`, with serialized latest-main runs, manual preview/retry, unchanged-post skipping and encrypted recovery artifacts.
 
 ## v1.5.0 — 2026-09-24
 

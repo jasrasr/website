@@ -9,3 +9,5 @@ The project-series articles are automation-authored summaries, not personal stat
 - Keep existing WordPress authors and publication dates when correcting text. Source-file contributor metadata identifies file maintenance, not the live WordPress author.
 
 Run `pwsh -File blog/tools/Test-AutomatedVoice.ps1` before publishing or syncing the automated series. This checks the source articles named in `wordpress-state.json`; it is a review aid, not a substitute for reading the copy.
+
+For a reader-facing project change, revise the existing article as needed and use `tools/Add-BlogRevision.ps1` to add a short public note in the same PR. Summaries must describe what actually changed; do not turn a code-only refactor into an invented feature announcement. The article's `revision_history` records are append-only and link to the source PR or commit. Include an editorial note for wording corrections, explicitly distinguishing them from application changes. Run `tools/Test-BlogRevisions.ps1` before committing. See `tools/README-WordPress.md` for setup and the automatic main-branch sync.

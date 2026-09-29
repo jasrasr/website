@@ -19,6 +19,7 @@ param(
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Blog-Revisions.ps1')
 if ([string]::IsNullOrWhiteSpace($Username) -or [string]::IsNullOrWhiteSpace($AppPassword)) {
     throw 'Read-only preflight requires WORDPRESS_USERNAME and WORDPRESS_APP_PASSWORD.'
 }
@@ -62,7 +63,7 @@ foreach ($key in $keys) {
     foreach ($field in @('title','excerpt','content_html')) {
         if ([string]::IsNullOrWhiteSpace([string]$post.$field)) { throw "Missing $field in $key" }
     }
-    $content = [regex]::Replace([string]$post.content_html,
+    $content = [regex]::Replace((Get-BlogRevisionContent $post),
         '(?is)^\s*<figure\b[^>]*class=["''][^"'']*\bpost-cover\b[^"'']*["''][^>]*>.*?</figure>\s*', '')
     if ([string]::IsNullOrWhiteSpace($content)) { throw "Empty WordPress body: $key" }
     $remote = Read-WpPost $id

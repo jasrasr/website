@@ -12,8 +12,9 @@ $argsForSync = @{
 $fixtureState = @{ posts=@{} }
 foreach ($id in @(1,2)) {
     $slug = "article-$id"
-    @{ slug=$slug; title="Article $id"; excerpt='Neutral excerpt'; content_html='<figure class="post-cover"><img src="media/cover.jpg"></figure><p>The project helps users.</p>' } |
-        ConvertTo-Json | Set-Content (Join-Path $temp "posts/$slug.json")
+    @{ slug=$slug; title="Article $id"; excerpt='Neutral excerpt'; content_html='<figure class="post-cover"><img src="media/cover.jpg"></figure><p>The project helps users.</p>';
+        revision_history=@(@{id='fixture';date='2026-09-29';summary='Updated the article.';source_url='https://github.com/jasrasr/website/pull/90'}) } |
+        ConvertTo-Json -Depth 10 | Set-Content (Join-Path $temp "posts/$slug.json")
     $fixtureState.posts[$slug] = @{ wordpress_post_id=$id; wordpress_url="https://example.invalid/?p=$id" }
 }
 $fixtureState | ConvertTo-Json -Depth 10 | Set-Content $argsForSync.StatePath
@@ -44,6 +45,7 @@ function Invoke-RestMethod {
         $payload = $Body | ConvertFrom-Json
         Assert ((@($payload.PSObject.Properties.Name | Sort-Object) -join ',') -eq 'content,excerpt,title') 'Update contains fields beyond text'
         Assert ($payload.content -notmatch 'post-cover') 'Static cover must not be duplicated'
+        Assert ([regex]::Matches($payload.content, 'id="revision-fixture"').Count -eq 1) 'Expected exactly one public revision note'
         foreach ($key in @('title','excerpt','content')) { $global:WordPressSyncTestRemote[$id].$key.raw=$payload.$key }
     }
     else { throw "Unexpected method: $Method" }
