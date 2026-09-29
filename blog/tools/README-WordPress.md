@@ -1,7 +1,37 @@
 # WordPress Scheduler
 
-Revision: 1.0.0  
-Modified: 2026-09-16
+## Correcting article text on existing WordPress posts
+
+Automated project articles follow [the neutral third-person editorial policy](../EDITORIAL.md).
+Changing source JSON or deploying the static blog does **not** update existing WordPress text.
+`Publish-WordPress.ps1 -UpdateExisting` handles taxonomy, not article text.
+
+Use PowerShell 7 with the existing application-password environment variables to review text changes:
+
+```powershell
+./blog/tools/Test-AutomatedVoice.ps1
+./blog/tools/Sync-WordPressContent.ps1 -SiteUrl 'https://jasonlamb.me' -Slug 'personal-budget-tracker-php-json'
+```
+
+Then apply the reviewed correction to the example post:
+
+```powershell
+./blog/tools/Sync-WordPressContent.ps1 -SiteUrl 'https://jasonlamb.me' -Slug 'personal-budget-tracker-php-json' -Commit
+```
+
+Omit `-Slug` to preview all tracked project articles; add `-Commit` to apply that batch.
+The command reads each tracked ID using authenticated edit context and verifies its slug and site.
+The account must have edit permission for the existing posts; an Author account cannot necessarily edit posts belonging to a different author.
+Preflight failure stops the batch before any writes. Identical content is skipped.
+Only title, excerpt and body are updated. No posts are created, media uploaded, or author, slug, status, schedule, tags or categories sent in the update payload.
+The leading static cover figure is removed, as in the original publisher; the existing featured image stays assigned.
+
+Commit mode saves the original raw posts under `.wordpress-content-backups` in the user's home directory before the first write. `-BackupPath` can override this; keep backups outside a public web root and outside source control, since they can contain private drafts. Retain the backup for manual restoration if needed. Each post is reread immediately before its update and the command stops if it changed since preflight. This reduces concurrent-edit risk but is not a server-side transaction or an atomic batch: previous successful updates remain applied after a later failure. Rerunning skips text that already matches.
+
+The preview lists changed fields, not a full textual diff; review the source changes in the PR. Commit mode reads current source and WordPress content again, so rerun the preview if either has changed.
+
+Revision: 1.1.0
+Modified: 2026-09-29
 
 `Publish-WordPress.ps1` publishes the existing JSON articles in `blog/posts` to a self-hosted WordPress site through the built-in WordPress REST API. It is separate from the static blog build.
 

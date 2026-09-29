@@ -1,0 +1,27 @@
+name: Blog validation
+on:
+  pull_request:
+    paths:
+      - 'blog/**'
+      - '.github/workflows/blog-validation.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'blog/**'
+      - '.github/workflows/blog-validation.yml'
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check automated article voice
+        shell: pwsh
+        run: ./blog/tools/Test-AutomatedVoice.ps1
+      - name: Test WordPress content sync without network access
+        shell: pwsh
+        run: ./blog/tools/Test-WordPressContentSync.ps1
+      - name: Test static blog build in an isolated copy
+        shell: pwsh
+        run: ./blog/tools/Test-Blog.ps1
