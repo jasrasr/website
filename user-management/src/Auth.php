@@ -32,10 +32,12 @@ final class Auth
     public function login(string $username, string $password): bool
     {
         $username = strtolower(trim($username));
+        $remoteIp = (string) ($_SERVER['REMOTE_ADDR'] ?? 'cli');
+        $rateLimitExempt = in_array($remoteIp, $this->config['rate_limit_exempt_ips'] ?? [], true);
         // Both account and direct peer IP limits persist across new browser sessions.
         $keys = ['user:' . hash('sha256', $username), 'ip:' . hash('sha256', $_SERVER['REMOTE_ADDR'] ?? 'cli')];
         $allowed = true;
-        JsonStore::update($this->config['data_path'] . '/attempts.json', function (array $r) use ($keys, &$allowed): array {
+        if (!$rateLimitExempt) JsonStore::update($this->config['data_path'] . '/attempts.json', function (array $r) use ($keys, &$allowed): array {
             $now = time();
             $r = array_filter($r, fn(array $v): bool => $v['until'] > $now);
             foreach ($keys as $key) {

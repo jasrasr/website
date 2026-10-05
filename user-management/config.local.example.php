@@ -9,6 +9,9 @@ return [
     'cookie_path' => '/',
     'secure_cookie' => true, // HTTPS required. Set false ONLY for local HTTP tests.
     'timeout' => 1800,
+    // Development only. Keep false and empty on production hosting.
+    'debug' => false,
+    'rate_limit_exempt_ips' => [],
     // Optional browser setup: choose a random secret of at least 32 characters.
     // Empty disables browser setup; CLI setup works without it. Remove after setup.
     'setup_key' => '',

@@ -14,6 +14,13 @@ function jasr_users_config(): array
     $local = is_file($file) ? require $file : [];
     if (!is_array($local)) throw new RuntimeException('Invalid user management configuration.');
     $config = array_replace($defaults, $local);
+    if (!is_bool($config['debug']) || !is_array($config['rate_limit_exempt_ips'])) {
+        throw new RuntimeException('Invalid development configuration.');
+    }
+    if ($config['debug']) {
+        error_reporting(E_ALL);
+        ini_set('display_errors', '1');
+    }
     if (!preg_match('~^/(?:[a-zA-Z0-9_-]+/)*$~D', $config['base_path']) ||
         !preg_match('~^/(?:[a-zA-Z0-9_-]+/)*$~D', $config['cookie_path'])) {
         throw new RuntimeException('Invalid identity URL paths.');

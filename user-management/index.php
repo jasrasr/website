@@ -57,6 +57,9 @@ try {
 } catch (Throwable $exception) {
     error_log('User management: ' . $exception->getMessage());
     http_response_code(503);
+    if (!empty($config['debug'] ?? false)) {
+        exit('User management error: ' . e($exception->getMessage()) . '<br>Client IP: ' . e((string)($_SERVER['REMOTE_ADDR'] ?? 'unknown')));
+    }
     exit('User management is unavailable. Check HTTPS, configuration, and private storage permissions.');
 }
 function form(string $action): void
