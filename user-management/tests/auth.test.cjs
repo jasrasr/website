@@ -100,7 +100,7 @@ test('central setup, shared sessions, project permissions, revocation and persis
   assert.equal((await reader.login('reader',temporary)).status,401);
   const stored=fs.readFileSync(path.join(data,'directory.json'),'utf8');
   assert.doesNotMatch(stored,/test-admin-password|test-temporary-password|test-permanent-password/);
-  fs.copyFileSync(path.join(root,'user-management/config.example.php'),path.join(temp,'user-management/config.example.php'));
+  fs.copyFileSync(path.join(root,'user-management/config.local.example.php'),path.join(temp,'user-management/config.local.example.php'));
   assert.equal(fs.readFileSync(path.join(data,'directory.json'),'utf8'),stored);
   const ignored=execFileSync('git',['check-ignore','user-management/config.local.php','user-management/data/directory.json','user-management/data/attempts.json','1-Framework/config/config.php'],{cwd:root,encoding:'utf8'});
   assert.equal(ignored.trim().split('\n').length,4);

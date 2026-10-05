@@ -9,7 +9,7 @@ require_once __DIR__ . '/src/AccountLinks.php';
 
 function jasr_users_config(): array
 {
-    $defaults = require __DIR__ . '/config.example.php';
+    $defaults = require __DIR__ . '/config.local.example.php';
     $file = __DIR__ . '/config.local.php';
     $local = is_file($file) ? require $file : [];
     if (!is_array($local)) throw new RuntimeException('Invalid user management configuration.');
