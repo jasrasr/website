@@ -6,6 +6,10 @@ Target URL after deployment: https://jasr.me/github/game-buzzer/
 
 Two games for six teams: 6th-grade boys/girls, 7th-grade boys/girls, and 8th-grade boys/girls. Designed for 5–10 students per team, one or more leader phones per team, and two projectors showing the same display link.
 
+## Leader question poll
+
+Share the **Choose question favorites** link from the home page with leaders before game day. Each leader can select up to ten favorites from the 100-question bank, see the live counts sorted by popularity, and suggest a new A/B question. Picks are remembered per browser; leaders should use their own phones or browsers so each person has a separate vote. The **Copy top 10 for game setup** button copies the current leading questions in the format accepted by the game creator. The host still chooses the final questions.
+
 ## First-time host setup through user-management
 
 1. Deploy this folder alongside the existing user-management and 1-Framework folders. Shared identity must already be configured and available over HTTPS.
@@ -59,7 +63,7 @@ This PHP version avoids assuming that shared hosting can run a persistent WebSoc
 
 ## Storage and operations
 
-- Rooms expire after 24 hours. Expiration blocks access but does not delete files; periodically remove only expired 12-hex-character room `.php` and `.lock.php` files (never delete `identity-enabled.php`) from the configured data directory when games are no longer active. No automatic data-deleting migration runs.
+- Rooms expire after 24 hours. Expiration blocks access but does not delete files; periodically remove only expired 12-hex-character room `.php` and `.lock.php` files (never delete `identity-enabled.php`, `leader-questions.json`, or `leader-questions.lock`) from the configured data directory when games are no longer active. No automatic data-deleting migration runs.
 - One room uses a stable lock file and atomic replace of its JSON-backed PHP data file. Shared storage must support reliable `flock` and same-directory rename. A single PHP host with local disk is the intended deployment.
 - Room IDs, host capabilities, and team invitations are randomly generated. Host mutations require the host secret; phone mutations require a registered device token. Requests require JSON; no permissive CORS or cookie authentication is used.
 - A room supports 300 ballots, 12 phones per team, and 3,000 host operations. It is a small-group app, not a public high-traffic service. Protect shared admin accounts (or the legacy creation password) and apply host-level request limiting for an internet-facing installation.

@@ -22,6 +22,106 @@ function gb_dir(array $config): string {
     if (!is_dir($dir) && !mkdir($dir, 0700, true) && !is_dir($dir)) gb_fail('Storage unavailable.', 503);
     return $dir;
 }
+function gb_leader_question_state(array $config, array $in): array {
+    $token = gb_string($in, 'leader', 48);
+    if (!preg_match('/^[a-f0-9]{48}$/D', $token)) gb_fail('Invalid leader token.');
+    $fingerprint = substr(hash('sha256', $token), 0, 12);
+    $kind = gb_string($in, 'kind', 20);
+    if (!in_array($kind, ['state', 'vote', 'suggest'], true)) gb_fail('Unknown question-poll action.');
+
+    $dir = gb_dir($config);
+    $lock = fopen($dir . '/leader-questions.lock', 'c+');
+    if (!$lock || !flock($lock, LOCK_EX)) gb_fail('Question poll busy. Please retry.', 503);
+    $path = $dir . '/leader-questions.json';
+    $tmp = null;
+    try {
+        $store = ['votes' => [], 'custom' => [], 'activity' => []];
+        if (is_file($path)) {
+            $loaded = json_decode((string)file_get_contents($path), true, 32, JSON_THROW_ON_ERROR);
+            if (!is_array($loaded) || !is_array($loaded['votes'] ?? null) || !is_array($loaded['custom'] ?? null)) gb_fail('Question poll storage is invalid.', 503);
+            $store = $loaded + ['activity' => []];
+            if (!is_array($store['activity'])) $store['activity'] = [];
+            $normalizedVotes = [];
+            foreach ($store['votes'] as $id => $selected) {
+                $normalizedId = preg_match('/^[a-f0-9]{48}$/D', (string)$id) ? substr(hash('sha256', (string)$id), 0, 12) : (string)$id;
+                $normalizedVotes[$normalizedId] = $selected;
+            }
+            $store['votes'] = $normalizedVotes;
+        }
+
+        $bankRows = json_decode((string)file_get_contents(__DIR__ . '/question-bank.json'), true, 32, JSON_THROW_ON_ERROR);
+        if (!is_array($bankRows) || count($bankRows) !== 100) gb_fail('Question bank is invalid.', 503);
+        $questions = [];
+        foreach ($bankRows as $i => $row) {
+            if (!is_array($row) || count($row) !== 3) gb_fail('Question bank is invalid.', 503);
+            $questions[] = ['id' => 'q' . str_pad((string)($i + 1), 3, '0', STR_PAD_LEFT), 'prompt' => $row[0], 'a' => $row[1], 'b' => $row[2], 'custom' => false];
+        }
+        foreach ($store['custom'] as $question) {
+            if (is_array($question) && isset($question['id'], $question['prompt'], $question['a'], $question['b'])) {
+                $questions[] = ['id' => $question['id'], 'prompt' => $question['prompt'], 'a' => $question['a'], 'b' => $question['b'], 'custom' => true];
+            }
+        }
+
+        $changed = false;
+        if ($kind === 'vote') {
+            $selected = $in['selected'] ?? null;
+            if (!is_array($selected) || !array_is_list($selected)) gb_fail('Choose valid questions.');
+            foreach ($selected as $id) if (!is_string($id)) gb_fail('Choose valid questions.');
+            if (count(array_unique($selected)) !== count($selected)) gb_fail('Choose each question only once.');
+            $valid = array_column($questions, 'id');
+            foreach ($selected as $id) if (!in_array($id, $valid, true)) gb_fail('One of the selected questions is unavailable.');
+            $store['votes'][$fingerprint] = $selected;
+            $activity = $store['activity'][$fingerprint] ?? ['votes' => 0, 'suggestions' => 0, 'lastSeen' => 0];
+            $activity['votes']++;
+            $activity['selected'] = count($selected);
+            $activity['lastSeen'] = time();
+            $store['activity'][$fingerprint] = $activity;
+            $changed = true;
+        } elseif ($kind === 'suggest') {
+            $question = [
+                'id' => 'c' . bin2hex(random_bytes(8)),
+                'prompt' => gb_string($in, 'prompt', 200),
+                'a' => gb_string($in, 'a', 120),
+                'b' => gb_string($in, 'b', 120),
+                'by' => $fingerprint,
+            ];
+            $store['custom'][] = $question;
+            $questions[] = $question + ['custom' => true];
+            $activity = $store['activity'][$fingerprint] ?? ['votes' => 0, 'suggestions' => 0, 'lastSeen' => 0];
+            $activity['suggestions']++;
+            $activity['lastSeen'] = time();
+            $store['activity'][$fingerprint] = $activity;
+            $changed = true;
+        }
+
+        if ($changed) {
+            $tmp = tempnam($dir, '.leader-questions-');
+            $body = json_encode($store, JSON_THROW_ON_ERROR);
+            if (!$tmp || file_put_contents($tmp, $body, LOCK_EX) !== strlen($body) || !rename($tmp, $path)) gb_fail('Unable to save question poll.', 503);
+            $tmp = null;
+        }
+
+        $counts = [];
+        foreach ($store['votes'] as $selected) if (is_array($selected)) foreach ($selected as $id) $counts[$id] = ($counts[$id] ?? 0) + 1;
+        foreach ($questions as &$question) $question['count'] = $counts[$question['id']] ?? 0;
+        unset($question);
+        usort($questions, fn($a, $b) => $b['count'] <=> $a['count'] ?: strcmp($a['id'], $b['id']));
+        $activity = [];
+        foreach ($store['activity'] as $id => $entry) {
+            $votes = (int)($entry['votes'] ?? 0);
+            $suggestions = (int)($entry['suggestions'] ?? 0);
+            $activity[] = ['fingerprint' => (string)$id, 'votes' => $votes, 'suggestions' => $suggestions,
+                'selected' => (int)($entry['selected'] ?? 0), 'lastSeen' => (int)($entry['lastSeen'] ?? 0),
+                'flagged' => $votes >= 20 || $suggestions >= 5];
+        }
+        usort($activity, fn($a, $b) => (($b['votes'] + $b['suggestions']) <=> ($a['votes'] + $a['suggestions'])) ?: strcmp($a['fingerprint'], $b['fingerprint']));
+        return ['questions' => $questions, 'selected' => $store['votes'][$fingerprint] ?? [], 'fingerprint' => $fingerprint, 'activity' => $activity];
+    } finally {
+        if ($tmp !== null && is_file($tmp)) unlink($tmp);
+        flock($lock, LOCK_UN);
+        fclose($lock);
+    }
+}
 // Separate stable lock + atomic rename: readers never see a truncated room.
 // PHP guard also protects room files if .htaccess is not honored.
 function gb_room(array $config, string $id, callable $fn, ?array $initial = null): array {

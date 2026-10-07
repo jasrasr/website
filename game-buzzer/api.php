@@ -17,6 +17,8 @@ try {
         require_once __DIR__ . '/identity.php';
         $out = $action === 'identityStatus' ? gb_identity_status($config) : gb_enable_identity($config, $in);
         session_write_close();
+    } elseif ($action === 'leaderQuestions') {
+        $out = gb_leader_question_state($config, $in);
     } elseif ($action === 'create') {
         if (is_file($config['data_dir'] . '/identity-enabled.php')) {
             require_once __DIR__ . '/identity.php';
