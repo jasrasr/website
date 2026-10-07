@@ -1,0 +1,23 @@
+name: Game Buzzer validation
+on:
+  pull_request:
+    paths: ['game-buzzer/**', '.github/workflows/game-buzzer-validation.yml']
+  push:
+    branches: [main]
+    paths: ['game-buzzer/**', '.github/workflows/game-buzzer-validation.yml']
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate source
+        run: |
+          find game-buzzer -name '*.php' -print0 | xargs -0 -n1 php -l
+          node --check game-buzzer/app.js
+          node -e "JSON.parse(require('fs').readFileSync('game-buzzer/questions.json','utf8'))"
+      - name: Verify game rules and concurrent presses
+        run: |
+          php game-buzzer/tests/game.test.php
+          php game-buzzer/tests/concurrency.test.php
