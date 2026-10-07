@@ -1,9 +1,12 @@
 <?php
+// Content-derived URLs invalidate browser/CDN caches whenever an asset changes.
+$scriptVersion = substr(hash_file('sha256', __DIR__ . '/app.js'), 0, 16);
+$styleVersion = substr(hash_file('sha256', __DIR__ . '/style.css'), 0, 16);
 header('Cache-Control: no-store');
 header('Referrer-Policy: no-referrer');
 header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'self'; form-action 'self'");
 ?><!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101326"><title>Game Buzzer</title><link rel="stylesheet" href="style.css"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101326"><title>Game Buzzer</title><link rel="stylesheet" href="style.css?v=<?= $styleVersion ?>"></head>
 <body><header><a href="./" class="brand">GAME <strong>BUZZER</strong></a><span id="connection" role="status">Ready to play</span></header>
 <main><div id="notice" role="alert" hidden></div>
 <section id="welcome" class="panel"><p class="eyebrow">SIX TEAMS. ONE ROOM. BIG ENERGY.</p><h1>Who’s got it?</h1><p class="intro">A giant team buzzer. A room full of opinions. Two ways to play.</p>
@@ -20,4 +23,4 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-sr
 <section id="survey" class="panel" hidden><h2>Your answers. Your opinion.</h2><p>Choose A or B for all ten. Your answers stay hidden until the host reveals each result.</p><form id="ballot"><div id="surveyQuestions"></div><button type="submit">Lock in my answers</button></form><div id="thanks" hidden><h2>You’re in!</h2><p>Your answers are locked. Let the guessing begin.</p><button id="nextStudent" class="secondary" hidden>Next student on this shared device</button></div></section>
 <section id="playArea"><div class="arena panel"><p class="eyebrow" id="roundLabel">WAITING FOR THE HOST</p><h2 id="headline">Get your team ready.</h2><p id="roundStatus" role="status"></p><div id="questionOptions"></div><div id="predictionButtons" hidden><button data-answer="a">Predict A</button><button data-answer="b">Predict B</button></div><div id="resultBars"></div><button id="buzz" hidden disabled>BUZZ!</button><p id="timing" class="muted"></p></div>
 <div class="columns"><section class="panel"><h2>Buzz order</h2><ol id="ranking"></ol><p id="emptyRanking" class="muted">The first phone from each team counts.</p><button id="sound" class="secondary">Enable chime</button></section><section class="panel"><h2>Scoreboard</h2><div id="scores"></div></section></div></section>
-</section><footer>Game Buzzer · v1.1.0 · Fast fingers, friendly competition.</footer></main><script src="app.js" defer></script></body></html>
+</section><footer>Game Buzzer · v1.1.1 · Fast fingers, friendly competition.</footer></main><script src="app.js?v=<?= $scriptVersion ?>" defer></script></body></html>
