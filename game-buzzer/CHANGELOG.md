@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1 — 2026-10-07
+
+- Version JavaScript and CSS URLs by file content to prevent old cached assets from disabling newly deployed shared-login controls.
+
 ## 1.1.0 — 2026-10-07
 
 - Add one-click shared-login setup restricted to the existing jasrasr central Super Admin.
