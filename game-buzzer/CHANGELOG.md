@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0 — 2026-10-07
+
+- Add one-click shared-login setup restricted to the existing jasrasr central Super Admin.
+- Register the project without account changes; preserve local configuration and game data.
+- Create rooms through shared admin authentication and CSRF protection after activation.
+- Keep guest invitations and existing room host capabilities working.
+- Add end-to-end shared-authentication and data-preservation tests.
+
 ## 1.0.0 — 2026-10-06
 
 - Add six-team phone buzzer, multiple phones per team, server acceptance ordering, countdown, round deadline, ranking, host scoring and projector chime.

@@ -21,3 +21,4 @@ jobs:
         run: |
           php game-buzzer/tests/game.test.php
           php game-buzzer/tests/concurrency.test.php
+          node --test game-buzzer/tests/identity.test.cjs

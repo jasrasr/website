@@ -3,6 +3,7 @@ const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 const fragment = new URLSearchParams(location.hash.slice(1));
 const room = params.get('room');
+let identity = null;
 const role = params.get('view') || 'team';
 const storeKey = `game-buzzer:${room}:`;
 const randomToken = () => Array.from(crypto.getRandomValues(new Uint8Array(24)), n => n.toString(16).padStart(2, '0')).join('');
@@ -16,6 +17,26 @@ if (fragment.get('host') && room && role === 'host') { host = fragment.get('host
 if (location.hash) history.replaceState(null, '', location.pathname + location.search);
 let state = null, offset = 0, rtt = 0, lastGood = 0, busy = false, lastChime = '', audio = null, rendered = '', generation = 0;
 function notice(message) { $('notice').textContent = message; $('notice').hidden = !message; }
+async function refreshIdentity() {
+  try {
+    identity = await api('identityStatus');
+    $('identityLogin').href = identity.loginUrl;
+    $('enableIdentity').hidden = identity.enabled || !identity.setupAllowed;
+    $('legacyPassword').hidden = !identity.legacyAvailable;
+    $('create').elements.password.required = identity.legacyAvailable;
+    $('create').querySelector('button').disabled = !identity.canCreate && !identity.legacyAvailable;
+    $('identityMessage').textContent = identity.enabled
+      ? identity.canCreate ? `Signed in as ${identity.username}. Ready to create a game.` : 'Sign in with Game Buzzer admin access, then tap Check sign-in.'
+      : identity.setupAllowed ? 'Enable shared login using your existing Super Admin account. No separate host password needed.' : 'For first-time setup, sign in as jasrasr (Super Admin), then tap Check sign-in.';
+  } catch (e) { $('identityMessage').textContent = 'Shared sign-in is unavailable. Check user-management setup, then tap Check sign-in. Existing password setup can still be used.'; }
+}
+$('identityRefresh').onclick = refreshIdentity;
+$('enableIdentity').onclick = async () => {
+  $('enableIdentity').disabled = true;
+  try { await api('enableIdentity', {csrf: identity.csrf}); notice(''); await refreshIdentity(); }
+  catch(e) { notice(e.message); }
+  finally { $('enableIdentity').disabled = false; }
+};
 async function api(action, extra = {}) {
   const started = performance.now(), wall = Date.now();
   const res = await fetch('api.php', {method:'POST', headers:{'Content-Type':'application/json'}, cache:'no-store',
@@ -132,7 +153,7 @@ async function poll() {
 }
 $('create').addEventListener('submit',async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{
   const form=new FormData(e.target);const questions=$('questions').value.trim().split('\n').map(line=>{const p=line.split('|').map(s=>s.trim());if(p.length!==3)throw Error('Each question needs exactly three parts separated by |.');return {prompt:p[0],a:p[1],b:p[2]};});
-  const out=await api('create',{title:form.get('title'),password:form.get('password'),questions});location.href=`?room=${out.id}&view=host#host=${out.host}`;
+  const out=await api('create',{title:form.get('title'),password:form.get('password'),csrf:identity?.csrf,questions});location.href=`?room=${out.id}&view=host#host=${out.host}`;
 }catch(err){notice(err.message);}finally{b.disabled=false;}});
 $('arm').onclick=()=>command('arm',{duration:Number($('duration').value)});
 $('closeBuzz').onclick=()=>command('closeBuzz',{round:state.round});
@@ -150,7 +171,7 @@ $('nextStudent').onclick=()=>{if(!confirm('Ready for a different student? Each s
 $('fullscreen').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen?.().catch(()=>notice('Full screen is not supported on this device.'));};
 $('sound').onclick=async()=>{try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();await audio.resume();$('sound').textContent='Chime enabled';}catch{notice('Audio unavailable on this device.');}};
 async function start(){
- if(!room){try{const res=await fetch('questions.json');const qs=await res.json();$('questions').value=qs.map(q=>`${q.prompt} | ${q.a} | ${q.b}`).join('\n');}catch{notice('Unable to load questions. Reload the page.');}return;}
+ if(!room){refreshIdentity();try{const res=await fetch('questions.json');const qs=await res.json();$('questions').value=qs.map(q=>`${q.prompt} | ${q.a} | ${q.b}`).join('\n');}catch{notice('Unable to load questions. Reload the page.');}return;}
  $('welcome').hidden=true;$('game').hidden=false;$('host').hidden=role!=='host';$('survey').hidden=role!=='survey';$('playArea').hidden=role==='survey';document.body.classList.toggle('projector',role==='projector');
  for(let i=0;i<10;i++){const o=el('option',`Question ${i+1}`);o.value=i;$('questionSelect').append(o);}
  if(role==='team') {try{if(!teamKey)throw Error('Open the team invitation from your host.');state=await api('join',{key:teamKey});render();}catch(e){notice(e.message);return;}}

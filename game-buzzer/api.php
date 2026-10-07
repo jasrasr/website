@@ -13,10 +13,20 @@ try {
     if (!is_array($in)) gb_fail('Invalid request.');
     $action = gb_string($in, 'action', 30);
     $config = gb_config();
-    if ($action === 'create') {
+    if (in_array($action, ['identityStatus', 'enableIdentity'], true)) {
+        require_once __DIR__ . '/identity.php';
+        $out = $action === 'identityStatus' ? gb_identity_status($config) : gb_enable_identity($config, $in);
+        session_write_close();
+    } elseif ($action === 'create') {
+        if (is_file($config['data_dir'] . '/identity-enabled.php')) {
+            require_once __DIR__ . '/identity.php';
+            gb_require_identity_create($in);
+            session_write_close();
+        } else {
         $password = $config['create_password'] ?? '';
-        if (strlen($password) < 12 || $password === 'REPLACE-WITH-A-LONG-PRIVATE-PASSWORD') gb_fail('Host setup required: configure config.local.php first.', 503);
+        if (strlen($password) < 12 || $password === 'REPLACE-WITH-A-LONG-PRIVATE-PASSWORD') gb_fail('Sign in as jasrasr in user-management, then enable Game Buzzer on this page.', 503);
         if (!hash_equals($password, gb_string($in, 'password', 200))) gb_fail('Incorrect room creation password.', 403);
+        }
         $room = gb_new($in);
         $out = gb_room($config, $room['id'], fn(&$r) => ['id' => $r['id'], 'host' => $r['host']], $room);
     } else {
