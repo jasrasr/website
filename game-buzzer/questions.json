@@ -1,0 +1,12 @@
+[
+  {"prompt":"Which would you rather have?","a":"The ability to fly","b":"The ability to turn invisible"},
+  {"prompt":"Which treat would you choose?","a":"Pizza","b":"Ice cream"},
+  {"prompt":"Which ride would you choose?","a":"Roller coaster","b":"Ferris wheel"},
+  {"prompt":"Which school perk would you choose?","a":"No homework","b":"School starts two hours later"},
+  {"prompt":"Which animal would you rather face?","a":"One horse-sized duck","b":"100 duck-sized horses"},
+  {"prompt":"Which would you rather do?","a":"Sing everything you say","b":"Dance everywhere you go"},
+  {"prompt":"Where would you rather explore?","a":"Outer space","b":"The deep ocean"},
+  {"prompt":"Which trip would you choose?","a":"Beach vacation","b":"Mountain adventure"},
+  {"prompt":"Which would you rather give up for a week?","a":"Video games","b":"Streaming videos"},
+  {"prompt":"Which sidekick would you choose?","a":"A tiny dragon","b":"A friendly robot"}
+]

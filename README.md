@@ -19,6 +19,7 @@ Folders in this repo sync under `https://jasr.me/github/<folder>/`, which is the
 
 | Project | Repo path / docs | Live or target URL | Notes |
 |---|---|---|---|
+| Game Buzzer | [game-buzzer/](game-buzzer/) / [README](game-buzzer/README.md) | <a href="https://jasr.me/github/game-buzzer/" target="_new">jasr.me/github/game-buzzer</a> | Six-team phone buzzer and arrival-survey Majority Rules game, with host controls and projector scoreboard. Requires private host setup. |
 | Webstats | [webstats/](webstats/) / [README](webstats/README.md) | <a href="https://jasr.me/github/webstats/" target="_new">jasr.me/github/webstats</a> | Custom multi-site page views and clicks with a private dashboard. Requires setup and tracker installation. |
 | Availability Poll | [availability/](availability/) / [README](availability/README.md) | <a href="https://jasr.me/github/availability/" target="_new">jasr.me/github/availability</a> | Named availability polls with admin-selected dates, private admin links, and live group results. |
 | YOURLS link shortener and tracker | External app | [jasr.me](https://jasr.me) | Fork of [YOURLS](https://github.com/YOURLS/YOURLS). |
