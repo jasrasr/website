@@ -8,7 +8,7 @@ Two games for six teams: 6th-grade boys/girls, 7th-grade boys/girls, and 8th-gra
 
 ## Leader question poll
 
-Share the **Choose question favorites** link from the home page with leaders before game day. Each leader can select up to ten favorites from the 100-question bank, see the live counts sorted by popularity, and suggest a new A/B question. Picks are remembered per browser; leaders should use their own phones or browsers so each person has a separate vote. The **Copy top 10 for game setup** button copies the current leading questions in the format accepted by the game creator. The host still chooses the final questions.
+Share the **Choose question favorites** link from the home page with leaders before game day. Each leader can select any number of favorites from the 100-question bank, see live counts sorted by popularity, and submit A/B suggestions without an app-imposed entry cap. Each browser has a random anonymous fingerprint; its latest saved picks count once per question, while repeated saves and suggestions are counted in the activity list. Twenty pick saves or five suggestions flag a fingerprint for review but do not block it. The ID is stored in browser storage, not derived from device details; clearing that storage creates a new ID. The **Copy top 10 for game setup** button copies the current leading questions in the format accepted by the game creator. The host still chooses the final questions.
 
 ## First-time host setup through user-management
 

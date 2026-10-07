@@ -35,16 +35,23 @@ function gb_leader_question_state(array $config, array $in): array {
     $path = $dir . '/leader-questions.json';
     $tmp = null;
     try {
+        $migrated = false;
         $store = ['votes' => [], 'custom' => [], 'activity' => []];
         if (is_file($path)) {
             $loaded = json_decode((string)file_get_contents($path), true, 32, JSON_THROW_ON_ERROR);
             if (!is_array($loaded) || !is_array($loaded['votes'] ?? null) || !is_array($loaded['custom'] ?? null)) gb_fail('Question poll storage is invalid.', 503);
+            $migrated = !isset($loaded['activity']) || !is_array($loaded['activity']);
             $store = $loaded + ['activity' => []];
             if (!is_array($store['activity'])) $store['activity'] = [];
             $normalizedVotes = [];
             foreach ($store['votes'] as $id => $selected) {
-                $normalizedId = preg_match('/^[a-f0-9]{48}$/D', (string)$id) ? substr(hash('sha256', (string)$id), 0, 12) : (string)$id;
+                $legacyToken = preg_match('/^[a-f0-9]{48}$/D', (string)$id) === 1;
+                $normalizedId = $legacyToken ? substr(hash('sha256', (string)$id), 0, 12) : (string)$id;
+                if ($legacyToken) $migrated = true;
                 $normalizedVotes[$normalizedId] = $selected;
+                if (!isset($store['activity'][$normalizedId])) {
+                    $store['activity'][$normalizedId] = ['votes' => 1, 'suggestions' => 0, 'selected' => is_array($selected) ? count($selected) : 0, 'lastSeen' => 0];
+                }
             }
             $store['votes'] = $normalizedVotes;
         }
@@ -58,11 +65,11 @@ function gb_leader_question_state(array $config, array $in): array {
         }
         foreach ($store['custom'] as $question) {
             if (is_array($question) && isset($question['id'], $question['prompt'], $question['a'], $question['b'])) {
-                $questions[] = ['id' => $question['id'], 'prompt' => $question['prompt'], 'a' => $question['a'], 'b' => $question['b'], 'custom' => true];
+                $questions[] = ['id' => $question['id'], 'prompt' => $question['prompt'], 'a' => $question['a'], 'b' => $question['b'], 'by' => $question['by'] ?? null, 'custom' => true];
             }
         }
 
-        $changed = false;
+        $changed = $migrated;
         if ($kind === 'vote') {
             $selected = $in['selected'] ?? null;
             if (!is_array($selected) || !array_is_list($selected)) gb_fail('Choose valid questions.');

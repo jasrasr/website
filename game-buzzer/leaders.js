@@ -15,7 +15,7 @@ async function api(kind, extra = {}) {
 }
 function render() {
   const query = $('searchQuestions').value.trim().toLocaleLowerCase();
-  $('selectionCount').textContent = `${draft.size} of 10 selected`;
+  $('selectionCount').textContent = `${draft.size} selected`;
   const list = $('questionList');
   list.replaceChildren();
   const filtered = questions.filter(q => `${q.prompt} ${q.a} ${q.b}`.toLocaleLowerCase().includes(query));
@@ -26,23 +26,35 @@ function render() {
     const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = draft.has(question.id);
     checkbox.setAttribute('aria-label', `Select question: ${question.prompt}`);
     checkbox.addEventListener('change', () => {
-      if (checkbox.checked && draft.size >= 10) { checkbox.checked = false; notice('Choose up to 10 questions.'); return; }
       if (checkbox.checked) draft.add(question.id); else draft.delete(question.id);
-      notice(''); $('selectionCount').textContent = `${draft.size} of 10 selected`;
+      notice(''); $('selectionCount').textContent = `${draft.size} selected`;
     });
     const prompt = document.createElement('span'), title = document.createElement('strong');
-    const number = question.id.startsWith('q') ? `#${Number(question.id.slice(1))} · ` : 'Leader suggestion · ';
+    const number = question.id.startsWith('q') ? `#${Number(question.id.slice(1))} · ` : `Leader suggestion${question.by ? ` · ${question.by}` : ''} · `;
     title.textContent = `${number}${question.prompt}`; prompt.append(title);
     label.append(checkbox, prompt); row.append(label);
     const answers = document.createElement('p'); answers.className = 'question-answers'; answers.textContent = `A: ${question.a}  ·  B: ${question.b}`;
     const count = document.createElement('small'); count.className = 'question-count'; count.textContent = `${question.count} leader ${question.count === 1 ? 'pick' : 'picks'}`;
     row.append(answers, count); list.append(row);
   }
+  const activity = window.pollActivity || [];
+  const flagged = activity.filter(entry => entry.flagged).length;
+  $('activitySummary').textContent = `${activity.length} anonymous browser fingerprints · ${flagged} flagged for review`;
+  const activityList = $('activityList'); activityList.replaceChildren();
+  for (const entry of activity) {
+    const row = document.createElement('div'); row.className = `activity-row${entry.flagged ? ' activity-flagged' : ''}`;
+    const id = document.createElement('strong'); id.textContent = entry.fingerprint;
+    const details = document.createElement('span');
+    details.textContent = `${entry.votes} pick saves · ${entry.suggestions} suggestions · ${entry.selected} currently selected`;
+    row.append(id, details);
+    if (entry.flagged) { const flag = document.createElement('small'); flag.textContent = 'Review activity'; row.append(flag); }
+    activityList.append(row);
+  }
 }
 async function load(preserveDraft = true) {
   try {
     const result = await api('state');
-    questions = result.questions;
+    questions = result.questions; window.pollActivity = result.activity;
     if (!initialized || !preserveDraft) draft = new Set(result.selected);
     initialized = true; render();
     $('connection').textContent = 'Counts update automatically';
@@ -54,7 +66,7 @@ $('saveSelections').addEventListener('click', async () => {
   busy = true; $('saveSelections').disabled = true;
   try {
     const result = await api('vote', {selected:[...draft]});
-    questions = result.questions; draft = new Set(result.selected); render(); notice('Your picks are saved. Thanks for helping choose!');
+    questions = result.questions; window.pollActivity = result.activity; draft = new Set(result.selected); render(); notice('Your picks are saved. Thanks for helping choose!');
   } catch (error) { notice(error.message); }
   finally { busy = false; $('saveSelections').disabled = false; }
 });
@@ -71,7 +83,7 @@ $('suggestionForm').addEventListener('submit', async event => {
   busy = true; submitButton.disabled = true;
   try {
     const result = await api('suggest', {prompt:form.get('prompt'),a:form.get('a'),b:form.get('b')});
-    questions = result.questions; render(); formElement.reset(); notice('Your question was added to the shared list. You can select it above.');
+    questions = result.questions; window.pollActivity = result.activity; render(); formElement.reset(); notice('Your question was added to the shared list. You can select it above.');
   } catch (error) { notice(error.message); }
   finally { busy = false; submitButton.disabled = false; }
 });
