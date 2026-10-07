@@ -30,17 +30,20 @@ Existing password-configured installations continue working until an owner expli
 - The host chooses 10, 15, 30, or 60 seconds and starts a round. A three-second countdown allows connected clients to receive the opening time.
 - Press the giant button when GO appears. The first accepted press per team counts. Additional phones on the same team cannot create extra places or overwrite its time.
 - All six teams may buzz; the projector shows their order and milliseconds behind first. Presses before opening, after closing, or from an older round are rejected.
-- Close the buzzer to finalize the order. Award **+1** to a correct answering team, or to first place in a pure speed round. The button awards at most once per team per round. The scoreboard’s −/+ controls allow deliberate corrections or custom scoring.
-- Start a fresh round to clear the order while retaining scores. There is no automatic fastest-finger score: a host ruling avoids awarding a wrong answer or a disputed close finish.
+- Close the buzzer to finalize the order and automatically award **60, 50, 40, 30, 20, and 10 points** by buzz order. Every team that buzzes earns at least 10 points. The scoreboard’s −/+ controls allow deliberate corrections or custom scoring.
+- Start a fresh round to clear the order while retaining scores. Majority Rules scores separately when the host reveals an answer.
+- On the host desk, **Next** advances the normal sequence: close the arrival survey, start a buzzer round, end it and open the next question, reveal and score, then start the next buzzer round. Manual controls remain available under **Manual controls and overrides**.
 
 ## Arrival survey → Majority Rules (under 15 minutes)
+
+Each new game shuffles the ten questions once. Every student and kiosk sees that same randomized order, which is also used for the host’s question reveals.
 
 1. While students arrive, have each answer all ten A/B questions privately on the survey link. No name, grade, phone number, or email is collected. Alternatively, use the **Check-in kiosk** link on a shared tablet; the Next student button clears the form and issues a fresh ballot identity.
 2. Supervise one submission per student. The normal flow locks one ballot per browser token; it is not identity verification and cannot prevent someone using another browser or clearing storage. Kiosk mode intentionally supports multiple students.
 3. Close the arrival survey once everyone has answered. It cannot reopen, so later questions always use the same group’s locked answers.
-4. Open question 1. Teams discuss the room’s likely majority. A leader taps **Predict A** or **Predict B**. The first submitted prediction from either of a team’s phones locks that team’s answer. Other teams’ predictions and all vote totals remain hidden until reveal.
-5. Reveal & score: matching the room’s majority earns +1. An exact tie awards +1 to each team that submitted. Teams without a prediction receive zero. Reveal is safe to repeat without adding points again.
-6. Select the next question and repeat. Budget about 60 seconds per question, plus instructions and the winner announcement. This mode does not need the speed buzzer; both modes share the scoreboard. Create separate rooms to keep scores separate.
+4. After the host closes the arrival survey, teams discuss each question’s likely majority. After a buzzer round closes, the next unrevealed question opens automatically. A leader taps **Predict A** or **Predict B**. The first submitted prediction from either of a team’s phones locks that team’s answer. Other teams’ predictions and all vote totals remain hidden until reveal.
+5. The host taps **Next** to reveal and score: matching the room’s majority earns +1. An exact tie awards +1 to each team that submitted. Teams without a prediction receive zero. Reveal is safe to repeat without adding points again.
+6. Tap **Next** to start the following buzzer round and repeat. Select a question manually under **Manual controls and overrides** to interrupt the sequence. Budget about 60 seconds per question, plus instructions and the winner announcement. Both games share the scoreboard. Create separate rooms to keep scores separate.
 
 Survey responses are stored only as anonymous arrays of A/B choices associated with random browser tokens. Public responses expose only total ballot count and the current question’s aggregate totals after reveal. Browser local storage contains capability links and random identifiers; use trusted host devices.
 

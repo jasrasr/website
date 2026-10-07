@@ -65,6 +65,7 @@ function gb_new(array $in): array {
         $q = ['prompt' => gb_string($q, 'prompt', 200), 'a' => gb_string($q, 'a', 120), 'b' => gb_string($q, 'b', 120)];
     }
     unset($q);
+    shuffle($questions);
     $teams = [];
     foreach (['6th grade boys', '6th grade girls', '7th grade boys', '7th grade girls', '8th grade boys', '8th grade girls'] as $i => $name) {
         $teams[] = ['id' => $i, 'name' => $name, 'join' => gb_token(), 'score' => 0];
@@ -73,7 +74,7 @@ function gb_new(array $in): array {
         'expires' => time() + 86400, 'revision' => 0, 'teams' => $teams, 'devices' => [],
         'questions' => $questions, 'ballots' => [], 'surveyOpen' => true, 'question' => null,
         'revealed' => [], 'predictions' => [], 'predictionOpen' => false, 'scored' => [],
-        'round' => 0, 'openAt' => null, 'closeAt' => null, 'buzzes' => [], 'awarded' => [], 'operations' => []];
+        'round' => 0, 'openAt' => null, 'closeAt' => null, 'buzzes' => [], 'speedScored' => false, 'awarded' => [], 'operations' => []];
 }
 function gb_host(array $room, array $in): bool {
     return is_string($in['host'] ?? null) && hash_equals($room['host'], $in['host']);
@@ -90,6 +91,14 @@ function gb_ranking(array $room): array {
         return ['team' => $row['team'], 'elapsedMs' => round(($row['at'] - $room['openAt']) * 1000),
             'gapMs' => round(($row['at'] - $rows[0]['at']) * 1000)];
     }, $rows);
+}
+function gb_score_speed(array &$room): void {
+    if (!empty($room['speedScored'])) return;
+    $points = [60, 50, 40, 30, 20, 10];
+    foreach (gb_ranking($room) as $place => $entry) {
+        if (isset($points[$place])) $room['teams'][$entry['team']]['score'] += $points[$place];
+    }
+    $room['speedScored'] = true;
 }
 function gb_results(array $room, int $q): array {
     $a = 0; $b = 0;
@@ -111,6 +120,7 @@ function gb_view(array $r, array $in): array {
         'myTeam' => $device['team'] ?? null,
         'myPrediction' => $device !== null && $q !== null ? ($r['predictions'][$q][$device['team']] ?? null) : null,
         'round' => $r['round'], 'openAt' => $r['openAt'], 'closeAt' => $r['closeAt'], 'ranking' => gb_ranking($r),
+        'speedScored' => !empty($r['speedScored']),
         'surveySubmitted' => isset($r['ballots'][$in['voter'] ?? ''])];
     if ($host) {
         $v['teamLinks'] = array_map(fn($t) => ['team' => $t['id'], 'key' => $t['join']], $r['teams']);
@@ -169,6 +179,7 @@ function gb_apply(array &$r, string $action, array $in): array {
                 if ($r['surveyOpen']) gb_fail('Close the arrival survey first.');
                 $q = $in['question'] ?? null;
                 if (!is_int($q) || $q < 0 || $q > 9) gb_fail('Invalid question.');
+                if ($r['question'] === null && $r['round'] > 0) gb_score_speed($r);
                 $r['question'] = $q;
                 $r['predictionOpen'] = !in_array($q, $r['revealed'], true);
                 $r['closeAt'] = microtime(true);
@@ -189,7 +200,7 @@ function gb_apply(array &$r, string $action, array $in): array {
             case 'arm':
                 $duration = $in['duration'] ?? 15;
                 if (!is_int($duration) || $duration < 5 || $duration > 60) gb_fail('Choose a 5–60 second round.');
-                $r['round']++; $r['buzzes'] = []; $r['awarded'] = [];
+                $r['round']++; $r['buzzes'] = []; $r['speedScored'] = false; $r['awarded'] = [];
                 $r['question'] = null; $r['predictionOpen'] = false;
                 $r['openAt'] = microtime(true) + 3;
                 $r['closeAt'] = $r['openAt'] + $duration;
@@ -197,6 +208,16 @@ function gb_apply(array &$r, string $action, array $in): array {
             case 'closeBuzz':
                 if (($in['round'] ?? null) !== $r['round']) gb_fail('Round changed.', 409);
                 $r['closeAt'] = microtime(true);
+                gb_score_speed($r);
+                if ($r['question'] === null && !$r['surveyOpen']) {
+                    foreach (array_keys($r['questions']) as $q) {
+                        if (!in_array($q, $r['revealed'], true)) {
+                            $r['question'] = $q;
+                            $r['predictionOpen'] = true;
+                            break;
+                        }
+                    }
+                }
                 break;
             case 'award':
                 $team = $in['team'] ?? null;

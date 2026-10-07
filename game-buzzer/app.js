@@ -86,10 +86,25 @@ function render() {
   $('roleLabel').textContent = role === 'team' && s.myTeam !== null ? s.teams[s.myTeam].name : {host:'HOST DESK',projector:'LIVE GAME',survey:'ARRIVAL SURVEY'}[role] || 'TEAM PHONE';
   if (role === 'host') {
     if (!s.teamLinks) { notice('Host access missing. Reopen your private host invitation.'); return; }
-    links(s); $('surveyStatus').textContent = `${s.ballotCount} surveys submitted · ${s.surveyOpen ? 'Arrival survey open' : 'Answers locked'} · Phones per team: ${s.devices.join(' / ')}`;
+    links(s);
+    const connectedPhones = s.teams.map((team,i) => `${team.name.replace(' grade','')}: ${s.devices[i]}`).join(' / ');
+    $('surveyStatus').textContent = `${s.ballotCount} surveys submitted · ${s.surveyOpen ? 'Arrival survey open' : 'Answers locked'} · Phones: ${connectedPhones}`;
     $('closeSurvey').disabled = !s.surveyOpen || !s.ballotCount;
     $('showQuestion').disabled = s.surveyOpen;
     $('reveal').disabled = s.question === null || s.revealed;
+    if (s.surveyOpen) {
+      $('nextStep').textContent = 'Next: Close arrival survey';
+      $('nextStep').disabled = !s.ballotCount;
+    } else if (s.question !== null) {
+      $('nextStep').textContent = s.revealed ? 'Next: Start buzzer round' : 'Next: Reveal & score';
+      $('nextStep').disabled = false;
+    } else if (s.round > 0 && !s.speedScored) {
+      $('nextStep').textContent = 'Next: End buzzer round';
+      $('nextStep').disabled = false;
+    } else {
+      $('nextStep').textContent = 'Next: Start buzzer round';
+      $('nextStep').disabled = false;
+    }
   }
   if (role === 'survey') { survey(s); return; }
   const signature = JSON.stringify([s.teams,s.ranking,s.question,s.revealed,s.results,s.predictionTeams,s.myPrediction,s.round]);
@@ -104,8 +119,8 @@ function render() {
     $('ranking').replaceChildren(); $('emptyRanking').hidden = s.ranking.length > 0;
     s.ranking.forEach((entry,i) => {
       const row = el('li', s.teams[entry.team].name);
-      row.append(el('small',`${entry.elapsedMs} ms after opening${i ? ` · +${entry.gapMs} ms behind first${entry.gapMs <= 150 ? ' · CLOSE FINISH' : ''}` : ' · FIRST'}`));
-      if (role === 'host') row.append(button('Award +1',()=>command('award',{team:entry.team,round:s.round})));
+      const points = [60,50,40,30,20,10][i];
+      row.append(el('small',`${entry.elapsedMs} ms after opening${i ? ` · +${entry.gapMs} ms behind first${entry.gapMs <= 150 ? ' · CLOSE FINISH' : ''}` : ' · FIRST'} · ${s.speedScored ? `+${points} points` : `+${points} points when closed`}`));
       $('ranking').append(row);
     });
     $('questionOptions').replaceChildren(); $('resultBars').replaceChildren();
@@ -158,6 +173,17 @@ $('create').addEventListener('submit',async e=>{e.preventDefault();const b=e.sub
 $('arm').onclick=()=>command('arm',{duration:Number($('duration').value)});
 $('closeBuzz').onclick=()=>command('closeBuzz',{round:state.round});
 $('closeSurvey').onclick=()=>{if(confirm('Lock all arrival answers and close the survey? This cannot be reopened.'))command('closeSurvey');};
+$('nextStep').onclick=()=>{
+  if(state.surveyOpen){if(confirm('Lock all arrival answers and close the survey? This cannot be reopened.'))command('closeSurvey');return;}
+  if(state.question!==null){
+    if(state.revealed)command('arm',{duration:Number($('duration').value)});
+    else if(state.predictionTeams.length<6&&!confirm('Not every team has predicted. Reveal and score anyway?'))return;
+    else command('reveal',{question:state.question});
+    return;
+  }
+  if(state.round>0&&!state.speedScored)command('closeBuzz',{round:state.round});
+  else command('arm',{duration:Number($('duration').value)});
+};
 $('showQuestion').onclick=()=>command('question',{question:Number($('questionSelect').value)});
 $('reveal').onclick=()=>{if(state.predictionTeams.length<6&&!confirm('Not every team has predicted. Reveal and score anyway?'))return;command('reveal',{question:state.question});};
 // Pointer-down sends immediately; keyboard activation remains accessible.
