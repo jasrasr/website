@@ -255,3 +255,14 @@ No project completion records yet.
 Linking permission rule: add missing project access only after permission review; retain the lower existing permission and enforce a per-link ceiling even for global super admins. Finances requires an explicit viewer/member choice because its legacy login has no enforced roles. Mapping and new membership commit together. See [ACCOUNT-LINKING.md](ACCOUNT-LINKING.md).
 
 Hosting preservation: see [HOSTING-DATA-SAFETY.md](HOSTING-DATA-SAFETY.md) and [documentation-only examples](examples/README.md). Repository safeguards and isolated tests are implemented; verifying Hostinger deployment exclusions, taking a live backup, and checking each migrated account remain pending.
+
+## Game Buzzer — added 2026-10-07, in review
+
+New integration outside the original 21-project inventory. Owner-only browser activation registers this project without provisioning or promoting accounts. Shared non-demo project admins can create rooms after activation; team/student/projector links remain guest flows and existing host capabilities remain valid.
+
+- [x] Implement authenticated owner-only activation and CSRF-protected room creation.
+- [x] Verify account/config/game-data preservation, conflicting-path rejection, repeated setup, unauthorized requests and revoked sessions in local HTTP tests.
+- [ ] Merge and deploy the integration.
+- [ ] Verify owner sign-in, activation and room creation on the live site.
+
+Not marked complete: live identity configuration and rollout still require verification.

@@ -1,4 +1,4 @@
 Options -Indexes
-<FilesMatch "^(config.*\.php|lib\.php)$">
+<FilesMatch "^(config.*\.php|lib\.php|identity\.php)$">
 Require all denied
 </FilesMatch>

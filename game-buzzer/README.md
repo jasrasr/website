@@ -1,21 +1,28 @@
 # Game Buzzer
 
-Version 1.0.0 · PHP 8.1+ · No database, npm build, external service, or student accounts.
+Version 1.1.0 · PHP 8.1+ · No database, npm build, external service, or student accounts.
 
 Target URL after deployment: https://jasr.me/github/game-buzzer/
 
 Two games for six teams: 6th-grade boys/girls, 7th-grade boys/girls, and 8th-grade boys/girls. Designed for 5–10 students per team, one or more leader phones per team, and two projectors showing the same display link.
 
-## First-time host setup
+## First-time host setup through user-management
 
-1. Deploy this folder to the PHP website. GitHub Pages cannot run it.
-2. On the host only, copy `config.sample.php` to `config.local.php`. Set a long, private `create_password` (12+ characters). Room creation remains disabled until configured.
-3. Set `data_dir` to a PHP-writable absolute directory **outside public_html** when possible. The fallback `data/` directory includes an Apache deny rule and room files also contain a PHP exit guard. Configure equivalent denial on non-Apache servers; disable directory listing. Serve over HTTPS.
-4. Open the target URL, enter the creation password and game title, optionally edit the ten questions, and create a room.
-5. Save the private host link. Share each team link only with its leaders; share the survey link with students. Open the projector link on both screens. Link secrets live in URL fragments and are removed from the address bar after loading; reopening works through browser local storage. Anyone holding the private host link controls that room.
-6. Click **Enable chime** on ONE projector/host browser to unlock browser audio. Click **Full screen** if desired.
+1. Deploy this folder alongside the existing user-management and 1-Framework folders. Shared identity must already be configured and available over HTTPS.
+2. Open Game Buzzer and choose **Open user-management**. Sign in as the existing **jasrasr** Super Admin, completing any required password change. Return to the game tab and tap **Check sign-in**.
+3. Choose **Enable Game Buzzer**. Only the active, non-demo jasrasr account with central directory Super Admin rights can perform this step. No account is created, promoted, reset, or renamed.
+4. Setup registers the game-buzzer project at its actual deployment path without overwriting an existing conflicting registration. It creates storage and a private, PHP-guarded identity-enabled.php marker. Repeated setup is safe. No separate host password or manual config file is required.
+5. Create a game. Shared login and CSRF protection authorize creation; the old creation-password route is disabled once shared login is enabled. Existing non-demo users with explicit Game Buzzer admin access (or existing all-project admin scope) can create games. Setup itself remains restricted to jasrasr.
+6. Save the private host link. Share each team link only with its leaders; share the survey link with students. Open the projector link on both screens. Guests do not need accounts. Room host links remain bearer capabilities, including after central logout or revocation; central revocation stops NEW room creation, not already-issued room invitations.
+7. Click **Enable chime** on ONE projector/host browser and **Full screen** if desired.
 
-No existing project accounts or files are modified. `config.local.php` and runtime room data are ignored by Git. Keep deployment tools from deleting ignored runtime files (do not use destructive `git clean -fdx` or sync deletion over data). No real credentials or sample live room are shipped.
+Existing game files and private config files are preserved. Setup does not provision any central accounts or automatically grant users higher permissions. New game registration honors the directory’s existing all-project scope. If setup cannot finish after registration (for example, storage is not writable), correct the reported issue and retry; registration and marker creation are idempotent. No public first-visitor account-claim flow exists.
+
+The shared cookie must cover the Game Buzzer URL (the default cookie_path is /). If sign-in succeeds but the game still shows signed out, check cookie scope, hostname, HTTPS and the configured identity portal URL. If jasrasr is missing or lacks the required rights, use an existing central directory administrator to review the account; this application will not elevate it automatically.
+
+### Optional existing/manual configuration
+
+Existing password-configured installations continue working until an owner explicitly enables shared login. config.local.php stays private and untouched. It can still set data_dir to a PHP-writable directory outside public_html. The fallback data/ folder has an Apache/LiteSpeed deny rule; use equivalent denial on other servers. Both runtime data and local config are ignored by Git. Preserve ignored data during deployment.
 
 ## Standalone buzzer game
 
@@ -49,10 +56,10 @@ This PHP version avoids assuming that shared hosting can run a persistent WebSoc
 
 ## Storage and operations
 
-- Rooms expire after 24 hours. Expiration blocks access but does not delete files; periodically remove expired room `.php` and `.lock.php` files from the configured data directory when games are no longer active. No automatic data-deleting migration runs.
+- Rooms expire after 24 hours. Expiration blocks access but does not delete files; periodically remove only expired 12-hex-character room `.php` and `.lock.php` files (never delete `identity-enabled.php`) from the configured data directory when games are no longer active. No automatic data-deleting migration runs.
 - One room uses a stable lock file and atomic replace of its JSON-backed PHP data file. Shared storage must support reliable `flock` and same-directory rename. A single PHP host with local disk is the intended deployment.
 - Room IDs, host capabilities, and team invitations are randomly generated. Host mutations require the host secret; phone mutations require a registered device token. Requests require JSON; no permissive CORS or cookie authentication is used.
-- A room supports 300 ballots, 12 phones per team, and 3,000 host operations. It is a small-group app, not a public high-traffic service. Protect the creation password and apply host-level request limiting for an internet-facing installation.
+- A room supports 300 ballots, 12 phones per team, and 3,000 host operations. It is a small-group app, not a public high-traffic service. Protect shared admin accounts (or the legacy creation password) and apply host-level request limiting for an internet-facing installation.
 - Do not open multiple host controllers and operate them simultaneously. Use one host and any number of projector displays.
 - No remote fonts, analytics, QR service, or CDN requests are needed. Links can be distributed in advance; creating QR codes is not built in.
 
@@ -62,6 +69,7 @@ This PHP version avoids assuming that shared hosting can run a persistent WebSoc
 php game-buzzer/tests/game.test.php
 php game-buzzer/tests/concurrency.test.php
 node --check game-buzzer/app.js
+node --test game-buzzer/tests/identity.test.cjs
 ```
 
 Tests cover authorization, early/late/stale presses, two phones per team, hidden results, locked surveys and predictions, majority/tie scoring, repeated awards, idempotent host operations and file persistence. The concurrency test starts 12 independent PHP processes and checks that exactly six team positions survive. CI also checks PHP/JavaScript syntax. Test on the actual venue Wi-Fi before using it with the group; local tests cannot establish Hostinger/venue latency.
