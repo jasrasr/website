@@ -38,6 +38,13 @@
     pixelRect(wx-21,121,9,20,'#b17b4c');pixelRect(wx-22,113,11,10,'#d5a76f');pixelRect(wx-24,111,13,4,'#4c3926');pixelRect(wx-20,140,4,20,'#30342b');pixelRect(wx-12,140,4,20,'#30342b');
     if(s.scene==='river'){pixelRect(0,183,800,77,'#345f68');for(let i=0;i<15;i++){pixelRect((i*63+30)%800,199+(i%3)*13,32,2,'#74a0a0')}}
     if(s.scene==='mountain'){for(let i=0;i<6;i++){let x=i*155-30;pixelRect(x,35,95,65,'#475247');pixelRect(x+22,18,50,40,'#5b6254');pixelRect(x+39,22,18,20,'#d2d0bb')}}
+    if(s.gameOver){
+      pixelRect(0,0,800,260,'#050605aa');
+      pixelRect(105,72,590,104,'#151811');
+      pixelRect(105,72,590,3,s.miles>=2040?'#a4bd72':'#d28c59');
+      ctx.textAlign='center';ctx.font='700 22px "DM Sans",sans-serif';ctx.fillStyle=s.miles>=2040?'#d9e8ae':'#f0c19b';ctx.fillText(s.miles>=2040?'JOURNEY COMPLETE':'JOURNEY ENDED',400,111);
+      ctx.font='11px "DM Mono",monospace';ctx.fillStyle='#d8d8c8';ctx.fillText(s.miles>=2040?'OREGON CITY IS IN SIGHT':'THE TRAIL HAS CLAIMED YOUR PARTY',400,139);ctx.fillStyle='#989d8c';ctx.fillText('Choose an option below to continue',400,159);ctx.textAlign='start';
+    }
   }
   function setStory(title,message,phase='THE JOURNEY BEGINS'){ $('headline').textContent=title;$('message').textContent=message;$('phase-label').textContent=phase; }
   function update(){
