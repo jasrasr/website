@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.2.0 — 2026-10-08
+
+- Show a shared revision and source update date/time footer on game, voting, and results pages.
+- Label tied popularity ranks explicitly and keep question IDs distinct from ranks.
+- Identify results as a separate page with a direct link back to voting.
 
 - Shuffle leader voting questions independently of popularity, preserving their order during a visit.
 - Move combined counts, rankings, activity, and top-10 copying to a separate public results page.

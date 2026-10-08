@@ -15,15 +15,18 @@ async function api(kind, extra = {}) {
 function render() {
   const query = $('searchQuestions').value.trim().toLocaleLowerCase();
   const list = $('questionList'); list.replaceChildren();
+  const ties = new Map();
+  for (const question of questions) ties.set(question.count, (ties.get(question.count) || 0) + 1);
   let rank = 0, previousCount = null;
   questions.forEach((question, index) => {
     if (question.count !== previousCount) rank = index + 1;
     previousCount = question.count;
     if (!`${question.prompt} ${question.a} ${question.b}`.toLocaleLowerCase().includes(query)) return;
     const row = document.createElement('article'); row.className = 'question-choice';
-    const title = document.createElement('strong'); title.textContent = `#${rank} · ${question.prompt}`;
+    const questionLabel = question.id.startsWith('q') ? `Question ${Number(question.id.slice(1))}` : 'Leader suggestion';
+    const title = document.createElement('strong'); title.textContent = `${questionLabel} · ${question.prompt}`;
     const answers = document.createElement('p'); answers.className = 'question-answers'; answers.textContent = `A: ${question.a} · B: ${question.b}`;
-    const count = document.createElement('small'); count.className = 'question-count'; count.textContent = `${question.count} leader ${question.count === 1 ? 'pick' : 'picks'}`;
+    const count = document.createElement('small'); count.className = 'question-count'; count.textContent = `${question.count === 0 ? 'No picks yet' : `${ties.get(question.count) > 1 ? 'Tied rank' : 'Rank'} ${rank}`} · ${question.count} leader ${question.count === 1 ? 'pick' : 'picks'}`;
     row.append(title, answers, count); list.append(row);
   });
   if (!list.children.length) list.textContent = 'No matching questions.';

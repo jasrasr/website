@@ -82,3 +82,7 @@ node --test game-buzzer/tests/identity.test.cjs
 ```
 
 Tests cover authorization, early/late/stale presses, two phones per team, hidden results, locked surveys and predictions, majority/tie scoring, repeated awards, idempotent host operations and file persistence. The concurrency test starts 12 independent PHP processes and checks that exactly six team positions survive. CI also checks PHP/JavaScript syntax. Test on the actual venue Wi-Fi before using it with the group; local tests cannot establish Hostinger/venue latency.
+
+## Release identification
+
+Every page displays the shared revision and source update timestamp in its footer (Eastern time). Update `GB_REVISION` and `GB_UPDATED_AT` in `release.php` for every release; this is not a deployment timestamp. Voting is `leaders.php`; public results are `leader-results.php`. Results show question IDs separately from rank, explicitly label ties, and mark zero-vote questions as not yet picked.
