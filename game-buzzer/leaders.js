@@ -4,6 +4,13 @@ const tokenKey = 'game-buzzer:leader-question-token';
 const randomToken = () => Array.from(crypto.getRandomValues(new Uint8Array(24)), n => n.toString(16).padStart(2, '0')).join('');
 let leaderToken = localStorage.getItem(tokenKey);
 if (!leaderToken) { leaderToken = randomToken(); localStorage.setItem(tokenKey, leaderToken); }
+// Assign random priorities once per page visit, independent of popularity.
+// Keep the order stable during refreshes, searches, and saves.
+const questionOrder = new Map();
+function votingOrder(rows) {
+  for (const row of rows) if (!questionOrder.has(row.id)) questionOrder.set(row.id, Math.random());
+  return [...rows].sort((a, b) => questionOrder.get(a.id) - questionOrder.get(b.id) || a.id.localeCompare(b.id));
+}
 let questions = [], draft = new Set(), initialized = false, busy = false;
 function notice(message) { $('notice').textContent = message; $('notice').hidden = !message; }
 async function api(kind, extra = {}) {
@@ -34,30 +41,17 @@ function render() {
     title.textContent = `${number}${question.prompt}`; prompt.append(title);
     label.append(checkbox, prompt); row.append(label);
     const answers = document.createElement('p'); answers.className = 'question-answers'; answers.textContent = `A: ${question.a}  ·  B: ${question.b}`;
-    const count = document.createElement('small'); count.className = 'question-count'; count.textContent = `${question.count} leader ${question.count === 1 ? 'pick' : 'picks'}`;
-    row.append(answers, count); list.append(row);
+    row.append(answers); list.append(row);
   }
-  const activity = window.pollActivity || [];
-  const flagged = activity.filter(entry => entry.flagged).length;
-  $('activitySummary').textContent = `${activity.length} anonymous browser fingerprints · ${flagged} flagged for review`;
-  const activityList = $('activityList'); activityList.replaceChildren();
-  for (const entry of activity) {
-    const row = document.createElement('div'); row.className = `activity-row${entry.flagged ? ' activity-flagged' : ''}`;
-    const id = document.createElement('strong'); id.textContent = entry.fingerprint;
-    const details = document.createElement('span');
-    details.textContent = `${entry.votes} pick saves · ${entry.suggestions} suggestions · ${entry.selected} currently selected`;
-    row.append(id, details);
-    if (entry.flagged) { const flag = document.createElement('small'); flag.textContent = 'Review activity'; row.append(flag); }
-    activityList.append(row);
-  }
+
 }
 async function load(preserveDraft = true) {
   try {
     const result = await api('state');
-    questions = result.questions; window.pollActivity = result.activity;
+    questions = votingOrder(result.questions);
     if (!initialized || !preserveDraft) draft = new Set(result.selected);
     initialized = true; render();
-    $('connection').textContent = 'Counts update automatically';
+    $('connection').textContent = 'Choose your favorites';
   } catch (error) { $('connection').textContent = 'Connection unavailable'; if (!initialized) notice(error.message); }
 }
 $('searchQuestions').addEventListener('input', render);
@@ -66,14 +60,9 @@ $('saveSelections').addEventListener('click', async () => {
   busy = true; $('saveSelections').disabled = true;
   try {
     const result = await api('vote', {selected:[...draft]});
-    questions = result.questions; window.pollActivity = result.activity; draft = new Set(result.selected); render(); notice('Your picks are saved. Thanks for helping choose!');
+    questions = votingOrder(result.questions); draft = new Set(result.selected); render(); notice('Your picks are saved. Thanks for helping choose!');
   } catch (error) { notice(error.message); }
   finally { busy = false; $('saveSelections').disabled = false; }
-});
-$('copyTopTen').addEventListener('click', async () => {
-  const text = questions.slice(0, 10).map(q => `${q.prompt} | ${q.a} | ${q.b}`).join('\n');
-  try { await navigator.clipboard.writeText(text); notice('Top 10 copied. Paste them into the game setup question editor.'); }
-  catch { notice('Clipboard access is unavailable in this browser.'); }
 });
 $('suggestionForm').addEventListener('submit', async event => {
   event.preventDefault();
@@ -83,7 +72,7 @@ $('suggestionForm').addEventListener('submit', async event => {
   busy = true; submitButton.disabled = true;
   try {
     const result = await api('suggest', {prompt:form.get('prompt'),a:form.get('a'),b:form.get('b')});
-    questions = result.questions; window.pollActivity = result.activity; render(); formElement.reset(); notice('Your question was added to the shared list. You can select it above.');
+    questions = votingOrder(result.questions); render(); formElement.reset(); notice('Your question was added to the shared list. You can select it above.');
   } catch (error) { notice(error.message); }
   finally { busy = false; submitButton.disabled = false; }
 });
