@@ -20,3 +20,24 @@ function gbTeamQr(value, name) {
   }
   return canvas;
 }
+
+function gbPrintTeamCodes(teams, gameTitle, singleTeam = false) {
+  let sheet = document.getElementById('teamQrPrint');
+  if (!sheet) { sheet = document.createElement('section'); sheet.id = 'teamQrPrint'; document.body.append(sheet); }
+  sheet.replaceChildren();
+  sheet.className = singleTeam ? 'qr-print-single' : 'qr-print-all';
+  const heading = document.createElement('h1'); heading.textContent = gameTitle || 'Game Buzzer'; sheet.append(heading);
+  const grid = document.createElement('div'); grid.className = 'qr-print-grid';
+  for (const team of teams) {
+    const card = document.createElement('section'); card.className = 'qr-print-card';
+    const label = document.createElement('h2'); label.textContent = team.name;
+    const instruction = document.createElement('p'); instruction.textContent = 'Scan to join this team · Each phone scans the same code';
+    card.append(label, gbTeamQr(team.invitation, team.name), instruction); grid.append(card);
+  }
+  sheet.append(grid);
+  document.body.classList.add('printing-team-qr');
+  const cleanup = () => { document.body.classList.remove('printing-team-qr'); sheet.replaceChildren(); };
+  window.addEventListener('afterprint', cleanup, {once:true});
+  try { window.print(); }
+  catch (error) { cleanup(); throw error; }
+}

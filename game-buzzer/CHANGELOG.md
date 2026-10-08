@@ -2,6 +2,7 @@
 
 ## 1.2.3 — 2026-10-08
 
+- Print all six codes on one spaced, labeled sheet, or print a single team with a large code on its own page. Printouts exclude host controls and private host links.
 - Add six labeled team invitation QR codes and PNG downloads to the private host controls. Generate codes locally, including team keys, so multiple phones can scan the same team invitation.
 
 ## 1.2.2 — 2026-10-08

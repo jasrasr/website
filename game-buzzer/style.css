@@ -3,3 +3,22 @@
 .activity-list{display:grid;gap:.45rem;max-height:35vh;overflow:auto}.activity-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:.75rem;background:#11192e;border-radius:9px;padding:.65rem .8rem;font-size:.82rem}.activity-row strong{color:var(--blue);font-variant-numeric:tabular-nums}.activity-row span{color:var(--muted)}.activity-row small{color:var(--lime);font-weight:800}.activity-flagged{outline:1px solid #d8a84c}@media(max-width:650px){.activity-row{grid-template-columns:1fr auto}.activity-row span{grid-column:1/-1;grid-row:2}}
 
 #teamLinks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:1rem}.team-invitation{border:1px solid var(--border);border-radius:12px;padding:1rem;text-align:center;min-width:0}.team-invitation h3{margin-top:0}.team-qr{display:block;width:256px;max-width:100%;height:auto;margin:1rem auto;background:white;image-rendering:pixelated}.team-invitation .linkrow{grid-template-columns:1fr auto;text-align:left}.team-invitation .linkrow span{grid-column:1/-1}
+
+#teamQrPrint{display:none}
+@media print{
+  @page{size:portrait;margin:10mm}
+  body.printing-team-qr{background:white!important;color:black!important}
+  body.printing-team-qr> *{display:none!important}
+  body.printing-team-qr>#teamQrPrint{display:block!important;color:black;background:white}
+  #teamQrPrint h1{font-size:18pt;text-align:center;line-height:1.2;margin:0 0 5mm}
+  .qr-print-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6mm}
+  .qr-print-card{border:1px solid #999;border-radius:3mm;padding:3mm;text-align:center;break-inside:avoid;page-break-inside:avoid}
+  .qr-print-card h2{font-size:14pt;line-height:1.2;margin:0 0 2mm}
+  .qr-print-card .team-qr{width:50mm;max-width:100%;height:auto;margin:0 auto}
+  .qr-print-card p{font-size:8pt;line-height:1.2;margin:2mm 0 0;color:black}
+  .qr-print-single .qr-print-grid{display:block}
+  .qr-print-single .qr-print-card{padding:10mm;margin-top:15mm}
+  .qr-print-single .qr-print-card h2{font-size:26pt;margin-bottom:8mm}
+  .qr-print-single .qr-print-card .team-qr{width:145mm}
+  .qr-print-single .qr-print-card p{font-size:12pt;margin-top:8mm}
+}

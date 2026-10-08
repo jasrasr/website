@@ -95,3 +95,4 @@ For a shared phone, tap **Next voter / clear selections** after choosing questio
 ## Team invitation QR codes
 
 Create a game, then open **Team phone invitations and QR codes** in the private host controls. Each team has a labeled code, **Download QR** PNG button, and copyable invitation. Multiple phones scan the same team code; the first phone from that team to buzz counts. QR generation runs locally using the vendored MIT-licensed qrcode-generator by Kazuhiko Arase. Team keys are included in the QR; share each code only with its team. The private host invitation is never turned into a QR code.
+Use **Print all six QR codes** for a two-column, three-row sheet with team labels and spacing. **Print this team** prints one large code on its own page. Printouts include only the game title, team labels, codes and scan instructions. Choose portrait paper and 100% scale; printer settings may affect pagination.
