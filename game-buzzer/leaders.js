@@ -37,7 +37,7 @@ function render() {
       notice(''); $('selectionCount').textContent = `${draft.size} selected`;
     });
     const prompt = document.createElement('span'), title = document.createElement('strong');
-    const number = question.id.startsWith('q') ? `#${Number(question.id.slice(1))} · ` : `Leader suggestion${question.by ? ` · ${question.by}` : ''} · `;
+    const number = question.id.startsWith('q') ? `Question ${Number(question.id.slice(1))} · ` : `Leader suggestion${question.by ? ` · ${question.by}` : ''} · `;
     title.textContent = `${number}${question.prompt}`; prompt.append(title);
     label.append(checkbox, prompt); row.append(label);
     const answers = document.createElement('p'); answers.className = 'question-answers'; answers.textContent = `A: ${question.a}  ·  B: ${question.b}`;
