@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.4 — 2026-10-08
+
+- Save my picks now completes the ballot, starts a new voter, clears checks, and reloads with shuffled questions. Block empty saves and retain the existing ballot on failed saves.
+
 ## 1.2.3 — 2026-10-08
 
 - Print all six codes on one spaced, labeled sheet, or print a single team with a large code on its own page. Printouts exclude host controls and private host links.
