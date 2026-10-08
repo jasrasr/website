@@ -56,16 +56,36 @@ async function load(preserveDraft = true) {
 }
 $('searchQuestions').addEventListener('input', render);
 const saveButtons = [$('saveSelections'), $('saveSelectionsBottom')];
+const voterButtons = [...saveButtons, $('nextVoter')];
 async function savePicks() {
   if (busy) return;
-  busy = true; saveButtons.forEach(button => { button.disabled = true; });
+  busy = true; voterButtons.forEach(button => { button.disabled = true; });
   try {
     const result = await api('vote', {selected:[...draft]});
     questions = votingOrder(result.questions); draft = new Set(result.selected); render(); notice('Your picks are saved. Thanks for helping choose!');
   } catch (error) { notice(error.message); }
-  finally { busy = false; saveButtons.forEach(button => { button.disabled = false; }); }
+  finally { busy = false; voterButtons.forEach(button => { button.disabled = false; }); }
 }
 for (const button of saveButtons) button.addEventListener('click', savePicks);
+$('nextVoter').addEventListener('click', async () => {
+  if (busy) return;
+  busy = true; voterButtons.forEach(button => { button.disabled = true; });
+  try {
+    // Persist the departing voter before rotating their anonymous identity.
+    const nextToken = randomToken();
+    const result = await api('vote', {selected:[...draft]});
+    localStorage.setItem(tokenKey, nextToken);
+    leaderToken = nextToken;
+    draft = new Set();
+    questionOrder.clear();
+    questions = votingOrder(result.questions);
+    $('suggestionForm').reset();
+    $('searchQuestions').value = '';
+    render();
+    notice('Previous picks saved. Ready for the next voter with a fresh selection.');
+  } catch (error) { notice(error.message); }
+  finally { busy = false; voterButtons.forEach(button => { button.disabled = false; }); }
+});
 $('suggestionForm').addEventListener('submit', async event => {
   event.preventDefault();
   if (busy) return;
