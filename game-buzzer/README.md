@@ -8,7 +8,9 @@ Two games for six teams: 6th-grade boys/girls, 7th-grade boys/girls, and 8th-gra
 
 ## Leader question poll
 
-Share the **Choose question favorites** link from the home page with leaders before game day. Each leader can select any number of favorites from the 100-question bank, see live counts sorted by popularity, and submit A/B suggestions without an app-imposed entry cap. Each browser has a random anonymous fingerprint; its latest saved picks count once per question, while repeated saves and suggestions are counted in the activity list. Twenty pick saves or five suggestions flag a fingerprint for review but do not block it. The ID is stored in browser storage, not derived from device details; clearing that storage creates a new ID. The **Copy top 10 for game setup** button copies the current leading questions in the format accepted by the game creator. The host still chooses the final questions.
+Share **leaders.php** with leaders before game day. The 100-question bank and leader suggestions appear in a random order for each page visit, stable while browsing and saving. Voting shows no popularity counts, rankings, activity totals, or results link. Each browser's latest saved picks count once per question. Existing picks and suggestions are preserved.
+
+Open **leader-results.php** separately (or use **view question rankings** on the home page) for public combined totals, rankings, anonymous activity, and **Copy top 10 for game setup**. Results update every 10 seconds; equal totals share a rank. Paste the copied questions into the game setup editor. Results are public, not access restricted; share the voting link with voters. Anonymous browser IDs and activity review flags work as before.
 
 ## First-time host setup through user-management
 

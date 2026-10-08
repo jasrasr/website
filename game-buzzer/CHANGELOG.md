@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Shuffle leader voting questions independently of popularity, preserving their order during a visit.
+- Move combined counts, rankings, activity, and top-10 copying to a separate public results page.
+- Preserve existing saved votes and suggestions.
+
 ## 1.1.1 — 2026-10-07
 
 - Version JavaScript and CSS URLs by file content to prevent old cached assets from disabling newly deployed shared-login controls.
