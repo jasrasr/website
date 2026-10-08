@@ -91,3 +91,7 @@ Submitting a custom question automatically saves it as a favorite for the submit
 Custom questions are numbered 101, 102, and onward in submission order, including existing suggestions. Their numbers stay the same as popularity and voting order change.
 
 For a shared phone, tap **Next voter / clear selections** after choosing questions. It saves the current ballot, generates a new anonymous voter ID, clears selections and search, and reshuffles for the next person. Previous votes remain counted. A failed save keeps the current voter and selections intact.
+
+## Team invitation QR codes
+
+Create a game, then open **Team phone invitations and QR codes** in the private host controls. Each team has a labeled code, **Download QR** PNG button, and copyable invitation. Multiple phones scan the same team code; the first phone from that team to buzz counts. QR generation runs locally using the vendored MIT-licensed qrcode-generator by Kazuhiko Arase. Team keys are included in the QR; share each code only with its team. The private host invitation is never turned into a QR code.

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.3 — 2026-10-08
+
+- Add six labeled team invitation QR codes and PNG downloads to the private host controls. Generate codes locally, including team keys, so multiple phones can scan the same team invitation.
+
 ## 1.2.2 — 2026-10-08
 
 - Add Next voter / clear selections to save the departing ballot and start a separate anonymous voter on the same phone.
