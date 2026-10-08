@@ -1,0 +1,179 @@
+{
+  "version": 1,
+  "totalMiles": 2040,
+  "stops": [
+    {
+      "id": "kansas-river",
+      "name": "Kansas River",
+      "mile": 102,
+      "type": "river"
+    },
+    {
+      "id": "fort-kearney",
+      "name": "Fort Kearney",
+      "mile": 304,
+      "type": "stop",
+      "actions": [
+        {
+          "label": "Rest for two days",
+          "days": 2,
+          "effects": {
+            "health": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "chimney-rock",
+      "name": "Chimney Rock",
+      "mile": 554,
+      "type": "stop"
+    },
+    {
+      "id": "fort-laramie",
+      "name": "Fort Laramie",
+      "mile": 640,
+      "type": "stop",
+      "actions": [
+        {
+          "label": "Rest for three days",
+          "days": 3,
+          "effects": {
+            "health": 15,
+            "food": -10
+          }
+        }
+      ]
+    },
+    {
+      "id": "independence-rock",
+      "name": "Independence Rock",
+      "mile": 830,
+      "type": "stop"
+    },
+    {
+      "id": "south-pass",
+      "name": "South Pass",
+      "mile": 932,
+      "type": "stop"
+    },
+    {
+      "id": "fort-bridger",
+      "name": "Fort Bridger",
+      "mile": 1120,
+      "type": "stop"
+    },
+    {
+      "id": "fort-hall",
+      "name": "Fort Hall",
+      "mile": 1330,
+      "type": "stop"
+    },
+    {
+      "id": "blue-mountains",
+      "name": "Blue Mountains",
+      "mile": 1700,
+      "type": "stop"
+    },
+    {
+      "id": "the-dalles",
+      "name": "The Dalles",
+      "mile": 1900,
+      "type": "river"
+    },
+    {
+      "id": "oregon-city",
+      "name": "Oregon City",
+      "mile": 2040,
+      "type": "stop"
+    }
+  ],
+  "events": [
+    {
+      "id": "broken-wheel",
+      "chancePercent": 12,
+      "title": "A wheel breaks on the rough trail.",
+      "message": "The repair takes time and costs you ground.",
+      "effects": {
+        "miles": [
+          -34,
+          -10
+        ]
+      }
+    },
+    {
+      "id": "illness",
+      "chancePercent": 9,
+      "title": "Someone has taken ill.",
+      "message": "You make camp early and tend to the sick.",
+      "effects": {
+        "health": [
+          -24,
+          -9
+        ]
+      }
+    },
+    {
+      "id": "wild-game",
+      "chancePercent": 10,
+      "title": "A kind afternoon for hunting.",
+      "message": "You bring back enough game to fill the pot.",
+      "effects": {
+        "food": [
+          12,
+          36
+        ]
+      }
+    }
+  ],
+  "actions": [
+    {
+      "label": "Rest for a day",
+      "days": 1,
+      "effects": {
+        "health": 5,
+        "food": -5
+      }
+    }
+  ],
+  "hunting": {
+    "failurePercent": 20,
+    "food": [
+      35,
+      85
+    ],
+    "days": 1
+  },
+  "crossings": [
+    {
+      "id": "ford",
+      "label": "Ford the river",
+      "successPercent": 40,
+      "days": 2
+    },
+    {
+      "id": "caulk",
+      "label": "Caulk the wagon",
+      "successPercent": 65,
+      "days": 2
+    },
+    {
+      "id": "ferry",
+      "label": "Take the ferry · 3 lb food",
+      "successPercent": 93,
+      "days": 2,
+      "costFood": 3
+    }
+  ],
+  "crossingFailure": {
+    "foodLoss": [
+      20,
+      70
+    ],
+    "milesLost": [
+      20,
+      70
+    ],
+    "travelerLossPercent": 25
+  }
+}
