@@ -17,7 +17,7 @@
     <section class="game-card" aria-label="Oregon Trail game">
       <div class="scene-wrap"><canvas id="scene" width="800" height="260" aria-label="A covered wagon crossing the prairie"></canvas><div class="scene-caption"><span id="scene-place">INDEPENDENCE, MISSOURI</span><span>1848</span></div></div>
       <div class="game-content">
-        <div class="game-topline"><span id="phase-label">THE JOURNEY BEGINS</span><span class="distance-track"><span id="distance-fill"></span></span><span class="distance-label"><b id="miles">0</b> / 2,040 MI</span></div>
+        <div class="game-topline"><span id="phase-label">THE JOURNEY BEGINS</span><span class="distance-track"><span id="distance-fill"></span></span><span class="distance-label"><b id="miles">0</b> / <span id="total-miles">2,040</span> MI</span></div>
         <div class="story" aria-live="polite"><div class="story-date" id="date">APRIL 1, 1848</div><h1 id="headline">A new life lies out west.</h1><p id="message">You and your party are ready to leave Independence. The trail is long, the country is wide, and the choices are yours.</p></div>
 
         <div class="status-grid" aria-label="Journey status">
@@ -28,12 +28,15 @@
         </div>
 
         <div class="action-area" id="actions"></div>
-        <div class="event-log" id="log" aria-live="polite"><span class="log-dot"></span><span id="log-text">The wagon is packed. Your adventure is about to begin.</span></div>
+        <p id="save-status" class="save-status" role="status">Loading game…</p><p id="offline-status" class="save-status">Offline play becomes available after the first successful load.</p><div class="event-log" id="log" aria-live="polite"><span class="log-dot"></span><span id="log-text">The wagon is packed. Your adventure is about to begin.</span></div>
       </div>
       <footer class="game-footer"><span>✳ &nbsp;GO WEST, YOUNG TRAVELER</span><button id="sound-toggle" class="sound-button" type="button" aria-label="Toggle sound">♪ <span>Sound off</span></button><button id="reset-button" class="reset-button" type="button">Start a new journey ↗</button></footer>
     </section>
+    <details class="saved-journeys"><summary>Saved journeys on this device</summary><div id="saved-games"></div></details>
     <p class="below-note">A little pixel adventure inspired by the classic 1848 journey. <span>Best played with a curious spirit.</span></p>
   </main>
+  <script src="rules.js"></script>
+  <script src="saves.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
