@@ -2,7 +2,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),vm=require(
 const root=path.resolve(__dirname,'..');
 const rules=require('../rules.js'),saves=require('../saves.js');
 const defaults=JSON.parse(fs.readFileSync(path.join(root,'game-content.json')));
-function environment(storage,config=defaults,failFetch=false){
+function environment(storage,config=defaults,failFetch=false,serviceWorker){
   const elements=new Map();
   class Element{
     constructor(tag='div'){this.tag=tag;this.children=[];this.style={};this.value='';this.textContent='';}
@@ -21,7 +21,7 @@ function environment(storage,config=defaults,failFetch=false){
   }
   const document={getElementById:id=>{if(!elements.has(id))elements.set(id,new Element());return elements.get(id);},createElement:tag=>new Element(tag),querySelectorAll:selector=>elements.get('family-fields')?.querySelectorAll(selector)||[],addEventListener(){}};
   document.getElementById('scene').getContext=()=>new Proxy({}, {get:()=>()=>{},set:()=>true});
-  const context=vm.createContext({document,window:{addEventListener(){}},navigator:{},localStorage:storage,TrailRules:rules,TrailSaves:saves,structuredClone,crypto:require('node:crypto').webcrypto,Date,Math,AbortSignal,fetch:async()=>{if(failFetch)throw Error('offline');return {ok:true,json:async()=>structuredClone(config)};}});
+  const context=vm.createContext({document,window:{addEventListener(){}},navigator:serviceWorker?{serviceWorker}:{},localStorage:storage,TrailRules:rules,TrailSaves:saves,structuredClone,crypto:require('node:crypto').webcrypto,Date,Math,AbortSignal,setTimeout:callback=>{queueMicrotask(callback);return 1;},clearTimeout(){},fetch:async()=>{if(failFetch)throw Error('offline');return {ok:true,json:async()=>structuredClone(config)};}});
   const ready=vm.runInContext(fs.readFileSync(path.join(root,'game.js'),'utf8'),context);
   return {ready,elements,click(label){const b=elements.get('actions').children.flatMap(c=>c.children).find(x=>x.tag==='button'&&x.textContent.startsWith(label));assert.ok(b,'Missing button '+label);b.onclick();},pack(){elements.get('begin-journey').onclick();}};
 }
@@ -43,12 +43,21 @@ test('Game runtime autosaves actions and restores exact pending stops with conte
   data=saves.read(storage);assert.equal(Object.keys(data.games).length,2);assert.equal(data.games[id].config.crossings[0].successPercent,40);
   assert.equal(Object.values(data.games).find(g=>g.id!==id).config.crossings[0].successPercent,0);
 });
+test('Final river stop offers its choices before completing the journey',async()=>{
+  const config=structuredClone(defaults);config.totalMiles=10;config.events=[];config.stops=[{id:'end',name:'Oregon River',mile:10,type:'river',actions:[{label:'Final task',effects:{health:1}}]}];
+  const serviceWorker={register:()=>Promise.resolve(),ready:new Promise(()=>{})};
+  const storage=memory(),game=environment(storage,config,false,serviceWorker);await game.ready;game.pack();game.click('Continue');await new Promise(resolve=>setImmediate(resolve));
+  assert.ok(game.elements.get('actions').children[1].children.some(b=>b.textContent.startsWith('Ford the river')));
+  assert.ok(game.elements.get('actions').children[1].children.some(b=>b.textContent==='Final task'));
+  assert.match(game.elements.get('offline-status').textContent,/Offline reload unavailable/);
+  game.click('Final task');assert.equal(Object.values(saves.read(storage).games)[0].state.gameOver,true);
+});
 test('Game visits crossed stops in order, resolves custom failure, and retains completed journeys',async()=>{
   const config=structuredClone(defaults);
   config.totalMiles=30;config.events=[];config.stops=[{id:'a',name:'Camp A',mile:1,type:'stop',actions:[{label:'Risky task',days:2,successPercent:0,failureEffects:{health:-100}}]},{id:'b',name:'Camp B',mile:2,type:'stop'},{id:'end',name:'Oregon City',mile:30,type:'stop'}];
   const storage=memory();const game=environment(storage,config);await game.ready;game.pack();game.click('Continue');assert.equal(Object.values(saves.read(storage).games)[0].pendingStop,'a');
   game.click('Leave');game.click('Continue');assert.equal(Object.values(saves.read(storage).games)[0].pendingStop,'b');
-  game.click('Leave');game.click('Continue');assert.equal(Object.values(saves.read(storage).games)[0].state.gameOver,true);
+  game.click('Leave');game.click('Continue');assert.equal(Object.values(saves.read(storage).games)[0].pendingStop,'end');game.click('Leave');assert.equal(Object.values(saves.read(storage).games)[0].state.gameOver,true);
   game.click('Start a new');game.pack();game.click('Continue');game.click('Risky task');
   const records=Object.values(saves.read(storage).games);assert.equal(records.length,2);assert.equal(records.filter(x=>x.state.gameOver).length,2);assert.ok(records.some(x=>x.state.health===0));
 });

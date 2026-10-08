@@ -32,6 +32,7 @@ test('Saving a journey preserves others and never overwrites unreadable storage'
   saves.write(storage,{id:'a',state:{miles:3}});
   assert.equal(saves.read(storage).games.b.state.miles,2);
   value='broken';assert.throws(()=>saves.write(storage,{id:'c'}));assert.equal(value,'broken');
+  value='';assert.throws(()=>saves.write(storage,{id:'c'}));assert.equal(value,'');
 });
 test('Browser restores pending choices, keeps multiple games and works offline',{skip:process.env.RUN_BROWSER_TESTS!=='1'},async()=>{
   const {chromium}=require('playwright');

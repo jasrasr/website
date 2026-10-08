@@ -120,7 +120,6 @@
     const stop=content.stops[s.landmark];
     if(!stop||s.miles<stop.mile)return false;
     s.landmark++;pendingStop=stop.id;view='stop';
-    if(s.landmark===content.stops.length){endIfNeeded();return true;}
     s.scene=stop.type==='river'?'river':'prairie';
     setStory(stop.type==='river'?stop.name+' lies ahead.':'You reached '+stop.name+'.',stop.type==='river'?'How will you get the wagon across?':'Your party pauses at this landmark. Choose an action or continue.','LANDMARK REACHED');log(stop.name+' · '+s.miles+' miles traveled.');stopChoices();update();return true;
   }
@@ -158,7 +157,7 @@
   }
   function stopChoices(){
     view='stop';const stop=content.stops.find(x=>x.id===pendingStop);
-    const choices=stop.type==='river'?content.crossings.map(c=>({label:c.label+' · '+c.successPercent+'% safe',disabled:s.food<(c.costFood||0),run:()=>cross(c,stop)})):[{label:'Leave '+stop.name+' →',run:()=>{pendingStop=null;s.scene='prairie';campChoices();update();}}];
+    const choices=stop.type==='river'?content.crossings.map(c=>({label:c.label+' · '+c.successPercent+'% safe',disabled:s.food<(c.costFood||0),run:()=>cross(c,stop)})):[{label:'Leave '+stop.name+' →',run:()=>{pendingStop=null;s.scene='prairie';if(!endIfNeeded()){campChoices();update();}}}];
     buttons([...choices,...customChoices(stop.actions||[])],stop.name.toUpperCase());
   }
   function cross(c,stop){
@@ -194,5 +193,5 @@
     const records=Object.values(TrailSaves.read(localStorage).games).filter(r=>{try{TrailSaves.valid(r,TrailRules);return !r.state.gameOver;}catch{return false;}}).sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)));
     if(records.length)loadGame(records[0].id);else setup();
   }catch{setup();}
-  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').then(()=>{$('offline-status').textContent='Preparing offline play…';return navigator.serviceWorker.ready;}).then(()=>{$('offline-status').textContent='Ready for offline play on this device.';}).catch(()=>{$('offline-status').textContent='Offline reload unavailable. Progress still saves on this device.';});
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').then(()=>{$('offline-status').textContent='Preparing offline play…';let timeout;return Promise.race([navigator.serviceWorker.ready,new Promise((_,reject)=>{timeout=setTimeout(()=>reject(Error('Service worker readiness timed out')),10000);})]).finally(()=>clearTimeout(timeout));}).then(()=>{$('offline-status').textContent='Ready for offline play on this device.';}).catch(()=>{$('offline-status').textContent='Offline reload unavailable. Progress still saves on this device.';});
 })();

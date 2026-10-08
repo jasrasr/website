@@ -1,7 +1,7 @@
 (function(root){
   'use strict';
   const KEY='oregon-trail.journeys.v1';
-  function read(storage){const raw=storage.getItem(KEY);if(!raw)return {version:1,games:{}};const data=JSON.parse(raw);if(data.version!==1||!data.games||typeof data.games!=='object'||Array.isArray(data.games))throw Error('Saved journey data is unreadable');return data;}
+  function read(storage){const raw=storage.getItem(KEY);if(raw===null)return {version:1,games:{}};const data=JSON.parse(raw);if(data.version!==1||!data.games||typeof data.games!=='object'||Array.isArray(data.games))throw Error('Saved journey data is unreadable');return data;}
   function write(storage,record){const data=read(storage);data.games[record.id]=record;storage.setItem(KEY,JSON.stringify(data));}
   function valid(record,rules){
     if(!record||typeof record.id!=='string'||!record.state||!record.story||typeof record.log!=='string')throw Error('Invalid saved journey');
