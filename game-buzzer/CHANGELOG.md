@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.2 — 2026-10-08
+
+- Automatically save new custom questions as favorites for the submitting browser, preserving existing picks and unsaved ballot edits.
+
 ## 1.2.1 — 2026-10-08
 
 - Add View results navigation from voting, completing links in both directions. Counts and rankings remain on the separate results page.

@@ -70,6 +70,7 @@ function gb_leader_question_state(array $config, array $in): array {
         }
 
         $changed = $migrated;
+        $suggestedId = null;
         if ($kind === 'vote') {
             $selected = $in['selected'] ?? null;
             if (!is_array($selected) || !array_is_list($selected)) gb_fail('Choose valid questions.');
@@ -92,10 +93,14 @@ function gb_leader_question_state(array $config, array $in): array {
                 'b' => gb_string($in, 'b', 120),
                 'by' => $fingerprint,
             ];
+            $suggestedId = $question['id'];
+            $store['votes'][$fingerprint] = array_values(array_unique(array_merge($store['votes'][$fingerprint] ?? [], [$suggestedId])));
             $store['custom'][] = $question;
             $questions[] = $question + ['custom' => true];
             $activity = $store['activity'][$fingerprint] ?? ['votes' => 0, 'suggestions' => 0, 'lastSeen' => 0];
             $activity['suggestions']++;
+            $activity['votes']++;
+            $activity['selected'] = count($store['votes'][$fingerprint]);
             $activity['lastSeen'] = time();
             $store['activity'][$fingerprint] = $activity;
             $changed = true;
@@ -122,7 +127,7 @@ function gb_leader_question_state(array $config, array $in): array {
                 'flagged' => $votes >= 20 || $suggestions >= 5];
         }
         usort($activity, fn($a, $b) => (($b['votes'] + $b['suggestions']) <=> ($a['votes'] + $a['suggestions'])) ?: strcmp($a['fingerprint'], $b['fingerprint']));
-        return ['questions' => $questions, 'selected' => $store['votes'][$fingerprint] ?? [], 'fingerprint' => $fingerprint, 'activity' => $activity];
+        return ['suggestedId' => $suggestedId, 'questions' => $questions, 'selected' => $store['votes'][$fingerprint] ?? [], 'fingerprint' => $fingerprint, 'activity' => $activity];
     } finally {
         if ($tmp !== null && is_file($tmp)) unlink($tmp);
         flock($lock, LOCK_UN);

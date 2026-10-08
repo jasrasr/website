@@ -18,7 +18,7 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-sr
 <p class="muted">Questions are shown in random order. A question’s prompt and both choices are shown below.</p>
 <div id="questionList" class="question-list" aria-live="polite"></div>
 </section>
-<section class="panel"><h2>Suggest a question</h2><p class="muted">Write a fun, kind, G-rated question for church and middle school students.</p>
+<section class="panel"><h2>Suggest a question</h2><p class="muted">Write a fun, kind, G-rated question for church and middle school students. Your suggestion is automatically saved as one of your favorites.</p>
 <form id="suggestionForm"><label>Question<input name="prompt" maxlength="200" required></label><div class="leader-answers"><label>Answer A<input name="a" maxlength="120" required></label><label>Answer B<input name="b" maxlength="120" required></label></div><button type="submit">Add suggestion</button></form>
 </section><p class="muted">Your saved picks are tied to this browser. Leaders using separate browsers get separate anonymous IDs.</p></main>
 <?php gb_release_footer('Voting'); ?><script src="leaders.js?v=<?= $scriptVersion ?>" defer></script></body></html>

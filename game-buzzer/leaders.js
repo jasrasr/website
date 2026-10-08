@@ -72,7 +72,9 @@ $('suggestionForm').addEventListener('submit', async event => {
   busy = true; submitButton.disabled = true;
   try {
     const result = await api('suggest', {prompt:form.get('prompt'),a:form.get('a'),b:form.get('b')});
-    questions = votingOrder(result.questions); render(); formElement.reset(); notice('Your question was added to the shared list. You can select it above.');
+    // Add only the new favorite so other unsaved checks/unchecks stay intact.
+    if (result.suggestedId) draft.add(result.suggestedId);
+    questions = votingOrder(result.questions); render(); formElement.reset(); notice('Your question was added and saved as one of your favorites. Save my picks to save any other changes.');
   } catch (error) { notice(error.message); }
   finally { busy = false; submitButton.disabled = false; }
 });
