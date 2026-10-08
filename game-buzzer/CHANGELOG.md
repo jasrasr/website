@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1 — 2026-10-08
+
+- Add View results navigation from voting, completing links in both directions. Counts and rankings remain on the separate results page.
+
 ## 1.2.0 — 2026-10-08
 
 - Show a shared revision and source update date/time footer on game, voting, and results pages.

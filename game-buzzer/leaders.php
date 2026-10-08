@@ -12,6 +12,7 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-sr
 <main><div id="notice" role="alert" hidden></div><section class="panel leader-panel">
 <p class="eyebrow">LEADER QUESTION VOTING</p><h1>Choose your favorites</h1>
 <p class="intro">Select any number of questions for an upcoming game. Questions are shuffled so you can choose your own favorites. You can also submit as many of your own A/B questions as you like.</p>
+<p class="muted">Save your picks before leaving. <a href="leader-results.php">View results</a>.</p>
 <div class="leader-toolbar"><strong id="selectionCount">0 selected</strong><div><button id="saveSelections">Save my picks</button></div></div>
 <label for="searchQuestions">Find a question<input id="searchQuestions" type="search" placeholder="Search the question bank"></label>
 <p class="muted">Questions are shown in random order. A question’s prompt and both choices are shown below.</p>
