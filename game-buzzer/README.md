@@ -8,7 +8,7 @@ Two games for six teams: 6th-grade boys/girls, 7th-grade boys/girls, and 8th-gra
 
 ## Leader question poll
 
-Share **leaders.php** with leaders before game day. The 100-question bank and leader suggestions appear in a random order for each page visit, stable while browsing and saving. Voting shows no popularity counts, rankings, activity totals, or results link. Each browser's latest saved picks count once per question. Existing picks and suggestions are preserved.
+Share **leaders.php** with leaders before game day. The 100-question bank and leader suggestions appear in a random order for each page visit, stable while browsing and saving. Voting shows no popularity counts, rankings, or activity totals. Each browser's latest saved picks count once per question. Existing picks and suggestions are preserved. A View results link opens the separate results page; save your picks before leaving.
 
 Open **leader-results.php** separately (or use **view question rankings** on the home page) for public combined totals, rankings, anonymous activity, and **Copy top 10 for game setup**. Results update every 10 seconds; equal totals share a rank. Paste the copied questions into the game setup editor. Results are public, not access restricted; share the voting link with voters. Anonymous browser IDs and activity review flags work as before.
 
