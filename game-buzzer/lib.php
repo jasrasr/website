@@ -61,15 +61,16 @@ function gb_leader_question_state(array $config, array $in): array {
         $questions = [];
         foreach ($bankRows as $i => $row) {
             if (!is_array($row) || count($row) !== 3) gb_fail('Question bank is invalid.', 503);
-            $questions[] = ['id' => 'q' . str_pad((string)($i + 1), 3, '0', STR_PAD_LEFT), 'prompt' => $row[0], 'a' => $row[1], 'b' => $row[2], 'custom' => false];
+            $questions[] = ['id' => 'q' . str_pad((string)($i + 1), 3, '0', STR_PAD_LEFT), 'number' => $i + 1, 'prompt' => $row[0], 'a' => $row[1], 'b' => $row[2], 'custom' => false];
         }
-        foreach ($store['custom'] as $question) {
+        foreach ($store['custom'] as $customIndex => $question) {
             if (is_array($question) && isset($question['id'], $question['prompt'], $question['a'], $question['b'])) {
-                $questions[] = ['id' => $question['id'], 'prompt' => $question['prompt'], 'a' => $question['a'], 'b' => $question['b'], 'by' => $question['by'] ?? null, 'custom' => true];
+                $questions[] = ['id' => $question['id'], 'number' => 101 + $customIndex, 'prompt' => $question['prompt'], 'a' => $question['a'], 'b' => $question['b'], 'by' => $question['by'] ?? null, 'custom' => true];
             }
         }
 
         $changed = $migrated;
+        $suggestedId = null;
         if ($kind === 'vote') {
             $selected = $in['selected'] ?? null;
             if (!is_array($selected) || !array_is_list($selected)) gb_fail('Choose valid questions.');
@@ -87,15 +88,20 @@ function gb_leader_question_state(array $config, array $in): array {
         } elseif ($kind === 'suggest') {
             $question = [
                 'id' => 'c' . bin2hex(random_bytes(8)),
+                'number' => 101 + count($store['custom']),
                 'prompt' => gb_string($in, 'prompt', 200),
                 'a' => gb_string($in, 'a', 120),
                 'b' => gb_string($in, 'b', 120),
                 'by' => $fingerprint,
             ];
+            $suggestedId = $question['id'];
+            $store['votes'][$fingerprint] = array_values(array_unique(array_merge($store['votes'][$fingerprint] ?? [], [$suggestedId])));
             $store['custom'][] = $question;
             $questions[] = $question + ['custom' => true];
             $activity = $store['activity'][$fingerprint] ?? ['votes' => 0, 'suggestions' => 0, 'lastSeen' => 0];
             $activity['suggestions']++;
+            $activity['votes']++;
+            $activity['selected'] = count($store['votes'][$fingerprint]);
             $activity['lastSeen'] = time();
             $store['activity'][$fingerprint] = $activity;
             $changed = true;
@@ -122,7 +128,7 @@ function gb_leader_question_state(array $config, array $in): array {
                 'flagged' => $votes >= 20 || $suggestions >= 5];
         }
         usort($activity, fn($a, $b) => (($b['votes'] + $b['suggestions']) <=> ($a['votes'] + $a['suggestions'])) ?: strcmp($a['fingerprint'], $b['fingerprint']));
-        return ['questions' => $questions, 'selected' => $store['votes'][$fingerprint] ?? [], 'fingerprint' => $fingerprint, 'activity' => $activity];
+        return ['suggestedId' => $suggestedId, 'questions' => $questions, 'selected' => $store['votes'][$fingerprint] ?? [], 'fingerprint' => $fingerprint, 'activity' => $activity];
     } finally {
         if ($tmp !== null && is_file($tmp)) unlink($tmp);
         flock($lock, LOCK_UN);

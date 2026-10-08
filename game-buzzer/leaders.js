@@ -37,7 +37,7 @@ function render() {
       notice(''); $('selectionCount').textContent = `${draft.size} selected`;
     });
     const prompt = document.createElement('span'), title = document.createElement('strong');
-    const number = question.id.startsWith('q') ? `Question ${Number(question.id.slice(1))} · ` : `Leader suggestion${question.by ? ` · ${question.by}` : ''} · `;
+    const number = `Question ${question.number ?? Number(question.id.slice(1))} · `;
     title.textContent = `${number}${question.prompt}`; prompt.append(title);
     label.append(checkbox, prompt); row.append(label);
     const answers = document.createElement('p'); answers.className = 'question-answers'; answers.textContent = `A: ${question.a}  ·  B: ${question.b}`;
@@ -55,14 +55,36 @@ async function load(preserveDraft = true) {
   } catch (error) { $('connection').textContent = 'Connection unavailable'; if (!initialized) notice(error.message); }
 }
 $('searchQuestions').addEventListener('input', render);
-$('saveSelections').addEventListener('click', async () => {
+const saveButtons = [$('saveSelections'), $('saveSelectionsBottom')];
+const voterButtons = [...saveButtons, $('nextVoter')];
+async function savePicks() {
   if (busy) return;
-  busy = true; $('saveSelections').disabled = true;
+  busy = true; voterButtons.forEach(button => { button.disabled = true; });
   try {
     const result = await api('vote', {selected:[...draft]});
     questions = votingOrder(result.questions); draft = new Set(result.selected); render(); notice('Your picks are saved. Thanks for helping choose!');
   } catch (error) { notice(error.message); }
-  finally { busy = false; $('saveSelections').disabled = false; }
+  finally { busy = false; voterButtons.forEach(button => { button.disabled = false; }); }
+}
+for (const button of saveButtons) button.addEventListener('click', savePicks);
+$('nextVoter').addEventListener('click', async () => {
+  if (busy) return;
+  busy = true; voterButtons.forEach(button => { button.disabled = true; });
+  try {
+    // Persist the departing voter before rotating their anonymous identity.
+    const nextToken = randomToken();
+    const result = await api('vote', {selected:[...draft]});
+    localStorage.setItem(tokenKey, nextToken);
+    leaderToken = nextToken;
+    draft = new Set();
+    questionOrder.clear();
+    questions = votingOrder(result.questions);
+    $('suggestionForm').reset();
+    $('searchQuestions').value = '';
+    render();
+    notice('Previous picks saved. Ready for the next voter with a fresh selection.');
+  } catch (error) { notice(error.message); }
+  finally { busy = false; voterButtons.forEach(button => { button.disabled = false; }); }
 });
 $('suggestionForm').addEventListener('submit', async event => {
   event.preventDefault();
@@ -72,7 +94,9 @@ $('suggestionForm').addEventListener('submit', async event => {
   busy = true; submitButton.disabled = true;
   try {
     const result = await api('suggest', {prompt:form.get('prompt'),a:form.get('a'),b:form.get('b')});
-    questions = votingOrder(result.questions); render(); formElement.reset(); notice('Your question was added to the shared list. You can select it above.');
+    // Add only the new favorite so other unsaved checks/unchecks stay intact.
+    if (result.suggestedId) draft.add(result.suggestedId);
+    questions = votingOrder(result.questions); render(); formElement.reset(); notice('Your question was added and saved as one of your favorites. Save my picks to save any other changes.');
   } catch (error) { notice(error.message); }
   finally { busy = false; submitButton.disabled = false; }
 });
