@@ -18,6 +18,11 @@ try {
     $counts = array_column($public['questions'], 'count', 'id');
     check($counts[$id] === 1 && $counts['q001'] === 1, 'Shared question has one pick without changing existing counts');
     check($public['selected'] === [], 'Other browser does not inherit author favorites');
+    check(array_column($public['questions'], 'number', 'id')[$id] === 101, 'First custom question is 101');
+    $next = gb_leader_question_state($config, ['leader' => $other, 'kind' => 'suggest', 'prompt' => 'Second?', 'a' => 'A', 'b' => 'B']);
+    check(array_column($next['questions'], 'number', 'id')[$next['suggestedId']] === 102, 'Next custom question is 102');
+    check(array_column($next['questions'], 'number', 'id')[$id] === 101, 'Original number stays stable');
+    check(count($next['questions']) === 102, 'Shared list includes bank and both suggestions');
     $activity = $result['activity'][0];
     check($activity['selected'] === 2 && $activity['suggestions'] === 1, 'Activity reflects automatic favorite');
     $removed = gb_leader_question_state($config, ['leader' => $author, 'kind' => 'vote', 'selected' => ['q001']]);

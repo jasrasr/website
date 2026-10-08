@@ -2,6 +2,9 @@
 
 ## 1.2.2 — 2026-10-08
 
+- Add Save my picks below the voting list as well as above it.
+- Update scoring regression assertions to account for existing automatic speed points.
+- Number custom questions sequentially from 101 on voting and results pages.
 - Automatically save new custom questions as favorites for the submitting browser, preserving existing picks and unsaved ballot edits.
 
 ## 1.2.1 — 2026-10-08

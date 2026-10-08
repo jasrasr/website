@@ -88,3 +88,4 @@ Tests cover authorization, early/late/stale presses, two phones per team, hidden
 Every page displays the shared revision and source update timestamp in its footer (Eastern time). Update `GB_REVISION` and `GB_UPDATED_AT` in `release.php` for every release; this is not a deployment timestamp. Voting is `leaders.php`; public results are `leader-results.php`. Results show question IDs separately from rank, explicitly label ties, and mark zero-vote questions as not yet picked.
 
 Submitting a custom question automatically saves it as a favorite for the submitting browser and shares it with others. Existing saved favorites stay intact. Other unsaved checkbox changes still require **Save my picks**. The author can uncheck the suggestion and save to remove their pick.
+Custom questions are numbered 101, 102, and onward in submission order, including existing suggestions. Their numbers stay the same as popularity and voting order change.

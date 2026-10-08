@@ -61,11 +61,11 @@ function gb_leader_question_state(array $config, array $in): array {
         $questions = [];
         foreach ($bankRows as $i => $row) {
             if (!is_array($row) || count($row) !== 3) gb_fail('Question bank is invalid.', 503);
-            $questions[] = ['id' => 'q' . str_pad((string)($i + 1), 3, '0', STR_PAD_LEFT), 'prompt' => $row[0], 'a' => $row[1], 'b' => $row[2], 'custom' => false];
+            $questions[] = ['id' => 'q' . str_pad((string)($i + 1), 3, '0', STR_PAD_LEFT), 'number' => $i + 1, 'prompt' => $row[0], 'a' => $row[1], 'b' => $row[2], 'custom' => false];
         }
-        foreach ($store['custom'] as $question) {
+        foreach ($store['custom'] as $customIndex => $question) {
             if (is_array($question) && isset($question['id'], $question['prompt'], $question['a'], $question['b'])) {
-                $questions[] = ['id' => $question['id'], 'prompt' => $question['prompt'], 'a' => $question['a'], 'b' => $question['b'], 'by' => $question['by'] ?? null, 'custom' => true];
+                $questions[] = ['id' => $question['id'], 'number' => 101 + $customIndex, 'prompt' => $question['prompt'], 'a' => $question['a'], 'b' => $question['b'], 'by' => $question['by'] ?? null, 'custom' => true];
             }
         }
 
@@ -88,6 +88,7 @@ function gb_leader_question_state(array $config, array $in): array {
         } elseif ($kind === 'suggest') {
             $question = [
                 'id' => 'c' . bin2hex(random_bytes(8)),
+                'number' => 101 + count($store['custom']),
                 'prompt' => gb_string($in, 'prompt', 200),
                 'a' => gb_string($in, 'a', 120),
                 'b' => gb_string($in, 'b', 120),

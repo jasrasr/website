@@ -37,7 +37,7 @@ function render() {
       notice(''); $('selectionCount').textContent = `${draft.size} selected`;
     });
     const prompt = document.createElement('span'), title = document.createElement('strong');
-    const number = question.id.startsWith('q') ? `Question ${Number(question.id.slice(1))} · ` : `Leader suggestion${question.by ? ` · ${question.by}` : ''} · `;
+    const number = `Question ${question.number ?? Number(question.id.slice(1))} · `;
     title.textContent = `${number}${question.prompt}`; prompt.append(title);
     label.append(checkbox, prompt); row.append(label);
     const answers = document.createElement('p'); answers.className = 'question-answers'; answers.textContent = `A: ${question.a}  ·  B: ${question.b}`;
@@ -55,15 +55,17 @@ async function load(preserveDraft = true) {
   } catch (error) { $('connection').textContent = 'Connection unavailable'; if (!initialized) notice(error.message); }
 }
 $('searchQuestions').addEventListener('input', render);
-$('saveSelections').addEventListener('click', async () => {
+const saveButtons = [$('saveSelections'), $('saveSelectionsBottom')];
+async function savePicks() {
   if (busy) return;
-  busy = true; $('saveSelections').disabled = true;
+  busy = true; saveButtons.forEach(button => { button.disabled = true; });
   try {
     const result = await api('vote', {selected:[...draft]});
     questions = votingOrder(result.questions); draft = new Set(result.selected); render(); notice('Your picks are saved. Thanks for helping choose!');
   } catch (error) { notice(error.message); }
-  finally { busy = false; $('saveSelections').disabled = false; }
-});
+  finally { busy = false; saveButtons.forEach(button => { button.disabled = false; }); }
+}
+for (const button of saveButtons) button.addEventListener('click', savePicks);
 $('suggestionForm').addEventListener('submit', async event => {
   event.preventDefault();
   if (busy) return;

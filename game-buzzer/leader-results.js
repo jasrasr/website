@@ -23,7 +23,7 @@ function render() {
     previousCount = question.count;
     if (!`${question.prompt} ${question.a} ${question.b}`.toLocaleLowerCase().includes(query)) return;
     const row = document.createElement('article'); row.className = 'question-choice';
-    const questionLabel = question.id.startsWith('q') ? `Question ${Number(question.id.slice(1))}` : 'Leader suggestion';
+    const questionLabel = `Question ${question.number ?? Number(question.id.slice(1))}`;
     const title = document.createElement('strong'); title.textContent = `${questionLabel} · ${question.prompt}`;
     const answers = document.createElement('p'); answers.className = 'question-answers'; answers.textContent = `A: ${question.a} · B: ${question.b}`;
     const count = document.createElement('small'); count.className = 'question-count'; count.textContent = `${question.count === 0 ? 'No picks yet' : `${ties.get(question.count) > 1 ? 'Tied rank' : 'Rank'} ${rank}`} · ${question.count} leader ${question.count === 1 ? 'pick' : 'picks'}`;
