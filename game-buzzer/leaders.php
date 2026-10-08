@@ -12,15 +12,15 @@ header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-sr
 <main><div id="notice" role="alert" hidden></div><section class="panel leader-panel">
 <p class="eyebrow">LEADER QUESTION VOTING</p><h1>Choose your favorites</h1>
 <p class="intro">Select any number of questions for an upcoming game. Questions are shuffled so you can choose your own favorites. You can also submit as many of your own A/B questions as you like.</p>
-<p class="muted">Save your picks before leaving. <a href="leader-results.php">View results</a>.</p>
+<p class="muted">Save finishes your vote and reloads a fresh, shuffled list for the next voter. <a href="leader-results.php">View results</a>.</p>
 <div class="leader-toolbar"><strong id="selectionCount">0 selected</strong><div><button id="saveSelections">Save my picks</button></div></div>
 <label for="searchQuestions">Find a question<input id="searchQuestions" type="search" placeholder="Search the question bank"></label>
 <p class="muted">Questions are shown in random order. A question’s prompt and both choices are shown below.</p>
 <div id="questionList" class="question-list" aria-live="polite"></div>
 <div class="controls"><button id="saveSelectionsBottom">Save my picks</button><button id="nextVoter" class="secondary">Next voter / clear selections</button></div>
-<p class="muted">Next voter saves the current picks, then clears selections for a separate person using this phone.</p>
+<p class="muted">Both Save my picks and Next voter save this ballot, then clear selections and reload for a separate voter.</p>
 </section>
 <section class="panel"><h2>Suggest a question</h2><p class="muted">Write a fun, kind, G-rated question for church and middle school students. Your suggestion is automatically saved as one of your favorites.</p>
 <form id="suggestionForm"><label>Question<input name="prompt" maxlength="200" required></label><div class="leader-answers"><label>Answer A<input name="a" maxlength="120" required></label><label>Answer B<input name="b" maxlength="120" required></label></div><button type="submit">Add suggestion</button></form>
-</section><p class="muted">Your saved picks are tied to this voter in this browser. Use Next voter to let another person vote separately on this phone.</p></main>
+</section><p class="muted">Your saved picks are tied to this voter in this browser. Saving completes your ballot and starts a separate voter on this phone.</p></main>
 <?php gb_release_footer('Voting'); ?><script src="leaders.js?v=<?= $scriptVersion ?>" defer></script></body></html>

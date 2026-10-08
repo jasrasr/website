@@ -16,6 +16,8 @@ jobs:
         run: |
           find game-buzzer -name '*.php' -print0 | xargs -0 -n1 php -l
           node --check game-buzzer/app.js
+          node --check game-buzzer/team-qr.js
+          node --check game-buzzer/vendor/qrcode.js
           node -e "JSON.parse(require('fs').readFileSync('game-buzzer/questions.json','utf8'))"
       - name: Verify game rules and concurrent presses
         run: |

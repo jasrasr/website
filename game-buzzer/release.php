@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 // Update these together for every Game Buzzer release. This is the source
 // revision time, not the visitor's current time or the server deployment time.
-const GB_REVISION = '1.2.2';
-const GB_UPDATED_AT = '2026-10-08T12:18:02Z';
+const GB_REVISION = '1.2.4';
+const GB_UPDATED_AT = '2026-10-08T12:40:12Z';
 
 function gb_release_footer(string $page): void {
     $updated = new DateTimeImmutable(GB_UPDATED_AT);

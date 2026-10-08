@@ -59,7 +59,27 @@ function links(s) {
   linkRow($('links'), 'Projector', url('projector'));
   linkRow($('links'), 'Student survey', url('survey'));
   linkRow($('links'), 'Check-in kiosk', url('survey') + '&kiosk=1');
-  s.teamLinks.forEach(t => linkRow($('teamLinks'), s.teams[t.team].name, url('team', `team=${t.key}`)));
+  const teamInvitations = s.teamLinks.map(t => ({name:s.teams[t.team].name, invitation:url('team', `team=${t.key}`)}));
+  $('printAllTeamQr').onclick = () => gbPrintTeamCodes(teamInvitations, s.title);
+  s.teamLinks.forEach(t => {
+    const name = s.teams[t.team].name, invitation = url('team', `team=${t.key}`);
+    const card = el('section', undefined, 'team-invitation');
+    card.append(el('h3', name));
+    try {
+      const canvas = gbTeamQr(invitation, name);
+      card.append(canvas, el('p', 'Scan with each phone on this team.', 'muted'));
+      card.append(button('Print this team', () => gbPrintTeamCodes([{name, invitation}], s.title, true)));
+      card.append(button('Download QR', () => {
+        const download = el('a'); download.href = canvas.toDataURL('image/png');
+        download.download = `game-buzzer-team-${t.team + 1}.png`;
+        download.click();
+      }));
+    } catch (error) {
+      card.append(el('p', 'QR unavailable. Use the team link below.', 'muted'));
+    }
+    linkRow(card, 'Team link', invitation);
+    $('teamLinks').append(card);
+  });
 }
 async function command(action, extra = {}) {
   if (busy) return;
