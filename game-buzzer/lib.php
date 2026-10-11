@@ -170,7 +170,7 @@ function gb_room(array $config, string $id, callable $fn, ?array $initial = null
         fclose($lock);
     }
 }
-function gb_new(array $in): array {
+function gb_questions(array $in): array {
     $questions = $in['questions'] ?? json_decode(file_get_contents(__DIR__ . '/questions.json'), true, 512, JSON_THROW_ON_ERROR);
     if (!is_array($questions) || count($questions) !== 10 || !array_is_list($questions)) gb_fail('Provide exactly ten questions.');
     foreach ($questions as &$q) {
@@ -179,12 +179,16 @@ function gb_new(array $in): array {
     }
     unset($q);
     shuffle($questions);
+    return $questions;
+}
+function gb_new(array $in): array {
+    $questions = gb_questions($in);
     $teams = [];
     foreach (['6th grade boys', '6th grade girls', '7th grade boys', '7th grade girls', '8th grade boys', '8th grade girls'] as $i => $name) {
         $teams[] = ['id' => $i, 'name' => $name, 'join' => gb_token(), 'score' => 0];
     }
     return ['id' => bin2hex(random_bytes(6)), 'host' => gb_token(), 'title' => gb_string($in, 'title', 80),
-        'expires' => time() + 86400, 'revision' => 0, 'teams' => $teams, 'devices' => [],
+        'playStarted' => false, 'practice' => false, 'demoVotes' => false, 'expires' => time() + 86400, 'revision' => 0, 'teams' => $teams, 'devices' => [],
         'questions' => $questions, 'ballots' => [], 'surveyOpen' => true, 'question' => null,
         'revealed' => [], 'predictions' => [], 'predictionOpen' => false, 'scored' => [],
         'round' => 0, 'openAt' => null, 'closeAt' => null, 'buzzes' => [], 'speedScored' => false, 'awarded' => [], 'operations' => []];
@@ -209,11 +213,16 @@ function gb_score_speed(array &$room): void {
     if (!empty($room['speedScored'])) return;
     $points = [60, 50, 40, 30, 20, 10];
     foreach (gb_ranking($room) as $place => $entry) {
-        if (isset($points[$place])) $room['teams'][$entry['team']]['score'] += $points[$place];
+        if (empty($room['practice']) && isset($points[$place])) $room['teams'][$entry['team']]['score'] += $points[$place];
     }
     $room['speedScored'] = true;
 }
 function gb_results(array $room, int $q): array {
+    // Sample totals never enter the real arrival ballots.
+    if (!empty($room['practice']) && !empty($room['demoVotes'])) {
+        $a = [14, 7, 11, 10, 5, 16, 8, 13, 6, 12][$q];
+        return ['a' => $a, 'b' => 20 - $a, 'majority' => $a === 10 ? 'tie' : ($a > 10 ? 'a' : 'b')];
+    }
     $a = 0; $b = 0;
     foreach ($room['ballots'] as $ballot) { if ($ballot[$q] === 'a') $a++; else $b++; }
     return ['a' => $a, 'b' => $b, 'majority' => $a === $b ? 'tie' : ($a > $b ? 'a' : 'b')];
@@ -224,7 +233,10 @@ function gb_view(array $r, array $in): array {
     $q = $r['question'];
     $revealed = $q !== null && in_array($q, $r['revealed'], true);
     $v = ['id' => $r['id'], 'title' => $r['title'], 'serverNow' => microtime(true), 'expires' => $r['expires'],
+        'practice' => !empty($r['practice']), 'demoVotes' => !empty($r['practice']) && !empty($r['demoVotes']),
         'teams' => array_map(fn($t) => ['id' => $t['id'], 'name' => $t['name'], 'score' => $t['score']], $r['teams']),
+        'playStarted' => $r['playStarted'] ?? ($r['round'] > 0),
+        'surveyVersion' => hash('sha256', json_encode($r['questions'])),
         'surveyOpen' => $r['surveyOpen'], 'ballotCount' => count($r['ballots']), 'questions' => $r['questions'],
         'question' => $q, 'predictionOpen' => $r['predictionOpen'], 'revealed' => $revealed,
         'results' => $revealed ? gb_results($r, $q) : null,
@@ -241,7 +253,24 @@ function gb_view(array $r, array $in): array {
     }
     return $v;
 }
-function gb_apply(array &$r, string $action, array $in): array {
+function gb_practice(array &$r, bool $enabled): void {
+    if ($enabled === !empty($r['practice'])) return;
+    $fields = ['question', 'revealed', 'predictions', 'predictionOpen', 'scored'];
+    $r['playStarted'] ??= $r['round'] > 0;
+    if ($enabled) {
+        if ($r['round'] > 0 && empty($r['speedScored']) && $r['question'] === null) gb_fail('End the current buzzer round before starting practice.', 409);
+        $r['practiceSaved'] = array_intersect_key($r, array_flip($fields));
+        $r['question'] = null; $r['revealed'] = []; $r['predictions'] = []; $r['predictionOpen'] = false; $r['scored'] = [];
+    } else {
+        foreach ($r['practiceSaved'] as $field => $value) $r[$field] = $value;
+        unset($r['practiceSaved']);
+    }
+    // Invalidate old phone presses across mode changes; never resume an old timer.
+    $r['round']++; $r['openAt'] = null; $r['closeAt'] = null;
+    $r['buzzes'] = []; $r['awarded'] = []; $r['speedScored'] = true;
+    $r['practice'] = $enabled; $r['demoVotes'] = false;
+}
+function gb_apply(array &$r, string $action, array $in, ?array $config = null): array {
     if ($action === 'state') return gb_view($r, $in);
     if ($action === 'join') {
         $key = gb_string($in, 'key', 48);
@@ -258,6 +287,7 @@ function gb_apply(array &$r, string $action, array $in): array {
         }
     } elseif ($action === 'vote') {
         if (!$r['surveyOpen']) gb_fail('The arrival survey is closed.', 409);
+        if (isset($in['surveyVersion']) && $in['surveyVersion'] !== hash('sha256', json_encode($r['questions']))) gb_fail('The survey questions changed. Review the new questions and answer again.', 409);
         $voter = gb_string($in, 'voter', 48);
         if (!preg_match('/^[a-f0-9]{48}$/D', $voter)) gb_fail('Invalid ballot token.');
         $answers = $in['answers'] ?? [];
@@ -272,6 +302,7 @@ function gb_apply(array &$r, string $action, array $in): array {
         if (!isset($r['buzzes'][$d['team']])) $r['buzzes'][$d['team']] = ['team' => $d['team'], 'at' => $now];
     } elseif ($action === 'predict') {
         $d = gb_device($r, $in);
+        if (isset($in['round']) && $in['round'] !== $r['round']) gb_fail('The game mode or round changed. Submit your prediction again.', 409);
         $q = $r['question'];
         if (!$r['predictionOpen'] || $q === null || ($in['question'] ?? null) !== $q) gb_fail('Predictions are closed or the question changed.', 409);
         $answer = $in['answer'] ?? '';
@@ -284,15 +315,39 @@ function gb_apply(array &$r, string $action, array $in): array {
         if (in_array($op, $r['operations'], true)) return gb_view($r, $in);
         if (count($r['operations']) >= 3000) gb_fail('Start a fresh room for more rounds.');
         switch ($action) {
+            case 'practice':
+                if (!is_bool($in['enabled'] ?? null)) gb_fail('Choose a practice mode.');
+                gb_practice($r, $in['enabled']);
+                break;
+            case 'demo':
+                gb_practice($r, true);
+                $r['demoVotes'] = true;
+                $r['revealed'] = []; $r['predictions'] = []; $r['scored'] = [];
+                $r['question'] = 0; $r['predictionOpen'] = true;
+                $r['round']++; $r['openAt'] = null; $r['closeAt'] = null;
+                $r['buzzes'] = []; $r['awarded'] = []; $r['speedScored'] = true;
+                break;
+            case 'resetScores':
+                foreach ($r['teams'] as &$team) $team['score'] = 0;
+                unset($team);
+                // Keep scoring receipts so previously scored rounds cannot score again.
+                break;
+            case 'topQuestions':
+                if (!empty($r['practice']) || count($r['ballots']) || ($r['playStarted'] ?? ($r['round'] > 0)) || $r['question'] !== null) gb_fail('Load the top ten before voting or play starts. Create a new game to change questions later.', 409);
+                $poll = gb_leader_question_state($config ?? gb_config(), ['leader' => gb_token(), 'kind' => 'state']);
+                $r['questions'] = gb_questions(['questions' => array_slice($poll['questions'], 0, 10)]);
+                break;
             case 'closeSurvey':
+                if (!empty($r['practice'])) gb_fail('Exit practice before closing the real arrival survey.', 409);
                 if (!count($r['ballots'])) gb_fail('Collect at least one survey first.');
                 $r['surveyOpen'] = false;
                 break;
             case 'question':
-                if ($r['surveyOpen']) gb_fail('Close the arrival survey first.');
+                if (!empty($r['practice']) ? empty($r['demoVotes']) : $r['surveyOpen']) gb_fail('Close the arrival survey first, or load demo votes in practice.');
                 $q = $in['question'] ?? null;
                 if (!is_int($q) || $q < 0 || $q > 9) gb_fail('Invalid question.');
                 if ($r['question'] === null && $r['round'] > 0) gb_score_speed($r);
+                if (empty($r['practice'])) $r['playStarted'] = true;
                 $r['question'] = $q;
                 $r['predictionOpen'] = !in_array($q, $r['revealed'], true);
                 $r['closeAt'] = microtime(true);
@@ -305,7 +360,7 @@ function gb_apply(array &$r, string $action, array $in): array {
                 if (!in_array($q, $r['scored'], true)) {
                     $result = gb_results($r, $q);
                     foreach ($r['predictions'][$q] ?? [] as $team => $answer) {
-                        if ($result['majority'] === 'tie' || $answer === $result['majority']) $r['teams'][$team]['score']++;
+                        if (empty($r['practice']) && ($result['majority'] === 'tie' || $answer === $result['majority'])) $r['teams'][$team]['score']++;
                     }
                     $r['scored'][] = $q;
                 }
@@ -313,6 +368,7 @@ function gb_apply(array &$r, string $action, array $in): array {
             case 'arm':
                 $duration = $in['duration'] ?? 15;
                 if (!is_int($duration) || $duration < 5 || $duration > 60) gb_fail('Choose a 5–60 second round.');
+                if (empty($r['practice'])) $r['playStarted'] = true;
                 $r['round']++; $r['buzzes'] = []; $r['speedScored'] = false; $r['awarded'] = [];
                 $r['question'] = null; $r['predictionOpen'] = false;
                 $r['openAt'] = microtime(true) + 3;
@@ -322,7 +378,7 @@ function gb_apply(array &$r, string $action, array $in): array {
                 if (($in['round'] ?? null) !== $r['round']) gb_fail('Round changed.', 409);
                 $r['closeAt'] = microtime(true);
                 gb_score_speed($r);
-                if ($r['question'] === null && !$r['surveyOpen']) {
+                if ($r['question'] === null && (!empty($r['practice']) ? !empty($r['demoVotes']) : !$r['surveyOpen'])) {
                     foreach (array_keys($r['questions']) as $q) {
                         if (!in_array($q, $r['revealed'], true)) {
                             $r['question'] = $q;
@@ -336,11 +392,12 @@ function gb_apply(array &$r, string $action, array $in): array {
                 $team = $in['team'] ?? null;
                 if (($in['round'] ?? null) !== $r['round'] || !is_int($team) || !isset($r['buzzes'][$team])) gb_fail('Select a team that buzzed in this round.');
                 if (microtime(true) < ($r['closeAt'] ?? 0)) gb_fail('Close the buzzer before awarding points.');
-                if (!in_array($team, $r['awarded'], true)) { $r['teams'][$team]['score']++; $r['awarded'][] = $team; }
+                if (empty($r['practice']) && !in_array($team, $r['awarded'], true)) { $r['teams'][$team]['score']++; $r['awarded'][] = $team; }
                 break;
             case 'adjust':
                 $team = $in['team'] ?? null; $delta = $in['delta'] ?? null;
                 if (!is_int($team) || !isset($r['teams'][$team]) || !in_array($delta, [-1, 1], true)) gb_fail('Invalid score adjustment.');
+                if (!empty($r['practice'])) gb_fail('Score adjustments are disabled during practice.', 409);
                 $r['teams'][$team]['score'] += $delta;
                 break;
             default: gb_fail('Unknown action.');
