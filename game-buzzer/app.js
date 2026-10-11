@@ -228,6 +228,11 @@ $('resetSurveys').onclick=()=>{
   if (!confirm('Final confirmation: erase every survey ballot for this game and reopen the empty survey?')) return;
   command('resetSurveys');
 };
+$('resetGame').onclick=()=>{
+  if (!confirm('FULL RESET: erase surveys, scores, buzzer rounds, predictions, and connected phones while keeping this game and its QR codes?')) return;
+  if (!confirm('Final confirmation: reset this entire game now? This cannot be undone.')) return;
+  command('resetGame');
+};
 $('topQuestions').onclick=()=>{if(confirm('Replace the ten arrival questions with the current top ten favorites?'))command('topQuestions');};
 $('setupTopQuestions').onclick=async()=>{
   const b=$('setupTopQuestions'); b.disabled=true;

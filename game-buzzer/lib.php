@@ -337,6 +337,28 @@ function gb_apply(array &$r, string $action, array $in, ?array $config = null): 
                 if (!$r['surveyOpen'] || !empty($r['playStarted']) || $r['round'] > 0 || $r['question'] !== null) gb_fail('Survey answers can only be reset before gameplay starts.', 409);
                 $r['ballots'] = [];
                 break;
+            case 'resetGame':
+                $r['ballots'] = [];
+                $r['surveyOpen'] = true;
+                $r['playStarted'] = false;
+                $r['practice'] = false;
+                $r['demoVotes'] = false;
+                $r['practiceSaved'] = [];
+                $r['question'] = null;
+                $r['revealed'] = [];
+                $r['predictions'] = [];
+                $r['predictionOpen'] = false;
+                $r['scored'] = [];
+                $r['round'] = 0;
+                $r['openAt'] = null;
+                $r['closeAt'] = null;
+                $r['buzzes'] = [];
+                $r['awarded'] = [];
+                $r['speedScored'] = true;
+                $r['devices'] = [];
+                foreach ($r['teams'] as &$team) $team['score'] = 0;
+                unset($team);
+                break;
             case 'topQuestions':
                 if (!empty($r['practice']) || count($r['ballots']) || ($r['playStarted'] ?? ($r['round'] > 0)) || $r['question'] !== null) gb_fail('Load the top ten before voting or play starts. Create a new game to change questions later.', 409);
                 $poll = gb_leader_question_state($config ?? gb_config(), ['leader' => gb_token(), 'kind' => 'state']);
