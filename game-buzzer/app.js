@@ -176,7 +176,13 @@ function render() {
     $('questionOptions').replaceChildren(); $('resultBars').replaceChildren();
     if (s.question !== null) {
       const q=s.questions[s.question];
-      ['a','b'].forEach(a=>{const choice=el('div',undefined,'choice');choice.append(el('strong',a.toUpperCase()+' · '),document.createTextNode(q[a]));$('questionOptions').append(choice);});
+      ['a','b'].forEach(a=>{
+        const choice=el('button',undefined,'choice'); choice.type='button'; choice.dataset.answer=a;
+        choice.append(el('strong',a.toUpperCase()+' · '),document.createTextNode(q[a]));
+        choice.disabled=role!=='team' || s.revealed || !s.predictionOpen || s.myPrediction!==null;
+        choice.onclick=()=>command('predict',{round:s.round,question:s.question,answer:a});
+        $('questionOptions').append(choice);
+      });
       if (s.results) {
         ['a','b'].forEach(a=>{const row=el('div',undefined,'result'),bar=el('progress');bar.max=s.results.a+s.results.b||1;bar.value=s.results[a];bar.setAttribute('aria-label',a.toUpperCase()+' votes');row.append(el('strong',a.toUpperCase()),bar,el('span',`${s.results[a]} votes`));$('resultBars').append(row);});
         $('resultBars').append(el('h3',s.results.majority==='tie'?'It’s a tie!':`${s.results.majority.toUpperCase()} wins the room!`));
