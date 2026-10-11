@@ -174,8 +174,10 @@ function render() {
       $('ranking').append(row);
     });
     $('questionOptions').replaceChildren(); $('resultBars').replaceChildren();
+  $('questionOptions').hidden=role==='team' || s.question===null;
     if (s.question !== null) {
       const q=s.questions[s.question];
+      ['a','b'].forEach(a=>{const button=document.querySelector(`#predictionButtons [data-answer="${a}"]`);if(button)button.textContent=`${a.toUpperCase()} · ${q[a]}`;});
       ['a','b'].forEach(a=>{
         const choice=el('button',undefined,'choice'); choice.type='button'; choice.dataset.answer=a;
         choice.append(el('strong',a.toUpperCase()+' · '),document.createTextNode(q[a]));
@@ -199,6 +201,7 @@ function tick() {
   const s=state, now=(Date.now()+offset)/1000, stale=Date.now()-lastGood>4000;
   $('connection').textContent = stale ? 'Connection lost — reconnecting…' : `Connected · ${rtt} ms round trip`;
   $('buzz').hidden=role!=='team' || s.question!==null;
+  $('predictionButtons').hidden=role!=='team' || s.question===null || s.revealed;
   document.querySelectorAll('[data-answer]').forEach(b=>b.disabled=stale || busy || !s.predictionOpen || s.myPrediction!==null || s.myTeam===null);
   if (s.question!==null) {
     $('roundLabel').textContent=`${s.practice ? 'PRACTICE · ' : ''}MAJORITY RULES · ${s.question+1} / 10`;
