@@ -22,3 +22,5 @@
   .qr-print-single .qr-print-card .team-qr{width:145mm}
   .qr-print-single .qr-print-card p{font-size:12pt;margin-top:8mm}
 }
+/* Keep answer text as bright as the A/B labels. */
+.choice,#predictionButtons button{color:var(--lime)}
