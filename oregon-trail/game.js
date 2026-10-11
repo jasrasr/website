@@ -6,7 +6,9 @@
   const initial=()=>({started:false,miles:0,day:1,month:4,year:1848,food:200,health:100,party:5,pace:'Steady',rations:'Filling',landmark:0,scene:'prairie',gameOver:false,names:['You','Sarah','James','Mary','Thomas'],ages:[35,32,14,11,8]});
   const rand=(a,b)=>TrailRules.sample([a,b]);
   let content,s=initial(),gameId=null,view='camp',pendingStop=null,story={},logText='',latestContent;
-  let soundEnabled=false,audioContext;
+  let soundEnabled=false,autoMode=false,autoTimer,audioContext,gamesPlayed=0;
+  try{gamesPlayed=Number(localStorage.getItem('oregonTrailGamesPlayed'))||0;}catch{}
+  $('games-played').textContent=gamesPlayed;
   function pixelRect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h)}
   function draw(){
     const c=ctx; c.clearRect(0,0,800,260); pixelRect(0,0,800,260,'#080a08');
@@ -60,6 +62,9 @@
     draw();
   }
   function tone(frequency=660,duration=.08){if(!soundEnabled)return;try{audioContext??=new(window.AudioContext||window.webkitAudioContext)();const oscillator=audioContext.createOscillator(),gain=audioContext.createGain();oscillator.frequency.value=frequency;gain.gain.setValueAtTime(.035,audioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+duration);oscillator.connect(gain);gain.connect(audioContext.destination);oscillator.start();oscillator.stop(audioContext.currentTime+duration);}catch{}}
+  function countGame(){gamesPlayed++;$('games-played').textContent=gamesPlayed;try{localStorage.setItem('oregonTrailGamesPlayed',String(gamesPlayed));}catch{}}
+  function stopAuto(){autoMode=false;clearTimeout(autoTimer);$('auto-button').textContent='▶ Auto-play';}
+  function scheduleAuto(){clearTimeout(autoTimer);if(!autoMode||s.gameOver)return;autoTimer=setTimeout(()=>$('actions').querySelector('.game-button:not(:disabled)')?.click(),650);}
   function save(){
     if(!s.started||!gameId)return;
     try{TrailSaves.write(localStorage,{id:gameId,updatedAt:new Date().toISOString(),state:s,config:content,story,log:logText,view,pendingStop});$('save-status').textContent='Saved on this device · '+new Date().toLocaleTimeString();renderSavedGames();}
@@ -69,6 +74,7 @@
     const area=$('actions');area.replaceChildren();const p=document.createElement('p');p.className='action-label';p.textContent=label;area.append(p);
     const row=document.createElement('div');row.className='button-row';area.append(row);
     items.forEach((item,i)=>{const button=document.createElement('button');button.type='button';button.className='game-button'+(i===0?' primary':'');button.textContent=item.label;button.disabled=!!item.disabled;button.onclick=()=>{tone(520+i*90);item.run();save();};row.append(button);});
+    scheduleAuto();
   }
   function renderSavedGames(){
     const list=$('saved-games');list.replaceChildren();
@@ -91,6 +97,7 @@
     }catch{$('save-status').textContent='This journey could not be restored. Its save has been left intact.';}
   }
   function setup(){
+    stopAuto();
     if(!latestContent){$('save-status').textContent='Connect and reload to load the rules for a new journey.';return;}
     save();content=structuredClone(latestContent);s=initial();gameId=null;pendingStop=null;
     $('save-status').textContent='Pack the wagon to create a new saved journey.';
@@ -106,7 +113,7 @@
     $('begin-journey').onclick=()=>{
       s.names=[...document.querySelectorAll('.traveler-name')].map((x,i)=>x.value.trim().slice(0,16)||'Traveler '+(i+1));
       s.ages=[...document.querySelectorAll('.traveler-age')].map(x=>Math.max(1,Math.min(90,Math.floor(Number(x.value)||18))));
-      s.party=s.names.length;s.food=s.party*40;s.started=true;gameId=crypto.randomUUID();
+      s.party=s.names.length;s.food=s.party*40;s.started=true;gameId=crypto.randomUUID();countGame();
       setStory('The trail is calling.','Your wagon is loaded and your party is ready. Set out when you are ready.','INDEPENDENCE, MISSOURI');log('April 1, 1848 · The journey west begins.');campChoices();update();save();
     };update();
   }
@@ -176,6 +183,12 @@
   }
   $('reset-button').onclick=()=>{setup();}; // setup saves the current journey before creating another.
   $('sound-toggle').onclick=()=>{soundEnabled=!soundEnabled;$('sound-toggle').textContent=soundEnabled?'♫ Sound on':'♪ Sound off';tone(880,.13);};
+  $('auto-button').onclick=()=>{
+    if(autoMode){stopAuto();log('Auto-play paused. Choose each action yourself.');return;}
+    autoMode=true;$('auto-button').textContent='■ Stop auto-play';
+    if(s.gameOver){setup();autoMode=true;$('auto-button').textContent='■ Stop auto-play';}
+    if(!s.started)$('begin-journey')?.click();else scheduleAuto();
+  };
   window.addEventListener('pagehide',save);
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')save();});
   window.addEventListener('storage',e=>{if(e.key===TrailSaves.KEY)renderSavedGames();});

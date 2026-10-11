@@ -35,7 +35,7 @@ try {
         $id = gb_string($in, 'room', 12);
         // Fail before creating a lock file for arbitrary nonexistent room IDs.
         if (!preg_match('/^[a-f0-9]{12}$/D', $id) || !is_file(gb_dir($config) . '/' . $id . '.php')) gb_fail('Room not found.', 404);
-        $out = gb_room($config, $id, fn(&$r) => gb_apply($r, $action, $in));
+        $out = gb_room($config, $id, fn(&$r) => gb_apply($r, $action, $in, $config));
     }
     echo json_encode($out, JSON_THROW_ON_ERROR);
 } catch (Throwable $e) {

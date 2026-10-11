@@ -22,6 +22,7 @@ jobs:
       - name: Verify game rules and concurrent presses
         run: |
           php game-buzzer/tests/game.test.php
+          php game-buzzer/tests/host-tools.test.php
           php game-buzzer/tests/leader-suggestions.test.php
           php game-buzzer/tests/concurrency.test.php
-          node --test game-buzzer/tests/identity.test.cjs
+          node --test game-buzzer/tests/identity.test.cjs game-buzzer/tests/host-ui.test.cjs

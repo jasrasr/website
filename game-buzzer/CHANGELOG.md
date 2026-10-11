@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0 — 2026-10-10
+
+- Add host practice mode with no scoring and restore live question progress on exit.
+- Add a demo of ten questions with 20 separate sample votes, including a tie.
+- Add confirmed reset of all team scores, retaining survey answers and scoring receipts.
+- Load the top ten favorites (including custom questions) directly during setup or from the host desk before voting/play begins. Refresh open survey forms when questions change.
+
 ## 1.2.4 — 2026-10-08
 
 - Save my picks now completes the ballot, starts a new voter, clears checks, and reloads with shuffled questions. Block empty saves and retain the existing ballot on failed saves.

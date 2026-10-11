@@ -1,6 +1,6 @@
 # Game Buzzer
 
-Version 1.1.0 · PHP 8.1+ · No database, npm build, external service, or student accounts.
+Version 1.3.0 · PHP 8.1+ · No database, npm build, external service, or student accounts.
 
 Target URL after deployment: https://jasr.me/github/game-buzzer/
 
@@ -40,6 +40,16 @@ Existing password-configured installations continue working until an owner expli
 - Start a fresh round to clear the order while retaining scores. Majority Rules scores separately when the host reveals an answer.
 - On the host desk, **Next** advances the normal sequence: close the arrival survey, start a buzzer round, end it and open the next question, reveal and score, then start the next buzzer round. Manual controls remain available under **Manual controls and overrides**.
 
+## Host rehearsal and score reset
+
+All controls are on the private host desk:
+
+- **Start practice mode** lets team phones buzz without scoring. Score adjustments are disabled; the scoreboard stays unchanged. End an unfinished live buzzer round before switching modes.
+- **Try demo voted questions** starts/restarts practice with 20 sample A/B votes per question, including one tie. Use Next to reveal, then run buzzer rounds and the following questions. Sample totals never enter student ballots; the real arrival survey continues to accept answers while open.
+- **Exit practice mode** discards practice predictions/reveals and restores your real question progress. Old buzzer timers and presses are cleared; start a new live round. All phones and projectors show a practice label while rehearsing.
+- **Reset all scores** asks for confirmation and zeros all six team scores. It keeps survey answers, questions, phones and completed scoring records; re-revealing a completed question does not re-award points. Future rounds continue to score normally. Reset is available during practice too.
+- **Load top 10 favorite questions** takes the combined favorites ranking, including custom suggestions, and loads ten shuffled arrival questions. Ties use the same stable order as results; if fewer than ten questions have votes, zero-vote questions fill the remaining slots. This works before real voting or play starts. You can also use **Use top 10 favorite questions** on the create-game screen and review/edit them before creating a room. Changing questions requires a new game once voting/play has started.
+
 ## Arrival survey → Majority Rules (under 15 minutes)
 
 Each new game shuffles the ten questions once. Every student and kiosk sees that same randomized order, which is also used for the host’s question reveals.
@@ -70,12 +80,13 @@ This PHP version avoids assuming that shared hosting can run a persistent WebSoc
 - Room IDs, host capabilities, and team invitations are randomly generated. Host mutations require the host secret; phone mutations require a registered device token. Requests require JSON; no permissive CORS or cookie authentication is used.
 - A room supports 300 ballots, 12 phones per team, and 3,000 host operations. It is a small-group app, not a public high-traffic service. Protect shared admin accounts (or the legacy creation password) and apply host-level request limiting for an internet-facing installation.
 - Do not open multiple host controllers and operate them simultaneously. Use one host and any number of projector displays.
-- No remote fonts, analytics, QR service, or CDN requests are needed. Links can be distributed in advance; creating QR codes is not built in.
+- No remote fonts, analytics, QR service, or CDN requests are needed. Team QR codes and printable sheets are built into the host desk.
 
 ## Verification
 
 ```sh
 php game-buzzer/tests/game.test.php
+php game-buzzer/tests/host-tools.test.php
 php game-buzzer/tests/concurrency.test.php
 node --check game-buzzer/app.js
 node --test game-buzzer/tests/identity.test.cjs

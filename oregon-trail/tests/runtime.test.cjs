@@ -25,9 +25,9 @@ function environment(storage,config=defaults,failFetch=false,serviceWorker){
   const ready=vm.runInContext(fs.readFileSync(path.join(root,'game.js'),'utf8'),context);
   return {ready,elements,click(label){const b=elements.get('actions').children.flatMap(c=>c.children).find(x=>x.tag==='button'&&x.textContent.startsWith(label));assert.ok(b,'Missing button '+label);b.onclick();},pack(){elements.get('begin-journey').onclick();}};
 }
-function memory(){let value=null;return {getItem:()=>value,setItem:(k,v)=>{value=v;}};}
+function memory(){const values=new Map();return {getItem:key=>values.get(key)??null,setItem:(key,value)=>values.set(key,value)};}
 test('Game runtime autosaves actions and restores exact pending stops with content snapshot',async()=>{
-  const storage=memory();const first=environment(storage);await first.ready;first.pack();first.click('Continue');
+  const storage=memory();const first=environment(storage);await first.ready;first.pack();assert.equal(storage.getItem('oregonTrailGamesPlayed'),'1');first.click('Continue');
   let data=saves.read(storage);const id=Object.keys(data.games)[0];const miles=data.games[id].state.miles;
   assert.ok(miles>0);const reload=environment(storage);await reload.ready;assert.equal(reload.elements.get('miles').textContent,miles);
   reload.click('Change pace');const paceReload=environment(storage);await paceReload.ready;paceReload.click('Grueling');assert.equal(saves.read(storage).games[id].state.pace,'Grueling');
