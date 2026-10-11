@@ -333,6 +333,10 @@ function gb_apply(array &$r, string $action, array $in, ?array $config = null): 
                 unset($team);
                 // Keep scoring receipts so previously scored rounds cannot score again.
                 break;
+            case 'resetSurveys':
+                if (!$r['surveyOpen'] || !empty($r['playStarted']) || $r['round'] > 0 || $r['question'] !== null) gb_fail('Survey answers can only be reset before gameplay starts.', 409);
+                $r['ballots'] = [];
+                break;
             case 'topQuestions':
                 if (!empty($r['practice']) || count($r['ballots']) || ($r['playStarted'] ?? ($r['round'] > 0)) || $r['question'] !== null) gb_fail('Load the top ten before voting or play starts. Create a new game to change questions later.', 409);
                 $poll = gb_leader_question_state($config ?? gb_config(), ['leader' => gb_token(), 'kind' => 'state']);

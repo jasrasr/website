@@ -134,6 +134,7 @@ function render() {
     $('practiceMode').textContent = s.practice ? 'Exit practice mode' : 'Start practice mode';
     $('modeStatus').textContent = s.practice ? `PRACTICE · No points awarded${s.demoVotes ? ' · 20 sample votes' : ''}` : 'LIVE GAME · Scores count';
     $('topQuestions').disabled = s.practice || s.ballotCount > 0 || s.playStarted || s.question !== null;
+    $('resetSurveys').disabled = !s.surveyOpen || s.playStarted || s.ballotCount === 0;
     $('closeSurvey').disabled = s.practice || !s.surveyOpen || !s.ballotCount;
     $('showQuestion').disabled = s.practice ? !s.demoVotes : s.surveyOpen;
     $('reveal').disabled = s.question === null || s.revealed;
@@ -222,6 +223,11 @@ $('create').addEventListener('submit',async e=>{e.preventDefault();const b=e.sub
 $('practiceMode').onclick=()=>command('practice',{enabled:!state.practice});
 $('demoVotes').onclick=()=>{if(confirm('Start a practice demo with 20 sample votes? Real student answers and scores will be preserved.'))command('demo');};
 $('resetScores').onclick=()=>{if(confirm('Reset all six team scores to zero? This cannot be undone. Survey answers and completed questions will be kept.'))command('resetScores');};
+$('resetSurveys').onclick=()=>{
+  if (!confirm('Reset all submitted survey answers? This cannot be undone.')) return;
+  if (!confirm('Final confirmation: erase every survey ballot for this game and reopen the empty survey?')) return;
+  command('resetSurveys');
+};
 $('topQuestions').onclick=()=>{if(confirm('Replace the ten arrival questions with the current top ten favorites?'))command('topQuestions');};
 $('setupTopQuestions').onclick=async()=>{
   const b=$('setupTopQuestions'); b.disabled=true;
