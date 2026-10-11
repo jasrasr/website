@@ -199,7 +199,6 @@ function tick() {
   const s=state, now=(Date.now()+offset)/1000, stale=Date.now()-lastGood>4000;
   $('connection').textContent = stale ? 'Connection lost — reconnecting…' : `Connected · ${rtt} ms round trip`;
   $('buzz').hidden=role!=='team' || s.question!==null;
-  $('predictionButtons').hidden=role!=='team' || s.question===null || s.revealed;
   document.querySelectorAll('[data-answer]').forEach(b=>b.disabled=stale || busy || !s.predictionOpen || s.myPrediction!==null || s.myTeam===null);
   if (s.question!==null) {
     $('roundLabel').textContent=`${s.practice ? 'PRACTICE · ' : ''}MAJORITY RULES · ${s.question+1} / 10`;
