@@ -250,6 +250,7 @@ function gb_view(array $r, array $in): array {
     if ($host) {
         $v['teamLinks'] = array_map(fn($t) => ['team' => $t['id'], 'key' => $t['join']], $r['teams']);
         $v['devices'] = array_map(fn($t) => count(array_filter($r['devices'], fn($d) => $d['team'] === $t['id'])), $r['teams']);
+        $v['surveyTotals'] = array_map(fn($index) => gb_results($r, $index), array_keys($r['questions']));
     }
     return $v;
 }
@@ -360,7 +361,7 @@ function gb_apply(array &$r, string $action, array $in, ?array $config = null): 
                 if (!in_array($q, $r['scored'], true)) {
                     $result = gb_results($r, $q);
                     foreach ($r['predictions'][$q] ?? [] as $team => $answer) {
-                        if (empty($r['practice']) && ($result['majority'] === 'tie' || $answer === $result['majority'])) $r['teams'][$team]['score']++;
+                        if (empty($r['practice']) && ($result['majority'] === 'tie' || $answer === $result['majority'])) $r['teams'][$team]['score'] += 30;
                     }
                     $r['scored'][] = $q;
                 }

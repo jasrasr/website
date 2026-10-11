@@ -57,8 +57,23 @@ function links(s) {
   if ($('links').children.length) return;
   linkRow($('links'), 'Private host', url('host', `host=${host}`));
   linkRow($('links'), 'Projector', url('projector'));
-  linkRow($('links'), 'Student survey', url('survey'));
-  linkRow($('links'), 'Check-in kiosk', url('survey') + '&kiosk=1');
+  const surveyUrl = url('survey');
+  const kioskUrl = surveyUrl + '&kiosk=1';
+  linkRow($('links'), 'Student survey', surveyUrl);
+  linkRow($('links'), 'Check-in kiosk', kioskUrl);
+  [{name:'Student survey', value:surveyUrl, file:'game-buzzer-survey.png', help:'Scan on each student phone.'},
+    {name:'Check-in kiosk', value:kioskUrl, file:'game-buzzer-kiosk.png', help:'Scan on the shared kiosk tablet.'}].forEach(item => {
+    const card = el('section', undefined, 'qr-link-card');
+    card.append(el('h3', item.name));
+    try {
+      const canvas = gbTeamQr(item.value, item.name);
+      card.append(canvas, el('p', item.help, 'muted'));
+      card.append(button('Download QR', () => {
+        const download = el('a'); download.href = canvas.toDataURL('image/png'); download.download = item.file; download.click();
+      }));
+    } catch { card.append(el('p', 'QR unavailable. Use the link above.', 'muted')); }
+    $('publicQrLinks').append(card);
+  });
   const teamInvitations = s.teamLinks.map(t => ({name:s.teams[t.team].name, invitation:url('team', `team=${t.key}`)}));
   $('printAllTeamQr').onclick = () => gbPrintTeamCodes(teamInvitations, s.title);
   s.teamLinks.forEach(t => {
@@ -114,7 +129,8 @@ function render() {
     if (!s.teamLinks) { notice('Host access missing. Reopen your private host invitation.'); return; }
     links(s);
     const connectedPhones = s.teams.map((team,i) => `${team.name.replace(' grade','')}: ${s.devices[i]}`).join(' / ');
-    $('surveyStatus').textContent = `${s.ballotCount} surveys submitted · ${s.surveyOpen ? 'Arrival survey open' : 'Answers locked'} · Phones: ${connectedPhones}`;
+    const surveyTotals = (s.surveyTotals || []).map((total, i) => `Q${i + 1}: A ${total.a} / B ${total.b}`).join(' · ');
+    $('surveyStatus').textContent = `${s.ballotCount} surveys submitted · ${s.surveyOpen ? 'Arrival survey open' : 'Answers locked'} · ${surveyTotals} · Phones: ${connectedPhones}`;
     $('practiceMode').textContent = s.practice ? 'Exit practice mode' : 'Start practice mode';
     $('modeStatus').textContent = s.practice ? `PRACTICE · No points awarded${s.demoVotes ? ' · 20 sample votes' : ''}` : 'LIVE GAME · Scores count';
     $('topQuestions').disabled = s.practice || s.ballotCount > 0 || s.playStarted || s.question !== null;
@@ -122,6 +138,7 @@ function render() {
     $('showQuestion').disabled = s.practice ? !s.demoVotes : s.surveyOpen;
     $('reveal').disabled = s.question === null || s.revealed;
     $('reveal').textContent = s.practice ? 'Reveal now (no points)' : 'Reveal & score now';
+    $('topQuestionsNote').textContent = s.practice ? 'Unavailable during practice.' : s.ballotCount > 0 ? 'Locked: survey answers already submitted.' : s.playStarted || s.question !== null ? 'Locked: game play has started.' : 'Available until the first survey response or game action.';
     if (s.surveyOpen && !s.practice) {
       $('nextStep').textContent = 'Next: Close arrival survey';
       $('nextStep').disabled = !s.ballotCount;

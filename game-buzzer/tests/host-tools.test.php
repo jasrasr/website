@@ -60,7 +60,7 @@ try {
     check($r['teams'][0]['score'] === 131, 'Live speed no longer scores');
     action('predict', ['device'=>$phone, 'question'=>0, 'answer'=>'a']);
     action('reveal', ['question'=>0]);
-    check($r['teams'][0]['score'] === 132, 'Live majority no longer scores');
+    check($r['teams'][0]['score'] === 161, 'Live majority no longer scores');
     $realProgress = [$r['question'], $r['revealed'], $r['predictions'], $r['scored']];
     action('demo');
     action('reveal', ['question'=>0]);
