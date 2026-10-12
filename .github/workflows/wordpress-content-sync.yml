@@ -4,9 +4,7 @@ on:
     branches: [main]
     paths:
       - 'blog/posts/**'
-      - 'blog/tools/Blog-Revisions.ps1'
-      - 'blog/tools/Sync-WordPressContent.ps1'
-      - 'blog/tools/wordpress-state.json'
+      - 'blog/wordpress/**'
       - '.github/workflows/wordpress-content-sync.yml'
   workflow_dispatch:
     inputs:
@@ -37,13 +35,13 @@ jobs:
         env:
           BASE_REF: ${{ github.event.before }}
         run: |
-          ./blog/tools/Test-AutomatedVoice.ps1
+          ./blog/wordpress/Test-AutomatedVoice.ps1
           if ($env:BASE_REF -and $env:BASE_REF -notmatch '^0+$') {
-            ./blog/tools/Test-BlogRevisions.ps1 -BaseRef $env:BASE_REF
+            ./blog/wordpress/Test-BlogRevisions.ps1 -BaseRef $env:BASE_REF
           } else {
-            ./blog/tools/Test-BlogRevisions.ps1
+            ./blog/wordpress/Test-BlogRevisions.ps1
           }
-          ./blog/tools/Test-WordPressContentSync.ps1
+          ./blog/wordpress/Test-WordPressContentSync.ps1
       - name: Verify required secrets are configured
         shell: pwsh
         env:
@@ -69,7 +67,7 @@ jobs:
             BackupPath = (Join-Path $env:RUNNER_TEMP 'wp-content-backups')
           }
           if ($env:APPLY_CHANGES -eq 'true') { $options.Commit = $true }
-          ./blog/tools/Sync-WordPressContent.ps1 @options
+          ./blog/wordpress/Sync-WordPressContent.ps1 @options
       - name: Encrypt any pre-update backups
         id: encrypt
         if: always()

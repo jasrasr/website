@@ -1,7 +1,7 @@
 # Revision: 1.0.0 — 2026-09-29. Check the tracked automated project series.
 param([string]$RootPath = (Split-Path $PSScriptRoot -Parent))
 $ErrorActionPreference = 'Stop'
-$state = Get-Content (Join-Path $RootPath 'tools/wordpress-state.json') -Raw | ConvertFrom-Json
+$state = Get-Content (Join-Path $RootPath 'wordpress/wordpress-state.json') -Raw | ConvertFrom-Json
 $failures = @()
 foreach ($key in $state.posts.PSObject.Properties.Name) {
     $post = Get-Content (Join-Path $RootPath "posts/$key.json") -Raw | ConvertFrom-Json

@@ -75,10 +75,14 @@ try {
     Assert (@($global:WordPressSyncTestRequests | Where-Object Method -eq Post).Count -eq 0) 'Second run should be a no-op'
     Reset-Mock
     $global:WordPressSyncTestRemote[2].slug='wrong-post'
-    Expect-Failure 'ID/slug mismatch' { & $sync @argsForSync -Commit }
+    & $sync @argsForSync -Commit
+    Assert (@($global:WordPressSyncTestRequests | Where-Object Method -eq Post).Count -eq 1) 'Slug mismatch should skip only the mismatched post'
+    Assert ($global:WordPressSyncTestRemote[2].content.raw -eq '<p>I like this project.</p>') 'Slug mismatch should not update the skipped post'
     Reset-Mock
     $global:WordPressSyncTestRemote[2].status='trash'
-    Expect-Failure 'Unsupported post status' { & $sync @argsForSync -Commit }
+    & $sync @argsForSync -Commit
+    Assert (@($global:WordPressSyncTestRequests | Where-Object Method -eq Post).Count -eq 1) 'Unsupported status should skip only the unsupported post'
+    Assert ($global:WordPressSyncTestRemote[2].content.raw -eq '<p>I like this project.</p>') 'Unsupported status should not update the skipped post'
     Reset-Mock
     $global:WordPressSyncTestConflict=$true
     Expect-Failure 'changed since preflight' { & $sync @argsForSync -Commit }

@@ -47,6 +47,7 @@ if ($Slug) {
 }
 $plan = @()
 $unchanged = 0
+$skipped = @()
 $ids = @{}
 foreach ($key in $keys) {
     if ($key -notmatch '^[a-z0-9]+(?:-[a-z0-9]+)*$') { throw "Invalid tracked slug: $key" }
@@ -67,15 +68,32 @@ foreach ($key in $keys) {
         '(?is)^\s*<figure\b[^>]*class=["''][^"'']*\bpost-cover\b[^"'']*["''][^>]*>.*?</figure>\s*', '')
     if ([string]::IsNullOrWhiteSpace($content)) { throw "Empty WordPress body: $key" }
     $remote = Read-WpPost $id
-    if ($remote.id -ne $id -or $remote.slug -cne $key) { throw "WordPress ID/slug mismatch: $key" }
-    if ($remote.status -notin @('publish','future','draft','pending')) { throw "Unsupported post status for $key" }
+    if ($remote.id -ne $id -or $remote.slug -cne $key) {
+        $skipped += [pscustomobject]@{
+            Id=$id; Slug=$key; Status=([string]$remote.status); Reason='WordPress ID/slug mismatch'
+            RemoteSlug=([string]$remote.slug)
+        }
+        Write-Warning "Skipping $key (ID $id): WordPress returned slug '$($remote.slug)' with status '$($remote.status)'."
+        continue
+    }
+    if ($remote.status -notin @('publish','future','draft','pending')) {
+        $skipped += [pscustomobject]@{
+            Id=$id; Slug=$key; Status=([string]$remote.status); Reason='Unsupported post status'
+            RemoteSlug=([string]$remote.slug)
+        }
+        Write-Warning "Skipping $key (ID $id): unsupported WordPress status '$($remote.status)'."
+        continue
+    }
     $body = [ordered]@{ title=[string]$post.title; excerpt=[string]$post.excerpt; content=$content }
     $changed = @('title','excerpt','content' | Where-Object { $body[$_] -cne $remote.$_.raw })
     if ($changed.Count -eq 0) { $unchanged++; continue }
     $plan += [pscustomobject]@{ Id=$id; Slug=$key; Status=$remote.status; Fields=($changed -join ', '); Body=$body; Before=$remote }
 }
 $plan | Select-Object Id,Slug,Status,Fields | Format-Table -AutoSize | Out-Host
-Write-Host "Changed: $($plan.Count); unchanged: $unchanged."
+if ($skipped.Count -gt 0) {
+    $skipped | Select-Object Id,Slug,Status,RemoteSlug,Reason | Format-Table -AutoSize | Out-Host
+}
+Write-Host "Changed: $($plan.Count); unchanged: $unchanged; skipped: $($skipped.Count)."
 if (-not $Commit) { Write-Host 'DRY RUN: GET requests only. No posts or backup files changed.'; return }
 if ($plan.Count -eq 0) { return }
 # Save all original raw content before any WordPress mutation. Backups stay outside

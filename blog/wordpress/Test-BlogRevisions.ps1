@@ -3,7 +3,7 @@ param([string]$RootPath = (Split-Path $PSScriptRoot -Parent), [string]$BaseRef)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'Blog-Revisions.ps1')
-$state = Get-Content (Join-Path $RootPath 'tools/wordpress-state.json') -Raw | ConvertFrom-Json
+$state = Get-Content (Join-Path $RootPath 'wordpress/wordpress-state.json') -Raw | ConvertFrom-Json
 foreach ($slug in $state.posts.PSObject.Properties.Name) {
     $post = Get-Content (Join-Path $RootPath "posts/$slug.json") -Raw | ConvertFrom-Json
     if (-not $post.PSObject.Properties['revision_history'] -or @($post.revision_history).Count -eq 0) { throw "Missing public history: $slug" }

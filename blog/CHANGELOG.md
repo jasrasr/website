@@ -15,6 +15,12 @@
 -->
 # Changelog
 
+## v1.6.1 - 2026-10-12
+
+- Move WordPress scheduling, publishing, existing-post sync, revision-history, taxonomy, state, and related tests into `blog/wordpress`.
+- Keep generic flat-file blog build tools in `blog/tools`.
+- Let the WordPress content sync skip a tracked post whose live WordPress record is trashed or no longer matches the expected slug, so the rest of the reviewed published and scheduled posts can still update safely.
+
 ## v1.6.0 — 2026-09-29
 
 - Rewrite all 43 automated project articles in neutral third person, including titles, excerpts and cover alt text, without attributing invented opinions to Jason.
