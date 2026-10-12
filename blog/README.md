@@ -113,10 +113,15 @@ json-flat-blog/
 │  ├─ media-manifest.json
 │  └─ backups/
 │     └─ media-manifest-*.json
-└─ tools/
-   ├─ Build-Blog.ps1
-   ├─ Build-Media.ps1
-   └─ Restore-Manifest.ps1
+├─ tools/
+│  ├─ Build-Blog.ps1
+│  ├─ Build-Media.ps1
+│  └─ Restore-Manifest.ps1
+└─ wordpress/
+   ├─ README.md
+   ├─ Publish-WordPress.ps1
+   ├─ Sync-WordPressContent.ps1
+   └─ wordpress-state.json
 ```
 
 ---

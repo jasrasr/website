@@ -22,23 +22,23 @@ jobs:
           fetch-depth: 0
       - name: Check automated article voice
         shell: pwsh
-        run: ./blog/tools/Test-AutomatedVoice.ps1
+        run: ./blog/wordpress/Test-AutomatedVoice.ps1
       - name: Test WordPress content sync without network access
         shell: pwsh
-        run: ./blog/tools/Test-WordPressContentSync.ps1
+        run: ./blog/wordpress/Test-WordPressContentSync.ps1
       - name: Check append-only public revision history
         shell: pwsh
         env:
           BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
           if ($env:BASE_REF -and $env:BASE_REF -notmatch '^0+$') {
-            ./blog/tools/Test-BlogRevisions.ps1 -BaseRef $env:BASE_REF
+            ./blog/wordpress/Test-BlogRevisions.ps1 -BaseRef $env:BASE_REF
           } else {
-            ./blog/tools/Test-BlogRevisions.ps1
+            ./blog/wordpress/Test-BlogRevisions.ps1
           }
       - name: Test local revision-note commands and CI gates
         shell: pwsh
-        run: ./blog/tools/Test-BlogRevisionCommands.ps1
+        run: ./blog/wordpress/Test-BlogRevisionCommands.ps1
       - name: Test static blog build in an isolated copy
         shell: pwsh
         run: ./blog/tools/Test-Blog.ps1

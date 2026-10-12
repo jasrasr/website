@@ -6,10 +6,10 @@ $temp = Join-Path ([IO.Path]::GetTempPath()) ('blog-note-test-' + [guid]::NewGui
 $add = Join-Path $PSScriptRoot 'Add-BlogRevision.ps1'
 $validate = Join-Path $PSScriptRoot 'Test-BlogRevisions.ps1'
 $slug = 'personal-budget-tracker-php-json'
-New-Item -ItemType Directory -Path (Join-Path $temp 'blog/posts'), (Join-Path $temp 'blog/tools') -Force | Out-Null
+New-Item -ItemType Directory -Path (Join-Path $temp 'blog/posts'), (Join-Path $temp 'blog/wordpress') -Force | Out-Null
 $path = Join-Path $temp "blog/posts/$slug.json"
 Copy-Item (Join-Path $root "posts/$slug.json") $path
-@{posts=@{$slug=@{wordpress_post_id=1}}} | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $temp 'blog/tools/wordpress-state.json')
+@{posts=@{$slug=@{wordpress_post_id=1}}} | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $temp 'blog/wordpress/wordpress-state.json')
 $original = Get-Content $path -Raw
 function Expect-NoteFailure([string]$Pattern, [scriptblock]$Action) {
     $failed=$false

@@ -17,7 +17,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'Blog-Revisions.ps1')
-$state = Get-Content (Join-Path $RootPath 'tools/wordpress-state.json') -Raw | ConvertFrom-Json
+$state = Get-Content (Join-Path $RootPath 'wordpress/wordpress-state.json') -Raw | ConvertFrom-Json
 if ($Slug -cnotin @($state.posts.PSObject.Properties.Name)) { throw "Untracked article: $Slug" }
 $path = Join-Path $RootPath "posts/$Slug.json"
 $post = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json

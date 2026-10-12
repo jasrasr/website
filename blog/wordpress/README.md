@@ -8,14 +8,14 @@ One existing WordPress post is maintained per tracked project. For a reader-faci
 2. Add a factual third-person revision note with a unique stable ID and the relevant GitHub PR or full commit link. Example (replace the summary, ID and PR link for the actual change):
 
 ```powershell
-./blog/tools/Add-BlogRevision.ps1 `
+./blog/wordpress/Add-BlogRevision.ps1 `
     -Slug 'personal-budget-tracker-php-json' `
     -Id '2026-09-29-budget-import-validation' `
     -Summary 'Updated the budget import documentation to explain validation errors.' `
     -SourceUrl 'https://github.com/jasrasr/website/pull/90'
 ./blog/tools/Build-Blog.ps1 -RootPath './blog'
-./blog/tools/Test-AutomatedVoice.ps1
-./blog/tools/Test-BlogRevisions.ps1
+./blog/wordpress/Test-AutomatedVoice.ps1
+./blog/wordpress/Test-BlogRevisions.ps1
 ```
 
 3. Commit the article and generated index/RSS with the project change. Merge the reviewed PR into `main`.
@@ -57,14 +57,14 @@ Changing source JSON or deploying the static blog does **not** update existing W
 Use PowerShell 7 with the existing application-password environment variables to review text changes:
 
 ```powershell
-./blog/tools/Test-AutomatedVoice.ps1
-./blog/tools/Sync-WordPressContent.ps1 -SiteUrl 'https://jasonlamb.me' -Slug 'personal-budget-tracker-php-json'
+./blog/wordpress/Test-AutomatedVoice.ps1
+./blog/wordpress/Sync-WordPressContent.ps1 -SiteUrl 'https://jasonlamb.me' -Slug 'personal-budget-tracker-php-json'
 ```
 
 Then apply the reviewed correction to the example post:
 
 ```powershell
-./blog/tools/Sync-WordPressContent.ps1 -SiteUrl 'https://jasonlamb.me' -Slug 'personal-budget-tracker-php-json' -Commit
+./blog/wordpress/Sync-WordPressContent.ps1 -SiteUrl 'https://jasonlamb.me' -Slug 'personal-budget-tracker-php-json' -Commit
 ```
 
 Omit `-Slug` to preview all tracked project articles; add `-Commit` to apply that batch.
@@ -121,31 +121,31 @@ $env:WORDPRESS_APP_PASSWORD = 'xxxx xxxx xxxx xxxx xxxx xxxx'
 Dry-run preview:
 
 ```powershell
-./blog/tools/Publish-WordPress.ps1 -SiteUrl 'https://your-wordpress-site.example'
+./blog/wordpress/Publish-WordPress.ps1 -SiteUrl 'https://your-wordpress-site.example'
 ```
 
 Create the scheduled posts after reviewing the preview:
 
 ```powershell
-./blog/tools/Publish-WordPress.ps1 -SiteUrl 'https://your-wordpress-site.example' -Commit
+./blog/wordpress/Publish-WordPress.ps1 -SiteUrl 'https://your-wordpress-site.example' -Commit
 ```
 
 If the WordPress account is also allowed to create tags:
 
 ```powershell
-./blog/tools/Publish-WordPress.ps1 -SiteUrl 'https://your-wordpress-site.example' -CreateMissingTags -Commit
+./blog/wordpress/Publish-WordPress.ps1 -SiteUrl 'https://your-wordpress-site.example' -CreateMissingTags -Commit
 ```
 
 To synchronize tags on existing scheduled or draft posts and append the `GitHub` tag:
 
 ```powershell
-./blog/tools/Publish-WordPress.ps1 -SiteUrl 'https://your-wordpress-site.example' -UpdateExisting -AddGitHubTag -CreateMissingTags -Commit
+./blog/wordpress/Publish-WordPress.ps1 -SiteUrl 'https://your-wordpress-site.example' -UpdateExisting -AddGitHubTag -CreateMissingTags -Commit
 ```
 
 To add one category to already-published WordPress posts that match local JSON slugs:
 
 ```powershell
-./blog/tools/Add-WordPressCategoryToPublished.ps1 -SiteUrl 'https://your-wordpress-site.example' -CategoryName 'Technology'
+./blog/wordpress/Add-WordPressCategoryToPublished.ps1 -SiteUrl 'https://your-wordpress-site.example' -CategoryName 'Technology'
 ```
 
 The published-post category script is also dry-run by default. Add `-Commit` only after reviewing the table. It preserves existing categories and appends the requested category. Use `-ExcludeSlug` to skip specific posts. Use `-AllPublished` only when the category should be added to every published WordPress post, including posts that do not have a local JSON source.
@@ -180,18 +180,18 @@ The first run should be done as a dry run. After that, a useful test is to tempo
 
 ```powershell
 # List all tags.
-./blog/tools/Edit-WordPressTaxonomy.ps1 -SiteUrl 'https://your-wordpress-site.example' -Taxonomy Tag
+./blog/wordpress/Edit-WordPressTaxonomy.ps1 -SiteUrl 'https://your-wordpress-site.example' -Taxonomy Tag
 
 # Preview and then perform a rename.
-./blog/tools/Edit-WordPressTaxonomy.ps1 -SiteUrl 'https://your-wordpress-site.example' -Taxonomy Category -Operation Rename -SourceName 'Techy Tips' -TargetName 'Technology'
-./blog/tools/Edit-WordPressTaxonomy.ps1 -SiteUrl 'https://your-wordpress-site.example' -Taxonomy Category -Operation Rename -SourceName 'Techy Tips' -TargetName 'Technology' -Commit
+./blog/wordpress/Edit-WordPressTaxonomy.ps1 -SiteUrl 'https://your-wordpress-site.example' -Taxonomy Category -Operation Rename -SourceName 'Techy Tips' -TargetName 'Technology'
+./blog/wordpress/Edit-WordPressTaxonomy.ps1 -SiteUrl 'https://your-wordpress-site.example' -Taxonomy Category -Operation Rename -SourceName 'Techy Tips' -TargetName 'Technology' -Commit
 
 # Preview merging one tag into another. The committed run updates affected posts
 # before deleting the source tag.
-./blog/tools/Edit-WordPressTaxonomy.ps1 -SiteUrl 'https://your-wordpress-site.example' -Taxonomy Tag -Operation Merge -SourceName '#powershell' -TargetName 'PowerShell'
+./blog/wordpress/Edit-WordPressTaxonomy.ps1 -SiteUrl 'https://your-wordpress-site.example' -Taxonomy Tag -Operation Merge -SourceName '#powershell' -TargetName 'PowerShell'
 
 # Preview deleting an unused category.
-./blog/tools/Edit-WordPressTaxonomy.ps1 -SiteUrl 'https://your-wordpress-site.example' -Taxonomy Category -Operation Delete -SourceName 'Testing'
+./blog/wordpress/Edit-WordPressTaxonomy.ps1 -SiteUrl 'https://your-wordpress-site.example' -Taxonomy Category -Operation Delete -SourceName 'Testing'
 ```
 
 For `Rename`, use `-NewSlug` only when the slug should be explicitly changed. A rename refuses to create a duplicate name; use `Merge` when the destination term already exists. If WordPress contains duplicate names, select terms unambiguously with `-SourceId` and, for a merge, `-TargetId`. Merge and delete previews show every affected post before any changes are made.
