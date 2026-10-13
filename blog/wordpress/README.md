@@ -21,6 +21,8 @@ One existing WordPress post is maintained per tracked project. For a reader-faci
 3. Commit the article and generated index/RSS with the project change. Merge the reviewed PR into `main`.
 4. **Sync existing WordPress articles** automatically compares the tracked posts and updates only changed text. Scheduled posts keep their schedule; published posts stay published; both retain author, slug and original date.
 
+The same workflow also ensures every tracked automation article has the public `Jason AI Automation` tag, using the stable public tag URL `/tag/jason-ai-automation/`. The tag provides a reader-facing collection without relying on the WordPress author archive URL or exposing the automation login name. Existing tags are preserved; deleted, mismatched, and otherwise ineligible posts are skipped rather than recreated.
+
 The `revision_history` array is the canonical public changelog. The helper writes its HTML footer into `content_html`, so the static blog and WordPress show the same history. Each entry displays a date, summary and GitHub source link. Never edit or delete old entries; append a correction with a new ID. Repeating an identical helper command is a no-op; reusing an ID for different text fails. Rendering replaces the existing generated footer, so retries never append a second copy.
 
 Article text changes require a new history entry in CI. Changes that do not affect readers can stay in the project's ordinary changelog without creating an article entry. The shared `website` repo is the scope of this workflow; updating another repository does not trigger it. Add the relevant article change to this repo to document an external update.
@@ -97,6 +99,7 @@ Modified: 2026-09-29
 - Checks WordPress by slug before creating a post when credentials are supplied, providing a second duplicate-protection layer.
 - Can update existing draft, pending, or scheduled posts by slug without changing their schedule when `-UpdateExisting` is used.
 - In `-UpdateExisting` mode, published, deleted, missing, and otherwise ineligible posts are not scheduled or recreated.
+- Adds the `Jason AI Automation` tag to newly scheduled automation posts by default.
 - Can append a standard `GitHub` tag to every processed post with `-AddGitHubTag`.
 - Reads an optional `categories` array from a source JSON file; categories are never created unless `-CreateMissingCategories` is explicitly supplied.
 - Runs as a dry run unless `-Commit` is specified.
@@ -141,6 +144,15 @@ To synchronize tags on existing scheduled or draft posts and append the `GitHub`
 ```powershell
 ./blog/wordpress/Publish-WordPress.ps1 -SiteUrl 'https://your-wordpress-site.example' -UpdateExisting -AddGitHubTag -CreateMissingTags -Commit
 ```
+
+To add the shared automation tag to all tracked published and scheduled posts:
+
+```powershell
+./blog/wordpress/Add-WordPressTagToTracked.ps1 -SiteUrl 'https://your-wordpress-site.example' -TagName 'Jason AI Automation' -TagSlug 'jason-ai-automation' -CreateMissingTag
+./blog/wordpress/Add-WordPressTagToTracked.ps1 -SiteUrl 'https://your-wordpress-site.example' -TagName 'Jason AI Automation' -TagSlug 'jason-ai-automation' -CreateMissingTag -Commit
+```
+
+The tracked-post tag script preserves existing tags and updates only `publish`, `future`, `draft`, and `pending` posts whose current WordPress slug still matches `wordpress-state.json`. It skips trashed or mismatched entries, including the known trashed `visual-ping-webhook-project-sketch` post.
 
 To add one category to already-published WordPress posts that match local JSON slugs:
 

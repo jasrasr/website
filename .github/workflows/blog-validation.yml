@@ -25,7 +25,9 @@ jobs:
         run: ./blog/wordpress/Test-AutomatedVoice.ps1
       - name: Test WordPress content sync without network access
         shell: pwsh
-        run: ./blog/wordpress/Test-WordPressContentSync.ps1
+        run: |
+          ./blog/wordpress/Test-WordPressContentSync.ps1
+          ./blog/wordpress/Test-WordPressTrackedTag.ps1
       - name: Check append-only public revision history
         shell: pwsh
         env:

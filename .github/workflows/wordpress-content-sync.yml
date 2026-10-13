@@ -68,6 +68,21 @@ jobs:
           }
           if ($env:APPLY_CHANGES -eq 'true') { $options.Commit = $true }
           ./blog/wordpress/Sync-WordPressContent.ps1 @options
+      - name: Add automation tag to tracked posts
+        shell: pwsh
+        env:
+          WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+          WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+          APPLY_CHANGES: ${{ github.event_name == 'push' || inputs.apply }}
+        run: |
+          $options = @{
+            SiteUrl = 'https://jasonlamb.me'
+            TagName = 'Jason AI Automation'
+            TagSlug = 'jason-ai-automation'
+            CreateMissingTag = $true
+          }
+          if ($env:APPLY_CHANGES -eq 'true') { $options.Commit = $true }
+          ./blog/wordpress/Add-WordPressTagToTracked.ps1 @options
       - name: Encrypt any pre-update backups
         id: encrypt
         if: always()
