@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "filename": "webstats-private-analytics-dashboard.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-10-13",
+    "modified_date": "2026-10-13",
+    "revision": "1.0.0",
+    "changelog": [
+      "1.0.0: Added Webstats: A Private Page-View and Click Dashboard article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "webstats-private-analytics-dashboard",
+  "title": "Webstats: A Private Page-View and Click Dashboard",
+  "date": "2026-10-13",
+  "updated": "2026-10-13",
+  "author": "Jason Lamb",
+  "tags": [
+    "Web foundations",
+    "Site admin"
+  ],
+  "categories": [
+    "Technology"
+  ],
+  "excerpt": "A PHP and JSON analytics dashboard for page views, clicks, referrers, top pages, and daily reports across personal sites.",
+  "cover": {
+    "src": "media/derivatives/2026/10/webstats-private-analytics-dashboard_640w.jpg",
+    "alt": "Webstats cover image showing a private analytics dashboard with page views, clicks, and protected JSON storage"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/10/webstats-private-analytics-dashboard_640w.jpg\" alt=\"Webstats cover image showing a private analytics dashboard with page views, clicks, and protected JSON storage\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Webstats is a personal analytics project for sites that need useful traffic information without handing the whole job to a third-party dashboard. It tracks page views and click events, then presents the results in a protected PHP interface.</p>\n<p>The tracker is a small JavaScript file that can be added to rendered HTML, PHP pages, WordPress theme output, and static hosts. It records ordinary page views and delegated link or button clicks, including elements added after page load.</p>\n<p>The dashboard focuses on practical questions: which pages were viewed, what was clicked, where visits came from, and how activity changed by day. Reports use Eastern calendar-day boundaries with DST-aware date handling and zero-filled quiet days.</p>\n<p>Data is stored in daily JSON files rather than a database server. That fits the modest personal-site scale of the project, but it also means storage limits, retention, locking, and backup behavior need to be explicit.</p>\n<p>Privacy boundaries are documented in the project. Form values, cookies, raw IP addresses, user-agent strings, query strings, URL credentials, and fragments are not saved in event data. Paths and explicit labels are retained, so sensitive page names still need to be avoided or excluded.</p>\n<p>The project includes a protected dashboard, password handling, CSRF checks, owner opt-out, named events, exclusions, rate limits, and a retention script. It also includes a WordPress integration path for loading the tracker on public theme pages while skipping logged-in administrators.</p>\n<p>Webstats does not try to be billing-grade analytics or bot-proof measurement. Browser blockers, disabled JavaScript, interrupted navigation, spoofed requests, and offline behavior can affect counts. It is better understood as a transparent personal dashboard with known limits.</p>\n<p>That honesty is the useful part. A small site owner can inspect the activity that matters, keep the data under direct control, and know where the numbers are approximate instead of pretending they are perfect.</p>\n<p><a href=\"https://jasr.me/github/webstats/\">Open the hosted project</a> &middot; <a href=\"https://github.com/jasrasr/website/tree/main/webstats\">Explore the project on GitHub</a></p>\n\n<!-- blog-revision-history:start -->\n<section class=\"revision-history\" aria-label=\"Article update history\">\n<h2>Update history</h2>\n<p>These notes record article updates associated with repository changes. The original publication date is retained.</p>\n<ul>\n<li id=\"revision-2026-10-13-webstats-private-analytics-dashboard\"><time datetime=\"2026-10-13\">2026-10-13</time> — Added the Webstats project article with notes on page-view tracking, click events, private reporting, WordPress integration, and protected JSON storage. <a href=\"https://github.com/jasrasr/website/tree/main/webstats\">GitHub source</a></li>\n</ul>\n</section>\n<!-- blog-revision-history:end -->\n",
+  "revision_history": [
+    {
+      "id": "2026-10-13-webstats-private-analytics-dashboard",
+      "date": "2026-10-13",
+      "summary": "Added the Webstats project article with notes on page-view tracking, click events, private reporting, WordPress integration, and protected JSON storage.",
+      "source_url": "https://github.com/jasrasr/website/tree/main/webstats"
+    }
+  ]
+}

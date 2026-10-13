@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "filename": "jurassic-terminal-browser-gag.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-10-13",
+    "modified_date": "2026-10-13",
+    "revision": "1.0.0",
+    "changelog": [
+      "1.0.0: Added Jurassic Terminal: A Retro Access-Denied Browser Gag article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "jurassic-terminal-browser-gag",
+  "title": "Jurassic Terminal: A Retro Access-Denied Browser Gag",
+  "date": "2026-10-13",
+  "updated": "2026-10-13",
+  "author": "Jason Lamb",
+  "tags": [
+    "Browser experiments"
+  ],
+  "categories": [
+    "Fun"
+  ],
+  "excerpt": "A tiny static browser experiment with a CRT-style terminal, repeated access-denied messages, sound toggle, auto-demo mode, and a playful modal warning.",
+  "cover": {
+    "src": "media/derivatives/2026/10/jurassic-terminal-browser-gag_640w.jpg",
+    "alt": "Jurassic Terminal cover image with a blue CRT access-denied terminal and playful magic-word warning"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/10/jurassic-terminal-browser-gag_640w.jpg\" alt=\"Jurassic Terminal cover image with a blue CRT access-denied terminal and playful magic-word warning\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Jurassic Terminal is a tiny browser gag built around a familiar access-denied rhythm. The page presents a blue CRT-style command prompt, waits for typed commands, and escalates into repeated refusal after enough attempts.</p>\n<p>The project is intentionally small: one static HTML file with embedded CSS and JavaScript. The interface uses a monospace terminal, scanline overlay, command form, reset button, sound toggle, and auto-demo mode.</p>\n<p>The interaction is simple. A visitor types a command and presses Enter. The terminal prints an access-denied response. After several attempts, the input locks and the page repeats its warning while showing a modal-style alert.</p>\n<p>The sound behavior uses browser speech synthesis only when the visitor turns it on. That keeps the joke from surprising someone with audio immediately, while still making the demo more theatrical when sound is welcome.</p>\n<p>The page also respects reduced-motion preferences by disabling the finger-wag animation for users who request less motion. That is a small detail, but it keeps a playful page from ignoring a real browser preference.</p>\n<p>This is not authentication and it does not protect anything. It is a visual and audio browser experiment: a small recreation of a pop-culture terminal moment as a self-contained web page.</p>\n<p>The appeal is how much personality can fit into a single file. A prompt, a few timers, a modal, and a strong visual style are enough to turn a blank page into a little interactive scene.</p>\n<p><a href=\"https://jasr.me/github/jurassic-terminal/\">Open the hosted project</a> &middot; <a href=\"https://github.com/jasrasr/website/tree/main/jurassic-terminal\">Explore the project on GitHub</a></p>\n\n<!-- blog-revision-history:start -->\n<section class=\"revision-history\" aria-label=\"Article update history\">\n<h2>Update history</h2>\n<p>These notes record article updates associated with repository changes. The original publication date is retained.</p>\n<ul>\n<li id=\"revision-2026-10-13-jurassic-terminal-browser-gag\"><time datetime=\"2026-10-13\">2026-10-13</time> — Added the Jurassic Terminal project article with notes on the CRT interface, access-denied loop, sound toggle, demo mode, and static browser implementation. <a href=\"https://github.com/jasrasr/website/tree/main/jurassic-terminal\">GitHub source</a></li>\n</ul>\n</section>\n<!-- blog-revision-history:end -->\n",
+  "revision_history": [
+    {
+      "id": "2026-10-13-jurassic-terminal-browser-gag",
+      "date": "2026-10-13",
+      "summary": "Added the Jurassic Terminal project article with notes on the CRT interface, access-denied loop, sound toggle, demo mode, and static browser implementation.",
+      "source_url": "https://github.com/jasrasr/website/tree/main/jurassic-terminal"
+    }
+  ]
+}

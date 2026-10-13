@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "filename": "shared-user-management-php-json.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-10-13",
+    "modified_date": "2026-10-13",
+    "revision": "1.0.0",
+    "changelog": [
+      "1.0.0: Added User Management: Shared PHP and JSON Accounts Across Projects article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "shared-user-management-php-json",
+  "title": "User Management: Shared PHP and JSON Accounts Across Projects",
+  "date": "2026-10-13",
+  "updated": "2026-10-13",
+  "author": "Jason Lamb",
+  "tags": [
+    "Web foundations",
+    "Security"
+  ],
+  "categories": [
+    "Technology"
+  ],
+  "excerpt": "A shared same-host account system with roles, project access, CSRF checks, session revocation, and protected JSON storage.",
+  "cover": {
+    "src": "media/derivatives/2026/10/shared-user-management-php-json_640w.jpg",
+    "alt": "User Management cover image showing roles, project access, session security, CSRF protection, and JSON storage"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/10/shared-user-management-php-json_640w.jpg\" alt=\"User Management cover image showing roles, project access, session security, CSRF protection, and JSON storage\" loading=\"eager\" decoding=\"async\"></figure>\n<p>User Management is the shared account layer for the PHP and JSON projects in the repository. The goal is to avoid rebuilding login, password changes, role checks, and session behavior separately inside every small application.</p>\n<p>The system provides same-host login for integrated projects. Accounts have User, Admin, and Super Admin roles, while project access is granted separately. A person can have access to selected projects, all projects, or central directory administration when explicitly allowed.</p>\n<p>The integration point is deliberately explicit. Registering a project in the portal does not automatically protect it, and deploying the account system does not migrate old users by itself. Each application still has to call the shared identity provider and gate every protected page, API, download, and write handler.</p>\n<p>Security details are treated as first-class behavior. The project includes server-side permission checks, CSRF tokens, secure cookies, session rotation, idle expiry, login throttling, required password changes, and session revocation after account or password changes.</p>\n<p>The first administrator is created through a private setup flow or CLI command. There is no shipped default account or password, and there is no email recovery service. The documentation is blunt about keeping a second administrator and private backups.</p>\n<p>Storage uses protected JSON files with stable locks and atomic replacement. Runtime files remain ignored by Git, which protects credentials from source control but also makes hosting backup and deployment preservation essential.</p>\n<p>The project also documents limits. This is same-host, same-PHP-session-storage integration, not OAuth, OIDC, or cross-domain single sign-on. Static HTML cannot be protected by a JavaScript login check; it needs to be served through a protected route if access control matters.</p>\n<p>The value is consistency. Once shared identity is in place, individual projects can spend less code on account plumbing and more code on their actual workflow, while still keeping access decisions visible and testable.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/user-management\">Explore the project on GitHub</a></p>\n\n<!-- blog-revision-history:start -->\n<section class=\"revision-history\" aria-label=\"Article update history\">\n<h2>Update history</h2>\n<p>These notes record article updates associated with repository changes. The original publication date is retained.</p>\n<ul>\n<li id=\"revision-2026-10-13-shared-user-management-php-json\"><time datetime=\"2026-10-13\">2026-10-13</time> — Added the User Management project article with notes on shared accounts, roles, project permissions, session security, setup boundaries, and JSON storage. <a href=\"https://github.com/jasrasr/website/tree/main/user-management\">GitHub source</a></li>\n</ul>\n</section>\n<!-- blog-revision-history:end -->\n",
+  "revision_history": [
+    {
+      "id": "2026-10-13-shared-user-management-php-json",
+      "date": "2026-10-13",
+      "summary": "Added the User Management project article with notes on shared accounts, roles, project permissions, session security, setup boundaries, and JSON storage.",
+      "source_url": "https://github.com/jasrasr/website/tree/main/user-management"
+    }
+  ]
+}

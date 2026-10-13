@@ -12,8 +12,81 @@
     ]
   },
   "blog_title": "Jason’s Flat-File Blog",
-  "generated": "2026-10-13T13:12:29.924Z",
+  "generated": "2026-10-13T13:28:54.830Z",
   "posts": [
+    {
+      "slug": "availability-date-poll",
+      "title": "Availability: A Date Poll for Groups That Need Clear Options",
+      "date": "2026-10-13",
+      "tags": [
+        "Everyday tools"
+      ],
+      "excerpt": "A PHP and JSON date-poll app for proposed times, attendee responses, optional passwords, private links, and group planning without a database.",
+      "cover": {
+        "src": "media/derivatives/2026/10/availability-date-poll_640w.jpg",
+        "alt": "Availability cover image with calendar poll screens, private links, and group planning notes"
+      },
+      "_searchText": "availability: a date poll for groups that need clear options everyday tools a php and json date-poll app for proposed times, attendee responses, optional passwords, private links, and group planning without a database. availability is a small planning tool for the moment before an event has a confirmed date. instead of asking a group to coordinate through scattered messages, the app collects proposed dates and optional times in one shared poll. the organizer creates an event, adds possible dates, sets an optional location and time zone, and shares an invite link. attendees mark each option as available, unavailable, or unanswered. the result is a readable matrix of responses instead of a chain of half-remembered replies. privacy is part of the design. admin and response tokens live in link fragments, so browsers do not send them to the server as part of the url request. tokens are hashed in storage, and private contact fields are excluded from public responses by a server-side allowlist. the project supports optional admin and event passwords. an admin password adds a second gate before event settings and private attendee details can be viewed. an event password can protect the invite side, including viewing results, voting, editing a response, and adding options when that feature is enabled. attendee-added options make the poll more flexible without overwriting existing answers. when the organizer allows it, a participant can suggest another date or date/time. existing responses remain intact and the new option starts unanswered for everyone. the app uses php, vanilla javascript, css, and one protected json document per event. that keeps deployment simple on shared hosting, but it also means runtime data needs to be preserved carefully during updates and backed up outside ordinary source-control history. availability is not a calendar system and it does not claim that a proposed date is confirmed. its job is narrower and more useful: collect preferences, protect the right details, and make the best options visible enough for a human organizer to decide. open the hosted project &middot; explore the project on github update history these notes record article updates associated with repository changes. the original publication date is retained. 2026-10-13 — added the availability project article with notes on proposed dates, private links, password options, attendee-added choices, and protected json storage. github source"
+    },
+    {
+      "slug": "oregon-trail-browser-game",
+      "title": "Oregon Trail: Saved Journeys and Editable Browser Game Rules",
+      "date": "2026-10-13",
+      "tags": [
+        "Browser experiments",
+        "Games"
+      ],
+      "excerpt": "A browser trail game with automatic local saves, recoverable journeys, offline reload support, and editable JSON game content.",
+      "cover": {
+        "src": "media/derivatives/2026/10/oregon-trail-browser-game_640w.jpg",
+        "alt": "Oregon Trail browser game cover image with saved journeys, supplies, health, and editable JSON content"
+      },
+      "_searchText": "oregon trail: saved journeys and editable browser game rules browser experiments games a browser trail game with automatic local saves, recoverable journeys, offline reload support, and editable json game content. oregon trail is a browser game project built around two ideas: a journey should survive a reload, and the game rules should be editable without rewriting the application code. packing the wagon creates a separate saved journey. every completed action saves immediately, including the exact pending river or landmark choice. reloading resumes the most recent unfinished journey without rerolling the previous turn. saved data includes the party, date, supplies, health, miles, pace, rations, next stop, story state, pending choice, and a snapshot of the content rules. that snapshot matters because old journeys should keep their original rules even if new content is added later. the game content lives in a json file. stops, river crossings, travel events, actions, probabilities, effects, hunting settings, and failure outcomes can be adjusted as data. bad content is reported without deleting existing saves, and older saved journeys can still be opened using their embedded rules. probability handling is documented plainly. travel events use absolute percentages per travel turn, not relative weights. action success has its own chance when selected. this keeps tuning from becoming a mystery hidden behind the interface. saves use browser localstorage on the current origin. that is useful for a lightweight game, but it also sets a clear boundary: saves do not sync between devices, private windows, browsers, or domains, and clearing site data removes them. the project also includes service-worker support for offline play after a successful first install over https or localhost. the initial visit still needs connectivity, but a working cached copy can reload later on the same device. the result is a small game that treats persistence as part of the experience. the wagon can get interrupted by life, the browser can reload, and the journey can still continue from the decision that was actually in front of the player. open the hosted project &middot; explore the project on github update history these notes record article updates associated with repository changes. the original publication date is retained. 2026-10-13 — added the oregon trail project article with notes on saved journeys, recovery, editable json rules, river choices, and offline play. github source"
+    },
+    {
+      "slug": "webstats-private-analytics-dashboard",
+      "title": "Webstats: A Private Page-View and Click Dashboard",
+      "date": "2026-10-13",
+      "tags": [
+        "Web foundations",
+        "Site admin"
+      ],
+      "excerpt": "A PHP and JSON analytics dashboard for page views, clicks, referrers, top pages, and daily reports across personal sites.",
+      "cover": {
+        "src": "media/derivatives/2026/10/webstats-private-analytics-dashboard_640w.jpg",
+        "alt": "Webstats cover image showing a private analytics dashboard with page views, clicks, and protected JSON storage"
+      },
+      "_searchText": "webstats: a private page-view and click dashboard web foundations site admin a php and json analytics dashboard for page views, clicks, referrers, top pages, and daily reports across personal sites. webstats is a personal analytics project for sites that need useful traffic information without handing the whole job to a third-party dashboard. it tracks page views and click events, then presents the results in a protected php interface. the tracker is a small javascript file that can be added to rendered html, php pages, wordpress theme output, and static hosts. it records ordinary page views and delegated link or button clicks, including elements added after page load. the dashboard focuses on practical questions: which pages were viewed, what was clicked, where visits came from, and how activity changed by day. reports use eastern calendar-day boundaries with dst-aware date handling and zero-filled quiet days. data is stored in daily json files rather than a database server. that fits the modest personal-site scale of the project, but it also means storage limits, retention, locking, and backup behavior need to be explicit. privacy boundaries are documented in the project. form values, cookies, raw ip addresses, user-agent strings, query strings, url credentials, and fragments are not saved in event data. paths and explicit labels are retained, so sensitive page names still need to be avoided or excluded. the project includes a protected dashboard, password handling, csrf checks, owner opt-out, named events, exclusions, rate limits, and a retention script. it also includes a wordpress integration path for loading the tracker on public theme pages while skipping logged-in administrators. webstats does not try to be billing-grade analytics or bot-proof measurement. browser blockers, disabled javascript, interrupted navigation, spoofed requests, and offline behavior can affect counts. it is better understood as a transparent personal dashboard with known limits. that honesty is the useful part. a small site owner can inspect the activity that matters, keep the data under direct control, and know where the numbers are approximate instead of pretending they are perfect. open the hosted project &middot; explore the project on github update history these notes record article updates associated with repository changes. the original publication date is retained. 2026-10-13 — added the webstats project article with notes on page-view tracking, click events, private reporting, wordpress integration, and protected json storage. github source"
+    },
+    {
+      "slug": "shared-user-management-php-json",
+      "title": "User Management: Shared PHP and JSON Accounts Across Projects",
+      "date": "2026-10-13",
+      "tags": [
+        "Web foundations",
+        "Security"
+      ],
+      "excerpt": "A shared same-host account system with roles, project access, CSRF checks, session revocation, and protected JSON storage.",
+      "cover": {
+        "src": "media/derivatives/2026/10/shared-user-management-php-json_640w.jpg",
+        "alt": "User Management cover image showing roles, project access, session security, CSRF protection, and JSON storage"
+      },
+      "_searchText": "user management: shared php and json accounts across projects web foundations security a shared same-host account system with roles, project access, csrf checks, session revocation, and protected json storage. user management is the shared account layer for the php and json projects in the repository. the goal is to avoid rebuilding login, password changes, role checks, and session behavior separately inside every small application. the system provides same-host login for integrated projects. accounts have user, admin, and super admin roles, while project access is granted separately. a person can have access to selected projects, all projects, or central directory administration when explicitly allowed. the integration point is deliberately explicit. registering a project in the portal does not automatically protect it, and deploying the account system does not migrate old users by itself. each application still has to call the shared identity provider and gate every protected page, api, download, and write handler. security details are treated as first-class behavior. the project includes server-side permission checks, csrf tokens, secure cookies, session rotation, idle expiry, login throttling, required password changes, and session revocation after account or password changes. the first administrator is created through a private setup flow or cli command. there is no shipped default account or password, and there is no email recovery service. the documentation is blunt about keeping a second administrator and private backups. storage uses protected json files with stable locks and atomic replacement. runtime files remain ignored by git, which protects credentials from source control but also makes hosting backup and deployment preservation essential. the project also documents limits. this is same-host, same-php-session-storage integration, not oauth, oidc, or cross-domain single sign-on. static html cannot be protected by a javascript login check; it needs to be served through a protected route if access control matters. the value is consistency. once shared identity is in place, individual projects can spend less code on account plumbing and more code on their actual workflow, while still keeping access decisions visible and testable. explore the project on github update history these notes record article updates associated with repository changes. the original publication date is retained. 2026-10-13 — added the user management project article with notes on shared accounts, roles, project permissions, session security, setup boundaries, and json storage. github source"
+    },
+    {
+      "slug": "jurassic-terminal-browser-gag",
+      "title": "Jurassic Terminal: A Retro Access-Denied Browser Gag",
+      "date": "2026-10-13",
+      "tags": [
+        "Browser experiments"
+      ],
+      "excerpt": "A tiny static browser experiment with a CRT-style terminal, repeated access-denied messages, sound toggle, auto-demo mode, and a playful modal warning.",
+      "cover": {
+        "src": "media/derivatives/2026/10/jurassic-terminal-browser-gag_640w.jpg",
+        "alt": "Jurassic Terminal cover image with a blue CRT access-denied terminal and playful magic-word warning"
+      },
+      "_searchText": "jurassic terminal: a retro access-denied browser gag browser experiments a tiny static browser experiment with a crt-style terminal, repeated access-denied messages, sound toggle, auto-demo mode, and a playful modal warning. jurassic terminal is a tiny browser gag built around a familiar access-denied rhythm. the page presents a blue crt-style command prompt, waits for typed commands, and escalates into repeated refusal after enough attempts. the project is intentionally small: one static html file with embedded css and javascript. the interface uses a monospace terminal, scanline overlay, command form, reset button, sound toggle, and auto-demo mode. the interaction is simple. a visitor types a command and presses enter. the terminal prints an access-denied response. after several attempts, the input locks and the page repeats its warning while showing a modal-style alert. the sound behavior uses browser speech synthesis only when the visitor turns it on. that keeps the joke from surprising someone with audio immediately, while still making the demo more theatrical when sound is welcome. the page also respects reduced-motion preferences by disabling the finger-wag animation for users who request less motion. that is a small detail, but it keeps a playful page from ignoring a real browser preference. this is not authentication and it does not protect anything. it is a visual and audio browser experiment: a small recreation of a pop-culture terminal moment as a self-contained web page. the appeal is how much personality can fit into a single file. a prompt, a few timers, a modal, and a strong visual style are enough to turn a blank page into a little interactive scene. open the hosted project &middot; explore the project on github update history these notes record article updates associated with repository changes. the original publication date is retained. 2026-10-13 — added the jurassic terminal project article with notes on the crt interface, access-denied loop, sound toggle, demo mode, and static browser implementation. github source"
+    },
     {
       "slug": "game-buzzer",
       "title": "Game Buzzer: Phones, QR Codes, and Majority Rules for Team Play",

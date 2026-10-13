@@ -846,6 +846,101 @@
         "missing_alt": false,
         "unused": false
       }
+    },
+    "availability-date-poll": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/10/availability-date-poll_640w.jpg"
+      },
+      "uploaded": "2026-10-13T00:00:00Z",
+      "used_in": [
+        "availability-date-poll"
+      ],
+      "alt": "Availability cover image with calendar poll screens, private links, and group planning notes",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-10-13T13:28:54.830Z",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "oregon-trail-browser-game": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/10/oregon-trail-browser-game_640w.jpg"
+      },
+      "uploaded": "2026-10-13T00:00:00Z",
+      "used_in": [
+        "oregon-trail-browser-game"
+      ],
+      "alt": "Oregon Trail browser game cover image with saved journeys, supplies, health, and editable JSON content",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-10-13T13:28:54.830Z",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "webstats-private-analytics-dashboard": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/10/webstats-private-analytics-dashboard_640w.jpg"
+      },
+      "uploaded": "2026-10-13T00:00:00Z",
+      "used_in": [
+        "webstats-private-analytics-dashboard"
+      ],
+      "alt": "Webstats cover image showing a private analytics dashboard with page views, clicks, and protected JSON storage",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-10-13T13:28:54.830Z",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "shared-user-management-php-json": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/10/shared-user-management-php-json_640w.jpg"
+      },
+      "uploaded": "2026-10-13T00:00:00Z",
+      "used_in": [
+        "shared-user-management-php-json"
+      ],
+      "alt": "User Management cover image showing roles, project access, session security, CSRF protection, and JSON storage",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-10-13T13:28:54.830Z",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "jurassic-terminal-browser-gag": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/10/jurassic-terminal-browser-gag_640w.jpg"
+      },
+      "uploaded": "2026-10-13T00:00:00Z",
+      "used_in": [
+        "jurassic-terminal-browser-gag"
+      ],
+      "alt": "Jurassic Terminal cover image with a blue CRT access-denied terminal and playful magic-word warning",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-10-13T13:28:54.830Z",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
     }
   }
 }
