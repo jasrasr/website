@@ -4,6 +4,9 @@ All notable changes to this project are documented here. Format is loosely based
 
 ## Unreleased
 
+## 2026-10-13
+- Added a private, read-only ticket review workspace with full conversation pagination, priority/age/SLA ranking, AI recommendations with verified evidence quotations, editable drafts, and sequential queue review. Rev 1.8.
+
 ## 2026-09-25
 - Fixed the organization collector never detecting new tickets: it combined all whitelisted agents into one `agent_id:A OR agent_id:B ...` Freshservice filter query, and that endpoint silently caps any single query at 10,000 results. With 7 agents' full ticket history combined, the query exceeded the cap and the truncated result never included recent tickets. `api/collect-org.php` and `FreshserviceClient::listTicketsForAgent()` now query one agent at a time (each well under the cap, same as the main dashboard's own agent) and merge the results. (Rev 1.7)
 

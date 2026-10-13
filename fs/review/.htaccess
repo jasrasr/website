@@ -1,0 +1,4 @@
+Options -Indexes
+<FilesMatch "^(ReviewService|AiReviewer)\.php$">
+Require all denied
+</FilesMatch>
