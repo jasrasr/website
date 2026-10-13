@@ -1,0 +1,24 @@
+name: Freshservice review validation
+on:
+  pull_request:
+    paths: ['fs/review/**', 'fs/tests/review-test.php', '.github/workflows/fs-review-validation.yml']
+  push:
+    branches: [main]
+    paths: ['fs/review/**', 'fs/tests/review-test.php', '.github/workflows/fs-review-validation.yml']
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: curl
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: find fs/review -name '*.php' -print0 | xargs -0 -n1 php -l
+      - run: php fs/tests/review-test.php
+      - run: node --check fs/review/review.js

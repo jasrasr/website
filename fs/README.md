@@ -83,3 +83,7 @@ ending unresolved = starting unresolved + entered unresolved - exited unresolved
 ```
 
 Because Freshservice only provides the current ticket state in list results, the collector compares each run with its private previous-state file. More frequent runs produce better transition coverage.
+
+## Private ticket review
+
+Open `review/` for a private companion workspace that reads the configured agent's unresolved tickets, full descriptions and paginated public/private conversations. It ranks attention by priority, SLA, age and idle time and offers optional AI next-step recommendations with verified evidence quotations and editable drafts. It never sends messages or changes ticket status. Add a separate `review_token` and optional AI settings to the existing local config. See [review setup and limitations](review/README.md).

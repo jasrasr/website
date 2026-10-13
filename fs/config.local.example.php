@@ -16,4 +16,11 @@ return [
     'resolved_status_ids' => [4, 5],
     // Optional fallback/overrides if the API key cannot read ticket-field metadata.
     'status_labels' => [],
+    // Private review workspace: /fs/review/. Never reuse collector_token.
+    'review_token' => 'REPLACE_WITH_A_SEPARATE_RANDOM_SECRET_AT_LEAST_32_CHARACTERS',
+    // Explicitly enable only after choosing an approved API account for ticket content.
+    'review_ai_enabled' => false,
+    'review_openai_key' => '',
+    'review_model' => '', // A model available to your API project with Structured Outputs.
+
 ];
