@@ -28,6 +28,7 @@ param(
     [switch]$CreateMissingTags,
     [switch]$CreateMissingCategories,
     [switch]$AddGitHubTag,
+    [string[]]$AutomationTag = @('Jason AI Automation'),
     [switch]$UpdateExisting,
     [switch]$KeepCoverInContent,
     [switch]$Commit
@@ -303,6 +304,11 @@ function Get-PostTagNames {
     $tagNames = @()
     if ($Post.PSObject.Properties['tags'] -and $Post.tags) { $tagNames = @($Post.tags) }
     if ($AddGitHubTag -and $tagNames -notcontains 'GitHub') { $tagNames += 'GitHub' }
+    foreach ($tagName in @($AutomationTag)) {
+        if (-not [string]::IsNullOrWhiteSpace($tagName) -and $tagNames -notcontains $tagName) {
+            $tagNames += $tagName
+        }
+    }
     @($tagNames)
 }
 
