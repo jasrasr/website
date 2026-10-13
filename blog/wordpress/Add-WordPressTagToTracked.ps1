@@ -108,7 +108,13 @@ function Get-TrackedPosts {
     }
 
     $state = Get-Content -LiteralPath $StatePath -Raw | ConvertFrom-Json
-    if ($state._meta.PSObject.Properties['site_url'] -and $state._meta.site_url -and $state._meta.site_url.TrimEnd('/') -ne $script:WpBase) {
+    if (
+        $state.PSObject.Properties['_meta'] -and
+        $state._meta -and
+        $state._meta.PSObject.Properties['site_url'] -and
+        $state._meta.site_url -and
+        $state._meta.site_url.TrimEnd('/') -ne $script:WpBase
+    ) {
         throw "State file belongs to a different WordPress site: $($state._meta.site_url)"
     }
 
