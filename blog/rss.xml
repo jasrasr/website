@@ -18,6 +18,13 @@
     <description>Database-free blog powered by JSON files.</description>
     <language>en-us</language>
     <item>
+      <title>Game Buzzer: Phones, QR Codes, and Majority Rules for Team Play</title>
+      <link>https://jasr.me/blog/post.html?p=game-buzzer</link>
+      <guid>https://jasr.me/blog/post.html?p=game-buzzer</guid>
+      <pubDate>Tue, 13 Oct 2026 00:00:00 +0000</pubDate>
+      <description>A PHP game-room tool with team phone buzzers, printable QR invitations, anonymous A/B voting, practice mode, and host scoring controls.</description>
+    </item>
+    <item>
       <title>A File Listing with Favorites, Sorting, and Useful Context</title>
       <link>https://jasr.me/blog/post.html?p=authenticated-directory-viewer</link>
       <guid>https://jasr.me/blog/post.html?p=authenticated-directory-viewer</guid>

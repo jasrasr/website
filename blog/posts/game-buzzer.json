@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "filename": "game-buzzer.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-10-13",
+    "modified_date": "2026-10-13",
+    "revision": "1.0.0",
+    "changelog": [
+      "1.0.0: Added Game Buzzer project article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "game-buzzer",
+  "title": "Game Buzzer: Phones, QR Codes, and Majority Rules for Team Play",
+  "date": "2026-10-13",
+  "updated": "2026-10-13",
+  "author": "Jason Lamb",
+  "tags": [
+    "Church and games"
+  ],
+  "categories": [
+    "Fun"
+  ],
+  "excerpt": "A PHP game-room tool with team phone buzzers, printable QR invitations, anonymous A/B voting, practice mode, and host scoring controls.",
+  "cover": {
+    "src": "media/derivatives/2026/10/game-buzzer_640w.jpg",
+    "alt": "Game Buzzer project cover image with a projector scoreboard, team phones, and QR invitations"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/10/game-buzzer_640w.jpg\" alt=\"Game Buzzer project cover image with a projector scoreboard, team phones, and QR invitations\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Game Buzzer is built for a room where several teams are playing at once, phones are already in people&apos;s hands, and the host needs the room to keep moving. The project combines a six-team buzzer, leader question voting, QR invitations, projector-friendly results, and a Majority Rules style prediction game.</p>\n<p>The buzzer side supports multiple phones per team while counting only the first accepted press for each team. That keeps the interaction flexible without turning every extra phone into an extra scoring chance. Server-side acceptance order decides which team registered first, and the scoring scale awards faster teams more points.</p>\n<p>The setup also includes a leader workflow for building the room&apos;s question list. Leaders can vote from a 100-question bank, results can be shown on a public display, and the host can load the top favorites into the game. That makes the event preparation visible without asking one person to manually reconcile every suggestion.</p>\n<p>QR code tools handle the practical entry problem. The app can produce labeled team invitation codes, download individual PNGs, print a one-team page, or print all six team codes on one sheet. Those details matter when people are arriving, choosing teams, and trying to get into the right place quickly.</p>\n<p>The Majority Rules mode adds a different kind of room game. Players answer anonymous A/B survey prompts, teams lock predictions, and the host reveals the result. Instead of measuring who knows a fact, the round rewards reading the room.</p>\n<p>Host tools make rehearsal less fragile. Practice mode, demo votes, score resets, and top-ten loading give the person running the event a way to test the flow before the room is full. The app also includes shared user-management setup, with access restricted to an existing site administrator rather than creating student accounts.</p>\n<p>This is still a web app running on ordinary phones and a server, not dedicated buzzer hardware. Network timing, browser behavior, and device differences can affect the experience. The project is best understood as a practical event tool with clear rules and useful controls, not as a precision timing system.</p>\n<p>The interesting part is how many event jobs sit behind a simple buzzer button. A good room game needs joining, voting, scoring, display, reset, and rehearsal paths. Game Buzzer puts those pieces in one small PHP project so the host can run the activity instead of juggling separate tools.</p>\n<p><a href=\"https://jasr.me/github/game-buzzer/\">Open the hosted project</a> &middot; <a href=\"https://github.com/jasrasr/website/tree/main/game-buzzer\">Explore the project on GitHub</a></p>\n\n<!-- blog-revision-history:start -->\n<section class=\"revision-history\" aria-label=\"Article update history\">\n<h2>Update history</h2>\n<p>These notes record article updates associated with repository changes. The original publication date is retained.</p>\n<ul>\n<li id=\"revision-2026-10-13-game-buzzer-article\"><time datetime=\"2026-10-13\">2026-10-13</time> — Added the Game Buzzer project article with current notes on team phones, QR invitations, leader voting, Majority Rules, practice mode, and shared-login setup. <a href=\"https://github.com/jasrasr/website/tree/main/game-buzzer\">GitHub source</a></li>\n</ul>\n</section>\n<!-- blog-revision-history:end -->\n",
+  "revision_history": [
+    {
+      "id": "2026-10-13-game-buzzer-article",
+      "date": "2026-10-13",
+      "summary": "Added the Game Buzzer project article with current notes on team phones, QR invitations, leader voting, Majority Rules, practice mode, and shared-login setup.",
+      "source_url": "https://github.com/jasrasr/website/tree/main/game-buzzer"
+    }
+  ]
+}
