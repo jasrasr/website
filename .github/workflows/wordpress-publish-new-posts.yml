@@ -1,0 +1,83 @@
+name: Publish new WordPress articles
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'blog/posts/**'
+      - 'blog/media/**'
+      - '.github/workflows/wordpress-publish-new-posts.yml'
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: Apply scheduling changes
+        type: boolean
+        default: false
+permissions:
+  contents: write
+concurrency:
+  group: wordpress-publish-new-posts
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Validate blog source
+        shell: pwsh
+        env:
+          BASE_REF: ${{ github.event.before }}
+        run: |
+          ./blog/wordpress/Test-AutomatedVoice.ps1
+          if ($env:BASE_REF -and $env:BASE_REF -notmatch '^0+$') {
+            ./blog/wordpress/Test-BlogRevisions.ps1 -BaseRef $env:BASE_REF
+          } else {
+            ./blog/wordpress/Test-BlogRevisions.ps1
+          }
+          ./blog/wordpress/Test-WordPressContentSync.ps1
+          ./blog/wordpress/Test-WordPressTrackedTag.ps1
+          ./blog/tools/Test-Blog.ps1
+      - name: Verify required secrets are configured
+        shell: pwsh
+        env:
+          WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+          WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+        run: |
+          foreach ($name in @('WORDPRESS_USERNAME','WORDPRESS_APP_PASSWORD')) {
+            if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) {
+              throw "Missing repository Actions secret: $name. Configure it and rerun this workflow."
+            }
+          }
+      - name: Schedule untracked blog posts
+        shell: pwsh
+        env:
+          WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+          WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+          APPLY_CHANGES: ${{ github.event_name == 'push' || inputs.apply }}
+        run: |
+          $options = @{
+            SiteUrl = 'https://jasonlamb.me'
+            CreateMissingTags = $true
+            CreateMissingCategories = $true
+            PreservePostOrder = $true
+          }
+          if ($env:APPLY_CHANGES -eq 'true') { $options.Commit = $true }
+          ./blog/wordpress/Publish-WordPress.ps1 @options
+      - name: Commit updated WordPress state
+        if: github.event_name == 'push' || inputs.apply
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! git diff --quiet -- blog/wordpress/wordpress-state.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add blog/wordpress/wordpress-state.json
+            git commit -m "Record WordPress scheduling state"
+            git push
+          else
+            echo "No WordPress state changes to commit."
+          fi
