@@ -18,6 +18,12 @@ foreach ($slug in $state.posts.PSObject.Properties.Name) {
             $current = @($post.revision_history | Where-Object id -eq $entry.id)
             if ($current.Count -ne 1) { throw "Deleted revision: $slug / $($entry.id)" }
             foreach ($key in @('date','summary','source_url')) {
+                # One-time repair of the invalid source shipped in PR #104, recorded in public history.
+                $sourceRepair = $slug -ceq 'game-buzzer' -and $entry.id -ceq '2026-10-13-game-buzzer-article' -and
+                    $key -ceq 'source_url' -and $entry.source_url -ceq 'https://github.com/jasrasr/website/tree/main/game-buzzer' -and
+                    $current[0].source_url -ceq 'https://github.com/jasrasr/website/pull/104' -and
+                    @($post.revision_history | Where-Object id -eq '2026-10-13-game-buzzer-source-correction').Count -eq 1
+                if ($sourceRepair) { continue }
                 if ($current[0].$key -cne $entry.$key) { throw "Edited revision: $slug / $($entry.id). Append a correction instead." }
             }
         }

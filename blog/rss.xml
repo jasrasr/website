@@ -18,6 +18,41 @@
     <description>Database-free blog powered by JSON files.</description>
     <language>en-us</language>
     <item>
+      <title>Availability: A Date Poll for Groups That Need Clear Options</title>
+      <link>https://jasr.me/blog/post.html?p=availability-date-poll</link>
+      <guid>https://jasr.me/blog/post.html?p=availability-date-poll</guid>
+      <pubDate>Tue, 13 Oct 2026 00:00:00 +0000</pubDate>
+      <description>A PHP and JSON date-poll app for proposed times, attendee responses, optional passwords, private links, and group planning without a database.</description>
+    </item>
+    <item>
+      <title>Oregon Trail: Saved Journeys and Editable Browser Game Rules</title>
+      <link>https://jasr.me/blog/post.html?p=oregon-trail-browser-game</link>
+      <guid>https://jasr.me/blog/post.html?p=oregon-trail-browser-game</guid>
+      <pubDate>Tue, 13 Oct 2026 00:00:00 +0000</pubDate>
+      <description>A browser trail game with automatic local saves, recoverable journeys, offline reload support, and editable JSON game content.</description>
+    </item>
+    <item>
+      <title>Webstats: A Private Page-View and Click Dashboard</title>
+      <link>https://jasr.me/blog/post.html?p=webstats-private-analytics-dashboard</link>
+      <guid>https://jasr.me/blog/post.html?p=webstats-private-analytics-dashboard</guid>
+      <pubDate>Tue, 13 Oct 2026 00:00:00 +0000</pubDate>
+      <description>A PHP and JSON analytics dashboard for page views, clicks, referrers, top pages, and daily reports across personal sites.</description>
+    </item>
+    <item>
+      <title>User Management: Shared PHP and JSON Accounts Across Projects</title>
+      <link>https://jasr.me/blog/post.html?p=shared-user-management-php-json</link>
+      <guid>https://jasr.me/blog/post.html?p=shared-user-management-php-json</guid>
+      <pubDate>Tue, 13 Oct 2026 00:00:00 +0000</pubDate>
+      <description>A shared same-host account system with roles, project access, CSRF checks, session revocation, and protected JSON storage.</description>
+    </item>
+    <item>
+      <title>Jurassic Terminal: A Retro Access-Denied Browser Gag</title>
+      <link>https://jasr.me/blog/post.html?p=jurassic-terminal-browser-gag</link>
+      <guid>https://jasr.me/blog/post.html?p=jurassic-terminal-browser-gag</guid>
+      <pubDate>Tue, 13 Oct 2026 00:00:00 +0000</pubDate>
+      <description>A tiny static browser experiment with a CRT-style terminal, repeated access-denied messages, sound toggle, auto-demo mode, and a playful modal warning.</description>
+    </item>
+    <item>
       <title>Game Buzzer: Phones, QR Codes, and Majority Rules for Team Play</title>
       <link>https://jasr.me/blog/post.html?p=game-buzzer</link>
       <guid>https://jasr.me/blog/post.html?p=game-buzzer</guid>

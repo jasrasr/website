@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "filename": "availability-date-poll.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-10-13",
+    "modified_date": "2026-10-13",
+    "revision": "1.0.0",
+    "changelog": [
+      "1.0.0: Added Availability: A Date Poll for Groups That Need Clear Options article to the JSON blog with generated cover image."
+    ]
+  },
+  "slug": "availability-date-poll",
+  "title": "Availability: A Date Poll for Groups That Need Clear Options",
+  "date": "2026-10-13",
+  "updated": "2026-10-13",
+  "author": "Jason Lamb",
+  "tags": [
+    "Everyday tools"
+  ],
+  "categories": [
+    "Technology"
+  ],
+  "excerpt": "A PHP and JSON date-poll app for proposed times, attendee responses, optional passwords, private links, and group planning without a database.",
+  "cover": {
+    "src": "media/derivatives/2026/10/availability-date-poll_640w.jpg",
+    "alt": "Availability cover image with calendar poll screens, private links, and group planning notes"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/10/availability-date-poll_640w.jpg\" alt=\"Availability cover image with calendar poll screens, private links, and group planning notes\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Availability is a small planning tool for the moment before an event has a confirmed date. Instead of asking a group to coordinate through scattered messages, the app collects proposed dates and optional times in one shared poll.</p>\n<p>The organizer creates an event, adds possible dates, sets an optional location and time zone, and shares an invite link. Attendees mark each option as available, unavailable, or unanswered. The result is a readable matrix of responses instead of a chain of half-remembered replies.</p>\n<p>Privacy is part of the design. Admin and response tokens live in link fragments, so browsers do not send them to the server as part of the URL request. Tokens are hashed in storage, and private contact fields are excluded from public responses by a server-side allowlist.</p>\n<p>The project supports optional admin and event passwords. An admin password adds a second gate before event settings and private attendee details can be viewed. An event password can protect the invite side, including viewing results, voting, editing a response, and adding options when that feature is enabled.</p>\n<p>Attendee-added options make the poll more flexible without overwriting existing answers. When the organizer allows it, a participant can suggest another date or date/time. Existing responses remain intact and the new option starts unanswered for everyone.</p>\n<p>The app uses PHP, vanilla JavaScript, CSS, and one protected JSON document per event. That keeps deployment simple on shared hosting, but it also means runtime data needs to be preserved carefully during updates and backed up outside ordinary source-control history.</p>\n<p>Availability is not a calendar system and it does not claim that a proposed date is confirmed. Its job is narrower and more useful: collect preferences, protect the right details, and make the best options visible enough for a human organizer to decide.</p>\n<p><a href=\"https://jasr.me/github/availability/\">Open the hosted project</a> &middot; <a href=\"https://github.com/jasrasr/website/tree/main/availability\">Explore the project on GitHub</a></p>\n\n<!-- blog-revision-history:start -->\n<section class=\"revision-history\" aria-label=\"Article update history\">\n<h2>Update history</h2>\n<p>These notes record article updates associated with repository changes. The original publication date is retained.</p>\n<ul>\n<li id=\"revision-2026-10-13-availability-date-poll\"><time datetime=\"2026-10-13\">2026-10-13</time> — Added the Availability project article with notes on proposed dates, private links, password options, attendee-added choices, and protected JSON storage. <a href=\"https://github.com/jasrasr/website/pull/106\">GitHub source</a></li>\n</ul>\n</section>\n<!-- blog-revision-history:end -->\n",
+  "revision_history": [
+    {
+      "id": "2026-10-13-availability-date-poll",
+      "date": "2026-10-13",
+      "summary": "Added the Availability project article with notes on proposed dates, private links, password options, attendee-added choices, and protected JSON storage.",
+      "source_url": "https://github.com/jasrasr/website/pull/106"
+    }
+  ]
+}
