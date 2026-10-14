@@ -41,6 +41,14 @@ with tempfile.TemporaryDirectory() as directory:
         assert status == 401
         assert 'DO_NOT_EXPOSE' not in body and 'PRIVATE_WARNING' not in body
         assert data['stage'] == 'configuration' and len(data['request_id']) == 16
+        log = root / 'errors.log'
+        config.write_text("<?php ini_set('log_errors','1'); ini_set('error_log', __DIR__.'/errors.log'); throw new RuntimeException('SYNTHETIC_PRIVATE_MESSAGE', 401);")
+        status, data, body = request()
+        assert status == 422 and data['stage'] == 'configuration'
+        assert data['error'] == 'SYNTHETIC_PRIVATE_MESSAGE'
+        logged = log.read_text()
+        assert data['request_id'] in logged and 'code 401' in logged
+        assert 'SYNTHETIC_PRIVATE_MESSAGE' not in logged
         config.write_text('<?php invalid syntax here;')
         status, data, body = request()
         assert status == 500 and data['stage'] == 'configuration'

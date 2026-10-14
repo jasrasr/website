@@ -62,7 +62,10 @@ if (!is_array($request)) reply(400,['error'=>'Invalid JSON request.']);
     }
     reply(200,$detail);
 } catch (RuntimeException $e) {
-    reply(502,['error'=>$e->getMessage()]);
+    // Expected review failures are application errors, not gateway failures.
+    // Never log the exception message: it may contain sensitive upstream content.
+    error_log('Ticket review '.$reviewRequestId.' handled failure during '.$reviewStage.' (code '.$e->getCode().').');
+    reply(422,['error'=>$e->getMessage()]);
 } catch (Throwable $e) {
     error_log('Ticket review '.$reviewRequestId.' failed during '.$reviewStage.' ('.get_class($e).').');
     reply(500,['error'=>'Review failed during '.$reviewStage.'. Check the hosting PHP error log using this request ID; no ticket was changed.']);

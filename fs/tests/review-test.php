@@ -38,4 +38,9 @@ $bad=$r;$bad['recommendation']='resolve_candidate';check(AiReviewer::validate($b
 $bad=$r;$bad['recommendation']='resolve_candidate';$bad['blockers']=[];$bad['evidence']=[];check(AiReviewer::validate($bad,$d)['recommendation']==='investigate','Unsupported candidate accepted.');
 $bad=$r;unset($bad['next_step']);fails(fn()=>AiReviewer::validate($bad,$d),'Incomplete review accepted.');
 fails(fn()=>new ReviewService(array_replace($config,['domain'=>'example.com'])),'Untrusted domain accepted.');
+foreach ([400,401,403,404,429,500] as $status) {
+    $failure=AiReviewer::httpFailure($status);
+    check($failure->getCode()===$status,'Upstream status must survive for safe logging.');
+    check(str_contains($failure->getMessage(),'HTTP '.$status),'Upstream status missing from user error.');
+}
 echo "Ticket review regression checks passed.\n";

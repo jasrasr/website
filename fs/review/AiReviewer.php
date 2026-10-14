@@ -33,7 +33,7 @@ PROMPT;
         $body=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_RESPONSE_CODE);$errno=curl_errno($ch);curl_close($ch);
         if ($errno===CURLE_OPERATION_TIMEDOUT) throw new RuntimeException('AI analysis timed out after 40 seconds. Retry this ticket individually.');
         if ($body===false) throw new RuntimeException('Could not reach the AI API (cURL code '.$errno.'). Check server outbound HTTPS connectivity.');
-        if ($body===false || $status<200 || $status>=300) throw new RuntimeException('AI request failed (HTTP '.$status.'). Check model access, API key, quota or retry later.');
+        if ($body===false || $status<200 || $status>=300) throw self::httpFailure($status);
         $response=json_decode($body,true);
         if (($response['status'] ?? '')!=='completed') throw new RuntimeException('AI review was incomplete. No recommendation was accepted.');
         $text='';
@@ -44,6 +44,19 @@ PROMPT;
         $review=json_decode($text,true);
         if (!is_array($review)) throw new RuntimeException('AI returned an invalid review.');
         return self::validate($review,$detail);
+    }
+    public static function httpFailure(int $status): RuntimeException
+    {
+        // Only local messages and numeric status are exposed, never provider response bodies.
+        $hint = match ($status) {
+            400 => 'Check the configured model and request compatibility.',
+            401 => 'Check review_openai_key on the server; the AI API rejected authentication.',
+            403 => 'Check API project permissions and model access.',
+            404 => 'Check review_model and whether this API project can access it.',
+            429 => 'Check API billing, quota and rate limits before retrying.',
+            default => 'Check model access, API configuration or retry later.',
+        };
+        return new RuntimeException('AI request failed (HTTP '.$status.'). '.$hint, $status);
     }
     public static function validate(array $review,array $detail): array
     {
