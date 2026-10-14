@@ -4,6 +4,9 @@ All notable changes to this project are documented here. Format is loosely based
 
 ## Unreleased
 
+## 2026-10-14
+- Hardened private review JSON error handling, added safe request/stage diagnostics, and reduced AI HTTP timeout to 40 seconds. Non-JSON responses now identify the operation, ticket, HTTP status and elapsed time. Rev 1.8.2.
+
 ## 2026-10-13
 - Removed the private ticket review link from the main dashboard. Review remains available by direct URL only, like the organization dashboard. Rev 1.8.1.
 - Added a private, read-only ticket review workspace with full conversation pagination, priority/age/SLA ranking, AI recommendations with verified evidence quotations, editable drafts, and sequential queue review. Rev 1.8.

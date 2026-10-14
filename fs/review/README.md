@@ -45,3 +45,9 @@ Run `php fs/tests/review-test.php` and `node --check fs/review/review.js`. Regre
 Before production use, compare fetched ticket and conversation counts against Freshservice; test a ticket with more than 30 notes; test 401/403/429 behavior; and evaluate recommendations on known resolved, waiting-on-user, waiting-on-vendor and contradictory-history examples.
 
 API references: [Freshservice API](https://api.freshservice.com/) and [OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
+
+## Troubleshooting unreadable responses
+
+The client reports the operation, ticket ID, HTTP status and elapsed seconds for non-JSON responses without displaying the raw server body. Open the failing ticket first: if history loads but Analyze fails, the problem occurs in the analysis request. JSON failures include a stage and reference ID for correlation with the hosting PHP error log. Logs from this handler contain only the reference, stage and exception class/fatal type, not exception text, secrets or ticket content.
+
+The endpoint requests a 120-second PHP execution allowance where supported; host/proxy limits can still override it. AI HTTPS calls stop after 40 seconds with an explicit error. This is timeout/error hardening, not a background job system or proof of the cause of an existing hosting failure.
