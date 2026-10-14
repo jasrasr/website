@@ -29,8 +29,10 @@ PROMPT;
             'text'=>['format'=>['type'=>'json_schema','name'=>'ticket_review','strict'=>true,'schema'=>self::schema()]]];
         $ch=curl_init('https://api.openai.com/v1/responses');
         curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_POST=>true,CURLOPT_HTTPHEADER=>['Content-Type: application/json','Authorization: Bearer '.$config['review_openai_key']],
-            CURLOPT_POSTFIELDS=>json_encode($payload,JSON_THROW_ON_ERROR),CURLOPT_CONNECTTIMEOUT=>10,CURLOPT_TIMEOUT=>90,CURLOPT_FOLLOWLOCATION=>false]);
-        $body=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_RESPONSE_CODE);curl_close($ch);
+            CURLOPT_POSTFIELDS=>json_encode($payload,JSON_THROW_ON_ERROR),CURLOPT_CONNECTTIMEOUT=>10,CURLOPT_TIMEOUT=>40,CURLOPT_FOLLOWLOCATION=>false]);
+        $body=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_RESPONSE_CODE);$errno=curl_errno($ch);curl_close($ch);
+        if ($errno===CURLE_OPERATION_TIMEDOUT) throw new RuntimeException('AI analysis timed out after 40 seconds. Retry this ticket individually.');
+        if ($body===false) throw new RuntimeException('Could not reach the AI API (cURL code '.$errno.'). Check server outbound HTTPS connectivity.');
         if ($body===false || $status<200 || $status>=300) throw new RuntimeException('AI request failed (HTTP '.$status.'). Check model access, API key, quota or retry later.');
         $response=json_decode($body,true);
         if (($response['status'] ?? '')!=='completed') throw new RuntimeException('AI review was incomplete. No recommendation was accepted.');

@@ -1,10 +1,10 @@
 name: Freshservice review validation
 on:
   pull_request:
-    paths: ['fs/review/**', 'fs/tests/review-test.php', '.github/workflows/fs-review-validation.yml']
+    paths: ['fs/review/**', 'fs/tests/review*.php', 'fs/tests/review*.js', 'fs/tests/review*.py', '.github/workflows/fs-review-validation.yml']
   push:
     branches: [main]
-    paths: ['fs/review/**', 'fs/tests/review-test.php', '.github/workflows/fs-review-validation.yml']
+    paths: ['fs/review/**', 'fs/tests/review*.php', 'fs/tests/review*.js', 'fs/tests/review*.py', '.github/workflows/fs-review-validation.yml']
 permissions:
   contents: read
 jobs:
@@ -22,3 +22,5 @@ jobs:
       - run: find fs/review -name '*.php' -print0 | xargs -0 -n1 php -l
       - run: php fs/tests/review-test.php
       - run: node --check fs/review/review.js
+      - run: node fs/tests/review-response-test.js
+      - run: python3 fs/tests/review-http-test.py

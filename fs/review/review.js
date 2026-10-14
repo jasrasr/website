@@ -5,7 +5,26 @@ let token='',tickets=[],reviews=new Map(),selected=null,busy=false,stop=false,ge
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function message(s){$('message').textContent=s;}
 function controls(){for(const id of ['refresh','analyze-all'])$(id).disabled=busy;document.querySelectorAll('[data-analyze]').forEach(b=>b.disabled=busy);}
-async function api(action,id){const response=await fetch('api.php',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({action,id})});let data;try{data=await response.json();}catch{throw Error('Server returned an unreadable response. Check PHP configuration or retry.');}if(!response.ok)throw Error(data.error||'Request failed');return data;}
+async function api(action,id){
+ const started=Date.now(),context=`${action}${id?` for ticket #${id}`:''}`;
+ let response;
+ try{response=await fetch('api.php',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({action,id})});}
+ catch{throw Error(`Network request failed during ${context}. Check your connection and retry.`);}
+ let data;
+ try{data=await response.json();}
+ catch{
+  const elapsed=Math.round((Date.now()-started)/1000);
+  const hint=[502,503,504].includes(response.status)?'The host or gateway may have timed out.':response.status===403?'The host may have blocked this request.':'Check the hosting PHP error log for this request.';
+  throw Error(`Non-JSON response during ${context} (HTTP ${response.status}, ${elapsed}s). ${hint} Try opening this ticket first to test history retrieval separately.`);
+ }
+ if(!data||typeof data!=='object'||Array.isArray(data))throw Error(`Invalid JSON response during ${context} (HTTP ${response.status}).`);
+ if(!response.ok||data.error){
+  const stage=typeof data.stage==='string'?` Stage: ${data.stage}.`:'';
+  const ref=typeof data.request_id==='string'?` Reference: ${data.request_id}.`:'';
+  throw Error(`${context}: ${data.error||'Request failed'} (HTTP ${response.status}).${stage}${ref}`);
+ }
+ return data;
+}
 function renderQueue(){const query=$('search').value.toLowerCase(),filter=$('filter').value,sort=$('sort').value;
  const shown=tickets.filter(t=>(`${t.id} ${t.subject}`).toLowerCase().includes(query)&&(!filter||(filter==='unreviewed'?!reviews.has(t.id):reviews.get(t.id)?.review?.recommendation===filter))).sort((a,b)=>(b[sort]??-1)-(a[sort]??-1)||a.id-b.id);
  $('count').textContent=`${tickets.length} unresolved · ${reviews.size} reviewed`;
