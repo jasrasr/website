@@ -5,6 +5,7 @@ All notable changes to this project are documented here. Format is loosely based
 ## Unreleased
 
 ## 2026-10-14
+- Added content-hashed JavaScript/CSS URLs to the review page and replaced its hard-coded v1.0 footer with the shared revision/date, so refreshed pages request updated assets after deployment. Rev 1.8.3.
 - Hardened private review JSON error handling, added safe request/stage diagnostics, and reduced AI HTTP timeout to 40 seconds. Non-JSON responses now identify the operation, ticket, HTTP status and elapsed time. Rev 1.8.2.
 
 ## 2026-10-13
