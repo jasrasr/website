@@ -18,6 +18,13 @@
     <description>Database-free blog powered by JSON files.</description>
     <language>en-us</language>
     <item>
+      <title>AI-Workspace: Shared Context for Claude Code and Codex CLI</title>
+      <link>https://jasr.me/blog/post.html?p=ai-workspace-shared-context</link>
+      <guid>https://jasr.me/blog/post.html?p=ai-workspace-shared-context</guid>
+      <pubDate>Thu, 15 Oct 2026 00:00:00 +0000</pubDate>
+      <description>A private Markdown-based workspace for sharing preferences, security guidance, role descriptions, and project handoffs between Claude Code and Codex CLI.</description>
+    </item>
+    <item>
       <title>Availability: A Date Poll for Groups That Need Clear Options</title>
       <link>https://jasr.me/blog/post.html?p=availability-date-poll</link>
       <guid>https://jasr.me/blog/post.html?p=availability-date-poll</guid>
