@@ -2,9 +2,19 @@
   "_meta": {
     "schema_version": "1.0.0",
     "purpose": "WordPress-only publication state for blog/posts JSON sources. This file is not used by the static blog build.",
-    "modified_date": "2026-10-13"
+    "modified_date": "2026-10-15"
   },
   "posts": {
+    "ai-workspace-shared-context": {
+      "source_file": "ai-workspace-shared-context.json",
+      "wordpress_post_id": 4504,
+      "wordpress_media_id": 4503,
+      "scheduled_date_eastern": "2026-10-21T11:34:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4504",
+      "last_sync": "2026-10-15T21:25:37.1364302+00:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
     "authenticated-directory-viewer": {
       "source_file": "authenticated-directory-viewer.json",
       "wordpress_post_id": 4294,
