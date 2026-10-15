@@ -2,7 +2,7 @@ function Get-WordPressScheduleStartDate {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][datetime]$Now,
-        [Parameter(Mandatory)][object[]]$TrackedPosts
+        [object[]]$TrackedPosts = @()
     )
 
     $startDate = $Now.Date.AddDays(1)
