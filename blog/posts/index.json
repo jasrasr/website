@@ -3,7 +3,7 @@
     "filename": "posts/index.json",
     "author": "Jason Lamb (with help from ChatGPT)",
     "created_date": "2026-02-03",
-    "modified_date": "2026-10-13",
+    "modified_date": "2026-10-15",
     "revision": "1.3.1",
     "changelog": [
       "1.3.1: Preserves cover metadata and fallback excerpts during generated index rebuilds",
@@ -12,8 +12,23 @@
     ]
   },
   "blog_title": "Jason’s Flat-File Blog",
-  "generated": "2026-10-13T13:28:54.830Z",
+  "generated": "2026-10-15T00:00:00.000Z",
   "posts": [
+    {
+      "slug": "ai-workspace-shared-context",
+      "title": "AI-Workspace: Shared Context for Claude Code and Codex CLI",
+      "date": "2026-10-15",
+      "tags": [
+        "IT and automation",
+        "Security"
+      ],
+      "excerpt": "A private Markdown-based workspace for sharing preferences, security guidance, role descriptions, and project handoffs between Claude Code and Codex CLI.",
+      "cover": {
+        "src": "media/derivatives/2026/10/ai-workspace-shared-context_640w.jpg",
+        "alt": "Two coding assistants connected by shared project notes, security guidance, preferences, and role folders"
+      },
+      "_searchText": "ai-workspace: shared context for claude code and codex cli it and automation security a private markdown-based workspace for sharing preferences, security guidance, role descriptions, and project handoffs between claude code and codex cli. ai-workspace is a private set of instructions for keeping claude code and codex cli aligned across computers. instead of relying on each chat to remember the same conventions, the workspace keeps reusable guidance in ordinary markdown files that can be reviewed and changed with git. the files are arranged by purpose. shared preferences capture how technical work should be explained, security guidance calls out risks such as credential exposure and unsafe logging, and development standards cover documentation, validation, and preserving existing behavior. separate persona notes allow each coding assistant to keep its own working style while following the same project expectations. portable role descriptions for architecture, development, code review, and security review provide reusable starting points for focused work. they are role specifications only; the files do not register native subagents automatically. project-specific context belongs with each project in a separate .ai folder. a project summary, decision notes, and handoff file can carry durable facts forward between sessions. the project’s claude.md and agents.md files must explicitly tell the relevant cli to read that context. the shared workspace is not loaded automatically just because it exists. the included setup script takes an inventory. it checks expected paths and reports whether claude code, codex cli, and claude-mem locations exist, then prints suggested next steps. it does not modify cli settings or hooks. that makes the first setup step easier to review, while leaving configuration changes for a deliberate follow-up. security notes keep the workspace small and intentional: secrets, transcripts, and live claude-mem databases stay out of git; existing hooks should be tested individually; and simultaneous git and onedrive edits need a conflict check. the publishing helper is designed to create a private repository and stop if that repository already exists. the result is a practical memory layer made from files rather than a hidden synchronization service. it can reduce repeated setup and make handoffs clearer, but each cli still needs explicit project instructions, and the local files remain the source of truth for each machine. the ai-workspace repository is private, so this article describes its structure and boundaries without linking to or reproducing its files. update history these notes record article updates associated with repository changes. the original publication date is retained. 2026-10-15 — added an overview of shared claude code and codex cli guidance, project handoffs, setup boundaries, and security practices. github source"
+    },
     {
       "slug": "availability-date-poll",
       "title": "Availability: A Date Poll for Groups That Need Clear Options",
