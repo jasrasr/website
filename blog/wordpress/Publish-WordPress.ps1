@@ -34,8 +34,6 @@ param(
     [switch]$Commit
 )
 
-. (Join-Path $PSScriptRoot 'Get-WordPressScheduleStartDate.ps1')
-
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
@@ -362,6 +360,7 @@ function New-PostSummaryRow {
 $script:WpBase = $SiteUrl.TrimEnd('/')
 $timeZone = Get-EasternTimeZone
 $nowEastern = [TimeZoneInfo]::ConvertTime([DateTimeOffset]::UtcNow, $timeZone)
+$startDate = $nowEastern.Date.AddDays(1)
 
 if (-not (Test-Path -LiteralPath $PostsPath -PathType Container)) {
     throw "Posts folder not found: $PostsPath"
@@ -378,8 +377,6 @@ if (Test-Path -LiteralPath $StatePath -PathType Leaf) {
         }
     }
 }
-
-$startDate = Get-WordPressScheduleStartDate -Now $nowEastern.Date -TrackedPosts @($script:StatePosts.Values)
 
 $ready = @()
 $invalid = @()

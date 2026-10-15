@@ -3,7 +3,7 @@
     "filename": "media-manifest.json",
     "author": "Jason Lamb (with help from ChatGPT)",
     "created_date": "2026-02-04",
-    "modified_date": "2026-10-15",
+    "modified_date": "2026-10-13",
     "revision": "1.1.0",
     "changelog": [
       "1.1.0: Adds committed derivative image manifest records from post cover references",
@@ -937,25 +937,6 @@
       "source": "committed-derivative",
       "health": {
         "checked": "2026-10-13T13:28:54.830Z",
-        "missing": [],
-        "missing_alt": false,
-        "unused": false
-      }
-    },
-    "ai-workspace-shared-context": {
-      "original": "",
-      "derivatives": {
-        "640": "media/derivatives/2026/10/ai-workspace-shared-context_640w.jpg"
-      },
-      "uploaded": "2026-10-15T00:00:00Z",
-      "used_in": [
-        "ai-workspace-shared-context"
-      ],
-      "alt": "Two coding assistants connected by shared project notes, security guidance, preferences, and role folders",
-      "credit": "",
-      "source": "committed-derivative",
-      "health": {
-        "checked": "2026-10-15T00:00:00.000Z",
         "missing": [],
         "missing_alt": false,
         "unused": false
