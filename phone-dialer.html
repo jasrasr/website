@@ -158,6 +158,7 @@
     let activeOscillators = [];
     let activeGainNode = null;
     let currentToneDigit = null;
+    let pendingToneDigit = null;
     let toneToken = 0;
     const activeKeys = new Set();
     const pressedDigits = new Set();
@@ -206,9 +207,11 @@
       const frequencies = dtmf[digit];
       if (!frequencies) return;
 
+      pendingToneDigit = digit;
       const ctx = getAudioContext();
       const beginTone = () => {
         if (currentToken !== toneToken) return;
+        pendingToneDigit = null;
         currentToneDigit = digit;
 
         const gainNode = ctx.createGain();
@@ -256,6 +259,7 @@
       }
 
       currentToneDigit = null;
+      pendingToneDigit = null;
     }
 
     function pressDigit(digit) {
@@ -272,7 +276,7 @@
     }
 
     function releaseDigit(digit) {
-      if (digit === currentToneDigit) {
+      if (digit === currentToneDigit || digit === pendingToneDigit) {
         toneToken++;
         stopTone();
       }
