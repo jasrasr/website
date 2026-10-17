@@ -27,6 +27,9 @@ time-clock/weather-demo.json
 # Git worktrees — local only
 .worktrees/
 
+# Generated local test page index
+testing/local-server/index.html
+
 # App data and uploads
 how-much-time-worked/data/
 how-much-time-worked/uploads/
