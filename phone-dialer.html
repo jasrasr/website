@@ -156,7 +156,16 @@
     let enteredNumber = "";
     let audioContext;
     let activeOscillators = [];
+    let activeGainNode = null;
+    let currentToneDigit = null;
+    let pendingToneDigit = null;
+    let toneToken = 0;
     const activeKeys = new Set();
+    const pressedDigits = new Set();
+    const supportsPointerEvents = "PointerEvent" in window;
+    const touchIdsByDigit = new Map();
+    const pointerDigitById = new Map();
+    let ignoreSyntheticMouseUntil = 0;
 
     const dtmf = {
       "1": [697, 1209],
@@ -180,11 +189,6 @@
       if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
       }
-
-      if (audioContext.state === "suspended") {
-        audioContext.resume();
-      }
-
       return audioContext;
     }
 
@@ -197,25 +201,40 @@
     }
 
     function startTone(digit) {
+      const currentToken = ++toneToken;
       stopTone();
 
       const frequencies = dtmf[digit];
       if (!frequencies) return;
 
+      pendingToneDigit = digit;
       const ctx = getAudioContext();
+      const beginTone = () => {
+        if (currentToken !== toneToken) return;
+        pendingToneDigit = null;
+        currentToneDigit = digit;
 
-      const gainNode = ctx.createGain();
-      gainNode.gain.setValueAtTime(0.16, ctx.currentTime);
-      gainNode.connect(ctx.destination);
+        const gainNode = ctx.createGain();
+        gainNode.gain.setValueAtTime(0.16, ctx.currentTime);
+        gainNode.connect(ctx.destination);
+        activeGainNode = gainNode;
 
-      activeOscillators = frequencies.map(freq => {
-        const oscillator = ctx.createOscillator();
-        oscillator.type = "sine";
-        oscillator.frequency.setValueAtTime(freq, ctx.currentTime);
-        oscillator.connect(gainNode);
-        oscillator.start();
-        return oscillator;
-      });
+        activeOscillators = frequencies.map(freq => {
+          const oscillator = ctx.createOscillator();
+          oscillator.type = "sine";
+          oscillator.frequency.setValueAtTime(freq, ctx.currentTime);
+          oscillator.connect(gainNode);
+          oscillator.start();
+          return oscillator;
+        });
+      };
+
+      if (ctx.state !== "running") {
+        ctx.resume().then(beginTone).catch(() => {});
+        return;
+      }
+
+      beginTone();
     }
 
     function stopTone() {
@@ -229,6 +248,18 @@
       });
 
       activeOscillators = [];
+
+      if (activeGainNode) {
+        try {
+          activeGainNode.disconnect();
+        } catch {
+          // Already disconnected.
+        }
+        activeGainNode = null;
+      }
+
+      currentToneDigit = null;
+      pendingToneDigit = null;
     }
 
     function pressDigit(digit) {
@@ -245,12 +276,102 @@
     }
 
     function releaseDigit(digit) {
-      stopTone();
+      if (digit === currentToneDigit || digit === pendingToneDigit) {
+        toneToken++;
+        stopTone();
+      }
 
       const button = getButton(digit);
       if (button) {
         button.classList.remove("pressed");
       }
+    }
+
+    function releasePressedDigit(digit) {
+      if (!pressedDigits.has(digit)) return;
+      pressedDigits.delete(digit);
+      touchIdsByDigit.delete(digit);
+      Array.from(pointerDigitById.entries()).forEach(([pointerId, pointerDigit]) => {
+        if (pointerDigit === digit) {
+          pointerDigitById.delete(pointerId);
+        }
+      });
+      releaseDigit(digit);
+    }
+
+    function releaseAllPressedDigits() {
+      Array.from(pressedDigits).forEach(releasePressedDigit);
+    }
+
+    function releaseAllKeyboardDigits() {
+      Array.from(activeKeys).forEach(releaseDigit);
+      activeKeys.clear();
+    }
+
+    function releaseFromGlobalEvent(event) {
+      const keyButton = event.target?.closest?.(".key");
+      const keyDigit = keyButton?.dataset?.digit;
+
+      if (keyDigit) {
+        // Key-level listeners handle normal key releases.
+        return;
+      }
+
+      if (event.type.startsWith("touch")) {
+        releaseDigitsForChangedTouches(event);
+        return;
+      }
+
+      releaseAllPressedDigits();
+    }
+
+    function registerTouchPress(digit, event) {
+      const touchIds = touchIdsByDigit.get(digit) || new Set();
+      Array.from(event.changedTouches || []).forEach(touch => {
+        touchIds.add(touch.identifier);
+      });
+      touchIdsByDigit.set(digit, touchIds);
+    }
+
+    function shouldReleaseTouchDigit(digit, event) {
+      const touchIds = touchIdsByDigit.get(digit);
+      if (!touchIds || touchIds.size === 0) return true;
+
+      Array.from(event.changedTouches || []).forEach(touch => {
+        touchIds.delete(touch.identifier);
+      });
+
+      if (touchIds.size > 0) {
+        touchIdsByDigit.set(digit, touchIds);
+        return false;
+      }
+
+      touchIdsByDigit.delete(digit);
+      return true;
+    }
+
+    function releaseDigitsForChangedTouches(event) {
+      const endedTouchIds = new Set(Array.from(event.changedTouches || []).map(touch => touch.identifier));
+      if (endedTouchIds.size === 0) {
+        releaseAllPressedDigits();
+        return;
+      }
+
+      Array.from(touchIdsByDigit.entries()).forEach(([digit, touchIds]) => {
+        endedTouchIds.forEach(touchId => touchIds.delete(touchId));
+        if (touchIds.size === 0) {
+          releasePressedDigit(digit);
+        } else {
+          touchIdsByDigit.set(digit, touchIds);
+        }
+      });
+    }
+
+    function releaseDigitForPointerEvent(event) {
+      const digit = pointerDigitById.get(event.pointerId);
+      if (!digit) return;
+      pointerDigitById.delete(event.pointerId);
+      releasePressedDigit(digit);
     }
 
     function normalizeKeyboardKey(event) {
@@ -272,20 +393,91 @@
     buttons.forEach(button => {
       const digit = button.dataset.digit;
 
-      button.addEventListener("pointerdown", event => {
+      const onPress = event => {
         event.preventDefault();
+        if (event.type.startsWith("mouse") && Date.now() < ignoreSyntheticMouseUntil) {
+          return;
+        }
+        if (event.type.startsWith("touch")) {
+          ignoreSyntheticMouseUntil = Date.now() + 750;
+          registerTouchPress(digit, event);
+        }
+        if (event.type === "pointerdown" && event.pointerType === "touch") {
+          ignoreSyntheticMouseUntil = Date.now() + 750;
+        }
+        if (event.type === "pointerdown" && typeof event.currentTarget?.setPointerCapture === "function") {
+          try {
+            pointerDigitById.set(event.pointerId, digit);
+            event.currentTarget.setPointerCapture(event.pointerId);
+          } catch {
+            // Ignore unsupported capture errors.
+            pointerDigitById.delete(event.pointerId);
+          }
+        }
+        if (pressedDigits.has(digit)) return;
+        if (pressedDigits.size > 0) {
+          releaseAllPressedDigits();
+        }
+        pressedDigits.add(digit);
         pressDigit(digit);
-      });
+      };
 
-      button.addEventListener("pointerup", () => releaseDigit(digit));
-      button.addEventListener("pointerleave", () => releaseDigit(digit));
-      button.addEventListener("pointercancel", () => releaseDigit(digit));
+      const onRelease = event => {
+        if (event.type.startsWith("pointer")) {
+          const mappedDigit = pointerDigitById.get(event.pointerId);
+          if (mappedDigit !== digit) {
+            return;
+          }
+          pointerDigitById.delete(event.pointerId);
+        }
+        if (event.type.startsWith("touch") && !shouldReleaseTouchDigit(digit, event)) {
+          return;
+        }
+        releasePressedDigit(digit);
+      };
+
+      if (supportsPointerEvents) {
+        button.addEventListener("pointerdown", onPress);
+        button.addEventListener("pointerup", onRelease);
+        button.addEventListener("pointercancel", onRelease);
+      } else {
+        button.addEventListener("touchstart", onPress, { passive: false });
+        button.addEventListener("touchend", onRelease);
+        button.addEventListener("touchcancel", onRelease);
+        button.addEventListener("mousedown", onPress);
+        button.addEventListener("mouseup", onRelease);
+        button.addEventListener("mouseleave", onRelease);
+      }
+    });
+
+    if (supportsPointerEvents) {
+      document.addEventListener("pointerup", releaseDigitForPointerEvent);
+      document.addEventListener("pointercancel", releaseDigitForPointerEvent);
+      window.addEventListener("pointerleave", releaseAllPressedDigits);
+    } else {
+      document.addEventListener("touchend", releaseFromGlobalEvent);
+      document.addEventListener("touchcancel", releaseFromGlobalEvent);
+      document.addEventListener("mouseup", releaseFromGlobalEvent);
+      window.addEventListener("mouseleave", releaseAllPressedDigits);
+    }
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        releaseAllPressedDigits();
+        releaseAllKeyboardDigits();
+      }
+    });
+    window.addEventListener("blur", () => {
+      releaseAllPressedDigits();
+      releaseAllKeyboardDigits();
     });
 
     document.addEventListener("keydown", event => {
       const digit = normalizeKeyboardKey(event);
 
       if (digit && !activeKeys.has(digit)) {
+        if (activeKeys.size > 0) {
+          releaseAllKeyboardDigits();
+        }
         activeKeys.add(digit);
         pressDigit(digit);
         return;
