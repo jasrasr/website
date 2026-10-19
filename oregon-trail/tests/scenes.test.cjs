@@ -1,3 +1,13 @@
+/*
+File Name     : tests/scenes.test.cjs
+Author        : Jason Lamb (with help from ChatGPT)
+Description   : Scene selection, unique landmark art, river orientation, and configuration tests.
+Revision      : 1.0.0
+Created Date  : 2026-10-19
+Modified Date : 2026-10-19
+Changelog     :
+  Rev 1.0.0 - Established independent file revision tracking; Scene selection, unique landmark art, river orientation, and configuration tests.
+*/
 const test=require('node:test'),assert=require('node:assert/strict');
 const scenes=require('../scenes.js'),rules=require('../rules.js'),content=require('../game-content.json');
 function record(scene){const draws=[];scenes.background({fillStyle:'',fillRect(x,y,w,h){draws.push([x,y,w,h,this.fillStyle]);}},scene);return draws;}

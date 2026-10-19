@@ -1,3 +1,13 @@
+/*
+File Name     : game.js
+Author        : Jason Lamb (with help from ChatGPT)
+Description   : Game flow, individual traveler status, scenery, autosaves, and project revision display.
+Revision      : 1.0.0
+Created Date  : 2026-10-08
+Modified Date : 2026-10-19
+Changelog     :
+  Rev 1.0.0 - Established independent file revision tracking; Game flow, individual traveler status, scenery, autosaves, and project revision display.
+*/
 (async () => {
   'use strict';
   const $=id=>document.getElementById(id);
@@ -9,6 +19,7 @@
   let soundEnabled=false,autoMode=false,autoTimer,audioContext,gamesPlayed=0;
   try{gamesPlayed=Number(localStorage.getItem('oregonTrailGamesPlayed'))||0;}catch{}
   $('games-played').textContent=gamesPlayed;
+  $('project-version').textContent='Project Rev '+TrailVersion.revision+' · Updated '+TrailVersion.updated;
   function pixelRect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h)}
   function draw(){
     const c=ctx;
@@ -51,7 +62,9 @@
       const name=document.createElement('strong');name.textContent=traveler.name+' · age '+traveler.age;
       const status=document.createElement('p');
       status.textContent=traveler.status==='alive'?'Remaining · '+(traveler.condition?traveler.condition+' · ':'')+TrailParty.healthLabel(traveler.health)+' · '+traveler.health+'/100 health':'Deceased · '+traveler.death.cause+' · '+traveler.death.month+'/'+traveler.death.day+'/'+traveler.death.year+' · '+traveler.death.miles+' miles';
-      row.append(name,status);list.append(row);
+      row.append(name,status);
+      if(traveler.status==='alive'){const risk=document.createElement('p');risk.textContent='Illness susceptibility ×'+TrailParty.illnessWeight(traveler.age,content.illnessRisk).toFixed(2);row.append(risk);}
+      list.append(row);
     }
     $('party-history-note').textContent=s.rosterHistoryIncomplete?'Older save: individual health begins from the saved party health. Previously lost travelers were not recorded.':'';
     $('party-dialog').showModal();
@@ -150,7 +163,7 @@
     if(event){
       if(event.id==='illness'){
         const {health,...other}=event.effects||{};applyEffects(other);
-        const traveler=TrailParty.illness(s,TrailRules.sample(health??-10));
+        const traveler=TrailParty.illness(s,TrailRules.sample(health??-10),Math.random,content.illnessRisk);
         const title=traveler?traveler.name+(traveler.status==='deceased'?' died from illness.':' has taken ill.'):event.title;
         setStory(title,event.message,'TRAIL EVENT');log(title);
       }else{applyEffects(event.effects);setStory(event.title,event.message,'TRAIL EVENT');log(event.title);}

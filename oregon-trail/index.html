@@ -1,3 +1,13 @@
+<!--
+File Name     : index.html
+Author        : Jason Lamb (with help from ChatGPT)
+Description   : Main game page, traveler dialog, project revision, and changelog link.
+Revision      : 1.0.0
+Created Date  : 2026-10-08
+Modified Date : 2026-10-19
+Changelog     :
+  Rev 1.0.0 - Established independent file revision tracking; Main game page, traveler dialog, project revision, and changelog link.
+-->
 <!doctype html>
 <html lang="en">
 <head>
@@ -33,9 +43,11 @@
       <footer class="game-footer"><span>✳ &nbsp;GO WEST, YOUNG TRAVELER</span><span class="games-played">GAMES PLAYED <b id="games-played">0</b></span><button id="sound-toggle" class="sound-button" type="button" aria-label="Toggle sound">♪ <span>Sound off</span></button><button id="auto-button" class="sound-button" type="button">▶ Auto-play</button><button id="reset-button" class="reset-button" type="button">Start a new journey ↗</button></footer>
     </section>
     <details class="saved-journeys"><summary>Saved journeys on this device</summary><div id="saved-games"></div></details>
+    <p class="below-note"><span id="project-version">Loading revision…</span> · <a href="CHANGELOG.md">Changelog</a></p>
     <p class="below-note">A little pixel adventure inspired by the classic 1848 journey. <span>Best played with a curious spirit.</span></p>
   </main>
-  <dialog id="party-dialog" aria-labelledby="party-heading"><div class="roster-heading"><h2 id="party-heading">Your travelers</h2><button id="party-close" class="game-button" type="button">Close</button></div><p id="party-summary"></p><ul id="party-roster"></ul><p id="party-history-note"></p></dialog>
+  <dialog id="party-dialog" aria-labelledby="party-heading"><div class="roster-heading"><h2 id="party-heading">Your travelers</h2><button id="party-close" class="game-button" type="button">Close</button></div><p id="party-summary"></p><p class="roster-help">Susceptibility is relative: younger children and older adults are more likely to be affected when illness strikes.</p><ul id="party-roster"></ul><p id="party-history-note"></p></dialog>
+  <script src="version.js"></script>
   <script src="scenes.js"></script>
   <script src="party.js"></script>
   <script src="rules.js"></script>

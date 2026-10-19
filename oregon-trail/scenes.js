@@ -1,3 +1,13 @@
+/*
+File Name     : scenes.js
+Author        : Jason Lamb (with help from ChatGPT)
+Description   : Deterministic pixel artwork for trail landmarks and perpendicular river crossings.
+Revision      : 1.0.0
+Created Date  : 2026-10-19
+Modified Date : 2026-10-19
+Changelog     :
+  Rev 1.0.0 - Established independent file revision tracking; Deterministic pixel artwork for trail landmarks and perpendicular river crossings.
+*/
 /* Deterministic canvas artwork; rendering never consumes gameplay randomness. */
 (function(root){
   'use strict';

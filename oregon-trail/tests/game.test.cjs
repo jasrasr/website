@@ -1,3 +1,13 @@
+/*
+File Name     : tests/game.test.cjs
+Author        : Jason Lamb (with help from ChatGPT)
+Description   : Content, probability, storage, date, and optional real-browser recovery tests.
+Revision      : 1.0.0
+Created Date  : 2026-10-08
+Modified Date : 2026-10-19
+Changelog     :
+  Rev 1.0.0 - Established independent file revision tracking; Content, probability, storage, date, and optional real-browser recovery tests.
+*/
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');

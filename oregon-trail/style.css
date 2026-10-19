@@ -1,3 +1,13 @@
+/*
+File Name     : style.css
+Author        : Jason Lamb (with help from ChatGPT)
+Description   : Responsive visual styling for the game, setup form, and traveler roster.
+Revision      : 1.0.0
+Created Date  : 2026-10-08
+Modified Date : 2026-10-19
+Changelog     :
+  Rev 1.0.0 - Established independent file revision tracking; Responsive visual styling for the game, setup form, and traveler roster.
+*/
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Press+Start+2P&display=swap');
 .games-played{color:#8a8d7a;font:8px 'DM Mono',monospace;letter-spacing:.1em}.games-played b{color:#d8dfb8;font-weight:500;margin-left:4px}
 .setup-row{display:flex;gap:14px;align-items:flex-start;margin-bottom:14px}.count-label{color:#a4a692;font:9px 'DM Mono',monospace;letter-spacing:.1em;white-space:nowrap}.count-label select{display:block;margin-top:8px;background:#27291f;border:1px solid #545646;color:#e8e6d6;padding:9px;font:12px 'DM Mono',monospace}.family-fields{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;width:100%}.traveler-field{display:flex;flex-direction:column;gap:5px;color:#8f9380;font:8px 'DM Mono',monospace;letter-spacing:.06em}.traveler-field input{width:100%;min-width:0;background:#11130f;border:1px solid #4a4c3d;color:#eee9d8;padding:9px 7px;font:11px 'DM Sans',sans-serif}.traveler-field input[type=number]{font-family:'DM Mono',monospace}.traveler-field input:focus,.count-label select:focus{outline:1px solid #a4bd72;border-color:#a4bd72}

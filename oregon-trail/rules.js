@@ -1,3 +1,13 @@
+/*
+File Name     : rules.js
+Author        : Jason Lamb (with help from ChatGPT)
+Description   : Validation of content, age-risk settings, event probabilities, effects, and dates.
+Revision      : 1.0.0
+Created Date  : 2026-10-08
+Modified Date : 2026-10-19
+Changelog     :
+  Rev 1.0.0 - Established independent file revision tracking; Validation of content, age-risk settings, event probabilities, effects, and dates.
+*/
 /* Editable content and probability rules. No code from JSON is executed. */
 (function(root) {
   'use strict';
@@ -29,6 +39,12 @@
     let sum=0;ids.clear();
     for(const event of c.events){text(event.id,'event id');if(ids.has(event.id))throw Error('Duplicate event id');ids.add(event.id);text(event.title,'event title');text(event.message,'event message');sum+=percent(event.chancePercent,'event chancePercent');effects(event.effects);}
     if(sum>100)throw Error('Event percentages must total 100 or less');
+    if(c.illnessRisk!==undefined){
+      const r=c.illnessRisk;if(!r||typeof r!=='object'||Array.isArray(r))throw Error('Invalid illnessRisk');
+      integer(r.childBelowAge,'childBelowAge',1,18);integer(r.olderAboveAge,'olderAboveAge',18,90);
+      for(const key of ['childExtraWeightPerYear','olderExtraWeightPerYear'])if(!Number.isFinite(r[key])||r[key]<0||r[key]>1)throw Error('Invalid '+key);
+      if(!Number.isFinite(r.maxWeight)||r.maxWeight<1||r.maxWeight>10)throw Error('Invalid maxWeight');
+    }
     c.actions.forEach(action);ids.clear();
     for(const cross of c.crossings){text(cross.id,'crossing id');if(ids.has(cross.id))throw Error('Duplicate crossing id');ids.add(cross.id);text(cross.label,'crossing label');percent(cross.successPercent,'crossing successPercent');integer(cross.days,'crossing days',0,365);if(cross.costFood!==undefined)integer(cross.costFood,'crossing costFood',0,100000);}
     percent(c.hunting.failurePercent,'hunting failurePercent');range(c.hunting.food,'hunting food',0,100000);integer(c.hunting.days,'hunting days',0,365);

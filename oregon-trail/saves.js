@@ -1,3 +1,13 @@
+/*
+File Name     : saves.js
+Author        : Jason Lamb (with help from ChatGPT)
+Description   : Versioned journey storage with legacy-save and individual-roster validation.
+Revision      : 1.0.0
+Created Date  : 2026-10-08
+Modified Date : 2026-10-19
+Changelog     :
+  Rev 1.0.0 - Established independent file revision tracking; Versioned journey storage with legacy-save and individual-roster validation.
+*/
 (function(root){
   'use strict';
   const KEY='oregon-trail.journeys.v1';

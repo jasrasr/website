@@ -1,9 +1,24 @@
+/*
+File Name     : party.js
+Author        : Jason Lamb (with help from ChatGPT)
+Description   : Random family generation, persistent traveler health, and age-weighted illness targeting.
+Revision      : 1.0.0
+Created Date  : 2026-10-19
+Modified Date : 2026-10-19
+Changelog     :
+  Rev 1.0.0 - Established independent file revision tracking; Random family generation, persistent traveler health, and age-weighted illness targeting.
+*/
 /* Party generation and individual health. Legacy name/age arrays mirror survivors. */
 (function(root){
   'use strict';
   const clamp=n=>Math.max(0,Math.min(100,n));
   const living=s=>s.travelers.filter(t=>t.status==='alive');
   const healthLabel=h=>h>75?'Good':h>45?'Fair':h>20?'Poor':'Critical';
+  const defaultIllnessRisk=Object.freeze({childBelowAge:12,childExtraWeightPerYear:.1,olderAboveAge:50,olderExtraWeightPerYear:.05,maxWeight:3});
+  function illnessWeight(age,risk=defaultIllnessRisk){
+    const extra=age<risk.childBelowAge?(risk.childBelowAge-age)*risk.childExtraWeightPerYear:age>risk.olderAboveAge?(age-risk.olderAboveAge)*risk.olderExtraWeightPerYear:0;
+    return Math.min(risk.maxWeight,1+extra);
+  }
   function family(random=Math.random){
     const pick=(a,b)=>a+Math.floor(random()*(b-a+1));
     const pool=['Sarah','Elizabeth','Abigail','Hannah','Clara','Ruth','James','Thomas','Henry','Samuel','William','Benjamin','Mary','Alice','Joseph','Emma','Charles','Eleanor'];
@@ -39,14 +54,17 @@
     else if(traveler.health===100)traveler.condition='';
   }
   function adjustAll(s,delta,cause){for(const t of living(s))adjust(s,t,delta,cause);sync(s);}
-  function illness(s,delta,random=Math.random){
+  function illness(s,delta,random=Math.random,risk=defaultIllnessRisk){
     const survivors=living(s);if(!survivors.length)return null;
-    const t=survivors[Math.floor(random()*survivors.length)];t.condition='Ill';adjust(s,t,delta,'Illness');sync(s);return t;
+    const weights=survivors.map(t=>illnessWeight(t.age,risk));
+    let roll=random()*weights.reduce((sum,w)=>sum+w,0),t=survivors.at(-1);
+    for(let i=0;i<survivors.length;i++){roll-=weights[i];if(roll<0){t=survivors[i];break;}}
+    t.condition='Ill';adjust(s,t,delta,'Illness');sync(s);return t;
   }
   function loseTraveler(s,cause,random=Math.random){
     const survivors=living(s);if(!survivors.length)return null;
     const t=survivors[Math.floor(random()*survivors.length)];death(s,t,cause);sync(s);return t;
   }
-  const api={family,ensure,sync,living,healthLabel,adjustAll,illness,loseTraveler};
+  const api={family,ensure,sync,living,healthLabel,adjustAll,illness,loseTraveler,illnessWeight,defaultIllnessRisk};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.TrailParty=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

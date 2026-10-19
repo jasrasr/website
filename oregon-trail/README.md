@@ -1,3 +1,13 @@
+<!--
+File Name     : README.md
+Author        : Jason Lamb (with help from ChatGPT)
+Description   : Project usage, content editing, saves, illness weights, revisions, and validation.
+Revision      : 1.0.0
+Created Date  : 2026-10-08
+Modified Date : 2026-10-19
+Changelog     :
+  Rev 1.0.0 - Established independent file revision tracking; Project usage, content editing, saves, illness weights, revisions, and validation.
+-->
 # Oregon Trail
 
 A small browser game, with automatic device-local saves and editable game content.
@@ -8,9 +18,24 @@ New journeys suggest a randomized family of five: you and another adult aged 30â
 
 Select the PARTY card to open the traveler roster. It lists each person's name, age, health, illness, and whether they remain with the party. Deceased travelers stay in the roster with their cause of death, trail date, and mileage. Inspecting the roster pauses auto-play and does not advance a turn. Close the roster to return to the same choice; resume auto-play explicitly if desired.
 
-Party health is the rounded average of surviving travelers' individual health. Illness affects one randomly chosen living traveler. Rest, starvation, normal recovery, and other configured health effects apply to each living traveler. Recovery to 100 health clears illness; zero health records death. Deceased travelers never heal.
+Party health is the rounded average of surviving travelers' individual health. Illness affects one living traveler, selected by age-weighted susceptibility. Rest, starvation, normal recovery, and other configured health effects apply to each living traveler. Recovery to 100 health clears illness; zero health records death. Deceased travelers never heal.
 
 Existing saves migrate their surviving names and ages, using saved party health as the initial individual health. They show a note that earlier individual conditions and previously lost travelers are unavailable. New roster data is included in automatic saves. Old saves are not randomized.
+
+## Revisions and illness susceptibility
+
+Project Rev 1.0.0 (2026-10-19) is the first explicitly numbered revision, currently under review in PR #113. The main page displays the project revision/date from `version.js` and links to the cumulative `CHANGELOG.md`. File revisions are independent and begin at 1.0.0 when the preferred header is introduced.
+
+Illness frequency is still `events[].chancePercent` (9% per travel turn by default). When illness occurs, selection among surviving travelers uses the `illnessRisk` configuration. Defaults:
+
+- Ages 12â€“50: weight 1.0.
+- Below 12: add 0.1 per year younger. Age 1 has weight 2.1.
+- Above 50: add 0.05 per year older. Age 60 has weight 1.5; age 80 has weight 2.5.
+- Weights are capped at 3.0. This is a game-balancing rule, not a medical estimate.
+
+A weight of 2 means twice the selection likelihood of a weight-1 traveler when an illness event occurs. It is not a 2% chance each turn. The roster displays each living traveler's relative susceptibility. Existing save snapshots without an illnessRisk field use these defaults; saves with a field retain their configured settings.
+
+All source/document files carry the preferred comment header. JSON uses a leading `_header` object; the PNG preview uses native PNG Comment metadata so both remain valid files.
 
 ## Saved journeys and recovery
 
