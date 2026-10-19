@@ -6,7 +6,8 @@
       "id": "kansas-river",
       "name": "Kansas River",
       "mile": 102,
-      "type": "river"
+      "type": "river",
+      "scene": "river"
     },
     {
       "id": "fort-kearney",
@@ -21,13 +22,15 @@
             "health": 10
           }
         }
-      ]
+      ],
+      "scene": "fort"
     },
     {
       "id": "chimney-rock",
       "name": "Chimney Rock",
       "mile": 554,
-      "type": "stop"
+      "type": "stop",
+      "scene": "chimney"
     },
     {
       "id": "fort-laramie",
@@ -43,49 +46,57 @@
             "food": -10
           }
         }
-      ]
+      ],
+      "scene": "fort"
     },
     {
       "id": "independence-rock",
       "name": "Independence Rock",
       "mile": 830,
-      "type": "stop"
+      "type": "stop",
+      "scene": "rock"
     },
     {
       "id": "south-pass",
       "name": "South Pass",
       "mile": 932,
-      "type": "stop"
+      "type": "stop",
+      "scene": "pass"
     },
     {
       "id": "fort-bridger",
       "name": "Fort Bridger",
       "mile": 1120,
-      "type": "stop"
+      "type": "stop",
+      "scene": "fort"
     },
     {
       "id": "fort-hall",
       "name": "Fort Hall",
       "mile": 1330,
-      "type": "stop"
+      "type": "stop",
+      "scene": "fort"
     },
     {
       "id": "blue-mountains",
       "name": "Blue Mountains",
       "mile": 1700,
-      "type": "stop"
+      "type": "stop",
+      "scene": "mountains"
     },
     {
       "id": "the-dalles",
       "name": "The Dalles",
       "mile": 1900,
-      "type": "river"
+      "type": "river",
+      "scene": "gorge"
     },
     {
       "id": "oregon-city",
       "name": "Oregon City",
       "mile": 2040,
-      "type": "stop"
+      "type": "stop",
+      "scene": "town"
     }
   ],
   "events": [

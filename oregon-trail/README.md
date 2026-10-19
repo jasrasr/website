@@ -24,6 +24,16 @@ Existing saves migrate their surviving names and ages, using saved party health 
 - Active journeys retain their original rules. Content edits apply to new journeys after reloading the page.
 - When changing app code, increment the cache version in `sw.js`. Close old game tabs and reopen to activate an updated worker.
 
+## Scenery
+
+Each built-in stop has a pixel-art scene: distinct forts, Chimney Rock, Independence Rock, South Pass, Blue Mountains, The Dalles, and Oregon City. Rivers cut across the horizontal road with the westbound wagon waiting on the right bank. The location caption follows the current stop; while traveling it says which stop lies ahead.
+
+![Scenery preview](docs/scenery-preview.png)
+
+A stop can set an optional `scene` in `game-content.json`: `prairie`, `settlement`, `fort`, `chimney`, `rock`, `pass`, `mountains`, `river`, `gorge`, or `town`. Set `type: "river"` for an actual crossing; artwork does not add crossing mechanics by itself. Old saved content without `scene` uses built-in IDs and stop types as a fallback. Scenery is rendered locally by canvas, consumes no gameplay random numbers, and works offline with the app.
+
+To regenerate the preview, install `@napi-rs/canvas` locally and run `node oregon-trail/tools/render-scenes.cjs`.
+
 ## Edit stops, actions and probabilities
 
 Edit [game-content.json](game-content.json). It is a plain-text JSON file; no JavaScript changes are required for the supported content below. JSON requires double quotes and does not allow comments or trailing commas. Bad content is reported without deleting saves; older saved journeys can still be opened with their embedded rules.

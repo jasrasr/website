@@ -2,6 +2,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),vm=require(
 const root=path.resolve(__dirname,'..');
 const rules=require('../rules.js'),saves=require('../saves.js');
 const party=require('../party.js');
+const scenes=require('../scenes.js');
 const defaults=JSON.parse(fs.readFileSync(path.join(root,'game-content.json')));
 
 test('Roster opens without advancing, retains Granny at 80 and persists named illness and river death',async()=>{
@@ -68,7 +69,7 @@ function environment(storage,config=defaults,failFetch=false,serviceWorker){
   }
   const document={getElementById:id=>{if(!elements.has(id))elements.set(id,new Element());return elements.get(id);},createElement:tag=>new Element(tag),querySelectorAll:selector=>elements.get('family-fields')?.querySelectorAll(selector)||[],addEventListener(){}};
   document.getElementById('scene').getContext=()=>new Proxy({}, {get:()=>()=>{},set:()=>true});
-  const context=vm.createContext({document,window:{addEventListener(){}},navigator:serviceWorker?{serviceWorker}:{},localStorage:storage,TrailRules:rules,TrailParty:party,TrailSaves:saves,structuredClone,crypto:require('node:crypto').webcrypto,Date,Math,AbortSignal,setTimeout:callback=>{queueMicrotask(callback);return 1;},clearTimeout(){},fetch:async()=>{if(failFetch)throw Error('offline');return {ok:true,json:async()=>structuredClone(config)};}});
+  const context=vm.createContext({document,window:{addEventListener(){}},navigator:serviceWorker?{serviceWorker}:{},localStorage:storage,TrailRules:rules,TrailParty:party,TrailScenes:scenes,TrailSaves:saves,structuredClone,crypto:require('node:crypto').webcrypto,Date,Math,AbortSignal,setTimeout:callback=>{queueMicrotask(callback);return 1;},clearTimeout(){},fetch:async()=>{if(failFetch)throw Error('offline');return {ok:true,json:async()=>structuredClone(config)};}});
   const ready=vm.runInContext(fs.readFileSync(path.join(root,'game.js'),'utf8'),context);
   return {ready,elements,click(label){const b=elements.get('actions').children.flatMap(c=>c.children).find(x=>x.tag==='button'&&x.textContent.startsWith(label));assert.ok(b,'Missing button '+label);b.onclick();},pack(){elements.get('begin-journey').onclick();}};
 }
@@ -116,7 +117,7 @@ test('Service worker caches scoped game resources and returns them when offline'
   let pending;listeners.install({waitUntil:p=>pending=p});await pending;listeners.activate({waitUntil:p=>pending=p});await pending;
   assert.ok(maps.has('another-app-v1'));assert.ok(!maps.has('oregon-trail-old'));
   offline=true;
-  for(const file of ['', 'game.js','party.js','game-content.json']){
+  for(const file of ['', 'game.js','party.js','scenes.js','game-content.json']){
     let result;listeners.fetch({request:{method:'GET',url:scope+file},respondWith:p=>result=p});assert.ok(result);const response=await result;assert.equal(response.status,200);
   }
   let touched=false;listeners.fetch({request:{method:'GET',url:'https://example.test/other/'},respondWith:()=>touched=true});assert.equal(touched,false);

@@ -11,20 +11,11 @@
   $('games-played').textContent=gamesPlayed;
   function pixelRect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h)}
   function draw(){
-    const c=ctx; c.clearRect(0,0,800,260); pixelRect(0,0,800,260,'#080a08');
-    // distant prairie and a warm, low sun
-    pixelRect(0,97,800,2,'#334129'); pixelRect(650,39,31,31,'#db9b55');pixelRect(656,33,19,6,'#db9b55');pixelRect(656,70,20,6,'#db9b55');
-    // far ridge
-    for(let i=0;i<32;i++){const x=i*27; const h=3+(i*17%10);pixelRect(x,98-h,30,h,'#283622')}
-    // tree silhouettes
-    for(const [x,y,k] of [[78,100,1],[145,101,.8],[215,97,1.2],[314,101,.8],[710,98,1]]){pixelRect(x+8*k,y-35*k,8*k,35*k,'#644727');pixelRect(x,y-40*k,23*k,18*k,'#33472e');pixelRect(x+4*k,y-51*k,16*k,16*k,'#3c5233');pixelRect(x+2*k,y-29*k,28*k,14*k,'#33472e')}
-    // ground, pixel grass
-    pixelRect(0,103,800,157,'#38613b');pixelRect(0,109,800,5,'#49764a');
-    for(let i=0;i<160;i++){let x=(i*71+11)%800,y=116+(i*37)%139;pixelRect(x,y,2,2,i%4===0?'#709054':i%3===0?'#2c5034':'#557a47')}
-    // trail ribbon
-    pixelRect(0,184,800,3,'#7e6744');pixelRect(0,190,800,2,'#947b50');
-    // wagon oxen
-    const shift=Math.min(s.miles/content.totalMiles*430,400);const wx=492-(shift%240);const ox=wx-93;
+    const c=ctx;
+    const scene=TrailScenes.resolve(s,content,pendingStop);
+    ctx.clearRect(0,0,800,260);TrailScenes.background(ctx,scene);
+    canvas.setAttribute('aria-label',scene.name+(scene.crossing?' · River crossing blocks the trail; wagon waits on the near bank.':' · Covered wagon on the trail.'));
+    const wx=TrailScenes.wagonX(scene,s.miles),ox=wx-93;
     // harness and oxen pair
     pixelRect(ox+11,173,82,4,'#4c3525');
     for(const x of [ox,ox+37]){pixelRect(x+7,144,23,27,'#e8e3d3');pixelRect(x+2,151,8,16,'#c9c5b9');pixelRect(x+11,137,17,10,'#e8e3d3');pixelRect(x+22,141,12,9,'#e8e3d3');pixelRect(x+29,145,7,6,'#191a16');pixelRect(x+10,169,6,11,'#4b3c2f');pixelRect(x+24,168,6,12,'#4b3c2f');pixelRect(x+31,143,3,3,'#171815')}
@@ -35,8 +26,6 @@
     for(const x of [wx+25,wx+101]){c.fillStyle='#271d15';c.beginPath();c.arc(x,173,16,0,Math.PI*2);c.fill();c.fillStyle='#cf9b65';c.beginPath();c.arc(x,173,10,0,Math.PI*2);c.fill();c.fillStyle='#30271e';c.beginPath();c.arc(x,173,4,0,Math.PI*2);c.fill();pixelRect(x-1,164,2,18,'#30271e');pixelRect(x-8,172,16,2,'#30271e')}
     // little traveler at the reins
     pixelRect(wx-21,121,9,20,'#b17b4c');pixelRect(wx-22,113,11,10,'#d5a76f');pixelRect(wx-24,111,13,4,'#4c3926');pixelRect(wx-20,140,4,20,'#30342b');pixelRect(wx-12,140,4,20,'#30342b');
-    if(s.scene==='river'){pixelRect(0,183,800,77,'#345f68');for(let i=0;i<15;i++){pixelRect((i*63+30)%800,199+(i%3)*13,32,2,'#74a0a0')}}
-    if(s.scene==='mountain'){for(let i=0;i<6;i++){let x=i*155-30;pixelRect(x,35,95,65,'#475247');pixelRect(x+22,18,50,40,'#5b6254');pixelRect(x+39,22,18,20,'#d2d0bb')}}
     if(s.gameOver){
       pixelRect(0,0,800,260,'#050605aa');
       pixelRect(105,72,590,104,'#151811');
@@ -78,7 +67,7 @@
     const stop=content.stops[s.landmark]||content.stops.at(-1);
     $('landmark').textContent=stop.name;$('to-landmark').textContent=Math.max(0,stop.mile-s.miles);
     $('distance-fill').style.width=Math.min(s.miles/content.totalMiles*100,100)+'%';
-    $('scene-place').textContent=s.miles===0?'INDEPENDENCE, MISSOURI':(pendingStop?content.stops.find(x=>x.id===pendingStop).name:stop.name).toUpperCase();
+    $('scene-place').textContent=TrailScenes.resolve(s,content,pendingStop).name.toUpperCase();
     draw();
   }
   function tone(frequency=660,duration=.08){if(!soundEnabled)return;try{audioContext??=new(window.AudioContext||window.webkitAudioContext)();const oscillator=audioContext.createOscillator(),gain=audioContext.createGain();oscillator.frequency.value=frequency;gain.gain.setValueAtTime(.035,audioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+duration);oscillator.connect(gain);gain.connect(audioContext.destination);oscillator.start();oscillator.stop(audioContext.currentTime+duration);}catch{}}
