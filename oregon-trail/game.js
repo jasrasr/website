@@ -1,30 +1,32 @@
+/*
+File Name     : game.js
+Author        : Jason Lamb (with help from ChatGPT)
+Description   : Game flow, individual traveler status, scenery, autosaves, and project revision display.
+Revision      : 1.0.0
+Created Date  : 2026-10-08
+Modified Date : 2026-10-19
+Changelog     :
+  Rev 1.0.0 - Established independent file revision tracking; Game flow, individual traveler status, scenery, autosaves, and project revision display.
+*/
 (async () => {
   'use strict';
   const $=id=>document.getElementById(id);
   const canvas=$('scene'),ctx=canvas.getContext('2d');
   const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const initial=()=>({started:false,miles:0,day:1,month:4,year:1848,food:200,health:100,party:5,pace:'Steady',rations:'Filling',landmark:0,scene:'prairie',gameOver:false,names:['You','Sarah','James','Mary','Thomas'],ages:[35,32,14,11,8]});
+  const initial=()=>({started:false,miles:0,day:1,month:4,year:1848,food:200,health:100,party:5,pace:'Steady',rations:'Filling',landmark:0,scene:'prairie',gameOver:false,...TrailParty.family()});
   const rand=(a,b)=>TrailRules.sample([a,b]);
   let content,s=initial(),gameId=null,view='camp',pendingStop=null,story={},logText='',latestContent;
   let soundEnabled=false,autoMode=false,autoTimer,audioContext,gamesPlayed=0;
   try{gamesPlayed=Number(localStorage.getItem('oregonTrailGamesPlayed'))||0;}catch{}
   $('games-played').textContent=gamesPlayed;
+  $('project-version').textContent='Project Rev '+TrailVersion.revision+' · Updated '+TrailVersion.updated;
   function pixelRect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h)}
   function draw(){
-    const c=ctx; c.clearRect(0,0,800,260); pixelRect(0,0,800,260,'#080a08');
-    // distant prairie and a warm, low sun
-    pixelRect(0,97,800,2,'#334129'); pixelRect(650,39,31,31,'#db9b55');pixelRect(656,33,19,6,'#db9b55');pixelRect(656,70,20,6,'#db9b55');
-    // far ridge
-    for(let i=0;i<32;i++){const x=i*27; const h=3+(i*17%10);pixelRect(x,98-h,30,h,'#283622')}
-    // tree silhouettes
-    for(const [x,y,k] of [[78,100,1],[145,101,.8],[215,97,1.2],[314,101,.8],[710,98,1]]){pixelRect(x+8*k,y-35*k,8*k,35*k,'#644727');pixelRect(x,y-40*k,23*k,18*k,'#33472e');pixelRect(x+4*k,y-51*k,16*k,16*k,'#3c5233');pixelRect(x+2*k,y-29*k,28*k,14*k,'#33472e')}
-    // ground, pixel grass
-    pixelRect(0,103,800,157,'#38613b');pixelRect(0,109,800,5,'#49764a');
-    for(let i=0;i<160;i++){let x=(i*71+11)%800,y=116+(i*37)%139;pixelRect(x,y,2,2,i%4===0?'#709054':i%3===0?'#2c5034':'#557a47')}
-    // trail ribbon
-    pixelRect(0,184,800,3,'#7e6744');pixelRect(0,190,800,2,'#947b50');
-    // wagon oxen
-    const shift=Math.min(s.miles/content.totalMiles*430,400);const wx=492-(shift%240);const ox=wx-93;
+    const c=ctx;
+    const scene=TrailScenes.resolve(s,content,pendingStop);
+    ctx.clearRect(0,0,800,260);TrailScenes.background(ctx,scene);
+    canvas.setAttribute('aria-label',scene.name+(scene.crossing?' · River crossing blocks the trail; wagon waits on the near bank.':' · Covered wagon on the trail.'));
+    const wx=TrailScenes.wagonX(scene,s.miles),ox=wx-93;
     // harness and oxen pair
     pixelRect(ox+11,173,82,4,'#4c3525');
     for(const x of [ox,ox+37]){pixelRect(x+7,144,23,27,'#e8e3d3');pixelRect(x+2,151,8,16,'#c9c5b9');pixelRect(x+11,137,17,10,'#e8e3d3');pixelRect(x+22,141,12,9,'#e8e3d3');pixelRect(x+29,145,7,6,'#191a16');pixelRect(x+10,169,6,11,'#4b3c2f');pixelRect(x+24,168,6,12,'#4b3c2f');pixelRect(x+31,143,3,3,'#171815')}
@@ -35,8 +37,6 @@
     for(const x of [wx+25,wx+101]){c.fillStyle='#271d15';c.beginPath();c.arc(x,173,16,0,Math.PI*2);c.fill();c.fillStyle='#cf9b65';c.beginPath();c.arc(x,173,10,0,Math.PI*2);c.fill();c.fillStyle='#30271e';c.beginPath();c.arc(x,173,4,0,Math.PI*2);c.fill();pixelRect(x-1,164,2,18,'#30271e');pixelRect(x-8,172,16,2,'#30271e')}
     // little traveler at the reins
     pixelRect(wx-21,121,9,20,'#b17b4c');pixelRect(wx-22,113,11,10,'#d5a76f');pixelRect(wx-24,111,13,4,'#4c3926');pixelRect(wx-20,140,4,20,'#30342b');pixelRect(wx-12,140,4,20,'#30342b');
-    if(s.scene==='river'){pixelRect(0,183,800,77,'#345f68');for(let i=0;i<15;i++){pixelRect((i*63+30)%800,199+(i%3)*13,32,2,'#74a0a0')}}
-    if(s.scene==='mountain'){for(let i=0;i<6;i++){let x=i*155-30;pixelRect(x,35,95,65,'#475247');pixelRect(x+22,18,50,40,'#5b6254');pixelRect(x+39,22,18,20,'#d2d0bb')}}
     if(s.gameOver){
       pixelRect(0,0,800,260,'#050605aa');
       pixelRect(105,72,590,104,'#151811');
@@ -48,7 +48,29 @@
 
   function setStory(title,message,phase='ON THE TRAIL'){story={title,message,phase};$('headline').textContent=title;$('message').textContent=message;$('phase-label').textContent=phase;}
   function log(message){logText=message;$('log-text').textContent=message;}
+  function applyEffects(effects={}){
+    const {health,...other}=effects;TrailRules.applyEffects(s,other);
+    if(health!==undefined)TrailParty.adjustAll(s,TrailRules.sample(health));
+  }
+  function showParty(){
+    if(!s.started)return;
+    stopAuto();
+    const list=$('party-roster');list.replaceChildren();
+    $('party-summary').textContent=s.party+' remaining · '+s.travelers.filter(t=>t.status==='deceased').length+' deceased';
+    for(const traveler of s.travelers){
+      const row=document.createElement('li');row.className='roster-traveler';
+      const name=document.createElement('strong');name.textContent=traveler.name+' · age '+traveler.age;
+      const status=document.createElement('p');
+      status.textContent=traveler.status==='alive'?'Remaining · '+(traveler.condition?traveler.condition+' · ':'')+TrailParty.healthLabel(traveler.health)+' · '+traveler.health+'/100 health':'Deceased · '+traveler.death.cause+' · '+traveler.death.month+'/'+traveler.death.day+'/'+traveler.death.year+' · '+traveler.death.miles+' miles';
+      row.append(name,status);
+      if(traveler.status==='alive'){const risk=document.createElement('p');risk.textContent='Illness susceptibility ×'+TrailParty.illnessWeight(traveler.age,content.illnessRisk).toFixed(2);row.append(risk);}
+      list.append(row);
+    }
+    $('party-history-note').textContent=s.rosterHistoryIncomplete?'Older save: individual health begins from the saved party health. Previously lost travelers were not recorded.':'';
+    $('party-dialog').showModal();
+  }
   function update(){
+    $('party-button').disabled=!s.started;
     $('date').textContent=`${monthNames[s.month-1].toUpperCase()} ${s.day}, ${s.year}`;
     $('miles').textContent=s.miles;$('total-miles').textContent=content.totalMiles.toLocaleString();$('food').textContent=s.food;$('party').textContent=s.party;
     $('health').textContent=s.health>75?'Good':s.health>45?'Fair':s.health>20?'Poor':'Critical';
@@ -58,7 +80,7 @@
     const stop=content.stops[s.landmark]||content.stops.at(-1);
     $('landmark').textContent=stop.name;$('to-landmark').textContent=Math.max(0,stop.mile-s.miles);
     $('distance-fill').style.width=Math.min(s.miles/content.totalMiles*100,100)+'%';
-    $('scene-place').textContent=s.miles===0?'INDEPENDENCE, MISSOURI':(pendingStop?content.stops.find(x=>x.id===pendingStop).name:stop.name).toUpperCase();
+    $('scene-place').textContent=TrailScenes.resolve(s,content,pendingStop).name.toUpperCase();
     draw();
   }
   function tone(frequency=660,duration=.08){if(!soundEnabled)return;try{audioContext??=new(window.AudioContext||window.webkitAudioContext)();const oscillator=audioContext.createOscillator(),gain=audioContext.createGain();oscillator.frequency.value=frequency;gain.gain.setValueAtTime(.035,audioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+duration);oscillator.connect(gain);gain.connect(audioContext.destination);oscillator.start();oscillator.stop(audioContext.currentTime+duration);}catch{}}
@@ -81,7 +103,7 @@
     try{
       const records=Object.values(TrailSaves.read(localStorage).games).sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)));
       for(const record of records){const button=document.createElement('button');button.type='button';button.className='game-button';
-        try{TrailSaves.valid(record,TrailRules);button.textContent=(record.state.gameOver?'View':'Continue')+' · '+record.state.names[0]+' · '+record.state.miles+' mi · '+new Date(record.updatedAt).toLocaleString();button.onclick=()=>{if(gameId!==record.id){save();}loadGame(record.id);};}
+        try{TrailSaves.valid(record,TrailRules);button.textContent=(record.state.gameOver?'View':'Continue')+' · '+(record.state.travelers?.[0]?.name||record.state.names[0]||'Party')+' · '+record.state.miles+' mi · '+new Date(record.updatedAt).toLocaleString();button.onclick=()=>{if(gameId!==record.id){save();}loadGame(record.id);};}
         catch{button.textContent='Unreadable saved journey';button.disabled=true;}
         list.append(button);
       }
@@ -92,6 +114,7 @@
     try{
       const record=TrailSaves.valid(TrailSaves.read(localStorage).games[id],TrailRules);
       s=structuredClone(record.state);content=structuredClone(record.config);gameId=record.id;view=record.view;pendingStop=record.pendingStop;
+      stopAuto();TrailParty.ensure(s,true);
       renderView();setStory(record.story.title,record.story.message,record.story.phase);log(record.log);update();
       $('save-status').textContent='Restored saved journey · '+new Date(record.updatedAt).toLocaleString();
     }catch{$('save-status').textContent='This journey could not be restored. Its save has been left intact.';}
@@ -113,7 +136,7 @@
     $('begin-journey').onclick=()=>{
       s.names=[...document.querySelectorAll('.traveler-name')].map((x,i)=>x.value.trim().slice(0,16)||'Traveler '+(i+1));
       s.ages=[...document.querySelectorAll('.traveler-age')].map(x=>Math.max(1,Math.min(90,Math.floor(Number(x.value)||18))));
-      s.party=s.names.length;s.food=s.party*40;s.started=true;gameId=crypto.randomUUID();countGame();
+      s.party=s.names.length;s.food=s.party*40;s.started=true;TrailParty.ensure(s);gameId=crypto.randomUUID();countGame();
       setStory('The trail is calling.','Your wagon is loaded and your party is ready. Set out when you are ready.','INDEPENDENCE, MISSOURI');log('April 1, 1848 · The journey west begins.');campChoices();update();save();
     };update();
   }
@@ -135,9 +158,16 @@
     if(!s.started||s.gameOver)return;
     s.miles+=s.miles===0?rand(12,22):s.pace==='Grueling'?rand(28,40):s.pace==='Steady'?rand(20,30):rand(12,19);
     TrailRules.advanceDate(s,7);s.food=Math.max(0,s.food-Math.ceil(s.party*(s.rations==='Filling'?4.2:s.rations==='Meager'?2.5:1.2)));
-    s.health=Math.max(0,Math.min(100,s.health+(s.food===0?-rand(8,17):2)));s.scene='prairie';
+    TrailParty.adjustAll(s,s.food===0?-rand(8,17):2,s.food===0?'Starvation':'Health declined on the trail');s.scene='prairie';
     const event=TrailRules.selectEvent(content.events);
-    if(event){TrailRules.applyEffects(s,event.effects);setStory(event.title,event.message,'TRAIL EVENT');log(event.title);}
+    if(event){
+      if(event.id==='illness'){
+        const {health,...other}=event.effects||{};applyEffects(other);
+        const traveler=TrailParty.illness(s,TrailRules.sample(health??-10),Math.random,content.illnessRisk);
+        const title=traveler?traveler.name+(traveler.status==='deceased'?' died from illness.':' has taken ill.'):event.title;
+        setStory(title,event.message,'TRAIL EVENT');log(title);
+      }else{applyEffects(event.effects);setStory(event.title,event.message,'TRAIL EVENT');log(event.title);}
+    }
     else{setStory('The trail rolls on.','The oxen keep their pace as dust rises behind the wagon.');log(s.miles+' miles traveled · '+s.pace+' pace · '+s.rations.toLowerCase()+' rations.');}
     if(endIfNeeded())return;if(reachedStop())return;
     if(s.food===0&&s.health<35)setStory('Supplies are running low.','Consider hunting before traveling farther.','SUPPLIES LOW');
@@ -146,7 +176,7 @@
   function executeAction(action){
     const success=Math.random()*100<(action.successPercent??100);
     TrailRules.advanceDate(s,TrailRules.sample(action.days??0));
-    TrailRules.applyEffects(s,success?action.effects:action.failureEffects);
+    applyEffects(success?action.effects:action.failureEffects);
     setStory(action.label,success?(action.message||'Your party finishes the action.'):(action.failureMessage||'The attempt was unsuccessful.'),'ACTION RESULT');
     log((success?'Completed: ':'Unsuccessful: ')+action.label);
     if(!endIfNeeded()){if(pendingStop)stopChoices();else campChoices();update();}
@@ -172,8 +202,8 @@
     if(Math.random()*100<c.successPercent){setStory('Safely across the water.','Your party is together and the trail continues west.','RIVER CROSSED');log(stop.name+' · Crossed safely.');}
     else{
       s.food=Math.max(0,s.food-TrailRules.sample(content.crossingFailure.foodLoss));s.miles=Math.max(0,s.miles-TrailRules.sample(content.crossingFailure.milesLost));
-      let lost=false;if(Math.random()*100<content.crossingFailure.travelerLossPercent){s.names.pop();s.ages.pop();s.party=s.names.length;lost=true;}
-      setStory('The crossing turns dangerous.',lost?'You lose supplies, time, and one traveler.':'You recover the wagon but lose supplies and ground.','DANGER AT THE RIVER');log(stop.name+' · '+(lost?'A traveler was lost.':'Supplies were lost.'));
+      let lost=false;if(Math.random()*100<content.crossingFailure.travelerLossPercent){lost=TrailParty.loseTraveler(s,'Lost in the '+stop.name+' crossing');}
+      setStory('The crossing turns dangerous.',lost?'You lose supplies, time, and '+lost.name+'.':'You recover the wagon but lose supplies and ground.','DANGER AT THE RIVER');log(stop.name+' · '+(lost?lost.name+' was lost.':'Supplies were lost.'));
     }
     pendingStop=null;s.scene='prairie';if(!endIfNeeded()){campChoices();update();}
   }
@@ -182,6 +212,8 @@
     else if(view==='stop')stopChoices();else if(view==='pace')pace();else if(view==='rations')rations();else campChoices();
   }
   $('reset-button').onclick=()=>{setup();}; // setup saves the current journey before creating another.
+  $('party-button').onclick=showParty;
+  $('party-close').onclick=()=>{$('party-dialog').close();};
   $('sound-toggle').onclick=()=>{soundEnabled=!soundEnabled;$('sound-toggle').textContent=soundEnabled?'♫ Sound on':'♪ Sound off';tone(880,.13);};
   $('auto-button').onclick=()=>{
     if(autoMode){stopAuto();log('Auto-play paused. Choose each action yourself.');return;}

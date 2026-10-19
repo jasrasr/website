@@ -1,4 +1,15 @@
 {
+  "_header": {
+    "File Name": "game-content.json",
+    "Author": "Jason Lamb (with help from ChatGPT)",
+    "Description": "Editable stops, actions, scenes, random-event odds, and illness-risk settings.",
+    "Revision": "1.0.0",
+    "Created Date": "2026-10-08",
+    "Modified Date": "2026-10-19",
+    "Changelog": [
+      "Rev 1.0.0 - Established independent file revision tracking; Editable stops, actions, scenes, random-event odds, and illness-risk settings."
+    ]
+  },
   "version": 1,
   "totalMiles": 2040,
   "stops": [
@@ -6,7 +17,8 @@
       "id": "kansas-river",
       "name": "Kansas River",
       "mile": 102,
-      "type": "river"
+      "type": "river",
+      "scene": "river"
     },
     {
       "id": "fort-kearney",
@@ -21,13 +33,15 @@
             "health": 10
           }
         }
-      ]
+      ],
+      "scene": "fort"
     },
     {
       "id": "chimney-rock",
       "name": "Chimney Rock",
       "mile": 554,
-      "type": "stop"
+      "type": "stop",
+      "scene": "chimney"
     },
     {
       "id": "fort-laramie",
@@ -43,49 +57,57 @@
             "food": -10
           }
         }
-      ]
+      ],
+      "scene": "fort"
     },
     {
       "id": "independence-rock",
       "name": "Independence Rock",
       "mile": 830,
-      "type": "stop"
+      "type": "stop",
+      "scene": "rock"
     },
     {
       "id": "south-pass",
       "name": "South Pass",
       "mile": 932,
-      "type": "stop"
+      "type": "stop",
+      "scene": "pass"
     },
     {
       "id": "fort-bridger",
       "name": "Fort Bridger",
       "mile": 1120,
-      "type": "stop"
+      "type": "stop",
+      "scene": "fort"
     },
     {
       "id": "fort-hall",
       "name": "Fort Hall",
       "mile": 1330,
-      "type": "stop"
+      "type": "stop",
+      "scene": "fort"
     },
     {
       "id": "blue-mountains",
       "name": "Blue Mountains",
       "mile": 1700,
-      "type": "stop"
+      "type": "stop",
+      "scene": "mountains"
     },
     {
       "id": "the-dalles",
       "name": "The Dalles",
       "mile": 1900,
-      "type": "river"
+      "type": "river",
+      "scene": "gorge"
     },
     {
       "id": "oregon-city",
       "name": "Oregon City",
       "mile": 2040,
-      "type": "stop"
+      "type": "stop",
+      "scene": "town"
     }
   ],
   "events": [
@@ -175,5 +197,12 @@
       70
     ],
     "travelerLossPercent": 25
+  },
+  "illnessRisk": {
+    "childBelowAge": 12,
+    "childExtraWeightPerYear": 0.1,
+    "olderAboveAge": 50,
+    "olderExtraWeightPerYear": 0.05,
+    "maxWeight": 3
   }
 }
