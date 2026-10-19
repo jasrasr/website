@@ -3,7 +3,7 @@
   const $=id=>document.getElementById(id);
   const canvas=$('scene'),ctx=canvas.getContext('2d');
   const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const initial=()=>({started:false,miles:0,day:1,month:4,year:1848,food:200,health:100,party:5,pace:'Steady',rations:'Filling',landmark:0,scene:'prairie',gameOver:false,names:['You','Sarah','James','Mary','Thomas'],ages:[35,32,14,11,8]});
+  const initial=()=>({started:false,miles:0,day:1,month:4,year:1848,food:200,health:100,party:5,pace:'Steady',rations:'Filling',landmark:0,scene:'prairie',gameOver:false,...TrailParty.family()});
   const rand=(a,b)=>TrailRules.sample([a,b]);
   let content,s=initial(),gameId=null,view='camp',pendingStop=null,story={},logText='',latestContent;
   let soundEnabled=false,autoMode=false,autoTimer,audioContext,gamesPlayed=0;
@@ -48,7 +48,27 @@
 
   function setStory(title,message,phase='ON THE TRAIL'){story={title,message,phase};$('headline').textContent=title;$('message').textContent=message;$('phase-label').textContent=phase;}
   function log(message){logText=message;$('log-text').textContent=message;}
+  function applyEffects(effects={}){
+    const {health,...other}=effects;TrailRules.applyEffects(s,other);
+    if(health!==undefined)TrailParty.adjustAll(s,TrailRules.sample(health));
+  }
+  function showParty(){
+    if(!s.started)return;
+    stopAuto();
+    const list=$('party-roster');list.replaceChildren();
+    $('party-summary').textContent=s.party+' remaining · '+s.travelers.filter(t=>t.status==='deceased').length+' deceased';
+    for(const traveler of s.travelers){
+      const row=document.createElement('li');row.className='roster-traveler';
+      const name=document.createElement('strong');name.textContent=traveler.name+' · age '+traveler.age;
+      const status=document.createElement('p');
+      status.textContent=traveler.status==='alive'?'Remaining · '+(traveler.condition?traveler.condition+' · ':'')+TrailParty.healthLabel(traveler.health)+' · '+traveler.health+'/100 health':'Deceased · '+traveler.death.cause+' · '+traveler.death.month+'/'+traveler.death.day+'/'+traveler.death.year+' · '+traveler.death.miles+' miles';
+      row.append(name,status);list.append(row);
+    }
+    $('party-history-note').textContent=s.rosterHistoryIncomplete?'Older save: individual health begins from the saved party health. Previously lost travelers were not recorded.':'';
+    $('party-dialog').showModal();
+  }
   function update(){
+    $('party-button').disabled=!s.started;
     $('date').textContent=`${monthNames[s.month-1].toUpperCase()} ${s.day}, ${s.year}`;
     $('miles').textContent=s.miles;$('total-miles').textContent=content.totalMiles.toLocaleString();$('food').textContent=s.food;$('party').textContent=s.party;
     $('health').textContent=s.health>75?'Good':s.health>45?'Fair':s.health>20?'Poor':'Critical';
@@ -81,7 +101,7 @@
     try{
       const records=Object.values(TrailSaves.read(localStorage).games).sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)));
       for(const record of records){const button=document.createElement('button');button.type='button';button.className='game-button';
-        try{TrailSaves.valid(record,TrailRules);button.textContent=(record.state.gameOver?'View':'Continue')+' · '+record.state.names[0]+' · '+record.state.miles+' mi · '+new Date(record.updatedAt).toLocaleString();button.onclick=()=>{if(gameId!==record.id){save();}loadGame(record.id);};}
+        try{TrailSaves.valid(record,TrailRules);button.textContent=(record.state.gameOver?'View':'Continue')+' · '+(record.state.travelers?.[0]?.name||record.state.names[0]||'Party')+' · '+record.state.miles+' mi · '+new Date(record.updatedAt).toLocaleString();button.onclick=()=>{if(gameId!==record.id){save();}loadGame(record.id);};}
         catch{button.textContent='Unreadable saved journey';button.disabled=true;}
         list.append(button);
       }
@@ -92,6 +112,7 @@
     try{
       const record=TrailSaves.valid(TrailSaves.read(localStorage).games[id],TrailRules);
       s=structuredClone(record.state);content=structuredClone(record.config);gameId=record.id;view=record.view;pendingStop=record.pendingStop;
+      stopAuto();TrailParty.ensure(s,true);
       renderView();setStory(record.story.title,record.story.message,record.story.phase);log(record.log);update();
       $('save-status').textContent='Restored saved journey · '+new Date(record.updatedAt).toLocaleString();
     }catch{$('save-status').textContent='This journey could not be restored. Its save has been left intact.';}
@@ -113,7 +134,7 @@
     $('begin-journey').onclick=()=>{
       s.names=[...document.querySelectorAll('.traveler-name')].map((x,i)=>x.value.trim().slice(0,16)||'Traveler '+(i+1));
       s.ages=[...document.querySelectorAll('.traveler-age')].map(x=>Math.max(1,Math.min(90,Math.floor(Number(x.value)||18))));
-      s.party=s.names.length;s.food=s.party*40;s.started=true;gameId=crypto.randomUUID();countGame();
+      s.party=s.names.length;s.food=s.party*40;s.started=true;TrailParty.ensure(s);gameId=crypto.randomUUID();countGame();
       setStory('The trail is calling.','Your wagon is loaded and your party is ready. Set out when you are ready.','INDEPENDENCE, MISSOURI');log('April 1, 1848 · The journey west begins.');campChoices();update();save();
     };update();
   }
@@ -135,9 +156,16 @@
     if(!s.started||s.gameOver)return;
     s.miles+=s.miles===0?rand(12,22):s.pace==='Grueling'?rand(28,40):s.pace==='Steady'?rand(20,30):rand(12,19);
     TrailRules.advanceDate(s,7);s.food=Math.max(0,s.food-Math.ceil(s.party*(s.rations==='Filling'?4.2:s.rations==='Meager'?2.5:1.2)));
-    s.health=Math.max(0,Math.min(100,s.health+(s.food===0?-rand(8,17):2)));s.scene='prairie';
+    TrailParty.adjustAll(s,s.food===0?-rand(8,17):2,s.food===0?'Starvation':'Health declined on the trail');s.scene='prairie';
     const event=TrailRules.selectEvent(content.events);
-    if(event){TrailRules.applyEffects(s,event.effects);setStory(event.title,event.message,'TRAIL EVENT');log(event.title);}
+    if(event){
+      if(event.id==='illness'){
+        const {health,...other}=event.effects||{};applyEffects(other);
+        const traveler=TrailParty.illness(s,TrailRules.sample(health??-10));
+        const title=traveler?traveler.name+(traveler.status==='deceased'?' died from illness.':' has taken ill.'):event.title;
+        setStory(title,event.message,'TRAIL EVENT');log(title);
+      }else{applyEffects(event.effects);setStory(event.title,event.message,'TRAIL EVENT');log(event.title);}
+    }
     else{setStory('The trail rolls on.','The oxen keep their pace as dust rises behind the wagon.');log(s.miles+' miles traveled · '+s.pace+' pace · '+s.rations.toLowerCase()+' rations.');}
     if(endIfNeeded())return;if(reachedStop())return;
     if(s.food===0&&s.health<35)setStory('Supplies are running low.','Consider hunting before traveling farther.','SUPPLIES LOW');
@@ -146,7 +174,7 @@
   function executeAction(action){
     const success=Math.random()*100<(action.successPercent??100);
     TrailRules.advanceDate(s,TrailRules.sample(action.days??0));
-    TrailRules.applyEffects(s,success?action.effects:action.failureEffects);
+    applyEffects(success?action.effects:action.failureEffects);
     setStory(action.label,success?(action.message||'Your party finishes the action.'):(action.failureMessage||'The attempt was unsuccessful.'),'ACTION RESULT');
     log((success?'Completed: ':'Unsuccessful: ')+action.label);
     if(!endIfNeeded()){if(pendingStop)stopChoices();else campChoices();update();}
@@ -172,8 +200,8 @@
     if(Math.random()*100<c.successPercent){setStory('Safely across the water.','Your party is together and the trail continues west.','RIVER CROSSED');log(stop.name+' · Crossed safely.');}
     else{
       s.food=Math.max(0,s.food-TrailRules.sample(content.crossingFailure.foodLoss));s.miles=Math.max(0,s.miles-TrailRules.sample(content.crossingFailure.milesLost));
-      let lost=false;if(Math.random()*100<content.crossingFailure.travelerLossPercent){s.names.pop();s.ages.pop();s.party=s.names.length;lost=true;}
-      setStory('The crossing turns dangerous.',lost?'You lose supplies, time, and one traveler.':'You recover the wagon but lose supplies and ground.','DANGER AT THE RIVER');log(stop.name+' · '+(lost?'A traveler was lost.':'Supplies were lost.'));
+      let lost=false;if(Math.random()*100<content.crossingFailure.travelerLossPercent){lost=TrailParty.loseTraveler(s,'Lost in the '+stop.name+' crossing');}
+      setStory('The crossing turns dangerous.',lost?'You lose supplies, time, and '+lost.name+'.':'You recover the wagon but lose supplies and ground.','DANGER AT THE RIVER');log(stop.name+' · '+(lost?lost.name+' was lost.':'Supplies were lost.'));
     }
     pendingStop=null;s.scene='prairie';if(!endIfNeeded()){campChoices();update();}
   }
@@ -182,6 +210,8 @@
     else if(view==='stop')stopChoices();else if(view==='pace')pace();else if(view==='rations')rations();else campChoices();
   }
   $('reset-button').onclick=()=>{setup();}; // setup saves the current journey before creating another.
+  $('party-button').onclick=showParty;
+  $('party-close').onclick=()=>{$('party-dialog').close();};
   $('sound-toggle').onclick=()=>{soundEnabled=!soundEnabled;$('sound-toggle').textContent=soundEnabled?'♫ Sound on':'♪ Sound off';tone(880,.13);};
   $('auto-button').onclick=()=>{
     if(autoMode){stopAuto();log('Auto-play paused. Choose each action yourself.');return;}

@@ -2,6 +2,16 @@
 
 A small browser game, with automatic device-local saves and editable game content.
 
+## Your travelers
+
+New journeys suggest a randomized family of five: you and another adult aged 30–50, plus three children aged 1–17 (at least 18 years younger than both adults). Other travelers have distinct randomly chosen names. All names and ages can be edited; manual ages remain 1–90, so older relatives can join. The suggested family changes only when creating a new journey; reloads preserve the saved party.
+
+Select the PARTY card to open the traveler roster. It lists each person's name, age, health, illness, and whether they remain with the party. Deceased travelers stay in the roster with their cause of death, trail date, and mileage. Inspecting the roster pauses auto-play and does not advance a turn. Close the roster to return to the same choice; resume auto-play explicitly if desired.
+
+Party health is the rounded average of surviving travelers' individual health. Illness affects one randomly chosen living traveler. Rest, starvation, normal recovery, and other configured health effects apply to each living traveler. Recovery to 100 health clears illness; zero health records death. Deceased travelers never heal.
+
+Existing saves migrate their surviving names and ages, using saved party health as the initial individual health. They show a note that earlier individual conditions and previously lost travelers are unavailable. New roster data is included in automatic saves. Old saves are not randomized.
+
 ## Saved journeys and recovery
 
 - Packing the wagon creates a separate saved journey.

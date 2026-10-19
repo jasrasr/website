@@ -22,7 +22,7 @@
 
         <div class="status-grid" aria-label="Journey status">
           <div class="stat"><span class="stat-icon">⌁</span><span class="stat-name">HEALTH</span><strong id="health">Good</strong><div class="meter"><i id="health-meter"></i></div></div>
-          <div class="stat"><span class="stat-icon">♙</span><span class="stat-name">PARTY</span><strong><span id="party">5</span> <small>travelers</small></strong><div class="stat-detail" id="party-names">You · Sarah · James · Mary · Thomas</div></div>
+          <div class="stat party-stat"><button id="party-button" class="party-button" type="button" aria-haspopup="dialog" aria-controls="party-dialog" aria-label="View travelers and their health" disabled><span class="stat-icon">♙</span><span class="stat-name">PARTY</span><strong><span id="party">5</span> <small>travelers</small></strong><div class="stat-detail" id="party-names">Your family</div><span class="party-hint">View travelers →</span></button></div>
           <div class="stat"><span class="stat-icon">◉</span><span class="stat-name">FOOD</span><strong><span id="food">200</span> <small>lb</small></strong><div class="meter"><i id="food-meter"></i></div></div>
           <div class="stat"><span class="stat-icon">↗</span><span class="stat-name">NEXT LANDMARK</span><strong id="landmark">Kansas River</strong><div class="stat-detail"><span id="to-landmark">102</span> miles ahead</div></div>
         </div>
@@ -35,6 +35,8 @@
     <details class="saved-journeys"><summary>Saved journeys on this device</summary><div id="saved-games"></div></details>
     <p class="below-note">A little pixel adventure inspired by the classic 1848 journey. <span>Best played with a curious spirit.</span></p>
   </main>
+  <dialog id="party-dialog" aria-labelledby="party-heading"><div class="roster-heading"><h2 id="party-heading">Your travelers</h2><button id="party-close" class="game-button" type="button">Close</button></div><p id="party-summary"></p><ul id="party-roster"></ul><p id="party-history-note"></p></dialog>
+  <script src="party.js"></script>
   <script src="rules.js"></script>
   <script src="saves.js"></script>
   <script src="game.js"></script>

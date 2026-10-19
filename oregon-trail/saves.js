@@ -13,6 +13,19 @@
     if(!['camp','pace','rations','stop','end'].includes(record.view))throw Error('Invalid saved view');
     if(record.view==='stop'&&!record.config.stops.some(x=>x.id===record.pendingStop))throw Error('Missing pending stop');
     for(const key of ['title','message','phase'])if(typeof record.story[key]!=='string')throw Error('Invalid saved story');
+    if(s.travelers!==undefined){
+      if(!Array.isArray(s.travelers)||s.travelers.length>5)throw Error('Invalid traveler roster');
+      const ids=new Set();
+      for(const t of s.travelers){
+        if(!t||typeof t.id!=='string'||!t.id||ids.has(t.id)||typeof t.name!=='string'||!t.name||t.name.length>16||!Number.isInteger(t.age)||t.age<1||t.age>90||!Number.isInteger(t.health)||t.health<0||t.health>100||!['alive','deceased'].includes(t.status)||typeof t.condition!=='string')throw Error('Invalid traveler');
+        ids.add(t.id);
+        if(t.status==='alive'&&t.health===0)throw Error('Invalid living traveler health');
+        if(t.status==='deceased'&&(t.health!==0||!t.death||typeof t.death.cause!=='string'||!Number.isInteger(t.death.miles)||t.death.miles<0||!Number.isInteger(t.death.day)||t.death.day<1||t.death.day>31||!Number.isInteger(t.death.month)||t.death.month<1||t.death.month>12||!Number.isInteger(t.death.year)))throw Error('Invalid deceased traveler');
+      }
+      const alive=s.travelers.filter(t=>t.status==='alive');
+      const health=alive.length?Math.round(alive.reduce((sum,t)=>sum+t.health,0)/alive.length):0;
+      if(alive.length!==s.party||health!==s.health||alive.some((t,i)=>t.name!==s.names[i]||t.age!==s.ages[i]))throw Error('Roster does not match party');
+    }
     return record;
   }
   const api={KEY,read,write,valid};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.TrailSaves=api;
