@@ -2,10 +2,11 @@
 File Name     : README.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Repository overview, development conventions, project index, and deployment guidance.
-Revision      : 1.0.0
+Revision      : 1.0.1
 Created Date  : 2025-02-14
 Modified Date : 2026-10-19
 Changelog     :
+  Rev 1.0.1 - Listed Khootish and Quiz Web Interactive as separate projects; marked the unavailable Quiz Web Interactive source path without substituting another app.
   Rev 1.0.0 - Added framework-first development requirements and complete folder inventory; corrected the stale quiz path. Earlier unversioned history remains in Git.
 -->
 # Website Stuff
@@ -69,6 +70,7 @@ The entries below describe source present in the repository. Canonical URLs are 
 | PSNotify | [psnotify/](psnotify/) / [README](psnotify/README.md) | <a href="https://jasr.me/github/psnotify/" target="_new">jasr.me/github/psnotify</a> | Self-hosted notification endpoint and viewer for long-running PowerShell jobs. |
 | License Plate Photo Logger | [license-plate/](license-plate/) / [README](license-plate/README.md) | <a href="https://jasr.me/github/license-plate/" target="_new">jasr.me/github/license-plate</a> | PHP app for uploading plate photos, extracting plate text, and logging duplicates. |
 | Khootish Multiplayer Quiz | [khootish/](khootish/) / [README](khootish/README.md) | <a href="https://jasr.me/github/khootish/" target="_new">jasr.me/github/khootish</a> | Reusable quizzes, invite codes, team play, projector display, question bank, and completed-game history. |
+| Quiz Web Interactive | Expected folder: `quiz-web-interactive/` (not present on `main` at this review) | Target: `https://jasr.me/github/quiz-web-interactive/` (deployment not verified) | Separate project from Khootish. Its source location needs confirmation; do not rename, merge, or replace it with Khootish. |
 | Timeclock Photo Logger | [how-much-time-worked/](how-much-time-worked/) / [README](how-much-time-worked/README.md) | Target folder: `/timeclock/` | Photo/manual employee hour logger with OCR options and JSON stats. |
 | Computer Heartbeat Dashboard | [computers/](computers/) / [README](computers/readme.md) | Target folder: `/computers/` | PowerShell-to-PHP heartbeat system for Windows device status tracking. |
 | JSON Flat-File Blog | [blog/](blog/) / [README](blog/README.md) | <a href="https://jasr.me/github/blog/" target="_new">jasr.me/github/blog</a> | Static-ish JSON blog with PowerShell builder, RSS, sitemap, and admin-protected media workflow. |
