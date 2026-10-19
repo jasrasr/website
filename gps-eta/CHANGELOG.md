@@ -1,5 +1,14 @@
 # GPS Speed + ETA Tracker Changelog
 
+## Rev 1.8.15 - 2026-10-19
+
+- Save the latest browser GPS altitude (meters), altitude accuracy (meters), and numeric heading (degrees) in new trip log snapshots.
+- Preserve these fields in per-device PHP history and PHP stored trip snapshots; unavailable altitude remains null, not zero.
+- Add altitude, altitude accuracy, and heading degrees to CSV export.
+- Add an Elevation Timeline line chart and a Travel Direction Timeline compass-degree plot built from saved snapshots, without an external charting API.
+- New charts use the existing logging cadence (about 60 seconds, plus manual snapshots); older entries without altitude or numeric heading remain valid and display as missing values.
+- No history reset or migration and no maps/directions API key required.
+
 ## Rev 1.8.14 - 2026-06-30
 
 - Moved the `Show Changelog` button above the collapsed-note text so it is not hidden behind the sticky toolbar.
