@@ -2,10 +2,11 @@
 File Name     : CHANGELOG.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Cumulative project changelog, verified history, revision policy, and remaining work.
-Revision      : 1.0.0
+Revision      : 1.0.1
 Created Date  : 2026-10-19
 Modified Date : 2026-10-19
 Changelog     :
+  Rev 1.0.1 - Documented framework alignment and repository-wide development requirements.
   Rev 1.0.0 - Established independent file revision tracking; Cumulative project changelog, verified history, revision policy, and remaining work.
 -->
 # Oregon Trail changelog
@@ -20,6 +21,7 @@ First explicitly numbered project revision. Earlier work was unversioned; the hi
 - Added distinct pixel-art scenes for forts, landmarks, mountains, towns, and perpendicular river crossings.
 - Added configurable age-weighted illness targeting: younger children and older adults have greater susceptibility. Overall illness-event frequency remains controlled separately by `events[].chancePercent`.
 - Added the visible project revision/date, independent file revisions, full file metadata, and this cumulative changelog.
+- Documented framework alignment and added the root README development requirements and complete project/support-folder index.
 - Added offline caching for new modules, project revision, and changelog.
 
 ## Earlier unversioned project history

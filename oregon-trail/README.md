@@ -2,15 +2,22 @@
 File Name     : README.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Project usage, content editing, saves, illness weights, revisions, and validation.
-Revision      : 1.0.0
+Revision      : 1.0.1
 Created Date  : 2026-10-08
 Modified Date : 2026-10-19
 Changelog     :
+  Rev 1.0.1 - Documented framework alignment and repository-wide development requirements.
   Rev 1.0.0 - Established independent file revision tracking; Project usage, content editing, saves, illness weights, revisions, and validation.
 -->
 # Oregon Trail
 
 A small browser game, with automatic device-local saves and editable game content.
+
+## Framework alignment
+
+Before changing this project, read the repository [development conventions](../README.md#development-conventions--read-before-changing-files), [framework overview](../1-Framework/README.md), [AI development instructions](../1-Framework/AI-INSTRUCTIONS.md), and [framework roadmap](../1-Framework/ROADMAP.md). Functional changes require documentation, configuration/failure handling, a changelog entry, and automated checks or a concrete manual validation procedure. Preserve file headers and independent file revisions.
+
+Oregon Trail is a standalone browser/offline application. It follows applicable framework conventions while using browser-local saves and cached frontend modules; the server-side PHP JsonStore and authentication provider are not runtime dependencies. New server-backed accounts or cross-device saves should evaluate the existing shared identity/storage components before adding another implementation.
 
 ## Your travelers
 
