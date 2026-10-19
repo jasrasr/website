@@ -1,0 +1,53 @@
+<!--
+File Name     : update.html
+Author        : Jason Lamb (with help from ChatGPT)
+Description   : Self-contained game-file update recovery without clearing saved journeys.
+Revision      : 1.0.0
+Created Date  : 2026-10-19
+Modified Date : 2026-10-19
+Changelog     :
+  Rev 1.0.0 - Self-contained game-file update recovery without clearing saved journeys.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Refresh Oregon Trail</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#11150f;color:#efe9d6}body{max-width:560px;margin:10vh auto;padding:24px}h1{font-size:28px}p{line-height:1.6}button,a{font:inherit}button{padding:14px 20px;background:#a4bd72;color:#14200e;border:0;border-radius:5px;cursor:pointer}button:disabled{opacity:.5}a{color:#c9dc9c}#status{padding:12px;border:1px solid #61704b}
+</style>
+</head>
+<body>
+<h1>Refresh game files</h1>
+<p>Check for the current game files and apply the update. Your saved journeys stay in this browser. Keep this page open while the update downloads.</p>
+<p>Target: Project Rev 1.0.1 · Updated 2026-10-19</p>
+<button id="refresh" type="button">Check and apply update</button>
+<p id="status" role="status">Connect to the internet, then select the button.</p>
+<p><a href="./">Return to the game</a></p>
+<script>
+(function(){
+  const button=document.getElementById('refresh'),status=document.getElementById('status');
+  function waitFor(worker,state){
+    return new Promise((resolve,reject)=>{
+      let timer;
+      function check(){if(worker.state===state||worker.state==='activated'){cleanup();resolve();}else if(worker.state==='redundant'){cleanup();reject(Error('Update did not install.'));}}
+      function cleanup(){clearTimeout(timer);worker.removeEventListener('statechange',check);}
+      worker.addEventListener('statechange',check);timer=setTimeout(()=>{cleanup();reject(Error('Update timed out. Check your connection and try again.'));},20000);check();
+    });
+  }
+  button.onclick=async()=>{
+    button.disabled=true;status.textContent='Downloading and checking game files…';
+    try{
+      if(!('serviceWorker' in navigator))throw Error('This browser needs HTTPS or localhost to refresh offline files.');
+      const registration=await navigator.serviceWorker.register('sw.js?v=1.0.1',{scope:'./',updateViaCache:'none'});
+      await registration.update();
+      if(registration.installing)await waitFor(registration.installing,'installed');
+      if(registration.waiting){const worker=registration.waiting;worker.postMessage({type:'ACTIVATE_UPDATE'});await waitFor(worker,'activated');}
+      if(registration.active)await waitFor(registration.active,'activated');
+      status.textContent='Update ready. Reopening the game…';window.location.replace('./');
+    }catch(error){status.textContent=error.message;button.disabled=false;}
+  };
+})();
+</script>
+</body>
+</html>

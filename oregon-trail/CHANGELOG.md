@@ -2,16 +2,26 @@
 File Name     : CHANGELOG.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Cumulative project changelog, verified history, revision policy, and remaining work.
-Revision      : 1.0.1
+Revision      : 1.0.2
 Created Date  : 2026-10-19
 Modified Date : 2026-10-19
 Changelog     :
+  Rev 1.0.2 - Recorded Rev 1.0.1 asset-cache, startup, and phone-layout fixes.
   Rev 1.0.1 - Documented framework alignment and repository-wide development requirements.
   Rev 1.0.0 - Established independent file revision tracking; Cumulative project changelog, verified history, revision policy, and remaining work.
 -->
 # Oregon Trail changelog
 
-## Project Rev 1.0.0 — 2026-10-19 — Unreleased (PR #113)
+## Project Rev 1.0.1 — 2026-10-19 — Unreleased
+
+- Prevented new HTML from silently running older scripts/styles by using release-specific URLs and integrity hashes.
+- Preserved release queries in offline cache keys; never substitute another release's assets.
+- Added a self-contained update page that applies a pending offline-worker update without clearing saved journeys.
+- Added visible startup failures and a static project revision fallback.
+- Reset native party-button sizing/appearance to keep the traveler panel within its grid cell on phones.
+- Added project-local HTTP revalidation rules for HTML, scripts, styles, configuration, and changelog.
+
+## Project Rev 1.0.0 — 2026-10-19 — Merged in PR #113
 
 First explicitly numbered project revision. Earlier work was unversioned; the historical dates below refer to Git changes, not invented release numbers.
 
