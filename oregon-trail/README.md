@@ -2,10 +2,11 @@
 File Name     : README.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Project usage, content editing, saves, illness weights, revisions, and validation.
-Revision      : 1.0.1
+Revision      : 1.0.2
 Created Date  : 2026-10-08
 Modified Date : 2026-10-19
 Changelog     :
+  Rev 1.0.2 - Documented safe updates, cache compatibility, and project Rev 1.0.1.
   Rev 1.0.1 - Documented framework alignment and repository-wide development requirements.
   Rev 1.0.0 - Established independent file revision tracking; Project usage, content editing, saves, illness weights, revisions, and validation.
 -->
@@ -31,7 +32,7 @@ Existing saves migrate their surviving names and ages, using saved party health 
 
 ## Revisions and illness susceptibility
 
-Project Rev 1.0.0 (2026-10-19) is the first explicitly numbered revision, currently under review in PR #113. The main page displays the project revision/date from `version.js` and links to the cumulative `CHANGELOG.md`. File revisions are independent and begin at 1.0.0 when the preferred header is introduced.
+Project Rev 1.0.1 (2026-10-19) fixes mixed cached assets and startup/layout recovery. Rev 1.0.0 was the first explicitly numbered revision (merged in PR #113). The main page displays the project revision/date from `version.js` and links to the cumulative `CHANGELOG.md`. File revisions are independent and begin at 1.0.0 when the preferred header is introduced.
 
 Illness frequency is still `events[].chancePercent` (9% per travel turn by default). When illness occurs, selection among surviving travelers uses the `illnessRisk` configuration. Defaults:
 
@@ -43,6 +44,12 @@ Illness frequency is still `events[].chancePercent` (9% per travel turn by defau
 A weight of 2 means twice the selection likelihood of a weight-1 traveler when an illness event occurs. It is not a 2% chance each turn. The roster displays each living traveler's relative susceptibility. Existing save snapshots without an illnessRisk field use these defaults; saves with a field retain their configured settings.
 
 All source/document files carry the preferred comment header. JSON uses a leading `_header` object; the PNG preview uses native PNG Comment metadata so both remain valid files.
+
+## Updating the installed game
+
+Use **Refresh game files** on the main page, or open `update.html` directly and select **Check and apply update**. This self-contained recovery page can load when an older offline worker is serving stale game files. It requests the current worker without HTTP-cache reuse and activates a waiting update only after the button is selected. Saved journey data is not cleared. Internet access is required to download an update.
+
+Scripts and CSS use release-specific URLs and integrity hashes; offline cache keys include the release. The local `.htaccess` requests revalidation instead of a seven-day static-file cache. A visible startup warning points to recovery if a script or stylesheet fails. Increment the project revision and worker cache when publishing changed application assets, then update URL versions and integrity hashes together.
 
 ## Saved journeys and recovery
 

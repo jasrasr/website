@@ -2,10 +2,11 @@
 File Name     : tests/game.test.cjs
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Content, probability, storage, date, and optional real-browser recovery tests.
-Revision      : 1.0.0
+Revision      : 1.0.1
 Created Date  : 2026-10-08
 Modified Date : 2026-10-19
 Changelog     :
+  Rev 1.0.1 - Added browser revision and portrait/landscape party-card containment checks.
   Rev 1.0.0 - Established independent file revision tracking; Content, probability, storage, date, and optional real-browser recovery tests.
 */
 const test=require('node:test');
@@ -63,7 +64,16 @@ test('Browser restores pending choices, keeps multiple games and works offline',
   await page.route('https://fonts.googleapis.com/**',r=>r.abort());
   const url='http://127.0.0.1:'+server.address().port+'/oregon-trail/';
   try{
-    await page.goto(url);await page.getByRole('button',{name:'Pack the wagon and begin'}).click();
+    await page.goto(url);
+    await page.waitForFunction(()=>document.getElementById('begin-journey'));
+    assert.match(await page.locator('#project-version').textContent(),/Project Rev 1\.0\.1/);
+    for(const viewport of [{width:390,height:844},{width:844,height:390}]){
+      await page.setViewportSize(viewport);
+      const fits=await page.locator('#party-button').evaluate(button=>{const b=button.getBoundingClientRect(),card=button.closest('.stat').getBoundingClientRect();return b.left>=card.left-1&&b.right<=card.right+1&&b.width<=card.width+1;});
+      assert.equal(fits,true,'Party button must fit its card in both orientations');
+      assert.equal(await page.locator('#startup-error').isVisible(),false);
+    }
+    await page.getByRole('button',{name:'Pack the wagon and begin'}).click();
     await page.getByRole('button',{name:'Continue down the trail'}).click();
     const key=saves.KEY;
     let data=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)),key);

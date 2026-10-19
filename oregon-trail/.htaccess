@@ -1,0 +1,16 @@
+# File Name     : .htaccess
+# Author        : Jason Lamb (with help from ChatGPT)
+# Description   : Revalidate game assets on the HTTP host while preserving offline caching.
+# Revision      : 1.0.0
+# Created Date  : 2026-10-19
+# Modified Date : 2026-10-19
+# Changelog     :
+#   Rev 1.0.0 - Revalidate game assets on the HTTP host while preserving offline caching.
+<IfModule mod_expires.c>
+  ExpiresActive Off
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|js|css|json|md)$">
+    Header always set Cache-Control "no-cache, max-age=0, must-revalidate"
+  </FilesMatch>
+</IfModule>

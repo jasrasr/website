@@ -2,14 +2,17 @@
 File Name     : game.js
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Game flow, individual traveler status, scenery, autosaves, and project revision display.
-Revision      : 1.0.0
+Revision      : 1.0.1
 Created Date  : 2026-10-08
 Modified Date : 2026-10-19
 Changelog     :
+  Rev 1.0.1 - Added startup diagnostics and release-specific configuration/worker requests.
   Rev 1.0.0 - Established independent file revision tracking; Game flow, individual traveler status, scenery, autosaves, and project revision display.
 */
 (async () => {
   'use strict';
+  if(typeof TrailVersion==='undefined'||typeof TrailParty==='undefined'||typeof TrailScenes==='undefined')throw Error('Game files are out of date. Open update.html to refresh.');
+  window.__trailBooted=true;
   const $=id=>document.getElementById(id);
   const canvas=$('scene'),ctx=canvas.getContext('2d');
   const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -225,7 +228,7 @@ Changelog     :
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')save();});
   window.addEventListener('storage',e=>{if(e.key===TrailSaves.KEY)renderSavedGames();});
   try{
-    const response=await fetch('game-content.json',{cache:'no-cache',signal:AbortSignal.timeout(8000)});if(!response.ok)throw Error('Content request failed');
+    const response=await fetch('game-content.json?v='+TrailVersion.revision,{cache:'no-cache',signal:AbortSignal.timeout(8000)});if(!response.ok)throw Error('Content request failed');
     latestContent=TrailRules.validate(await response.json());content=structuredClone(latestContent);
   }catch{
     $('save-status').textContent='Game content could not be loaded. Connect and reload to start a new journey.';
@@ -238,5 +241,5 @@ Changelog     :
     const records=Object.values(TrailSaves.read(localStorage).games).filter(r=>{try{TrailSaves.valid(r,TrailRules);return !r.state.gameOver;}catch{return false;}}).sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)));
     if(records.length)loadGame(records[0].id);else setup();
   }catch{setup();}
-  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').then(()=>{$('offline-status').textContent='Preparing offline play…';let timeout;return Promise.race([navigator.serviceWorker.ready,new Promise((_,reject)=>{timeout=setTimeout(()=>reject(Error('Service worker readiness timed out')),10000);})]).finally(()=>clearTimeout(timeout));}).then(()=>{$('offline-status').textContent='Ready for offline play on this device.';}).catch(()=>{$('offline-status').textContent='Offline reload unavailable. Progress still saves on this device.';});
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js?v='+TrailVersion.revision,{updateViaCache:'none'}).then(()=>{$('offline-status').textContent='Preparing offline play…';let timeout;return Promise.race([navigator.serviceWorker.ready,new Promise((_,reject)=>{timeout=setTimeout(()=>reject(Error('Service worker readiness timed out')),10000);})]).finally(()=>clearTimeout(timeout));}).then(()=>{$('offline-status').textContent='Ready for offline play on this device.';}).catch(()=>{$('offline-status').textContent='Offline reload unavailable. Progress still saves on this device.';});
 })();
