@@ -4,7 +4,28 @@ const labels={resolve_candidate:'Resolution candidate',follow_up:'Follow up',inv
 let token='',tickets=[],reviews=new Map(),selected=null,busy=false,stop=false,generation=0;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function message(s){$('message').textContent=s;}
-function controls(){for(const id of ['refresh','analyze-all'])$(id).disabled=busy;document.querySelectorAll('[data-analyze]').forEach(b=>b.disabled=busy);}
+function ticketUrlsForOpening(queue){
+ const urls=[],seen=new Set();
+ for(const ticket of queue){
+  try{
+   const url=new URL(String(ticket?.url??''));
+   if(url.protocol!=='https:'||!url.hostname.toLowerCase().endsWith('.freshservice.com')||seen.has(url.href))continue;
+   seen.add(url.href);urls.push(url.href);
+  }catch{}
+ }
+ return urls;
+}
+function openTicketTabs(queue,openTab=(url,target)=>window.open(url,target)){
+ const urls=ticketUrlsForOpening(queue);let opened=0,blocked=0;
+ for(const url of urls){
+  const tab=openTab('about:blank','_blank');
+  if(!tab){blocked++;continue;}
+  try{tab.opener=null;tab.location.replace(url);opened++;}
+  catch{try{tab.close();}catch{}blocked++;}
+ }
+ return {total:urls.length,opened,blocked};
+}
+function controls(){for(const id of ['refresh','analyze-all'])$(id).disabled=busy;$('open-all').disabled=busy||tickets.length===0;document.querySelectorAll('[data-analyze]').forEach(b=>b.disabled=busy);}
 async function api(action,id){
  const started=Date.now(),context=`${action}${id?` for ticket #${id}`:''}`;
  let response;
@@ -39,6 +60,17 @@ async function refresh(){busy=true;controls();const g=generation;message('Loadin
 async function analyze(id){const d=await api('analyze',id);return d;}
 $('connect-form').addEventListener('submit',e=>{e.preventDefault();if(busy)return;token=$('token').value.trim();$('token').value='';refresh();});
 $('refresh').onclick=refresh;
+$('open-all').onclick=()=>{
+ if(busy||tickets.length===0)return;
+ const urls=ticketUrlsForOpening(tickets);
+ if(urls.length===0){message('No valid Freshservice ticket links are available. Refresh the queue and try again.');return;}
+ const noun=urls.length===1?'ticket':'tickets';
+ if(!window.confirm(`Open all ${urls.length} unresolved ${noun} in separate tabs?\n\nTo use Chrome, open this review page in Chrome before continuing. Your browser may ask you to allow pop-ups for jasr.me.`))return;
+ const result=openTicketTabs(tickets);
+ message(result.blocked===0
+  ? `${result.opened} ticket tabs opened in this browser.`
+  : `${result.opened} of ${result.total} ticket tabs opened. Allow pop-ups and redirects for jasr.me, then try again for the blocked tabs.`);
+};
 $('lock').onclick=()=>{generation++;stop=true;token='';tickets=[];reviews.clear();selected=null;busy=false;$('queue').replaceChildren();$('detail').replaceChildren();$('workspace').hidden=true;$('connect').hidden=false;$('stop').hidden=true;message('Locked. Ticket data cleared from this page.');controls();};
 for(const id of ['search','filter','sort'])$(id).addEventListener('input',renderQueue);
 $('queue').onclick=async e=>{const b=e.target.closest('[data-ticket]');if(!b||busy)return;const id=Number(b.dataset.ticket);const g=generation;busy=true;controls();message('Loading complete history…');try{const d=reviews.get(id)||await api('detail',id);if(g!==generation)return;renderDetail(d);message('');}catch(err){if(g===generation)message(err.message);}finally{if(g===generation){busy=false;controls();}}};
