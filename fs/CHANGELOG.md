@@ -4,6 +4,9 @@ All notable changes to this project are documented here. Format is loosely based
 
 ## Unreleased
 
+## 2026-10-20
+- Added an **Open all ticket tabs** action to the private review queue. It opens the complete loaded unresolved queue in the current browser after confirming the ticket count, reports blocked tabs, and explains how to use Chrome and allow site pop-ups. Rev 1.9.0.
+
 ## 2026-10-14
 - Return HTTP 422 for handled review failures to avoid gateway error-page substitution, log safe request/stage/error codes, and explain AI upstream HTTP failures without exposing provider response bodies. Rev 1.8.4.
 - Added content-hashed JavaScript/CSS URLs to the review page and replaced its hard-coded v1.0 footer with the shared revision/date, so refreshed pages request updated assets after deployment. Rev 1.8.3.
