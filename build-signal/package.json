@@ -1,0 +1,13 @@
+{
+  "name": "build-signal",
+  "version": "1.0.0",
+  "description": "<!-- File Name     : README.md Author        : Jason Lamb (with help from ChatGPT) Description   : Source and operating notes for the illustrated, narrated Build Signal page. Revision      : 1.0.0 Created Date  : 2026-10-20 Modified Date : 2026-10-20 Changelog     :   Rev 1.0.0 - Published a GitHub-ready copy of the illustrated walkthrough for local Codex CLI refinement. --> # Build Signal",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [],
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.5"
+  }
+}
