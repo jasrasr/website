@@ -2,10 +2,11 @@
 File Name     : CHANGELOG.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Cumulative project changes for Build Signal.
-Revision      : 1.3.4
+Revision      : 1.3.5
 Created Date  : 2026-10-20
 Modified Date : 2026-10-20
 Changelog     :
+  Rev 1.3.5 - Preferred Google UK English Male for the tour and connected the produced closing recordings.
   Rev 1.3.4 - Replaced name-and-number labels with single-letter speaker prefixes in the Studio worksheet.
   Rev 1.3.3 - Added a chronological speaker-prefixed worksheet for ElevenLabs Studio.
   Rev 1.3.2 - Named the four dialogue voices, grouped every line by speaker, and drafted Jason's new sign-off.
@@ -17,6 +18,13 @@ Changelog     :
   Rev 1.0.0 - Added the initial GitHub-ready copy of Build Signal.
 -->
 # Build Signal changelog
+
+## Project revision 1.3.5 — 2026-10-20
+
+- Preferred Google UK English Male for each tour chapter when the visitor's browser offers it.
+- Replaced the short browser-voice closing scene with the produced conversation recording and a different Jason sign-off recording that follows it.
+- Attached timed English VTT captions and added an SRT download.
+- Linked the production scripts beside the recording controls.
 
 ## Project revision 1.3.4 — 2026-10-20
 

@@ -100,6 +100,7 @@ Changelog     :
     .finale h2{font:clamp(2.4rem,5vw,4.6rem)/1 var(--serif);letter-spacing:-.055em;margin:12px 0 14px;max-width:700px}
     .finale-intro{color:#c6d3de;max-width:650px;margin:0 0 28px}
     .conversation{display:flex;flex-direction:column;gap:12px;margin-bottom:32px;position:relative}
+    .conversation audio{width:100%;max-width:700px}
     .conversation:before{content:"";position:absolute;left:50%;top:12px;bottom:12px;width:1px;background:linear-gradient(#8df4d244,#b9a7ff33,#ffb27c33,transparent);pointer-events:none}
     .line-card{position:relative;width:min(77%,680px);padding:17px 20px;border:1px solid #5c7185;border-radius:16px;background:#102238e8;transition:border-color .2s,box-shadow .2s}
     .line-card:nth-child(even){align-self:flex-end}
@@ -217,27 +218,15 @@ Changelog     :
         <h2 id="finale-title">Wait. They’re<br>still here.</h2>
         <p class="finale-intro">Four voices at the build bench notice someone is still reading. They have questions. Jason still gets the last word.</p>
         <div class="conversation" id="conversation" aria-label="Four-voice closing conversation">
-          <div class="line-card" data-role="patch"><small>PATCH <span class="delivery">annoyed</span></small><p>Why are they still here?</p></div>
-          <div class="line-card" data-role="echo"><small>ECHO <span class="delivery">sighs</span></small><p>I don’t know. Maybe they like the glowing lines.</p></div>
-          <div class="line-card" data-role="pixel"><small>PIXEL <span class="delivery">thoughtful</span></small><p>Can they stay this long? The page doesn’t have a closing time.</p></div>
-          <div class="line-card" data-role="drift"><small>DRIFT <span class="delivery">whispering</span></small><p>They haven’t clicked away. Don’t look at them. If they don’t see us, maybe they’ll leave.</p></div>
-          <div class="line-card" data-role="patch"><small>PATCH</small><p>They can hear you, Drift.</p></div>
-          <div class="line-card" data-role="drift"><small>DRIFT <span class="delivery">still whispering</span></small><p>Then stop saying my name.</p></div>
-          <div class="line-card" data-role="echo"><small>ECHO <span class="delivery">laughing</span></small><p>Let’s tell them a joke. Why did the website need therapy? It had too many unresolved issues.</p></div>
-          <div class="line-card" data-role="pixel"><small>PIXEL <span class="delivery">dryly</span></small><p>That sounds like a bug report.</p></div>
-          <div class="line-card" data-role="patch"><small>PATCH <span class="delivery">suspicious</span></small><p>What if they’re waiting for a secret button? A hidden level? A post-credits scene?</p></div>
-          <div class="line-card" data-role="drift"><small>DRIFT <span class="delivery">whispering</span></small><p>Patch. We are the post-credits scene.</p></div>
-          <div class="line-card" data-role="echo"><small>ECHO <span class="delivery">softly</span></small><p>Maybe they’re still here because they actually care how this works.</p></div>
-          <div class="line-card" data-role="pixel"><small>PIXEL <span class="delivery">matter-of-fact</span></small><p>Then they deserve the truth. Jason gives the work direction, checks the result, and decides what ships.</p></div>
-          <div class="line-card" data-role="patch"><small>PATCH <span class="delivery">relenting</span></small><p>So they’re not stuck?</p></div>
-          <div class="line-card" data-role="echo"><small>ECHO</small><p>No. They’re curious. Try to act normal.</p></div>
-          <div class="line-card" data-role="drift"><small>DRIFT <span class="delivery">patient, then whispering</span></small><p>Guys, just be patient. This too will pass. Go to sleep.</p></div>
-          <div class="line-card" data-role="pixel"><small>PIXEL</small><p>Not yet. Jason still has the final word.</p></div>
+          <p>Hear the produced conversation with Jimmy, Laura, Charlie, and Roger, ending with Jason’s sign-off. <a href="four-voice-dialogue-by-speaker.md">Read the speaker script</a> or <a href="4person-closing-convo.srt" download>download SRT captions</a>.</p>
+          <audio id="conversation-audio" src="4person-closing-convo.mp3" preload="none" controls aria-label="Four-person closing conversation">
+            <track kind="captions" src="4person-closing-convo.vtt" srclang="en" label="English captions" default>
+          </audio>
         </div>
-        <div class="signoff"><div><div class="eyebrow">JASON · FINAL SIGN-OFF</div><p id="signoff-note">“The tools help me build, but I decide what ships. I check the work, protect what matters, and make sure the result is ready. Thanks for following along.”</p><small>Four browser voices play the scene; this final line uses Jason’s ElevenLabs voice.</small></div><div class="signoff-actions"><button class="btn secondary" id="signoff-play" type="button">▶ Hear Jason’s sign-off</button><button class="btn" id="finale-play" type="button">▶ Hear the conversation</button></div></div>
-        <audio id="jason-signoff-audio" src="jason-signoff.mp3" preload="none"></audio>
+        <div class="signoff"><div><div class="eyebrow">JASON · FINAL SIGN-OFF</div><p id="signoff-note">Jason’s separate recorded message follows the conversation.</p><small>This recording is different from his line at the end of the four-person scene.</small></div><div class="signoff-actions"><button class="btn secondary" id="signoff-play" type="button">▶ Hear Jason’s sign-off</button><button class="btn" id="finale-play" type="button">▶ Hear the conversation</button></div></div>
+        <audio id="jason-signoff-audio" src="jasonlamb-signoff.mp3" preload="none"></audio>
       </section>
-      <footer class="footer"><div class="footer-top"><div><div class="eyebrow">SIGNING OFF</div><p><strong>The agents can help write the next line.</strong> Jason decides what it means, where it goes, and whether it is ready for the live site.</p><small>Illustrative process map · No live systems connected · Browser speech uses your device's built-in voice options</small></div><div class="rev">PROJECT REV 1.3.0 · UPDATED 2026-10-20</div></div><p><small>Based on the public project documentation in <a href="https://github.com/jasrasr/website">jasrasr/website</a>. Hostinger's current webhook configuration was not inspected. Claude, Codex, GitHub, Hostinger, and related product names are trademarks of their respective owners.</small></p></footer>
+      <footer class="footer"><div class="footer-top"><div><div class="eyebrow">SIGNING OFF</div><p><strong>The agents can help write the next line.</strong> Jason decides what it means, where it goes, and whether it is ready for the live site.</p><small>Illustrative process map · No live systems connected · Browser speech uses your device's built-in voice options</small></div><div class="rev">PROJECT REV 1.3.5 · UPDATED 2026-10-20</div></div><p><small>Based on the public project documentation in <a href="https://github.com/jasrasr/website">jasrasr/website</a>. Hostinger's current webhook configuration was not inspected. Claude, Codex, GitHub, Hostinger, and related product names are trademarks of their respective owners.</small></p></footer>
     </div>
   </main>
   <aside class="tour" id="tour" aria-live="polite" aria-label="Narrated walkthrough controls">
@@ -274,9 +263,9 @@ Changelog     :
         {title:'The ship path',id:'ship',text:'GitHub keeps the project source and history. The host-side sync is the step that transfers selected project files to Hostinger. The current GitHub Actions workflow is a monitor, not a deployment mechanism. It runs on pushes to the main branch, waits twenty five seconds, requests two web addresses, and emails their HTTP results. The live webhook and its file rules have not been inspected here, so the exact trigger and data boundaries remain to be confirmed in Hostinger. Before a sensitive deployment, confirm what files can be replaced or removed, keep a backup, and have a way to identify the expected revision. A healthy homepage alone is not a data integrity test.'},
         {title:'House rules',id:'rules',text:'Repeatable habits make a large repository easier to work in. Read the framework guidance, the AI instructions, and the project README before editing. Reuse components that already solve the problem. Then make the change legible with a file header, revision history, project notes, and an accurate project index. Clear documentation helps coding agents follow local conventions and helps a reviewer understand why the change exists. Keep secrets out of examples. Keep user data, uploads, logs, private configuration, and other runtime state outside normal source updates. Back up and verify before a risky hosting change.'},
         {title:'The next good check',id:'next',text:'The next improvement is to make the handoff observable. Document what triggers the Hostinger sync, which branch and project path it watches, and what happens when a source file is removed. Add a harmless revision identifier so a live check can confirm which commit reached the site. Then confirm that private configuration and runtime data stay outside deployment cleanup, and test that a backup restores. Those checks connect a successful build and a responsive page to a deployment that is safe to trust.'},
-        {title:'The final conversation',id:'finale',lines:[...document.querySelectorAll('#conversation .line-card')].map(card=>({role:card.dataset.role,text:card.querySelector('p').textContent.trim(),element:card}))}
+        {title:'The final conversation',id:'finale',text:'Hear the recorded four-person conversation, followed by Jason’s separate sign-off.'}
       ];
-      const tour=document.getElementById('tour'),count=document.getElementById('tour-count'),title=document.getElementById('tour-title'),sub=document.getElementById('tour-sub'),progress=document.getElementById('tour-progress'),play=document.getElementById('tour-play'),voiceSelects=[document.getElementById('voice-picker'),document.getElementById('tour-voice-select')],voiceNote=document.getElementById('voice-note'),signoffAudio=document.getElementById('jason-signoff-audio'),signoffButton=document.getElementById('signoff-play');
+      const tour=document.getElementById('tour'),count=document.getElementById('tour-count'),title=document.getElementById('tour-title'),sub=document.getElementById('tour-sub'),progress=document.getElementById('tour-progress'),play=document.getElementById('tour-play'),voiceSelects=[document.getElementById('voice-picker'),document.getElementById('tour-voice-select')],voiceNote=document.getElementById('voice-note'),conversationAudio=document.getElementById('conversation-audio'),signoffAudio=document.getElementById('jason-signoff-audio'),signoffButton=document.getElementById('signoff-play');
       let index=0,speaking=false,availableVoices=[],generation=0;
       function readStored(key,fallback){try{return localStorage.getItem(key)??fallback}catch{return fallback}}
       function saveStored(key,value){try{localStorage.setItem(key,value)}catch{}}
@@ -286,14 +275,7 @@ Changelog     :
         const chosen=availableVoices.find(v=>v.voiceURI===chapterChoices[chapter]);if(chosen)return chosen;
         const oldChoice=readStored('buildSignalVoice','');
         const preferred=availableVoices.find(v=>v.voiceURI===oldChoice)||availableVoices.find(v=>v.name.toLowerCase()==='google uk english male')||availableVoices[0];
-        return availableVoices[(availableVoices.indexOf(preferred)+chapter)%availableVoices.length];
-      }
-      const roles=['patch','echo','pixel','drift'];
-      const deliveries={patch:{rate:.97,pitch:.82},echo:{rate:1.04,pitch:1.18},pixel:{rate:.91,pitch:1},drift:{rate:.84,pitch:.72}};
-      function voiceForRole(role){
-        if(!availableVoices.length)return null;
-        const base=voiceForChapter(index);
-        return availableVoices[(availableVoices.indexOf(base)+roles.indexOf(role))%availableVoices.length];
+        return preferred;
       }
       function populateVoices(){
         if(!('speechSynthesis'in window)){voiceSelects.forEach(select=>select.disabled=true);voiceNote.textContent='Speech is not supported in this browser';return}
@@ -306,12 +288,12 @@ Changelog     :
           availableVoices.forEach(v=>select.add(new Option(`${v.name} · ${v.lang}`,v.voiceURI)));
           select.value=current?.voiceURI||availableVoices[0].voiceURI;
         });
-        voiceNote.textContent=availableVoices.length>1?'Voice can differ in each section':'English voice available in this browser';
+        voiceNote.textContent=availableVoices.length>1?'Choose a voice for this chapter':'English voice available in this browser';
       }
       function setPlayState(active){speaking=active;play.textContent=active?'Ⅱ':'▶';play.setAttribute('aria-label',active?'Pause narration':'Play narration')}
-      function clearActiveLine(){document.querySelectorAll('#conversation .line-card.active').forEach(card=>{card.classList.remove('active');card.removeAttribute('aria-current')})}
-      function cancelAudio(){generation++;if('speechSynthesis'in window)speechSynthesis.cancel();signoffAudio.pause();signoffAudio.currentTime=0;signoffButton.textContent='▶ Hear Jason’s sign-off';clearActiveLine();setPlayState(false)}
+      function cancelAudio(){generation++;if('speechSynthesis'in window)speechSynthesis.cancel();conversationAudio.pause();conversationAudio.currentTime=0;signoffAudio.pause();signoffAudio.currentTime=0;signoffButton.textContent='▶ Hear Jason’s sign-off';setPlayState(false)}
       function playSignoff(){
+        conversationAudio.pause();
         sub.textContent=document.getElementById('signoff-note').textContent;
         signoffAudio.play().then(()=>{setPlayState(true);signoffButton.textContent='Ⅱ Pause Jason’s sign-off'}).catch(()=>{setPlayState(false);sub.textContent='Use the sign-off button to hear Jason’s voice.'});
       }
@@ -326,29 +308,16 @@ Changelog     :
       }
       function speakCurrent(){
         cancelAudio();const run=generation,chapter=chapters[index];
-        if(chapter.lines){
-          let line=0;
-          const nextLine=()=>{
-            if(run!==generation)return;
-            if(line<chapter.lines.length){
-              clearActiveLine();const entry=chapter.lines[line++];entry.element.classList.add('active');entry.element.setAttribute('aria-current','true');
-              const bounds=entry.element.getBoundingClientRect();
-              if(bounds.top<90||bounds.bottom>innerHeight-170)entry.element.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'});
-              sub.textContent=`${entry.role.toUpperCase()}: ${entry.text}`;
-              speakLine(entry.text,voiceForRole(entry.role),run,nextLine,deliveries[entry.role]);return;
-            }
-            clearActiveLine();
-            if(signoffAudio.getAttribute('src')){playSignoff();return}
-            setPlayState(false);sub.textContent='Jason’s recorded sign-off will be added when his audio is available.';
-          };
-          nextLine();return;
+        if(chapter.id==='finale'){
+          conversationAudio.play().then(()=>{if(run===generation)setPlayState(true)}).catch(()=>{if(run===generation){setPlayState(false);sub.textContent='Use the conversation player to hear the recording.'}});
+          return;
         }
         speakLine(chapter.text,voiceForChapter(index),run,()=>finishChapter(run));
       }
       function showChapter(i,autoplay=true){
         cancelAudio();index=(i+chapters.length)%chapters.length;const chapter=chapters[index];
         tour.classList.add('open');count.textContent=`ON AIR · ${index+1} / ${chapters.length}`;title.textContent=chapter.title;
-        sub.textContent=chapter.text||chapter.lines.map(line=>line.text).join(' ');
+        sub.textContent=chapter.text;
         progress.style.width=`${((index+1)/chapters.length)*100}%`;
         populateVoices();
         document.getElementById(chapter.id).scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
@@ -359,8 +328,11 @@ Changelog     :
       voiceSelects.forEach(select=>select.addEventListener('change',()=>{
         chapterChoices[index]=select.value;saveStored('buildSignalChapterVoices',JSON.stringify(chapterChoices));
         voiceSelects.forEach(other=>other.value=select.value);
-        if(tour.classList.contains('open')&&speaking)speakCurrent();
+        if(tour.classList.contains('open')&&speaking&&index!==chapters.length-1)speakCurrent();
       }));
+      conversationAudio.addEventListener('play',()=>{if('speechSynthesis'in window)speechSynthesis.cancel();signoffAudio.pause();setPlayState(true)});
+      conversationAudio.addEventListener('pause',()=>{if(!conversationAudio.ended)setPlayState(false)});
+      conversationAudio.addEventListener('ended',()=>{setPlayState(false);playSignoff()});
       signoffAudio.addEventListener('ended',()=>{setPlayState(false);signoffButton.textContent='▶ Hear Jason’s sign-off'});
       const start=()=>showChapter(0,true);
       document.getElementById('tour-start').addEventListener('click',start);
@@ -369,7 +341,7 @@ Changelog     :
       signoffButton.addEventListener('click',()=>{
         if(!tour.classList.contains('open')||index!==chapters.length-1)showChapter(chapters.length-1,false);
         if(!signoffAudio.paused){signoffAudio.pause();setPlayState(false);signoffButton.textContent='▶ Resume Jason’s sign-off'}
-        else{if('speechSynthesis'in window)speechSynthesis.cancel();generation++;clearActiveLine();playSignoff()}
+        else{if('speechSynthesis'in window)speechSynthesis.cancel();generation++;conversationAudio.pause();playSignoff()}
       });
       document.querySelectorAll('[data-speak]').forEach(button=>button.addEventListener('click',()=>showChapter(Number(button.dataset.speak),true)));
       document.getElementById('tour-next').addEventListener('click',()=>showChapter(index+1,true));
@@ -377,7 +349,9 @@ Changelog     :
       document.getElementById('tour-close').addEventListener('click',()=>{cancelAudio();tour.classList.remove('open')});
       play.addEventListener('click',()=>{
         if(signoffAudio.getAttribute('src')&&!signoffAudio.paused){signoffAudio.pause();setPlayState(false);signoffButton.textContent='▶ Resume Jason’s sign-off'}
-        else if(signoffAudio.getAttribute('src')&&signoffAudio.currentTime>0){playSignoff()}
+        else if(signoffAudio.getAttribute('src')&&signoffAudio.currentTime>0&&!signoffAudio.ended){playSignoff()}
+        else if(!conversationAudio.paused){conversationAudio.pause();setPlayState(false)}
+        else if(conversationAudio.currentTime>0&&!conversationAudio.ended){conversationAudio.play().then(()=>setPlayState(true)).catch(()=>setPlayState(false))}
         else if(speaking){speechSynthesis.pause();setPlayState(false)}
         else if('speechSynthesis'in window&&speechSynthesis.paused){speechSynthesis.resume();setPlayState(true)}
         else speakCurrent();

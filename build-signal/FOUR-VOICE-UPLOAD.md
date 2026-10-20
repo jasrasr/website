@@ -21,6 +21,6 @@ For the paragraph-by-paragraph selection workflow shown in ElevenLabs Studio, us
 4. Preview the first four turns and the Jason handoff to check separation, voice assignments, pronunciation, and bracketed performance cues. If Studio speaks a cue literally, remove that cue from the project text before generating the final audio. Add a short pause between turns, and a longer beat after turn 36.
 5. Generate and export the completed conversation. Listen to the entire export and check its actual duration. The five-minute target applies to the four-person conversation; Jason's sign-off adds time. A 5:00 target may require timing adjustments in Studio.
 
-The current webpage still plays its shorter browser-voice scene and existing `jason-signoff.mp3`. That MP3 contains a different line from the new corralling sign-off text. Replacing the browser-voice scene and sign-off recording with new exports would be a separate site change.
+The webpage now plays `4person-closing-convo.mp3`, whose final caption cues contain a Jason line, then plays the different `jasonlamb-signoff.mp3` recording. The player uses `4person-closing-convo.vtt` for captions and offers `4person-closing-convo.srt` for download. The linked script files are production text; compare them with the exported recording before calling them verbatim transcripts. The separate sign-off recording needs its own transcript.
 
 Keep any ElevenLabs API key out of the TXT, exported audio metadata, and webpage source.

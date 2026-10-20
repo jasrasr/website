@@ -1,0 +1,356 @@
+1
+00:00:00,000 --> 00:00:05,014
+[annoyed] Why are they still here? The
+story ended. Even the footer has finished
+
+2
+00:00:05,014 --> 00:00:07,680
+being a footer. And yet, our guest
+remains!
+
+3
+00:00:08,153 --> 00:00:12,480
+[brightly] I don't know! Maybe they like
+the glowing lines. Maybe they made a
+
+4
+00:00:12,480 --> 00:00:14,473
+sandwich shaped like a tiny laptop.
+
+5
+00:00:14,791 --> 00:00:18,866
+[confidently] They can stay as long as
+they like. I checked twice, and I cannot
+
+6
+00:00:18,866 --> 00:00:19,911
+find a closing time.
+
+7
+00:00:20,410 --> 00:00:24,868
+[casually] They haven't clicked away. Let
+them hang out. We aren't paying rent on
+
+8
+00:00:24,868 --> 00:00:25,370
+this tab.
+
+9
+00:00:25,768 --> 00:00:31,430
+They can hear you, Roger. You are talking
+into their browser. This is a talk show,
+
+10
+00:00:31,430 --> 00:00:32,968
+not a private meeting.
+
+11
+00:00:33,425 --> 00:00:37,699
+[laughing] Let's tell them a joke!
+Something weird and wonderful, so they
+
+12
+00:00:37,699 --> 00:00:38,945
+leave on a high note.
+
+13
+00:00:39,384 --> 00:00:44,331
+Hang on. We don't know how long they've
+been here. We only know they made it to
+
+14
+00:00:44,331 --> 00:00:46,424
+this part. Good effort, honestly.
+
+15
+00:00:46,832 --> 00:00:51,817
+[laid-back] Someone's here. That's cool.
+No need to stare at the text like it owes
+
+16
+00:00:51,817 --> 00:00:52,432
+you money.
+
+17
+00:00:52,869 --> 00:00:58,554
+Ladies and gentlemen, why did the website
+need therapy? Too many unresolved issues!
+
+18
+00:00:58,554 --> 00:01:02,229
+Thank you. I'll be here until somebody
+closes the tab.
+
+19
+00:01:02,694 --> 00:01:08,000
+[giggling] You stole my joke and somehow
+made it sound like a maintenance notice.
+
+20
+00:01:08,000 --> 00:01:10,454
+It deserved a drum roll and confetti.
+
+21
+00:01:10,978 --> 00:01:15,140
+[energetically] And it deserved a passing
+test. An unresolved issue isn't a
+
+22
+00:01:15,140 --> 00:01:18,178
+personality trait, mate. It's a ticket
+with a due date.
+
+23
+00:01:18,504 --> 00:01:22,981
+[casually] Easy, everyone. They might be
+waiting for another joke. If we give them
+
+24
+00:01:22,981 --> 00:01:24,584
+one, we'll be here all night.
+
+25
+00:01:25,012 --> 00:01:29,425
+What if they're waiting for a secret
+button? Every long page has one. Or is
+
+26
+00:01:29,425 --> 00:01:31,572
+that just what my producers tell me?
+
+27
+00:01:32,042 --> 00:01:37,769
+I looked! There's a tour button, a signal
+map, and a voice selector. The mystery is
+
+28
+00:01:37,769 --> 00:01:40,842
+regular navigation wearing dramatic
+lighting.
+
+29
+00:01:41,293 --> 00:01:46,666
+No secret exit, but there are seven
+chapters, and the last one is us. We're
+
+30
+00:01:46,666 --> 00:01:49,933
+the post-credits scene. That's a solid
+finish.
+
+31
+00:01:50,361 --> 00:01:54,536
+[casually] Don't tell them that. They'll
+wait for a post-post-credits scene, and I
+
+32
+00:01:54,536 --> 00:01:55,721
+left my script at home.
+
+33
+00:01:56,189 --> 00:02:01,242
+New theory: they're checking whether the
+four voices sound different. Hello! This
+
+34
+00:02:01,242 --> 00:02:04,589
+is your host, Jimmy, live from the bottom
+of the page.
+
+35
+00:02:04,995 --> 00:02:10,299
+And this is Laura! A little warmth, a
+little sparkle, and absolutely no promise
+
+36
+00:02:10,299 --> 00:02:13,155
+that Jimmy's joke improves with
+repetition.
+
+37
+00:02:13,723 --> 00:02:18,840
+Charlie here. The sound depends on the
+voices you choose. Pick a good one; give
+
+38
+00:02:18,840 --> 00:02:20,283
+the story some energy.
+
+39
+00:02:20,753 --> 00:02:25,641
+[relaxed] Roger here. I was hoping the
+microphone would forget me. So far, no
+
+40
+00:02:25,641 --> 00:02:27,313
+luck. I'm good either way.
+
+41
+00:02:27,783 --> 00:02:32,260
+Maybe they're inspecting the build
+process instead of auditioning us. In
+
+42
+00:02:32,260 --> 00:02:35,223
+that case, our next guest has one useful
+answer!
+
+43
+00:02:35,675 --> 00:02:41,319
+Jason starts with an idea, asks for help,
+and still checks what changed. The tools
+
+44
+00:02:41,319 --> 00:02:44,315
+don't make the final call. That's the
+trick.
+
+45
+00:02:44,743 --> 00:02:49,574
+GitHub keeps the source and history.
+Hostinger syncs the updated files. A
+
+46
+00:02:49,574 --> 00:02:54,539
+health check proves a page answered, not
+which revision answered. Keep that
+
+47
+00:02:54,539 --> 00:02:55,143
+straight.
+
+48
+00:02:55,691 --> 00:03:01,909
+[casually] See? Useful and still relaxed.
+Also, keep a backup. I like knowing where
+
+49
+00:03:01,909 --> 00:03:02,971
+the exits are.
+
+50
+00:03:03,322 --> 00:03:08,355
+This was supposed to be a talk show. It
+is becoming a very small conference about
+
+51
+00:03:08,355 --> 00:03:09,802
+responsible deployment.
+
+52
+00:03:10,117 --> 00:03:15,454
+[laughing] We can do both! Responsible
+facts first, ridiculous theory second.
+
+53
+00:03:15,454 --> 00:03:19,317
+What if the viewer is a cat walking
+across the keyboard?
+
+54
+00:03:19,733 --> 00:03:24,588
+A cat could scroll, but it couldn't
+compare source, webhook handoff, and
+
+55
+00:03:24,588 --> 00:03:27,733
+monitoring. Probably. I've met some sharp
+cats.
+
+56
+00:03:28,069 --> 00:03:33,449
+[casually] I knew a focused cat once. Sat
+on a backup drive for an hour. Nice cat;
+
+57
+00:03:33,449 --> 00:03:35,109
+terrible backup strategy.
+
+58
+00:03:35,674 --> 00:03:40,163
+What if the viewer is Jason? What if he's
+checking whether we followed the
+
+59
+00:03:40,163 --> 00:03:43,914
+instructions and kept the story honest? A
+surprise inspection!
+
+60
+00:03:44,454 --> 00:03:49,384
+Then he'll notice we can't see who's
+here. This is theater, not surveillance.
+
+61
+00:03:49,384 --> 00:03:51,654
+The page isn't watching the viewer.
+
+62
+00:03:52,085 --> 00:03:57,161
+And he'll notice the ending needs a human
+voice. We can riff around the edges, but
+
+63
+00:03:57,161 --> 00:03:59,605
+Jason gets the final word. Fair enough.
+
+64
+00:04:00,003 --> 00:04:04,690
+[relaxed] Good. I'm out of theories
+anyway. Maybe the viewer is still here,
+
+65
+00:04:04,690 --> 00:04:06,083
+waiting for that line.
+
+66
+00:04:06,511 --> 00:04:11,384
+So they're not stuck? They can leave,
+stay, or replay Laura's terrible joke and
+
+67
+00:04:11,384 --> 00:04:13,071
+decide it was a bug report?
+
+68
+00:04:13,489 --> 00:04:18,193
+[warmly] Exactly! Maybe they stayed
+because they're curious. That's a lovely
+
+69
+00:04:18,193 --> 00:04:21,329
+reason. Thanks for making it all the way
+down here.
+
+70
+00:04:21,747 --> 00:04:26,701
+Right, here's the finish: stop talking
+over the builder, leave one beat of
+
+71
+00:04:26,701 --> 00:04:29,347
+quiet, and let his recorded voice play.
+
+72
+00:04:29,770 --> 00:04:35,041
+[casually] Guys, just be patient. This
+too will pass. Go to sleep. Or stay. I'm
+
+73
+00:04:35,041 --> 00:04:36,730
+not in charge of the tab.
+
+74
+00:04:37,087 --> 00:04:41,439
+Alright, you four. That's enough
+commentary. The viewer is welcome to
+
+75
+00:04:41,439 --> 00:04:46,495
+stay, leave, or start the tour again. The
+tools help me build, but I decide what
+
+76
+00:04:46,495 --> 00:04:50,527
+ships. Thanks for being here—and yes, you
+can close the tab now.

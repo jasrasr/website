@@ -2,10 +2,11 @@
 File Name     : README.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Source and operating notes for the illustrated, narrated Build Signal page.
-Revision      : 1.3.4
+Revision      : 1.3.5
 Created Date  : 2026-10-20
 Modified Date : 2026-10-20
 Changelog     :
+  Rev 1.3.5 - Connected the produced conversation and sign-off recordings and preferred the Google UK English Male tour voice.
   Rev 1.3.4 - Simplified the Studio worksheet to single-letter speaker prefixes without line numbers.
   Rev 1.3.3 - Added the chronological, prefixed ElevenLabs voice-assignment worksheet.
   Rev 1.3.2 - Assigned the long dialogue to four named characters and drafted Jason's corralling sign-off.
@@ -21,11 +22,11 @@ A third-person, narrated walkthrough of Jason Lamb's AI-assisted web workflow: C
 
 ## Run locally
 
-Open `index.html` in a current browser, or serve this directory with a static web server. Browser speech uses the English voices installed in the visitor's browser or operating system. The voice selectors in the top bar and tour player change the current chapter's voice; each chapter remembers its own choice in that browser. The walkthrough scrolls to the first section and continues through the sections as narration finishes.
+Open `index.html` in a current browser, or serve this directory with a static web server. Browser speech uses the English voices installed in the visitor's browser or operating system. The tour prefers Google UK English Male when available and otherwise uses an available English voice. The voice selectors in the top bar and tour player change the current chapter's voice; each chapter remembers its own choice in that browser. The walkthrough scrolls to the first section and continues through the sections as narration finishes.
 
-The closing conversation is a four-character post-credits scene about the viewer who stayed to the end. Each character uses a stable available English browser voice and a distinct delivery style; if the device has fewer than four English voices, some voices are reused. Jason's sign-off is a local `jason-signoff.mp3` asset generated with his ElevenLabs voice. The page attempts to play it after the conversation and also offers a direct playback button. The voice service credential is not included in the site. Future audio revisions must be generated outside browser code; never put an ElevenLabs API key in the page.
+The closing conversation plays from `4person-closing-convo.mp3` and includes a Jason line at its end. Its English WebVTT captions are attached to the player; SRT captions are available to download. A different recording, `jasonlamb-signoff.mp3`, plays afterward and has its own direct playback button. The on-page text describes that recording without quoting it until its exact transcript is available. The voice service credential is not included in the site. Future audio revisions must be generated outside browser code; never put an ElevenLabs API key in the page.
 
-For a produced, approximately five-minute version of the four-character scene, use `four-voice-dialogue-ordered-for-studio.txt` as a chronological voice-assignment worksheet in ElevenCreative Studio. Its `J:`, `L:`, `C:`, and `R:` prefixes identify the first 36 turns; the final `J:` is Jason. Remove the initials before final generation so they are not spoken. The name-free `four-voice-dialogue-upload.txt` is the clean first-36-turn alternative. `four-voice-dialogue-by-speaker.md` groups the same lines by role; `FOUR-VOICE-UPLOAD.md` gives production steps. `jason-corralling-signoff.txt` is a new fifth-voice line. The exported audio is not yet wired into the webpage; the page continues to use its shorter browser-voice conversation and earlier sign-off recording.
+The existing production scripts are `four-voice-dialogue-upload.txt`, `four-voice-dialogue-by-speaker.md`, and `jason-corralling-signoff.txt`. Compare them with the final exports before treating them as verbatim transcripts. `four-voice-dialogue-ordered-for-studio.txt` is the voice-assignment worksheet, and `FOUR-VOICE-UPLOAD.md` gives production steps. To replace a recording, put the new MP3 in this directory under the same filename, verify it locally, then commit and push it through a pull request.
 
 ## Visual iteration with Codex CLI
 
@@ -41,7 +42,11 @@ This page describes repository documentation and workflow files. It does not con
 - `build-signal-workbench.webp` — illustrated AI coding workbench.
 - `build-signal-github.webp` — illustrated Git history and review.
 - `build-signal-hosting.webp` — illustrated hosting handoff and health check.
-- `jason-signoff.mp3` — Jason's generated, spoken closing line.
+- `4person-closing-convo.mp3` — produced four-person closing conversation.
+- `4person-closing-convo.vtt` — timed English captions attached to the conversation player.
+- `4person-closing-convo.srt` — downloadable SRT version of the same captions.
+- `jasonlamb-signoff.mp3` — standalone Jason sign-off recording.
+- `jason-signoff.mp3` — earlier sign-off recording retained as a source asset.
 - `four-voice-dialogue-upload.txt` — 36-turn, approximately five-minute script for ElevenLabs Studio import.
 - `four-voice-dialogue-ordered-for-studio.txt` — 37 initial-prefixed turns in chronological order for assigning five voices.
 - `four-voice-dialogue-by-speaker.md` — all 36 lines grouped under their intended named speaker.
