@@ -1,0 +1,35 @@
+name: Build Signal Playwright
+on:
+  push:
+    branches: [main]
+    paths: ['build-signal/**', '.github/workflows/build-signal-playwright.yml']
+  pull_request:
+    paths: ['build-signal/**', '.github/workflows/build-signal-playwright.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: build-signal
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: npm
+        cache-dependency-path: build-signal/package-lock.json
+    - name: Install dependencies
+      run: npm ci
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps chromium
+    - name: Run Playwright tests
+      run: npx playwright test
+    - uses: actions/upload-artifact@v4
+      if: ${{ failure() }}
+      with:
+        name: build-signal-playwright-report
+        path: build-signal/playwright-report/
+        retention-days: 7
