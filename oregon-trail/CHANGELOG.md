@@ -2,17 +2,29 @@
 File Name     : CHANGELOG.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Cumulative project changelog, verified history, revision policy, and remaining work.
-Revision      : 1.0.2
+Revision      : 1.0.3
 Created Date  : 2026-10-19
-Modified Date : 2026-10-19
+Modified Date : 2026-10-20
 Changelog     :
+  Rev 1.0.3 - Recorded project Rev 1.1.0 event interruptions and completed Rev 1.0.1 release.
   Rev 1.0.2 - Recorded Rev 1.0.1 asset-cache, startup, and phone-layout fixes.
   Rev 1.0.1 - Documented framework alignment and repository-wide development requirements.
   Rev 1.0.0 - Established independent file revision tracking; Cumulative project changelog, verified history, revision policy, and remaining work.
 -->
 # Oregon Trail changelog
 
-## Project Rev 1.0.1 — 2026-10-19 — Unreleased
+## Project Rev 1.1.0 — 2026-10-20 — Unreleased
+
+- Added persistent, focused amber alerts next to actions; blocked Continue until emergencies and event decisions are resolved.
+- Paused auto-play on events, landmarks, river choices, and endings; removed green first-choice highlighting on decisions.
+- Added required named-traveler care, hunting when food is empty, two-day wheel repairs, funeral/burial and final-party memorials.
+- Preserved alerts and burial records across saves/reloads; retained legacy saves and historical deaths.
+- Kept same-turn landmarks from replacing unresolved events; required final river crossings before winning.
+- Disabled automatic wild-game food rewards for new journeys; existing content snapshots retain their probabilities.
+- Labeled finished saved journeys Won/Lost and kept restarting an explicit player choice.
+- Added deterministic runtime tests for the decision and offline-restoration paths.
+
+## Project Rev 1.0.1 — 2026-10-19 — Merged in PR #115
 
 - Prevented new HTML from silently running older scripts/styles by using release-specific URLs and integrity hashes.
 - Preserved release queries in offline cache keys; never substitute another release's assets.
@@ -48,7 +60,7 @@ First explicitly numbered project revision. Earlier work was unversioned; the hi
 
 - Automated rules, runtime recovery, roster, scenery, probability, and metadata checks are included under `tests/`.
 - Real-device dialog/layout and airplane-mode reload remain to be verified.
-- Mandatory emergency decisions, funeral/burial actions, and full per-journey event journals are not implemented in this revision.
+- Mandatory emergency decisions and funeral/burial actions are implemented in Rev 1.1.0. Full per-journey event journals and buying/trading remain future work.
 
 ## Revision policy
 

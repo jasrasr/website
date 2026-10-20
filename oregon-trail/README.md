@@ -2,10 +2,11 @@
 File Name     : README.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Project usage, content editing, saves, illness weights, revisions, and validation.
-Revision      : 1.0.2
+Revision      : 1.0.3
 Created Date  : 2026-10-08
-Modified Date : 2026-10-19
+Modified Date : 2026-10-20
 Changelog     :
+  Rev 1.0.3 - Documented mandatory event decisions, saved alerts, food settings, and remaining verification.
   Rev 1.0.2 - Documented safe updates, cache compatibility, and project Rev 1.0.1.
   Rev 1.0.1 - Documented framework alignment and repository-wide development requirements.
   Rev 1.0.0 - Established independent file revision tracking; Project usage, content editing, saves, illness weights, revisions, and validation.
@@ -32,7 +33,7 @@ Existing saves migrate their surviving names and ages, using saved party health 
 
 ## Revisions and illness susceptibility
 
-Project Rev 1.0.1 (2026-10-19) fixes mixed cached assets and startup/layout recovery. Rev 1.0.0 was the first explicitly numbered revision (merged in PR #113). The main page displays the project revision/date from `version.js` and links to the cumulative `CHANGELOG.md`. File revisions are independent and begin at 1.0.0 when the preferred header is introduced.
+Project Rev 1.1.0 (2026-10-20) adds persistent event interruptions. Rev 1.0.1 (2026-10-19) fixes mixed cached assets and startup/layout recovery. Rev 1.0.0 was the first explicitly numbered revision (merged in PR #113). The main page displays the project revision/date from `version.js` and links to the cumulative `CHANGELOG.md`. File revisions are independent and begin at 1.0.0 when the preferred header is introduced.
 
 Illness frequency is still `events[].chancePercent` (9% per travel turn by default). When illness occurs, selection among surviving travelers uses the `illnessRisk` configuration. Defaults:
 
@@ -50,6 +51,22 @@ All source/document files carry the preferred comment header. JSON uses a leadin
 Use **Refresh game files** on the main page, or open `update.html` directly and select **Check and apply update**. This self-contained recovery page can load when an older offline worker is serving stale game files. It requests the current worker without HTTP-cache reuse and activates a waiting update only after the button is selected. Saved journey data is not cleared. Internet access is required to download an update.
 
 Scripts and CSS use release-specific URLs and integrity hashes; offline cache keys include the release. The local `.htaccess` requests revalidation instead of a seven-day static-file cache. A visible startup warning points to recovery if a script or stylesheet fails. Increment the project revision and worker cache when publishing changed application assets, then update URL versions and integrity hashes together.
+
+## Events that stop travel
+
+An amber alert appears immediately above the action buttons, receives focus, and scrolls into view. It stays until the decision is resolved. Continue is unavailable and auto-play stops. The first river option is no longer highlighted green; every crossing requires your choice. Auto-play never resolves an alert, crosses a river, or starts another game after an ending.
+
+- No food: hunt successfully before traveling again. Failed hunts leave the emergency open. There is no money/trade system yet.
+- Illness: care for the named traveler for one day, consuming up to 5 lb food and restoring 10 health. This stabilizes them as Recovering; it is not a complete cure.
+- Death: surviving travelers spend one day on funeral/burial. If nobody survives, record each memorial before viewing the loss. Deceased travelers remain in the roster.
+- Broken wheel: spend two days repairing before continuing, in addition to configured event effects.
+- Other events and action/crossing results: read and acknowledge the result. A landmark reached on that turn appears after the event is resolved.
+
+Pending notices, untreated illness, empty-food emergencies, and burial records survive reloads, including offline reloads. Older saves acquire emergency checks when resumed; previously recorded deaths are treated as historical rather than requiring retrospective funerals. Old rule snapshots retain their food probabilities; start a new journey for the disabled default food-found event. Saved journey buttons now label finished games Won or Lost.
+
+Completed: persistent alerts and required responses above. Needs real-device verification: phone focus/scroll behavior in portrait/landscape and airplane-mode reload. Full per-game event timelines and buying/trading remain future work. Existing saves contain the latest event, not a reconstructable full history.
+
+Concrete check: set one event to 100% (all others 0) in a test copy, start a new journey, and travel. Verify the amber alert is visible, Continue is absent, and auto-play stays off. Reload offline: the same event must remain without rerolling. Resolve it, then confirm the next landmark is still offered. For empty food, fail a hunt and verify Continue remains absent; a successful hunt clears the emergency.
 
 ## Saved journeys and recovery
 
@@ -81,7 +98,7 @@ Edit [game-content.json](game-content.json). It is a plain-text JSON file; no Ja
 
 `chancePercent` is an **absolute percentage per travel turn** (one week), not a relative weight. One event at most is selected. Event percentages must total 100 or less. The unused percentage is a quiet travel turn.
 
-Defaults: wagon trouble 12%, illness 9%, food found 10%, quiet travel 69%. Zero disables an event. 100 makes a single event certain.
+Defaults for new journeys: wagon trouble 12%, illness 9%, food found 0%, quiet travel 79%. Zero disables an event. 100 makes a single event certain.
 
 Add an object to `events`:
 
@@ -95,7 +112,7 @@ Add an object to `events`:
 }
 ```
 
-With the default events unchanged, adding this 5% event leaves 64% quiet turns.
+With the default events unchanged, adding this 5% event leaves 74% quiet turns.
 
 ### Stops and actions
 

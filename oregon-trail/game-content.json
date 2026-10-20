@@ -3,10 +3,11 @@
     "File Name": "game-content.json",
     "Author": "Jason Lamb (with help from ChatGPT)",
     "Description": "Editable stops, actions, scenes, random-event odds, and illness-risk settings.",
-    "Revision": "1.0.0",
+    "Revision": "1.0.1",
     "Created Date": "2026-10-08",
-    "Modified Date": "2026-10-19",
+    "Modified Date": "2026-10-20",
     "Changelog": [
+      "Rev 1.0.1 - Disabled automatic wild-game food rewards for new journeys.",
       "Rev 1.0.0 - Established independent file revision tracking; Editable stops, actions, scenes, random-event odds, and illness-risk settings."
     ]
   },
@@ -137,7 +138,7 @@
     },
     {
       "id": "wild-game",
-      "chancePercent": 10,
+      "chancePercent": 0,
       "title": "A kind afternoon for hunting.",
       "message": "You bring back enough game to fill the pot.",
       "effects": {

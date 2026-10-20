@@ -2,10 +2,11 @@
 File Name     : style.css
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Responsive visual styling for the game, setup form, and traveler roster.
-Revision      : 1.0.1
+Revision      : 1.0.2
 Created Date  : 2026-10-08
-Modified Date : 2026-10-19
+Modified Date : 2026-10-20
 Changelog     :
+  Rev 1.0.2 - Styled persistent decision alerts with high contrast and responsive text.
   Rev 1.0.1 - Constrained native party controls and styled startup and recovery links.
   Rev 1.0.0 - Established independent file revision tracking; Responsive visual styling for the game, setup form, and traveler roster.
 */
@@ -20,3 +21,11 @@ Changelog     :
 #party-dialog{width:min(100% - 28px,560px);max-height:80dvh;background:var(--panel);color:var(--ink);border:1px solid #69724e;padding:20px;overflow-y:auto}#party-dialog::backdrop{background:#000b}.roster-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}.roster-heading h2{font-size:21px;margin:0}#party-summary,#party-history-note{font-size:12px;color:#b7b6a8;line-height:1.6}#party-roster{list-style:none;margin:0;padding:0}.roster-traveler{border-top:1px solid var(--line);padding:14px 0}.roster-traveler strong{font-size:15px}.roster-traveler p{font-size:13px;line-height:1.5;color:#b7bd91;margin:6px 0 0;overflow-wrap:anywhere}
 
 .party-stat{min-width:0;overflow:hidden}.party-button{appearance:none;-webkit-appearance:none;box-sizing:border-box;min-width:0;max-width:100%;margin:0;border-radius:0;white-space:normal;overflow:hidden}.party-button .stat-detail{display:block;max-width:100%}.startup-error{padding:12px;border:1px solid #d28c59;background:#38271d;color:#fff;line-height:1.6}.startup-error a,.below-note a{color:#c9dc9c}.roster-help{font-size:12px;line-height:1.5;color:#b7b6a8}
+
+/* A persistent, high-contrast decision notice adjacent to the action controls. */
+.event-alert{border:3px solid #e0a05f;background:#332519;color:#fff0d8;padding:clamp(16px,4vw,28px);margin:24px 0 0;scroll-margin:20px;overflow-wrap:anywhere;}
+.event-alert[hidden]{display:none;}
+.event-alert .action-label{color:#ffcb86;margin:0 0 12px;font-weight:700;}
+.event-alert h2{font-size:clamp(22px,5vw,30px);line-height:1.2;margin:0 0 12px;}
+.event-alert p:last-child{margin:0;line-height:1.6;}
+.event-alert:focus{outline:2px solid #ffe0ad;outline-offset:4px;}

@@ -2,10 +2,11 @@
 File Name     : tests/runtime.test.cjs
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Game recovery, roster, legacy migration, and offline-resource tests.
-Revision      : 1.0.0
+Revision      : 1.0.1
 Created Date  : 2026-10-08
-Modified Date : 2026-10-19
+Modified Date : 2026-10-20
 Changelog     :
+  Rev 1.0.1 - Covered persistent alerts, offline emergency reloads, care, repairs, burial, neutral rivers, and manual restarts.
   Rev 1.0.0 - Established independent file revision tracking; Game recovery, roster, legacy migration, and offline-resource tests.
 */
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
@@ -15,6 +16,7 @@ const party=require('../party.js');
 const scenes=require('../scenes.js');
 const version=require('../version.js');
 const defaults=JSON.parse(fs.readFileSync(path.join(root,'game-content.json')));
+const quiet=structuredClone(defaults);quiet.events=[];
 
 test('Roster opens without advancing, retains Granny at 80 and persists named illness and river death',async()=>{
   const config=structuredClone(defaults);
@@ -37,10 +39,11 @@ test('Roster opens without advancing, retains Granny at 80 and persists named il
   assert.equal(storage.getItem(saves.KEY),before);
   game.elements.get('party-close').onclick();
   assert.equal(game.elements.get('party-dialog').open,false);
+  game.click('Care for');game.click('Review event');
   game.click('Ford the river');
   saved=Object.values(saves.read(storage).games)[0];const dead=saved.state.travelers.find(t=>t.status==='deceased');
   assert.ok(dead);assert.equal(saved.state.party,4);
-  const reload=environment(storage);await reload.ready;reload.elements.get('party-button').onclick();
+  saves.valid(saved,rules);const reload=environment(storage);await reload.ready;reload.elements.get('party-button').onclick();
   const texts=reload.elements.get('party-roster').children.map(row=>row.children.map(c=>c.textContent).join(' '));
   assert.ok(texts.some(t=>t.includes(dead.name)&&t.includes('Deceased')&&t.includes('Kansas River')));
   assert.match(reload.elements.get('party-summary').textContent,/4 remaining · 1 deceased/);
@@ -59,13 +62,15 @@ test('Legacy saves retain names and ages and explain missing earlier roster hist
   const migrated=saves.read(storage).games[id];saves.valid(migrated,rules);
   assert.equal(migrated.state.travelers.length,5);assert.deepEqual(migrated.state.names,originalNames);
 });
-function environment(storage,config=defaults,failFetch=false,serviceWorker){
+function environment(storage,config=quiet,failFetch=false,serviceWorker){
   const elements=new Map();
   class Element{
     constructor(tag='div'){this.tag=tag;this.children=[];this.style={};this.value='';this.textContent='';}
     append(...items){this.children.push(...items);}
     replaceChildren(){this.children=[];}
     setAttribute(){}
+    focus(){this.focused=true;}
+    scrollIntoView(){this.scrolled=true;}
     showModal(){this.open=true;}
     close(){this.open=false;}
     querySelector(selector){return this.querySelectorAll(selector)[0];}
@@ -91,12 +96,12 @@ test('Game runtime autosaves actions and restores exact pending stops with conte
   assert.ok(miles>0);const reload=environment(storage);await reload.ready;assert.equal(reload.elements.get('miles').textContent,miles);
   reload.click('Change pace');const paceReload=environment(storage);await paceReload.ready;paceReload.click('Grueling');assert.equal(saves.read(storage).games[id].state.pace,'Grueling');
   data=saves.read(storage);const g=data.games[id];g.state.miles=110;g.state.landmark=1;g.state.scene='river';g.view='stop';g.pendingStop='kansas-river';storage.setItem(saves.KEY,JSON.stringify(data));
-  const modified=structuredClone(defaults);modified.crossings[0].successPercent=0;
+  const modified=structuredClone(quiet);modified.crossings[0].successPercent=0;
   const river=environment(storage,modified);await river.ready;
   assert.ok(river.elements.get('actions').children[1].children.some(b=>b.textContent==='Ford the river · 40% safe'));
   river.click('Take the ferry');assert.equal(saves.read(storage).games[id].pendingStop,null);
-  const offline=environment(storage,defaults,true);await offline.ready;assert.match(offline.elements.get('save-status').textContent,/Restored/);
-  offline.click('Hunt');assert.match(offline.elements.get('save-status').textContent,/Saved/);
+  saves.valid(saves.read(storage).games[id],rules);const offline=environment(storage,defaults,true);await offline.ready;assert.match(offline.elements.get('save-status').textContent,/Restored/);
+  offline.click('Review event');offline.click('Hunt');assert.match(offline.elements.get('save-status').textContent,/Saved/);
   // Old rules remain attached; a new journey uses the latest loaded JSON.
   const current=environment(storage,modified);await current.ready;current.elements.get('reset-button').onclick();current.pack();
   data=saves.read(storage);assert.equal(Object.keys(data.games).length,2);assert.equal(data.games[id].config.crossings[0].successPercent,40);
@@ -109,7 +114,8 @@ test('Final river stop offers its choices before completing the journey',async()
   assert.ok(game.elements.get('actions').children[1].children.some(b=>b.textContent.startsWith('Ford the river')));
   assert.ok(game.elements.get('actions').children[1].children.some(b=>b.textContent==='Final task'));
   assert.match(game.elements.get('offline-status').textContent,/Offline reload unavailable/);
-  game.click('Final task');assert.equal(Object.values(saves.read(storage).games)[0].state.gameOver,true);
+  game.click('Final task');assert.equal(Object.values(saves.read(storage).games)[0].state.gameOver,false);game.click('Review event');
+  assert.ok(game.elements.get('actions').children[1].children.some(b=>b.textContent.startsWith('Ford the river')));
 });
 test('Game visits crossed stops in order, resolves custom failure, and retains completed journeys',async()=>{
   const config=structuredClone(defaults);
@@ -118,6 +124,7 @@ test('Game visits crossed stops in order, resolves custom failure, and retains c
   game.click('Leave');game.click('Continue');assert.equal(Object.values(saves.read(storage).games)[0].pendingStop,'b');
   game.click('Leave');game.click('Continue');assert.equal(Object.values(saves.read(storage).games)[0].pendingStop,'end');game.click('Leave');assert.equal(Object.values(saves.read(storage).games)[0].state.gameOver,true);
   game.click('Start a new');game.pack();game.click('Continue');game.click('Risky task');
+  for(let i=0;i<5;i++)game.click('Record a memorial');game.click('Review event');
   const records=Object.values(saves.read(storage).games);assert.equal(records.length,2);assert.equal(records.filter(x=>x.state.gameOver).length,2);assert.ok(records.some(x=>x.state.health===0));
 });
 test('Service worker caches scoped game resources and returns them when offline',async()=>{
@@ -132,4 +139,54 @@ test('Service worker caches scoped game resources and returns them when offline'
     let result;listeners.fetch({request:{method:'GET',url:scope+file},respondWith:p=>result=p});assert.ok(result);const response=await result;assert.equal(response.status,200);
   }
   let touched=false;listeners.fetch({request:{method:'GET',url:'https://example.test/other/'},respondWith:()=>touched=true});assert.equal(touched,false);
+});
+
+function actionButtons(game){return game.elements.get('actions').children[1].children;}
+function record(storage){return Object.values(saves.read(storage).games)[0];}
+test('An event blocks Continue, pauses autoplay, focuses an alert, and survives offline reload before a landmark',async()=>{
+  const config=structuredClone(quiet);config.stops[0].mile=1;
+  config.events=[{id:'broken-wheel',chancePercent:100,title:'A wheel breaks.',message:'The wagon needs attention.',effects:{miles:-1}}];
+  const storage=memory(),game=environment(storage,config);await game.ready;game.pack();game.click('Continue');
+  const original=record(storage);assert.equal(original.pendingStop,null);assert.equal(original.state.notice.title,'A wheel breaks.');
+  assert.equal(game.elements.get('event-alert').hidden,false);assert.equal(game.elements.get('event-alert').focused,true);
+  assert.equal(game.elements.get('event-alert').scrolled,true);
+  assert.ok(actionButtons(game).every(b=>!b.textContent.startsWith('Continue')&&!b.className.includes('primary')));
+  game.elements.get('auto-button').onclick();assert.match(game.elements.get('auto-button').textContent,/▶ Auto-play/);
+  const reload=environment(storage,quiet,true);await reload.ready;assert.equal(reload.elements.get('event-alert-title').textContent,'A wheel breaks.');
+  assert.equal(record(storage).state.miles,original.state.miles);reload.click('Repair the wagon');
+  assert.equal(record(storage).state.day,original.state.day+2);
+  assert.equal(record(storage).pendingStop,'kansas-river');assert.match(reload.elements.get('event-alert-title').textContent,/Kansas River/);
+  assert.ok(actionButtons(reload).every(b=>!b.className.includes('primary')));
+});
+test('No food requires a successful hunt, including restored and repeated failed hunts',async()=>{
+  const storage=memory(),game=environment(storage);await game.ready;game.pack();
+  const data=saves.read(storage),id=Object.keys(data.games)[0];data.games[id].state.food=1;data.games[id].config.hunting.failurePercent=100;storage.setItem(saves.KEY,JSON.stringify(data));
+  const hungry=environment(storage);await hungry.ready;hungry.click('Continue');const miles=record(storage).state.miles;
+  assert.match(hungry.elements.get('event-alert-title').textContent,/no food/);assert.equal(actionButtons(hungry).length,1);
+  hungry.click('Hunt');assert.equal(record(storage).state.food,0);assert.equal(record(storage).state.miles,miles);
+  const reload=environment(storage,quiet,true);await reload.ready;assert.match(reload.elements.get('event-alert-title').textContent,/no food/);
+  const fresh=saves.read(storage);fresh.games[id].config.hunting.failurePercent=0;storage.setItem(saves.KEY,JSON.stringify(fresh));
+  const success=environment(storage);await success.ready;success.click('Hunt');assert.ok(record(storage).state.food>0);
+  assert.ok(actionButtons(success).some(b=>b.textContent.startsWith('Continue')));assert.equal(success.elements.get('event-alert').hidden,true);
+});
+test('Care and burial cost time and persist; the last death ends with a loss instead of autoplay restarting',async()=>{
+  const storage=memory(),game=environment(storage);await game.ready;game.pack();
+  const data=saves.read(storage),id=Object.keys(data.games)[0],s=data.games[id].state;
+  party.illness(s,-40,()=>0);storage.setItem(saves.KEY,JSON.stringify(data));
+  const care=environment(storage);await care.ready;assert.match(care.elements.get('event-alert-title').textContent,/needs care/);
+  care.click('Care for');let saved=record(storage);assert.equal(saved.state.travelers[0].condition,'Recovering');assert.equal(saved.state.travelers[0].health,70);assert.equal(saved.state.day,2);assert.equal(saved.state.food,195);
+  const next=saves.read(storage);party.loseTraveler(next.games[id].state,'Test river',()=>0);storage.setItem(saves.KEY,JSON.stringify(next));
+  const funeral=environment(storage);await funeral.ready;assert.match(funeral.elements.get('event-alert-title').textContent,/has died/);funeral.click('Hold a funeral');
+  saved=record(storage);assert.equal(saved.state.travelers[0].buried,true);assert.equal(saved.state.party,4);assert.equal(saved.state.day,3);
+  const loss=saves.read(storage);party.adjustAll(loss.games[id].state,-100,'Starvation');storage.setItem(saves.KEY,JSON.stringify(loss));
+  const end=environment(storage);await end.ready;for(let i=0;i<4;i++)end.click('Record a memorial');
+  assert.equal(record(storage).state.gameOver,true);end.elements.get('auto-button').onclick();assert.equal(storage.getItem('oregonTrailGamesPlayed'),'1');
+  assert.ok(end.elements.get('saved-games').children[0].textContent.startsWith('Lost · View'));
+});
+
+test('Resolved event notices do not reappear after reloading the same saved story',async()=>{
+  const config=structuredClone(quiet);config.events=[{id:'test',chancePercent:100,title:'A trail event.',message:'Pause here.'}];
+  const storage=memory(),game=environment(storage,config);await game.ready;game.pack();game.click('Continue');game.click('Review event');
+  assert.equal(record(storage).state.notice,null);const reload=environment(storage);await reload.ready;
+  assert.equal(reload.elements.get('event-alert').hidden,true);reload.click('Change pace');assert.equal(record(storage).state.notice,null);
 });
