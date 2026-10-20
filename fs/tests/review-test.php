@@ -13,7 +13,7 @@ $client=new ReviewService($config,function($path) use (&$calls,$t){
     if (str_contains($path,'/conversations?')) {parse_str(parse_url($path,PHP_URL_QUERY),$q);$page=(int)$q['page'];return ['conversations'=>$page<=2?[['id'=>$page,'private'=>$page===1,'body_text'=>$page===1?'Fixed, test requested.':'Still broken.','created_at'=>'2026-10-0'.$page.'T12:00:00Z']]:[]];}
     return ['ticket'=>$t];
 });
-$q=$client->queue();check(count($q)===1,'Resolved ticket must be excluded.');check(count($calls)===2,'Must paginate to total even with a short page.');
+$q=$client->queue();check(count($q)===1,'Resolved ticket must be excluded.');check($q[0]['url']==='https://example.freshservice.com/a/tickets/1','Queue must expose a safe canonical ticket URL for browser review.');check(count($calls)===2,'Must paginate to total even with a short page.');
 $d=$client->detail(1);check(count($d['conversations'])===2,'Must read through an empty final conversation page.');check($d['conversations'][0]['private']===true,'Private-note marker lost.');check($d['conversations'][1]['body']==='Still broken.','Latest contradictory response omitted.');
 check(!$client->inScope(array_replace($t,['responder_id'=>11])),'Other agents must be rejected.');
 check(!$client->inScope(array_replace($t,['deleted'=>true])),'Deleted tickets must be rejected.');
