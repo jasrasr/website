@@ -1,3 +1,11 @@
+# File Name     : .github/workflows/deploy-notify.yml
+# Author        : Jason Lamb (with help from ChatGPT)
+# Description   : Wait for Hostinger sync and verify live site availability and Oregon Trail revision.
+# Revision      : 1.0.0
+# Created Date  : 2026-10-20
+# Modified Date : 2026-10-20
+# Changelog     :
+#   Rev 1.0.0 - Verify the deployed Oregon Trail revision instead of treating any HTTP 200 as a successful deploy.
 name: Deploy Notification
 
 on:
@@ -8,8 +16,11 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out the deployed source revision
+        uses: actions/checkout@v4
+
       - name: Wait for Hostinger webhooks to process
-        run: sleep 25
+        run: sleep 60
 
       - name: Check jasr.me deployed
         id: check_jasr
@@ -33,13 +44,29 @@ jobs:
             echo "result=FAILED (HTTP $STATUS)" >> $GITHUB_OUTPUT
           fi
 
+      - name: Check Oregon Trail deployed revision
+        id: check_oregon_trail
+        run: |
+          EXPECTED=$(node -p "require('./oregon-trail/version.js').revision")
+          URL="https://jasr.me/github/oregon-trail/version.js?deploy=$GITHUB_SHA"
+          CONTENT=$(curl --silent --show-error --fail --retry 3 --retry-delay 10 --max-time 15 "$URL" 2>/dev/null || true)
+          ACTUAL=$(printf '%s\n' "$CONTENT" | sed -n "s/.*revision:'\\([^']*\\)'.*/\\1/p" | head -n 1)
+          echo "expected=$EXPECTED" >> "$GITHUB_OUTPUT"
+          echo "actual=${ACTUAL:-unavailable}" >> "$GITHUB_OUTPUT"
+          if [ "$ACTUAL" = "$EXPECTED" ]; then
+            echo "result=SUCCESS" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=FAILED" >> "$GITHUB_OUTPUT"
+            echo "::error::Oregon Trail is serving revision '${ACTUAL:-unavailable}', expected '$EXPECTED'. Check the Hostinger sync and deployed cache."
+          fi
+
       - name: Compute overall result
         id: overall
         run: |
-          if [ "${{ steps.check_jasr.outputs.status }}" = "200" ] && [ "${{ steps.check_jj.outputs.status }}" = "200" ]; then
-            echo "result=SUCCESS" >> $GITHUB_OUTPUT
+          if [ "${{ steps.check_jasr.outputs.status }}" = "200" ] && [ "${{ steps.check_jj.outputs.status }}" = "200" ] && [ "${{ steps.check_oregon_trail.outputs.result }}" = "SUCCESS" ]; then
+            echo "result=SUCCESS" >> "$GITHUB_OUTPUT"
           else
-            echo "result=FAILED" >> $GITHUB_OUTPUT
+            echo "result=FAILED" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Send email notification
@@ -52,7 +79,7 @@ jobs:
           secure: false
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          subject: "Deploy ${{ steps.overall.outputs.result }} — jasr.me ${{ steps.check_jasr.outputs.status }}, justjason.fyi ${{ steps.check_jj.outputs.status }} — ${{ github.event.head_commit.message }}"
+          subject: "Deploy ${{ steps.overall.outputs.result }} — jasr.me ${{ steps.check_jasr.outputs.status }}, justjason.fyi ${{ steps.check_jj.outputs.status }}, Oregon Trail ${{ steps.check_oregon_trail.outputs.actual }} (expected ${{ steps.check_oregon_trail.outputs.expected }}) — ${{ github.event.head_commit.message }}"
           to: jason.lamb@cooperservices.com
           from: ${{ secrets.MAIL_USERNAME }}
           body: |
@@ -60,6 +87,9 @@ jobs:
 
             jasr.me           : ${{ steps.check_jasr.outputs.result }}  (HTTP ${{ steps.check_jasr.outputs.status }})
             justjason.fyi     : ${{ steps.check_jj.outputs.result }}  (HTTP ${{ steps.check_jj.outputs.status }})
+            Oregon Trail      : ${{ steps.check_oregon_trail.outputs.result }}
+              Expected revision: ${{ steps.check_oregon_trail.outputs.expected }}
+              Deployed revision: ${{ steps.check_oregon_trail.outputs.actual }}
 
             Commit : ${{ github.event.head_commit.message }}
             Branch : ${{ github.ref_name }}
@@ -69,7 +99,12 @@ jobs:
             Sites:
               https://jasr.me/time-clock/
               https://justjason.fyi/
+              https://jasr.me/github/oregon-trail/
 
       - name: Warn if email notification failed
         if: ${{ steps.send_mail.outcome == 'failure' }}
         run: echo "::warning::Email notification failed (SMTP auth issue). Deployment checks completed."
+
+      - name: Fail when a deployment check did not pass
+        if: ${{ steps.overall.outputs.result != 'SUCCESS' }}
+        run: exit 1
