@@ -6,12 +6,19 @@ Revision      : 1.0.3
 Created Date  : 2026-10-19
 Modified Date : 2026-10-20
 Changelog     :
-  Rev 1.0.3 - Recorded project Rev 1.1.0 event interruptions and completed Rev 1.0.1 release.
+  Rev 1.0.3 - Recorded Project Rev 1.2.0 resource meter colors.
   Rev 1.0.2 - Recorded Rev 1.0.1 asset-cache, startup, and phone-layout fixes.
   Rev 1.0.1 - Documented framework alignment and repository-wide development requirements.
   Rev 1.0.0 - Established independent file revision tracking; Cumulative project changelog, verified history, revision policy, and remaining work.
 -->
 # Oregon Trail changelog
+
+## Project Rev 1.2.0 — 2026-10-20 — Unreleased
+
+- Added green, yellow, orange, and red health/food meters and matching value colors as supplies or health decline.
+- Kept health thresholds aligned with Good/Fair/Poor/Critical labels; food thresholds scale per remaining traveler.
+- Updated main-page asset hashes, recovery release, and offline cache together.
+- Added deterministic runtime checks for each meter warning level.
 
 ## Project Rev 1.1.0 — 2026-10-20 — Unreleased
 

@@ -6,7 +6,7 @@ Revision      : 1.0.2
 Created Date  : 2026-10-08
 Modified Date : 2026-10-20
 Changelog     :
-  Rev 1.0.2 - Aligned browser expectations with current project revision.
+  Rev 1.0.2 - Updated the browser check to expect Project Rev 1.2.0.
   Rev 1.0.1 - Added browser revision and portrait/landscape party-card containment checks.
   Rev 1.0.0 - Established independent file revision tracking; Content, probability, storage, date, and optional real-browser recovery tests.
 */
@@ -70,7 +70,7 @@ test('Browser restores pending choices, keeps multiple games and works offline',
   try{
     await page.goto(url);
     await page.waitForFunction(()=>document.getElementById('begin-journey'));
-    assert.match(await page.locator('#project-version').textContent(),/Project Rev 1\.1\.0/);
+    assert.match(await page.locator('#project-version').textContent(),/Project Rev 1\.2\.0/);
     for(const viewport of [{width:390,height:844},{width:844,height:390}]){
       await page.setViewportSize(viewport);
       const fits=await page.locator('#party-button').evaluate(button=>{const b=button.getBoundingClientRect(),card=button.closest('.stat').getBoundingClientRect();return b.left>=card.left-1&&b.right<=card.right+1&&b.width<=card.width+1;});

@@ -6,7 +6,7 @@ Revision      : 1.0.2
 Created Date  : 2026-10-08
 Modified Date : 2026-10-20
 Changelog     :
-  Rev 1.0.2 - Added a focused persistent event alert next to actions; published project Rev 1.1.0.
+  Rev 1.0.2 - Added accessible progress meters and published project Rev 1.2.0.
   Rev 1.0.1 - Added versioned assets, visible startup errors, and a recovery link.
   Rev 1.0.0 - Established independent file revision tracking; Main game page, traveler dialog, project revision, and changelog link.
 -->
@@ -17,7 +17,7 @@ Changelog     :
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#11140d">
   <title>The Oregon Trail — Westward, 1848</title>
-  <link rel="stylesheet" href="style.css?v=1.1.0" integrity="sha256-potfHRRsCKyAPZ+oFLN1OwzL/Ipq4a4SQoRrkngCx0o=" onerror="window.__trailAssetFailed=true;">
+  <link rel="stylesheet" href="style.css?v=1.2.0" integrity="sha256-70DPPnbcuU8lx1Avz2WWVioemMWbwbwwpSP1cjmzfg0=" onerror="window.__trailAssetFailed=true;">
 </head>
 <body>
   <main class="game-shell">
@@ -34,9 +34,9 @@ Changelog     :
         <div class="story" aria-live="polite"><div class="story-date" id="date">APRIL 1, 1848</div><h1 id="headline">A new life lies out west.</h1><p id="message">You and your party are ready to leave Independence. The trail is long, the country is wide, and the choices are yours.</p></div>
 
         <div class="status-grid" aria-label="Journey status">
-          <div class="stat"><span class="stat-icon">⌁</span><span class="stat-name">HEALTH</span><strong id="health">Good</strong><div class="meter"><i id="health-meter"></i></div></div>
+          <div class="stat"><span class="stat-icon">⌁</span><span class="stat-name">HEALTH</span><strong id="health">Good</strong><div class="meter"><i id="health-meter" class="meter-fill level-green" role="progressbar" aria-label="Party health" aria-valuemin="0" aria-valuemax="100"></i></div></div>
           <div class="stat party-stat"><button id="party-button" class="party-button" type="button" aria-haspopup="dialog" aria-controls="party-dialog" aria-label="View travelers and their health" disabled><span class="stat-icon">♙</span><span class="stat-name">PARTY</span><strong><span id="party">5</span> <small>travelers</small></strong><div class="stat-detail" id="party-names">Your family</div><span class="party-hint">View travelers →</span></button></div>
-          <div class="stat"><span class="stat-icon">◉</span><span class="stat-name">FOOD</span><strong><span id="food">200</span> <small>lb</small></strong><div class="meter"><i id="food-meter"></i></div></div>
+          <div class="stat"><span class="stat-icon">◉</span><span class="stat-name">FOOD</span><strong><span id="food">200</span> <small>lb</small></strong><div class="meter"><i id="food-meter" class="meter-fill level-green" role="progressbar" aria-label="Food supply" aria-valuemin="0" aria-valuemax="200"></i></div></div>
           <div class="stat"><span class="stat-icon">↗</span><span class="stat-name">NEXT LANDMARK</span><strong id="landmark">Kansas River</strong><div class="stat-detail"><span id="to-landmark">102</span> miles ahead</div></div>
         </div>
 
@@ -47,7 +47,7 @@ Changelog     :
       <footer class="game-footer"><span>✳ &nbsp;GO WEST, YOUNG TRAVELER</span><span class="games-played">GAMES PLAYED <b id="games-played">0</b></span><button id="sound-toggle" class="sound-button" type="button" aria-label="Toggle sound">♪ <span>Sound off</span></button><button id="auto-button" class="sound-button" type="button">▶ Auto-play</button><button id="reset-button" class="reset-button" type="button">Start a new journey ↗</button></footer>
     </section>
     <details class="saved-journeys"><summary>Saved journeys on this device</summary><div id="saved-games"></div></details>
-    <p class="below-note"><span id="project-version">Project Rev 1.1.0 · Updated 2026-10-20</span> · <a href="CHANGELOG.md?v=1.1.0">Changelog</a> · <a href="update.html">Refresh game files</a></p>
+    <p class="below-note"><span id="project-version">Project Rev 1.2.0 · Updated 2026-10-20</span> · <a href="CHANGELOG.md?v=1.2.0">Changelog</a> · <a href="update.html">Refresh game files</a></p>
     <p class="below-note">A little pixel adventure inspired by the classic 1848 journey. <span>Best played with a curious spirit.</span></p>
   </main>
   <dialog id="party-dialog" aria-labelledby="party-heading"><div class="roster-heading"><h2 id="party-heading">Your travelers</h2><button id="party-close" class="game-button" type="button">Close</button></div><p id="party-summary"></p><p class="roster-help">Susceptibility is relative: younger children and older adults are more likely to be affected when illness strikes.</p><ul id="party-roster"></ul><p id="party-history-note"></p></dialog>
@@ -59,11 +59,11 @@ Changelog     :
     window.addEventListener('load',function(){if(window.__trailAssetFailed||!window.__trailBooted)failed();});
   })();
   </script>
-  <script src="version.js?v=1.1.0" integrity="sha256-1FaF450U4k8cidJkaM8jdwJL6RuUbHI/EHEbMoE6C1w="></script>
-  <script src="scenes.js?v=1.1.0" integrity="sha256-3IeB+mJB29XeDSCAIilRNdyqbVkDJFtTi/GoULt42/w="></script>
-  <script src="party.js?v=1.1.0" integrity="sha256-6yuoG3XNhm1nofmK4g3SIu3z6i9fFWxE5PhPwgrrtWY="></script>
-  <script src="rules.js?v=1.1.0" integrity="sha256-o5jC8kQjUEYIx32lnz2RUK8yK1UXwRMbRH54ASqZpvo="></script>
-  <script src="saves.js?v=1.1.0" integrity="sha256-E1oXI/VqctH8Qh0sg0L2JkxQOClAYV6L5dQko/FcIa8="></script>
-  <script src="game.js?v=1.1.0" integrity="sha256-HFP4E4B7i+kw0IkqMGatNGUfgG7Em6kQ//mz+Jjrt78="></script>
+  <script src="version.js?v=1.2.0" integrity="sha256-7IxupcY8uJHfkuiMcllSlZorWoBhWJ9xuHBibScmL/0="></script>
+  <script src="scenes.js?v=1.2.0" integrity="sha256-3IeB+mJB29XeDSCAIilRNdyqbVkDJFtTi/GoULt42/w="></script>
+  <script src="party.js?v=1.2.0" integrity="sha256-6yuoG3XNhm1nofmK4g3SIu3z6i9fFWxE5PhPwgrrtWY="></script>
+  <script src="rules.js?v=1.2.0" integrity="sha256-o5jC8kQjUEYIx32lnz2RUK8yK1UXwRMbRH54ASqZpvo="></script>
+  <script src="saves.js?v=1.2.0" integrity="sha256-E1oXI/VqctH8Qh0sg0L2JkxQOClAYV6L5dQko/FcIa8="></script>
+  <script src="game.js?v=1.2.0" integrity="sha256-Jd0TW31qIsndjvrytd5pNsh4w0HH/MP3H2pveL/cUuU="></script>
 </body>
 </html>

@@ -6,7 +6,7 @@ Revision      : 1.0.1
 Created Date  : 2026-10-08
 Modified Date : 2026-10-20
 Changelog     :
-  Rev 1.0.1 - Covered persistent alerts, offline emergency reloads, care, repairs, burial, neutral rivers, and manual restarts.
+  Rev 1.0.1 - Tested all four health and per-traveler food warning colors.
   Rev 1.0.0 - Established independent file revision tracking; Game recovery, roster, legacy migration, and offline-resource tests.
 */
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
@@ -189,4 +189,16 @@ test('Resolved event notices do not reappear after reloading the same saved stor
   const storage=memory(),game=environment(storage,config);await game.ready;game.pack();game.click('Continue');game.click('Review event');
   assert.equal(record(storage).state.notice,null);const reload=environment(storage);await reload.ready;
   assert.equal(reload.elements.get('event-alert').hidden,true);reload.click('Change pace');assert.equal(record(storage).state.notice,null);
+});
+
+test('Health and food meters move through green, yellow, orange, and red warning levels',async()=>{
+  const storage=memory(),game=environment(storage);await game.ready;game.pack();const id=Object.keys(saves.read(storage).games)[0];
+  for(const [health,level] of [[100,'green'],[75,'yellow'],[45,'orange'],[20,'red']]){
+    const data=saves.read(storage),s=data.games[id].state;for(const traveler of s.travelers){traveler.health=health;traveler.condition='';}party.sync(s);storage.setItem(saves.KEY,JSON.stringify(data));
+    const view=environment(storage);await view.ready;assert.equal(view.elements.get('health-meter').className,'meter-fill level-'+level);
+  }
+  for(const [food,level] of [[200,'green'],[120,'yellow'],[70,'orange'],[30,'red']]){
+    const data=saves.read(storage);data.games[id].state.travelers.forEach(t=>{t.health=100;t.condition='';});party.sync(data.games[id].state);data.games[id].state.food=food;storage.setItem(saves.KEY,JSON.stringify(data));
+    const view=environment(storage);await view.ready;assert.equal(view.elements.get('food-meter').className,'meter-fill level-'+level);
+  }
 });

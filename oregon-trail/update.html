@@ -6,7 +6,7 @@ Revision      : 1.0.1
 Created Date  : 2026-10-19
 Modified Date : 2026-10-20
 Changelog     :
-  Rev 1.0.1 - Targeted Rev 1.1.0 for safe saved-game-preserving refresh.
+  Rev 1.0.1 - Targeted Rev 1.2.0 while preserving device saves.
   Rev 1.0.0 - Self-contained game-file update recovery without clearing saved journeys.
 -->
 <!doctype html>
@@ -21,7 +21,7 @@ Changelog     :
 <body>
 <h1>Refresh game files</h1>
 <p>Check for the current game files and apply the update. Your saved journeys stay in this browser. Keep this page open while the update downloads.</p>
-<p>Target: Project Rev 1.1.0 · Updated 2026-10-20</p>
+<p>Target: Project Rev 1.2.0 · Updated 2026-10-20</p>
 <button id="refresh" type="button">Check and apply update</button>
 <p id="status" role="status">Connect to the internet, then select the button.</p>
 <p><a href="./">Return to the game</a></p>
@@ -40,7 +40,7 @@ Changelog     :
     button.disabled=true;status.textContent='Downloading and checking game files…';
     try{
       if(!('serviceWorker' in navigator))throw Error('This browser needs HTTPS or localhost to refresh offline files.');
-      const registration=await navigator.serviceWorker.register('sw.js?v=1.1.0',{scope:'./',updateViaCache:'none'});
+      const registration=await navigator.serviceWorker.register('sw.js?v=1.2.0',{scope:'./',updateViaCache:'none'});
       await registration.update();
       if(registration.installing)await waitFor(registration.installing,'installed');
       if(registration.waiting){const worker=registration.waiting;worker.postMessage({type:'ACTIVATE_UPDATE'});await waitFor(worker,'activated');}
