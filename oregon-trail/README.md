@@ -6,7 +6,7 @@ Revision      : 1.0.3
 Created Date  : 2026-10-08
 Modified Date : 2026-10-20
 Changelog     :
-  Rev 1.0.3 - Documented mandatory event decisions, saved alerts, food settings, and remaining verification.
+  Rev 1.0.3 - Documented resource meter thresholds and per-traveler food scaling.
   Rev 1.0.2 - Documented safe updates, cache compatibility, and project Rev 1.0.1.
   Rev 1.0.1 - Documented framework alignment and repository-wide development requirements.
   Rev 1.0.0 - Established independent file revision tracking; Project usage, content editing, saves, illness weights, revisions, and validation.
@@ -20,6 +20,10 @@ A small browser game, with automatic device-local saves and editable game conten
 Before changing this project, read the repository [development conventions](../README.md#development-conventions--read-before-changing-files), [framework overview](../1-Framework/README.md), [AI development instructions](../1-Framework/AI-INSTRUCTIONS.md), and [framework roadmap](../1-Framework/ROADMAP.md). Functional changes require documentation, configuration/failure handling, a changelog entry, and automated checks or a concrete manual validation procedure. Preserve file headers and independent file revisions.
 
 Oregon Trail is a standalone browser/offline application. It follows applicable framework conventions while using browser-local saves and cached frontend modules; the server-side PHP JsonStore and authentication provider are not runtime dependencies. New server-backed accounts or cross-device saves should evaluate the existing shared identity/storage components before adding another implementation.
+
+## Resource indicators
+
+Health and food values and bars change through green, yellow, orange, and red as they decline. Health colors follow the Good/Fair/Poor/Critical bands. Food colors use pounds per remaining traveler (green at 25 lb or more, yellow at 15–24, orange at 7–14, and red below 7), so small parties are not shown as critically low merely because they carry fewer total pounds.
 
 ## Your travelers
 

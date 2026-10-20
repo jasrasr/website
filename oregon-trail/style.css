@@ -6,7 +6,7 @@ Revision      : 1.0.2
 Created Date  : 2026-10-08
 Modified Date : 2026-10-20
 Changelog     :
-  Rev 1.0.2 - Styled persistent decision alerts with high contrast and responsive text.
+  Rev 1.0.2 - Added green, yellow, orange, and red resource meter colors.
   Rev 1.0.1 - Constrained native party controls and styled startup and recovery links.
   Rev 1.0.0 - Established independent file revision tracking; Responsive visual styling for the game, setup form, and traveler roster.
 */
@@ -29,3 +29,10 @@ Changelog     :
 .event-alert h2{font-size:clamp(22px,5vw,30px);line-height:1.2;margin:0 0 12px;}
 .event-alert p:last-child{margin:0;line-height:1.6;}
 .event-alert:focus{outline:2px solid #ffe0ad;outline-offset:4px;}
+
+/* Resource colors make diminishing health and food visible at a glance. */
+.meter-fill{display:block;height:100%;width:100%;transition:width .35s,background-color .25s;}
+.meter-fill.level-green{background:#a6bd79!important;}
+.meter-fill.level-yellow{background:#e1c45d!important;}
+.meter-fill.level-orange{background:#e69a51!important;}
+.meter-fill.level-red{background:#df6258!important;}

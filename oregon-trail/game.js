@@ -6,7 +6,7 @@ Revision      : 1.0.2
 Created Date  : 2026-10-08
 Modified Date : 2026-10-20
 Changelog     :
-  Rev 1.0.2 - Paused travel for persistent event alerts, care, hunting, repairs, burial, and explicit journey endings; neutral river decisions.
+  Rev 1.0.2 - Added green-to-yellow/orange/red health and per-traveler food indicators.
   Rev 1.0.1 - Added startup diagnostics and release-specific configuration/worker requests.
   Rev 1.0.0 - Established independent file revision tracking; Game flow, individual traveler status, scenery, autosaves, and project revision display.
 */
@@ -73,13 +73,18 @@ Changelog     :
     $('party-history-note').textContent=s.rosterHistoryIncomplete?'Older save: individual health begins from the saved party health. Previously lost travelers were not recorded.':'';
     $('party-dialog').showModal();
   }
+  function levelColor(level){return ({green:'#a6bd79',yellow:'#e1c45d',orange:'#e69a51',red:'#df6258'})[level];}
   function update(){
     $('party-button').disabled=!s.started;
     $('date').textContent=`${monthNames[s.month-1].toUpperCase()} ${s.day}, ${s.year}`;
     $('miles').textContent=s.miles;$('total-miles').textContent=content.totalMiles.toLocaleString();$('food').textContent=s.food;$('party').textContent=s.party;
     $('health').textContent=s.health>75?'Good':s.health>45?'Fair':s.health>20?'Poor':'Critical';
-    $('health-meter').style.width=s.health+'%';$('health-meter').style.background=s.health>45?'#a6bd79':'#d28c59';
-    $('food-meter').style.width=Math.min(s.food/200*100,100)+'%';
+    const healthLevel=s.health>75?'green':s.health>45?'yellow':s.health>20?'orange':'red';
+    const foodPerTraveler=s.food/Math.max(1,s.party),foodLevel=foodPerTraveler>=25?'green':foodPerTraveler>=15?'yellow':foodPerTraveler>=7?'orange':'red';
+    $('health-meter').style.width=s.health+'%';$('health-meter').className='meter-fill level-'+healthLevel;
+    $('food-meter').style.width=Math.min(s.food/Math.max(1,s.party*40)*100,100)+'%';$('food-meter').className='meter-fill level-'+foodLevel;
+    $('health').style.color=levelColor(healthLevel);$('food').style.color=levelColor(foodLevel);
+    $('health-meter').setAttribute('aria-valuenow',s.health);$('food-meter').setAttribute('aria-valuenow',s.food);
     $('party-names').textContent=s.names.map((n,i)=>n+' · '+s.ages[i]).join('  ');
     const stop=content.stops[s.landmark]||content.stops.at(-1);
     $('landmark').textContent=stop.name;$('to-landmark').textContent=Math.max(0,stop.mile-s.miles);
