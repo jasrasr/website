@@ -24,7 +24,7 @@ A third-person, narrated walkthrough of Jason Lamb's AI-assisted web workflow: C
 
 Open `index.html` in a current browser, or serve this directory with a static web server. Browser speech uses the English voices installed in the visitor's browser or operating system. The tour prefers Google UK English Male when available and otherwise uses an available English voice. The voice selectors in the top bar and tour player change the current chapter's voice; each chapter remembers its own choice in that browser. The walkthrough scrolls to the first section and continues through the sections as narration finishes.
 
-The closing conversation plays from `4person-closing-convo.mp3`, followed by `jasonlamb-signoff.mp3`. The page also offers a direct sign-off button and links to the scripts. The voice service credential is not included in the site. Future audio revisions must be generated outside browser code; never put an ElevenLabs API key in the page.
+The closing conversation plays from `4person-closing-convo.mp3` and includes Jason's final line. Its English WebVTT captions are attached to the player; SRT captions are available to download. `jasonlamb-signoff.mp3` is a separate recording behind the direct sign-off button, so the final line is not played twice in sequence. The voice service credential is not included in the site. Future audio revisions must be generated outside browser code; never put an ElevenLabs API key in the page.
 
 The existing production scripts are `four-voice-dialogue-upload.txt`, `four-voice-dialogue-by-speaker.md`, and `jason-corralling-signoff.txt`. Compare them with the final exports before treating them as verbatim transcripts. `four-voice-dialogue-ordered-for-studio.txt` is the voice-assignment worksheet, and `FOUR-VOICE-UPLOAD.md` gives production steps. To replace a recording, put the new MP3 in this directory under the same filename, verify it locally, then commit and push it through a pull request.
 
@@ -43,7 +43,9 @@ This page describes repository documentation and workflow files. It does not con
 - `build-signal-github.webp` — illustrated Git history and review.
 - `build-signal-hosting.webp` — illustrated hosting handoff and health check.
 - `4person-closing-convo.mp3` — produced four-person closing conversation.
-- `jasonlamb-signoff.mp3` — Jason's produced sign-off played after the conversation.
+- `4person-closing-convo.vtt` — timed English captions attached to the conversation player.
+- `4person-closing-convo.srt` — downloadable SRT version of the same captions.
+- `jasonlamb-signoff.mp3` — standalone Jason sign-off recording.
 - `jason-signoff.mp3` — earlier sign-off recording retained as a source asset.
 - `four-voice-dialogue-upload.txt` — 36-turn, approximately five-minute script for ElevenLabs Studio import.
 - `four-voice-dialogue-ordered-for-studio.txt` — 37 initial-prefixed turns in chronological order for assigning five voices.

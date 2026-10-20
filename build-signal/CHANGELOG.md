@@ -22,7 +22,8 @@ Changelog     :
 ## Project revision 1.3.5 — 2026-10-20
 
 - Preferred Google UK English Male for each tour chapter when the visitor's browser offers it.
-- Replaced the short browser-voice closing scene with the produced conversation and Jason sign-off recordings.
+- Replaced the short browser-voice closing scene with the produced conversation recording, including Jason's sign-off, and a separate sign-off playback button.
+- Attached timed English VTT captions and added an SRT download.
 - Linked the production scripts beside the recording controls.
 
 ## Project revision 1.3.4 — 2026-10-20

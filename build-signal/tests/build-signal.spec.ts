@@ -44,9 +44,14 @@ test('plays the produced closing recordings', async ({ page }) => {
   const conversation = page.locator('#conversation-audio');
   const signoff = page.locator('#jason-signoff-audio');
   await expect(conversation).toHaveAttribute('src', '4person-closing-convo.mp3');
+  await expect(conversation.locator('track')).toHaveAttribute('src', '4person-closing-convo.vtt');
   await expect(signoff).toHaveAttribute('src', 'jasonlamb-signoff.mp3');
   await page.locator('#finale-play').click();
   await expect.poll(() => conversation.evaluate((audio: HTMLAudioElement) => audio.paused)).toBe(false);
+  await expect.poll(() => conversation.evaluate((audio: HTMLAudioElement) => audio.duration)).toBeGreaterThan(290.527);
+  await expect.poll(() => conversation.evaluate((audio: HTMLAudioElement) => audio.textTracks[0]?.cues?.length ?? 0)).toBe(76);
+  await conversation.evaluate((audio: HTMLAudioElement) => audio.dispatchEvent(new Event('ended')));
+  await expect.poll(() => signoff.evaluate((audio: HTMLAudioElement) => audio.paused)).toBe(true);
   await page.locator('#signoff-play').click();
   await expect.poll(() => signoff.evaluate((audio: HTMLAudioElement) => audio.paused)).toBe(false);
   await expect.poll(() => conversation.evaluate((audio: HTMLAudioElement) => audio.paused)).toBe(true);
