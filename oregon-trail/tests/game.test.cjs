@@ -2,10 +2,11 @@
 File Name     : tests/game.test.cjs
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Content, probability, storage, date, and optional real-browser recovery tests.
-Revision      : 1.0.1
+Revision      : 1.0.2
 Created Date  : 2026-10-08
-Modified Date : 2026-10-19
+Modified Date : 2026-10-20
 Changelog     :
+  Rev 1.0.2 - Aligned browser expectations with current project revision.
   Rev 1.0.1 - Added browser revision and portrait/landscape party-card containment checks.
   Rev 1.0.0 - Established independent file revision tracking; Content, probability, storage, date, and optional real-browser recovery tests.
 */
@@ -27,7 +28,10 @@ test('Content validates, rejects invalid probabilities and unsorted stops',()=>{
 test('Absolute event probabilities have precise boundaries and quiet remainder',()=>{
   assert.equal(rules.selectEvent(content.events,()=>0).id,'broken-wheel');
   assert.equal(rules.selectEvent(content.events,()=>.12).id,'illness');
-  assert.equal(rules.selectEvent(content.events,()=>.21).id,'wild-game');
+  assert.equal(rules.selectEvent(content.events,()=>.209999).id,'illness');
+  assert.equal(rules.selectEvent(content.events,()=>.21),null);
+  const enabled=structuredClone(content.events);enabled.find(e=>e.id==='wild-game').chancePercent=10;
+  assert.equal(rules.selectEvent(enabled,()=>.21).id,'wild-game');
   assert.equal(rules.selectEvent(content.events,()=>.31),null);
   assert.equal(rules.selectEvent(content.events,()=>.999),null);
 });
@@ -55,7 +59,7 @@ test('Browser restores pending choices, keeps multiple games and works offline',
     if(!file)file='index.html';
     const full=path.resolve(root,file);
     if(!full.startsWith(root+path.sep)){res.writeHead(404);res.end();return;}
-    try{const data=fs.readFileSync(full);res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.json')?'application/json':file.endsWith('.css')?'text/css':'text/html');res.end(data);}catch{res.writeHead(404);res.end();}
+    try{const data=file==='game-content.json'?JSON.stringify({...content,events:[],crossings:content.crossings.map(c=>({...c,successPercent:100}))}):fs.readFileSync(full);res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.json')?'application/json':file.endsWith('.css')?'text/css':'text/html');res.end(data);}catch{res.writeHead(404);res.end();}
   });
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const context=await browser.newContext();const page=await context.newPage();const errors=[];
@@ -66,7 +70,7 @@ test('Browser restores pending choices, keeps multiple games and works offline',
   try{
     await page.goto(url);
     await page.waitForFunction(()=>document.getElementById('begin-journey'));
-    assert.match(await page.locator('#project-version').textContent(),/Project Rev 1\.0\.1/);
+    assert.match(await page.locator('#project-version').textContent(),/Project Rev 1\.1\.0/);
     for(const viewport of [{width:390,height:844},{width:844,height:390}]){
       await page.setViewportSize(viewport);
       const fits=await page.locator('#party-button').evaluate(button=>{const b=button.getBoundingClientRect(),card=button.closest('.stat').getBoundingClientRect();return b.left>=card.left-1&&b.right<=card.right+1&&b.width<=card.width+1;});
@@ -88,6 +92,7 @@ test('Browser restores pending choices, keeps multiple games and works offline',
     await page.reload();await page.getByRole('button',{name:'Ford the river'}).waitFor();
     assert.equal(await page.locator('#miles').textContent(),'110');
     await page.getByRole('button',{name:'Take the ferry'}).click();
+    assert.equal(await page.locator('#event-alert').isVisible(),true);await page.getByRole('button',{name:'Review event'}).click();
     data=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)),key);assert.equal(data.games[first].pendingStop,null);
     await page.getByRole('button',{name:'Start a new journey'}).click();await page.getByRole('button',{name:'Pack the wagon and begin'}).click();
     data=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)),key);assert.equal(Object.keys(data.games).length,2);
@@ -97,8 +102,12 @@ test('Browser restores pending choices, keeps multiple games and works offline',
     assert.equal(await page.locator('#miles').textContent(),String(data.games[first].state.miles));
     await page.waitForFunction(()=>navigator.serviceWorker.controller);
     await page.waitForFunction(()=>document.getElementById('offline-status').textContent.includes('Ready for offline'));
+    await page.evaluate(({key,id})=>{const d=JSON.parse(localStorage.getItem(key));d.games[id].state.notice={title:'Offline test alert',message:'Resolve this event.'};localStorage.setItem(key,JSON.stringify(d));},{key,id:first});
     await context.setOffline(true);
     await page.reload();await page.waitForFunction(()=>document.getElementById('save-status').textContent.startsWith('Restored'));
+    assert.equal(await page.locator('#event-alert-title').textContent(),'Offline test alert');
+    assert.equal(await page.getByRole('button',{name:'Continue down the trail'}).count(),0);
+    await page.getByRole('button',{name:'Review event'}).click();
     await page.getByRole('button',{name:'Hunt for food'}).click();
     assert.match(await page.locator('#save-status').textContent(),/^Saved/);
     assert.deepEqual(errors,[]);

@@ -2,15 +2,16 @@
 File Name     : sw.js
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Scoped offline caching for the game, artwork modules, revision, and changelog.
-Revision      : 1.0.1
+Revision      : 1.0.2
 Created Date  : 2026-10-08
-Modified Date : 2026-10-19
+Modified Date : 2026-10-20
 Changelog     :
+  Rev 1.0.2 - Cached the Rev 1.1.0 application assets with a new offline cache.
   Rev 1.0.1 - Versioned cached asset keys and allowed explicit waiting-worker activation.
   Rev 1.0.0 - Established independent file revision tracking; Scoped offline caching for the game, artwork modules, revision, and changelog.
 */
 /* Bump RELEASE and CACHE when cached application files change. */
-const RELEASE='1.0.1',CACHE='oregon-trail-v6';
+const RELEASE='1.1.0',CACHE='oregon-trail-v7';
 const FILES=['./','index.html','style.css','rules.js','party.js','scenes.js','version.js','CHANGELOG.md','saves.js','game.js','game-content.json'];
 const versioned=file=>/\.(js|css|json|md)$/.test(file)?file+'?v='+RELEASE:file;
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES.map(versioned))));});

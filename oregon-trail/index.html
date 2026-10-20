@@ -2,10 +2,11 @@
 File Name     : index.html
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Main game page, traveler dialog, project revision, and changelog link.
-Revision      : 1.0.1
+Revision      : 1.0.2
 Created Date  : 2026-10-08
-Modified Date : 2026-10-19
+Modified Date : 2026-10-20
 Changelog     :
+  Rev 1.0.2 - Added a focused persistent event alert next to actions; published project Rev 1.1.0.
   Rev 1.0.1 - Added versioned assets, visible startup errors, and a recovery link.
   Rev 1.0.0 - Established independent file revision tracking; Main game page, traveler dialog, project revision, and changelog link.
 -->
@@ -16,7 +17,7 @@ Changelog     :
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#11140d">
   <title>The Oregon Trail — Westward, 1848</title>
-  <link rel="stylesheet" href="style.css?v=1.0.1" integrity="sha256-amyQyq2wOcQxpV/iX7fLFUiOknq/Xcg5s65LVeuPkk0=" onerror="window.__trailAssetFailed=true;">
+  <link rel="stylesheet" href="style.css?v=1.1.0" integrity="sha256-potfHRRsCKyAPZ+oFLN1OwzL/Ipq4a4SQoRrkngCx0o=" onerror="window.__trailAssetFailed=true;">
 </head>
 <body>
   <main class="game-shell">
@@ -39,13 +40,14 @@ Changelog     :
           <div class="stat"><span class="stat-icon">↗</span><span class="stat-name">NEXT LANDMARK</span><strong id="landmark">Kansas River</strong><div class="stat-detail"><span id="to-landmark">102</span> miles ahead</div></div>
         </div>
 
+        <section id="event-alert" class="event-alert" role="alert" tabindex="-1" aria-labelledby="event-alert-title" hidden><p id="event-alert-label" class="action-label"></p><h2 id="event-alert-title"></h2><p id="event-alert-message"></p></section>
         <div class="action-area" id="actions"></div>
         <p id="save-status" class="save-status" role="status">Loading game…</p><p id="offline-status" class="save-status">Offline play becomes available after the first successful load.</p><div class="event-log" id="log" aria-live="polite"><span class="log-dot"></span><span id="log-text">The wagon is packed. Your adventure is about to begin.</span></div>
       </div>
       <footer class="game-footer"><span>✳ &nbsp;GO WEST, YOUNG TRAVELER</span><span class="games-played">GAMES PLAYED <b id="games-played">0</b></span><button id="sound-toggle" class="sound-button" type="button" aria-label="Toggle sound">♪ <span>Sound off</span></button><button id="auto-button" class="sound-button" type="button">▶ Auto-play</button><button id="reset-button" class="reset-button" type="button">Start a new journey ↗</button></footer>
     </section>
     <details class="saved-journeys"><summary>Saved journeys on this device</summary><div id="saved-games"></div></details>
-    <p class="below-note"><span id="project-version">Project Rev 1.0.1 · Updated 2026-10-19</span> · <a href="CHANGELOG.md?v=1.0.1">Changelog</a> · <a href="update.html">Refresh game files</a></p>
+    <p class="below-note"><span id="project-version">Project Rev 1.1.0 · Updated 2026-10-20</span> · <a href="CHANGELOG.md?v=1.1.0">Changelog</a> · <a href="update.html">Refresh game files</a></p>
     <p class="below-note">A little pixel adventure inspired by the classic 1848 journey. <span>Best played with a curious spirit.</span></p>
   </main>
   <dialog id="party-dialog" aria-labelledby="party-heading"><div class="roster-heading"><h2 id="party-heading">Your travelers</h2><button id="party-close" class="game-button" type="button">Close</button></div><p id="party-summary"></p><p class="roster-help">Susceptibility is relative: younger children and older adults are more likely to be affected when illness strikes.</p><ul id="party-roster"></ul><p id="party-history-note"></p></dialog>
@@ -57,11 +59,11 @@ Changelog     :
     window.addEventListener('load',function(){if(window.__trailAssetFailed||!window.__trailBooted)failed();});
   })();
   </script>
-  <script src="version.js?v=1.0.1" integrity="sha256-kPSs7aj04nWWK1LDJcTa7ID30RG8X+ys3eaUBe3yuTE="></script>
-  <script src="scenes.js?v=1.0.1" integrity="sha256-3IeB+mJB29XeDSCAIilRNdyqbVkDJFtTi/GoULt42/w="></script>
-  <script src="party.js?v=1.0.1" integrity="sha256-6yuoG3XNhm1nofmK4g3SIu3z6i9fFWxE5PhPwgrrtWY="></script>
-  <script src="rules.js?v=1.0.1" integrity="sha256-o5jC8kQjUEYIx32lnz2RUK8yK1UXwRMbRH54ASqZpvo="></script>
-  <script src="saves.js?v=1.0.1" integrity="sha256-KPBGebjHpurm2oSdnbC09n4UrOuSfVUDLa5kkUNfv8w="></script>
-  <script src="game.js?v=1.0.1" integrity="sha256-uZ1qDsHPpr3VqneQ8XskAr/t+PcWDqB+2rzDaKhQ3Pc="></script>
+  <script src="version.js?v=1.1.0" integrity="sha256-1FaF450U4k8cidJkaM8jdwJL6RuUbHI/EHEbMoE6C1w="></script>
+  <script src="scenes.js?v=1.1.0" integrity="sha256-3IeB+mJB29XeDSCAIilRNdyqbVkDJFtTi/GoULt42/w="></script>
+  <script src="party.js?v=1.1.0" integrity="sha256-6yuoG3XNhm1nofmK4g3SIu3z6i9fFWxE5PhPwgrrtWY="></script>
+  <script src="rules.js?v=1.1.0" integrity="sha256-o5jC8kQjUEYIx32lnz2RUK8yK1UXwRMbRH54ASqZpvo="></script>
+  <script src="saves.js?v=1.1.0" integrity="sha256-E1oXI/VqctH8Qh0sg0L2JkxQOClAYV6L5dQko/FcIa8="></script>
+  <script src="game.js?v=1.1.0" integrity="sha256-HFP4E4B7i+kw0IkqMGatNGUfgG7Em6kQ//mz+Jjrt78="></script>
 </body>
 </html>

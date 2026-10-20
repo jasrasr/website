@@ -2,10 +2,11 @@
 File Name     : saves.js
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Versioned journey storage with legacy-save and individual-roster validation.
-Revision      : 1.0.0
+Revision      : 1.0.1
 Created Date  : 2026-10-08
-Modified Date : 2026-10-19
+Modified Date : 2026-10-20
 Changelog     :
+  Rev 1.0.1 - Validated optional persistent event and burial data without discarding legacy saves.
   Rev 1.0.0 - Established independent file revision tracking; Versioned journey storage with legacy-save and individual-roster validation.
 */
 (function(root){
@@ -23,11 +24,15 @@ Changelog     :
     if(!['camp','pace','rations','stop','end'].includes(record.view))throw Error('Invalid saved view');
     if(record.view==='stop'&&!record.config.stops.some(x=>x.id===record.pendingStop))throw Error('Missing pending stop');
     for(const key of ['title','message','phase'])if(typeof record.story[key]!=='string')throw Error('Invalid saved story');
+    if(s.notice!=null&&(!s.notice||typeof s.notice.title!=='string'||typeof s.notice.message!=='string'))throw Error('Invalid saved notice');
+    if(s.notice?.kind!==undefined&&typeof s.notice.kind!=='string')throw Error('Invalid notice kind');
+    if(s.attentionVersion!==undefined&&s.attentionVersion!==1)throw Error('Invalid attention version');
     if(s.travelers!==undefined){
       if(!Array.isArray(s.travelers)||s.travelers.length>5)throw Error('Invalid traveler roster');
       const ids=new Set();
       for(const t of s.travelers){
         if(!t||typeof t.id!=='string'||!t.id||ids.has(t.id)||typeof t.name!=='string'||!t.name||t.name.length>16||!Number.isInteger(t.age)||t.age<1||t.age>90||!Number.isInteger(t.health)||t.health<0||t.health>100||!['alive','deceased'].includes(t.status)||typeof t.condition!=='string')throw Error('Invalid traveler');
+        if(t.buried!==undefined&&typeof t.buried!=='boolean')throw Error('Invalid burial record');
         ids.add(t.id);
         if(t.status==='alive'&&t.health===0)throw Error('Invalid living traveler health');
         if(t.status==='deceased'&&(t.health!==0||!t.death||typeof t.death.cause!=='string'||!Number.isInteger(t.death.miles)||t.death.miles<0||!Number.isInteger(t.death.day)||t.death.day<1||t.death.day>31||!Number.isInteger(t.death.month)||t.death.month<1||t.death.month>12||!Number.isInteger(t.death.year)))throw Error('Invalid deceased traveler');
