@@ -64,3 +64,8 @@ how-much-time-worked/Original HEIC/
 # Local AI assistant memory and instructions (kept out of this public repo)
 /.ai/
 /CLAUDE.md
+
+# Workout tracker — private settings and personal workout/photo data
+workout-tracker/config.local.php
+workout-tracker/storage/*
+!workout-tracker/storage/.htaccess
