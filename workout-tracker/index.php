@@ -2,10 +2,10 @@
 /* File Name: index.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: Authenticated workout dashboard and JSON API.
-Revision: 1.0.0
+Revision: 1.0.1
 Created Date: 2026-10-21
 Modified Date: 2026-10-21
-Changelog: 1.0.0 - Initial release. */
+Changelog: 1.0.1 - Use framework JsonStore for private entries. 1.0.0 - Initial release. */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
 $auth = \Jasr\Framework\SharedIdentity::connect();
@@ -16,20 +16,13 @@ if (!is_dir($root) && !mkdir($root, 0700, true) && !is_dir($root)) { http_respon
 $path = $root . '/' . hash('sha256', $uid) . '.json';
 function reply(int $status, array $body): never { http_response_code($status); header('Content-Type: application/json'); header('Cache-Control: no-store'); echo json_encode($body, JSON_THROW_ON_ERROR); exit; }
 function store(string $path, ?array $new = null): array {
-    $lock = fopen($path . '.lock', 'c'); if (!$lock || !flock($lock, LOCK_EX)) throw new RuntimeException('Storage lock failed');
-    try {
-        $data = is_file($path) ? json_decode(file_get_contents($path), true, 512, JSON_THROW_ON_ERROR) : ['entries'=>[]];
-        if (!is_array($data) || !isset($data['entries']) || !is_array($data['entries'])) throw new RuntimeException('Invalid storage');
-        if ($new !== null) {
-            $data['entries'][] = $new;
-            $temp = tempnam(dirname($path), 'wrk');
-            if ($temp === false) throw new RuntimeException('Storage unavailable');
-            file_put_contents($temp, json_encode($data, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
-            chmod($temp, 0600);
-            if (!rename($temp, $path)) throw new RuntimeException('Save failed');
-        }
-        return $data;
-    } finally { flock($lock, LOCK_UN); fclose($lock); }
+    if ($new !== null) {
+        \Jasr\Framework\JsonStore::update($path, static function(array $records) use ($new): array {
+            $records[] = $new;
+            return $records;
+        });
+    }
+    return ['entries' => \Jasr\Framework\JsonStore::read($path)['records']];
 }
 if (isset($_GET['api'])) {
     try {
