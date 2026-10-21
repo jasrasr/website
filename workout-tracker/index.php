@@ -2,12 +2,13 @@
 /* File Name: index.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: Authenticated workout dashboard and JSON API.
-Revision: 1.0.1
+Revision: 1.1.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-21
-Changelog: 1.0.1 - Use framework JsonStore for private entries. 1.0.0 - Initial release. */
+Changelog: 1.1.0 - No-key text parsing and atomic multi-exercise logging. 1.0.1 - Use framework JsonStore for private entries. 1.0.0 - Initial release. */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
+require_once __DIR__ . '/parse.php';
 $auth = \Jasr\Framework\SharedIdentity::connect();
 $user = $auth->requireProject('workout-tracker', $_SERVER['REQUEST_METHOD'] === 'POST' ? 'member' : 'viewer', isset($_GET['api']));
 $uid = (string)$user['id'];
@@ -31,6 +32,71 @@ if (isset($_GET['api'])) {
         $csrf = $_POST['csrf'] ?? '';
         if (!$auth->validCsrf(is_string($csrf) ? $csrf : null)) reply(403, ['error'=>'Invalid CSRF']);
         $action = $_POST['action'] ?? 'save';
+
+        if ($action === 'parse_local') {
+            $note = $_POST['note'] ?? null;
+            $today = $_POST['today'] ?? null;
+            if (!is_string($note) || !is_string($today)) reply(422, ['error'=>'Enter a workout description.']);
+            try { $suggestions=workout_parse_text($note,$today); }
+            catch (InvalidArgumentException $e) { reply(422,['error'=>$e->getMessage()]); }
+            reply(200,['suggestions'=>$suggestions]);
+        }
+        if ($action === 'save_batch') {
+            $encoded=$_POST['entries'] ?? null;
+            if (!is_string($encoded) || strlen($encoded)>40000) reply(422,['error'=>'Invalid workout submission.']);
+            $rows=json_decode($encoded,true);
+            if (!is_array($rows) || !array_is_list($rows) || count($rows)<1 || count($rows)>20) reply(422,['error'=>'Select 1 to 20 exercises.']);
+            $time=$_POST['time_local'] ?? '';
+            $offset=$_POST['utc_offset'] ?? '';
+            if (!is_string($time) || !preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/D',$time)) reply(422,['error'=>'Invalid local time.']);
+            if (!is_string($offset) || !preg_match('/^[+-](?:0\d|1[0-4]):[0-5]\d$/D',$offset)) reply(422,['error'=>'Invalid timezone offset.']);
+            $session=bin2hex(random_bytes(12));
+            $saved=[];
+            foreach ($rows as $row) {
+                if (!is_array($row)) reply(422,['error'=>'Invalid exercise details.']);
+                $exercise=strtolower(trim((string)($row['exercise']??'')));
+                if (!preg_match('/^[a-z0-9][a-z0-9 _-]{1,79}$/D',$exercise)) reply(422,['error'=>'Check the exercise name.']);
+                $day=$row['date']??'';
+                if (!is_string($day)) reply(422,['error'=>'Check the date.']);
+                $dt=DateTimeImmutable::createFromFormat('!Y-m-d',$day);
+                if (!$dt || $dt->format('Y-m-d')!==$day) reply(422,['error'=>'Check the workout date.']);
+                $notes=$row['notes']??'';
+                if (!is_string($notes) || strlen($notes)>2000) reply(422,['error'=>'Notes must be under 2,000 characters.']);
+                $entry=['id'=>bin2hex(random_bytes(12)),'session_id'=>$session,'date'=>$day,'performed_at'=>$day.'T'.$time.':00'.$offset,
+                    'exercise'=>$exercise,'notes'=>$notes,'created_at'=>gmdate('c'),'photo'=>null];
+                foreach (['distance_miles','duration_minutes','speed_mph','reps','sets','weight_lb'] as $field) {
+                    $value=$row[$field]??null;
+                    if ($value===null || $value==='') {$entry[$field]=null;continue;}
+                    if (!is_numeric($value) || !is_finite((float)$value) || (float)$value<0 || (float)$value>100000) reply(422,['error'=>'Check '.$field.'.']);
+                    $entry[$field]=(float)$value;
+                }
+                $saved[]=$entry;
+            }
+            $uploadedPath=null;
+            if (isset($_FILES['photo']) && $_FILES['photo']['error']!==UPLOAD_ERR_NO_FILE) {
+                $f=$_FILES['photo'];
+                if ($f['error']!==UPLOAD_ERR_OK || $f['size']>5*1024*1024) reply(422,['error'=>'Photo must be under 5 MB.']);
+                $mime=(new finfo(FILEINFO_MIME_TYPE))->file($f['tmp_name']);
+                $ext=['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'][$mime]??null;
+                if (!$ext || !getimagesize($f['tmp_name'])) reply(422,['error'=>'JPEG, PNG or WebP only.']);
+                $folder=$root.'/photos/'.hash('sha256',$uid);
+                if (!is_dir($folder) && !mkdir($folder,0700,true) && !is_dir($folder)) reply(500,['error'=>'Photo storage unavailable.']);
+                $filename=$saved[0]['id'].'.'.$ext;
+                $uploadedPath=$folder.'/'.$filename;
+                if (!move_uploaded_file($f['tmp_name'],$uploadedPath)) reply(500,['error'=>'Unable to save photo.']);
+                $saved[0]['photo']=$filename;
+            }
+            try {
+                \Jasr\Framework\JsonStore::update($path,static function(array $existing) use ($saved):array {
+                    return array_merge($existing,$saved);
+                });
+            } catch (Throwable $e) {
+                if ($uploadedPath!==null && is_file($uploadedPath)) unlink($uploadedPath);
+                throw $e;
+            }
+            reply(201,['entries'=>$saved]);
+        }
+
         if ($action === 'parse') {
             $note = trim((string)($_POST['note'] ?? ''));
             if (strlen($note) > 4000 || $note === '') reply(422, ['error'=>'Enter a workout description']);
