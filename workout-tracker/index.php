@@ -2,12 +2,13 @@
 /* File Name: index.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: Authenticated workout dashboard and JSON API.
-Revision: 1.0.1
+Revision: 1.1.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-21
-Changelog: 1.0.1 - Use framework JsonStore for private entries. 1.0.0 - Initial release. */
+Changelog: 1.1.0 - No-key text parsing and atomic multi-exercise logging. 1.0.1 - Use framework JsonStore for private entries. 1.0.0 - Initial release. */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
+require_once __DIR__ . '/parse.php';
 $auth = \Jasr\Framework\SharedIdentity::connect();
 $user = $auth->requireProject('workout-tracker', $_SERVER['REQUEST_METHOD'] === 'POST' ? 'member' : 'viewer', isset($_GET['api']));
 $uid = (string)$user['id'];
@@ -31,6 +32,71 @@ if (isset($_GET['api'])) {
         $csrf = $_POST['csrf'] ?? '';
         if (!$auth->validCsrf(is_string($csrf) ? $csrf : null)) reply(403, ['error'=>'Invalid CSRF']);
         $action = $_POST['action'] ?? 'save';
+
+        if ($action === 'parse_local') {
+            $note = $_POST['note'] ?? null;
+            $today = $_POST['today'] ?? null;
+            if (!is_string($note) || !is_string($today)) reply(422, ['error'=>'Enter a workout description.']);
+            try { $suggestions=workout_parse_text($note,$today); }
+            catch (InvalidArgumentException $e) { reply(422,['error'=>$e->getMessage()]); }
+            reply(200,['suggestions'=>$suggestions]);
+        }
+        if ($action === 'save_batch') {
+            $encoded=$_POST['entries'] ?? null;
+            if (!is_string($encoded) || strlen($encoded)>40000) reply(422,['error'=>'Invalid workout submission.']);
+            $rows=json_decode($encoded,true);
+            if (!is_array($rows) || !array_is_list($rows) || count($rows)<1 || count($rows)>20) reply(422,['error'=>'Select 1 to 20 exercises.']);
+            $time=$_POST['time_local'] ?? '';
+            $offset=$_POST['utc_offset'] ?? '';
+            if (!is_string($time) || !preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/D',$time)) reply(422,['error'=>'Invalid local time.']);
+            if (!is_string($offset) || !preg_match('/^[+-](?:0\d|1[0-4]):[0-5]\d$/D',$offset)) reply(422,['error'=>'Invalid timezone offset.']);
+            $session=bin2hex(random_bytes(12));
+            $saved=[];
+            foreach ($rows as $row) {
+                if (!is_array($row)) reply(422,['error'=>'Invalid exercise details.']);
+                $exercise=strtolower(trim((string)($row['exercise']??'')));
+                if (!preg_match('/^[a-z0-9][a-z0-9 _-]{1,79}$/D',$exercise)) reply(422,['error'=>'Check the exercise name.']);
+                $day=$row['date']??'';
+                if (!is_string($day)) reply(422,['error'=>'Check the date.']);
+                $dt=DateTimeImmutable::createFromFormat('!Y-m-d',$day);
+                if (!$dt || $dt->format('Y-m-d')!==$day) reply(422,['error'=>'Check the workout date.']);
+                $notes=$row['notes']??'';
+                if (!is_string($notes) || strlen($notes)>2000) reply(422,['error'=>'Notes must be under 2,000 characters.']);
+                $entry=['id'=>bin2hex(random_bytes(12)),'session_id'=>$session,'date'=>$day,'performed_at'=>$day.'T'.$time.':00'.$offset,
+                    'exercise'=>$exercise,'notes'=>$notes,'created_at'=>gmdate('c'),'photo'=>null];
+                foreach (['distance_miles','duration_minutes','speed_mph','reps','sets','weight_lb'] as $field) {
+                    $value=$row[$field]??null;
+                    if ($value===null || $value==='') {$entry[$field]=null;continue;}
+                    if (!is_numeric($value) || !is_finite((float)$value) || (float)$value<0 || (float)$value>100000) reply(422,['error'=>'Check '.$field.'.']);
+                    $entry[$field]=(float)$value;
+                }
+                $saved[]=$entry;
+            }
+            $uploadedPath=null;
+            if (isset($_FILES['photo']) && $_FILES['photo']['error']!==UPLOAD_ERR_NO_FILE) {
+                $f=$_FILES['photo'];
+                if ($f['error']!==UPLOAD_ERR_OK || $f['size']>5*1024*1024) reply(422,['error'=>'Photo must be under 5 MB.']);
+                $mime=(new finfo(FILEINFO_MIME_TYPE))->file($f['tmp_name']);
+                $ext=['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'][$mime]??null;
+                if (!$ext || !getimagesize($f['tmp_name'])) reply(422,['error'=>'JPEG, PNG or WebP only.']);
+                $folder=$root.'/photos/'.hash('sha256',$uid);
+                if (!is_dir($folder) && !mkdir($folder,0700,true) && !is_dir($folder)) reply(500,['error'=>'Photo storage unavailable.']);
+                $filename=$saved[0]['id'].'.'.$ext;
+                $uploadedPath=$folder.'/'.$filename;
+                if (!move_uploaded_file($f['tmp_name'],$uploadedPath)) reply(500,['error'=>'Unable to save photo.']);
+                $saved[0]['photo']=$filename;
+            }
+            try {
+                \Jasr\Framework\JsonStore::update($path,static function(array $existing) use ($saved):array {
+                    return array_merge($existing,$saved);
+                });
+            } catch (Throwable $e) {
+                if ($uploadedPath!==null && is_file($uploadedPath)) unlink($uploadedPath);
+                throw $e;
+            }
+            reply(201,['entries'=>$saved]);
+        }
+
         if ($action === 'parse') {
             $note = trim((string)($_POST['note'] ?? ''));
             if (strlen($note) > 4000 || $note === '') reply(422, ['error'=>'Enter a workout description']);
@@ -80,41 +146,92 @@ if (isset($_GET['api'])) {
     } catch (Throwable $e) { reply(500,['error'=>'Unable to complete request']); }
 }
 ?><!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Workout Tracker</title><style>
-:root{color-scheme:dark;font-family:system-ui,Arial;background:#0b1220;color:#e5eefb}*{box-sizing:border-box}body{margin:0;padding:22px;max-width:1100px;margin-inline:auto}header,.stats,.cols{display:grid;gap:16px}header{display:flex;justify-content:space-between;align-items:center}.stats{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin:20px 0}.cols{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}.panel,.stat{background:#172337;border:1px solid #30445e;border-radius:15px;padding:18px}.stat strong{display:block;font-size:1.8rem}label{display:block;margin:12px 0 5px;color:#c4d3e5}input,textarea,select,button{font:inherit;width:100%;padding:11px;border-radius:9px;border:1px solid #52677d;background:#0b1728;color:white}textarea{min-height:95px}button{background:#3a83e7;border:0;font-weight:700;cursor:pointer;margin-top:12px}button:disabled{opacity:.5}.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}canvas{width:100%;height:230px}small{color:#b6c7db}li{padding:8px 0;border-bottom:1px solid #30445e}#message{min-height:24px}a{color:#9bc7ff}
-</style></head><body><header><div><small>PERSONAL FITNESS</small><h1>Workout Tracker</h1></div><small>v1.0.0 · 2026-10-21</small></header>
-<section class="stats"><div class="stat"><small>Sessions</small><strong id="sessions">—</strong></div><div class="stat"><small>Exercise entries</small><strong id="count">—</strong></div><div class="stat"><small>Minutes</small><strong id="minutes">—</strong></div><div class="stat"><small>Miles</small><strong id="miles">—</strong></div></section>
-<div class="cols"><section class="panel"><h2>Log exercise</h2><label for="note">Describe your workout</label><textarea id="note" placeholder="Walked 1.16 miles at 3.3 mph for 22 minutes"></textarea><button type="button" id="parse">Interpret with AI (optional)</button><p><small>Review suggested values before saving. AI never saves automatically.</small></p>
-<form id="form"><input type="hidden" name="csrf" id="csrf"><label>Exercise</label><input name="exercise" required placeholder="treadmill or push-ups"><label>Date</label><input name="date" type="date" required><div class="fields"><div><label>Miles</label><input name="distance_miles" type="number" step="any" min="0"></div><div><label>Minutes</label><input name="duration_minutes" type="number" step="any" min="0"></div><div><label>Speed (mph)</label><input name="speed_mph" type="number" step="any" min="0"></div><div><label>Reps</label><input name="reps" type="number" step="any" min="0"></div><div><label>Sets</label><input name="sets" type="number" step="any" min="0"></div><div><label>Weight (lb)</label><input name="weight_lb" type="number" step="any" min="0"></div></div><label>Notes</label><textarea name="notes"></textarea><label>Photo (JPEG, PNG, WebP, max 5 MB)</label><input name="photo" type="file" accept="image/jpeg,image/png,image/webp"><button type="submit">Save workout</button></form><p id="message" role="status"></p></section>
-<section class="panel"><h2>Exercise trends</h2><label for="filter">Exercise</label><select id="filter"></select><label for="metric">Measurement</label><select id="metric"><option value="distance_miles">Distance (miles)</option><option value="duration_minutes">Duration (minutes)</option><option value="speed_mph">Speed (mph)</option><option value="reps">Reps</option><option value="sets">Sets</option><option value="weight_lb">Weight (lb)</option></select><canvas id="chart" width="650" height="250" aria-label="Exercise trend chart" role="img"></canvas><p id="trend"></p><h2>Recent entries</h2><ul id="recent"></ul></section></div>
-<script>
-/* File Name: inline dashboard JS
-Author: Jason Lamb (with help from ChatGPT)
-Description: Client-side logging and per-exercise trend display.
-Revision: 1.0.0
-Created Date: 2026-10-21
-Modified Date: 2026-10-21
-Changelog: 1.0.0 - Initial release. */
-const $=s=>document.querySelector(s), form=$('#form'); let entries=[];
-form.elements.date.value=new Date().toLocaleDateString('en-CA');
-function draw(){
- const kinds=[...new Set(entries.map(e=>e.exercise))].sort(),old=$('#filter').value;
- $('#filter').replaceChildren(...kinds.map(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;return o}));if(kinds.includes(old))$('#filter').value=old;
- $('#count').textContent=entries.length;$('#sessions').textContent=new Set(entries.map(e=>e.date)).size;
- $('#minutes').textContent=entries.reduce((s,e)=>s+(Number(e.duration_minutes)||0),0).toFixed(1);
- $('#miles').textContent=entries.reduce((s,e)=>s+(Number(e.distance_miles)||0),0).toFixed(2);
- const filtered=entries.filter(e=>e.exercise===$('#filter').value).sort((a,b)=>a.date.localeCompare(b.date));
- const metric=$('#metric').value,points=filtered.filter(e=>e[metric]!==null&&Number.isFinite(Number(e[metric])));
- const c=$('#chart'),ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.strokeStyle='#54708f';ctx.beginPath();ctx.moveTo(48,15);ctx.lineTo(48,215);ctx.lineTo(625,215);ctx.stroke();
- if(points.length){const vals=points.map(e=>Number(e[metric])),max=Math.max(...vals,1);ctx.strokeStyle='#66b3ff';ctx.lineWidth=3;ctx.beginPath();vals.forEach((v,i)=>{const x=55+(i/Math.max(1,vals.length-1))*560,y=210-(v/max)*180;i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke();ctx.fillStyle='#d7e7fa';ctx.font='14px system-ui';ctx.fillText('0',25,215);ctx.fillText(max.toFixed(1),8,28)}
- $('#trend').textContent=points.length>1?'Change from first to latest: '+(Number(points.at(-1)[metric])-Number(points[0][metric])).toFixed(2):'Log at least two matching measurements to see a trend.';
- $('#recent').replaceChildren(...entries.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,12).map(e=>{const li=document.createElement('li');li.textContent=e.date+' · '+e.exercise+' · '+[e.distance_miles!=null?e.distance_miles+' mi':'',e.duration_minutes!=null?e.duration_minutes+' min':'',e.reps!=null?e.reps+' reps':''].filter(Boolean).join(' / ')+(e.photo?' · photo saved':'');return li}));
-}
-async function api(body){const r=await fetch('?api=1',body?{method:'POST',body,credentials:'same-origin'}:{credentials:'same-origin'});const j=await r.json();if(!r.ok)throw Error(j.error||'Request failed');return j}
-async function load(){try{const j=await api();entries=j.entries;$('#csrf').value=j.csrf;draw()}catch(e){$('#message').textContent=e.message}}
-$('#filter').addEventListener('change',draw);$('#metric').addEventListener('change',draw);
-$('#parse').onclick=async()=>{const b=new FormData();b.set('csrf',$('#csrf').value);b.set('action','parse');b.set('note',$('#note').value);$('#parse').disabled=true;try{const j=await api(b);for(const [k,v] of Object.entries(j.suggestion)){if(form.elements[k]&&v!==null&&v!=='')form.elements[k].value=v}$('#message').textContent='AI suggestion ready. Review and save.'}catch(e){$('#message').textContent=e.message}finally{$('#parse').disabled=false}};
-form.onsubmit=async ev=>{ev.preventDefault();const b=new FormData(form);b.set('action','save');try{await api(b);$('#message').textContent='Workout saved.';form.reset();form.elements.date.value=new Date().toLocaleDateString('en-CA');await load()}catch(e){$('#message').textContent=e.message}};
-load();
-</script></body></html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#08141f">
+<title>Workout Tracker · Keep moving</title>
+<link rel="stylesheet" href="app.css?v=1.1.0">
+<script src="app.js?v=1.1.0" defer></script>
+</head>
+<body><main>
+<header class="hero">
+ <div><div class="eyebrow">Personal fitness · Your pace</div>
+  <h1>Keep moving.</h1>
+  <p class="subtitle">Every session counts. Progress happens one workout at a time.</p>
+  <p class="version">Workout Tracker v1.1.0 · Updated October 21, 2026</p>
+ </div>
+ <div class="hero-mark" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 25h9l6-11 9 22 7-14h11"/></svg></div>
+</header>
+<section class="stats" aria-label="Workout totals">
+ <div class="stat"><span>Sessions</span><strong id="sessions">—</strong></div>
+ <div class="stat"><span>Exercise entries</span><strong id="count">—</strong></div>
+ <div class="stat"><span>Total minutes</span><strong id="minutes">—</strong></div>
+ <div class="stat"><span>Total miles</span><strong id="miles">—</strong></div>
+</section>
+<div class="content">
+ <section class="panel" aria-labelledby="logTitle">
+  <div class="panel-head"><h2 id="logTitle">What did you do?</h2><span class="day-label" id="dateLabel">Today</span></div>
+  <p class="muted lead">Type it naturally. The app reads common exercises and numbers right here, with no AI key.</p>
+  <label class="field" for="note"><span>Workout description</span></label>
+  <textarea id="note" placeholder="1.16 miles at 3.3 on treadmill for 22 minutes, then 20 push-ups"></textarea>
+  <button class="primary" id="parseBtn" type="button">Review workout</button>
+  <p class="footnote">Today and your current time are automatic. Say “yesterday” or enter a date to backdate.</p>
+  <p id="message" role="status" aria-live="polite"></p>
+  <input type="hidden" id="csrf" value="">
+  <section class="review" id="review" hidden aria-label="Review exercise entries">
+   <h2 id="reviewHeading">Review exercises</h2>
+   <p class="muted">Only the details recognized from your text are filled in. Edit anything before saving.</p>
+   <div id="reviewList"></div>
+   <details><summary>Change recorded time or attach a photo (optional)</summary>
+    <div class="utility">
+     <label class="field"><span>Time (local)</span><input type="time" id="sessionTime"></label>
+     <label class="field"><span>Photo</span><input type="file" id="photo" accept="image/jpeg,image/png,image/webp"></label>
+    </div>
+    <p class="footnote">One photo attaches to the first exercise. Stored privately; maximum 5 MB.</p>
+   </details>
+   <button class="primary" id="saveBtn" type="button">Save workout</button>
+  </section>
+  <details><summary>Enter an exercise manually instead</summary>
+   <form id="manualForm">
+    <div class="field-grid">
+     <label class="field full"><span>Exercise</span><input name="exercise" required placeholder="e.g. treadmill"></label>
+     <label class="field"><span>Date</span><input type="date" name="date" id="manualDate" required></label>
+     <label class="field"><span>Miles</span><input type="number" min="0" step="any" name="distance_miles"></label>
+     <label class="field"><span>Minutes</span><input type="number" min="0" step="any" name="duration_minutes"></label>
+     <label class="field"><span>Speed (mph)</span><input type="number" min="0" step="any" name="speed_mph"></label>
+     <label class="field"><span>Reps</span><input type="number" min="0" step="any" name="reps"></label>
+     <label class="field"><span>Sets</span><input type="number" min="0" step="any" name="sets"></label>
+     <label class="field"><span>Weight (lb)</span><input type="number" min="0" step="any" name="weight_lb"></label>
+     <label class="field full"><span>Notes</span><textarea rows="2" name="notes"></textarea></label>
+     <label class="field full"><span>Photo (optional)</span><input type="file" name="photo" accept="image/jpeg,image/png,image/webp"></label>
+    </div>
+    <button class="primary" type="submit">Save manual entry</button>
+   </form>
+  </details>
+ </section>
+ <section class="panel" aria-label="Progress overview">
+  <h2>Progress over time</h2>
+  <p class="muted lead">Every exercise has its own trend. No mixed-up treadmill and push-up numbers.</p>
+  <p class="empty" id="empty">Your first workout starts your history. Log a session above to see progress here.</p>
+  <div id="trendPanel" hidden>
+   <div class="filters">
+    <label>Exercise<select id="exerciseFilter"></select></label>
+    <label>Measurement<select id="metric">
+     <option value="distance_miles">Distance (miles)</option>
+     <option value="duration_minutes">Duration (minutes)</option>
+     <option value="speed_mph">Speed (mph)</option>
+     <option value="reps">Repetitions</option>
+     <option value="sets">Sets</option>
+     <option value="weight_lb">Weight (lb)</option>
+    </select></label>
+   </div>
+   <canvas id="chart" width="650" height="280" role="img" aria-label="Trend of selected exercise and measurement"></canvas>
+   <p id="trend" aria-live="polite"></p>
+  </div>
+  <h2 style="margin-top:28px">Recent workouts</h2>
+  <ul id="recent" class="recent-list"></ul>
+ </section>
+</div>
+<footer>Private fitness log · Powered by 1-Framework and central user-management</footer>
+</main></body></html>

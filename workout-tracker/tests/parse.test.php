@@ -1,0 +1,35 @@
+<?php
+/* File Name: parse.test.php
+Author: Jason Lamb (with help from ChatGPT)
+Description: Standalone CLI regression tests for key-free workout descriptions.
+Revision: 1.1.0
+Created Date: 2026-10-21
+Modified Date: 2026-10-21
+Changelog: 1.1.0 - Validate workouts, multi-exercise separation, dates, and invalid input. */
+declare(strict_types=1);
+require dirname(__DIR__) . '/parse.php';
+$cases=[
+ ['1.16 miles at 3.3 on treadmill for today for 22 minutes',[['exercise'=>'treadmill','date'=>'2026-10-21','distance_miles'=>1.16,'speed_mph'=>3.3,'duration_minutes'=>22]]],
+ ['Walked 1.16 miles on the treadmill for 22 minutes at 3.3 mph, then did 20 push-ups',[['exercise'=>'treadmill','distance_miles'=>1.16,'duration_minutes'=>22],['exercise'=>'push-ups','reps'=>20]]],
+ ['3 sets of 10 squats and 20 lunges',[['exercise'=>'squats','reps'=>10,'sets'=>3],['exercise'=>'lunges','reps'=>20]]],
+ ['Yesterday walked 3 km in 45 minutes',[['exercise'=>'walking','date'=>'2026-10-20','distance_miles'=>1.864,'duration_minutes'=>45]]],
+ ['10/20/2026 ran 2 mi in 20 mins',[['exercise'=>'running','date'=>'2026-10-20','distance_miles'=>2,'duration_minutes'=>20]]],
+ ['Last Monday biked 10 miles for 1 hr 15 minutes',[['exercise'=>'cycling','date'=>'2026-10-19','distance_miles'=>10,'duration_minutes'=>75]]],
+ ['Did 4x12 pushups',[['exercise'=>'push-ups','sets'=>4,'reps'=>12]]],
+ ['Plank for 60 seconds',[['exercise'=>'plank','duration_minutes'=>1]]],
+ ['Bench press 3 sets of 8 reps at 75 lb',[['exercise'=>'bench press','sets'=>3,'reps'=>8,'weight_lb'=>75]]]
+];
+foreach($cases as $i=>[$input,$expected]){
+ $records=workout_parse_text($input,'2026-10-21');
+ if(count($records)!==count($expected))throw new RuntimeException('Case '.$i.' count mismatch.');
+ foreach($expected as $j=>$wanted)foreach($wanted as $field=>$value){
+  $actual=$records[$j][$field]??null;
+  if(is_numeric($value)?abs((float)$actual-(float)$value)>0.002:$actual!==$value)
+   throw new RuntimeException('Case '.$i.' '.$field.' mismatch: '.json_encode($records[$j]));
+ }
+}
+foreach(['','gym workout','treadmill on 2026-02-30'] as $bad){
+ try{workout_parse_text($bad,'2026-10-21');throw new RuntimeException('Invalid input accepted.');}
+ catch(InvalidArgumentException $e){}
+}
+echo 'Passed '.count($cases).' extraction examples and 3 invalid-input cases.'.PHP_EOL;
