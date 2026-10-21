@@ -1,0 +1,52 @@
+/*
+File Name: app.css
+Author: Jason Lamb (with help from ChatGPT)
+Description: Calm, responsive workout dashboard with compact progressive-entry controls.
+Revision: 1.1.0
+Created Date: 2026-10-21
+Modified Date: 2026-10-21
+Changelog: 1.1.0 - Mobile-first quick entry, measured progress, accessible review layout.
+*/
+:root{color-scheme:dark;font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#08141f;color:#e7f5f8}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% 0%,#173b44 0%,#0b1a29 50%,#08141f 100%);min-height:100vh}
+main{max-width:1120px;margin:0 auto;padding:clamp(16px,3vw,36px) clamp(16px,4vw,44px) 65px}
+h1,h2,h3,p{margin-top:0}h1{font-size:clamp(2.4rem,8vw,4.5rem);line-height:1.1;letter-spacing:-.045em;margin:12px 0}h2{font-size:1.35rem;letter-spacing:-.025em;margin-bottom:10px}h3{font-size:1.06rem;margin:0}
+.hero{padding:20px 0 16px;display:flex;justify-content:space-between;gap:15px;align-items:flex-start}
+.eyebrow{text-transform:uppercase;letter-spacing:.19em;color:#6bdfcb;font-size:.72rem;font-weight:800}
+.subtitle{color:#bad1dc;margin:0;font-size:1rem}.hero-mark{width:68px;height:68px;border:1px solid #376a70;background:#153945;border-radius:23px;display:grid;place-items:center;flex:none;color:#7ce3c7}
+.hero-mark svg{width:35px;height:35px}.version{color:#8ba8b7;font-size:.75rem;margin-top:12px}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:20px 0}
+.stat{border:1px solid #2b4558;border-radius:18px;padding:17px;background:linear-gradient(140deg,#183343,#122536)}
+.stat strong{font-size:clamp(1.6rem,5vw,2.5rem);line-height:1.15;display:block;font-variant-numeric:tabular-nums;margin-top:5px}.stat span{color:#aac1ce;font-size:.85rem}
+.content{display:grid;gap:18px}.panel{background:linear-gradient(155deg,#15293a,#112232);border:1px solid #29465b;border-radius:22px;padding:clamp(18px,4vw,28px);min-width:0;box-shadow:0 15px 35px #020e191f}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.day-label{background:#214d50;border:1px solid #2e7672;color:#d8fff4;font-size:.83rem;border-radius:100px;padding:6px 12px;white-space:nowrap}
+.muted{color:#aebfcb}.lead{margin-bottom:14px}textarea,input,select,button{font:inherit;max-width:100%}
+textarea,input,select{width:100%;border:1px solid #456378;background:#091827;color:#e9f9fc;border-radius:12px;padding:12px 13px;outline-offset:3px}
+textarea:focus,input:focus,select:focus{outline:2px solid #6adfc7}textarea{resize:vertical}#note{min-height:125px;font-size:1.05rem;line-height:1.6;padding:17px}
+button{cursor:pointer;border:0;border-radius:12px;padding:14px 18px;font-weight:750;transition:filter .15s ease,transform .15s ease}
+button:hover{filter:brightness(1.1)}button:active{transform:translateY(1px)}button:disabled{opacity:.55;cursor:wait}
+.primary{width:100%;background:linear-gradient(115deg,#2fbbab,#3a8ed2);color:#031b2c;margin-top:13px}
+.subtle-button{background:#274658;color:#d7f1f6}
+.footnote{font-size:.83rem;color:#9db6c4;margin:10px 0 0}
+#message{margin-top:12px;min-height:24px;color:#90ead4;font-size:.94rem}#message.error{color:#ffbfad}
+[hidden]{display:none!important}.review{margin-top:18px;border-top:1px solid #315063;padding-top:18px}
+.review-card{border:1px solid #31566a;border-radius:16px;background:#112939;padding:16px;margin:12px 0}
+.review-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.review-top p{color:#b1cbd5;font-size:.9rem;margin:5px 0 0}.date-chip{color:#a5ddda;font-size:.75rem;border:1px solid #3e636c;border-radius:100px;padding:5px 8px;white-space:nowrap}
+details{margin-top:10px}summary{color:#86d9d3;cursor:pointer;font-size:.92rem;padding:8px 2px;user-select:none}
+.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding-top:8px}
+.field{display:block;color:#bcd1dc;font-size:.82rem}.field span{display:block;margin-bottom:5px}.field.full{grid-column:1/-1}
+.field-grid input,.field-grid textarea{font-size:.93rem;padding:9px;min-width:0}
+.field input[type=file]{font-size:.85rem}.utility{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+#manualForm{padding-top:7px}#manualForm .primary{margin-top:18px}
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.filters label{font-size:.79rem;color:#bed5dd}.filters select{margin-top:5px;font-size:.9rem}
+#chart{display:block;width:100%;height:auto;background:#0d2331;border-radius:14px;border:1px solid #294a5c}
+#trend{color:#c3dce2;font-size:.84rem;margin:12px 0 0}
+.recent-list{padding:0;margin:16px 0 0;list-style:none}.recent-list li{display:grid;grid-template-columns:1fr auto;gap:2px 12px;border-top:1px solid #264251;padding:12px 0}
+.recent-list span{color:#91b7c4;font-size:.8rem}.recent-list small{grid-column:1/-1;color:#a9c8d2}
+.empty{padding:26px;text-align:center;color:#a7c5cd;border:1px dashed #38596a;border-radius:14px}
+footer{margin-top:23px;color:#839eae;text-align:center;font-size:.75rem}
+@media(min-width:840px){.stats{grid-template-columns:repeat(4,1fr)}.content{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)}.panel{align-self:start}}
+@media(max-width:420px){.hero-mark{width:50px;height:50px;border-radius:15px}.hero-mark svg{width:28px;height:28px}.review-top{flex-wrap:wrap}.field-grid{grid-template-columns:1fr 1fr}.stat{padding:14px}}
+@media(prefers-reduced-motion:reduce){button{transition:none}*{scroll-behavior:auto!important}}
