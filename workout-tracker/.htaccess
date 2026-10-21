@@ -1,0 +1,10 @@
+# File Name: .htaccess
+# Author: Jason Lamb (with help from ChatGPT)
+# Description: Deny HTTP access to private and template configuration files.
+# Revision: 1.0.0
+# Created Date: 2026-10-21
+# Modified Date: 2026-10-21
+# Changelog: 1.0.0 - Protect local AI configuration and related templates.
+<FilesMatch "^config\.local\.(?:example\.)?php(?:\.placeholder)?$">
+    Require all denied
+</FilesMatch>

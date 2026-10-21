@@ -1,0 +1,8 @@
+# File Name: storage/photos/.placeholder
+# Author: Jason Lamb (with help from ChatGPT)
+# Description: Tracked marker for private per-user workout photo storage.
+# Revision: 1.0.0
+# Created Date: 2026-10-21
+# Modified Date: 2026-10-21
+# Changelog: 1.0.0 - Keep private photo upload directory in deployed source.
+# Per-user photo subdirectories are generated automatically when an image is uploaded.

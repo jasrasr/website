@@ -1,0 +1,11 @@
+# File Name: config.local.php.placeholder
+# Author: Jason Lamb (with help from ChatGPT)
+# Description: Safe marker documenting that optional API credentials are provisioned on Hostinger only.
+# Revision: 1.0.0
+# Created Date: 2026-10-21
+# Modified Date: 2026-10-21
+# Changelog: 1.0.0 - Document exact target name and no-key default behavior.
+# This is NOT the actual config; only config.local.php is loaded by PHP.
+# To enable optional AI, COPY config.local.example.php to config.local.php
+# (remove '.example' only), enter the key on Hostinger, and deny public web access.
+# No API key is required for normal local workout parsing.

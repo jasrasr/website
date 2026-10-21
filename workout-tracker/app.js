@@ -1,10 +1,10 @@
 /* File Name: app.js
 Author: Jason Lamb (with help from ChatGPT)
 Description: Workout quick entry, editable review, and per-exercise trends.
-Revision: 1.1.0
+Revision: 1.2.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-21
-Changelog: 1.1.0 - Local parsing without API key and multi-exercise saving. */
+Changelog: 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
 'use strict';
 const $=selector=>document.querySelector(selector);
 const measures=[['distance_miles','Miles'],['duration_minutes','Minutes'],['speed_mph','Speed (mph)'],['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']];
@@ -68,6 +68,18 @@ async function review(){
  }catch(e){$('#review').hidden=true;message(e.message,true);}
  finally{button.disabled=false;button.textContent='Review workout';}
 }
+async function retryWithAi(){
+ const note=$('#note').value.trim();
+ if(!note){message('Describe your workout first.',true);$('#note').focus();return;}
+ const button=$('#aiParseBtn');button.disabled=true;button.textContent='Asking AI to interpret…';
+ try{
+  const data=payload('parse_ai');data.set('note',note);data.set('today',localDate());
+  const result=await api(data);
+  renderReview(result.suggestions);
+  message('AI suggested these details. Confirm each value before saving.');
+ }catch(e){message(e.message,true);}
+ finally{button.textContent='Try AI interpretation instead (optional)';button.disabled=!button.dataset.enabled;}
+}
 async function save(rows,photo=null){
  const button=$('#saveBtn');button.disabled=true;button.textContent='Saving…';
  try{const data=payload('save_batch');data.set('entries',JSON.stringify(rows));
@@ -118,9 +130,16 @@ function draw(){
  const change=vals.at(-1)-vals[0];
  $('#trend').textContent=points.length>1?points.length+' measurements · First '+vals[0]+' · Latest '+vals.at(-1)+' · Change '+(change>0?'+':'')+Number(change.toFixed(2)):'First measurement logged. Add another to see your trend.';
 }
-async function load(){try{const data=await api();entries=data.entries;$('#csrf').value=data.csrf;refresh();}catch(e){message(e.message,true);}}
+async function load(){try{const data=await api();entries=data.entries;$('#csrf').value=data.csrf;
+ const retry=$('#aiParseBtn');retry.dataset.enabled=data.ai_available?'yes':'';
+ retry.disabled=!data.ai_available;
+ $('#aiHint').textContent=data.ai_available
+  ?'AI fallback is configured. Select it only when the local interpretation needs another try. Your description will be sent to your configured AI provider.'
+  :'AI fallback is optional and disabled until config.local.example.php is copied to config.local.php on Hostinger with a private API key.';
+ refresh();}catch(e){message(e.message,true);}}
 $('#dateLabel').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
 $('#parseBtn').addEventListener('click',review);
+$('#aiParseBtn').addEventListener('click',retryWithAi);
 $('#note').addEventListener('input',()=>{$('#review').hidden=true;});
 $('#saveBtn').addEventListener('click',()=>{try{save(collect(),$('#photo').files[0]||null);}catch(e){message(e.message,true);}});
 $('#exerciseFilter').addEventListener('change',draw);$('#metric').addEventListener('change',draw);

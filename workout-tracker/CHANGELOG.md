@@ -2,12 +2,20 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release history for private Workout Tracker.
-Revision: 1.0.0
+Revision: 1.1.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-21
-Changelog: 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
+Changelog: 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
 -->
 # Workout Tracker changelog
+
+## v1.2.0 — 2026-10-21
+
+- Add explicit, optional **Try AI interpretation instead** action for uncertain or failed local text parsing; requires a private, configured provider and always shows a review before save.
+- Standardize secret template as `config.local.example.php`; copy to ignored `config.local.php` on Hostinger by removing only `.example`.
+- Track `.placeholder` markers for config instructions, private workout JSON storage and photo directory. Enforce local configuration HTTP denial.
+- Prepare six mobile screenshot assets for import; add `screenshots/README.md` with filenames and import instructions. Binary images are not yet committed.
+- Update framework-wide development instructions so future hosted projects follow these conventions.
 
 ## v1.1.0 — 2026-10-21
 

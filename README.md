@@ -2,10 +2,11 @@
 File Name     : README.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Repository overview, development conventions, project index, and deployment guidance.
-Revision      : 1.0.4
+Revision      : 1.0.5
 Created Date  : 2025-02-14
 Modified Date : 2026-10-21
 Changelog     :
+  Rev 1.0.5 - Clarified exact-name config examples, protected placeholders and optional opt-in AI fallback.
   Rev 1.0.4 - Indexed Workout Tracker with key-free quick entry.
   Rev 1.0.3 - Linked the compiled project TODO list.
   Rev 1.0.2 - Added Build Signal source, revision notes, and illustration manifest for Codex CLI visual iteration.
@@ -32,6 +33,8 @@ These repository-wide requirements apply to new work and updates:
 - Keep strict data formats valid: JSON uses a leading `_header` metadata object instead of comments; binary assets use supported native metadata or an accompanying documented manifest.
 - Include configuration examples without secrets, input/failure handling, and appropriate tests or a concrete manual validation procedure for functional changes.
 - Reuse applicable framework components. New account-based PHP projects use the shared user-management provider through `SharedIdentity::connect()`; introducing another account store requires an explicit design decision.
+- For host-only settings use `config.local.example.php` → `config.local.php`: remove **only `.example`** on Hostinger, not another section of the filename. Track safe `.placeholder` files for ignored runtime directories with explicit `.gitignore` exceptions; document files the application auto-creates versus secrets copied manually. Never commit credentials.
+- If a no-key parser is backed by an optional external AI provider, keep local entry as default and show an explicit **Retry with AI** option when parsing is uncertain; never send text or save AI suggestions automatically.
 - Preserve existing saves, permissions, ignored runtime data, and deployment behavior. Document compatibility or migration needs. For Jason-requested PR changes, prepare the result for review and obtain explicit confirmation before merging.
 - Update this project index when folders are added, renamed, or removed. Verify paths against the repository; identify placeholders and test/support folders, and do not imply an unverified deployment is live.
 
