@@ -2,10 +2,10 @@
 File Name: app.css
 Author: Jason Lamb (with help from ChatGPT)
 Description: Calm, responsive workout dashboard with compact progressive-entry controls.
-Revision: 1.1.0
+Revision: 1.2.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-21
-Changelog: 1.1.0 - Mobile-first quick entry, measured progress, accessible review layout.
+Changelog: 1.2.0 - Add low-emphasis optional AI retry action. 1.1.0 - Mobile-first quick entry, measured progress, accessible review layout.
 */
 :root{color-scheme:dark;font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#08141f;color:#e7f5f8}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% 0%,#173b44 0%,#0b1a29 50%,#08141f 100%);min-height:100vh}
@@ -27,6 +27,9 @@ button{cursor:pointer;border:0;border-radius:12px;padding:14px 18px;font-weight:
 button:hover{filter:brightness(1.1)}button:active{transform:translateY(1px)}button:disabled{opacity:.55;cursor:wait}
 .primary{width:100%;background:linear-gradient(115deg,#2fbbab,#3a8ed2);color:#031b2c;margin-top:13px}
 .subtle-button{background:#274658;color:#d7f1f6}
+.secondary-action{display:block;margin-top:9px;width:100%;background:transparent;border:1px solid #456378;color:#bfe0e6;font-weight:600;padding:10px 12px}
+.secondary-action:disabled{opacity:.62;cursor:not-allowed}
+.secondary-action:not(:disabled):hover{background:#254457}
 .footnote{font-size:.83rem;color:#9db6c4;margin:10px 0 0}
 #message{margin-top:12px;min-height:24px;color:#90ead4;font-size:.94rem}#message.error{color:#ffbfad}
 [hidden]{display:none!important}.review{margin-top:18px;border-top:1px solid #315063;padding-top:18px}
