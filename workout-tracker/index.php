@@ -171,6 +171,7 @@ if (isset($_GET['api'])) {
                 }
                 $normalized[]=$entry;
             }
+            if ($action === 'parse') reply(200,['suggestion'=>$normalized[0]]); // Preserve legacy API response shape.
             reply(200,['suggestions'=>$normalized,'source'=>'ai']);
         }
         if ($action !== 'save') reply(400,['error'=>'Unknown action']);
