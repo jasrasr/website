@@ -47,6 +47,7 @@ $request=json_decode($body,true);
 if (!is_array($request)) reply(400,['error'=>'Invalid JSON request.']);
     require_once __DIR__.'/ReviewService.php';
     require_once __DIR__.'/AiReviewer.php';
+    require_once __DIR__.'/ReviewCache.php';
     if (!function_exists('curl_init')) throw new RuntimeException('PHP cURL is required.');
     $service=new ReviewService($config);
     $action=$request['action'] ?? '';
@@ -56,9 +57,13 @@ if (!is_array($request)) reply(400,['error'=>'Invalid JSON request.']);
     if (!$id || !in_array($action,['detail','analyze'],true)) reply(400,['error'=>'Invalid action or ticket ID.']);
     $reviewStage = 'Freshservice ticket history';
     $detail=$service->detail($id);
+    $reviewStage = 'review cache';
+    $cache=new ReviewCache($config);
     if ($action==='analyze') {
         $reviewStage = 'AI analysis';
-        $detail['review']=AiReviewer::review($detail,$config);
+        $detail += $cache->analyze($detail,($request['force'] ?? false)===true,fn()=>AiReviewer::review($detail,$config));
+    } elseif (($entry=$cache->load($detail))!==null) {
+        $detail += ['review'=>$entry['review'],'reviewed_at'=>$entry['reviewed_at'],'review_cached'=>true];
     }
     reply(200,$detail);
 } catch (RuntimeException $e) {

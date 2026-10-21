@@ -15,12 +15,14 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: curl
+          extensions: curl, openssl
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - run: find fs/review -name '*.php' -print0 | xargs -0 -n1 php -l
       - run: php fs/tests/review-test.php
+      - run: php fs/review/cache-test.php
+      - run: node fs/review/login-test.cjs
       - run: node --check fs/review/review.js
       - run: node fs/tests/review-response-test.js
       - run: python3 fs/tests/review-http-test.py

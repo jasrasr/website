@@ -1,4 +1,4 @@
 Options -Indexes
-<FilesMatch "^(ReviewService|AiReviewer)\.php$">
+<FilesMatch "^(ReviewService|AiReviewer|ReviewCache|cache-test)\.php$">
 Require all denied
 </FilesMatch>
