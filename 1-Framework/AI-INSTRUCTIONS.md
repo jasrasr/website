@@ -2,10 +2,10 @@
 File Name: AI-INSTRUCTIONS.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Framework-wide coding and deployment rules for AI-assisted projects.
-Revision: 1.1.0
+Revision: 1.2.0
 Created Date: 2026-09-20
 Modified Date: 2026-10-21
-Changelog: 1.1.0 - Standardize removable .example suffixes and tracked runtime placeholders.
+Changelog: 1.2.0 - Default to regular GitHub merge commits to preserve original development commits and tool provenance. 1.1.0 - Standardize removable .example suffixes and tracked runtime placeholders.
 -->
 # AI Development Instructions
 
@@ -57,6 +57,14 @@ These instructions apply to all AI-assisted changes inside `1-Framework` and to 
 - Use file locking and atomic replacement for writes.
 - Preserve backwards compatibility or provide an explicit migration.
 - Follow `docs/JSON-STANDARD.md` for API responses.
+
+## GitHub pull request merge policy
+
+- **Default to GitHub's regular “Create a merge commit” method** for PRs in this repository. Preserve the branch's individual commits, original commit hashes, authorship, timestamps, and development history. This is particularly useful when Codex CLI, Claude Code, ChatGPT, and other tools collaborate on a feature.
+- **Do not automatically squash** a PR, regardless of the number of intermediate commits. Use **Squash and merge** only when Jason explicitly requests squashing for that PR, after explaining that the resulting target branch contains a single combined commit instead of the individual source commits.
+- Use **Rebase and merge** only when Jason explicitly requests it for that PR; warn that rebasing rewrites commit identities and produces different hashes.
+- When requested to merge without naming a method, choose **merge commit**. Respect required reviews, CI, merge conflicts, branch protection, and other repository safeguards. Do not bypass checks or rewrite protected branch history.
+- Prepare PRs for review first; **never merge without explicit user authorization**. Clearly report the chosen method and resulting merge SHA.
 
 ## Change requirements
 
