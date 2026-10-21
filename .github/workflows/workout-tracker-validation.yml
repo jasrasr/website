@@ -1,0 +1,27 @@
+# File Name: workout-tracker-validation.yml
+# Author: Jason Lamb (with help from ChatGPT)
+# Description: Validate Workout Tracker PHP parsing, quotas and config deny patterns.
+# Revision: 1.0.0
+# Created Date: 2026-10-21
+# Modified Date: 2026-10-21
+# Changelog: 1.0.0 - Run syntax and regression checks on relevant source changes.
+name: Workout Tracker validation
+on:
+  pull_request:
+    paths: ['workout-tracker/**', '1-Framework/**', '.github/workflows/workout-tracker-validation.yml']
+  push:
+    branches: [main]
+    paths: ['workout-tracker/**', '1-Framework/**', '.github/workflows/workout-tracker-validation.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax
+        run: find workout-tracker -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Local parser regressions
+        run: php workout-tracker/tests/parse.test.php
+      - name: AI quotas, exemptions, concurrency and config deny patterns
+        run: php workout-tracker/tests/ai-limits.test.php

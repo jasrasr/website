@@ -2,12 +2,20 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release history for private Workout Tracker.
-Revision: 1.1.0
+Revision: 1.2.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-21
-Changelog: 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
+Changelog: 1.2.0 - Document v1.2.1 AI quotas and config backup protection. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
 -->
 # Workout Tracker changelog
+
+## v1.2.1 — 2026-10-21
+
+- Deny case-insensitive `config.local` prefixes, including hidden editor files and backup suffixes.
+- Limit both optional paid AI action aliases to 5 attempts per rolling minute and 50 per rolling 24 hours per central account; atomically reserve before provider calls and return 429 with retry timing when exhausted.
+- Exempt non-demo central Super Admins and optionally configured stable user IDs; retain all authentication, project-access, CSRF and per-call token controls. Demo accounts remain limited.
+- Keep existing private configs intact and apply defaults when new settings are absent. Persist private quota records separately from workout entries with framework locks/atomic writes.
+- Add quota/concurrency/config-filename regressions and Workout Tracker CI. Hostinger deny enforcement and live role/provider checks remain deployment validation steps.
 
 ## v1.2.0 — 2026-10-21
 

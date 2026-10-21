@@ -2,13 +2,14 @@
 /* File Name: index.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: Authenticated workout dashboard and JSON API.
-Revision: 1.2.0
+Revision: 1.2.1
 Created Date: 2026-10-21
 Modified Date: 2026-10-21
-Changelog: 1.2.0 - Add explicit optional AI retry with private config and multi-exercise validation. 1.1.0 - No-key text parsing and atomic multi-exercise logging. 1.0.1 - Use framework JsonStore for private entries. 1.0.0 - Initial release. */
+Changelog: 1.2.1 - Limit paid AI requests with central Super Admin exemptions and protect config backups. 1.2.0 - Add explicit optional AI retry with private config and multi-exercise validation. 1.1.0 - No-key text parsing and atomic multi-exercise logging. 1.0.1 - Use framework JsonStore for private entries. 1.0.0 - Initial release. */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
 require_once __DIR__ . '/parse.php';
+require_once __DIR__ . '/ai-limits.php';
 $auth = \Jasr\Framework\SharedIdentity::connect();
 $user = $auth->requireProject('workout-tracker', $_SERVER['REQUEST_METHOD'] === 'POST' ? 'member' : 'viewer', isset($_GET['api']));
 $uid = (string)$user['id'];
@@ -39,7 +40,7 @@ function workoutAiConfig(): ?array {
         || parse_url($endpoint, PHP_URL_SCHEME)!=='https'
         || parse_url($endpoint, PHP_URL_USER)!==null
         || parse_url($endpoint, PHP_URL_PASS)!==null) return null;
-    return ['endpoint'=>$endpoint,'model'=>$model,'api_key'=>$key];
+    return ['endpoint'=>$endpoint,'model'=>$model,'api_key'=>$key,'request_limits'=>workout_ai_limits($cfg)];
 }
 if (isset($_GET['api'])) {
     try {
@@ -129,6 +130,13 @@ if (isset($_GET['api'])) {
             ],'max_tokens'=>1800];
             $ch=curl_init($cfg['endpoint']);
             if (!$ch) reply(502,['error'=>'Could not initialize AI interpretation.']);
+            // Reserve before contacting the provider; failed attempts may still cost money.
+            $retry=workout_ai_reserve($root,$user,$cfg['request_limits']);
+            if ($retry>0) {
+                curl_close($ch);
+                header('Retry-After: '. $retry);
+                reply(429,['error'=>'AI request limit reached. Try again later or use local parsing.','retry_after'=>$retry]);
+            }
             curl_setopt_array($ch,[
                 CURLOPT_POST=>true,
                 CURLOPT_POSTFIELDS=>json_encode($payload,JSON_THROW_ON_ERROR),
@@ -218,7 +226,7 @@ if (isset($_GET['api'])) {
  <div><div class="eyebrow">Personal fitness · Your pace</div>
   <h1>Keep moving.</h1>
   <p class="subtitle">Every session counts. Progress happens one workout at a time.</p>
-  <p class="version">Workout Tracker v1.2.0 · Updated October 21, 2026</p>
+  <p class="version">Workout Tracker v1.2.1 · Updated October 21, 2026</p>
  </div>
  <div class="hero-mark" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 25h9l6-11 9 22 7-14h11"/></svg></div>
 </header>
