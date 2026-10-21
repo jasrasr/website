@@ -1,8 +1,8 @@
 # File Name: .htaccess
-Author: Jason Lamb (with help from ChatGPT)
-Description: Block web access to workout runtime files.
-Revision: 1.0.0
-Created Date: 2026-10-21
-Modified Date: 2026-10-21
-Changelog: 1.0.0 - Initial release.
+# Author: Jason Lamb (with help from ChatGPT)
+# Description: Block web access to workout runtime files.
+# Revision: 1.0.0
+# Created Date: 2026-10-21
+# Modified Date: 2026-10-21
+# Changelog: 1.0.0 - Initial release.
 Require all denied
