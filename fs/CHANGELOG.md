@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Format is loosely based
 
 ## Unreleased
 
+## 2026-10-21
+- Rev 1.10.0: Remember successful review logins for seven days; Lock forgets the saved login.
+- Continue batch AI review after a failed ticket and list failures for manual review or retry.
+- Persist validated AI reviews encrypted per ticket, restore them across reloads, and reuse them without AI calls until ticket content changes. Ignore age and timestamp-only changes. Add Force new AI review and display review time/cache status.
+- Validate cache reuse, change detection, forced refresh, credential isolation, malformed storage, and batch continuation with synthetic regression checks; run the cache checks in CI.
+
 ## 2026-10-20
 - Added an **Open all ticket tabs** action to the private review queue. It opens the complete loaded unresolved queue in the current browser after confirming the ticket count, reports blocked tabs, and explains how to use Chrome and allow site pop-ups. Rev 1.9.0.
 
