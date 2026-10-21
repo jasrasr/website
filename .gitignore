@@ -69,3 +69,7 @@ how-much-time-worked/Original HEIC/
 workout-tracker/config.local.php
 workout-tracker/storage/*
 !workout-tracker/storage/.htaccess
+!workout-tracker/storage/.placeholder
+!workout-tracker/storage/photos/
+workout-tracker/storage/photos/*
+!workout-tracker/storage/photos/.placeholder
