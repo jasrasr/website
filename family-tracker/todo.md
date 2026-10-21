@@ -1,12 +1,14 @@
 <!--
-Project: Family GPS Tracker
-File: todo.md
-Revision: 1.6.12
+File Name     : todo.md
+Revision      : 1.6.13
 Project Revision Reference: 1.6.12
-Description: Feature backlog and improvement ideas for the PHP/JSON family tracker.
-Author: Jason Lamb / ChatGPT scaffold
-Created: 2026-07-06
-Modified: 2026-08-16
+Description   : Feature backlog and improvement ideas for the PHP/JSON family tracker.
+Author        : Jason Lamb (with help from ChatGPT)
+Created Date  : 2026-07-06
+Modified Date : 2026-10-20
+Changelog     :
+  Rev 1.6.13 - Rechecked outstanding security and PWA items against current source and added validation follow-up.
+  Rev 1.6.12 - Recorded completed owner member-management and prior feature work.
 -->
 
 # Family GPS Tracker TODO
@@ -67,6 +69,10 @@ Current App Revision Context: **1.6.12**
 - [ ] Add a PNG icon set for broader home-screen compatibility.
 - [ ] Evaluate offline location-update queuing; do not queue sensitive writes without conflict handling.
 
+### Validation
+
+- [ ] Add browser checks for installed-app fallback, offline messaging, and reconnect behavior before changing the service worker or location flow.
+
 ## Implementation notes
 
 - Keep revision numbers in the 1.x+ pattern.
@@ -75,6 +81,3 @@ Current App Revision Context: **1.6.12**
 - Avoid hardcoded administrator credentials.
 - Keep the automatic location-permission request on launch unless explicitly changed later.
 - Preserve the mobile map fallback because iPhone browser map behavior remains fragile.
-
-
-

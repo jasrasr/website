@@ -2,10 +2,11 @@
 File Name     : README.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Repository overview, development conventions, project index, and deployment guidance.
-Revision      : 1.0.2
+Revision      : 1.0.3
 Created Date  : 2025-02-14
 Modified Date : 2026-10-20
 Changelog     :
+  Rev 1.0.3 - Linked the compiled project TODO list.
   Rev 1.0.2 - Added Build Signal source, revision notes, and illustration manifest for Codex CLI visual iteration.
   Rev 1.0.1 - Listed Khootish and Quiz Web Interactive as separate projects; marked the unavailable Quiz Web Interactive source path without substituting another app.
   Rev 1.0.0 - Added framework-first development requirements and complete folder inventory; corrected the stale quiz path. Earlier unversioned history remains in Git.
@@ -47,6 +48,8 @@ Folders in this repo sync under `https://jasr.me/github/<folder>/`, which is the
 ## Project index
 
 The entries below describe source present in the repository. Canonical URLs are live or target locations under the convention above; this inventory does not verify every deployed endpoint.
+
+The [repository-wide TODO list](ALL-TODOS.md) collects the TODO files kept in each project folder.
 
 | Project | Repo path / docs | Live or target URL | Notes |
 |---|---|---|---|\n| Build Signal walkthrough | [build-signal/](build-signal/) / [README](build-signal/README.md) | [Private ChatGPT Site](https://jason-ai-build-flow.jasrasr.chatgpt.site) | Illustrated, narrated AI development workflow. Source is here for local Codex CLI visual refinement; the linked Site remains owner-only. |

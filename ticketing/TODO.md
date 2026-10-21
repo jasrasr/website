@@ -1,12 +1,19 @@
 <!--
-File: TODO.md
-File Revision: 1.0.0
-Modified: 2026-09-14
-History:
-1.0.0 - Updated future backlog after authentication and persistent directories were implemented.
+File Name: TODO.md
+Author: Jason Lamb (with help from ChatGPT)
+Description: Verified backlog for the Ticketing application.
+Revision: 1.1.0
+Created Date: 2026-09-14
+Modified Date: 2026-10-20
+Changelog: 1.1.0 - Marked category management complete and clarified current security migration priorities.
 -->
 
 # Ticketing Future Features / TODO
+
+## Current priorities
+- [ ] Verify the deployed `TEST_MODE` setting and remove password-free sign-in as part of the per-project shared-identity migration. Preserve requester ticket ownership and agent-only private notes. Source: `user-management/MIGRATION-TRACKER.md`; the current `index.php` still bypasses password verification in test mode.
+- [ ] Apply CSRF validation to every state-changing endpoint. `categories.php` already checks a token for its forms, so audit the remaining `index.php` and `csv.php` routes rather than treating category management as unfinished.
+- [ ] Add focused tests for requester/agent access, ticket ownership, and private-note filtering before changing authentication.
 
 ## Authentication and account management
 - [x] Requester login.
@@ -37,7 +44,7 @@ History:
 
 ## Ticket workflow
 - [ ] Departments and agent groups.
-- [ ] Configurable categories and subcategories.
+- [x] Configurable categories and subcategories (`categories.php` and runtime category JSON).
 - [ ] Ticket types: Incident, Service Request, Problem, Change, Question.
 - [ ] Custom fields.
 - [ ] Tags.
