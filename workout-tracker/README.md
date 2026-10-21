@@ -1,11 +1,11 @@
 <!--
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
-Description: Setup, key-free quick entry, privacy and testing for Workout Tracker.
+Description: Setup, key-free quick entry, optional AI and screenshot import guidance for Workout Tracker.
 Revision: 1.2.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-21
-Changelog: 1.2.0 - Optional AI retry, exact-name config template and public screenshots gallery. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
+Changelog: 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
 -->
 # Workout Tracker
 
@@ -68,16 +68,8 @@ The parser regression tests cover treadmill wording, sets/reps, multiple exercis
 
 The October 21, 2026 workout (1.16 miles, 22 minutes, 3.3 mph) is **not imported**. Enter it once after deploying the revised application.
 
-## Screenshots (mobile)
+## Mobile screenshots
 
-The following images are captured from the live Workout Tracker on October 21, 2026. They illustrate the entry flow and chart views from v1.1.0; the optional AI retry is introduced in v1.2.0.
+Six October 21, 2026 screenshots have been prepared as a **separate import archive**. Their exact filenames and provenance are documented in [screenshots/README.md](screenshots/README.md). The screenshot images are not yet committed in this branch, so a gallery is intentionally not embedded here until the files have been uploaded to the repository.
 
-| Dashboard | Natural-language quick entry |
-|---|---|
-| ![Mobile overview and session counters](screenshots/01-dashboard-overview.webp) | ![Text workout description and Review workout button](screenshots/02-natural-language-entry.webp) |
-| **Push-ups example** | **Recognized exercise review** |
-| ![100 push-ups natural language entry](screenshots/03-push-ups-entry.webp) | ![Recognized push-ups with optional photo and time](screenshots/04-recognized-review.webp) |
-| **Progress over time** | **Manual entry** |
-| ![Treadmill trend and recent workouts](screenshots/05-progress-trends.webp) | ![Manually entering measurements](screenshots/06-manual-entry.webp) |
-
-Screenshots are documentation-only, stored in `workout-tracker/screenshots/`; user-uploaded workout photos remain in private, ignored `storage/photos/`.
+The archive contains six matching WebP files under `workout-tracker/screenshots/`. It covers the dashboard, quick text entry, push-up example, review, separate trend chart, and manual-entry fallback. User-uploaded workout photos remain private and ignored under `storage/photos/`.
