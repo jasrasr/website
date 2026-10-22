@@ -2,10 +2,10 @@
 /* File Name: parse.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: API-key-free natural-language extraction for workout tracking.
-Revision: 1.1.0
+Revision: 1.2.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-21
-Changelog: 1.1.0 - Extract workout activities, dates, and metrics without external services. */
+Changelog: 1.2.0 - Extract optional tracking tags and treadmill incline percentage. 1.1.0 - Extract workout activities, dates, and metrics without external services. */
 declare(strict_types=1);
 
 /** Recognize common exercise descriptions conservatively; never invent missing measurements. */
@@ -103,7 +103,7 @@ function workout_parse_segment(string $segment, string $exercise, string $date):
     $cardio = in_array($exercise, ['treadmill','walking','running','cycling','rowing','swimming','elliptical','stairs'], true);
     $strength = in_array($exercise, ['push-ups','sit-ups','squats','lunges','crunches','plank','bench press','deadlift','jumping jacks','weight training'], true);
     $out = ['exercise' => $exercise, 'date' => $date, 'distance_miles'=>null, 'duration_minutes'=>null,
-        'speed_mph'=>null, 'reps'=>null, 'sets'=>null, 'weight_lb'=>null, 'notes'=>$segment];
+        'speed_mph'=>null, 'reps'=>null, 'sets'=>null, 'weight_lb'=>null, 'incline_percent'=>null, 'tag'=>'', 'notes'=>$segment];
     if (preg_match('~\b(\d+(?:\.\d+)?)\s*(miles?|mi|kilomet(?:er|re)s?|km)\b~i', $segment, $m)) {
         $out['distance_miles'] = round((float)$m[1] * (str_starts_with(strtolower($m[2]), 'k') ? 0.621371 : 1), 3);
     }
@@ -130,6 +130,15 @@ function workout_parse_segment(string $segment, string $exercise, string $date):
         }
         if (preg_match('~\b(\d+(?:\.\d+)?)\s*(?:lb|lbs|pounds?)\b~i', $segment, $m)) $out['weight_lb']=(float)$m[1];
         elseif (preg_match('~\b(\d+(?:\.\d+)?)\s*(?:kg|kilograms?)\b~i', $segment, $m)) $out['weight_lb']=round((float)$m[1]*2.20462,2);
+    }
+    if ($exercise === 'treadmill') {
+        if (preg_match('~\b(?:incline|grade)\s*(?:at|of|=|:)?\s*(\d{1,3}(?:\.\d+)?)\s*%?~i', $segment, $m)
+            || preg_match('~\b(\d{1,3}(?:\.\d+)?)\s*%\s*(?:incline|grade)\b~i', $segment, $m)) {
+            if ((float)$m[1] <= 100) $out['incline_percent'] = (float)$m[1];
+        }
+    }
+    if (preg_match('~(?:^|\s)#([\p{L}\p{N}][\p{L}\p{N}_-]{0,63})\b~u', $segment, $m)) {
+        $out['tag'] = $m[1];
     }
     return $out;
 }
