@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, key-free quick entry, optional AI and screenshot import guidance for Workout Tracker.
-Revision: 1.2.0
+Revision: 1.3.0
 Created Date: 2026-10-21
-Modified Date: 2026-10-21
-Changelog: 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
+Modified Date: 2026-10-22
+Changelog: 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
 -->
 # Workout Tracker
 
@@ -20,6 +20,16 @@ Private PHP workout logger at https://jasr.me/github/workout-tracker/ using shar
 5. Dates default to the user's **browser-local current date**. Time defaults to the current local time at review. "Yesterday", "last Monday", an ISO date, and US numeric MM/DD/YYYY dates are supported for backdating. An optional time control exists under review details.
 
 The parser is rule-based rather than a general LLM. It recognizes common exercises and explicit numbers but does **not guess missing values**. Unrecognized exercises use the collapsed manual entry form. It does not analyze photos.
+
+## Edit saved workouts, tracking tags and treadmill incline (v1.3.0)
+
+- Under **Workout history**, select **Edit** beside an existing workout (select **View all entries** to go beyond the newest ten). The form preloads exercise, date, local time if stored, distance, speed, duration, reps, sets, weight, treadmill incline, tag and notes. Confirm to update **only that workout record**; **Cancel** makes no change.
+- A tracking **tag** is an optional short label (e.g. `Cardio`, `Morning`, `Recovery`). Enter it before a new quick workout, adjust it in the preview, or attach it while editing a saved workout. Use the **Filter workouts and trends by tag** dropdown to narrow history and the metric chart. Local descriptions containing `#cardio` are recognized as a tag.
+- Treadmill **incline_percent** is an optional separate measurement, not derived from speed/distance and not retroactively assigned to old entries. Log `treadmill 1.2 miles for 23 minutes at 3.5 mph incline 5%`, fill the incline in a preview/manual form, or edit an older treadmill entry. The chart's **Treadmill incline (%)** metric trends it separately.
+- **No JSON migration or destructive initialization:** existing `storage/<hashed-user-id>.json` files keep the same filename and framework envelope (`schemaVersion:1`, `records`). Reads never rewrite records. Existing entries missing `tag`, `incline_percent` or `performed_at` remain valid. No prior values are automatically backfilled.
+- **Targeted edits and recovery:** records are selected by original ID, edited under `JsonStore::update`'s exclusive file lock, and require the exact revision hash supplied by the authenticated GET. A conflicting concurrent edit returns HTTP 409 and saves nothing; missing IDs return 404. `created_at`, `session_id`, `photo` and unknown legacy fields stay intact; untouched records remain unchanged. Every actual edit appends a full prior record snapshot to `edit_history` before saving its new values, so previous values are retained for manual recovery. There is no delete operation.
+- **Before deployment:** back up the *existing* ignored `workout-tracker/storage/` folder, including JSON, `.lock` files and private photos, and verify the Hostinger webhook does **not** run `git clean -fdx`, `rsync --delete` over runtime storage or an equivalent destructive cleanup. Do not reset or replace live JSON files. Backups stay outside the public web directory.
+- **After deployment:** confirm the existing entry count, notes, dates and photos still exist; edit one known record and verify the other entries, session totals, tags and charts remain intact.
 
 ## Optional AI fallback (explicit and private)
 
@@ -50,17 +60,22 @@ Hostinger setup (never do this inside GitHub):
 - storage/.htaccess: deny direct access to JSON records and photos. Photos are private but not yet viewable in the app.
 - JSON follows the 1-Framework schemaVersion 1 records envelope, separated by hashed stable user ID.
 - Saved exercises share a session_id, the chosen date, local time with UTC offset, and creation timestamp. Each batch is written atomically.
-- Entries are append-only. Editing saved entries, OCR, authenticated photo viewing, body weight and blood-pressure logs are future work.
+- Existing entries support revision-checked editing and retained previous values. OCR, authenticated photo viewing, body weight and blood-pressure logs are future work.
 
 ## Verification
 
 Run these from the repository root:
 
     php workout-tracker/tests/parse.test.php
+    php workout-tracker/tests/edit.test.php
+    php -l workout-tracker/entries.php
+    node --check workout-tracker/app.js
     php -l workout-tracker/index.php
     php -l workout-tracker/parse.php
 
 Also test the optional AI fallback with a safe test account/endpoint: disabled without credentials, enabled after server-only setup, failure without exposing keys, returned one or multiple activity suggestions requiring review, and no automatic saves.
+
+The edit tests create an **isolated temporary JSON file**, start with three preexisting legacy entries, edit exactly one, and verify the other two remain byte-for-byte equivalent in decoded records; they also assert timestamps/photos/session IDs remain, the original values are preserved in edit history, bad inputs are rejected, and a stale revision cannot overwrite concurrent updates. CI runs these tests without touching Hostinger storage. Browser execution of the CLI tests is denied by `tests/.htaccess`.
 
 The parser regression tests cover treadmill wording, sets/reps, multiple exercises, dates, durations and invalid text. Test separately on staging/Hostinger: authentication, viewer vs member permissions, CSRF, cross-account isolation, no-key parsing, one-time saves, private file HTTP 403, mobile display, storage persistence, upload size/type validation, and ignored-runtime backups.
 
