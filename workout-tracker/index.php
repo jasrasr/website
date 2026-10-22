@@ -330,6 +330,7 @@ if (isset($_GET['api'])) {
      <option value="distance_miles">Distance (miles)</option>
      <option value="duration_minutes">Duration (minutes)</option>
      <option value="speed_mph">Speed (mph)</option>
+     <option value="incline_percent">Treadmill incline (%)</option>
      <option value="reps">Repetitions</option>
      <option value="sets">Sets</option>
      <option value="weight_lb">Weight (lb)</option>
@@ -342,7 +343,7 @@ if (isset($_GET['api'])) {
     <h2>Workout history</h2>
     <button id="toggleHistory" class="secondary-action history-toggle" type="button" hidden>View all entries</button>
    </div>
-   <label class="field"><span>Filter history by tag</span><select id="historyTag"><option value="">All tags</option></select></label>
+   <label class="field"><span>Filter workouts and trends by tag</span><select id="historyTag"><option value="">All tags</option></select></label>
    <ul id="recent" class="recent-list"></ul>
    <section id="editPanel" class="review edit-panel" hidden aria-labelledby="editTitle">
     <h2 id="editTitle">Edit saved workout</h2>
