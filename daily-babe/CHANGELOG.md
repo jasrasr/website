@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.1 — 2026-10-22
+
+- Refresh the gallery with a warmer, photo-first layout, clearer controls, and responsive styling.
+- Hide inactive notifications fully so no tab peeks up from the bottom edge.
+
 ## 1.3.0 — 2026-10-22
 
 - Give the original account super admin access to all baby galleries through a gallery selector.

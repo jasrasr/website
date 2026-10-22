@@ -21,11 +21,22 @@ $superAdmin = $authenticated && is_super_admin();
 </head>
 <body data-authenticated="<?= $authenticated ? 'true' : 'false' ?>" data-configured="<?= $configured ? 'true' : 'false' ?>" data-legacy-auth="<?= $legacyAuth ? 'true' : 'false' ?>">
 <header class="topbar">
-    <div>
-        <p class="eyebrow">ONE PHOTO · EVERY DAY</p>
-        <h1>Baby Daily</h1>
+    <h1>Baby Daily<span class="brand-dot">.</span></h1>
+    <?php if ($authenticated): ?>
+    <div class="topbar-actions">
+        <?php if ($superAdmin): ?>
+        <div class="baby-switcher">
+            <label for="babySelector">Viewing baby</label>
+            <select id="babySelector">
+                <?php foreach ($authData['accounts'] as $babyAccount): ?>
+                    <option value="<?= htmlspecialchars((string) $babyAccount['babyId']) ?>" <?= current_baby_id() === (string) $babyAccount['babyId'] ? 'selected' : '' ?>><?= htmlspecialchars((string) $babyAccount['username']) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <?php endif; ?>
+        <div class="account-actions"><span><?= htmlspecialchars((string) $account['username']) ?></span><button class="secondary compact" id="logoutButton">Sign out</button></div>
     </div>
-    <?php if ($authenticated): ?><div class="account-actions"><span><?= htmlspecialchars((string) $account['username']) ?></span><button class="secondary compact" id="logoutButton">Sign out</button></div><?php endif; ?>
+    <?php endif; ?>
 </header>
 
 <main>
@@ -42,30 +53,18 @@ $superAdmin = $authenticated && is_super_admin();
             </form>
         </section>
     <?php else: ?>
-        <?php if ($superAdmin): ?>
-        <section class="baby-switcher card" aria-label="Baby galleries">
-            <label for="babySelector">Viewing baby</label>
-            <select id="babySelector">
-                <?php foreach ($authData['accounts'] as $babyAccount): ?>
-                    <option value="<?= htmlspecialchars((string) $babyAccount['babyId']) ?>" <?= current_baby_id() === (string) $babyAccount['babyId'] ? 'selected' : '' ?>><?= htmlspecialchars((string) $babyAccount['username']) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <span><?= count($authData['accounts']) ?> baby <?= count($authData['accounts']) === 1 ? 'gallery' : 'galleries' ?></span>
-        </section>
-        <?php endif; ?>
-        <section class="hero card">
-            <div>
-                <p class="eyebrow">DUE <?= htmlspecialchars((new DateTimeImmutable((string) $settings['dueDate']))->format('F j, Y')) ?></p>
+        <section class="overview" aria-label="Gallery overview">
+            <div class="hero-copy">
                 <h2 id="heroTitle">A little face, one day at a time.</h2>
                 <p id="heroStatus">Loading the gallery…</p>
+                <p class="due-date">Due <?= htmlspecialchars((new DateTimeImmutable((string) $settings['dueDate']))->format('F j, Y')) ?></p>
             </div>
-            <button id="openUpload">＋ Add today’s photo</button>
-        </section>
-
-        <section class="stats" aria-label="Gallery summary">
-            <article class="card"><strong id="photoCount">0</strong><span>photos</span></article>
-            <article class="card"><strong id="streakCount">0</strong><span>day streak</span></article>
-            <article class="card"><strong id="missingCount">0</strong><span>days missing</span></article>
+            <div class="stats" aria-label="Gallery summary">
+                <div><strong id="photoCount">0</strong><span>photos</span></div>
+                <div><strong id="streakCount">0</strong><span>day streak</span></div>
+                <div><strong id="missingCount">0</strong><span>days missing</span></div>
+            </div>
+            <button id="openUpload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h3l2-2h6l2 2h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Add today’s photo</button>
         </section>
 
         <section class="toolbar">
@@ -74,9 +73,9 @@ $superAdmin = $authenticated && is_super_admin();
                 <button data-filter="missing">Missing</button>
             </div>
             <div class="toolbar-actions">
-                <button class="secondary" id="collageButton">Make collage</button>
-                <button class="secondary" id="gifButton">Make GIF</button>
-                <button class="secondary" id="settingsButton">Settings</button>
+                <button class="secondary" id="collageButton"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Make collage</button>
+                <button class="secondary" id="gifButton"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="m8 4 12 8-12 8z"/></svg>Make GIF</button>
+                <button class="secondary" id="settingsButton"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M10 2h4l.5 2.1 1.6.7 1.9-1.1 2.8 2.8-1.1 1.9.7 1.6L22 10v4l-2.1.5-.7 1.6 1.1 1.9-2.8 2.8-1.9-1.1-1.6.7L14 22h-4l-.5-2.1-1.6-.7-1.9 1.1-2.8-2.8 1.1-1.9-.7-1.6L2 14v-4l2.1-.5.7-1.6-1.1-1.9 2.8-2.8 1.9 1.1 1.6-.7z"/></svg>Settings</button>
             </div>
         </section>
 
