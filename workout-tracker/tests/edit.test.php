@@ -2,10 +2,10 @@
 /* File Name: edit.test.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: Regression tests proving existing JSON workouts remain intact when editing one entry.
-Revision: 1.0.0
+Revision: 1.0.1
 Created Date: 2026-10-22
 Modified Date: 2026-10-22
-Changelog: 1.0.0 - Test legacy compatibility, targeted edits, history, and stale-write protection. */
+Changelog: 1.0.1 - Compare original audit snapshot to serialized JSON baseline to avoid float/int encoding mismatch. 1.0.0 - Test legacy compatibility, targeted edits, history, and stale-write protection. */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/entries.php';
 require_once dirname(__DIR__,2) . '/1-Framework/core/JsonStore.php';
@@ -41,6 +41,7 @@ try {
     // Model the already-live v1.0/1.1 format without the new optional fields.
     JsonStore::update($file,static fn(array $records):array=>[$legacy,$second,$third]);
     $before=JsonStore::read($file);
+    $originalStored=$before['records'][0]; // Read actual JSON baseline (22.0 encodes to JSON integer 22).
     assertWorkout(count($before['records'])===3,'all original records present');
     assertWorkout(!isset($before['records'][0]['tag']),'old entries have no tag');
     assertWorkout(!isset($before['records'][0]['incline_percent']),'old entries have no incline');
@@ -66,7 +67,7 @@ try {
     assertWorkout($edited['photo']===$legacy['photo'],'original photo retained');
     assertWorkout($edited['session_id']===$legacy['session_id'],'original session preserved');
     assertWorkout($edited['custom_legacy_field']==='keep untouched','unknown legacy field not deleted');
-    assertWorkout($edited['edit_history'][0]['previous']===$legacy,'original record available for recovery');
+    assertWorkout($edited['edit_history'][0]['previous']===$originalStored,'original record available for recovery');
     assertWorkout(isset($edited['updated_at']),'updated timestamp saved');
 
     $saved=JsonStore::read($file)['records'];
