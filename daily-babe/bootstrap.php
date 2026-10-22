@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '1.2.0';
+const BABY_TRACKER_VERSION = '1.3.0';
 
 $configFile = __DIR__ . '/config/config.php';
 $config = require is_file($configFile) ? $configFile : __DIR__ . '/config/config.example.php';
@@ -57,6 +57,14 @@ function current_baby_id(): string
     $babyId = (string) ($_SESSION['babyId'] ?? '');
     if (preg_match('/^[a-f0-9]{24}$/', $babyId) !== 1) {
         throw new RuntimeException('No baby account is active.');
+    }
+    $selected = (string) ($_SESSION['selectedBabyId'] ?? '');
+    if ($selected !== '' && is_super_admin()) {
+        foreach (auth_data()['accounts'] ?? [] as $account) {
+            if (($account['babyId'] ?? '') === $selected) {
+                return $selected;
+            }
+        }
     }
     return $babyId;
 }
@@ -205,12 +213,22 @@ function json_response(bool $success, string $message, mixed $data = null, array
 
 function auth_data(): array
 {
-    return json_read('data/auth.json', ['schemaVersion' => 2, 'accounts' => []]);
+    $auth = json_read('data/auth.json', ['schemaVersion' => 3, 'accounts' => []]);
+    if (!empty($auth['accounts']) && (int) ($auth['schemaVersion'] ?? 2) < 3) {
+        // Accounts retain insertion order: the first account is the original gallery owner.
+        $first = array_key_first($auth['accounts']);
+        foreach ($auth['accounts'] as $key => &$account) {
+            $account['role'] = $key === $first ? 'super_admin' : 'user';
+        }
+        unset($account);
+        write_auth($auth);
+    }
+    return $auth;
 }
 
 function write_auth(array $auth): void
 {
-    $auth['schemaVersion'] = 2;
+    $auth['schemaVersion'] = 3;
     $auth['updatedAt'] = gmdate('c');
     json_write('data/auth.json', $auth);
 }
@@ -231,6 +249,7 @@ function begin_account_session(string $username, string $babyId): void
     $_SESSION['authenticated'] = true;
     $_SESSION['username'] = $username;
     $_SESSION['babyId'] = $babyId;
+    unset($_SESSION['selectedBabyId']);
 }
 
 function current_account(): array
@@ -242,6 +261,11 @@ function current_account(): array
         throw new RuntimeException('The active baby account could not be found.');
     }
     return $account;
+}
+
+function is_super_admin(): bool
+{
+    return is_authenticated() && (current_account()['role'] ?? 'user') === 'super_admin';
 }
 
 function migrate_legacy_gallery(string $babyId, string $username): void

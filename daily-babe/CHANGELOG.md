@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0 — 2026-10-22
+
+- Give the original account super admin access to all baby galleries through a gallery selector.
+- Keep gallery switching restricted by role and preserve the super admin session when adding a baby.
+- Let signed-in users remove photos from their own gallery, including photos they uploaded earlier.
+- Let the super admin remove photos from any selected baby gallery.
+- Stop browser caching of delivered photos so removed photos are not retained by the app cache.
+
 ## 1.2.0 — 2026-08-27
 
 - Added a baby first-name username to setup and sign-in.

@@ -2,11 +2,13 @@
 
 A private, mobile-first PHP/JSON gallery for one baby photo per day. Built from the conventions in `1-Framework` for shared Hostinger hosting.
 
-## Included in v1.1.0
+## Included in v1.3.0
 
 - First-run password setup and protected sessions
 - Baby first-name usernames with current/new/confirm password changes
 - Multiple independently authenticated baby galleries
+- Original gallery owner has super admin access to all baby galleries through a gallery selector
+- Any signed-in baby account can remove photos from its own gallery; the super admin can remove photos from any selected gallery
 - Daily or backdated JPEG, PNG, and WebP uploads
 - One photo per calendar date
 - Due date of November 2, 2026 and editable actual birth date
@@ -44,6 +46,8 @@ storage/
 ```
 
 The baby’s first name is the sign-in username. Usernames are case-insensitive and must be unique. Add another baby from Settings; the newly created gallery opens immediately.
+
+The first account is the super admin. Existing installations assign that role to the original account during the next load. The super admin can switch galleries without signing in as another baby. Other accounts can only access their own gallery. Open a photo and choose **Remove photo** to delete it permanently; the date can then be used for a new upload.
 
 Existing v1.1 and earlier installations migrate on the next successful sign-in. Enter the baby’s first name with the existing password. The migration copies the old metadata and photos into the first baby folder before replacing the legacy authentication format.
 

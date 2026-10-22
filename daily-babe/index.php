@@ -8,6 +8,7 @@ $authData = auth_data();
 $legacyAuth = $configured && isset($authData['passwordHash']);
 $settings = $authenticated ? tracker_settings() : [];
 $account = $authenticated ? current_account() : [];
+$superAdmin = $authenticated && is_super_admin();
 ?>
 <!doctype html>
 <html lang="en">
@@ -41,6 +42,17 @@ $account = $authenticated ? current_account() : [];
             </form>
         </section>
     <?php else: ?>
+        <?php if ($superAdmin): ?>
+        <section class="baby-switcher card" aria-label="Baby galleries">
+            <label for="babySelector">Viewing baby</label>
+            <select id="babySelector">
+                <?php foreach ($authData['accounts'] as $babyAccount): ?>
+                    <option value="<?= htmlspecialchars((string) $babyAccount['babyId']) ?>" <?= current_baby_id() === (string) $babyAccount['babyId'] ? 'selected' : '' ?>><?= htmlspecialchars((string) $babyAccount['username']) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <span><?= count($authData['accounts']) ?> baby <?= count($authData['accounts']) === 1 ? 'gallery' : 'galleries' ?></span>
+        </section>
+        <?php endif; ?>
         <section class="hero card">
             <div>
                 <p class="eyebrow">DUE <?= htmlspecialchars((new DateTimeImmutable((string) $settings['dueDate']))->format('F j, Y')) ?></p>
@@ -101,7 +113,7 @@ $account = $authenticated ? current_account() : [];
     </form>
     <div class="account-section">
         <p class="eyebrow">ACCOUNT</p>
-        <p>Username: <strong><?= htmlspecialchars((string) $account['username']) ?></strong></p>
+        <p>Signed in as: <strong><?= htmlspecialchars((string) $account['username']) ?></strong><?= $superAdmin ? ' (super admin)' : '' ?></p>
         <form id="passwordForm">
             <label>Current password<input type="password" name="currentPassword" minlength="10" autocomplete="current-password" required></label>
             <label>New password<input type="password" name="newPassword" minlength="10" autocomplete="new-password" required></label>
@@ -123,7 +135,7 @@ $account = $authenticated ? current_account() : [];
     </form>
 </dialog>
 
-<dialog id="photoDialog"><div class="photo-view"><button type="button" class="icon-button close-dialog" aria-label="Close">×</button><img id="fullPhoto" alt=""><div id="photoDetails"></div></div></dialog>
+<dialog id="photoDialog"><div class="photo-view"><button type="button" class="icon-button close-dialog" aria-label="Close">×</button><img id="fullPhoto" alt=""><div id="photoDetails"></div><button type="button" class="danger" id="deletePhotoButton">Remove photo</button></div></dialog>
 
 <dialog id="collageDialog">
     <div class="dialog-head"><div><p class="eyebrow">READY TO KEEP</p><h2 id="exportTitle">Your collage</h2></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>

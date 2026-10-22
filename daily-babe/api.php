@@ -38,6 +38,7 @@ try {
                 normalize_username($username) => [
                     'username' => $username,
                     'babyId' => $babyId,
+                    'role' => 'super_admin',
                     'passwordHash' => password_hash($password, PASSWORD_DEFAULT),
                     'createdAt' => gmdate('c'),
                     'updatedAt' => gmdate('c'),
@@ -70,6 +71,7 @@ try {
             $account = [
                 'username' => $username,
                 'babyId' => $babyId,
+                'role' => 'super_admin',
                 'passwordHash' => (string) $auth['passwordHash'],
                 'createdAt' => (string) ($auth['updatedAt'] ?? gmdate('c')),
                 'updatedAt' => gmdate('c'),
@@ -103,8 +105,29 @@ try {
         json_response(true, 'Gallery loaded.', [
             'settings' => tracker_settings(),
             'records' => $records,
-            'account' => ['username' => (string) $account['username']],
+            'account' => ['username' => (string) $account['username'], 'role' => (string) ($account['role'] ?? 'user')],
         ]);
+    }
+
+    if ($action === 'select_baby') {
+        require_csrf();
+        if (!is_super_admin()) {
+            json_response(false, 'Only the super admin can open another baby’s gallery.', null, [['code' => 'FORBIDDEN']], 403);
+        }
+        $babyId = (string) ($_POST['babyId'] ?? '');
+        $found = false;
+        foreach (auth_data()['accounts'] ?? [] as $account) {
+            if (($account['babyId'] ?? '') === $babyId) {
+                $found = true;
+                break;
+            }
+        }
+        if (!$found) {
+            json_response(false, 'That baby gallery was not found.', null, [['code' => 'NOT_FOUND']], 404);
+        }
+        $_SESSION['selectedBabyId'] = $babyId;
+        audit_event('baby.selected', ['selectedBabyId' => $babyId]);
+        json_response(true, 'Baby gallery selected.');
     }
 
     if ($action === 'change_password') {
@@ -152,13 +175,18 @@ try {
         $account = [
             'username' => $username,
             'babyId' => $babyId,
+            'role' => 'user',
             'passwordHash' => password_hash($password, PASSWORD_DEFAULT),
             'createdAt' => gmdate('c'),
             'updatedAt' => gmdate('c'),
         ];
         $auth['accounts'][$key] = $account;
         write_auth($auth);
-        begin_account_session($username, $babyId);
+        if (is_super_admin()) {
+            $_SESSION['selectedBabyId'] = $babyId;
+        } else {
+            begin_account_session($username, $babyId);
+        }
         baby_json_write('data/settings.json', [
             'schemaVersion' => 2,
             'babyName' => $username,
@@ -244,7 +272,7 @@ try {
         foreach ($records as $record) {
             if (($record['photoDate'] ?? '') === $photoDate) {
                 unlink($destination);
-                json_response(false, 'That date already has a photo. Delete or replace support is planned; choose another date for now.', null, [['code' => 'DATE_EXISTS']], 409);
+                json_response(false, 'That date already has a photo. Remove it first or choose another date.', null, [['code' => 'DATE_EXISTS']], 409);
             }
         }
         $record = [
@@ -261,6 +289,56 @@ try {
         baby_json_write('data/entries.json', $entries);
         audit_event('photo.uploaded', ['id' => $id, 'photoDate' => $photoDate]);
         json_response(true, 'Daily photo saved.', $record, [], 201);
+    }
+
+    if ($action === 'delete_photo') {
+        require_csrf();
+        $id = (string) ($_POST['id'] ?? '');
+        if (preg_match('/^[a-f0-9]{24}$/', $id) !== 1) {
+            json_response(false, 'Photo not found.', null, [['code' => 'NOT_FOUND']], 404);
+        }
+        $entries = tracker_entries();
+        $records = $entries['records'] ?? [];
+        $index = null;
+        foreach ($records as $key => $record) {
+            if (($record['id'] ?? '') === $id) {
+                $index = $key;
+                break;
+            }
+        }
+        if ($index === null) {
+            json_response(false, 'Photo not found.', null, [['code' => 'NOT_FOUND']], 404);
+        }
+        $record = $records[$index];
+        $filename = (string) ($record['filename'] ?? '');
+        if (preg_match('/^' . preg_quote($id, '/') . '\\.(?:jpg|png|webp)$/', $filename) !== 1) {
+            throw new RuntimeException('Invalid stored photo filename.');
+        }
+        $path = baby_storage_path('uploads/' . $filename);
+        $temporary = baby_storage_path('uploads/.deleting-' . $id . '-' . bin2hex(random_bytes(4)));
+        $moved = false;
+        if (is_file($path)) {
+            if (!rename($path, $temporary)) {
+                throw new RuntimeException('Unable to prepare photo deletion.');
+            }
+            $moved = true;
+        }
+        unset($records[$index]);
+        $entries['records'] = array_values($records);
+        $entries['updatedAt'] = gmdate('c');
+        try {
+            baby_json_write('data/entries.json', $entries);
+        } catch (Throwable $exception) {
+            if ($moved) {
+                rename($temporary, $path);
+            }
+            throw $exception;
+        }
+        if ($moved && !unlink($temporary)) {
+            error_log('Baby Daily [' . request_id() . '] Unable to remove deleted photo file.');
+        }
+        audit_event('photo.deleted', ['id' => $id, 'photoDate' => (string) ($record['photoDate'] ?? ''), 'selectedBabyId' => current_baby_id()]);
+        json_response(true, 'Photo removed.');
     }
 
     json_response(false, 'Unknown action.', null, [['code' => 'NOT_FOUND']], 404);
