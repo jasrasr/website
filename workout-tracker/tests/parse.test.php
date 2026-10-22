@@ -2,10 +2,10 @@
 /* File Name: parse.test.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: Standalone CLI regression tests for key-free workout descriptions.
-Revision: 1.1.0
+Revision: 1.2.0
 Created Date: 2026-10-21
-Modified Date: 2026-10-21
-Changelog: 1.1.0 - Validate workouts, multi-exercise separation, dates, and invalid input. */
+Modified Date: 2026-10-22
+Changelog: 1.2.0 - Assert explicit treadmill incline and tracking hashtag parsing. 1.1.0 - Validate workouts, multi-exercise separation, dates, and invalid input. */
 declare(strict_types=1);
 require dirname(__DIR__) . '/parse.php';
 $cases=[
@@ -17,7 +17,10 @@ $cases=[
  ['Last Monday biked 10 miles for 1 hr 15 minutes',[['exercise'=>'cycling','date'=>'2026-10-19','distance_miles'=>10,'duration_minutes'=>75]]],
  ['Did 4x12 pushups',[['exercise'=>'push-ups','sets'=>4,'reps'=>12]]],
  ['Plank for 60 seconds',[['exercise'=>'plank','duration_minutes'=>1]]],
- ['Bench press 3 sets of 8 reps at 75 lb',[['exercise'=>'bench press','sets'=>3,'reps'=>8,'weight_lb'=>75]]]
+ ['Bench press 3 sets of 8 reps at 75 lb',[['exercise'=>'bench press','sets'=>3,'reps'=>8,'weight_lb'=>75]]],
+ ['Treadmill 1.16 miles 22 min 3.3 mph 5% incline #morning',[['exercise'=>'treadmill','distance_miles'=>1.16,'duration_minutes'=>22,'speed_mph'=>3.3,'incline_percent'=>5,'tag'=>'morning']]],
+ ['Treadmill at 3.3 mph incline 2.5 for 30 minutes',[['exercise'=>'treadmill','incline_percent'=>2.5,'duration_minutes'=>30,'speed_mph'=>3.3]]],
+ ['20 pushups #strength',[['exercise'=>'push-ups','reps'=>20,'tag'=>'strength']]]
 ];
 foreach($cases as $i=>[$input,$expected]){
  $records=workout_parse_text($input,'2026-10-21');
