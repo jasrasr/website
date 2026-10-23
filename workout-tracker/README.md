@@ -5,7 +5,7 @@ Description: Setup, key-free quick entry, optional AI and screenshot import guid
 Revision: 1.3.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-22
-Changelog: 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
+Changelog: 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.1 - Limit paid AI requests and deny config backups. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
 -->
 # Workout Tracker
 
@@ -39,10 +39,22 @@ Hostinger setup (never do this inside GitHub):
 
 1. The tracked template is **`config.local.example.php`**. On Hostinger copy it to **`config.local.php`** by **removing only `.example`**, keeping the rest of the name unchanged.
 2. Enter the provider endpoint, model and secret API key in `config.local.php`. Never commit or show the real key in screenshots.
-3. The root `.htaccess` denies HTTP access to private local configuration. For nginx or other servers configure an equivalent deny rule or store secrets outside the public web directory.
+3. The app's root `.htaccess` denies HTTP access to every `config.local` prefix (case insensitive), including `.bak`, `~`, template, placeholder, hidden swap and editor backup variants. For nginx or other servers configure an equivalent deny rule or store secrets outside the public web directory.
 4. Reload the app. Once configured, its optional AI button becomes enabled. The app sends workout text to your configured external provider **only after explicit opt-in**. Suggestions may be wrong; check every metric and date.
 
 `config.local.php.placeholder` is a tracked, safe marker explaining the host-only file. It is **not** loaded as a config and must not contain a key. The app never auto-generates actual API credentials.
+
+### Paid AI request limits
+
+Both `parse_ai` and the legacy `parse` route share a persisted per-account budget: **5 attempts per rolling minute and 50 per rolling 24 hours**. Reservations happen atomically before the external request, survive refreshes/new sessions, and count provider failures too. Invalid input, rejected authorization/CSRF, and missing provider configuration do not consume the budget. A blocked request returns HTTP **429**, `Retry-After` seconds, and JSON `retry_after`; no provider call is made. Storage/limit configuration failures block AI calls rather than allowing unlimited usage.
+
+These are **request-count limits**, alongside the existing **1,800 output-token maximum per call** and 4,000-byte input validation. They are not a billed-token or dollar budget: input tokens, model prices and failed-call billing vary. Set provider-side billing controls as appropriate. Local parsing and saving workouts are not rate limited.
+
+Authenticated **non-demo central Super Admins are exempt** from these request limits. The repository's Jason account provisioning assigns `jasrasr` this central role; verify the actual live account role in user-management. Project admins and demo Super Admins remain limited. Exemption never bypasses project access, CSRF, input validation or the per-call output-token maximum.
+
+For another specific account, add its immutable central user ID to `request_limits.exempt_user_ids` in the private `config.local.php` (not its username/display name). The tracked template shows the optional `request_limits` keys. Existing configs automatically receive the defaults above; **do not overwrite an existing config or API key**. Thresholds must be integers from 1 to 10,000. Exemption decisions use only the central provider's server-side identity.
+
+Counters are auto-created as ignored `storage/ai-requests-<hashed-user-id>.json` plus stable lock files, using framework `JsonStore`. They contain attempt timestamps, no workout text or credentials, and are separate from workout history. Preserve them through deployments so quotas do not reset; include them in private storage backups. Expired timestamps are pruned on the next request.
 
 ## Setup
 
@@ -67,6 +79,7 @@ Hostinger setup (never do this inside GitHub):
 Run these from the repository root:
 
     php workout-tracker/tests/parse.test.php
+    php workout-tracker/tests/ai-limits.test.php
     php workout-tracker/tests/edit.test.php
     php -l workout-tracker/entries.php
     node --check workout-tracker/app.js
@@ -74,6 +87,10 @@ Run these from the repository root:
     php -l workout-tracker/parse.php
 
 Also test the optional AI fallback with a safe test account/endpoint: disabled without credentials, enabled after server-only setup, failure without exposing keys, returned one or multiple activity suggestions requiring review, and no automatic saves.
+
+The Workout Tracker validation workflow runs syntax, parser and quota regressions, including parallel reservations, rolling-window boundaries, cross-account isolation, corrupt/missing storage, role/ID exemptions and config filename patterns. Before enabling a real key on Hostinger, verify with harmless config-named fixtures that HTTP requests for `config.local.php.bak`, `config.local.php~`, `.config.local.php.swp` and uppercase variants receive 403, then remove the fixtures. Verify valid app routes still load. Pattern tests cannot establish the host honors `.htaccess`.
+
+On staging with a mock provider, use a member account to consume the limit through both AI action aliases and confirm the next request returns 429 with `Retry-After`, across a new session. Confirm failures count and invalid-CSRF requests do not. Verify the intended central Super Admin can exceed both thresholds, a demo Super Admin cannot, and changing client-supplied role/ID fields cannot claim exemption. Confirm local parsing and saves still work while AI is limited, and repeat with Hostinger's PHP version. No automated check proves deployment or live account provisioning.
 
 The edit tests create an **isolated temporary JSON file**, start with three preexisting legacy entries, edit exactly one, and verify the other two remain byte-for-byte equivalent in decoded records; they also assert timestamps/photos/session IDs remain, the original values are preserved in edit history, bad inputs are rejected, and a stale revision cannot overwrite concurrent updates. CI runs these tests without touching Hostinger storage. Browser execution of the CLI tests is denied by `tests/.htaccess`.
 

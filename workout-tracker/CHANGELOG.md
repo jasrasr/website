@@ -5,7 +5,7 @@ Description: Cumulative release history for private Workout Tracker.
 Revision: 1.2.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-22
-Changelog: 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
+Changelog: 1.3.0 - Document v1.3.0 non-destructive edits, tags and incline. 1.2.1 - Document paid AI quotas and config backup protection. 1.2.0 - Document optional AI retry, prepared screenshots and secrets convention. 1.1.0 - Initial local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
 -->
 # Workout Tracker changelog
 
@@ -17,6 +17,14 @@ Changelog: 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regr
 - Add freeform **tracking tag** labels to new and existing workouts; filter workout history and the exercise chart by tag.
 - Track optional treadmill `incline_percent` separately from speed/distance with local parsing and charting; existing workouts keep missing incline until explicitly entered.
 - Add isolated JSON preservation tests, parser cases, PHP/JS validation workflow and Apache/LiteSpeed protection for CLI-only tests.
+
+## v1.2.1 — 2026-10-21
+
+- Deny case-insensitive `config.local` prefixes, including hidden editor files and backup suffixes.
+- Limit both optional paid AI action aliases to 5 attempts per rolling minute and 50 per rolling 24 hours per central account; atomically reserve before provider calls and return 429 with retry timing when exhausted.
+- Exempt non-demo central Super Admins and optionally configured stable user IDs; retain all authentication, project-access, CSRF and per-call token controls. Demo accounts remain limited.
+- Keep existing private configs intact and apply defaults when new settings are absent. Persist private quota records separately from workout entries with framework locks/atomic writes.
+- Add quota/concurrency/config-filename regressions and Workout Tracker CI. Hostinger deny enforcement and live role/provider checks remain deployment validation steps.
 
 ## v1.2.0 — 2026-10-21
 

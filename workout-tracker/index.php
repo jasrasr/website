@@ -10,6 +10,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
 require_once __DIR__ . '/parse.php';
 require_once __DIR__ . '/entries.php';
+require_once __DIR__ . '/ai-limits.php';
 $auth = \Jasr\Framework\SharedIdentity::connect();
 $user = $auth->requireProject('workout-tracker', $_SERVER['REQUEST_METHOD'] === 'POST' ? 'member' : 'viewer', isset($_GET['api']));
 $uid = (string)$user['id'];
@@ -40,7 +41,9 @@ function workoutAiConfig(): ?array {
         || parse_url($endpoint, PHP_URL_SCHEME)!=='https'
         || parse_url($endpoint, PHP_URL_USER)!==null
         || parse_url($endpoint, PHP_URL_PASS)!==null) return null;
-    return ['endpoint'=>$endpoint,'model'=>$model,'api_key'=>$key];
+    try { $limits=workout_ai_limits($cfg); }
+    catch (RuntimeException $e) { return null; }
+    return ['endpoint'=>$endpoint,'model'=>$model,'api_key'=>$key,'request_limits'=>$limits];
 }
 if (isset($_GET['api'])) {
     try {
@@ -170,6 +173,13 @@ if (isset($_GET['api'])) {
             ],'max_tokens'=>1800];
             $ch=curl_init($cfg['endpoint']);
             if (!$ch) reply(502,['error'=>'Could not initialize AI interpretation.']);
+            // Reserve before contacting the provider; failed attempts may still cost money.
+            $retry=workout_ai_reserve($root,$user,$cfg['request_limits']);
+            if ($retry>0) {
+                curl_close($ch);
+                header('Retry-After: '. $retry);
+                reply(429,['error'=>'AI request limit reached. Try again later or use local parsing.','retry_after'=>$retry]);
+            }
             curl_setopt_array($ch,[
                 CURLOPT_POST=>true,
                 CURLOPT_POSTFIELDS=>json_encode($payload,JSON_THROW_ON_ERROR),
