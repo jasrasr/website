@@ -1,14 +1,17 @@
 /* File Name: app.js
 Author: Jason Lamb (with help from ChatGPT)
 Description: Workout quick entry, editable review, and per-exercise trends.
-Revision: 1.2.0
+Revision: 1.3.0
 Created Date: 2026-10-21
-Modified Date: 2026-10-21
-Changelog: 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
+Modified Date: 2026-10-22
+Changelog: 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
 'use strict';
 const $=selector=>document.querySelector(selector);
-const measures=[['distance_miles','Miles'],['duration_minutes','Minutes'],['speed_mph','Speed (mph)'],['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']];
+const measures=[['distance_miles','Miles'],['duration_minutes','Minutes'],['speed_mph','Speed (mph)'],['incline_percent','Treadmill incline (%)'],['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']];
 let entries=[];
+let editingId=null;
+let editingRevision=null;
+let showAllHistory=false;
 function localDate(d=new Date()){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
 function localTime(d=new Date()){return [String(d.getHours()).padStart(2,'0'),String(d.getMinutes()).padStart(2,'0')].join(':');}
 function offset(d=new Date()){const n=-d.getTimezoneOffset(),a=Math.abs(n);return (n>=0?'+':'-')+String(Math.floor(a/60)).padStart(2,'0')+':'+String(a%60).padStart(2,'0');}
@@ -25,18 +28,20 @@ function fieldInput(name,label,value,type='number'){
  const wrapper=document.createElement('label');wrapper.className='field';
  const caption=document.createElement('span');caption.textContent=label;
  const input=document.createElement('input');input.type=type;input.dataset.field=name;input.value=value??'';
- if(type==='number'){input.min='0';input.step='any';}if(type==='text')input.maxLength=80;
+ if(type==='number'){input.min='0';input.step='any';}if(type==='text')input.maxLength=name==='tag'?64:80;
+ if(name==='incline_percent')input.max='100';
  wrapper.append(caption,input);return wrapper;
 }
 function describe(entry){
  return [entry.distance_miles!=null?entry.distance_miles+' mi':'',entry.duration_minutes!=null?entry.duration_minutes+' min':'',
  entry.speed_mph!=null?entry.speed_mph+' mph':'',entry.sets!=null?entry.sets+' sets':'',
- entry.reps!=null?entry.reps+' reps'+(entry.sets!=null?'/set':''):'',entry.weight_lb!=null?entry.weight_lb+' lb':''].filter(Boolean).join(' · ')||'Add measurements below';
+ entry.reps!=null?entry.reps+' reps'+(entry.sets!=null?'/set':''):'',entry.weight_lb!=null?entry.weight_lb+' lb':'',entry.incline_percent!=null?entry.incline_percent+'% incline':''].filter(Boolean).join(' · ')||'Add measurements below';
 }
 function renderReview(suggestions){
  const list=$('#reviewList');list.replaceChildren();$('#sessionTime').value=localTime();
  $('#reviewHeading').textContent=suggestions.length+' exercise'+(suggestions.length===1?'':'s')+' recognized';
  suggestions.forEach(entry=>{
+  if(!entry.tag)entry.tag=$('#entryTag').value.trim();
   const card=document.createElement('article');card.className='review-card';
   const top=document.createElement('div');top.className='review-top';
   const left=document.createElement('div'),name=document.createElement('h3');name.textContent=titleCase(entry.exercise);
@@ -46,6 +51,7 @@ function renderReview(suggestions){
   const grid=document.createElement('div');grid.className='field-grid';
   grid.append(fieldInput('exercise','Exercise',entry.exercise,'text'),fieldInput('date','Workout date',entry.date,'date'));
   measures.forEach(item=>grid.append(fieldInput(item[0],item[1],entry[item[0]])));
+  const tagInput=fieldInput('tag','Tracking tag',entry.tag||'','text');tagInput.classList.add('full');grid.append(tagInput);
   const notes=document.createElement('label');notes.className='field full';
   const nt=document.createElement('span');nt.textContent='Notes';
   const ta=document.createElement('textarea');ta.dataset.field='notes';ta.rows=2;ta.maxLength=2000;ta.value=entry.notes||'';
@@ -84,33 +90,99 @@ async function save(rows,photo=null){
  const button=$('#saveBtn');button.disabled=true;button.textContent='Saving…';
  try{const data=payload('save_batch');data.set('entries',JSON.stringify(rows));
   data.set('time_local',$('#sessionTime').value||localTime());data.set('utc_offset',offset());if(photo)data.set('photo',photo);
-  const result=await api(data);$('#note').value='';$('#photo').value='';$('#review').hidden=true;
+  const result=await api(data);$('#note').value='';$('#photo').value='';$('#entryTag').value='';$('#review').hidden=true;
   message('Saved '+result.entries.length+' exercise'+(result.entries.length===1?'':'s')+'. Every session counts.');
   await load();window.scrollTo({top:0,behavior:'smooth'});
  }catch(e){message(e.message,true);}finally{button.disabled=false;button.textContent='Save workout';}
+}
+function historyItems(){
+ const tag=$('#historyTag').value;
+ return entries.slice().filter(e=>!tag||(e.tag||'')===tag)
+  .sort((a,b)=>(b.performed_at||b.date).localeCompare(a.performed_at||a.date));
+}
+function renderHistory(){
+ const history=historyItems(),visible=showAllHistory?history:history.slice(0,10);
+ $('#recent').replaceChildren(...visible.map(e=>{
+  const li=document.createElement('li'),name=document.createElement('strong');name.textContent=titleCase(e.exercise);
+  const day=document.createElement('span');day.textContent=niceDay(e.date);
+  const detail=document.createElement('small');detail.textContent=describe(e)+(e.tag?' · #'+e.tag:'')+(e.photo?' · Photo saved':'');
+  const edit=document.createElement('button');edit.type='button';edit.className='history-edit';
+  edit.textContent='Edit';edit.dataset.editId=e.id||'';
+  edit.disabled=!e.id||!e._revision;edit.setAttribute('aria-label','Edit '+e.exercise+' from '+niceDay(e.date));
+  li.append(name,day,detail,edit);return li;
+ }));
+ const toggle=$('#toggleHistory');toggle.hidden=history.length<=10;
+ toggle.textContent=showAllHistory?'Show latest 10':'View all '+history.length+' entries';
+ $('#empty').hidden=entries.length>0;
 }
 function refresh(){
  $('#sessions').textContent=new Set(entries.map(e=>e.session_id||e.date)).size;
  $('#count').textContent=entries.length;
  $('#minutes').textContent=entries.reduce((v,e)=>v+(Number(e.duration_minutes)||0),0).toFixed(0);
  $('#miles').textContent=entries.reduce((v,e)=>v+(Number(e.distance_miles)||0),0).toFixed(2);
- const recent=entries.slice().sort((a,b)=>(b.performed_at||b.date).localeCompare(a.performed_at||a.date)).slice(0,10);
- $('#recent').replaceChildren(...recent.map(e=>{
-  const li=document.createElement('li'),name=document.createElement('strong');name.textContent=titleCase(e.exercise);
-  const day=document.createElement('span');day.textContent=niceDay(e.date);
-  const detail=document.createElement('small');detail.textContent=describe(e)+(e.photo?' · Photo saved':'');
-  li.append(name,day,detail);return li;
+ const selectedTag=$('#historyTag').value,tagSelect=$('#historyTag');
+ const tags=[...new Set(entries.map(e=>e.tag||'').filter(Boolean))].sort();
+ tagSelect.replaceChildren(...[{'value':'','label':'All tags'},...tags.map(value=>({value,label:'#'+value}))].map(item=>{
+  const opt=document.createElement('option');opt.value=item.value;opt.textContent=item.label;return opt;
  }));
- $('#empty').hidden=entries.length>0;
+ if(tags.includes(selectedTag))tagSelect.value=selectedTag;
+ renderHistory();
  const kinds=[...new Set(entries.map(e=>e.exercise))].sort(),select=$('#exerciseFilter'),old=select.value;
  select.replaceChildren(...kinds.map(k=>{const o=document.createElement('option');o.value=k;o.textContent=titleCase(k);return o;}));
  if(kinds.includes(old))select.value=old;
  $('#trendPanel').hidden=kinds.length===0;draw();
 }
+function editField(name,label,value,type='number'){
+ const input=fieldInput(name,label,value,type);
+ input.classList.add(name==='exercise'||name==='tag'?'full':'');
+ return input;
+}
+function beginEdit(id){
+ const entry=entries.find(e=>e.id===id);
+ if(!entry||!entry._revision){message('Entry no longer available. Refresh the page.',true);return;}
+ editingId=id;editingRevision=entry._revision;
+ const grid=$('#editFields');grid.replaceChildren();
+ grid.append(editField('exercise','Exercise',entry.exercise,'text'),editField('date','Workout date',entry.date,'date'));
+ measures.forEach(([key,label])=>grid.append(editField(key,label,entry[key])));
+ grid.append(editField('tag','Tracking tag (optional)',entry.tag||'','text'));
+ const notes=document.createElement('label');notes.className='field full';
+ const nt=document.createElement('span');nt.textContent='Notes';
+ const textarea=document.createElement('textarea');textarea.rows=3;textarea.dataset.field='notes';textarea.maxLength=2000;textarea.value=entry.notes||'';
+ notes.append(nt,textarea);grid.append(notes);
+ const match=typeof entry.performed_at==='string'?
+  /^\d{4}-\d{2}-\d{2}T(\d{2}:\d{2}):\d{2}([+-]\d{2}:\d{2})$/.exec(entry.performed_at):null;
+ grid.append(editField('time_local','Local time (optional)',match?match[1]:'','time'));
+ const timezone=document.createElement('input');timezone.type='hidden';timezone.dataset.field='utc_offset';
+ timezone.value=match?match[2]:offset();grid.append(timezone);
+ $('#editPanel').hidden=false;$('#editStatus').textContent='Original entry and changes are kept in your private workout history.';
+ $('#editPanel').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function closeEdit(){
+ editingId=null;editingRevision=null;$('#editPanel').hidden=true;$('#editFields').replaceChildren();
+}
+async function submitEdit(){
+ if(!editingId||!editingRevision)return;
+ const button=$('#confirmEdit'),row={};
+ $('#editFields').querySelectorAll('[data-field]').forEach(input=>{row[input.dataset.field]=input.value;});
+ if(!row.time_local){delete row.time_local;delete row.utc_offset;}
+ if(!row.exercise.trim()||!row.date){$('#editStatus').textContent='Exercise and date are required.';return;}
+ button.disabled=true;button.textContent='Saving changes…';
+ try{
+  const data=payload('edit_entry');data.set('entry_id',editingId);
+  data.set('expected_revision',editingRevision);data.set('entry',JSON.stringify(row));
+  await api(data);
+  closeEdit();message('Updated only the selected workout. Previous values remain in its edit history.');
+  await load();
+ }catch(e){
+  $('#editStatus').textContent=e.message;
+  if(e.message.toLowerCase().includes('changed elsewhere'))message('This entry was changed in another session. Refresh before editing.',true);
+ }finally{button.disabled=false;button.textContent='Save changes to this entry';}
+}
 function draw(){
  const c=$('#chart'),ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);
  const metric=$('#metric').value,exercise=$('#exerciseFilter').value;
- const points=entries.filter(e=>e.exercise===exercise&&e[metric]!=null&&Number.isFinite(Number(e[metric])))
+ const tag=$('#historyTag').value;
+ const points=entries.filter(e=>e.exercise===exercise&&(!tag||(e.tag||'')===tag)&&e[metric]!=null&&Number.isFinite(Number(e[metric])))
   .sort((a,b)=>(a.performed_at||a.date).localeCompare(b.performed_at||b.date));
  const left=54,right=c.width-23,top=22,bottom=c.height-46;
  ctx.font='14px system-ui';ctx.strokeStyle='#36546d';ctx.fillStyle='#aebfd0';ctx.lineWidth=1;
@@ -143,6 +215,11 @@ $('#aiParseBtn').addEventListener('click',retryWithAi);
 $('#note').addEventListener('input',()=>{$('#review').hidden=true;});
 $('#saveBtn').addEventListener('click',()=>{try{save(collect(),$('#photo').files[0]||null);}catch(e){message(e.message,true);}});
 $('#exerciseFilter').addEventListener('change',draw);$('#metric').addEventListener('change',draw);
+$('#historyTag').addEventListener('change',()=>{showAllHistory=false;renderHistory();draw();});
+$('#toggleHistory').addEventListener('click',()=>{showAllHistory=!showAllHistory;renderHistory();});
+$('#recent').addEventListener('click',e=>{const button=e.target.closest('[data-edit-id]');if(button)beginEdit(button.dataset.editId);});
+$('#editForm').addEventListener('submit',e=>{e.preventDefault();submitEdit();});
+$('#cancelEdit').addEventListener('click',closeEdit);
 $('#manualForm').addEventListener('submit',async e=>{
  e.preventDefault();const fd=new FormData(e.currentTarget),row=Object.fromEntries(fd.entries());
  const file=fd.get('photo'),photo=file instanceof File&&file.size?file:null;

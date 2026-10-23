@@ -4,10 +4,19 @@ Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release history for private Workout Tracker.
 Revision: 1.2.0
 Created Date: 2026-10-21
-Modified Date: 2026-10-21
-Changelog: 1.2.0 - Document v1.2.1 AI quotas and config backup protection. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
+Modified Date: 2026-10-22
+Changelog: 1.3.0 - Document v1.3.0 non-destructive edits, tags and incline. 1.2.1 - Document paid AI quotas and config backup protection. 1.2.0 - Document optional AI retry, prepared screenshots and secrets convention. 1.1.0 - Initial local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
 -->
 # Workout Tracker changelog
+
+## v1.3.0 — 2026-10-22
+
+- Add an **Edit** control on each saved exercise, **View all entries** for older records, and editable dates, time, notes and measurements.
+- Preserve the existing JSON store and other workout records: use stable IDs, an atomic locked edit of one entry, and a revision token to reject stale changes. Keep original `created_at`, `session_id`, photos and unknown metadata.
+- Append original values to `edit_history` rather than losing prior entry details. Existing entries require **no migration**.
+- Add freeform **tracking tag** labels to new and existing workouts; filter workout history and the exercise chart by tag.
+- Track optional treadmill `incline_percent` separately from speed/distance with local parsing and charting; existing workouts keep missing incline until explicitly entered.
+- Add isolated JSON preservation tests, parser cases, PHP/JS validation workflow and Apache/LiteSpeed protection for CLI-only tests.
 
 ## v1.2.1 — 2026-10-21
 
