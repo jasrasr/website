@@ -4,6 +4,9 @@ All notable changes to this project are documented here. Format is loosely based
 
 ## Unreleased
 
+## 2026-10-23
+- Rev 1.11.0: Renamed the organization dashboard to `org.php`, kept `index-org.php` as a compatibility redirect, and added each displayed organization's new-ticket count and percentage of the visible-history total.
+
 ## 2026-10-21
 - Rev 1.10.0: Remember successful review logins for seven days; Lock forgets the saved login.
 - Continue batch AI review after a failed ticket and list failures for manual review or retry.
@@ -78,21 +81,3 @@ All notable changes to this project are documented here. Format is loosely based
 ## 2026-08-29
 - Added an adaptive collection schedule (hourly on weekday days, less frequent nights/weekends) with status labels, exposed in the protected diagnostic endpoint.
 - Added automatic hourly collection triggered by page load, gated server-wide to avoid duplicate pulls.
-- Simplified the ticket summary cards.
-- Fixed analytics label wrapping on mobile.
-
-## 2026-08-28
-- Recorded Aug 27-28 unresolved ticket counts manually.
-- Added the Freshservice API diagnostic endpoint (`api/test.php`) and a ticket assignment diagnostic.
-- Logged every collector pull attempt (success or failure) on the dashboard.
-- Added automatic cleanup of zero-count API snapshots created by invalid configuration.
-- Added a dismissible celebration banner with accessible fireworks when the unresolved queue reaches zero.
-- Added anonymous queue analytics (status, category, priority, age).
-
-## 2026-08-26
-- Recorded 120 unresolved tickets manually.
-
-## 2026-08-25
-- Renamed the Freshservice tracker folder to lowercase `fs`.
-- Added the manual "Pull tickets now" button.
-- Improved Freshservice API diagnostics and recorded 129 unresolved tickets.
