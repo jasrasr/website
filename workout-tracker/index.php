@@ -41,7 +41,9 @@ function workoutAiConfig(): ?array {
         || parse_url($endpoint, PHP_URL_SCHEME)!=='https'
         || parse_url($endpoint, PHP_URL_USER)!==null
         || parse_url($endpoint, PHP_URL_PASS)!==null) return null;
-    return ['endpoint'=>$endpoint,'model'=>$model,'api_key'=>$key,'request_limits'=>workout_ai_limits($cfg)];
+    try { $limits=workout_ai_limits($cfg); }
+    catch (RuntimeException $e) { return null; }
+    return ['endpoint'=>$endpoint,'model'=>$model,'api_key'=>$key,'request_limits'=>$limits];
 }
 if (isset($_GET['api'])) {
     try {
