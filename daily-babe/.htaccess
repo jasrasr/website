@@ -1,5 +1,9 @@
 Options -Indexes
 
+<IfModule mod_mime.c>
+    AddCharset UTF-8 .md
+</IfModule>
+
 <FilesMatch "^(?:bootstrap\.php|config\.php)$">
     Require all denied
 </FilesMatch>

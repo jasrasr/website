@@ -1,11 +1,15 @@
 # Changelog
 
-## 1.3.1 — 2026-10-22
+## 1.3.2 - 2026-10-24
+
+- Serve the Markdown changelog as UTF-8 and use plain separators in release headings so dates display correctly.
+
+## 1.3.1 - 2026-10-22
 
 - Refresh the gallery with a warmer, photo-first layout, clearer controls, and responsive styling.
 - Hide inactive notifications fully so no tab peeks up from the bottom edge.
 
-## 1.3.0 — 2026-10-22
+## 1.3.0 - 2026-10-22
 
 - Give the original account super admin access to all baby galleries through a gallery selector.
 - Keep gallery switching restricted by role and preserve the super admin session when adding a baby.
@@ -13,7 +17,7 @@
 - Let the super admin remove photos from any selected baby gallery.
 - Stop browser caching of delivered photos so removed photos are not retained by the app cache.
 
-## 1.2.0 — 2026-08-27
+## 1.2.0 - 2026-08-27
 
 - Added a baby first-name username to setup and sign-in.
 - Added password changes requiring the current password, a new password, and a matching confirmation.
@@ -23,7 +27,7 @@
 - Added a safe first-login migration that copies the existing single-baby gallery before upgrading authentication.
 - Added duplicate-username prevention and per-baby authenticated image delivery.
 
-## 1.1.0 — 2026-08-27
+## 1.1.0 - 2026-08-27
 
 - Close and reset the add-photo dialog immediately after a confirmed successful save.
 - Let iPhone users choose an existing photo, take a new photo, or browse Files.
@@ -35,19 +39,19 @@
 - Add optional birth time, length in inches, and weight in pounds/ounces.
 - Clarify that actual birth date controls day numbering while due date remains the countdown and early/late reference.
 
-## 1.0.2 — 2026-08-25
+## 1.0.2 - 2026-08-25
 
 - Replaced unreliable iPhone data-URL collage downloads with a real JPEG blob.
 - Added a collage preview with iOS Share/Save and standard file-download actions.
 - Added clearer collage progress and image-loading failure handling.
 
-## 1.0.1 — 2026-08-25
+## 1.0.1 - 2026-08-25
 
 - Fixed iPhone uploads being blocked when the phone's local date was one day ahead of the web server date.
 - Daily upload and birth-date limits now use the browser's local calendar date.
 - Added a one-day server-side timezone allowance while still rejecting genuinely future dates.
 
-## 1.0.0 — 2026-08-25
+## 1.0.0 - 2026-08-25
 
 - Added private first-run gallery setup and sign-in.
 - Added daily and backdated photo uploads with optional notes.
