@@ -1,8 +1,12 @@
 # Changelog
 
+## 1.3.3 - 2026-10-26
+
+- Send an explicit UTF-8 Content-Type for the changelog on Hostinger so punctuation in release notes displays correctly.
+
 ## 1.3.2 - 2026-10-24
 
-- Serve the Markdown changelog as UTF-8 and use plain separators in release headings so dates display correctly.
+- Declare UTF-8 for Markdown and use plain separators in release headings so dates display correctly.
 
 ## 1.3.1 - 2026-10-22
 

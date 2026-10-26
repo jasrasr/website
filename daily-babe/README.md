@@ -2,7 +2,7 @@
 
 A private, mobile-first PHP/JSON gallery for one baby photo per day. Built from the conventions in `1-Framework` for shared Hostinger hosting.
 
-## Included in v1.3.2
+## Included in v1.3.3
 
 - First-run password setup and protected sessions
 - Baby first-name usernames with current/new/confirm password changes

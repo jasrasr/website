@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '1.3.2';
+const BABY_TRACKER_VERSION = '1.3.3';
 
 $configFile = __DIR__ . '/config/config.php';
 $config = require is_file($configFile) ? $configFile : __DIR__ . '/config/config.example.php';
