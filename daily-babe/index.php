@@ -9,6 +9,14 @@ $legacyAuth = $configured && isset($authData['passwordHash']);
 $settings = $authenticated ? tracker_settings() : [];
 $account = $authenticated ? current_account() : [];
 $superAdmin = $authenticated && is_super_admin();
+$availableBabies = [];
+if ($authenticated) {
+    foreach ($authData['babies'] ?? [] as $babyId => $baby) {
+        if (can_access_baby($account, (string) $babyId, $authData)) {
+            $availableBabies[$babyId] = $baby;
+        }
+    }
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -24,12 +32,12 @@ $superAdmin = $authenticated && is_super_admin();
     <h1>Baby Daily<span class="brand-dot">.</span></h1>
     <?php if ($authenticated): ?>
     <div class="topbar-actions">
-        <?php if ($superAdmin): ?>
+        <?php if (count($availableBabies) > 1): ?>
         <div class="baby-switcher">
             <label for="babySelector">Viewing baby</label>
             <select id="babySelector">
-                <?php foreach ($authData['accounts'] as $babyAccount): ?>
-                    <option value="<?= htmlspecialchars((string) $babyAccount['babyId']) ?>" <?= current_baby_id() === (string) $babyAccount['babyId'] ? 'selected' : '' ?>><?= htmlspecialchars((string) $babyAccount['username']) ?></option>
+                <?php foreach ($availableBabies as $babyId => $baby): ?>
+                    <option value="<?= htmlspecialchars((string) $babyId) ?>" <?= current_baby_id() === (string) $babyId ? 'selected' : '' ?>><?= htmlspecialchars((string) ($baby['name'] ?? 'Baby')) ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
@@ -44,9 +52,10 @@ $superAdmin = $authenticated && is_super_admin();
         <section class="auth-card card">
             <div class="baby-mark" aria-hidden="true">♥</div>
             <h2><?= $legacyAuth ? 'Name the existing gallery' : ($configured ? 'Welcome back' : 'Create the private gallery') ?></h2>
-            <p><?= $legacyAuth ? 'Enter the baby’s first name and your existing password. This upgrades the gallery without deleting the current photos.' : ($configured ? 'Sign in with the baby’s first name to view that gallery.' : 'The baby’s first name becomes the username for this private gallery.') ?></p>
+            <p><?= $legacyAuth ? 'Enter a username and your existing password. This upgrades the gallery without deleting the current photos.' : ($configured ? 'Sign in with your username.' : 'Create your admin sign-in and the first baby gallery.') ?></p>
             <form id="authForm">
-                <label>Baby’s first name<input name="username" maxlength="40" pattern="[A-Za-z][A-Za-z'-]{0,39}" autocomplete="username" autocapitalize="words" required></label>
+                <label>Your username<input name="username" maxlength="40" pattern="[A-Za-z][A-Za-z0-9._'-]{0,39}" autocomplete="username" required></label>
+                <?php if (!$configured): ?><label>Baby’s name<input name="babyName" maxlength="80" required></label><?php endif; ?>
                 <label>Password<input type="password" name="password" minlength="10" autocomplete="<?= $configured ? 'current-password' : 'new-password' ?>" required></label>
                 <?php if (!$configured): ?><label>Confirm password<input type="password" name="confirmPassword" minlength="10" autocomplete="new-password" required></label><?php endif; ?>
                 <button type="submit"><?= $configured ? 'Sign in' : 'Create gallery' ?></button>
@@ -119,20 +128,38 @@ $superAdmin = $authenticated && is_super_admin();
             <label>Confirm new password<input type="password" name="confirmNewPassword" minlength="10" autocomplete="new-password" required></label>
             <button type="submit" class="secondary">Change password</button>
         </form>
+        <?php if ($superAdmin): ?>
         <button type="button" id="openBabyDialog">＋ Add another baby</button>
+        <button type="button" class="secondary" id="openUsersDialog">Manage users</button>
+        <?php else: ?>
+        <button type="button" id="openBabyDialog" hidden>＋ Add another baby</button>
+        <?php endif; ?>
     </div>
 </dialog>
 
 <dialog id="babyDialog">
     <form id="babyForm">
         <div class="dialog-head"><div><p class="eyebrow">ANOTHER GALLERY</p><h2>Add a baby</h2></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>
-        <p class="save-help">This creates a separate photo and metadata folder. The baby’s first name is the username.</p>
-        <label>Baby’s first name<input name="babyUsername" maxlength="40" pattern="[A-Za-z][A-Za-z'-]{0,39}" autocomplete="off" autocapitalize="words" required></label>
-        <label>Password<input type="password" name="babyPassword" minlength="10" autocomplete="new-password" required></label>
-        <label>Confirm password<input type="password" name="confirmBabyPassword" minlength="10" autocomplete="new-password" required></label>
+        <p class="save-help">Create a separate gallery. Add people to it from Manage users.</p>
+        <label>Baby’s name<input name="babyName" maxlength="80" required></label>
         <button type="submit">Create and open gallery</button>
     </form>
 </dialog>
+
+<?php if ($superAdmin): ?>
+<dialog id="usersDialog">
+    <div class="dialog-head"><div><p class="eyebrow">ACCESS</p><h2>Manage users</h2></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>
+    <div id="userList"></div>
+    <form id="userForm">
+        <h3>Add user</h3>
+        <label>Username<input name="username" maxlength="40" pattern="[A-Za-z][A-Za-z0-9._'-]{0,39}" autocomplete="off" required></label>
+        <label>Password<input type="password" name="password" minlength="10" autocomplete="new-password" required></label>
+        <label>Confirm password<input type="password" name="confirmPassword" minlength="10" autocomplete="new-password" required></label>
+        <fieldset id="newUserBabies"><legend>Gallery access</legend></fieldset>
+        <button type="submit">Create user</button>
+    </form>
+</dialog>
+<?php endif; ?>
 
 <dialog id="photoDialog"><div class="photo-view"><button type="button" class="icon-button close-dialog" aria-label="Close">×</button><img id="fullPhoto" alt=""><div id="photoDetails"></div><button type="button" class="danger" id="deletePhotoButton">Remove photo</button></div></dialog>
 

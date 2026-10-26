@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.0 - 2026-10-26
+
+- Separate user accounts from baby galleries while retaining existing usernames, password hashes, baby IDs, settings, and photos.
+- Back up the prior authentication file before migration to the new format.
+- Let the admin create users, assign gallery access, and add babies without creating baby sign-ins.
+- Let users switch among the galleries they can access.
+
 ## 1.3.3 - 2026-10-26
 
 - Send an explicit UTF-8 Content-Type for the changelog on Hostinger so punctuation in release notes displays correctly.

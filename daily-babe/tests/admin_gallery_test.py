@@ -106,24 +106,27 @@ def main():
             admin = browser()
             admin_csrf = token(admin, base)
             status, _ = api(admin, base, "setup", {
-                "username": "Alice", "password": "admin-password-123",
+                "username": "Alice", "babyName": "Baby Alice", "password": "admin-password-123",
                 "confirmPassword": "admin-password-123",
             }, admin_csrf)
             assert status == 200
             status, result = api(admin, base, "list")
             assert status == 200 and result["data"]["account"]["role"] == "super_admin"
             status, _ = api(admin, base, "add_baby", {
-                "babyUsername": "Bob", "babyPassword": "user-password-123",
-                "confirmBabyPassword": "user-password-123",
+                "babyName": "Baby Bob",
             }, admin_csrf)
             assert status == 201
             status, page = request(admin, base)
-            assert status == 200 and b'Viewing baby' in page and b'>Bob</option>' in page
+            assert status == 200 and b'Viewing baby' in page and b'>Baby Bob</option>' in page
             auth = json.loads((root / "storage/data/auth.json").read_text())
-            bob_id = auth["accounts"]["bob"]["babyId"]
-            alice_id = auth["accounts"]["alice"]["babyId"]
-            assert auth["accounts"]["alice"]["role"] == "super_admin"
-            assert auth["accounts"]["bob"]["role"] == "user"
+            alice_id, bob_id = list(auth["babies"])
+            assert auth["users"]["alice"]["role"] == "super_admin"
+            assert len(auth["users"]) == 1
+            status, _ = api(admin, base, "add_user", {
+                "username": "Bob", "password": "user-password-123",
+                "confirmPassword": "user-password-123", "babyIds[]": bob_id,
+            }, admin_csrf)
+            assert status == 201
 
             user = browser()
             user_csrf = token(user, base)
@@ -177,17 +180,51 @@ def main():
             assert status == 200
             status, _ = api(user, base, "delete_photo", {"id": replacement_id}, user_csrf)
             assert status == 404
-            auth["schemaVersion"] = 2
-            for account in auth["accounts"].values():
-                account.pop("role")
-            (root / "storage/data/auth.json").write_text(json.dumps(auth))
-            status, _ = request(admin, base)
+            status, _ = api(admin, base, "update_user_access", {
+                "username": "Bob", "babyIds[]": alice_id,
+            }, admin_csrf)
             assert status == 200
+            status, _ = api(user, base, "select_baby", {"babyId": alice_id}, user_csrf)
+            assert status == 200
+            status, _ = api(user, base, "select_baby", {"babyId": bob_id}, user_csrf)
+            assert status == 403
+            status, _ = api(user, base, "add_user", {
+                "username": "Eve", "password": "user-password-123",
+                "confirmPassword": "user-password-123", "babyIds[]": alice_id,
+            }, user_csrf)
+            assert status == 403
+            assert len(json.loads((root / "storage/data/auth.json").read_text())["babies"]) == 2
+            # Simulate an installed v3 auth file and verify its in-place upgrade.
+            status, result = api(admin, base, "upload", {
+                "photoDate": "2026-08-25", "note": "Keep this photo"
+            }, admin_csrf, multipart=True)
+            assert status == 201, result
+            preserved_photo = root / "storage/babies" / bob_id / "uploads" / result["data"]["filename"]
+            assert preserved_photo.is_file()
+            current = json.loads((root / "storage/data/auth.json").read_text())
+            old_auth = {"schemaVersion": 3, "accounts": {
+                "alice": {"username": "Alice", "babyId": alice_id, "role": "super_admin",
+                          "passwordHash": current["users"]["alice"]["passwordHash"]},
+                "bob": {"username": "Bob", "babyId": bob_id, "role": "user",
+                        "passwordHash": current["users"]["bob"]["passwordHash"]},
+            }}
+            (root / "storage/data/auth.json").write_text(json.dumps(old_auth))
+            migrated_browser = browser()
+            migrated_csrf = token(migrated_browser, base)
             migrated = json.loads((root / "storage/data/auth.json").read_text())
-            assert migrated["schemaVersion"] == 3
-            assert migrated["accounts"]["alice"]["role"] == "super_admin"
-            assert migrated["accounts"]["bob"]["role"] == "user"
-            print("PASS: admin gallery access, regular account isolation, and photo removal")
+            assert migrated["schemaVersion"] == 4
+            assert set(migrated["babies"]) == {alice_id, bob_id}
+            assert migrated["users"]["bob"]["passwordHash"] == old_auth["accounts"]["bob"]["passwordHash"]
+            backup = json.loads((root / "storage/backups/auth-before-user-management.json").read_text())
+            assert backup == old_auth
+            status, _ = api(migrated_browser, base, "login", {
+                "username": "Bob", "password": "user-password-123"
+            }, migrated_csrf)
+            assert status == 200
+            status, result = api(migrated_browser, base, "list")
+            assert status == 200 and result["data"]["records"][0]["note"] == "Keep this photo"
+            assert preserved_photo.is_file()
+            print("PASS: user access, gallery isolation, and photo removal")
         finally:
             server.terminate()
             server.wait(timeout=5)

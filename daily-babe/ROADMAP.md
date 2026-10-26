@@ -3,7 +3,7 @@
 ## Next
 
 - [ ] Replace or delete an incorrect daily photo with confirmation and audit history.
-- [ ] Multi-user accounts for Jason and Hannah with individual sign-ins.
+- [x] Multi-user accounts with individual sign-ins and admin-managed gallery access.
 - [ ] Automated encrypted backup/export of originals and metadata.
 - [ ] Optional server-generated thumbnails for faster multi-year galleries.
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '1.3.3';
+const BABY_TRACKER_VERSION = '1.4.0';
 
 $configFile = __DIR__ . '/config/config.php';
 $config = require is_file($configFile) ? $configFile : __DIR__ . '/config/config.example.php';
@@ -54,19 +54,22 @@ function initialize_baby_storage(string $babyId): void
 
 function current_baby_id(): string
 {
-    $babyId = (string) ($_SESSION['babyId'] ?? '');
-    if (preg_match('/^[a-f0-9]{24}$/', $babyId) !== 1) {
-        throw new RuntimeException('No baby account is active.');
-    }
+    $account = current_account();
+    $auth = auth_data();
     $selected = (string) ($_SESSION['selectedBabyId'] ?? '');
-    if ($selected !== '' && is_super_admin()) {
-        foreach (auth_data()['accounts'] ?? [] as $account) {
-            if (($account['babyId'] ?? '') === $selected) {
-                return $selected;
-            }
+    if ($selected !== '' && can_access_baby($account, $selected, $auth)) {
+        return $selected;
+    }
+    $home = (string) ($account['homeBabyId'] ?? '');
+    if (can_access_baby($account, $home, $auth)) {
+        return $home;
+    }
+    foreach ($auth['babies'] as $babyId => $_baby) {
+        if (can_access_baby($account, (string) $babyId, $auth)) {
+            return (string) $babyId;
         }
     }
-    return $babyId;
+    throw new RuntimeException('No baby gallery is available to this user.');
 }
 
 function baby_storage_path(string $relative = ''): string
@@ -148,8 +151,8 @@ function request_id(): string
 
 function audit_event(string $event, array $details = []): void
 {
-    if (!empty($_SESSION['babyId'])) {
-        $details['babyId'] = (string) $_SESSION['babyId'];
+    if (!empty($_SESSION['username'])) {
+        $details['userId'] = (string) ($_SESSION['userId'] ?? '');
         $details['username'] = (string) ($_SESSION['username'] ?? '');
     }
     $entry = json_encode([
@@ -180,14 +183,16 @@ function require_csrf(): void
 function is_configured(): bool
 {
     $auth = json_read('data/auth.json', []);
-    return isset($auth['passwordHash']) || !empty($auth['accounts']);
+    return isset($auth['passwordHash']) || !empty($auth['accounts']) || !empty($auth['users']);
 }
 
 function is_authenticated(): bool
 {
-    return !empty($_SESSION['authenticated'])
-        && preg_match('/^[a-f0-9]{24}$/', (string) ($_SESSION['babyId'] ?? '')) === 1
-        && (string) ($_SESSION['username'] ?? '') !== '';
+    if (empty($_SESSION['authenticated']) || (string) ($_SESSION['username'] ?? '') === '') {
+        return false;
+    }
+    $user = auth_data()['users'][normalize_username((string) $_SESSION['username'])] ?? null;
+    return is_array($user) && (empty($_SESSION['userId']) || $user['userId'] === $_SESSION['userId']);
 }
 
 function require_auth(): void
@@ -213,14 +218,38 @@ function json_response(bool $success, string $message, mixed $data = null, array
 
 function auth_data(): array
 {
-    $auth = json_read('data/auth.json', ['schemaVersion' => 3, 'accounts' => []]);
-    if (!empty($auth['accounts']) && (int) ($auth['schemaVersion'] ?? 2) < 3) {
-        // Accounts retain insertion order: the first account is the original gallery owner.
-        $first = array_key_first($auth['accounts']);
-        foreach ($auth['accounts'] as $key => &$account) {
-            $account['role'] = $key === $first ? 'super_admin' : 'user';
+    $auth = json_read('data/auth.json', ['schemaVersion' => 4, 'users' => [], 'babies' => []]);
+    if (!empty($auth['accounts'])) {
+        // Preserve the original file before replacing its authentication format.
+        $source = storage_path('data/auth.json');
+        $backup = storage_path('backups/auth-before-user-management.json');
+        if (!is_file($backup) && !copy($source, $backup)) {
+            throw new RuntimeException('Unable to back up existing accounts.');
         }
-        unset($account);
+        $users = [];
+        $babies = [];
+        $first = array_key_first($auth['accounts']);
+        foreach ($auth['accounts'] as $key => $account) {
+            $babyId = (string) ($account['babyId'] ?? '');
+            if (preg_match('/^[a-f0-9]{24}$/', $babyId) !== 1) {
+                throw new RuntimeException('An existing baby identifier is invalid.');
+            }
+            $username = (string) $account['username'];
+            $settings = json_read('babies/' . $babyId . '/data/settings.json', []);
+            $babyName = trim((string) ($settings['babyName'] ?? ''));
+            $babies[$babyId] = ['name' => $babyName !== '' ? $babyName : $username, 'createdAt' => (string) ($account['createdAt'] ?? gmdate('c'))];
+            $users[$key] = [
+                'userId' => bin2hex(random_bytes(12)),
+                'username' => $username,
+                'role' => $key === $first ? 'super_admin' : (string) ($account['role'] ?? 'user'),
+                'passwordHash' => (string) $account['passwordHash'],
+                'babyIds' => [$babyId],
+                'homeBabyId' => $babyId,
+                'createdAt' => (string) ($account['createdAt'] ?? gmdate('c')),
+                'updatedAt' => (string) ($account['updatedAt'] ?? gmdate('c')),
+            ];
+        }
+        $auth = ['users' => $users, 'babies' => $babies];
         write_auth($auth);
     }
     return $auth;
@@ -228,7 +257,7 @@ function auth_data(): array
 
 function write_auth(array $auth): void
 {
-    $auth['schemaVersion'] = 3;
+    $auth['schemaVersion'] = 4;
     $auth['updatedAt'] = gmdate('c');
     json_write('data/auth.json', $auth);
 }
@@ -240,15 +269,16 @@ function normalize_username(string $username): string
 
 function valid_username(string $username): bool
 {
-    return preg_match("/^[A-Za-z][A-Za-z'-]{0,39}$/", trim($username)) === 1;
+    return preg_match("/^[A-Za-z][A-Za-z0-9._'-]{0,39}$/", trim($username)) === 1;
 }
 
-function begin_account_session(string $username, string $babyId): void
+function begin_account_session(array $account): void
 {
     session_regenerate_id(true);
     $_SESSION['authenticated'] = true;
-    $_SESSION['username'] = $username;
-    $_SESSION['babyId'] = $babyId;
+    $_SESSION['username'] = (string) $account['username'];
+    $_SESSION['userId'] = (string) $account['userId'];
+    unset($_SESSION['babyId']);
     unset($_SESSION['selectedBabyId']);
 }
 
@@ -256,11 +286,17 @@ function current_account(): array
 {
     $auth = auth_data();
     $key = normalize_username((string) ($_SESSION['username'] ?? ''));
-    $account = $auth['accounts'][$key] ?? null;
-    if (!is_array($account) || ($account['babyId'] ?? '') !== (string) ($_SESSION['babyId'] ?? '')) {
-        throw new RuntimeException('The active baby account could not be found.');
+    $account = $auth['users'][$key] ?? null;
+    if (!is_array($account) || (!empty($_SESSION['userId']) && $account['userId'] !== $_SESSION['userId'])) {
+        throw new RuntimeException('The active user account could not be found.');
     }
     return $account;
+}
+
+function can_access_baby(array $account, string $babyId, array $auth): bool
+{
+    return isset($auth['babies'][$babyId])
+        && (($account['role'] ?? 'user') === 'super_admin' || in_array($babyId, $account['babyIds'] ?? [], true));
 }
 
 function is_super_admin(): bool
@@ -311,9 +347,10 @@ function migrate_legacy_gallery(string $babyId, string $username): void
 function tracker_settings(): array
 {
     global $config;
+    $babyId = current_baby_id();
     return baby_json_read('data/settings.json', [
         'schemaVersion' => 2,
-        'babyName' => (string) ($_SESSION['username'] ?? ''),
+        'babyName' => (string) (auth_data()['babies'][$babyId]['name'] ?? ''),
         'dueDate' => (string) ($config['due_date'] ?? '2026-11-02'),
         'birthDate' => '',
         'birthTime' => '',

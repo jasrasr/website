@@ -59,4 +59,30 @@ document.addEventListener('DOMContentLoaded',()=>{
     });
 });
 
+document.addEventListener('DOMContentLoaded',()=>{
+    const dialog=$('#usersDialog');
+    if(!dialog)return;
+    const galleryChoices=(babies,selected=[])=>Object.entries(babies).map(([id,baby])=>`<label class="access-choice"><input type="checkbox" name="babyIds[]" value="${escapeHtml(id)}" ${selected.includes(id)?'checked':''}> ${escapeHtml(baby.name||'Baby')}</label>`).join('');
+    async function loadUsers(){
+        const data=await api('users');
+        $('#newUserBabies').innerHTML='<legend>Gallery access</legend>'+galleryChoices(data.babies);
+        $('#userList').innerHTML=data.users.map(user=>user.role==='super_admin'
+            ? `<div class="user-row"><strong>${escapeHtml(user.username)}</strong><small>Admin · all galleries</small></div>`
+            : `<form class="user-row access-form"><strong>${escapeHtml(user.username)}</strong><input type="hidden" name="username" value="${escapeHtml(user.username)}"><fieldset><legend>Gallery access</legend>${galleryChoices(data.babies,user.babyIds)}</fieldset><button type="submit" class="secondary compact">Save access</button></form>`).join('');
+    }
+    $('#openUsersDialog').addEventListener('click',async()=>{
+        $('#settingsDialog').close();
+        try{await loadUsers();dialog.showModal()}catch(error){toast(error.message)}
+    });
+    $('#userForm').addEventListener('submit',async event=>{
+        event.preventDefault();
+        try{await api('add_user',formOptions(event.currentTarget));event.currentTarget.reset();await loadUsers();toast('User created.')}catch(error){toast(error.message)}
+    });
+    $('#userList').addEventListener('submit',async event=>{
+        if(!event.target.matches('.access-form'))return;
+        event.preventDefault();
+        try{await api('update_user_access',formOptions(event.target));await loadUsers();toast('Gallery access updated.')}catch(error){toast(error.message)}
+    });
+});
+
 
