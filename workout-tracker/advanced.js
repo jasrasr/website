@@ -25,7 +25,7 @@ const WorkoutAdvanced = (() => {
   const caption = el('span','',label);
   const input = el('input');
   input.type = options.type || 'number';
-  input.name = name;
+  // No name attribute: do not collide with legacy scalar weight/reps in FormData.
   input.dataset.advancedField = name;
   input.value = value ?? '';
   if(input.type==='number'){
@@ -118,7 +118,7 @@ const WorkoutAdvanced = (() => {
    refreshSetNumbers();
   }
   existingSets.forEach(appendSet);
-  addSet.addEventListener('click',()=>{appendSet();setRows.lastElementChild?.querySelector('[name="weight_lb"]')?.focus();});
+  addSet.addEventListener('click',()=>{appendSet();setRows.lastElementChild?.querySelector('[data-advanced-field="weight_lb"]')?.focus();});
   function updateSetVisibility(){
    const name=String(exerciseInput?.value||'').trim();
    // Leave previously recorded sets visible even when changing an exercise name.
@@ -148,7 +148,7 @@ const WorkoutAdvanced = (() => {
    row.append(name,unit,value,remove);metricRows.append(row);refreshMetricNumbers();
   }
   existingMetrics.forEach(appendMetric);
-  addMetric.addEventListener('click',()=>{metricsPanel.open=true;appendMetric();metricRows.lastElementChild?.querySelector('[name="name"]')?.focus();});
+  addMetric.addEventListener('click',()=>{metricsPanel.open=true;appendMetric();metricRows.lastElementChild?.querySelector('[data-advanced-field="name"]')?.focus();});
   // Keep advanced editors before the metadata/notes, not at the bottom.
   const before=Array.from(grid.children).find(child=>{
    if(String(child.tagName).toLowerCase()!=='label')return false;
@@ -163,7 +163,11 @@ const WorkoutAdvanced = (() => {
   }else{
    grid.append(setsPanel,metricsPanel);
   }
-  return {setsPanel,metricsPanel};
+  return {setsPanel,metricsPanel,reset(){
+   setRows.replaceChildren();metricRows.replaceChildren();
+   setsPanel.dataset.hadSets='no';metricsPanel.dataset.hadMetrics='no';
+   metricsPanel.open=false;refreshSetNumbers();refreshMetricNumbers();updateSetVisibility();
+  }};
  }
  function collect(container) {
   const result={};
