@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, key-free quick entry, optional AI and screenshot import guidance for Workout Tracker.
-Revision: 1.5.0
+Revision: 1.5.1
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.5.0 - Authenticated photo/detail view and per-user ZIP backup, preserving live data. 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
+Changelog: 1.5.1 - Optional heart rate in BPM, including local parsing, charts and safe edits. 1.5.0 - Authenticated photo/detail view and per-user ZIP backup, preserving live data. 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
 -->
 # Workout Tracker
 
@@ -14,12 +14,24 @@ Private PHP workout logger at https://jasr.me/github/workout-tracker/ using shar
 ## Quick entry — no API key required
 
 1. Open the tracker after signing into user-management. Type a sentence such as **"1.16 miles at 3.3 on treadmill for today for 22 minutes"**.
-2. Tap **Review workout**. The built-in PHP parser extracts exercise, distance, duration, speed, reps, sets, weight and date. Nothing is sent to an external AI provider.
+2. Tap **Review workout**. The built-in PHP parser extracts exercise, distance, duration, speed, **heart rate (BPM)**, reps, sets, weight and date when stated. Nothing is sent to an external AI provider.
 3. Review the compact result (e.g. Treadmill · 1.16 mi · 22 min · 3.3 mph), expand **Edit measurements or date** only if a correction is needed, then tap **Save workout** once.
 4. A sentence with multiple recognized exercises (e.g. "treadmill 1 mile in 20 minutes, then 20 push-ups") creates multiple separate exercise entries as one atomic session. Trends remain isolated by exercise and measurement.
 5. Dates default to the user's **browser-local current date**. Time defaults to the current local time at review. "Yesterday", "last Monday", an ISO date, and US numeric MM/DD/YYYY dates are supported for backdating. An optional time control exists under review details.
 
 The parser is rule-based rather than a general LLM. It recognizes common exercises and explicit numbers but does **not guess missing values**. Unrecognized exercises use the collapsed manual entry form. It does not analyze photos.
+
+## Heart rate tracking (v1.5.1)
+
+Heart rate is an **optional first-class measurement** in beats per minute, saved as `heart_rate_bpm` (whole-number BPM from 1 to 300). It is separate from calorie estimates, treadmill speed and organization tags. The app does not estimate or diagnose heart rate and does not automatically read a wearable.
+
+- **No API key required:** local descriptions such as **"Treadmill 1.16 miles for 22 minutes at 3.3 mph, heart rate 143 bpm"**, **"Walking 2 miles, average heart rate 128"**, **"HR 143"** attached to a recognized exercise, and **"145 bpm"** are parsed as an explicitly reported pulse. The parser does **not** mistake `1 hr 15 min` for a 15 BPM pulse or `at 145 bpm` for a treadmill speed of 145 mph.
+- **Phone entry:** `Heart rate (BPM)` appears with treadmill, walking, running, cycling, rowing, swimming, elliptical and stair measurements in the natural-language review, manual entry and saved-workout editor. It remains accessible under **Show other measurements** for strength exercises.
+- **Progress tracking:** select an exercise, then **Heart rate (BPM)** for a separate chart. The authenticated **Details** view and workout-history summaries display recorded BPM.
+- **Existing records remain intact:** older JSON entries without `heart_rate_bpm` remain valid and are **not assigned made-up heart rates**. Editing an old entry without entering BPM does not add a new value. An older API client omitting this field cannot erase an already saved pulse.
+- The optional AI fallback may also return `heart_rate_bpm` when explicitly stated. Any suggestion must be reviewed before saving. The number is associated with the workout, not a continuous heart-rate time series; use the notes or additional measurements for distinct heart-rate readings.
+
+Run `php workout-tracker/tests/heart-rate.test.php` and the existing parser, edit and mobile-view tests. All tests operate on synthetic entries and temporary JSON files—not live Hostinger workout data.
 
 ## Authenticated workout details, photos and backups (v1.5.0)
 
