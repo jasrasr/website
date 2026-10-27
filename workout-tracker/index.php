@@ -2,10 +2,10 @@
 /* File Name: index.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: Authenticated workout dashboard and JSON API.
-Revision: 1.3.0
+Revision: 1.3.1
 Created Date: 2026-10-21
-Modified Date: 2026-10-22
-Changelog: 1.3.0 - Edit prior entries safely, optional tracking tags, treadmill incline and retained edit history. 1.2.0 - Add explicit optional AI retry with private config and multi-exercise validation. 1.1.0 - No-key text parsing and atomic multi-exercise logging. 1.0.1 - Use framework JsonStore for private entries. 1.0.0 - Initial release. */
+Modified Date: 2026-10-27
+Changelog: 1.3.1 - Bust cached JavaScript and mark Edit button UI repair. 1.3.0 - Edit prior entries safely, optional tracking tags, treadmill incline and retained edit history. 1.2.0 - Add explicit optional AI retry with private config and multi-exercise validation. 1.1.0 - No-key text parsing and atomic multi-exercise logging. 1.0.1 - Use framework JsonStore for private entries. 1.0.0 - Initial release. */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
 require_once __DIR__ . '/parse.php';
@@ -256,14 +256,14 @@ if (isset($_GET['api'])) {
 <meta name="theme-color" content="#08141f">
 <title>Workout Tracker · Keep moving</title>
 <link rel="stylesheet" href="app.css?v=1.3.0">
-<script src="app.js?v=1.3.0" defer></script>
+<script src="app.js?v=1.3.1" defer></script>
 </head>
 <body><main>
 <header class="hero">
  <div><div class="eyebrow">Personal fitness · Your pace</div>
   <h1>Keep moving.</h1>
   <p class="subtitle">Every session counts. Progress happens one workout at a time.</p>
-  <p class="version">Workout Tracker v1.3.0 · Updated October 22, 2026</p>
+  <p class="version">Workout Tracker v1.3.1 · Updated October 27, 2026</p>
  </div>
  <div class="hero-mark" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 25h9l6-11 9 22 7-14h11"/></svg></div>
 </header>
