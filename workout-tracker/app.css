@@ -2,10 +2,10 @@
 File Name: app.css
 Author: Jason Lamb (with help from ChatGPT)
 Description: Calm, responsive workout dashboard with compact progressive-entry controls.
-Revision: 1.3.0
+Revision: 1.3.2
 Created Date: 2026-10-21
-Modified Date: 2026-10-22
-Changelog: 1.3.0 - Style editable history, tracking tags and incline controls. 1.2.0 - Add low-emphasis optional AI retry action. 1.1.0 - Mobile-first quick entry, measured progress, accessible review layout.
+Modified Date: 2026-10-27
+Changelog: 1.3.2 - Keep mobile date/time full width, compact numeric pairs, iOS-safe input fonts and thumb-friendly touch targets. 1.3.0 - Style editable history, tracking tags and incline controls. 1.2.0 - Add low-emphasis optional AI retry action. 1.1.0 - Mobile-first quick entry, measured progress, accessible review layout.
 */
 :root{color-scheme:dark;font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#08141f;color:#e7f5f8}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% 0%,#173b44 0%,#0b1a29 50%,#08141f 100%);min-height:100vh}
@@ -67,3 +67,44 @@ footer{margin-top:23px;color:#839eae;text-align:center;font-size:.75rem}
 #editStatus{min-height:1.2em}
 #editForm .secondary-action{margin-top:9px}
 @media(max-width:420px){.history-toggle{font-size:.78rem}.history-edit{padding:7px 10px}}
+
+/* Never allow native iOS date/time controls to overflow a two-column grid. */
+.field-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+.field-grid>.field{min-width:0;max-width:100%;}
+.field-grid .field input,.field-grid .field textarea{display:block;min-width:0;max-width:100%;width:100%;box-sizing:border-box;}
+.field-grid>.field:has(input[type="date"]),
+.field-grid>.field:has(input[type="time"]){grid-column:1/-1;}
+.field-grid>.other-metrics{grid-column:1/-1;width:100%;font-size:.86rem;margin-top:2px;}
+.field-grid>.field[hidden]{display:none!important;}
+/* Mobile-first: compact pairs of numeric fields where there is room, full-width date/time. */
+.field-grid .field input,.field-grid .field textarea{
+ font-size:16px;
+ line-height:1.3;
+ min-height:48px;
+}
+.field-grid .field textarea{min-height:94px;}
+.field-grid>.field:has(input[type="date"]),
+.field-grid>.field:has(input[type="time"]){min-width:0;}
+.field-grid input[type="date"],.field-grid input[type="time"]{
+ min-width:0;max-width:100%;width:100%;min-height:48px;
+}
+.secondary-action,.history-edit{min-height:44px;}
+details>summary{min-height:44px;display:list-item;align-content:center;}
+.filters select,.utility input,.utility select{font-size:16px;min-height:48px;}
+.filters label,.filters select{min-width:0;width:100%;}
+@media(max-width:560px){
+ .field-grid{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px;row-gap:12px;}
+ .field-grid>.field.full{grid-column:1/-1;}
+ .field-grid>.other-metrics{grid-column:1/-1;}
+ .filters{grid-template-columns:minmax(0,1fr);gap:12px;}
+ .utility{grid-template-columns:minmax(0,1fr);}
+ .utility>.field{min-width:0;}
+ .utility input{min-width:0;max-width:100%;width:100%;}
+ .panel{padding:18px;}
+ .recent-list li{column-gap:8px;}
+}
+@media(max-width:360px){
+ .field-grid{grid-template-columns:minmax(0,1fr);}
+ .field-grid>.field.full,.field-grid>.other-metrics{grid-column:1;}
+}
+

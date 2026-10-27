@@ -1,10 +1,10 @@
 /* File Name: app.js
 Author: Jason Lamb (with help from ChatGPT)
 Description: Workout quick entry, editable review, and per-exercise trends.
-Revision: 1.3.1
+Revision: 1.3.2
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
+Changelog: 1.3.2 - Optimize mobile exercise fields, retain hidden measurements, and keep optional metrics near the measurements. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
 'use strict';
 const $=selector=>document.querySelector(selector);
 const measures=[['distance_miles','Miles'],['duration_minutes','Minutes'],['speed_mph','Speed (mph)'],['incline_percent','Treadmill incline (%)'],['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']];
@@ -37,6 +37,81 @@ function describe(entry){
  entry.speed_mph!=null?entry.speed_mph+' mph':'',entry.sets!=null?entry.sets+' sets':'',
  entry.reps!=null?entry.reps+' reps'+(entry.sets!=null?'/set':''):'',entry.weight_lb!=null?entry.weight_lb+' lb':'',entry.incline_percent!=null?entry.incline_percent+'% incline':''].filter(Boolean).join(' · ')||'Add measurements below';
 }
+
+/**
+ * Presentation only: no schema migration or data deletion. A hidden measurement
+ * stays in the input and is submitted unchanged when editing an older record.
+ */
+function visibleFieldsForExercise(exercise){
+ const name=String(exercise||'').toLowerCase().trim().replace(/\s+/g,' ');
+ if(/tread\s?mill/.test(name)) return ['distance_miles','duration_minutes','speed_mph','incline_percent'];
+ if(/^(walking|walk|hiking|running|run|cycling|bike|biking|stationary bike|rowing|swimming|elliptical|stairs)$/.test(name))
+  return ['distance_miles','duration_minutes','speed_mph'];
+ if(/^(bench press|deadlift|weight training|weight lifting)$/.test(name))
+  return ['weight_lb','reps','sets'];
+ if(/^(push-ups|pushups|sit-ups|situps|squats|lunges|crunches|jumping jacks)$/.test(name))
+  return ['reps','sets'];
+ if(/^(plank|yoga)$/.test(name)) return ['duration_minutes','sets'];
+ return measures.map(([key])=>key); // Unknown/custom exercises can use all existing metrics.
+}
+/**
+ * Hide unrelated fields by default but offer a safe override.
+ * Empty/historical values remain in the DOM and are never discarded.
+ */
+function installExerciseVisibility(grid,exerciseInput){
+ const button=document.createElement('button');
+ button.type='button';button.className='secondary-action other-metrics';
+ button.textContent='Show other measurements';
+ button.hidden=true;button.dataset.expanded='no';
+ // Keep the expand control alongside measurements, not below notes or photos.
+ const detailsStart=Array.from(grid.children).find(label=>
+  String(label.tagName).toLowerCase()==='label' &&
+  Array.from(label.children).some(child=>['tag','notes','photo','time_local'].includes(
+   child.dataset?.field||child.name
+  ))
+ );
+ if(detailsStart)grid.insertBefore(button,detailsStart);
+ else grid.append(button);
+ const allKeys=new Set(measures.map(([key])=>key));
+ function update(){
+  const visible=new Set(visibleFieldsForExercise(exerciseInput?.value));
+  let others=0,savedHidden=0;
+  for(const label of Array.from(grid.children)){
+   if(String(label.tagName).toLowerCase()!=='label')continue;
+   const field=Array.from(label.children).find(child=>{
+    const key=child.dataset?.field||child.name;
+    return allKeys.has(key);
+   });
+   if(!field)continue;
+   const key=field.dataset?.field||field.name;
+   const extra=!visible.has(key);
+   if(extra){others++;if(field.value!==''&&field.value!=null)savedHidden++;}
+   label.hidden=extra&&button.dataset.expanded!=='yes';
+  }
+  button.hidden=others===0;
+  button.textContent=button.dataset.expanded==='yes'?'Hide other measurements':
+   'Show other measurements'+(savedHidden?' ('+savedHidden+' saved)':'');
+ }
+ button.addEventListener('click',()=>{button.dataset.expanded=button.dataset.expanded==='yes'?'no':'yes';update();});
+ exerciseInput?.addEventListener('input',()=>{button.dataset.expanded='no';update();});
+ update();
+ return update;
+}
+function refreshChartMetrics(){
+ const exercise=$('#exerciseFilter').value;
+ const allowed=new Set(visibleFieldsForExercise(exercise));
+ // Keep metrics populated in historical records accessible, even if their
+ // exercise category ordinarily would not use them.
+ const existing=entries.filter(row=>row.exercise===exercise);
+ const available=measures.filter(([key])=>allowed.has(key)||existing.some(row=>row[key]!=null));
+ const select=$('#metric'),previous=select.value;
+ select.replaceChildren(...available.map(([key,label])=>{
+  const option=document.createElement('option');option.value=key;
+  option.textContent=label;return option;
+ }));
+ if(available.some(([key])=>key===previous))select.value=previous;
+}
+
 function renderReview(suggestions){
  const list=$('#reviewList');list.replaceChildren();$('#sessionTime').value=localTime();
  $('#reviewHeading').textContent=suggestions.length+' exercise'+(suggestions.length===1?'':'s')+' recognized';
@@ -49,13 +124,17 @@ function renderReview(suggestions){
   const date=document.createElement('span');date.className='date-chip';date.textContent=niceDay(entry.date);top.append(left,date);
   const details=document.createElement('details'),heading=document.createElement('summary');heading.textContent='Edit measurements or date';
   const grid=document.createElement('div');grid.className='field-grid';
-  grid.append(fieldInput('exercise','Exercise',entry.exercise,'text'),fieldInput('date','Workout date',entry.date,'date'));
+  const exerciseField=fieldInput('exercise','Exercise',entry.exercise,'text');
+  exerciseField.classList.add('full');
+  grid.append(exerciseField,fieldInput('date','Workout date',entry.date,'date'));
   measures.forEach(item=>grid.append(fieldInput(item[0],item[1],entry[item[0]])));
   const tagInput=fieldInput('tag','Tracking tag',entry.tag||'','text');tagInput.classList.add('full');grid.append(tagInput);
   const notes=document.createElement('label');notes.className='field full';
   const nt=document.createElement('span');nt.textContent='Notes';
   const ta=document.createElement('textarea');ta.dataset.field='notes';ta.rows=2;ta.maxLength=2000;ta.value=entry.notes||'';
-  notes.append(nt,ta);grid.append(notes);details.append(heading,grid);card.append(top,details);list.append(card);
+  notes.append(nt,ta);grid.append(notes);
+  installExerciseVisibility(grid,exerciseField.children[1]);
+  details.append(heading,grid);card.append(top,details);list.append(card);
  });
  $('#review').hidden=false;$('#review').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
@@ -130,7 +209,7 @@ function refresh(){
  const kinds=[...new Set(entries.map(e=>e.exercise))].sort(),select=$('#exerciseFilter'),old=select.value;
  select.replaceChildren(...kinds.map(k=>{const o=document.createElement('option');o.value=k;o.textContent=titleCase(k);return o;}));
  if(kinds.includes(old))select.value=old;
- $('#trendPanel').hidden=kinds.length===0;draw();
+ $('#trendPanel').hidden=kinds.length===0;refreshChartMetrics();draw();
 }
 function editField(name,label,value,type='number'){
  const input=fieldInput(name,label,value,type);
@@ -142,7 +221,8 @@ function beginEdit(id){
  if(!entry||!entry._revision){message('Entry no longer available. Refresh the page.',true);return;}
  editingId=id;editingRevision=entry._revision;
  const grid=$('#editFields');grid.replaceChildren();
- grid.append(editField('exercise','Exercise',entry.exercise,'text'),editField('date','Workout date',entry.date,'date'));
+ const exerciseField=editField('exercise','Exercise',entry.exercise,'text');
+ grid.append(exerciseField,editField('date','Workout date',entry.date,'date'));
  measures.forEach(([key,label])=>grid.append(editField(key,label,entry[key])));
  grid.append(editField('tag','Tracking tag (optional)',entry.tag||'','text'));
  const notes=document.createElement('label');notes.className='field full';
@@ -154,6 +234,7 @@ function beginEdit(id){
  grid.append(editField('time_local','Local time (optional)',match?match[1]:'','time'));
  const timezone=document.createElement('input');timezone.type='hidden';timezone.dataset.field='utc_offset';
  timezone.value=match?match[2]:offset();grid.append(timezone);
+ installExerciseVisibility(grid,exerciseField.children[1]);
  $('#editPanel').hidden=false;$('#editStatus').textContent='Original entry and changes are kept in your private workout history.';
  $('#editPanel').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
@@ -214,7 +295,7 @@ $('#parseBtn').addEventListener('click',review);
 $('#aiParseBtn').addEventListener('click',retryWithAi);
 $('#note').addEventListener('input',()=>{$('#review').hidden=true;});
 $('#saveBtn').addEventListener('click',()=>{try{save(collect(),$('#photo').files[0]||null);}catch(e){message(e.message,true);}});
-$('#exerciseFilter').addEventListener('change',draw);$('#metric').addEventListener('change',draw);
+$('#exerciseFilter').addEventListener('change',()=>{refreshChartMetrics();draw();});$('#metric').addEventListener('change',draw);
 $('#historyTag').addEventListener('change',()=>{showAllHistory=false;renderHistory();draw();});
 $('#toggleHistory').addEventListener('click',()=>{showAllHistory=!showAllHistory;renderHistory();});
 $('#recent').addEventListener('click',e=>{const button=e.target.closest('[data-edit-id]');if(button)beginEdit(button.dataset.editId);});
@@ -227,4 +308,5 @@ $('#manualForm').addEventListener('submit',async e=>{
  await save([row],photo);if(!$('#message').classList.contains('error'))e.currentTarget.reset();
 });
 $('#manualDate').value=localDate();
+installExerciseVisibility($('#manualForm .field-grid'),$('#manualForm [name="exercise"]'));
 load();
