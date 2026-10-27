@@ -2,12 +2,20 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release history for private Workout Tracker.
-Revision: 1.4.0
+Revision: 1.4.1
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.4.0 - Document v1.5.0 authenticated photos, workout details and ZIP backups. 1.3.0 - Document v1.4.0 calories, custom numeric metrics and per-set strength logging. 1.2.2 - Document workout-specific fields and iPhone-safe date/time layout in v1.3.2. 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
+Changelog: 1.4.1 - Document optional heart-rate BPM field and local parser in v1.5.1. 1.4.0 - Document v1.5.0 authenticated photos, workout details and ZIP backups. 1.3.0 - Document v1.4.0 calories, custom numeric metrics and per-set strength logging. 1.2.2 - Document workout-specific fields and iPhone-safe date/time layout in v1.3.2. 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
 -->
 # Workout Tracker changelog
+
+## v1.5.1 — 2026-10-27
+
+- Add optional, validated `heart_rate_bpm` (1–300 integer BPM) to exercise records without any JSON migration, replacement or legacy backfill.
+- Parse explicitly reported heart rate from no-key natural workout descriptions including **heart rate 143 bpm**, **HR 143**, **pulse 143**, or **143 bpm**. Avoid false positives from `1 hr 15 min` and avoid interpreting BPM as treadmill speed.
+- Show heart rate in mobile treadmill/cardio manual entry, review, editing, workout history and the private details viewer; other exercises can use **Show other measurements**.
+- Chart BPM per exercise, separate from speed/calories. Support explicit optional AI fallback output for BPM, with user review required before saving.
+- Keep past record/photo/session data intact and prevent older API clients from clearing heart-rate fields. Add parser, validation, stale-write, and mobile regression checks.
 
 ## v1.5.0 — 2026-10-27
 
