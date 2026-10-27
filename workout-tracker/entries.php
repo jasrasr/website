@@ -2,10 +2,10 @@
 /* File Name: entries.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: Validated per-entry edits preserving all existing workout records and prior values.
-Revision: 1.1.0
+Revision: 1.2.0
 Created Date: 2026-10-22
 Modified Date: 2026-10-27
-Changelog: 1.1.0 - Preserve/validate optional calories, custom metrics and individual set arrays in revision-locked edits. 1.0.0 - Add optimistic-lock edits, tags, incline, and reversible edit history. */
+Changelog: 1.2.0 - Permit validated optional heart_rate_bpm on individual audited edits. 1.1.0 - Preserve/validate optional calories, custom metrics and individual set arrays in revision-locked edits. 1.0.0 - Add optimistic-lock edits, tags, incline, and reversible edit history. */
 declare(strict_types=1);
 require_once __DIR__ . '/measurements.php';
 
@@ -97,7 +97,7 @@ function workout_apply_entry_edit(array $records, string $id, string $expectedRe
         $changed = false;
         foreach ($changes as $key => $value) {
             if ($key === 'performed_at' || in_array($key, ['exercise','date','notes','tag','incline_percent',
-                'distance_miles','duration_minutes','speed_mph','reps','sets','weight_lb','calories_kcal','custom_metrics','sets_detail'], true)) {
+                'distance_miles','duration_minutes','speed_mph','reps','sets','weight_lb','calories_kcal','heart_rate_bpm','custom_metrics','sets_detail'], true)) {
                 if (($record[$key] ?? null) !== $value && !($value === '' && !isset($record[$key]))) $changed = true;
                 $record[$key] = $value;
             }
