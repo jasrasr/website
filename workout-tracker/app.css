@@ -87,7 +87,6 @@ footer{margin-top:23px;color:#839eae;text-align:center;font-size:.75rem}
 .field-grid>.field:has(input[type="time"]){min-width:0;}
 .field-grid input[type="date"],.field-grid input[type="time"]{
  min-width:0;max-width:100%;width:100%;min-height:48px;
- -webkit-appearance:none;appearance:none;
 }
 .secondary-action,.history-edit{min-height:44px;}
 details>summary{min-height:44px;display:list-item;align-content:center;}
