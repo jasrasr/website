@@ -2,10 +2,10 @@
 File Name: edit-button.test.cjs
 Author: Jason Lamb (with help from ChatGPT)
 Description: Regression test for Edit button opening saved workouts without a DOMException.
-Revision: 1.1.1
+Revision: 1.1.2
 Created Date: 2026-10-27
 Modified Date: 2026-10-27
-Changelog: 1.1.1 - Check hidden historical rep/set/weight values remain intact and manual entry adapts. 1.1.0 - Verify exercise-specific field visibility and safe retention of hidden measurements. 1.0.0 - Exercise the actual event handler and editing form against DOM class-token validation.
+Changelog: 1.1.2 - Verify mobile touch targets, optional fields location, and hidden-value indicator. 1.1.1 - Check hidden historical rep/set/weight values remain intact and manual entry adapts. 1.1.0 - Verify exercise-specific field visibility and safe retention of hidden measurements. 1.0.0 - Exercise the actual event handler and editing form against DOM class-token validation.
 */
 'use strict';
 const assert = require('node:assert/strict');
@@ -26,6 +26,11 @@ function element(name) {
     tagName:name, dataset:{}, children:[], value:'', hidden:false, textContent:'',
     classes:new Set(), listeners:new Map(),
     append(...nodes){this.children.push(...nodes);},
+    insertBefore(node,reference){
+      const at=this.children.indexOf(reference);
+      if(at<0) throw Error('Unknown reference child');
+      this.children.splice(at,0,node);
+    },
     replaceChildren(...nodes){this.children=nodes;},
     scrollIntoView(){this.scrolled=true;},
     addEventListener(type,fn){this.listeners.set(type,fn);}
@@ -116,6 +121,11 @@ assert.equal(byName('sets').value,2,'Legacy set count must remain in a collapsed
 assert.equal(byName('weight_lb').value,10,'Legacy lifting weight must remain in a collapsed field.');
 const reveal=dom.get('#editFields').children.find(child=>child.tagName==='button');
 assert.ok(reveal,'There should be a button to access unusual measurements.');
+const gridChildren=dom.get('#editFields').children;
+assert.ok(gridChildren.indexOf(reveal)<gridChildren.indexOf(fieldLabel('tag')),
+ 'Optional measurements control should appear above tracking tag and notes.');
+assert.match(reveal.textContent,/3 saved/,
+ 'Hidden historical measurements must be signaled instead of silently concealed.');
 reveal.listeners.get('click')();
 assert.equal(fieldLabel('sets').hidden,false,'Optional unusual measurements can be revealed.');
 reveal.listeners.get('click')();
@@ -155,4 +165,8 @@ assert.match(css,/grid-template-columns:minmax\(0,1fr\)/,
   'Narrow/mobile fields need a single minmax(0,1fr) column.');
 assert.match(css,/input\[type="date"\]/,'Date controls must span both desktop grid columns.');
 assert.match(css,/input\[type="time"\]/,'Time controls must span both desktop grid columns.');
+assert.match(css,/font-size:16px/,'Mobile input fonts should prevent Safari focus zoom.');
+assert.match(css,/min-height:44px/,'Mobile actions must have usable touch targets.');
+assert.match(css,/@media\(max-width:560px\)/,'Mobile breakpoint must cover phone widths.');
+assert.match(css,/@media\(max-width:360px\)/,'Very narrow phones must use a one-column fallback.');
 console.log('Passed: Edit and manual fields adapt by exercise; legacy values stay intact; mobile date/time CSS protected.');
