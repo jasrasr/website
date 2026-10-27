@@ -1,10 +1,11 @@
 <!-- File Name: index.html
 Author: Jason Lamb (with help from ChatGPT)
 Description: Giant animated random coin flip, no dependencies or data storage.
-Revision: 1.0.3
+Revision: 1.0.4
 Created Date: 2026-10-27
 Modified Date: 2026-10-27
-Changelog: 1.0.3 - Show a face for heads and a cross for tails.
+Changelog: 1.0.4 - Prevent mobile face and label bleed-through after landing.
+1.0.3 - Show a face for heads and a cross for tails.
 1.0.2 - Make the coin an accessible flip control.
 1.0.1 - Fit the coin and controls to the available screen height.
 1.0.0 - Add accessible animated coin toss and celebration.
@@ -45,6 +46,9 @@ h1{font-size:clamp(30px,min(6vw,8dvh),90px)}
 @media(prefers-reduced-motion:reduce){button{transition:none}.confetti{display:none}}
 .coin{min-width:0;width:auto;padding:0;border:0;border-radius:50%;background:none;box-shadow:none;font:inherit;color:inherit;display:block;cursor:pointer}
 .coin:hover{transform:none;box-shadow:0 0 0 4px #f6bc3533}.coin:active{transform:none}.coin:disabled{opacity:1;cursor:wait}
+.face{-webkit-backface-visibility:hidden;transform:translateZ(1px)}
+.back{transform:rotateY(180deg) translateZ(1px)}
+.coin[data-side="heads"] .back,.coin[data-side="tails"] .front{visibility:hidden}
 </style>
 </head>
 <body>
@@ -53,8 +57,8 @@ h1{font-size:clamp(30px,min(6vw,8dvh),90px)}
 <p class="subtitle">One coin. Two possibilities.</p>
 <div class="stage">
 <div class="shadow"></div><i class="spark s1"></i><i class="spark s2"></i><i class="spark s3"></i><i class="spark s4"></i>
-<button class="coin" id="coin" type="button" aria-label="Flip the coin" title="Click to flip">
-<div class="face"><svg class="emblem" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="41"/><g fill="none" stroke="#a96909" stroke-width="4" stroke-linecap="round"><path d="M32 37v7m36-7v7M31 59q19 23 38 0"/></g></svg><span>HEADS</span></div>
+<button class="coin" id="coin" type="button" aria-label="Flip the coin" title="Click to flip" data-side="heads">
+<div class="face front"><svg class="emblem" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="41"/><g fill="none" stroke="#a96909" stroke-width="4" stroke-linecap="round"><path d="M32 37v7m36-7v7M31 59q19 23 38 0"/></g></svg><span>HEADS</span></div>
 <div class="face back"><svg class="emblem" viewBox="0 0 100 100" aria-hidden="true"><path d="M40 7h20v25h26v20H60v41H40V52H14V32h26Z"/></svg><span>TAILS</span></div>
 </button>
 </div>
@@ -62,7 +66,7 @@ h1{font-size:clamp(30px,min(6vw,8dvh),90px)}
 <button id="flip" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M5.1 7a8 8 0 0 1 13.8-1L20 9M4 15l1.1 3A8 8 0 0 0 18.9 17"/></svg><span>Flip coin</span></button>
 <p class="hint">Press Space to flip</p>
 </main>
-<footer>v1.0.3 · 2026-10-27</footer>
+<footer>v1.0.4 · 2026-10-27</footer>
 <script>
 const coin = document.querySelector('#coin');
 const button = document.querySelector('#flip');
@@ -83,6 +87,7 @@ async function flip() {
   if (button.disabled) return;
   button.disabled = true;
   coin.disabled = true;
+  delete coin.dataset.side;
   result.textContent = 'Up in the air…';
   button.querySelector('span').textContent = 'Flipping…';
   const tails = crypto.getRandomValues(new Uint8Array(1))[0] & 1;
@@ -95,6 +100,7 @@ async function flip() {
   await animation.finished;
   rotation = target % 360;
   coin.style.transform = `rotateY(${rotation}deg)`;
+  coin.dataset.side = tails ? 'tails' : 'heads';
   animation.cancel();
   result.textContent = tails ? 'Tails!' : 'Heads!';
   button.querySelector('span').textContent = 'Flip coin';
