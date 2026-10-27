@@ -1,10 +1,11 @@
 <!-- File Name: index.html
 Author: Jason Lamb (with help from ChatGPT)
 Description: Giant animated random coin flip, no dependencies or data storage.
-Revision: 1.0.0
+Revision: 1.0.1
 Created Date: 2026-10-27
 Modified Date: 2026-10-27
-Changelog: 1.0.0 - Add accessible animated coin toss and celebration.
+Changelog: 1.0.1 - Fit the coin and controls to the available screen height.
+1.0.0 - Add accessible animated coin toss and celebration.
 -->
 <!doctype html>
 <html lang="en">
@@ -16,10 +17,10 @@ Changelog: 1.0.0 - Add accessible animated coin toss and celebration.
 <style>
 :root{color-scheme:light;--paper:#fffcf4;--ink:#171716;--gold:#f6bc35}
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:ui-rounded,"Arial Rounded MT Bold",system-ui,sans-serif;text-align:center}
-main{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px 55px;overflow:hidden}
+main{height:100svh;height:100dvh;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto auto;justify-items:center;align-items:center;padding:20px 20px 38px;overflow:hidden}
 h1{font-size:clamp(36px,6vw,90px);letter-spacing:-.055em;line-height:1.1;margin:0;font-weight:900} .subtitle{font-size:clamp(17px,2.5vw,27px);font-weight:600;color:#73716c;margin:12px 0 25px}
-.stage{position:relative;width:min(560px,88vw);height:min(560px,88vw);display:grid;place-items:center;perspective:1200px;margin-bottom:14px}
-.coin{width:85%;aspect-ratio:1;position:relative;transform-style:preserve-3d;will-change:transform}
+.stage{position:relative;width:min(560px,88vw);height:100%;min-height:0;display:grid;place-items:center;perspective:1200px}
+.coin{height:min(85%,476px,74.8vw);aspect-ratio:1;position:relative;transform-style:preserve-3d;will-change:transform}
 .face{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;background:linear-gradient(135deg,#fff3a0 1%,#ffd75d 30%,#f5b627 67%,#d88b13);border:5px solid #ffe58b;box-shadow:0 7px 0 #bc7c16,inset 0 0 0 13px #f6c448,inset 0 0 0 16px #c98d1f,inset 0 0 0 19px #ffe58b;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#a96909;text-shadow:0 2px 0 #ffe694;gap:8px}
 .face:after{content:"";position:absolute;inset:11%;border:2px solid #ffdf78;border-radius:50%;box-shadow:0 -2px 0 #d89423;pointer-events:none}
 .back{transform:rotateY(180deg)}.emblem{width:46%;height:46%;filter:drop-shadow(0 3px 0 #b9760d);fill:#ffe57a;stroke:#d7961a;stroke-width:1.4}.back .emblem{fill:#ffe57a}
@@ -33,7 +34,12 @@ button svg{width:29px;height:29px;fill:none;stroke:currentColor;stroke-width:2.5
 .hint{font-size:14px;color:#77756e;margin:20px 0 0}footer{position:fixed;bottom:14px;right:20px;color:#817e76;font-size:11px}
 .confetti{position:fixed;left:50%;top:48%;width:10px;height:16px;pointer-events:none;z-index:3;animation:burst 1.25s ease-out forwards}
 @keyframes burst{to{transform:translate(var(--x),var(--y)) rotate(var(--r));opacity:0}}
-@media(max-width:550px){main{padding-top:35px}h1{max-width:350px}.subtitle{margin-bottom:24px}.stage{margin-bottom:20px}button{min-width:250px;padding:20px 35px}footer{position:static;padding:0 0 15px}main{min-height:calc(100svh - 35px)}}
+h1{font-size:clamp(30px,min(6vw,8dvh),90px)}
+.subtitle{margin:10px 0 12px}
+#result{margin:6px 0 14px}
+.hint{margin-top:14px}
+@media(max-width:550px){h1{max-width:350px}button{min-width:250px;padding:18px 35px}footer{right:12px;bottom:10px}}
+@media(max-height:550px){main{padding-top:10px;padding-bottom:25px}h1{font-size:clamp(24px,7dvh,38px)}.subtitle{font-size:15px;margin:4px 0}.face span{font-size:clamp(12px,4dvh,23px)}#result{font-size:20px;min-height:1.2em;margin:3px 0 7px}button{font-size:19px;padding:10px 30px;min-width:220px}.hint{font-size:12px;margin-top:7px}footer{font-size:9px;bottom:6px}}
 @media(prefers-reduced-motion:reduce){button{transition:none}.confetti{display:none}}
 </style>
 </head>
@@ -52,7 +58,7 @@ button svg{width:29px;height:29px;fill:none;stroke:currentColor;stroke-width:2.5
 <button id="flip" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M5.1 7a8 8 0 0 1 13.8-1L20 9M4 15l1.1 3A8 8 0 0 0 18.9 17"/></svg><span>Flip coin</span></button>
 <p class="hint">Press Space to flip</p>
 </main>
-<footer>v1.0.0 · 2026-10-27</footer>
+<footer>v1.0.1 · 2026-10-27</footer>
 <script>
 const coin = document.querySelector('#coin');
 const button = document.querySelector('#flip');
