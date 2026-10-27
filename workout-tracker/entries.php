@@ -7,6 +7,7 @@ Created Date: 2026-10-22
 Modified Date: 2026-10-27
 Changelog: 1.1.0 - Preserve/validate optional calories, custom metrics and individual set arrays in revision-locked edits. 1.0.0 - Add optimistic-lock edits, tags, incline, and reversible edit history. */
 declare(strict_types=1);
+require_once __DIR__ . '/measurements.php';
 
 final class WorkoutEditConflict extends RuntimeException {}
 final class WorkoutEntryNotFound extends RuntimeException {}
