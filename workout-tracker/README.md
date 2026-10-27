@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, key-free quick entry, optional AI and screenshot import guidance for Workout Tracker.
-Revision: 1.4.0
+Revision: 1.5.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
+Changelog: 1.5.0 - Authenticated photo/detail view and per-user ZIP backup, preserving live data. 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
 -->
 # Workout Tracker
 
@@ -20,6 +20,23 @@ Private PHP workout logger at https://jasr.me/github/workout-tracker/ using shar
 5. Dates default to the user's **browser-local current date**. Time defaults to the current local time at review. "Yesterday", "last Monday", an ISO date, and US numeric MM/DD/YYYY dates are supported for backdating. An optional time control exists under review details.
 
 The parser is rule-based rather than a general LLM. It recognizes common exercises and explicit numbers but does **not guess missing values**. Unrecognized exercises use the collapsed manual entry form. It does not analyze photos.
+
+## Authenticated workout details, photos and backups (v1.5.0)
+
+From **Workout history**, select **Details** on any saved entry. The mobile-friendly panel shows date/time, notes, scalar and custom measurements, ordered strength sets, summary totals and prior edit versions. **Edit this workout** opens the existing revision-checked editor; there is no delete operation.
+
+An attached photo appears in the details panel with an **Open full-size photo** link. The server accepts only an entry ID, verifies that the photo belongs to that user's saved workout, and checks the file is a non-symlinked JPEG/PNG/WebP within that user's protected storage. Images cannot be served by guessing a filename or asking for another user's record. The existing **storage/.htaccess** continues to block direct requests.
+
+**Download my workout backup** sends a CSRF-protected, authenticated POST. PHP ZipArchive creates a temporary ZIP *outside the site* containing the existing account's JsonStore document and only its referenced private photos. The server reads data but never rewrites records, changes permissions or modifies the live photo folder. Incomplete exports fail if a photo is missing. On Hostinger, PHP **ZipArchive** is required; the UI disables backups if the extension is unavailable.
+
+A separate Hostinger backup/snapshot should be taken **before deployment**, including the existing private JSON and photos. See **[BACKUP-RECOVERY.md](docs/BACKUP-RECOVERY.md)** for the exact checklist, secure download verification and controlled administrator recovery. There is intentionally no automatic Restore button.
+
+Run the new tests alongside existing suites:
+
+    php workout-tracker/tests/photo-backup.test.php
+    node workout-tracker/tests/workout-detail.test.cjs
+
+GitHub Actions installs ZIP support for a full archive-content check using **temporary synthetic data**. Production session authorization, Hostinger .htaccess behavior, ZIP downloading and physical iPhone layout remain manual acceptance checks and are not assumed to have passed.
 
 ## Flexible measurements and weighted sets (v1.4.0; issue #128)
 
@@ -97,7 +114,7 @@ Hostinger setup (never do this inside GitHub):
 
 ## Setup
 
-1. Deploy workout-tracker beside 1-Framework and user-management on the same host. PHP 8.1+, fileinfo and HTTPS are required; cURL is only needed if using an optional external AI service.
+1. Deploy workout-tracker beside 1-Framework and user-management on the same host. PHP 8.1+, fileinfo and HTTPS are required; ZipArchive is additionally required for backup downloads, and cURL is only needed for optional external AI.
 2. In central user-management register project ID workout-tracker with path /github/workout-tracker/, then grant the intended account member access. Existing all-project access works once the project is registered.
 3. Ensure storage/ is writable by PHP but inaccessible over HTTP. Apache/LiteSpeed must honor storage/.htaccess; verify a direct request for a private test file receives **403**. On nginx, configure a deny rule or use a private directory outside the public web root.
 4. The tracked `storage/.placeholder` and `storage/photos/.placeholder` keep private directories in deployment. PHP creates per-user JSON files and photo subdirectories **automatically** when used. Only optional `config.local.php` is copied manually. Never auto-copy or overwrite an existing private config.
@@ -108,10 +125,10 @@ Hostinger setup (never do this inside GitHub):
 - index.php: authenticated page/API, CSRF validation, optional authenticated AI fallback, per-user isolation, atomic multi-exercise writes using the shared framework JsonStore.
 - parse.php: no-key text interpretation of workouts and relative or explicit dates.
 - app.js / app.css: responsive, progressive entry UI, review and isolated exercise trends.
-- storage/.htaccess: deny direct access to JSON records and photos. Photos are private but not yet viewable in the app.
+- storage/.htaccess: deny direct access to JSON records and photos. The authenticated photo endpoint now verifies user ownership and serves images privately.
 - JSON follows the 1-Framework schemaVersion 1 records envelope, separated by hashed stable user ID.
 - Saved exercises share a session_id, the chosen date, local time with UTC offset, and creation timestamp. Each batch is written atomically.
-- Existing entries support revision-checked editing and retained previous values, optional calories/custom metrics, and per-set weights. OCR, authenticated photo viewing, body weight and blood-pressure logs remain future work.
+- Existing entries support revision-checked editing and retained previous values, optional calories/custom metrics, and per-set weights. Photo viewing and read-only account ZIP backups are available. OCR, automatic restore, body weight and blood-pressure logs remain future work.
 
 ## Verification
 
