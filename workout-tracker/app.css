@@ -2,10 +2,10 @@
 File Name: app.css
 Author: Jason Lamb (with help from ChatGPT)
 Description: Calm, responsive workout dashboard with compact progressive-entry controls.
-Revision: 1.4.0
+Revision: 1.5.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.4.0 - Thumb-friendly set rows and expandable custom numeric measurements. 1.3.2 - Keep mobile date/time full width, compact numeric pairs, iOS-safe input fonts and thumb-friendly touch targets. 1.3.0 - Style editable history, tracking tags and incline controls. 1.2.0 - Add low-emphasis optional AI retry action. 1.1.0 - Mobile-first quick entry, measured progress, accessible review layout.
+Changelog: 1.5.0 - Add mobile details panel, secure photo preview and backup download controls. 1.4.0 - Thumb-friendly set rows and expandable custom numeric measurements. 1.3.2 - Keep mobile date/time full width, compact numeric pairs, iOS-safe input fonts and thumb-friendly touch targets. 1.3.0 - Style editable history, tracking tags and incline controls. 1.2.0 - Add low-emphasis optional AI retry action. 1.1.0 - Mobile-first quick entry, measured progress, accessible review layout.
 */
 :root{color-scheme:dark;font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#08141f;color:#e7f5f8}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% 0%,#173b44 0%,#0b1a29 50%,#08141f 100%);min-height:100vh}
@@ -144,3 +144,35 @@ details>summary{min-height:44px;display:list-item;align-content:center;}
  .custom-row>.field:nth-child(3){grid-column:2;grid-row:2;}
  .custom-row>.remove-item{grid-column:1/-1;grid-row:auto;width:100%;}
 }
+
+/* Authenticated workout detail card: readable on small phone screens. */
+.history-actions{grid-column:2;grid-row:2;display:flex;gap:7px;align-items:center;justify-content:flex-end;flex-wrap:wrap;}
+.history-actions .history-edit{grid-column:auto;grid-row:auto;align-self:auto;min-height:44px;font-size:.84rem;padding:8px 12px;}
+.history-actions .history-view{background:#25485b;border-color:#4a8291;color:#d8f4f5;}
+.workout-detail{border-top:1px solid #376579;margin-top:19px;}
+.workout-detail .detail-close{width:auto;min-height:44px;margin-top:0;font-size:.86rem;padding:8px 14px;}
+.detail-summary{display:grid;gap:10px;min-width:0;}
+.detail-fact{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 0;border-bottom:1px solid #2e4b5a;min-width:0;}
+.detail-label{color:#b6cdda;overflow-wrap:anywhere;}
+.detail-fact strong{text-align:right;white-space:normal;overflow-wrap:anywhere;font-variant-numeric:tabular-nums;}
+.detail-summary h3{margin:18px 0 1px;}
+.detail-sets{margin:8px 0 6px;padding-left:24px;}
+.detail-sets li{margin:7px 0;padding-left:2px;overflow-wrap:anywhere;}
+.detail-sets small{display:block;color:#9cb9c6;}
+.detail-notes{overflow-wrap:anywhere;white-space:pre-wrap;color:#c4dbe3;}
+.detail-image{margin:18px 0 0;}
+.detail-image img{display:block;max-height:min(70vh,640px);width:100%;height:auto;object-fit:contain;border:1px solid #3c5e70;border-radius:14px;background:#081522;}
+.detail-image a{display:inline-flex;align-items:center;min-height:44px;color:#9adfd3;text-decoration:underline;text-underline-offset:3px;margin-top:9px;}
+.detail-actions .secondary-action{min-height:46px;}
+.backup-form{margin-top:28px;padding-top:22px;border-top:1px solid #315063;}
+.backup-form h2{margin-bottom:8px;}
+.backup-form p{overflow-wrap:anywhere;}
+.backup-form .secondary-action{min-height:48px;}
+@media(max-width:560px){
+ .recent-list li{grid-template-columns:minmax(0,1fr) auto;column-gap:8px;}
+ .history-actions{display:flex;flex-direction:column;align-items:stretch;gap:7px;}
+ .history-actions .history-edit{width:100%;font-size:.85rem;}
+ .detail-fact{flex-direction:column;gap:3px;align-items:flex-start;}
+ .detail-fact strong{text-align:left;}
+}
+@media(max-width:360px){.workout-detail .panel-head{align-items:flex-start;}}
