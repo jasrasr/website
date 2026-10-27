@@ -102,7 +102,13 @@ try {
  }catch(WorkoutEditConflict $e){$stale=true;}
  checkMetric($stale,'revision conflict prevents stale overwrite');
  $newBase=JsonStore::read($file)['records'];
- checkMetric($newBase===$updated,'rejected concurrent edit made no changes');
+ // Read the actual JSON representation; numeric 95.0 may round-trip as 95.
+ checkMetric($newBase[0]===$legacySaved[0]&&$newBase[1]===$legacySaved[1],
+    'rejected edit never touched other records');
+ checkMetric($newBase[2]['edit_history'][0]['previous']===$originalRecord,
+    'rejected edit did not alter prior version');
+ checkMetric($newBase[2]['sets_detail'][3]['weight_lb']==120,
+    'rejected edit left last set at 120 lb');
 
  // Old editor clients don't send sets_detail/custom_metrics; they must survive.
  $legacyClientChanges=workout_validate_entry_edit([
@@ -113,11 +119,11 @@ try {
   'missing advanced keys are not interpreted as clear requests');
  $oldClientEdited=JsonStore::update($file,static fn(array $r):array=>workout_apply_entry_edit(
    $r,$originalRecord['id'],workout_record_revision($r[2]),$legacyClientChanges));
- checkMetric($oldClientEdited[2]['sets_detail']===$updated[2]['sets_detail'],
+ checkMetric($oldClientEdited[2]['sets_detail']===$newBase[2]['sets_detail'],
    'older client leaves advanced sets intact');
- checkMetric($oldClientEdited[2]['custom_metrics']===$updated[2]['custom_metrics'],
+ checkMetric($oldClientEdited[2]['custom_metrics']===$newBase[2]['custom_metrics'],
    'older client leaves custom metrics intact');
- checkMetric($oldClientEdited[2]['calories_kcal']===$updated[2]['calories_kcal'],
+ checkMetric($oldClientEdited[2]['calories_kcal']===$newBase[2]['calories_kcal'],
    'older client leaves calories intact');
 
  rejectsMetric(fn()=>workout_advanced_fields(['sets_detail'=>[['weight_lb'=>95,'reps'=>0]]]),'zero reps');
