@@ -164,9 +164,14 @@ function workout_parse_segment(string $segment, string $exercise, string $date):
         }
     }
     if ($exercise === 'treadmill') {
-        if (preg_match('~\b(?:incline|grade)\s*(?:at|of|=|:)?\s*(\d{1,3}(?:\.\d+)?)\s*%?~i', $segment, $m)
-            || preg_match('~\b(\d{1,3}(?:\.\d+)?)\s*%\s*(?:incline|grade)\b~i', $segment, $m)) {
-            if ((float)$m[1] <= 100) $out['incline_percent'] = (float)$m[1];
+        // Prioritize "5% incline" before "incline 320 calories": never let the
+        // latter consume the calorie figure and mask a valid incline.
+        if (preg_match('~\b(\d{1,3}(?:\.\d+)?)\s*%\s*(?:incline|grade)\b~i', $segment, $m)
+            && (float)$m[1] <= 100) {
+            $out['incline_percent'] = (float)$m[1];
+        } elseif (preg_match('~\b(?:incline|grade)\s*(?:at|of|=|:)?\s*(\d{1,3}(?:\.\d+)?)\s*%?~i', $segment, $m)
+            && (float)$m[1] <= 100) {
+            $out['incline_percent'] = (float)$m[1];
         }
     }
     if (preg_match('~(?:^|\s)#([\p{L}\p{N}][\p{L}\p{N}_-]{0,63})\b~u', $segment, $m)) {
