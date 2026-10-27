@@ -2,10 +2,10 @@
 /* File Name: PasswordSession.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: Shared PHP sessions with CSRF, revocation and optional bounded persistent login.
-Revision: 1.1.0
+Revision: 1.1.1
 Created Date: 2026-10-27
 Modified Date: 2026-10-27
-Changelog: 1.1.0 - Add explicitly opted-in 7-day cookies while retaining 30-minute default inactivity expiry.
+Changelog: 1.1.1 - Preserve fixed persistent-cookie expiry on every request and rotate expired IDs. 1.1.0 - Add explicitly opted-in 7-day cookies while retaining 30-minute default inactivity expiry.
 */
 declare(strict_types=1);
 namespace Jasr\Framework;
@@ -41,8 +41,13 @@ final class PasswordSession
         if (($until > 0 && $until <= $now)
             || (isset($_SESSION['last']) && $now - (int)$_SESSION['last'] > $idle)) {
             $_SESSION = [];
-            // Expire a remembered cookie if the server-side session ended.
+            session_regenerate_id(true); // Never reuse an expired identity's session ID.
+            // Replace any persistent cookie with a new session-only anonymous ID.
             $this->writeCookie(false);
+        } elseif ($until > $now) {
+            // session_start() can resend a session-only cookie on some hosts.
+            // Repeat the SAME fixed expiry, never sliding it forward.
+            $this->writeCookie(true);
         }
         $_SESSION['last'] = $now;
         $_SESSION['csrf'] ??= bin2hex(random_bytes(32));
