@@ -2,10 +2,10 @@
 File Name: edit-button.test.cjs
 Author: Jason Lamb (with help from ChatGPT)
 Description: Regression test for Edit button opening saved workouts without a DOMException.
-Revision: 1.1.0
+Revision: 1.1.1
 Created Date: 2026-10-27
 Modified Date: 2026-10-27
-Changelog: 1.1.0 - Verify exercise-specific field visibility and safe retention of hidden measurements. 1.0.0 - Exercise the actual event handler and editing form against DOM class-token validation.
+Changelog: 1.1.1 - Check hidden historical rep/set/weight values remain intact and manual entry adapts. 1.1.0 - Verify exercise-specific field visibility and safe retention of hidden measurements. 1.0.0 - Exercise the actual event handler and editing form against DOM class-token validation.
 */
 'use strict';
 const assert = require('node:assert/strict');
@@ -53,7 +53,7 @@ const original={
   _revision:'a'.repeat(64),
   exercise:'treadmill',date:'2026-10-22',
   distance_miles:2.06,duration_minutes:37,speed_mph:3.5,
-  incline_percent:null,notes:'Existing workout',
+  incline_percent:null,reps:6,sets:2,weight_lb:10,notes:'Existing workout',
   photo:'unchanged.jpg',created_at:'2026-10-22T11:00:00Z'
 };
 const saved=JSON.stringify(original);
@@ -111,6 +111,9 @@ assert.equal(fieldLabel('sets').hidden,true,'Treadmill does not need sets by def
 assert.equal(fieldLabel('weight_lb').hidden,true,'Treadmill does not need weight by default.');
 assert.equal(fields.filter(f=>['reps','sets','weight_lb'].includes(f.dataset.field)).length,3,
   'Hidden fields must stay in the form so legacy values are not lost.');
+assert.equal(byName('reps').value,6,'Legacy rep count must remain in a collapsed field.');
+assert.equal(byName('sets').value,2,'Legacy set count must remain in a collapsed field.');
+assert.equal(byName('weight_lb').value,10,'Legacy lifting weight must remain in a collapsed field.');
 const reveal=dom.get('#editFields').children.find(child=>child.tagName==='button');
 assert.ok(reveal,'There should be a button to access unusual measurements.');
 reveal.listeners.get('click')();
@@ -126,9 +129,30 @@ assert.equal(fieldLabel('distance_miles').hidden,true,'Bench press hides distanc
 exercise.value='treadmill';exercise.listeners.get('input')();
 assert.equal(fieldLabel('distance_miles').hidden,false,'Switching back reveals treadmill fields.');
 assert.equal(JSON.stringify(original),saved,'Opening/changing displayed fields does not mutate saved workout.');
+
+// Manual entry uses the same workout-to-fields mapping.
+const manualGrid=element('div'),manualExercise=element('input');
+manualExercise.name='exercise';manualExercise.value='treadmill';
+for(const key of context.measures.map(([name])=>name)){
+ const label=element('label'),input=element('input');input.name=key;input.value='';
+ label.append(input);manualGrid.append(label);
+}
+context.installExerciseVisibility(manualGrid,manualExercise);
+const manualLabel=name=>manualGrid.children.find(
+ label=>label.tagName==='label'&&label.children.some(child=>child.name===name));
+assert.equal(manualLabel('reps').hidden,true,'Manual treadmill form hides reps.');
+assert.equal(manualLabel('incline_percent').hidden,false,'Manual treadmill form shows incline.');
+manualExercise.value='bench press';manualExercise.listeners.get('input')();
+assert.equal(manualLabel('reps').hidden,false,'Manual bench press shows reps.');
+assert.equal(manualLabel('weight_lb').hidden,false,'Manual bench press shows weight.');
+assert.equal(manualLabel('distance_miles').hidden,true,'Manual bench press hides miles.');
+manualExercise.value='a custom workout';manualExercise.listeners.get('input')();
+assert.equal(manualLabel('distance_miles').hidden,false,'Custom exercise can use all existing fields.');
+assert.equal(manualLabel('reps').hidden,false,'Custom exercise can use reps.');
+
 const css=fs.readFileSync(path.join(__dirname,'..','app.css'),'utf8');
 assert.match(css,/grid-template-columns:minmax\(0,1fr\)/,
   'Narrow/mobile fields need a single minmax(0,1fr) column.');
 assert.match(css,/input\[type="date"\]/,'Date controls must span both desktop grid columns.');
 assert.match(css,/input\[type="time"\]/,'Time controls must span both desktop grid columns.');
-console.log('Passed: Edit opens; treadmill and strength fields adapt; hidden data remains; mobile date/time CSS protected.');
+console.log('Passed: Edit and manual fields adapt by exercise; legacy values stay intact; mobile date/time CSS protected.');
