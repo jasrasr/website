@@ -101,7 +101,7 @@ test('default idle session, opt-in remembered login, and global logout',async()=
  assert.ok(remaining>6 && remaining<8,'remember expiry is bounded at seven days');
  const visited=await browser.request();
  assert.match(visited.text,/Signed in as/);
- const refreshed=visited.cookies.find(x=>/;\\s*expires=/i.test(x));
+ const refreshed=visited.cookies.find(x=>/;\s*expires=/i.test(x));
  if(refreshed){
   const expiry=refreshed.match(/expires=([^;]+)/i);
   assert.ok(expiry,'subsequent authenticated request must keep a persistent cookie');
