@@ -2,15 +2,17 @@
 /* File Name: index.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: Authenticated workout dashboard and JSON API.
-Revision: 1.4.0
+Revision: 1.5.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.4.0 - Backward-compatible calories, configurable metrics and detailed weightlifting sets; closes #128. 1.3.2 - Mobile input layout and context-sensitive exercise measurements (display only, no storage changes). 1.3.1 - Bust cached JavaScript and mark Edit button UI repair. 1.3.0 - Edit prior entries safely, optional tracking tags, treadmill incline and retained edit history. 1.2.0 - Add explicit optional AI retry with private config and multi-exercise validation. 1.1.0 - No-key text parsing and atomic multi-exercise logging. 1.0.1 - Use framework JsonStore for private entries. 1.0.0 - Initial release. */
+Changelog: 1.5.0 - Authenticated workout detail/photo viewing and read-only user backup ZIP. 1.4.0 - Backward-compatible calories, configurable metrics and detailed weightlifting sets; closes #128. 1.3.2 - Mobile input layout and context-sensitive exercise measurements (display only, no storage changes). 1.3.1 - Bust cached JavaScript and mark Edit button UI repair. 1.3.0 - Edit prior entries safely, optional tracking tags, treadmill incline and retained edit history. 1.2.0 - Add explicit optional AI retry with private config and multi-exercise validation. 1.1.0 - No-key text parsing and atomic multi-exercise logging. 1.0.1 - Use framework JsonStore for private entries. 1.0.0 - Initial release. */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
 require_once __DIR__ . '/parse.php';
 require_once __DIR__ . '/entries.php';
 require_once __DIR__ . '/measurements.php';
+require_once __DIR__ . '/photo.php';
+require_once __DIR__ . '/backup.php';
 $auth = \Jasr\Framework\SharedIdentity::connect();
 $user = $auth->requireProject('workout-tracker', $_SERVER['REQUEST_METHOD'] === 'POST' ? 'member' : 'viewer', isset($_GET['api']));
 $uid = (string)$user['id'];
@@ -43,6 +45,24 @@ function workoutAiConfig(): ?array {
         || parse_url($endpoint, PHP_URL_PASS)!==null) return null;
     return ['endpoint'=>$endpoint,'model'=>$model,'api_key'=>$key];
 }
+
+// Private photo stream. The client supplies only an entry ID; never a path.
+if (isset($_GET['photo'])) {
+    $entryId = $_GET['photo'];
+    $photo = is_string($entryId)
+        ? workout_owned_photo(\Jasr\Framework\JsonStore::read($path)['records'], $entryId, $root, $uid)
+        : null;
+    header('Cache-Control: private, no-store, max-age=0');
+    header('X-Content-Type-Options: nosniff');
+    header('Cross-Origin-Resource-Policy: same-origin');
+    if ($photo === null) { http_response_code(404); exit('Photo unavailable'); }
+    header('Content-Type: ' . $photo['mime']);
+    header('Content-Disposition: inline; filename="workout-photo.' . strtolower(pathinfo($photo['filename'], PATHINFO_EXTENSION)) . '"');
+    header('Content-Length: ' . (string)filesize($photo['path']));
+    readfile($photo['path']);
+    exit;
+}
+
 if (isset($_GET['api'])) {
     try {
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -51,12 +71,32 @@ if (isset($_GET['api'])) {
                 if (is_array($record)) $record['_revision']=workout_record_revision($record);
             }
             unset($record);
-            reply(200,['entries'=>$records,'csrf'=>$auth->csrf(),'ai_available'=>workoutAiConfig()!==null]);
+            reply(200,['entries'=>$records,'csrf'=>$auth->csrf(),'ai_available'=>workoutAiConfig()!==null,'backup_available'=>class_exists(ZipArchive::class)]);
         }
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') reply(405, ['error'=>'Method not allowed']);
         $csrf = $_POST['csrf'] ?? '';
         if (!$auth->validCsrf(is_string($csrf) ? $csrf : null)) reply(403, ['error'=>'Invalid CSRF']);
         $action = $_POST['action'] ?? 'save';
+
+
+        if ($action === 'export_backup') {
+            if (!class_exists(ZipArchive::class)) reply(503, ['error'=>'ZIP backup is unavailable on this server.']);
+            try {
+                $archive = workout_prepare_backup($path, $root, $uid);
+            } catch (RuntimeException $e) {
+                reply(409, ['error'=>$e->getMessage()]);
+            }
+            header('Content-Type: application/zip');
+            header('Cache-Control: private, no-store, max-age=0');
+            header('Pragma: no-cache');
+            header('X-Content-Type-Options: nosniff');
+            header('Content-Security-Policy: default-src \'none\'');
+            header('Content-Disposition: attachment; filename="workout-backup-'.gmdate('Ymd-His').'.zip"');
+            header('Content-Length: '.(string)filesize($archive));
+            try { readfile($archive); }
+            finally { unlink($archive); }
+            exit;
+        }
 
         if ($action === 'edit_entry') {
             $id=$_POST['entry_id']??null;
@@ -256,16 +296,16 @@ if (isset($_GET['api'])) {
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#08141f">
 <title>Workout Tracker · Keep moving</title>
-<link rel="stylesheet" href="app.css?v=1.4.0">
+<link rel="stylesheet" href="app.css?v=1.5.0">
 <script src="advanced.js?v=1.4.0" defer></script>
-<script src="app.js?v=1.4.0" defer></script>
+<script src="app.js?v=1.5.0" defer></script>
 </head>
 <body><main>
 <header class="hero">
  <div><div class="eyebrow">Personal fitness · Your pace</div>
   <h1>Keep moving.</h1>
   <p class="subtitle">Every session counts. Progress happens one workout at a time.</p>
-  <p class="version">Workout Tracker v1.4.0 · Updated October 27, 2026</p>
+  <p class="version">Workout Tracker v1.5.0 · Updated October 27, 2026</p>
  </div>
  <div class="hero-mark" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 25h9l6-11 9 22 7-14h11"/></svg></div>
 </header>
@@ -349,6 +389,16 @@ if (isset($_GET['api'])) {
    </div>
    <label class="field"><span>Filter workouts and trends by tag</span><select id="historyTag"><option value="">All tags</option></select></label>
    <ul id="recent" class="recent-list"></ul>
+   <section id="detailPanel" class="review workout-detail" hidden aria-labelledby="detailTitle">
+    <div class="panel-head">
+     <h2 id="detailTitle">Workout details</h2>
+     <button type="button" id="closeDetail" class="secondary-action detail-close">Close</button>
+    </div>
+    <p id="detailDate" class="muted"></p>
+    <div id="detailSummary" class="detail-summary" aria-live="polite"></div>
+    <div id="detailImage" class="detail-image" hidden></div>
+    <div class="detail-actions"><button type="button" class="secondary-action" id="editFromDetail">Edit this workout</button></div>
+   </section>
    <section id="editPanel" class="review edit-panel" hidden aria-labelledby="editTitle">
     <h2 id="editTitle">Edit saved workout</h2>
     <p class="muted">Only this exercise will be updated. All other entries and original values are retained.</p>
@@ -359,6 +409,14 @@ if (isset($_GET['api'])) {
      <button class="secondary-action" type="button" id="cancelEdit">Cancel</button>
     </form>
    </section>
+   <form id="backupForm" action="?api=1" method="post" class="backup-form">
+    <h2>Keep a private backup</h2>
+    <p class="muted">Download your own workout history and attached photos in one ZIP file. No workout records are changed.</p>
+    <input type="hidden" name="action" value="export_backup">
+    <input type="hidden" id="backupCsrf" name="csrf" value="">
+    <button id="backupBtn" class="secondary-action" type="submit" disabled>Download my workout backup</button>
+    <p class="footnote" id="backupStatus">Checking secure backup availability…</p>
+   </form>
  </section>
 </div>
 <footer>Private fitness log · Powered by 1-Framework and central user-management</footer>
