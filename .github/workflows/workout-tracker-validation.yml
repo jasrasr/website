@@ -1,10 +1,10 @@
 # File Name: workout-tracker-validation.yml
 # Author: Jason Lamb (with help from ChatGPT)
 # Description: Validate PHP, JavaScript and preservation of Workout Tracker records.
-# Revision: 1.4.0
+# Revision: 1.5.0
 # Created Date: 2026-10-22
 # Modified Date: 2026-10-27
-# Changelog: 1.4.0 - Run BPM parsing, input-validation and legacy-data isolation regression tests. 1.3.0 - Verify mobile detail-view DOM and private photo URLs. 1.2.0 - Test user-bound image access, backup ZIP, and read-only storage. 1.1.0 - Validate optional measurements, legacy-safe set edits and new advanced UI tests. 1.0.1 - Run DOM-backed Edit button regression test to catch empty CSS class exceptions. 1.0.0 - Run parser and lossless edit regression tests on pull requests.
+# Changelog: 1.5.0 - Validate seven-day and since-first attendance, weekday streaks, mobile card rendering. 1.4.0 - Run BPM parsing, input-validation and legacy-data isolation regression tests. 1.3.0 - Verify mobile detail-view DOM and private photo URLs. 1.2.0 - Test user-bound image access, backup ZIP, and read-only storage. 1.1.0 - Validate optional measurements, legacy-safe set edits and new advanced UI tests. 1.0.1 - Run DOM-backed Edit button regression test to catch empty CSS class exceptions. 1.0.0 - Run parser and lossless edit regression tests on pull requests.
 name: Workout Tracker validation
 on:
   pull_request:
@@ -50,6 +50,11 @@ jobs:
       - name: Verify JavaScript syntax and Edit button behavior
         run: |
           node --check workout-tracker/app.js
+          node --check workout-tracker/attendance.js
+          node --check workout-tracker/tests/attendance.test.cjs
+          node --check workout-tracker/tests/attendance-ui.test.cjs
+          node workout-tracker/tests/attendance.test.cjs
+          node workout-tracker/tests/attendance-ui.test.cjs
           node --check workout-tracker/tests/workout-detail.test.cjs
           node workout-tracker/tests/workout-detail.test.cjs
           node --check workout-tracker/advanced.js
