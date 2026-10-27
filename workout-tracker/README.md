@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, key-free quick entry, optional AI and screenshot import guidance for Workout Tracker.
-Revision: 1.3.1
+Revision: 1.3.2
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
+Changelog: 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
 -->
 # Workout Tracker
 
@@ -20,6 +20,15 @@ Private PHP workout logger at https://jasr.me/github/workout-tracker/ using shar
 5. Dates default to the user's **browser-local current date**. Time defaults to the current local time at review. "Yesterday", "last Monday", an ISO date, and US numeric MM/DD/YYYY dates are supported for backdating. An optional time control exists under review details.
 
 The parser is rule-based rather than a general LLM. It recognizes common exercises and explicit numbers but does **not guess missing values**. Unrecognized exercises use the collapsed manual entry form. It does not analyze photos.
+
+## Exercise-specific measurements and mobile layout (v1.3.2)
+
+- **Treadmill:** the quick-entry review, manual form, and saved-workout editor show **miles, minutes, speed (mph), incline (%)** by default; reps, sets and lifting weight are collapsed under **Show other measurements**.
+- **Walking/running/cycling/rowing/swimming/elliptical/stairs:** miles, minutes and speed are primary. **Push-ups/squats/sit-ups/lunges/crunches:** reps and sets. **Bench press/deadlift/weight training:** weight, reps and sets. **Yoga/plank:** duration and sets. Unrecognized/custom exercise names show all currently supported fields.
+- Exercise field visibility is **presentation-only**. Every measurement remains in the page's controls—even when collapsed—so old records containing unusual values are not cleared by opening/editing an entry. Changing the exercise name dynamically refreshes its suggested fields without discarding values.
+- Trends also offer measurements relevant to the selected exercise, plus any *nonstandard historical metrics* already saved for that exercise. No JSON schema changes or migrations.
+- On phones, measurement fields use a single, minimum-width-safe column. On wider screens date and time controls span the full row to avoid native iOS input overlap. Optional upload/time controls also stack on narrow displays.
+- Run `node workout-tracker/tests/edit-button.test.cjs`; it checks exercise-specific field visibility, the Edit button click, unchanged saved records, and the mobile date/time styling rules. **Live-browser rendering still requires iPhone verification** after deployment.
 
 ## Edit button repair (v1.3.1)
 
