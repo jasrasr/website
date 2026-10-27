@@ -2,10 +2,10 @@
 /* File Name: parse.test.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: Standalone CLI regression tests for key-free workout descriptions.
-Revision: 1.2.0
+Revision: 1.3.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-22
-Changelog: 1.2.0 - Assert explicit treadmill incline and tracking hashtag parsing. 1.1.0 - Validate workouts, multi-exercise separation, dates, and invalid input. */
+Changelog: 1.3.0 - Parse calorie totals and varying bench-press weights in one exercise. 1.2.0 - Assert explicit treadmill incline and tracking hashtag parsing. 1.1.0 - Validate workouts, multi-exercise separation, dates, and invalid input. */
 declare(strict_types=1);
 require dirname(__DIR__) . '/parse.php';
 $cases=[
@@ -20,14 +20,23 @@ $cases=[
  ['Bench press 3 sets of 8 reps at 75 lb',[['exercise'=>'bench press','sets'=>3,'reps'=>8,'weight_lb'=>75]]],
  ['Treadmill 1.16 miles 22 min 3.3 mph 5% incline #morning',[['exercise'=>'treadmill','distance_miles'=>1.16,'duration_minutes'=>22,'speed_mph'=>3.3,'incline_percent'=>5,'tag'=>'morning']]],
  ['Treadmill at 3.3 mph incline 2.5 for 30 minutes',[['exercise'=>'treadmill','incline_percent'=>2.5,'duration_minutes'=>30,'speed_mph'=>3.3]]],
- ['20 pushups #strength',[['exercise'=>'push-ups','reps'=>20,'tag'=>'strength']]]
+ ['20 pushups #strength',[['exercise'=>'push-ups','reps'=>20,'tag'=>'strength']]],
+ ['treadmill 2 miles 30 mins 5% incline 320 calories',[['exercise'=>'treadmill','distance_miles'=>2,'duration_minutes'=>30,'incline_percent'=>5,'calories_kcal'=>320]]],
+ ['bench press 95 lb x 12, 115 lb x 10, 135 lb x 8, 115 lb x 10',[['exercise'=>'bench press','sets_detail'=>[
+   ['weight_lb'=>95,'reps'=>12],['weight_lb'=>115,'reps'=>10],['weight_lb'=>135,'reps'=>8],['weight_lb'=>115,'reps'=>10]
+ ]]]
 ];
 foreach($cases as $i=>[$input,$expected]){
  $records=workout_parse_text($input,'2026-10-21');
  if(count($records)!==count($expected))throw new RuntimeException('Case '.$i.' count mismatch.');
  foreach($expected as $j=>$wanted)foreach($wanted as $field=>$value){
   $actual=$records[$j][$field]??null;
-  if(is_numeric($value)?abs((float)$actual-(float)$value)>0.002:$actual!==$value)
+  if(is_array($value)){
+   if(!is_array($actual)||count($actual)!==count($value)) throw new RuntimeException('Case '.$i.' '.$field.' count mismatch.');
+   foreach($value as $k=>$want)foreach($want as $subkey=>$v)
+    if(($actual[$k][$subkey]??null)!==$v && (!is_numeric($v)||abs((float)($actual[$k][$subkey]??0)-(float)$v)>0.002))
+     throw new RuntimeException('Case '.$i.' '.$field.' set detail mismatch.');
+  }elseif(is_numeric($value)?abs((float)$actual-(float)$value)>0.002:$actual!==$value)
    throw new RuntimeException('Case '.$i.' '.$field.' mismatch: '.json_encode($records[$j]));
  }
 }
