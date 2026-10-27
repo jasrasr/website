@@ -2,12 +2,21 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release history for private Workout Tracker.
-Revision: 1.2.2
+Revision: 1.3.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.2.2 - Document workout-specific fields and iPhone-safe date/time layout in v1.3.2. 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
+Changelog: 1.3.0 - Document v1.4.0 calories, custom numeric metrics and per-set strength logging. 1.2.2 - Document workout-specific fields and iPhone-safe date/time layout in v1.3.2. 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
 -->
 # Workout Tracker changelog
+
+## v1.4.0 — 2026-10-27 (Issue #128)
+
+- Optional calories burned (kcal) and arbitrary validated named numeric measurements, each with unit and individual exercise chart.
+- Repeatable per-set weight/reps entries for a single strength session; calculate total repetitions, heaviest set and accurate total lifted volume.
+- Extract calories and ordered varying set loads from natural-language workout descriptions without an AI key; extend explicit optional AI schema.
+- Add thumb-friendly per-set and custom-measurement editors in quick-entry review, manual entry and existing-record editing.
+- Protect historical user data: optional fields only, unchanged per-user JSON files and schema envelope, locked revision-checked edits, audit snapshots, backward-compatible older-client updates.
+- Add PHP preservation/regression tests, Node editor tests and CI validation. No migration or automatic modifications of stored workouts.
 
 ## v1.3.2 — 2026-10-27
 

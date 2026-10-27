@@ -2,10 +2,10 @@
 File Name: edit-button.test.cjs
 Author: Jason Lamb (with help from ChatGPT)
 Description: Regression test for Edit button opening saved workouts without a DOMException.
-Revision: 1.1.2
+Revision: 1.1.3
 Created Date: 2026-10-27
 Modified Date: 2026-10-27
-Changelog: 1.1.2 - Verify mobile touch targets, optional fields location, and hidden-value indicator. 1.1.1 - Check hidden historical rep/set/weight values remain intact and manual entry adapts. 1.1.0 - Verify exercise-specific field visibility and safe retention of hidden measurements. 1.0.0 - Exercise the actual event handler and editing form against DOM class-token validation.
+Changelog: 1.1.3 - Isolate previous edit button regression from advanced measurement editor. 1.1.2 - Verify mobile touch targets, optional fields location, and hidden-value indicator. 1.1.1 - Check hidden historical rep/set/weight values remain intact and manual entry adapts. 1.1.0 - Verify exercise-specific field visibility and safe retention of hidden measurements. 1.0.0 - Exercise the actual event handler and editing form against DOM class-token validation.
 */
 'use strict';
 const assert = require('node:assert/strict');
@@ -74,6 +74,8 @@ const context={
   ],
   message:()=>{},
   offset:()=>'-04:00',
+  // The advanced editor is independently tested in advanced.test.cjs.
+  WorkoutAdvanced:{attach:()=>({})},
   DOMException
 };
 const declarations =

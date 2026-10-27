@@ -2,10 +2,10 @@
 /* File Name: parse.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: API-key-free natural-language extraction for workout tracking.
-Revision: 1.2.0
+Revision: 1.3.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-21
-Changelog: 1.2.0 - Extract optional tracking tags and treadmill incline percentage. 1.1.0 - Extract workout activities, dates, and metrics without external services. */
+Changelog: 1.3.0 - Recognize explicit calories and ordered varying weight-rep pairs. 1.2.0 - Extract optional tracking tags and treadmill incline percentage. 1.1.0 - Extract workout activities, dates, and metrics without external services. */
 declare(strict_types=1);
 
 /** Recognize common exercise descriptions conservatively; never invent missing measurements. */
@@ -103,7 +103,7 @@ function workout_parse_segment(string $segment, string $exercise, string $date):
     $cardio = in_array($exercise, ['treadmill','walking','running','cycling','rowing','swimming','elliptical','stairs'], true);
     $strength = in_array($exercise, ['push-ups','sit-ups','squats','lunges','crunches','plank','bench press','deadlift','jumping jacks','weight training'], true);
     $out = ['exercise' => $exercise, 'date' => $date, 'distance_miles'=>null, 'duration_minutes'=>null,
-        'speed_mph'=>null, 'reps'=>null, 'sets'=>null, 'weight_lb'=>null, 'incline_percent'=>null, 'tag'=>'', 'notes'=>$segment];
+        'speed_mph'=>null, 'reps'=>null, 'sets'=>null, 'weight_lb'=>null, 'incline_percent'=>null, 'calories_kcal'=>null, 'tag'=>'', 'notes'=>$segment];
     if (preg_match('~\b(\d+(?:\.\d+)?)\s*(miles?|mi|kilomet(?:er|re)s?|km)\b~i', $segment, $m)) {
         $out['distance_miles'] = round((float)$m[1] * (str_starts_with(strtolower($m[2]), 'k') ? 0.621371 : 1), 3);
     }
@@ -131,10 +131,47 @@ function workout_parse_segment(string $segment, string $exercise, string $date):
         if (preg_match('~\b(\d+(?:\.\d+)?)\s*(?:lb|lbs|pounds?)\b~i', $segment, $m)) $out['weight_lb']=(float)$m[1];
         elseif (preg_match('~\b(\d+(?:\.\d+)?)\s*(?:kg|kilograms?)\b~i', $segment, $m)) $out['weight_lb']=round((float)$m[1]*2.20462,2);
     }
+    if (preg_match('~\b(\d+(?:\.\d+)?)\s*(?:calories?|kcals?|kcal)\b~i', $segment, $m)
+        || preg_match('~\b(?:calories?|kcals?|kcal)\s*(?:burned|of|:)?\s*(\d+(?:\.\d+)?)\b~i', $segment, $m)) {
+        $out['calories_kcal'] = (float)$m[1];
+    }
+    // Ordered weight/repetition pairs are a single exercise with multiple sets,
+    // not separate workout entries. Never calculate an average load.
+    if (in_array($exercise, ['bench press','deadlift','weight training'], true)) {
+        $detail = [];
+        preg_match_all('~\b(\d+(?:\.\d+)?)\s*(lb|lbs|pounds?|kg)\s*(?:[x×]\s*|for\s*)(\d{1,3})\s*(?:reps?)?\b~i', $segment, $pairs, PREG_SET_ORDER);
+        foreach ($pairs as $pair) {
+            $load=(float)$pair[1];
+            if (strtolower($pair[2])==='kg') $load*=2.20462;
+            if ((int)$pair[3]>0 && $load<=10000) $detail[]=[
+                'reps'=>(int)$pair[3], 'weight_lb'=>round($load,3), 'note'=>''
+            ];
+        }
+        if ($detail === []) {
+            preg_match_all('~\b(\d{2,4}(?:\.\d+)?)\s*[x×]\s*(\d{1,3})\b~i', $segment, $pairs, PREG_SET_ORDER);
+            foreach ($pairs as $pair) {
+                if ((float)$pair[1]<=10000 && (int)$pair[2]>0)
+                    $detail[]=['reps'=>(int)$pair[2],'weight_lb'=>(float)$pair[1],'note'=>''];
+            }
+        }
+        if ($detail !== [] && count($detail)<=40) {
+            $out['sets_detail']=$detail;
+            // Scalar reps/weight summarize a single repeated-set value poorly.
+            // Keep them unset for freshly parsed mixed-load sessions.
+            $out['sets']=null;
+            $out['reps']=null;
+            $out['weight_lb']=null;
+        }
+    }
     if ($exercise === 'treadmill') {
-        if (preg_match('~\b(?:incline|grade)\s*(?:at|of|=|:)?\s*(\d{1,3}(?:\.\d+)?)\s*%?~i', $segment, $m)
-            || preg_match('~\b(\d{1,3}(?:\.\d+)?)\s*%\s*(?:incline|grade)\b~i', $segment, $m)) {
-            if ((float)$m[1] <= 100) $out['incline_percent'] = (float)$m[1];
+        // Prioritize "5% incline" before "incline 320 calories": never let the
+        // latter consume the calorie figure and mask a valid incline.
+        if (preg_match('~\b(\d{1,3}(?:\.\d+)?)\s*%\s*(?:incline|grade)\b~i', $segment, $m)
+            && (float)$m[1] <= 100) {
+            $out['incline_percent'] = (float)$m[1];
+        } elseif (preg_match('~\b(?:incline|grade)\s*(?:at|of|=|:)?\s*(\d{1,3}(?:\.\d+)?)\s*%?~i', $segment, $m)
+            && (float)$m[1] <= 100) {
+            $out['incline_percent'] = (float)$m[1];
         }
     }
     if (preg_match('~(?:^|\s)#([\p{L}\p{N}][\p{L}\p{N}_-]{0,63})\b~u', $segment, $m)) {

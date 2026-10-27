@@ -2,11 +2,12 @@
 /* File Name: entries.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: Validated per-entry edits preserving all existing workout records and prior values.
-Revision: 1.0.0
+Revision: 1.1.0
 Created Date: 2026-10-22
-Modified Date: 2026-10-22
-Changelog: 1.0.0 - Add optimistic-lock edits, tags, incline, and reversible edit history. */
+Modified Date: 2026-10-27
+Changelog: 1.1.0 - Preserve/validate optional calories, custom metrics and individual set arrays in revision-locked edits. 1.0.0 - Add optimistic-lock edits, tags, incline, and reversible edit history. */
 declare(strict_types=1);
+require_once __DIR__ . '/measurements.php';
 
 final class WorkoutEditConflict extends RuntimeException {}
 final class WorkoutEntryNotFound extends RuntimeException {}
@@ -47,7 +48,7 @@ function workout_validate_entry_edit(array $input): array {
     $notes = $input['notes'] ?? '';
     if (!is_string($notes) || strlen($notes) > 2000) throw new InvalidArgumentException('Notes must be under 2,000 characters.');
 
-    $changes = ['exercise'=>$exercise, 'date'=>$date, 'notes'=>trim($notes)] + workout_optional_fields($input);
+    $changes = ['exercise'=>$exercise, 'date'=>$date, 'notes'=>trim($notes)] + workout_optional_fields($input) + workout_advanced_fields($input);
     foreach (['distance_miles','duration_minutes','speed_mph','reps','sets','weight_lb'] as $field) {
         $value = $input[$field] ?? null;
         if ($value === null || $value === '') { $changes[$field] = null; continue; }
@@ -96,7 +97,7 @@ function workout_apply_entry_edit(array $records, string $id, string $expectedRe
         $changed = false;
         foreach ($changes as $key => $value) {
             if ($key === 'performed_at' || in_array($key, ['exercise','date','notes','tag','incline_percent',
-                'distance_miles','duration_minutes','speed_mph','reps','sets','weight_lb'], true)) {
+                'distance_miles','duration_minutes','speed_mph','reps','sets','weight_lb','calories_kcal','custom_metrics','sets_detail'], true)) {
                 if (($record[$key] ?? null) !== $value && !($value === '' && !isset($record[$key]))) $changed = true;
                 $record[$key] = $value;
             }

@@ -2,10 +2,10 @@
 File Name: app.css
 Author: Jason Lamb (with help from ChatGPT)
 Description: Calm, responsive workout dashboard with compact progressive-entry controls.
-Revision: 1.3.2
+Revision: 1.4.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.3.2 - Keep mobile date/time full width, compact numeric pairs, iOS-safe input fonts and thumb-friendly touch targets. 1.3.0 - Style editable history, tracking tags and incline controls. 1.2.0 - Add low-emphasis optional AI retry action. 1.1.0 - Mobile-first quick entry, measured progress, accessible review layout.
+Changelog: 1.4.0 - Thumb-friendly set rows and expandable custom numeric measurements. 1.3.2 - Keep mobile date/time full width, compact numeric pairs, iOS-safe input fonts and thumb-friendly touch targets. 1.3.0 - Style editable history, tracking tags and incline controls. 1.2.0 - Add low-emphasis optional AI retry action. 1.1.0 - Mobile-first quick entry, measured progress, accessible review layout.
 */
 :root{color-scheme:dark;font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#08141f;color:#e7f5f8}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% 0%,#173b44 0%,#0b1a29 50%,#08141f 100%);min-height:100vh}
@@ -108,3 +108,39 @@ details>summary{min-height:44px;display:list-item;align-content:center;}
  .field-grid>.field.full,.field-grid>.other-metrics{grid-column:1;}
 }
 
+
+/* Per-exercise measurements: full-width panels inside the existing adaptive grid. */
+.field-grid>.advanced-section{grid-column:1/-1;min-width:0;}
+.advanced-section{border-top:1px solid #315063;margin-top:5px;padding:15px 0 4px;}
+.advanced-section h3{font-size:1rem;margin-bottom:5px;}
+.advanced-section .footnote{margin:5px 0 13px;}
+.advanced-section>summary{font-weight:650;}
+.advanced-rows{display:grid;gap:11px;margin:12px 0;}
+.advanced-row{display:grid;gap:9px;align-items:end;background:#102738;border:1px solid #2c5160;border-radius:13px;padding:11px;min-width:0;}
+.set-row{grid-template-columns:52px minmax(0,1.2fr) minmax(0,.85fr) 44px;}
+.custom-row{grid-template-columns:minmax(0,1.5fr) minmax(0,.7fr) minmax(0,.7fr) 44px;}
+.advanced-row .field{min-width:0;}
+.advanced-row .field span{font-size:.8rem;}
+.advanced-row input{display:block;font-size:16px;min-height:48px;max-width:100%;width:100%;min-width:0;box-sizing:border-box;padding:8px;}
+.set-number{font-size:.83rem;color:#a9d3dc;padding-bottom:15px;}
+.remove-item{height:44px;min-width:44px;width:44px;padding:4px;background:#244457;color:#d6eff3;font-size:.75rem;font-weight:600;border:1px solid #446c7e;border-radius:10px;}
+.advanced-section .add-item{width:100%;margin-top:7px;min-height:46px;}
+.advanced-sets[hidden]{display:none!important;}
+.advanced-section .set-summary{color:#97e0d0;font-variant-numeric:tabular-nums;}
+@media(max-width:560px){
+ .set-row{grid-template-columns:40px minmax(0,1.15fr) minmax(0,.85fr) 44px;gap:6px;padding:9px;}
+ .set-number{font-size:.76rem;}
+ .remove-item{font-size:.7rem;white-space:nowrap;}
+ .custom-row{grid-template-columns:minmax(0,1fr) minmax(0,.75fr) 44px;}
+ .custom-row>.field:first-child{grid-column:1/-1;}
+ .custom-row>.field:nth-child(2){grid-column:1;}
+ .custom-row>.field:nth-child(3){grid-column:2;}
+ .custom-row>.remove-item{grid-column:3;grid-row:2;}
+}
+@media(max-width:360px){
+ .set-row{grid-template-columns:36px minmax(0,1fr) minmax(0,.85fr);gap:5px;}
+ .set-row>.remove-item{grid-column:1/-1;width:100%;height:44px;}
+ .custom-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
+ .custom-row>.field:nth-child(3){grid-column:2;grid-row:2;}
+ .custom-row>.remove-item{grid-column:1/-1;grid-row:auto;width:100%;}
+}
