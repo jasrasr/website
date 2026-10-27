@@ -2,10 +2,10 @@
 File Name: remember.test.cjs
 Author: Jason Lamb (with help from ChatGPT)
 Description: Isolated HTTP verification for opt-in seven-day central login, expiry and sign-out.
-Revision: 1.0.0
+Revision: 1.0.1
 Created Date: 2026-10-27
 Modified Date: 2026-10-27
-Changelog: 1.0.0 - Check session-only default, secure cookie flags, remembered expiry and revocation.
+Changelog: 1.0.1 - Check that remembered cookies retain fixed original expiry after a page load. 1.0.0 - Check session-only default, secure cookie flags, remembered expiry and revocation.
 */
 'use strict';
 const {test,after}=require('node:test');
@@ -99,7 +99,15 @@ test('default idle session, opt-in remembered login, and global logout',async()=
  assert.ok(match,'expiry field exists');
  const remaining=(Date.parse(match[1])-Date.now())/86400000;
  assert.ok(remaining>6 && remaining<8,'remember expiry is bounded at seven days');
- assert.match((await browser.request()).text,/Signed in as/);
+ const visited=await browser.request();
+ assert.match(visited.text,/Signed in as/);
+ const refreshed=visited.cookies.find(x=>/;\\s*expires=/i.test(x));
+ if(refreshed){
+  const expiry=refreshed.match(/expires=([^;]+)/i);
+  assert.ok(expiry,'subsequent authenticated request must keep a persistent cookie');
+  assert.ok(Math.abs(Date.parse(expiry[1])-Date.parse(match[1]))<2000,
+   'each visit retains the original fixed seven-day expiry rather than extending it');
+ }
 
  // Expired remembered sessions cannot bypass server expiration even with cookie.
  assert.equal((await browser.request('/expire.php')).status,200);
