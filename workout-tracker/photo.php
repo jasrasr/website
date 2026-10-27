@@ -72,6 +72,7 @@ function workout_owned_photo(array $records, string $entryId, string $storageRoo
 function workout_owned_photo_manifest(array $records, string $storageRoot, string $userId): array
 {
     $found = [];
+    $manifest = [];
     foreach ($records as $record) {
         if (!is_array($record) || empty($record['photo'])) continue;
         $entryId = $record['id'] ?? null;
@@ -87,5 +88,5 @@ function workout_owned_photo_manifest(array $records, string $storageRoot, strin
         $found[$photo['filename']] = $entryId;
         $manifest[$photo['filename']] = $photo;
     }
-    return array_values($manifest ?? []);
+    return array_values($manifest);
 }
