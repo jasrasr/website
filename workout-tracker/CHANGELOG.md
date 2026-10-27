@@ -2,12 +2,18 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release history for private Workout Tracker.
-Revision: 1.2.0
+Revision: 1.2.1
 Created Date: 2026-10-21
-Modified Date: 2026-10-22
-Changelog: 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
+Modified Date: 2026-10-27
+Changelog: 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
 -->
 # Workout Tracker changelog
+
+## v1.3.1 — 2026-10-27
+
+- Fix tapping **Edit** silently failing because the editor attempted to add an empty CSS class token and stopped with a browser `DOMException`.
+- Add a regression test simulating the actual history Edit click and verifying the form opens with existing values, including missing optional fields, without modifying data.
+- Bump the JavaScript cache query to `app.js?v=1.3.1`; no storage schema changes or workout-file migrations.
 
 ## v1.3.0 — 2026-10-22
 
