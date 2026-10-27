@@ -1,10 +1,10 @@
 /* File Name: app.js
 Author: Jason Lamb (with help from ChatGPT)
 Description: Workout quick entry, editable review, and per-exercise trends.
-Revision: 1.5.1
+Revision: 1.6.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.5.1 - Display and edit heart rate BPM with cardio-focused fields and separate trends. 1.5.0 - Add authenticated workout details/photo viewer and private backup download UI. 1.4.0 - Editable set-by-set weight/reps, custom measurements, calories and exercise-specific progress. 1.3.2 - Optimize mobile exercise fields, retain hidden measurements, and keep optional metrics near the measurements. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
+Changelog: 1.6.0 - Read-only workout attendance, weekday percentages and calendar/weekday streaks. 1.5.1 - Display and edit heart rate BPM with cardio-focused fields and separate trends. 1.5.0 - Add authenticated workout details/photo viewer and private backup download UI. 1.4.0 - Editable set-by-set weight/reps, custom measurements, calories and exercise-specific progress. 1.3.2 - Optimize mobile exercise fields, retain hidden measurements, and keep optional metrics near the measurements. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
 'use strict';
 const $=selector=>document.querySelector(selector);
 const measures=[['distance_miles','Miles'],['duration_minutes','Minutes'],['speed_mph','Speed (mph)'],['incline_percent','Treadmill incline (%)'],['calories_kcal','Calories (kcal)'],['heart_rate_bpm','Heart rate (BPM)'],['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']];
@@ -345,7 +345,56 @@ function renderHistory(){
  toggle.textContent=showAllHistory?'Show latest 10':'View all '+history.length+' entries';
  $('#empty').hidden=entries.length>0;
 }
+/**
+ * All attendance comes from existing saved workout dates: zero writes or new
+ * schema fields. Calculate using the browser's local today and unique dates.
+ */
+function refreshAttendance(){
+ const stats=WorkoutAttendance.calculate(entries,localDate());
+ const panel=$('#attendancePanel');panel.hidden=!stats.hasData;
+ if(!stats.hasData)return;
+ $('#attendanceStart').textContent='Since '+niceDay(stats.firstDate);
+ const pairs=[
+  ['attendance7',stats.rollingCalendar],
+  ['attendanceWeek7',stats.rollingWeekdays],
+  ['attendanceOverall',stats.calendar],
+  ['attendanceOverallWeek',stats.weekdays]
+ ];
+ pairs.forEach(([prefix,value])=>{
+  $('#'+prefix+'Percentage').textContent=value.percentage.toFixed(1)+'%';
+  $('#'+prefix+'Count').textContent=value.attended+' of '+value.eligible+
+   (prefix.includes('Week')?' weekdays':' days');
+ });
+ const streaks=[
+  ['attendanceCurrentStreak',stats.calendarStreak.current],
+  ['attendanceLongestStreak',stats.calendarStreak.longest],
+  ['attendanceCurrentWeekStreak',stats.weekdayStreak.current],
+  ['attendanceLongestWeekStreak',stats.weekdayStreak.longest]
+ ];
+ streaks.forEach(([id,value])=>{$('#'+id).textContent=value+' day'+(value===1?'':'s');});
+ const strip=$('#attendanceStrip');
+ strip.replaceChildren(...stats.lastSeven.map(item=>{
+  const el=document.createElement('div');el.className='attendance-day';
+  if(item.attended)el.classList.add('attended');
+  else if(!item.weekday)el.classList.add('weekend');
+  if(item.today)el.classList.add('today');
+  const date=new Date(item.date+'T12:00:00');
+  const weekday=document.createElement('span');weekday.className='attendance-dayname';
+  weekday.textContent=date.toLocaleDateString(undefined,{weekday:'short'});
+  const mark=document.createElement('span');mark.className='attendance-mark';
+  mark.textContent=item.attended?'✓':(item.weekday?'·':'–');
+  const day=document.createElement('span');day.className='attendance-daynumber';
+  day.textContent=String(date.getDate());
+  el.setAttribute('aria-label',date.toLocaleDateString(undefined,{
+   weekday:'long',month:'long',day:'numeric',year:'numeric'})+
+   ': '+(item.attended?'workout recorded':item.weekday?'no workout recorded':'weekend, no workout recorded'));
+  el.append(weekday,mark,day);
+  return el;
+ }));
+}
+
 function refresh(){
+ refreshAttendance();
  $('#sessions').textContent=new Set(entries.map(e=>e.session_id||e.date)).size;
  $('#count').textContent=entries.length;
  $('#minutes').textContent=entries.reduce((v,e)=>v+(Number(e.duration_minutes)||0),0).toFixed(0);
@@ -469,6 +518,7 @@ $('#toggleHistory').addEventListener('click',()=>{showAllHistory=!showAllHistory
 $('#recent').addEventListener('click',e=>{const button=e.target.closest('[data-edit-id]');if(button)beginEdit(button.dataset.editId);});
 $('#editForm').addEventListener('submit',e=>{e.preventDefault();submitEdit();});
 $('#cancelEdit').addEventListener('click',closeEdit);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden && entries.length)refreshAttendance();});
 $('#closeDetail').addEventListener('click',closeWorkoutDetails);
 $('#editFromDetail').addEventListener('click',()=>{if(detailEntryId)beginEdit(detailEntryId);});
 $('#backupForm').addEventListener('submit',()=>{$('#backupStatus').textContent='Preparing your private backup download…';});
