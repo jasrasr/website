@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, key-free quick entry, optional AI and screenshot import guidance for Workout Tracker.
-Revision: 1.5.1
+Revision: 1.6.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.5.1 - Optional heart rate in BPM, including local parsing, charts and safe edits. 1.5.0 - Authenticated photo/detail view and per-user ZIP backup, preserving live data. 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
+Changelog: 1.6.0 - Read-only workout-day attendance and weekday streak dashboard. 1.5.1 - Optional heart rate in BPM, including local parsing, charts and safe edits. 1.5.0 - Authenticated photo/detail view and per-user ZIP backup, preserving live data. 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
 -->
 # Workout Tracker
 
@@ -20,6 +20,37 @@ Private PHP workout logger at https://jasr.me/github/workout-tracker/ using shar
 5. Dates default to the user's **browser-local current date**. Time defaults to the current local time at review. "Yesterday", "last Monday", an ISO date, and US numeric MM/DD/YYYY dates are supported for backdating. An optional time control exists under review details.
 
 The parser is rule-based rather than a general LLM. It recognizes common exercises and explicit numbers but does **not guess missing values**. Unrecognized exercises use the collapsed manual entry form. It does not analyze photos.
+
+## Attendance and workout streaks (v1.6.0)
+
+The mobile dashboard uses only the **existing workout dates** in the authenticated user's saved records. A day counts at most once, even if multiple exercises were recorded that day. **No migration, backfill, or change to existing JSON** is needed.
+
+- **Last seven calendar days:** unique workout dates divided by eligible calendar dates in the seven-day window ending today, **not before the first logged workout**.
+- **Last seven days, weekdays only:** the same rolling window but excluding Saturdays and Sundays from both the numerator and denominator. A gym workout recorded on a weekend still appears in the calendar view but does not count as an eligible weekday.
+- **Overall calendar attendance:** unique workout dates since the **earliest saved workout**, inclusive, divided by all calendar dates through today.
+- **Overall weekday attendance:** workouts on Monday–Friday since that first recorded workout divided by eligible Monday–Friday dates, inclusive.
+- **Calendar streak:** continuous days with workouts; **weekday streak** skips Saturday and Sunday. The current streak does not reset until a full eligible day was missed; today is treated as unfinished.
+- **Last-seven-day strip:** a small, phone-friendly view of attended days, missed weekdays, and weekends. These counts do not distinguish a home workout from a gym visit—any saved workout date currently means attendance.
+
+Example from **October 21, 22, and 27, 2026**, evaluated Tuesday, October 27:
+
+| Measurement | Attendance | Percentage |
+| --- | --- | --- |
+| Calendar, last 7 days | 3 / 7 | **42.9%** |
+| Weekdays, last 7 days | 3 / 5 | **60.0%** |
+| Calendar, since first workout | 3 / 7 | **42.9%** |
+| Weekdays, since first workout | 3 / 5 | **60.0%** |
+| Calendar streak | Current 1 day, longest 2 days | |
+| Weekday streak | Current 1 eligible day, longest 2 days | |
+
+The attendance percentage **3 / 5 is 60%, not 66.7%**. All calculations are browser-local date based; date-only arithmetic uses UTC calendar day numbers to avoid DST date shifting. They run on every data refresh and when returning to the page after midnight.
+
+Run:
+
+    node workout-tracker/tests/attendance.test.cjs
+    node workout-tracker/tests/attendance-ui.test.cjs
+
+The test data is synthetic and never touches Hostinger records. For on-device acceptance, verify the October 21/22/27 dates, weekday and calendar rates, first-workout start, week boundary, and mobile readability. Attendance stays read-only and has no new API endpoints.
 
 ## Heart rate tracking (v1.5.1)
 
