@@ -2,10 +2,10 @@
 /* File Name: parse.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: API-key-free natural-language extraction for workout tracking.
-Revision: 1.3.0
+Revision: 1.4.0
 Created Date: 2026-10-21
-Modified Date: 2026-10-21
-Changelog: 1.3.0 - Recognize explicit calories and ordered varying weight-rep pairs. 1.2.0 - Extract optional tracking tags and treadmill incline percentage. 1.1.0 - Extract workout activities, dates, and metrics without external services. */
+Modified Date: 2026-10-27
+Changelog: 1.4.0 - Extract explicit BPM/heart-rate/HR values without mistaking pulse for treadmill speed. 1.3.0 - Recognize explicit calories and ordered varying weight-rep pairs. 1.2.0 - Extract optional tracking tags and treadmill incline percentage. 1.1.0 - Extract workout activities, dates, and metrics without external services. */
 declare(strict_types=1);
 
 /** Recognize common exercise descriptions conservatively; never invent missing measurements. */
@@ -103,7 +103,7 @@ function workout_parse_segment(string $segment, string $exercise, string $date):
     $cardio = in_array($exercise, ['treadmill','walking','running','cycling','rowing','swimming','elliptical','stairs'], true);
     $strength = in_array($exercise, ['push-ups','sit-ups','squats','lunges','crunches','plank','bench press','deadlift','jumping jacks','weight training'], true);
     $out = ['exercise' => $exercise, 'date' => $date, 'distance_miles'=>null, 'duration_minutes'=>null,
-        'speed_mph'=>null, 'reps'=>null, 'sets'=>null, 'weight_lb'=>null, 'incline_percent'=>null, 'calories_kcal'=>null, 'tag'=>'', 'notes'=>$segment];
+        'speed_mph'=>null, 'reps'=>null, 'sets'=>null, 'weight_lb'=>null, 'incline_percent'=>null, 'calories_kcal'=>null, 'heart_rate_bpm'=>null, 'tag'=>'', 'notes'=>$segment];
     if (preg_match('~\b(\d+(?:\.\d+)?)\s*(miles?|mi|kilomet(?:er|re)s?|km)\b~i', $segment, $m)) {
         $out['distance_miles'] = round((float)$m[1] * (str_starts_with(strtolower($m[2]), 'k') ? 0.621371 : 1), 3);
     }
@@ -117,7 +117,7 @@ function workout_parse_segment(string $segment, string $exercise, string $date):
     }
     if (preg_match('~\b(\d+(?:\.\d+)?)\s*(mph|km/h|kph)\b~i', $segment, $m)) {
         $out['speed_mph']=round((float)$m[1]*(strtolower($m[2]) === 'mph'?1:0.621371),3);
-    } elseif ($cardio && preg_match('~\b(?:at|speed(?:\s+of)?|set(?:\s+to)?)\s*(\d+(?:\.\d+)?)\b(?!\s*(?:mi|mile|km|h|hour|min|sec|lb|kg))~i', $segment, $m)) {
+    } elseif ($cardio && preg_match('~\b(?:at|speed(?:\s+of)?|set(?:\s+to)?)\s*(\d+(?:\.\d+)?)\b(?!\s*(?:mi|mile|km|h|hour|min|sec|lb|kg|bpm|beats?\s+per\s+min|calor))~i', $segment, $m)) {
         $out['speed_mph']=(float)$m[1];
     }
     if ($strength) {
@@ -134,6 +134,22 @@ function workout_parse_segment(string $segment, string $exercise, string $date):
     if (preg_match('~\b(\d+(?:\.\d+)?)\s*(?:calories?|kcals?|kcal)\b~i', $segment, $m)
         || preg_match('~\b(?:calories?|kcals?|kcal)\s*(?:burned|of|:)?\s*(\d+(?:\.\d+)?)\b~i', $segment, $m)) {
         $out['calories_kcal'] = (float)$m[1];
+    }
+    // Heart rate is recorded only when explicitly stated, never inferred from
+    // treadmill speed or workout duration. Bare "143 bpm" also qualifies.
+    // A duration such as "1 hr 15 minutes" must not be mistaken for HR 15.
+    if (
+        preg_match('~\b(?:(?:average|avg|mean|maximum|max|peak|resting)\s+)?'
+            . '(?:heart[\s-]*rate|pulse|(?<!\d\s)hr)\s*'
+            . '(?:(?:was|is|of|at|averaged?)\s*|[:=\-]\s*)?'
+            . '(\d{1,3})(?:\s*(?:bpm|beats?\s+per\s+min(?:ute)?))?\b~i', $segment, $m)
+        || preg_match('~\b(\d{1,3})\s*(?:bpm|beats?\s+per\s+minute)\b~i', $segment, $m)
+    ) {
+        $heartRate = (int)$m[1];
+        if ($heartRate < 1 || $heartRate > 300) {
+            throw new InvalidArgumentException('Heart rate must be between 1 and 300 BPM.');
+        }
+        $out['heart_rate_bpm'] = $heartRate;
     }
     // Ordered weight/repetition pairs are a single exercise with multiple sets,
     // not separate workout entries. Never calculate an average load.
