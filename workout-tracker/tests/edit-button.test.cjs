@@ -2,10 +2,10 @@
 File Name: edit-button.test.cjs
 Author: Jason Lamb (with help from ChatGPT)
 Description: Regression test for Edit button opening saved workouts without a DOMException.
-Revision: 1.1.3
+Revision: 1.1.4
 Created Date: 2026-10-27
 Modified Date: 2026-10-27
-Changelog: 1.1.3 - Isolate previous edit button regression from advanced measurement editor. 1.1.2 - Verify mobile touch targets, optional fields location, and hidden-value indicator. 1.1.1 - Check hidden historical rep/set/weight values remain intact and manual entry adapts. 1.1.0 - Verify exercise-specific field visibility and safe retention of hidden measurements. 1.0.0 - Exercise the actual event handler and editing form against DOM class-token validation.
+Changelog: 1.1.4 - Validate cardio heart rate visibility and editing without hiding saved BPM values. 1.1.3 - Isolate previous edit button regression from advanced measurement editor. 1.1.2 - Verify mobile touch targets, optional fields location, and hidden-value indicator. 1.1.1 - Check hidden historical rep/set/weight values remain intact and manual entry adapts. 1.1.0 - Verify exercise-specific field visibility and safe retention of hidden measurements. 1.0.0 - Exercise the actual event handler and editing form against DOM class-token validation.
 */
 'use strict';
 const assert = require('node:assert/strict');
@@ -58,7 +58,7 @@ const original={
   _revision:'a'.repeat(64),
   exercise:'treadmill',date:'2026-10-22',
   distance_miles:2.06,duration_minutes:37,speed_mph:3.5,
-  incline_percent:null,reps:6,sets:2,weight_lb:10,notes:'Existing workout',
+  incline_percent:null,heart_rate_bpm:143,reps:6,sets:2,weight_lb:10,notes:'Existing workout',
   photo:'unchanged.jpg',created_at:'2026-10-22T11:00:00Z'
 };
 const saved=JSON.stringify(original);
@@ -70,6 +70,7 @@ const context={
   measures:[
     ['distance_miles','Miles'],['duration_minutes','Minutes'],
     ['speed_mph','Speed (mph)'],['incline_percent','Treadmill incline (%)'],
+    ['calories_kcal','Calories (kcal)'],['heart_rate_bpm','Heart rate (BPM)'],
     ['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']
   ],
   message:()=>{},
@@ -103,6 +104,10 @@ const byName=name=>fields.find(input=>input.dataset.field===name);
 assert.equal(byName('date')?.value,'2026-10-22','Date prepopulated without invalid class token.');
 assert.equal(byName('distance_miles')?.value,2.06,'Saved distance prepopulated.');
 assert.equal(byName('speed_mph')?.value,3.5,'Saved speed prepopulated.');
+assert.equal(byName('heart_rate_bpm')?.value,143,'Saved heart rate prepopulated.');
+assert.equal(byName('heart_rate_bpm')?.min,'1','BPM input has a positive lower bound.');
+assert.equal(byName('heart_rate_bpm')?.max,'300','BPM input has upper bound.');
+assert.equal(byName('heart_rate_bpm')?.step,'1','BPM input uses integer steps.');
 assert.equal(byName('incline_percent')?.value,'','Missing optional incline remains empty.');
 assert.equal(byName('tag')?.value,'','Missing optional tag remains empty.');
 const fieldLabel=name=>dom.get('#editFields').children.find(
@@ -113,6 +118,7 @@ assert.equal(fieldLabel('distance_miles').hidden,false,'Treadmill distance visib
 assert.equal(fieldLabel('duration_minutes').hidden,false,'Treadmill duration visible.');
 assert.equal(fieldLabel('speed_mph').hidden,false,'Treadmill speed visible.');
 assert.equal(fieldLabel('incline_percent').hidden,false,'Treadmill incline visible.');
+assert.equal(fieldLabel('heart_rate_bpm').hidden,false,'Treadmill heart rate visible.');
 assert.equal(fieldLabel('reps').hidden,true,'Treadmill does not need reps by default.');
 assert.equal(fieldLabel('sets').hidden,true,'Treadmill does not need sets by default.');
 assert.equal(fieldLabel('weight_lb').hidden,true,'Treadmill does not need weight by default.');
@@ -138,6 +144,8 @@ assert.equal(fieldLabel('weight_lb').hidden,false,'Strength exercises show weigh
 assert.equal(fieldLabel('reps').hidden,false,'Strength exercises show reps.');
 assert.equal(fieldLabel('sets').hidden,false,'Strength exercises show sets.');
 assert.equal(fieldLabel('distance_miles').hidden,true,'Bench press hides distance.');
+assert.equal(fieldLabel('heart_rate_bpm').hidden,true,'Bench press can show heart rate under other measurements.');
+assert.equal(byName('heart_rate_bpm').value,143,'Hidden strength heart rate remains saved.');
 exercise.value='treadmill';exercise.listeners.get('input')();
 assert.equal(fieldLabel('distance_miles').hidden,false,'Switching back reveals treadmill fields.');
 assert.equal(JSON.stringify(original),saved,'Opening/changing displayed fields does not mutate saved workout.');
@@ -154,13 +162,16 @@ const manualLabel=name=>manualGrid.children.find(
  label=>label.tagName==='label'&&label.children.some(child=>child.name===name));
 assert.equal(manualLabel('reps').hidden,true,'Manual treadmill form hides reps.');
 assert.equal(manualLabel('incline_percent').hidden,false,'Manual treadmill form shows incline.');
+assert.equal(manualLabel('heart_rate_bpm').hidden,false,'Manual treadmill form shows heart rate.');
 manualExercise.value='bench press';manualExercise.listeners.get('input')();
 assert.equal(manualLabel('reps').hidden,false,'Manual bench press shows reps.');
 assert.equal(manualLabel('weight_lb').hidden,false,'Manual bench press shows weight.');
 assert.equal(manualLabel('distance_miles').hidden,true,'Manual bench press hides miles.');
+assert.equal(manualLabel('heart_rate_bpm').hidden,true,'Manual bench press can expose heart rate in extra metrics.');
 manualExercise.value='a custom workout';manualExercise.listeners.get('input')();
 assert.equal(manualLabel('distance_miles').hidden,false,'Custom exercise can use all existing fields.');
 assert.equal(manualLabel('reps').hidden,false,'Custom exercise can use reps.');
+assert.equal(manualLabel('heart_rate_bpm').hidden,false,'Custom exercise allows heart-rate data.');
 
 const css=fs.readFileSync(path.join(__dirname,'..','app.css'),'utf8');
 assert.match(css,/grid-template-columns:minmax\(0,1fr\)/,
