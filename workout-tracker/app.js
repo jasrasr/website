@@ -1,13 +1,13 @@
 /* File Name: app.js
 Author: Jason Lamb (with help from ChatGPT)
 Description: Workout quick entry, editable review, and per-exercise trends.
-Revision: 1.5.0
+Revision: 1.5.1
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.5.0 - Add authenticated workout details/photo viewer and private backup download UI. 1.4.0 - Editable set-by-set weight/reps, custom measurements, calories and exercise-specific progress. 1.3.2 - Optimize mobile exercise fields, retain hidden measurements, and keep optional metrics near the measurements. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
+Changelog: 1.5.1 - Display and edit heart rate BPM with cardio-focused fields and separate trends. 1.5.0 - Add authenticated workout details/photo viewer and private backup download UI. 1.4.0 - Editable set-by-set weight/reps, custom measurements, calories and exercise-specific progress. 1.3.2 - Optimize mobile exercise fields, retain hidden measurements, and keep optional metrics near the measurements. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
 'use strict';
 const $=selector=>document.querySelector(selector);
-const measures=[['distance_miles','Miles'],['duration_minutes','Minutes'],['speed_mph','Speed (mph)'],['incline_percent','Treadmill incline (%)'],['calories_kcal','Calories (kcal)'],['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']];
+const measures=[['distance_miles','Miles'],['duration_minutes','Minutes'],['speed_mph','Speed (mph)'],['incline_percent','Treadmill incline (%)'],['calories_kcal','Calories (kcal)'],['heart_rate_bpm','Heart rate (BPM)'],['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']];
 let entries=[];
 let editingId=null;
 let editingRevision=null;
@@ -33,6 +33,7 @@ function fieldInput(name,label,value,type='number'){
  if(type==='number'){input.min='0';input.step='any';}if(type==='text')input.maxLength=name==='tag'?64:80;
  if(name==='incline_percent')input.max='100';
  if(name==='calories_kcal')input.max='100000';
+ if(name==='heart_rate_bpm'){input.min='1';input.max='300';input.step='1';input.inputMode='numeric';}
  if(type==='number')input.inputMode='decimal';
  wrapper.append(caption,input);return wrapper;
 }
@@ -44,6 +45,7 @@ function describe(entry){
   entry.speed_mph!=null?entry.speed_mph+' mph':'',
   entry.incline_percent!=null?entry.incline_percent+'% incline':'',
   entry.calories_kcal!=null?entry.calories_kcal+' kcal':'',
+  entry.heart_rate_bpm!=null?entry.heart_rate_bpm+' bpm':'',
  ];
  if(perSet){
   parts.push(perSet.set_count+' sets',perSet.total_reps+' total reps');
@@ -67,9 +69,9 @@ function describe(entry){
  */
 function visibleFieldsForExercise(exercise){
  const name=String(exercise||'').toLowerCase().trim().replace(/\s+/g,' ');
- if(/tread\s?mill/.test(name)) return ['distance_miles','duration_minutes','speed_mph','incline_percent','calories_kcal'];
+ if(/tread\s?mill/.test(name)) return ['distance_miles','duration_minutes','speed_mph','incline_percent','calories_kcal','heart_rate_bpm'];
  if(/^(walking|walk|hiking|running|run|cycling|bike|biking|stationary bike|rowing|swimming|elliptical|stairs)$/.test(name))
-  return ['distance_miles','duration_minutes','speed_mph','calories_kcal'];
+  return ['distance_miles','duration_minutes','speed_mph','calories_kcal','heart_rate_bpm'];
  if(/^(bench press|deadlift|weight training|weight lifting)$/.test(name))
   return ['weight_lb','reps','sets'];
  if(/^(push-ups|pushups|sit-ups|situps|squats|lunges|crunches|jumping jacks)$/.test(name))
@@ -242,6 +244,7 @@ function openWorkoutDetails(id){
   speed_mph:['Speed',' mph'],
   incline_percent:['Treadmill incline','%'],
   calories_kcal:['Calories burned',' kcal'],
+  heart_rate_bpm:['Heart rate',' BPM'],
   reps:['Reps (legacy summary)',''],
   sets:['Sets (legacy summary)',''],
   weight_lb:['Weight (legacy summary)',' lb']
@@ -394,6 +397,12 @@ async function submitEdit(){
  if(!editingId||!editingRevision)return;
  const button=$('#confirmEdit'),row={};
  $('#editFields').querySelectorAll('[data-field]').forEach(input=>{row[input.dataset.field]=input.value;});
+ // Old records without heart rate must remain unchanged unless the user enters one.
+ if(row.heart_rate_bpm==='' && editingId){
+  const original=entries.find(entry=>entry.id===editingId);
+  if(original && !Object.prototype.hasOwnProperty.call(original,'heart_rate_bpm'))
+   delete row.heart_rate_bpm;
+ }
  if(!row.time_local){delete row.time_local;delete row.utc_offset;}
  try{Object.assign(row,WorkoutAdvanced.collect($('#editFields')));}catch(e){$('#editStatus').textContent=e.message;return;}
  if(!row.exercise.trim()||!row.date){$('#editStatus').textContent='Exercise and date are required.';return;}
