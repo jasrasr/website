@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, key-free quick entry, optional AI and screenshot import guidance for Workout Tracker.
-Revision: 1.6.0
+Revision: 1.7.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.6.0 - Read-only workout-day attendance and weekday streak dashboard. 1.5.1 - Optional heart rate in BPM, including local parsing, charts and safe edits. 1.5.0 - Authenticated photo/detail view and per-user ZIP backup, preserving live data. 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
+Changelog: 1.7.0 - Multiple photo uploads on saved workouts, central logout/navigation and opt-in seven-day login. 1.6.0 - Read-only workout-day attendance and weekday streak dashboard. 1.5.1 - Optional heart rate in BPM, including local parsing, charts and safe edits. 1.5.0 - Authenticated photo/detail view and per-user ZIP backup, preserving live data. 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
 -->
 # Workout Tracker
 
@@ -20,6 +20,20 @@ Private PHP workout logger at https://jasr.me/github/workout-tracker/ using shar
 5. Dates default to the user's **browser-local current date**. Time defaults to the current local time at review. "Yesterday", "last Monday", an ISO date, and US numeric MM/DD/YYYY dates are supported for backdating. An optional time control exists under review details.
 
 The parser is rule-based rather than a general LLM. It recognizes common exercises and explicit numbers but does **not guess missing values**. Unrecognized exercises use the collapsed manual entry form. It does not analyze photos.
+
+## Multiple photos, account navigation and remembered login (v1.7.0; issue #135)
+
+**Photo uploads after saving:** Tap **Edit** on a previous workout, then scroll to **Add pictures to this workout**. Choose up to five JPEG, PNG or WebP images at once (max 5 MB each, 12 total per workout) using the phone's camera or photo library; tap **Add selected pictures**. Existing measurements and photos are not overwritten. The editor reports existing photo count and retains all earlier uploads. The upload is a separate CSRF-protected action, using the same authenticated user and revision-lock checks as other edits.
+
+**View multiple photos:** Tap **Details** from Workout history. The private gallery displays every photo attached to that record in order, including an original legacy `photo`. Each full-size link uses only an entry ID and numeric image index (`?photo=<entry-id>&image=0`); clients cannot supply filenames or paths. All images remain behind central authentication and owner checks. The protected data files are still ignored by Git and denied by the web-server rule.
+
+**How records remain safe:** Existing single-photo references `photo` remain unchanged. New filenames are appended to an optional `photos` array. The current `schemaVersion:1`, IDs, sessions, workout notes, dates and old entries are preserved. Uploads are checked (size, MIME, actual image data, path traversal and symlink rules), named uniquely, and attached atomically under `JsonStore::update`. If the entry has changed or a validation error occurs, newly staged uploads are removed and the old record is not modified. Photos are never automatically deleted. The account ZIP export includes every legacy and new image and fails if one is missing.
+
+**User Management and sign-out:** The top of Workout Tracker provides a **User Management** link and a **Sign out** button. The sign-out form submits with CSRF to the existing central account portal, signing out **all connected JASR projects in that browser**. This is not a local-only logoff.
+
+**Stay signed in:** The User Management login offers an optional **Stay signed in for 7 days on this browser** checkbox. **Unchecked remains the normal 30-minute inactivity timeout**, with a session-only cookie. Checked uses a seven-day, secure/HttpOnly/SameSite=Strict persistent session cookie with a fixed maximum expiry and server-side session lifetime. It is not enabled automatically for current sessions. After deploying, sign out and sign back in with the checkbox selected to activate it. Do not select it on shared devices. Logout, account disabling, password changes and permissions revocation still invalidate sessions. If hosting aggressively cleans PHP session files, server configuration may need adjustment; the new PHP session code raises the configured garbage-collection lifetime for remembered sessions.
+
+**Verification:** GitHub CI exercises synthetic multi-photo uploads, cross-account image denial, missing-file ZIP safety and the existing Edit button. It also runs an isolated User Management HTTP test for normal versus remembered cookies, expiry and logout. On Hostinger, verify the portal's remembered sign-in behavior, cross-account photo denial, private storage HTTP 403, ZIP completeness and multi-file iPhone upload. No hosted accounts/records are used in CI. The hosting webhook must never delete `workout-tracker/storage/` or `user-management/data/`.
 
 ## Attendance and workout streaks (v1.6.0)
 
