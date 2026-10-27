@@ -2,10 +2,10 @@
 File Name: workout-detail.test.cjs
 Author: Jason Lamb (with help from ChatGPT)
 Description: DOM regression for mobile workout detail and private photo viewing.
-Revision: 1.0.0
+Revision: 1.0.1
 Created Date: 2026-10-27
 Modified Date: 2026-10-27
-Changelog: 1.0.0 - Verify safe UI rendering, set details, photo ID URL, and old entries without photos.
+Changelog: 1.0.1 - Verify saved BPM appears in authenticated mobile workout details. 1.0.0 - Verify safe UI rendering, set details, photo ID URL, and old entries without photos.
 */
 'use strict';
 const assert=require('node:assert/strict');
@@ -35,7 +35,7 @@ const id='aaaaaaaaaaaaaaaaaaaaaaaa';
 const old='bbbbbbbbbbbbbbbbbbbbbbbb';
 const first={
  id,exercise:'bench press',date:'2026-10-22',performed_at:'2026-10-22T08:37:00-04:00',
- notes:'Warmup <img src=x onerror=alert(1)>',tag:'Strength',
+ notes:'Warmup <img src=x onerror=alert(1)>',tag:'Strength',heart_rate_bpm:148,
  photo:id+'.png',sets_detail:[{weight_lb:95,reps:12},{weight_lb:115,reps:10},{weight_lb:135,reps:8}],
  custom_metrics:[{name:'Tempo<script>',unit:'sec',value:2.5}],
  edit_history:[{edited_at:'2026-10-23T00:00:00Z',previous:{exercise:'bench press',date:'2026-10-22',notes:'previous value'}}]
@@ -67,6 +67,8 @@ assert.ok(shown.some(x=>x.textContent.includes('95 lb')&&x.textContent.includes(
 assert.ok(shown.some(x=>x.textContent.includes('previous value')),'edit history remains inspectable');
 assert.ok(shown.some(x=>x.textContent.includes('Tempo<script>')),'custom label is rendered as text');
 assert.ok(shown.some(x=>x.textContent.includes('<img src=x')),'untrusted workout notes remain literal text');
+assert.ok(shown.some(x=>x.textContent==='Heart rate'),'Detail view labels the BPM value.');
+assert.ok(shown.some(x=>x.textContent==='148 BPM'),'Detail view shows saved BPM.');
 const imageNodes=flatten(elements.get('#detailImage'));
 const img=imageNodes.find(x=>x.tagName==='img');
 const link=imageNodes.find(x=>x.tagName==='a');
