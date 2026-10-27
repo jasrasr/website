@@ -1,17 +1,18 @@
 /* File Name: app.js
 Author: Jason Lamb (with help from ChatGPT)
 Description: Workout quick entry, editable review, and per-exercise trends.
-Revision: 1.3.2
+Revision: 1.4.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.3.2 - Optimize mobile exercise fields, retain hidden measurements, and keep optional metrics near the measurements. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
+Changelog: 1.4.0 - Editable set-by-set weight/reps, custom measurements, calories and exercise-specific progress. 1.3.2 - Optimize mobile exercise fields, retain hidden measurements, and keep optional metrics near the measurements. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
 'use strict';
 const $=selector=>document.querySelector(selector);
-const measures=[['distance_miles','Miles'],['duration_minutes','Minutes'],['speed_mph','Speed (mph)'],['incline_percent','Treadmill incline (%)'],['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']];
+const measures=[['distance_miles','Miles'],['duration_minutes','Minutes'],['speed_mph','Speed (mph)'],['incline_percent','Treadmill incline (%)'],['calories_kcal','Calories (kcal)'],['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']];
 let entries=[];
 let editingId=null;
 let editingRevision=null;
 let showAllHistory=false;
+let manualAdvanced=null;
 function localDate(d=new Date()){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
 function localTime(d=new Date()){return [String(d.getHours()).padStart(2,'0'),String(d.getMinutes()).padStart(2,'0')].join(':');}
 function offset(d=new Date()){const n=-d.getTimezoneOffset(),a=Math.abs(n);return (n>=0?'+':'-')+String(Math.floor(a/60)).padStart(2,'0')+':'+String(a%60).padStart(2,'0');}
@@ -30,12 +31,33 @@ function fieldInput(name,label,value,type='number'){
  const input=document.createElement('input');input.type=type;input.dataset.field=name;input.value=value??'';
  if(type==='number'){input.min='0';input.step='any';}if(type==='text')input.maxLength=name==='tag'?64:80;
  if(name==='incline_percent')input.max='100';
+ if(name==='calories_kcal')input.max='100000';
+ if(type==='number')input.inputMode='decimal';
  wrapper.append(caption,input);return wrapper;
 }
 function describe(entry){
- return [entry.distance_miles!=null?entry.distance_miles+' mi':'',entry.duration_minutes!=null?entry.duration_minutes+' min':'',
- entry.speed_mph!=null?entry.speed_mph+' mph':'',entry.sets!=null?entry.sets+' sets':'',
- entry.reps!=null?entry.reps+' reps'+(entry.sets!=null?'/set':''):'',entry.weight_lb!=null?entry.weight_lb+' lb':'',entry.incline_percent!=null?entry.incline_percent+'% incline':''].filter(Boolean).join(' · ')||'Add measurements below';
+ const perSet=WorkoutAdvanced.stats(entry);
+ const parts=[
+  entry.distance_miles!=null?entry.distance_miles+' mi':'',
+  entry.duration_minutes!=null?entry.duration_minutes+' min':'',
+  entry.speed_mph!=null?entry.speed_mph+' mph':'',
+  entry.incline_percent!=null?entry.incline_percent+'% incline':'',
+  entry.calories_kcal!=null?entry.calories_kcal+' kcal':'',
+ ];
+ if(perSet){
+  parts.push(perSet.set_count+' sets',perSet.total_reps+' total reps');
+  if(perSet.max_weight_lb!==null){
+   parts.push(perSet.max_weight_lb+' lb heaviest');
+   parts.push(perSet.total_volume_lb+' lb volume');
+  }
+ }else{
+  parts.push(entry.sets!=null?entry.sets+' sets':'',
+    entry.reps!=null?entry.reps+' reps'+(entry.sets!=null?'/set':''):'',
+    entry.weight_lb!=null?entry.weight_lb+' lb':'');
+ }
+ if(Array.isArray(entry.custom_metrics)&&entry.custom_metrics.length)
+  parts.push(entry.custom_metrics.length+' custom metric'+(entry.custom_metrics.length===1?'':'s'));
+ return parts.filter(Boolean).join(' · ')||'Add measurements below';
 }
 
 /**
@@ -44,9 +66,9 @@ function describe(entry){
  */
 function visibleFieldsForExercise(exercise){
  const name=String(exercise||'').toLowerCase().trim().replace(/\s+/g,' ');
- if(/tread\s?mill/.test(name)) return ['distance_miles','duration_minutes','speed_mph','incline_percent'];
+ if(/tread\s?mill/.test(name)) return ['distance_miles','duration_minutes','speed_mph','incline_percent','calories_kcal'];
  if(/^(walking|walk|hiking|running|run|cycling|bike|biking|stationary bike|rowing|swimming|elliptical|stairs)$/.test(name))
-  return ['distance_miles','duration_minutes','speed_mph'];
+  return ['distance_miles','duration_minutes','speed_mph','calories_kcal'];
  if(/^(bench press|deadlift|weight training|weight lifting)$/.test(name))
   return ['weight_lb','reps','sets'];
  if(/^(push-ups|pushups|sit-ups|situps|squats|lunges|crunches|jumping jacks)$/.test(name))
@@ -100,18 +122,32 @@ function installExerciseVisibility(grid,exerciseInput){
 function refreshChartMetrics(){
  const exercise=$('#exerciseFilter').value;
  const allowed=new Set(visibleFieldsForExercise(exercise));
- // Keep metrics populated in historical records accessible, even if their
- // exercise category ordinarily would not use them.
- const existing=entries.filter(row=>row.exercise===exercise);
- const available=measures.filter(([key])=>allowed.has(key)||existing.some(row=>row[key]!=null));
+ const existing=entries.filter(record=>record.exercise===exercise);
+ const base=measures.filter(([key])=>allowed.has(key)||existing.some(row=>row[key]!=null));
+ const detailed=existing.some(row=>Array.isArray(row.sets_detail)&&row.sets_detail.length>0);
+ if(detailed)base.push(
+  ['set_count','Set count'],['total_reps','Total reps'],
+  ['max_weight_lb','Heaviest set (lb)'],['total_volume_lb','Total volume (lb)']
+ );
+ const known=new Set();
+ for(const row of existing){
+  if(!Array.isArray(row.custom_metrics))continue;
+  for(const metric of row.custom_metrics){
+   if(typeof metric?.name!=='string'||typeof metric?.unit!=='string')continue;
+   const key=WorkoutAdvanced.customKey(metric.name,metric.unit);
+   if(!known.has(key)){
+    known.add(key);
+    base.push([key,metric.name+(metric.unit?' ('+metric.unit+')':'')]);
+   }
+  }
+ }
  const select=$('#metric'),previous=select.value;
- select.replaceChildren(...available.map(([key,label])=>{
+ select.replaceChildren(...base.map(([key,label])=>{
   const option=document.createElement('option');option.value=key;
   option.textContent=label;return option;
  }));
- if(available.some(([key])=>key===previous))select.value=previous;
+ if(base.some(([key])=>key===previous))select.value=previous;
 }
-
 function renderReview(suggestions){
  const list=$('#reviewList');list.replaceChildren();$('#sessionTime').value=localTime();
  $('#reviewHeading').textContent=suggestions.length+' exercise'+(suggestions.length===1?'':'s')+' recognized';
@@ -134,6 +170,7 @@ function renderReview(suggestions){
   const ta=document.createElement('textarea');ta.dataset.field='notes';ta.rows=2;ta.maxLength=2000;ta.value=entry.notes||'';
   notes.append(nt,ta);grid.append(notes);
   installExerciseVisibility(grid,exerciseField.children[1]);
+  WorkoutAdvanced.attach(grid,entry,exerciseField.children[1]);
   details.append(heading,grid);card.append(top,details);list.append(card);
  });
  $('#review').hidden=false;$('#review').scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -142,6 +179,7 @@ function collect(){
  return Array.from($('#reviewList').querySelectorAll('.review-card'),card=>{
   const row={};card.querySelectorAll('[data-field]').forEach(input=>{row[input.dataset.field]=input.value;});
   if(!row.exercise.trim())throw Error('Enter an exercise name.');if(!row.date)throw Error('Select an exercise date.');
+  Object.assign(row,WorkoutAdvanced.collect(card));
   return row;
  });
 }
@@ -172,7 +210,8 @@ async function save(rows,photo=null){
   const result=await api(data);$('#note').value='';$('#photo').value='';$('#entryTag').value='';$('#review').hidden=true;
   message('Saved '+result.entries.length+' exercise'+(result.entries.length===1?'':'s')+'. Every session counts.');
   await load();window.scrollTo({top:0,behavior:'smooth'});
- }catch(e){message(e.message,true);}finally{button.disabled=false;button.textContent='Save workout';}
+  return true;
+ }catch(e){message(e.message,true);return false;}finally{button.disabled=false;button.textContent='Save workout';}
 }
 function historyItems(){
  const tag=$('#historyTag').value;
@@ -235,6 +274,7 @@ function beginEdit(id){
  const timezone=document.createElement('input');timezone.type='hidden';timezone.dataset.field='utc_offset';
  timezone.value=match?match[2]:offset();grid.append(timezone);
  installExerciseVisibility(grid,exerciseField.children[1]);
+ WorkoutAdvanced.attach(grid,entry,exerciseField.children[1]);
  $('#editPanel').hidden=false;$('#editStatus').textContent='Original entry and changes are kept in your private workout history.';
  $('#editPanel').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
@@ -246,6 +286,7 @@ async function submitEdit(){
  const button=$('#confirmEdit'),row={};
  $('#editFields').querySelectorAll('[data-field]').forEach(input=>{row[input.dataset.field]=input.value;});
  if(!row.time_local){delete row.time_local;delete row.utc_offset;}
+ try{Object.assign(row,WorkoutAdvanced.collect($('#editFields')));}catch(e){$('#editStatus').textContent=e.message;return;}
  if(!row.exercise.trim()||!row.date){$('#editStatus').textContent='Exercise and date are required.';return;}
  button.disabled=true;button.textContent='Saving changes…';
  try{
@@ -263,13 +304,15 @@ function draw(){
  const c=$('#chart'),ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);
  const metric=$('#metric').value,exercise=$('#exerciseFilter').value;
  const tag=$('#historyTag').value;
- const points=entries.filter(e=>e.exercise===exercise&&(!tag||(e.tag||'')===tag)&&e[metric]!=null&&Number.isFinite(Number(e[metric])))
+ const points=entries.filter(e=>e.exercise===exercise&&(!tag||(e.tag||'')===tag))
+  .map(e=>({...e,_selectedValue:WorkoutAdvanced.metricValue(e,metric)}))
+  .filter(e=>e._selectedValue!=null&&Number.isFinite(Number(e._selectedValue)))
   .sort((a,b)=>(a.performed_at||a.date).localeCompare(b.performed_at||b.date));
  const left=54,right=c.width-23,top=22,bottom=c.height-46;
  ctx.font='14px system-ui';ctx.strokeStyle='#36546d';ctx.fillStyle='#aebfd0';ctx.lineWidth=1;
  ctx.beginPath();ctx.moveTo(left,top);ctx.lineTo(left,bottom);ctx.lineTo(right,bottom);ctx.stroke();
  if(!points.length){$('#trend').textContent='Choose a logged measurement to see its trend.';return;}
- const vals=points.map(e=>Number(e[metric]));let high=Math.max(...vals),low=Math.min(0,...vals);if(high===low)high=low+1;
+ const vals=points.map(e=>Number(e._selectedValue));let high=Math.max(...vals),low=Math.min(0,...vals);if(high===low)high=low+1;
  for(let i=0;i<4;i++){const value=low+(high-low)*i/3,y=bottom-i*(bottom-top)/3;
   ctx.fillText(value.toFixed(value<10?1:0),5,y+5);
   ctx.strokeStyle='#21394d';ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();
@@ -302,11 +345,16 @@ $('#recent').addEventListener('click',e=>{const button=e.target.closest('[data-e
 $('#editForm').addEventListener('submit',e=>{e.preventDefault();submitEdit();});
 $('#cancelEdit').addEventListener('click',closeEdit);
 $('#manualForm').addEventListener('submit',async e=>{
- e.preventDefault();const fd=new FormData(e.currentTarget),row=Object.fromEntries(fd.entries());
+ e.preventDefault();
+ const fd=new FormData(e.currentTarget),row=Object.fromEntries(fd.entries());
  const file=fd.get('photo'),photo=file instanceof File&&file.size?file:null;
  delete row.photo;row.date=row.date||localDate();$('#sessionTime').value=localTime();
- await save([row],photo);if(!$('#message').classList.contains('error'))e.currentTarget.reset();
+ try{Object.assign(row,WorkoutAdvanced.collect($('#manualForm .field-grid')));}
+ catch(err){message(err.message,true);return;}
+ const saved=await save([row],photo);
+ if(saved){e.currentTarget.reset();manualAdvanced?.reset();$('#manualDate').value=localDate();}
 });
 $('#manualDate').value=localDate();
 installExerciseVisibility($('#manualForm .field-grid'),$('#manualForm [name="exercise"]'));
+manualAdvanced=WorkoutAdvanced.attach($('#manualForm .field-grid'),{},$('#manualForm [name="exercise"]'));
 load();
