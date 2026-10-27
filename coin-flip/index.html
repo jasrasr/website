@@ -1,10 +1,11 @@
 <!-- File Name: index.html
 Author: Jason Lamb (with help from ChatGPT)
 Description: Giant animated random coin flip, no dependencies or data storage.
-Revision: 1.0.2
+Revision: 1.0.3
 Created Date: 2026-10-27
 Modified Date: 2026-10-27
-Changelog: 1.0.2 - Make the coin an accessible flip control.
+Changelog: 1.0.3 - Show a face for heads and a cross for tails.
+1.0.2 - Make the coin an accessible flip control.
 1.0.1 - Fit the coin and controls to the available screen height.
 1.0.0 - Add accessible animated coin toss and celebration.
 -->
@@ -43,7 +44,7 @@ h1{font-size:clamp(30px,min(6vw,8dvh),90px)}
 @media(max-height:550px){main{padding-top:10px;padding-bottom:25px}h1{font-size:clamp(24px,7dvh,38px)}.subtitle{font-size:15px;margin:4px 0}.face span{font-size:clamp(12px,4dvh,23px)}#result{font-size:20px;min-height:1.2em;margin:3px 0 7px}button{font-size:19px;padding:10px 30px;min-width:220px}.hint{font-size:12px;margin-top:7px}footer{font-size:9px;bottom:6px}}
 @media(prefers-reduced-motion:reduce){button{transition:none}.confetti{display:none}}
 .coin{min-width:0;width:auto;padding:0;border:0;border-radius:50%;background:none;box-shadow:none;font:inherit;color:inherit;display:block;cursor:pointer}
-.coin:hover{transform:none;box-shadow:none;filter:brightness(1.04)}.coin:active{transform:none}.coin:disabled{opacity:1;filter:none;cursor:wait}
+.coin:hover{transform:none;box-shadow:0 0 0 4px #f6bc3533}.coin:active{transform:none}.coin:disabled{opacity:1;cursor:wait}
 </style>
 </head>
 <body>
@@ -53,15 +54,15 @@ h1{font-size:clamp(30px,min(6vw,8dvh),90px)}
 <div class="stage">
 <div class="shadow"></div><i class="spark s1"></i><i class="spark s2"></i><i class="spark s3"></i><i class="spark s4"></i>
 <button class="coin" id="coin" type="button" aria-label="Flip the coin" title="Click to flip">
-<div class="face"><svg class="emblem" viewBox="0 0 100 100"><path d="M50 3Q57 43 97 50Q57 57 50 97Q43 57 3 50Q43 43 50 3Z"/></svg><span>HEADS</span></div>
-<div class="face back"><svg class="emblem" viewBox="0 0 100 100"><path d="M69 8A43 43 0 1 0 92 69A37 37 0 0 1 69 8Z"/></svg><span>TAILS</span></div>
+<div class="face"><svg class="emblem" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="41"/><g fill="none" stroke="#a96909" stroke-width="4" stroke-linecap="round"><path d="M32 37v7m36-7v7M31 59q19 23 38 0"/></g></svg><span>HEADS</span></div>
+<div class="face back"><svg class="emblem" viewBox="0 0 100 100" aria-hidden="true"><path d="M40 7h20v25h26v20H60v41H40V52H14V32h26Z"/></svg><span>TAILS</span></div>
 </button>
 </div>
 <p id="result" role="status" aria-live="polite">Ready when you are.</p>
 <button id="flip" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M5.1 7a8 8 0 0 1 13.8-1L20 9M4 15l1.1 3A8 8 0 0 0 18.9 17"/></svg><span>Flip coin</span></button>
 <p class="hint">Press Space to flip</p>
 </main>
-<footer>v1.0.2 · 2026-10-27</footer>
+<footer>v1.0.3 · 2026-10-27</footer>
 <script>
 const coin = document.querySelector('#coin');
 const button = document.querySelector('#flip');
