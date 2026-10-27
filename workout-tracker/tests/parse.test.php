@@ -24,7 +24,7 @@ $cases=[
  ['treadmill 2 miles 30 mins 5% incline 320 calories',[['exercise'=>'treadmill','distance_miles'=>2,'duration_minutes'=>30,'incline_percent'=>5,'calories_kcal'=>320]]],
  ['bench press 95 lb x 12, 115 lb x 10, 135 lb x 8, 115 lb x 10',[['exercise'=>'bench press','sets_detail'=>[
    ['weight_lb'=>95,'reps'=>12],['weight_lb'=>115,'reps'=>10],['weight_lb'=>135,'reps'=>8],['weight_lb'=>115,'reps'=>10]
- ]]]
+ ]]]]
 ];
 foreach($cases as $i=>[$input,$expected]){
  $records=workout_parse_text($input,'2026-10-21');
