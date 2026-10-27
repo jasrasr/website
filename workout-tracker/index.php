@@ -2,10 +2,10 @@
 /* File Name: index.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: Authenticated workout dashboard and JSON API.
-Revision: 1.5.1
+Revision: 1.6.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.5.1 - Add optional heart rate (BPM) to parsing, manual entry, editing, AI fallback and trends. 1.5.0 - Authenticated workout detail/photo viewing and read-only user backup ZIP. 1.4.0 - Backward-compatible calories, configurable metrics and detailed weightlifting sets; closes #128. 1.3.2 - Mobile input layout and context-sensitive exercise measurements (display only, no storage changes). 1.3.1 - Bust cached JavaScript and mark Edit button UI repair. 1.3.0 - Edit prior entries safely, optional tracking tags, treadmill incline and retained edit history. 1.2.0 - Add explicit optional AI retry with private config and multi-exercise validation. 1.1.0 - No-key text parsing and atomic multi-exercise logging. 1.0.1 - Use framework JsonStore for private entries. 1.0.0 - Initial release. */
+Changelog: 1.6.0 - Add rolling and since-first attendance with weekday-only rates and workout streaks. 1.5.1 - Add optional heart rate (BPM) to parsing, manual entry, editing, AI fallback and trends. 1.5.0 - Authenticated workout detail/photo viewing and read-only user backup ZIP. 1.4.0 - Backward-compatible calories, configurable metrics and detailed weightlifting sets; closes #128. 1.3.2 - Mobile input layout and context-sensitive exercise measurements (display only, no storage changes). 1.3.1 - Bust cached JavaScript and mark Edit button UI repair. 1.3.0 - Edit prior entries safely, optional tracking tags, treadmill incline and retained edit history. 1.2.0 - Add explicit optional AI retry with private config and multi-exercise validation. 1.1.0 - No-key text parsing and atomic multi-exercise logging. 1.0.1 - Use framework JsonStore for private entries. 1.0.0 - Initial release. */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
 require_once __DIR__ . '/parse.php';
@@ -296,16 +296,17 @@ if (isset($_GET['api'])) {
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#08141f">
 <title>Workout Tracker · Keep moving</title>
-<link rel="stylesheet" href="app.css?v=1.5.0">
+<link rel="stylesheet" href="app.css?v=1.6.0">
 <script src="advanced.js?v=1.4.0" defer></script>
-<script src="app.js?v=1.5.1" defer></script>
+<script src="attendance.js?v=1.6.0" defer></script>
+<script src="app.js?v=1.6.0" defer></script>
 </head>
 <body><main>
 <header class="hero">
  <div><div class="eyebrow">Personal fitness · Your pace</div>
   <h1>Keep moving.</h1>
   <p class="subtitle">Every session counts. Progress happens one workout at a time.</p>
-  <p class="version">Workout Tracker v1.5.1 · Updated October 27, 2026</p>
+  <p class="version">Workout Tracker v1.6.0 · Updated October 27, 2026</p>
  </div>
  <div class="hero-mark" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 25h9l6-11 9 22 7-14h11"/></svg></div>
 </header>
@@ -314,6 +315,51 @@ if (isset($_GET['api'])) {
  <div class="stat"><span>Exercise entries</span><strong id="count">—</strong></div>
  <div class="stat"><span>Total minutes</span><strong id="minutes">—</strong></div>
  <div class="stat"><span>Total miles</span><strong id="miles">—</strong></div>
+</section>
+<section id="attendancePanel" class="panel attendance-panel" aria-labelledby="attendanceHeading" hidden>
+ <div class="panel-head attendance-heading">
+  <div>
+   <div class="eyebrow">Consistency over time</div>
+   <h2 id="attendanceHeading">Workout attendance</h2>
+  </div>
+  <span class="day-label" id="attendanceStart">Since your first workout</span>
+ </div>
+ <p class="muted attendance-intro">Each date with a saved workout counts once, even if you record multiple exercises. Weekends do not count against weekday attendance.</p>
+ <div class="attendance-grid">
+  <article class="attendance-card">
+   <div class="attendance-card-label">Last 7 days</div>
+   <strong id="attendance7Percentage" class="attendance-percent" aria-live="polite">—</strong>
+   <div class="attendance-count" id="attendance7Count">—</div>
+   <div class="attendance-card-caption">Calendar days</div>
+  </article>
+  <article class="attendance-card">
+   <div class="attendance-card-label">Last 7 days</div>
+   <strong id="attendanceWeek7Percentage" class="attendance-percent" aria-live="polite">—</strong>
+   <div class="attendance-count" id="attendanceWeek7Count">—</div>
+   <div class="attendance-card-caption">Weekdays only · Mon–Fri</div>
+  </article>
+  <article class="attendance-card attendance-overall">
+   <div class="attendance-card-label">Since first workout</div>
+   <strong id="attendanceOverallPercentage" class="attendance-percent">—</strong>
+   <div class="attendance-count" id="attendanceOverallCount">—</div>
+   <div class="attendance-card-caption">All calendar days</div>
+  </article>
+  <article class="attendance-card attendance-overall">
+   <div class="attendance-card-label">Since first workout</div>
+   <strong id="attendanceOverallWeekPercentage" class="attendance-percent">—</strong>
+   <div class="attendance-count" id="attendanceOverallWeekCount">—</div>
+   <div class="attendance-card-caption">Weekdays only · Mon–Fri</div>
+  </article>
+ </div>
+ <div class="attendance-streaks" aria-label="Current and longest workout streaks">
+  <div class="attendance-streak"><span>Current calendar streak</span><strong id="attendanceCurrentStreak">—</strong></div>
+  <div class="attendance-streak"><span>Longest calendar streak</span><strong id="attendanceLongestStreak">—</strong></div>
+  <div class="attendance-streak"><span>Current weekday streak</span><strong id="attendanceCurrentWeekStreak">—</strong></div>
+  <div class="attendance-streak"><span>Longest weekday streak</span><strong id="attendanceLongestWeekStreak">—</strong></div>
+ </div>
+ <h3 class="attendance-strip-label">Last 7 calendar days</h3>
+ <div id="attendanceStrip" class="attendance-strip" aria-label="Workout attendance for the last seven days"></div>
+ <p class="footnote attendance-note">Streaks allow today to remain unfinished. Weekend days are skipped in weekday streaks. Attendance currently counts saved workouts as gym visits.</p>
 </section>
 <div class="content">
  <section class="panel" aria-labelledby="logTitle">
