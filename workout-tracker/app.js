@@ -4,7 +4,7 @@ Description: Workout quick entry, editable review, and per-exercise trends.
 Revision: 1.3.2
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.3.2 - Show exercise-specific fields, retain hidden measurements, and filter available trend metrics. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
+Changelog: 1.3.2 - Optimize mobile exercise fields, retain hidden measurements, and keep optional metrics near the measurements. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
 'use strict';
 const $=selector=>document.querySelector(selector);
 const measures=[['distance_miles','Miles'],['duration_minutes','Minutes'],['speed_mph','Speed (mph)'],['incline_percent','Treadmill incline (%)'],['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']];
@@ -63,11 +63,19 @@ function installExerciseVisibility(grid,exerciseInput){
  button.type='button';button.className='secondary-action other-metrics';
  button.textContent='Show other measurements';
  button.hidden=true;button.dataset.expanded='no';
- grid.append(button);
+ // Keep the expand control alongside measurements, not below notes or photos.
+ const detailsStart=Array.from(grid.children).find(label=>
+  String(label.tagName).toLowerCase()==='label' &&
+  Array.from(label.children).some(child=>['tag','notes','photo','time_local'].includes(
+   child.dataset?.field||child.name
+  ))
+ );
+ if(detailsStart)grid.insertBefore(button,detailsStart);
+ else grid.append(button);
  const allKeys=new Set(measures.map(([key])=>key));
  function update(){
   const visible=new Set(visibleFieldsForExercise(exerciseInput?.value));
-  let others=0;
+  let others=0,savedHidden=0;
   for(const label of Array.from(grid.children)){
    if(String(label.tagName).toLowerCase()!=='label')continue;
    const field=Array.from(label.children).find(child=>{
@@ -77,11 +85,12 @@ function installExerciseVisibility(grid,exerciseInput){
    if(!field)continue;
    const key=field.dataset?.field||field.name;
    const extra=!visible.has(key);
-   if(extra)others++;
+   if(extra){others++;if(field.value!==''&&field.value!=null)savedHidden++;}
    label.hidden=extra&&button.dataset.expanded!=='yes';
   }
   button.hidden=others===0;
-  button.textContent=button.dataset.expanded==='yes'?'Hide other measurements':'Show other measurements';
+  button.textContent=button.dataset.expanded==='yes'?'Hide other measurements':
+   'Show other measurements'+(savedHidden?' ('+savedHidden+' saved)':'');
  }
  button.addEventListener('click',()=>{button.dataset.expanded=button.dataset.expanded==='yes'?'no':'yes';update();});
  exerciseInput?.addEventListener('input',()=>{button.dataset.expanded='no';update();});
