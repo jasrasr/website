@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, key-free quick entry, optional AI and screenshot import guidance for Workout Tracker.
-Revision: 1.3.2
+Revision: 1.4.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
+Changelog: 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
 -->
 # Workout Tracker
 
@@ -20,6 +20,41 @@ Private PHP workout logger at https://jasr.me/github/workout-tracker/ using shar
 5. Dates default to the user's **browser-local current date**. Time defaults to the current local time at review. "Yesterday", "last Monday", an ISO date, and US numeric MM/DD/YYYY dates are supported for backdating. An optional time control exists under review details.
 
 The parser is rule-based rather than a general LLM. It recognizes common exercises and explicit numbers but does **not guess missing values**. Unrecognized exercises use the collapsed manual entry form. It does not analyze photos.
+
+## Flexible measurements and weighted sets (v1.4.0; issue #128)
+
+Organization **tags** (such as strength or cardio) remain separate from **measured numeric values**. Filters still organize workouts by tag.
+
+### Treadmill and other cardio
+
+- Record miles, minutes, speed, incline and **calories burned (kcal)** independently. The local parser recognizes "treadmill 2 miles for 30 minutes, incline 5%, 320 calories"; it never guesses calories.
+- Under **Additional measurements**, tap **+ Add measurement** to log user-defined numeric metrics such as **Elevation gain / ft / 250**, **Resistance level / (blank) / 7**, or **Heart rate / bpm / 132**. You can track up to 12 custom metrics for one workout.
+- Progress charts match custom metrics by a normalized name plus unit. Keep that pair consistent across dates. Custom metrics allow signed values for measurements such as change from baseline.
+
+### Multiple weightlifting sets in ONE exercise
+
+- Select bench press, deadlift, or another supported strength exercise. Under **Individual sets**, tap **+ Add set** to record each load and repetition count in order, up to 40 sets in one workout record.
+- Example on one date: **95 lb × 12**, **115 lb × 10**, **135 lb × 8**, **115 lb × 10**.
+- Show **40 total reps**, **135 lb heaviest set**, **4,520 lb total volume** (95×12 + 115×10 + 135×8 + 115×10), and **4 sets**. The chart offers these separate strength-progress metrics.
+- Bodyweight sets may leave the load blank. Do not report an average weight for sets with varying loads.
+- Local natural-language parsing recognizes ordered wording such as "bench press 95 lb x 12, 115 lb x 10, 135 lb x 8". Review the result before saving; optional AI fallback remains opt-in.
+- A legacy bench-press entry with a scalar reps/sets/weight summary remains a **legacy summary**. The application never invents individual sets from those totals.
+
+### Persistence and privacy
+
+- The per-user JsonStore files retain their current IDs, session IDs, timestamps, notes, photo references, tags, edit history, record order and schemaVersion 1 envelope. **No database migration, reset, delete or destructive import.**
+- Optional per-record additions: calories_kcal (number/null), custom_metrics (array of name, unit, value), and sets_detail (ordered reps, weight_lb and note). Existing records without them still work.
+- Older clients that omit these optional fields must never clear them. Edits remain authenticated, CSRF protected, locked, revision-checked and audited; stale edits return HTTP 409.
+- Custom labels/units and numeric values receive strict server validation. The browser builds labels using safe textContent, not HTML injection.
+- Before Hostinger deployment, **back up the ignored storage directory, JSON files and private photos**, verify the webhook does not wipe runtime storage, and compare old records before and after.
+- Manual verification: save treadmill with calories/custom metric, save one bench press with different loads, refresh, edit the last set, and verify the original treadmill entries and uploaded photos remain accessible.
+
+### New test commands
+
+    php workout-tracker/tests/measurements.test.php
+    node workout-tracker/tests/advanced.test.cjs
+
+The new tests operate on synthetic data and temporary JSON files only. Existing parser, edit, security and mobile validation remain mandatory.
 
 ## Exercise-specific measurements and mobile layout (v1.3.2)
 
@@ -76,7 +111,7 @@ Hostinger setup (never do this inside GitHub):
 - storage/.htaccess: deny direct access to JSON records and photos. Photos are private but not yet viewable in the app.
 - JSON follows the 1-Framework schemaVersion 1 records envelope, separated by hashed stable user ID.
 - Saved exercises share a session_id, the chosen date, local time with UTC offset, and creation timestamp. Each batch is written atomically.
-- Existing entries support revision-checked editing and retained previous values. OCR, authenticated photo viewing, body weight and blood-pressure logs are future work.
+- Existing entries support revision-checked editing and retained previous values, optional calories/custom metrics, and per-set weights. OCR, authenticated photo viewing, body weight and blood-pressure logs remain future work.
 
 ## Verification
 
