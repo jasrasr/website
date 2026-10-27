@@ -2,12 +2,20 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release history for private Workout Tracker.
-Revision: 1.2.1
+Revision: 1.2.2
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
+Changelog: 1.2.2 - Document workout-specific fields and iPhone-safe date/time layout in v1.3.2. 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
 -->
 # Workout Tracker changelog
+
+## v1.3.2 — 2026-10-27
+
+- Display only measurements relevant to the named exercise across natural-language review, manual entry and editing saved workouts (e.g. no reps/sets for treadmill; weights/reps/sets for bench press).
+- Provide **Show other measurements** for unusual combinations, retaining hidden historical values in the existing form and JSON fields without any storage migration.
+- Make mobile fields single-column and ensure date/time inputs cannot overlap adjacent fields on iOS.
+- Limit trend measurement choices to relevant exercise fields plus any atypical values already stored.
+- Add regression checks for treadmill/strength field visibility, preservation of untouched entry values and date/time layout rules.
 
 ## v1.3.1 — 2026-10-27
 
