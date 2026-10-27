@@ -28,10 +28,12 @@ function workout_prepare_backup(string $jsonPath, string $storageRoot, string $u
     $tmp = tempnam(sys_get_temp_dir(), 'workout-export-');
     if ($tmp === false) throw new RuntimeException('Unable to prepare a private backup.');
     $zip = new ZipArchive();
+    $opened = false;
     try {
         if ($zip->open($tmp, ZipArchive::OVERWRITE) !== true) {
             throw new RuntimeException('Unable to create a backup archive.');
         }
+        $opened = true;
         $instructions =
             "Workout Tracker private backup\n"
             . "Created: " . gmdate(DATE_ATOM) . "\n"
@@ -52,10 +54,12 @@ function workout_prepare_backup(string $jsonPath, string $storageRoot, string $u
                 throw new RuntimeException('Unable to include every personal workout photo.');
             }
         }
-        if (!$zip->close()) throw new RuntimeException('Unable to finalize the backup archive.');
+        $complete = $zip->close();
+        $opened = false;
+        if (!$complete) throw new RuntimeException('Unable to finalize the backup archive.');
         return $tmp;
     } catch (Throwable $e) {
-        $zip->close();
+        if ($opened) $zip->close();
         unlink($tmp);
         throw $e;
     }
