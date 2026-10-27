@@ -1,10 +1,10 @@
 /* File Name: app.js
 Author: Jason Lamb (with help from ChatGPT)
 Description: Workout quick entry, editable review, and per-exercise trends.
-Revision: 1.4.0
+Revision: 1.5.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.4.0 - Editable set-by-set weight/reps, custom measurements, calories and exercise-specific progress. 1.3.2 - Optimize mobile exercise fields, retain hidden measurements, and keep optional metrics near the measurements. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
+Changelog: 1.5.0 - Add authenticated workout details/photo viewer and private backup download UI. 1.4.0 - Editable set-by-set weight/reps, custom measurements, calories and exercise-specific progress. 1.3.2 - Optimize mobile exercise fields, retain hidden measurements, and keep optional metrics near the measurements. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
 'use strict';
 const $=selector=>document.querySelector(selector);
 const measures=[['distance_miles','Miles'],['duration_minutes','Minutes'],['speed_mph','Speed (mph)'],['incline_percent','Treadmill incline (%)'],['calories_kcal','Calories (kcal)'],['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']];
@@ -13,6 +13,7 @@ let editingId=null;
 let editingRevision=null;
 let showAllHistory=false;
 let manualAdvanced=null;
+let detailEntryId=null;
 function localDate(d=new Date()){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
 function localTime(d=new Date()){return [String(d.getHours()).padStart(2,'0'),String(d.getMinutes()).padStart(2,'0')].join(':');}
 function offset(d=new Date()){const n=-d.getTimezoneOffset(),a=Math.abs(n);return (n>=0?'+':'-')+String(Math.floor(a/60)).padStart(2,'0')+':'+String(a%60).padStart(2,'0');}
@@ -218,16 +219,124 @@ function historyItems(){
  return entries.slice().filter(e=>!tag||(e.tag||'')===tag)
   .sort((a,b)=>(b.performed_at||b.date).localeCompare(a.performed_at||a.date));
 }
+
+/** Mobile-readable workout detail view. All user-provided content uses textContent. */
+function openWorkoutDetails(id){
+ const entry=entries.find(row=>row.id===id);
+ if(!entry){message('That workout is no longer available. Refresh your history.',true);return;}
+ detailEntryId=id;
+ const title=$('#detailTitle');title.textContent=titleCase(entry.exercise)+' details';
+ $('#detailDate').textContent=niceDay(entry.date)+
+  (typeof entry.performed_at==='string'?' · '+entry.performed_at.slice(11,16)+' local time':'')+
+  (entry.tag?' · #'+entry.tag:'');
+ const region=$('#detailSummary');region.replaceChildren();
+ const fact=(label,value)=>{
+  const row=document.createElement('div');row.className='detail-fact';
+  const term=document.createElement('span');term.className='detail-label';term.textContent=label;
+  const amount=document.createElement('strong');amount.textContent=String(value);
+  row.append(term,amount);region.append(row);
+ };
+ const labels={
+  distance_miles:['Distance', ' miles'],
+  duration_minutes:['Duration',' minutes'],
+  speed_mph:['Speed',' mph'],
+  incline_percent:['Treadmill incline','%'],
+  calories_kcal:['Calories burned',' kcal'],
+  reps:['Reps (legacy summary)',''],
+  sets:['Sets (legacy summary)',''],
+  weight_lb:['Weight (legacy summary)',' lb']
+ };
+ Object.entries(labels).forEach(([key,[label,unit]])=>{
+  if(entry[key]!==null && entry[key]!==undefined && entry[key]!=='')
+   fact(label,entry[key]+unit);
+ });
+ const stats=WorkoutAdvanced.stats(entry);
+ if(stats){
+  const heading=document.createElement('h3');heading.textContent='Individual sets';region.append(heading);
+  const list=document.createElement('ol');list.className='detail-sets';
+  entry.sets_detail.forEach((set,index)=>{
+   const item=document.createElement('li');
+   const label=document.createElement('span');label.textContent=
+    'Set '+(index+1)+': '+(set.weight_lb==null?'Bodyweight':set.weight_lb+' lb')+' × '+set.reps+' reps';
+   item.append(label);
+   if(set.note){const note=document.createElement('small');note.textContent=String(set.note);item.append(note);}
+   list.append(item);
+  });
+  region.append(list);
+  fact('Total repetitions',stats.total_reps);
+  if(stats.max_weight_lb!==null){
+   fact('Heaviest set',stats.max_weight_lb+' lb');
+   fact('Total lifted volume',stats.total_volume_lb+' lb');
+  }
+ }
+ if(Array.isArray(entry.custom_metrics) && entry.custom_metrics.length){
+  const heading=document.createElement('h3');heading.textContent='Additional measurements';region.append(heading);
+  entry.custom_metrics.forEach(metric=>{
+   if(typeof metric?.name==='string')
+    fact(metric.name,String(metric.value??'')+(metric.unit?' '+metric.unit:''));
+  });
+ }
+ if(entry.notes){
+  const heading=document.createElement('h3');heading.textContent='Notes';region.append(heading);
+  const note=document.createElement('p');note.className='detail-notes';note.textContent=entry.notes;
+  region.append(note);
+ }
+ if(Array.isArray(entry.edit_history) && entry.edit_history.length){
+  const history=document.createElement('details');
+  const summary=document.createElement('summary');
+  summary.textContent='Edit history · '+entry.edit_history.length+' previous version'+
+   (entry.edit_history.length===1?'':'s');
+  history.append(summary);
+  // Read-only audit details: no restoration/write operation.
+  entry.edit_history.slice(-10).reverse().forEach(change=>{
+   const previous=change.previous;
+   if(!previous || typeof previous!=='object')return;
+   const paragraph=document.createElement('p');paragraph.className='footnote';
+   paragraph.textContent=(change.edited_at||'Edited')+' — '+
+    (previous.exercise||'Workout')+' · '+(previous.date||'')+
+    ' · '+describe(previous)+(previous.notes?' · '+previous.notes:'');
+   history.append(paragraph);
+  });
+  region.append(history);
+ }
+ const media=$('#detailImage');media.replaceChildren();media.hidden=true;
+ if(typeof entry.photo==='string' && entry.photo!==''){
+  const image=document.createElement('img');
+  const src='?photo='+encodeURIComponent(id);
+  image.src=src;image.alt='Private photo attached to '+entry.exercise+' workout';
+  image.loading='lazy';
+  const fallback=document.createElement('p');fallback.className='footnote';fallback.textContent=
+   'Photo unavailable. Check that private storage is preserved on Hostinger.';
+  fallback.hidden=true;
+  image.addEventListener('error',()=>{image.hidden=true;fallback.hidden=false;});
+  const link=document.createElement('a');link.href=src;link.target='_blank';
+  link.rel='noopener noreferrer';link.textContent='Open full-size photo';
+  const caption=document.createElement('p');caption.className='footnote';
+  caption.textContent='Only your authenticated account can view this image.';
+  media.append(image,link,fallback,caption);media.hidden=false;
+ }
+ $('#detailPanel').hidden=false;
+ $('#detailPanel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function closeWorkoutDetails(){
+ detailEntryId=null;$('#detailPanel').hidden=true;$('#detailImage').replaceChildren();
+}
+
 function renderHistory(){
  const history=historyItems(),visible=showAllHistory?history:history.slice(0,10);
  $('#recent').replaceChildren(...visible.map(e=>{
   const li=document.createElement('li'),name=document.createElement('strong');name.textContent=titleCase(e.exercise);
   const day=document.createElement('span');day.textContent=niceDay(e.date);
   const detail=document.createElement('small');detail.textContent=describe(e)+(e.tag?' · #'+e.tag:'')+(e.photo?' · Photo saved':'');
+  const actions=document.createElement('div');actions.className='history-actions';
+  const view=document.createElement('button');view.type='button';view.className='history-edit history-view';
+  view.textContent='Details';view.disabled=!e.id;
+  view.setAttribute('aria-label','View '+e.exercise+' details from '+niceDay(e.date));
+  view.addEventListener('click',()=>openWorkoutDetails(e.id));
   const edit=document.createElement('button');edit.type='button';edit.className='history-edit';
   edit.textContent='Edit';edit.dataset.editId=e.id||'';
   edit.disabled=!e.id||!e._revision;edit.setAttribute('aria-label','Edit '+e.exercise+' from '+niceDay(e.date));
-  li.append(name,day,detail,edit);return li;
+  actions.append(view,edit);li.append(name,day,detail,actions);return li;
  }));
  const toggle=$('#toggleHistory');toggle.hidden=history.length<=10;
  toggle.textContent=showAllHistory?'Show latest 10':'View all '+history.length+' entries';
@@ -332,7 +441,14 @@ async function load(){try{const data=await api();entries=data.entries;$('#csrf')
  $('#aiHint').textContent=data.ai_available
   ?'AI fallback is configured. Select it only when the local interpretation needs another try. Your description will be sent to your configured AI provider.'
   :'AI fallback is optional and disabled until config.local.example.php is copied to config.local.php on Hostinger with a private API key.';
- refresh();}catch(e){message(e.message,true);}}
+ $('#backupCsrf').value=data.csrf;
+ $('#backupBtn').disabled=!data.backup_available;
+ $('#backupStatus').textContent=data.backup_available
+  ?'This ZIP contains your original workout records, edit history and attached photos. Store it privately.'
+  :'ZIP exports are unavailable on this server; PHP ZipArchive must be enabled.';
+ refresh();
+ if(detailEntryId && !$('#detailPanel').hidden)openWorkoutDetails(detailEntryId);
+ }catch(e){message(e.message,true);}}
 $('#dateLabel').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
 $('#parseBtn').addEventListener('click',review);
 $('#aiParseBtn').addEventListener('click',retryWithAi);
@@ -344,6 +460,9 @@ $('#toggleHistory').addEventListener('click',()=>{showAllHistory=!showAllHistory
 $('#recent').addEventListener('click',e=>{const button=e.target.closest('[data-edit-id]');if(button)beginEdit(button.dataset.editId);});
 $('#editForm').addEventListener('submit',e=>{e.preventDefault();submitEdit();});
 $('#cancelEdit').addEventListener('click',closeEdit);
+$('#closeDetail').addEventListener('click',closeWorkoutDetails);
+$('#editFromDetail').addEventListener('click',()=>{if(detailEntryId)beginEdit(detailEntryId);});
+$('#backupForm').addEventListener('submit',()=>{$('#backupStatus').textContent='Preparing your private backup download…';});
 $('#manualForm').addEventListener('submit',async e=>{
  e.preventDefault();
  const fd=new FormData(e.currentTarget),row=Object.fromEntries(fd.entries());
