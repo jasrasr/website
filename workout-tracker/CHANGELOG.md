@@ -2,12 +2,21 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release history for private Workout Tracker.
-Revision: 1.3.0
+Revision: 1.4.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.3.0 - Document v1.4.0 calories, custom numeric metrics and per-set strength logging. 1.2.2 - Document workout-specific fields and iPhone-safe date/time layout in v1.3.2. 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
+Changelog: 1.4.0 - Document v1.5.0 authenticated photos, workout details and ZIP backups. 1.3.0 - Document v1.4.0 calories, custom numeric metrics and per-set strength logging. 1.2.2 - Document workout-specific fields and iPhone-safe date/time layout in v1.3.2. 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
 -->
 # Workout Tracker changelog
+
+## v1.5.0 — 2026-10-27
+
+- Add a mobile-first **Details** view for each saved workout, including notes, individual lifting sets, custom measurements, totals and edit history. Continue editing through the existing revision-checked **Edit** flow.
+- Serve uploaded photos through a **session-authorized, per-user file resolver**. Requests accept workout entry IDs, not filenames or paths, and reject cross-account access, traversal, symlinks and non-image content. Private storage remains denied by Apache/LiteSpeed.
+- Add an authenticated, CSRF-protected **Download my workout backup** ZIP action with unchanged original JSON plus only owned referenced photos. Archives are prepared outside the web root and never replace or delete live data.
+- Reject incomplete exports when a stored photo is missing. Keep restoration as a separate, explicitly authorized administrator process.
+- Add PHP media/backup integrity tests and JavaScript detail-view/mobile regression tests to CI, plus a Hostinger backup and recovery runbook.
+- No database migration or change to existing JSON file names, record IDs, edit history, photos or version-1 schema.
 
 ## v1.4.0 — 2026-10-27 (Issue #128)
 
