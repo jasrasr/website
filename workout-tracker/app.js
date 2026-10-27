@@ -1,10 +1,10 @@
 /* File Name: app.js
 Author: Jason Lamb (with help from ChatGPT)
 Description: Workout quick entry, editable review, and per-exercise trends.
-Revision: 1.3.0
+Revision: 1.3.1
 Created Date: 2026-10-21
-Modified Date: 2026-10-22
-Changelog: 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
+Modified Date: 2026-10-27
+Changelog: 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
 'use strict';
 const $=selector=>document.querySelector(selector);
 const measures=[['distance_miles','Miles'],['duration_minutes','Minutes'],['speed_mph','Speed (mph)'],['incline_percent','Treadmill incline (%)'],['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']];
@@ -134,7 +134,7 @@ function refresh(){
 }
 function editField(name,label,value,type='number'){
  const input=fieldInput(name,label,value,type);
- input.classList.add(name==='exercise'||name==='tag'?'full':'');
+ if(name==='exercise'||name==='tag')input.classList.add('full');
  return input;
 }
 function beginEdit(id){

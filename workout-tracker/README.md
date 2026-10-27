@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, key-free quick entry, optional AI and screenshot import guidance for Workout Tracker.
-Revision: 1.3.0
+Revision: 1.3.1
 Created Date: 2026-10-21
-Modified Date: 2026-10-22
-Changelog: 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
+Modified Date: 2026-10-27
+Changelog: 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
 -->
 # Workout Tracker
 
@@ -20,6 +20,13 @@ Private PHP workout logger at https://jasr.me/github/workout-tracker/ using shar
 5. Dates default to the user's **browser-local current date**. Time defaults to the current local time at review. "Yesterday", "last Monday", an ISO date, and US numeric MM/DD/YYYY dates are supported for backdating. An optional time control exists under review details.
 
 The parser is rule-based rather than a general LLM. It recognizes common exercises and explicit numbers but does **not guess missing values**. Unrecognized exercises use the collapsed manual entry form. It does not analyze photos.
+
+## Edit button repair (v1.3.1)
+
+- Fix a JavaScript `DOMException` that prevented an existing workout's **Edit** button from opening its form. Empty CSS class tokens were being added to ordinary date/number fields; classes are now only added when needed.
+- `app.js?v=1.3.1` forces browser refresh of the corrected code after Hostinger deployment; PHP storage schema and saved workout files are unchanged.
+- `node workout-tracker/tests/edit-button.test.cjs` exercises the actual history click listener and populated editor with realistic class-token validation, including legacy workouts that have no tag or incline; the CI workflow now runs it.
+- After deployment, tap **Edit** on both the October 21 and October 22 workouts. Each should open a prefilled form; **Cancel** should leave values unchanged. The live workout files must be preserved as before.
 
 ## Edit saved workouts, tracking tags and treadmill incline (v1.3.0)
 
