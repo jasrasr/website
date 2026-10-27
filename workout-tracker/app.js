@@ -125,6 +125,7 @@ function renderReview(suggestions){
   const details=document.createElement('details'),heading=document.createElement('summary');heading.textContent='Edit measurements or date';
   const grid=document.createElement('div');grid.className='field-grid';
   const exerciseField=fieldInput('exercise','Exercise',entry.exercise,'text');
+  exerciseField.classList.add('full');
   grid.append(exerciseField,fieldInput('date','Workout date',entry.date,'date'));
   measures.forEach(item=>grid.append(fieldInput(item[0],item[1],entry[item[0]])));
   const tagInput=fieldInput('tag','Tracking tag',entry.tag||'','text');tagInput.classList.add('full');grid.append(tagInput);
