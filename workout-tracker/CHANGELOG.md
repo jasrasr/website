@@ -2,12 +2,21 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release history for private Workout Tracker.
-Revision: 1.4.1
+Revision: 1.5.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.4.1 - Document optional heart-rate BPM field and local parser in v1.5.1. 1.4.0 - Document v1.5.0 authenticated photos, workout details and ZIP backups. 1.3.0 - Document v1.4.0 calories, custom numeric metrics and per-set strength logging. 1.2.2 - Document workout-specific fields and iPhone-safe date/time layout in v1.3.2. 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
+Changelog: 1.5.0 - Record v1.6.0 attendance dates, weekend-excluded percentages, and streaks. 1.4.1 - Document optional heart-rate BPM field and local parser in v1.5.1. 1.4.0 - Document v1.5.0 authenticated photos, workout details and ZIP backups. 1.3.0 - Document v1.4.0 calories, custom numeric metrics and per-set strength logging. 1.2.2 - Document workout-specific fields and iPhone-safe date/time layout in v1.3.2. 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
 -->
 # Workout Tracker changelog
+
+## v1.6.0 — 2026-10-27
+
+- Add four attendance metrics: 7-day calendar / weekday percentages and overall calendar / weekday percentages, each starting no earlier than the first workout date.
+- Count distinct workout dates, not individual exercises. Example on October 27 for dates 21, 22, 27: **3/7 = 42.9%** and **3/5 = 60.0%**.
+- Show current and longest streaks for calendar days and weekdays only; weekends do not break weekday streaks, and today is treated as unfinished.
+- Mobile-ready two-column cards and a seven-day history strip with completed, missing and weekend statuses. Adapt to very narrow phone screens.
+- Keep everything read-only from existing per-user workout dates: no migration, new database table, JSON edits, or data reset.
+- Add isolated calendar/DST/weekday regression tests and safe DOM mobile rendering tests.
 
 ## v1.5.1 — 2026-10-27
 
