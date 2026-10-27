@@ -1,12 +1,16 @@
 <!-- File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Coin Flip cumulative release history.
-Revision: 1.0.1
+Revision: 1.0.2
 Created Date: 2026-10-27
 Modified Date: 2026-10-27
-Changelog: 1.0.1 - Document viewport-height layout fix. 1.0.0 - Initial release.
+Changelog: 1.0.2 - Document clickable coin. 1.0.1 - Document viewport-height layout fix. 1.0.0 - Initial release.
 -->
 # Changelog
+
+## 1.0.2 - 2026-10-27
+- Click or tap the coin to flip; the separate button and Space shortcut remain available.
+- Coin supports keyboard focus, Enter and Space activation, a hover cue, and disabled state during a toss.
 
 ## 1.0.1 - 2026-10-27
 - Fit the entire interface to the dynamic viewport height, scaling the coin to the space remaining above the controls.
