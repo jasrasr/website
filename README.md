@@ -2,10 +2,11 @@
 File Name     : README.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Repository overview, development conventions, project index, and deployment guidance.
-Revision      : 1.0.7
+Revision      : 1.0.8
 Created Date  : 2025-02-14
-Modified Date : 2026-10-27
+Modified Date : 2026-10-29
 Changelog     :
+  Rev 1.0.8 - Indexed authenticated Investment Tracker with tax-lot history and private CSV import.
   Rev 1.0.7 - Added Coin Flip to the project index.
   Rev 1.0.6 - Set regular merge commits as the default for preserving PR commit history.
   Rev 1.0.5 - Clarified exact-name config examples, protected placeholders and optional opt-in AI fallback.
@@ -61,6 +62,7 @@ The [repository-wide TODO list](ALL-TODOS.md) collects the TODO files kept in ea
 | Project | Repo path / docs | Live or target URL | Notes |
 |---|---|---|---|\n| Build Signal walkthrough | [build-signal/](build-signal/) / [README](build-signal/README.md) | [Private ChatGPT Site](https://jason-ai-build-flow.jasrasr.chatgpt.site) | Illustrated, narrated AI development workflow. Source is here for local Codex CLI visual refinement; the linked Site remains owner-only. |
 | Coin Flip | [coin-flip/](coin-flip/) / [README](coin-flip/README.md) | <a href="https://jasr.me/github/coin-flip/" target="_new">jasr.me/github/coin-flip</a> | Giant animated coin, random heads or tails, keyboard control, and confetti. |
+| Investment Tracker | [investment-tracker/](investment-tracker/) / [README](investment-tracker/README.md) | <a href="https://jasr.me/github/investment-tracker/" target="_new">jasr.me/github/investment-tracker</a> | Private split-aware, per-purchase tax lots, portfolio charts, sell simulation, manual market prices and normalized CSV import; requires central project grant and protected writable storage. Source prepared; live deployment not verified. |
 | Workout Tracker | [workout-tracker/](workout-tracker/) / [README](workout-tracker/README.md) | <a href="https://jasr.me/github/workout-tracker/" target="_new">jasr.me/github/workout-tracker</a> | Private, no-key natural-language fitness logging, multiple exercises per session, mobile dashboard and separate trend charts. Requires central project access. |
 | Game Buzzer | [game-buzzer/](game-buzzer/) / [README](game-buzzer/README.md) | <a href="https://jasr.me/github/game-buzzer/" target="_new">jasr.me/github/game-buzzer</a> | Six-team phone buzzer and arrival-survey Majority Rules game, with host controls and projector scoreboard. Requires private host setup. |
 | Webstats | [webstats/](webstats/) / [README](webstats/README.md) | <a href="https://jasr.me/github/webstats/" target="_new">jasr.me/github/webstats</a> | Custom multi-site page views and clicks with a private dashboard. Requires setup and tracker installation. |

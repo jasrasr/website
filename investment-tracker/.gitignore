@@ -1,0 +1,11 @@
+# File Name: .gitignore
+# Author: Jason Lamb (with help from ChatGPT)
+# Description: Keep runtime financial data and host private settings out of the repository.
+# Revision: 1.0.0
+# Created Date: 2026-10-29
+# Modified Date: 2026-10-29
+# Changelog: 1.0.0 - Exclude account JSON, locks, temp files, and private config.
+config.local.php
+storage/*
+!storage/.htaccess
+!storage/.placeholder
