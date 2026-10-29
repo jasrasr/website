@@ -5,7 +5,7 @@
 // Revision: 2.3
 // Author: Jason Lamb
 // ============================================================================
-error_reporting(E_ALL);ini_set('display_errors',1);require_once __DIR__.'/device_init.php';
+error_reporting(E_ALL);ini_set('display_errors', 0);require_once __DIR__.'/device_init.php';
 $isPasswordAdmin=!empty($_SESSION['admin_logged_in']);
 if(!$isAdminTrusted&&!$isPasswordAdmin){header('Location: login.php?return=admin');exit;}
 $currentIP=$visitorIP;

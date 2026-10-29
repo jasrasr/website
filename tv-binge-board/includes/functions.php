@@ -23,6 +23,33 @@ function app_href(string $path): string
     return app_base_prefix() . ltrim($path, '/');
 }
 
+function app_safe_return_location($candidate, string $fallback): string
+{
+    if (!is_string($candidate) || $candidate === '' || preg_match('/[\x00-\x1F\x7F\\\\]/', $candidate)) {
+        return $fallback;
+    }
+
+    $path = parse_url($candidate, PHP_URL_PATH);
+    if (!is_string($path) || $path === '' || str_contains(rawurldecode($path), '..')) {
+        // The one leading "../" from an API route is handled below.
+        if (!str_starts_with($candidate, '../') || !is_string($path) || str_contains(rawurldecode(substr($path, 3)), '..')) {
+            return $fallback;
+        }
+    }
+
+    if (str_starts_with($candidate, '../') && !str_starts_with($candidate, '../../')) {
+        return $candidate;
+    }
+
+    $script = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
+    $appRoot = rtrim(dirname(dirname($script)), '/');
+    if ($appRoot !== '' && str_starts_with($candidate, $appRoot . '/') && !str_starts_with($candidate, '//')) {
+        return $candidate;
+    }
+
+    return $fallback;
+}
+
 function app_flash(?string $message = null, string $type = 'info'): ?array
 {
     if ($message !== null) {

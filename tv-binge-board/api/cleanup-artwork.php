@@ -17,5 +17,5 @@ app_verify_csrf();
 $stats = app_remove_unused_artwork_cache();
 app_log_activity((string)$admin['username'], 'artwork-cache-cleanup', 'public-cache', $stats);
 app_flash('Artwork cleanup complete. Checked: ' . $stats['checked'] . '. Kept: ' . $stats['kept'] . '. Removed: ' . $stats['removed'] . '. Errors: ' . $stats['errors'] . '.', $stats['errors'] > 0 ? 'warning' : 'success');
-header('Location: ' . (string)($_POST['redirect'] ?? '../admin/site-settings.php'));
+header('Location: ' . app_safe_return_location($_POST['redirect'] ?? null, '../admin/site-settings.php'));
 exit;

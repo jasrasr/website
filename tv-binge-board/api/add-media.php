@@ -90,5 +90,5 @@ if ($index === null) {
 }
 app_save_library($targetUser, $library);
 app_log_activity((string)$user['username'], 'media-added-or-updated', $targetUser, ['uid' => $uid, 'tmdb_id' => $tmdbId]);
-header('Location: ' . (string)($_POST['redirect'] ?? '../watchlist.php'));
+header('Location: ' . app_safe_return_location($_POST['redirect'] ?? null, '../watchlist.php'));
 exit;

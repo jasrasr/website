@@ -6,7 +6,7 @@
 // Author: Jason Lamb
 // ============================================================================
 
-error_reporting(E_ALL);ini_set('display_errors',1);if(session_status()===PHP_SESSION_NONE)session_start();require_once __DIR__.'/device_init.php';if(!$isAdminTrusted)die('<h2>Access denied.</h2>');
+error_reporting(E_ALL);ini_set('display_errors', 0);if(session_status()===PHP_SESSION_NONE)session_start();require_once __DIR__.'/device_init.php';if(!$isAdminTrusted)die('<h2>Access denied.</h2>');
 $stationsFile=__DIR__.'/stations.json';$data=['brands'=>[],'locations'=>[]];if(file_exists($stationsFile)){$d=json_decode(file_get_contents($stationsFile),true);if(is_array($d))$data=array_merge($data,$d);}if(!is_array($data['locations']??null))$data['locations']=[];
 ?>
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Manage Fuel Stations</title><style>body{font-family:sans-serif;max-width:1200px;margin:auto;padding:1rem}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}.card{border:1px solid #ddd;border-radius:8px;padding:1rem;margin:1rem 0}.card input{width:100%;padding:.4rem;box-sizing:border-box}.actions{margin-top:.8rem;display:flex;gap:.5rem}.save{background:#28a745;color:#fff;border:0;padding:.5rem .8rem;border-radius:4px}.delete{background:#dc3545;color:#fff;border:0;padding:.5rem .8rem;border-radius:4px}.msg{padding:.6rem;border-radius:6px;background:#eef;margin-bottom:1rem}.note{font-size:.82rem;color:#666}@media(max-width:700px){.grid{grid-template-columns:1fr}}</style></head><body>

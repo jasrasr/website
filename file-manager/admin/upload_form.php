@@ -24,6 +24,7 @@ require_once __DIR__ . '/../config.php';
 <body>
     <h1>Secure Upload Form</h1>
     <p>This form is intended for admin use only and submits to the JSON API endpoint.</p>
+    <p>Only documents, pictures, videos, and audio files are accepted.</p>
 
     <form action="../api/upload.php" method="post" enctype="multipart/form-data">
         <label for="directory">Destination directory :</label>

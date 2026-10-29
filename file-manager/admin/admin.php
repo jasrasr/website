@@ -17,6 +17,7 @@
 */
 
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../file-policy.php';
 require_once __DIR__ . '/mfa_lib.php';
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -111,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $newFileName = trim($newFileName);
             $subfolder   = trim($subfolder);
 
-            if ($newFileName === '' || preg_match('/[\/\\]/', $newFileName)) {
+            if (!file_manager_allowed_filename($newFileName)) {
                 $actionMessage = "Invalid file name.";
             } else {
                 $baseDir = $dirPath;
@@ -303,11 +304,11 @@ $mfaStatusColor = $mfaConfigured
         <br><br>
 
         <label for="new_filename">File name (with extension) :</label>
-        <input type="text" id="new_filename" name="new_filename" placeholder="index.html or notes.txt" required>
+        <input type="text" id="new_filename" name="new_filename" placeholder="notes.txt or report.md" required>
         <br><br>
 
         <label for="file_content">File content :</label><br>
-        <textarea id="file_content" name="file_content" rows="15" cols="100" placeholder="Enter your HTML, JSON, config, etc. here..."></textarea>
+        <textarea id="file_content" name="file_content" rows="15" cols="100" placeholder="Enter document text here..."></textarea>
         <br><br>
 
         <button type="submit">Create / Save File</button>

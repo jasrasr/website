@@ -53,5 +53,5 @@ try {
     app_flash('Artwork cache failed: ' . $ex->getMessage(), 'danger');
 }
 
-header('Location: ' . (string)($_POST['redirect'] ?? '../watchlist.php'));
+header('Location: ' . app_safe_return_location($_POST['redirect'] ?? null, '../watchlist.php'));
 exit;

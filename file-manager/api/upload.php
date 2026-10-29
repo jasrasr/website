@@ -20,16 +20,18 @@
 */
 
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../file-policy.php';
 
 // If you have the MaxMind PHP library installed via Composer, include it here.
 if (file_exists(__DIR__ . '/../geoip/vendor/autoload.php')) {
     require_once __DIR__ . '/../geoip/vendor/autoload.php';
-    use GeoIp2\Database\Reader;
+    $readerClass = \GeoIp2\Database\Reader::class;
 } else {
-    class Reader {
+    class FallbackGeoIpReader {
         public function __construct($db) {}
         public function country($ip) { return (object)['country' => (object)['isoCode' => 'US']]; }
     }
+    $readerClass = FallbackGeoIpReader::class;
 }
 
 header('Content-Type: application/json');
@@ -44,7 +46,7 @@ $computer = $_POST['computer'] ?? "N/A";
 // GeoIP: US-only restriction
 // --------------------------------------------------------
 try {
-    $reader  = new Reader($geoDB);
+    $reader  = new $readerClass($geoDB);
     $record  = $reader->country($clientIP);
     $country = $record->country->isoCode;
 } catch (Exception $e) {
@@ -120,7 +122,14 @@ if (!isset($_FILES['fileToUpload']) || !is_uploaded_file($_FILES['fileToUpload']
     exit;
 }
 
-$filename   = basename($_FILES["fileToUpload"]["name"]);
+$uploadName = $_FILES["fileToUpload"]["name"] ?? null;
+$filename = is_string($uploadName) ? basename($uploadName) : '';
+if (!file_manager_allowed_filename($filename)) {
+    write_log($LOG_UPLOAD, "BLOCK FILE TYPE | IP=$clientIP | SRC=$source");
+    http_response_code(415);
+    echo json_encode(["status" => "blocked", "reason" => "Only document, picture, video, and audio files are allowed."]);
+    exit;
+}
 $targetFile = $targetPath . $filename;
 
 // Versioning: move existing base file to next _vN

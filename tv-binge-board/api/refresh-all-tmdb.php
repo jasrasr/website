@@ -39,5 +39,5 @@ foreach ($library['items'] as $index => $item) {
 app_save_library($targetUser, $library);
 app_log_activity((string)$user['username'], 'tmdb-library-refresh', $targetUser, ['refreshed' => $refreshed, 'failed' => $failed]);
 app_flash('TMDB refresh complete. Refreshed metadata/posters: ' . $refreshed . '. Failed: ' . $failed . '.', $failed > 0 ? 'warning' : 'success');
-header('Location: ' . (string)($_POST['redirect'] ?? '../watchlist.php'));
+header('Location: ' . app_safe_return_location($_POST['redirect'] ?? null, '../watchlist.php'));
 exit;

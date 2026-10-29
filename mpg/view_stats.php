@@ -5,7 +5,7 @@
 // Revision: 1.4
 // Author: Jason Lamb
 // ============================================================================
-error_reporting(E_ALL);ini_set('display_errors',1);if(session_status()===PHP_SESSION_NONE)session_start();
+error_reporting(E_ALL);ini_set('display_errors', 0);if(session_status()===PHP_SESSION_NONE)session_start();
 $plate=preg_replace('/[^A-Z0-9]/','',strtoupper(trim($_GET['plate']??'')));if($plate==='')die('<h2>No license plate specified.</h2>');$logFile=__DIR__."/logs/{$plate}.json";if(!file_exists($logFile))die('<h2>No log found.</h2>');$data=json_decode(file_get_contents($logFile),true);if(!is_array($data)||!count($data))die('<h2>No entries found.</h2>');
 function normStationText($v){$v=strtolower(trim((string)$v));$v=preg_replace('/[^a-z0-9]+/',' ',$v);return trim(preg_replace('/\s+/',' ',$v));}
 function physicalStationKey($e,$brand,$locLabel){$street=normStationText($e['station_street']??'');$city=normStationText($e['station_city']??'');$b=normStationText($brand);if($street!=='')return $b.'|'.$street.'|'.$city;$label=normStationText($locLabel);if($label!=='')return $b.'|'.$label;/* Last resort only: ID when no human-readable physical location exists. */return 'id|'.normStationText($e['station_location_id']??'unknown');}

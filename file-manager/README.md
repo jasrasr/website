@@ -7,7 +7,7 @@ This project provides a secure, admin-only **file management system** with:
 - Web-based **Admin Portal** (behind `.htaccess` & MFA)
 - **PowerShell-friendly API** endpoint for uploads
 - File **versioning** (`file_v1.ext`, `file_v2.ext`, ...)
-- **Text file creation** from the admin UI (any extension, any subfolder under `/uploads`)
+- **Document text creation** from the admin UI (allowed document extensions, any subfolder under `/uploads`)
 - Dynamic **IP allowlisting** with auto-whitelist for admin logins
 - Optional **self-whitelist page** (with password + rate limit)
 - **US-only** IP geolocation enforcement (MaxMind GeoLite2)
@@ -107,8 +107,8 @@ The main Admin UI provides:
 - A **Create New File** section:
   - Choose a top-level directory (currently `uploads`).  
   - Optional subfolder (relative, like `blog`, `notes/2025`, etc.).  
-  - Enter any filename with extension (`index.html`, `config.json`, `readme.txt`, etc.).  
-  - Enter file content (text/HTML/JSON/etc.).  
+  - Enter an allowed document filename (`readme.txt`, `notes.md`, etc.).
+  - Enter document text.
   - If the file already exists, it is versioned similar to uploads:
     - Existing base file → `_v1`, `_v2`, etc.
     - New content becomes the base file.
@@ -137,20 +137,21 @@ This endpoint:
   - IP allowlist
   - API key
   - Upload rate limit
+  - File extension: documents, pictures, videos, and audio only; executable and active web formats are rejected
 - Performs versioning:
   - If `filename.ext` exists in the target directory:
     - Renames existing file to `filename_v1.ext`, `filename_v2.ext`, …
 - Logs success/failure with IP, filename, source, and (for PowerShell) computer name.
 - Returns JSON like:
   ```json
-  { "status": "success", "file": "index.html", "source": "powershell" }
+  { "status": "success", "file": "notes.txt", "source": "powershell" }
   ```
   or with error/reason keys.
 
 ### PowerShell Example
 
 ```powershell
-$FilePath   = "C:\path\to\file.html"
+$FilePath   = "C:\path\to\file.pdf"
 $Computer   = $env:COMPUTERNAME
 $FormUrl    = "https://jasr.me/file-manager/api/upload.php"
 $Cred       = Get-Credential  # .htaccess or HTTP Basic, if needed

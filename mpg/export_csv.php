@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 // ============================================================================
 
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
 
 $plate = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($_GET['plate'] ?? '')));
 $logFile = __DIR__ . "/logs/{$plate}.json";

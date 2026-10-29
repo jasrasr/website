@@ -1,5 +1,9 @@
 # Security review — 2026-10-29
 
+## Remediation on this branch
+
+After the initial review, this branch gained a document/picture/video/audio filename allowlist for both file-manager entry points, an uploads-directory Apache deny rule for script extensions, and local-only return URL validation in TV Binge Board. The file-manager upload endpoint also had a pre-existing PHP parse error in its optional GeoIP branch; that syntax was corrected. Checked-in MPG pages now disable displayed errors, matching the change reported on the host for `manage_stations.php`. These source changes have passed local syntax and focused security checks, but have not been verified on the live host. Findings 1 and 3 still need host-side action or verification.
+
 ## Summary
 
 This is a static, risk-focused review of the checked-out website repository, which contains multiple independent PHP applications. The clearest issue is that the timeclock app reads and changes employee shift records without an application access check. The file manager also accepts arbitrary file extensions into a web directory once its IP and API-key checks pass. Live Apache configuration and deployment contents were not available, so server reachability and the local environment-file exposure remain unverified. Confirmed or conditional findings: **High 2, Medium 3, Low 0, Informational 0**.

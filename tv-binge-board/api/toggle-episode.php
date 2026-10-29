@@ -134,9 +134,6 @@ if (($library['items'][$index]['episodes'] ?? []) === []) {
 $library['items'][$index]['updated_at'] = date(DATE_ATOM);
 app_save_library($targetUser, $library);
 app_log_activity((string)$user['username'], $activity, $targetUser, $activityData);
-$redirect = (string)($_POST['redirect'] ?? '../item.php?uid=' . rawurlencode($uid));
-if ($redirect === '' || str_starts_with($redirect, 'http://') || str_starts_with($redirect, 'https://') || str_contains($redirect, "\n") || str_contains($redirect, "\r")) {
-    $redirect = '../item.php?uid=' . rawurlencode($uid);
-}
+$redirect = app_safe_return_location($_POST['redirect'] ?? null, '../item.php?uid=' . rawurlencode($uid));
 header('Location: ' . $redirect);
 exit;

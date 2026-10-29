@@ -1,4 +1,5 @@
 .htaccess
+!uploads/.htaccess
 .htpasswd
 config.php
 .claude

@@ -6,7 +6,7 @@
 // Author: Jason Lamb
 // ============================================================================
 
-error_reporting(E_ALL);ini_set('display_errors',1);if(session_status()===PHP_SESSION_NONE)session_start();
+error_reporting(E_ALL);ini_set('display_errors', 0);if(session_status()===PHP_SESSION_NONE)session_start();
 $plate=preg_replace('/[^A-Z0-9]/','',strtoupper(trim($_GET['plate']??'')));if($plate==='')die('<h2>No license plate specified.</h2>');$logFile=__DIR__."/logs/{$plate}.json";if(!file_exists($logFile))die('<h2>No log found.</h2>');$data=json_decode(file_get_contents($logFile),true);if(!is_array($data))die('<h2>Fuel log is unreadable.</h2>');
 $points=[];$brands=[];foreach($data as $e){if(!isset($e['latitude'],$e['longitude']))continue;$lat=(float)$e['latitude'];$lon=(float)$e['longitude'];if($lat<-90||$lat>90||$lon<-180||$lon>180)continue;$brand=trim((string)($e['station_brand']??''));if($brand!=='')$brands[strtolower($brand)]=$brand;$loc=trim((string)($e['station_location_label']??''));$station=$brand;if($loc!=='')$station=$station!==''?$station.' — '.$loc:$loc;$points[]=['lat'=>$lat,'lon'=>$lon,'date'=>$e['date']??'','station'=>$station,'brand'=>$brand,'stationId'=>$e['station_location_id']??'','gallons'=>$e['gallons']??null,'price'=>$e['price_per_gallon']??null,'total'=>$e['total_cost']??null,'fillType'=>strtolower((string)($e['fill_type']??'full'))==='partial'?'Partial':'Full','mpg'=>$e['mpg']??null,'comment'=>$e['comment']??'','source'=>$e['location_source']??''];}natcasesort($brands);
 ?>
