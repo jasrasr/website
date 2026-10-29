@@ -63,8 +63,34 @@ t(it_holding_period('2025-10-29','2026-10-30')['tax_term']==='long-term',
   'Day after anniversary qualifies as long-term');
 t(it_holding_period('2024-02-29','2025-02-28')['tax_term']==='short-term',
   'Leap-day purchase is not erroneously treated as long-term at one-year boundary');
+t(it_holding_period('2024-02-29','2025-03-01')['tax_term']==='long-term',
+  'Leap-day purchase qualifies as long-term on March 1 after the clamped anniversary');
 t(it_holding_period('2024-02-29','2025-03-02')['tax_term']==='long-term',
   'Leap-year boundary can eventually become long-term');
+$sameDayEvents=[
+    event('buy','2024-06-10','SPLIT','buy',1,100),
+    event('split','2024-06-10','SPLIT','split',0,0,['numerator'=>10,'denominator'=>1]),
+];
+$sameDay=it_calculate($sameDayEvents);
+$sameDayReversed=it_calculate(array_reverse($sameDayEvents));
+t(abs($sameDay['holdings']['SPLIT']['shares']-1)<1e-9
+    && $sameDay['holdings']['SPLIT']['shares']===$sameDayReversed['holdings']['SPLIT']['shares'],
+  'Same-day splits are replayed before trades regardless of insertion order');
+$splitQuote=it_calculate([
+    event('buy','2024-06-09','QUOTE','buy',1,100),
+    event('price','2024-06-09','QUOTE','price',0,0,['price'=>100]),
+    event('split','2024-06-10','QUOTE','split',0,0,['numerator'=>10,'denominator'=>1]),
+]);
+t($splitQuote['holdings']['QUOTE']['price']===null && $splitQuote['holdings']['QUOTE']['value']===null,
+  'A split invalidates a cached pre-split quote');
+$today=gmdate('Y-m-d');
+$yesterday=(new DateTimeImmutable($today,new DateTimeZone('UTC')))->modify('-1 day')->format('Y-m-d');
+$extreme=it_calculate([
+    event('tiny',''.$yesterday,'EXTREME','buy',1,1),
+    event('spike',$today,'EXTREME','price',0,0,['price'=>10]),
+]);
+t($extreme['holdings']['EXTREME']['lots'][0]['annualized_pct']===null,
+  'Overflowing annualized rates are returned as null');
 $splitHistory=it_calculate([
     event('a','2020-01-02','TEST','buy',0.05,20),
     event('sp1','2021-07-20','TEST','split',0,0,['numerator'=>4,'denominator'=>1]),
@@ -83,6 +109,6 @@ t(abs($demo['holdings']['NVDA']['shares']-1.732118)<1e-8,
 $lots=$demo['holdings']['NVDA']['lots'];
 t(abs($lots[0]['original_shares']-0.059679)<1e-9 && abs($lots[0]['shares']-0.59679)<1e-9,
   'NVDA 2021 purchase displays original and tenfold adjusted share counts');
-t($lots[count($lots)-1]['tax_term']==='short-term',
+t(it_holding_period($lots[count($lots)-1]['date'],'2026-10-29')['tax_term']==='short-term',
   'October 2026 Nvidia purchase marked short-term during October 2026');
 echo "All synthetic ledger tests passed.\n";

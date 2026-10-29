@@ -86,8 +86,8 @@ function it_append_import(array $existing,array $new): array
 {
     $allExternal=[]; $lotsByRef=[];
     foreach ($existing as $row) {
-        if (!empty($row['external_id'])) $allExternal[(string)$row['external_id']]=true;
-        if (!empty($row['external_id']) && in_array($row['type'],['buy','reinvest'],true) && empty($row['voided_at'])) {
+        if (isset($row['external_id']) && (string)$row['external_id']!=='') $allExternal[(string)$row['external_id']]=true;
+        if (isset($row['external_id']) && (string)$row['external_id']!=='' && in_array($row['type'],['buy','reinvest'],true) && empty($row['voided_at'])) {
             $lotsByRef[(string)$row['external_id']]=$row['id'];
         }
     }
@@ -226,7 +226,7 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
 <form id="csvForm"><label class="full">Normalized CSV file<input id="csvFile" name="file" type="file" accept=".csv,text/csv" required></label><div class="actions"><button type="button" id="previewCsv" class="secondary">Validate &amp; preview</button><button type="button" id="commitCsv" class="primary" disabled>Import validated file</button></div></form>
 <div id="csvPreview" class="result">No import preview yet.</div><p class="hint">Download the <a href="sample.csv" download>sample CSV</a>. Every row has a unique external_id; sales reference the purchase's external_id in lot_id. All-or-nothing validation prevents partial imports or duplicate IDs.</p></article>
 </section>
-<section class="panel"><div class="panel-heading"><div><span class="eyebrow">IMMUTABLE HISTORY</span><h2>Activity ledger</h2></div><span id="recordCount" class="subtle"></span></div><div class="tablewrap"><table><thead><tr><th>Date</th><th>Stock</th><th>Type</th><th class="numeric">Shares</th><th class="numeric">Amount / price</th><th>Notes</th><th>Correction</th></tr></thead><tbody id="eventsBody"></tbody></table></div><p class="hint">Voiding retains the original record for audit. Voiding a purchase that has allocated sales is blocked until its dependencies are corrected.</p></section>
+<section class="panel"><div class="panel-heading"><div><span class="eyebrow">IMMUTABLE HISTORY</span><h2>Activity ledger</h2></div><span id="recordCount" class="subtle"></span></div><div class="tablewrap"><table><thead><tr><th>Date</th><th>Stock</th><th>Type</th><th class="numeric">Shares</th><th class="numeric">Amount / price</th><th>Notes</th><th>Correction</th></tr></thead><tbody id="eventsBody"></tbody></table></div><div class="actions"><button type="button" class="secondary" id="newerEvents" disabled>Newer events</button><span id="eventPage" class="subtle" aria-live="polite"></span><button type="button" class="secondary" id="olderEvents" disabled>Older events</button></div><p class="hint">Voiding retains the original record for audit. Voiding a purchase that has allocated sales is blocked until its dependencies are corrected.</p></section>
 </main>
 <footer>Investment Tracker · Revision 1.1.0 · Updated October 29, 2026 · Data private to your central account · Calculations are estimates, not trading or tax advice</footer>
 </body></html>

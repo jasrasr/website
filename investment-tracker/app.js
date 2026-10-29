@@ -11,6 +11,8 @@
 const $ = s => document.querySelector(s);
 let state={events:[],analysis:{holdings:{},series:{},totals:{},missing_prices:[]},csrf:''};
 let selectedTicker='', selectedLot='',csvPreviewKey='';
+let eventPage=0;
+const eventPageSize=100;
 const demoMode=document.body?.dataset.demo==='1';
 const svgNS='http://www.w3.org/2000/svg';
 function el(tag,cls,text) {const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text);return n;}
@@ -162,8 +164,16 @@ function renderHoldings() {
 }
 function renderEvents() {
  const body=$('#eventsBody');body.replaceChildren();
- const rows=[...state.events].reverse().slice(0,100);
- $('#recordCount').textContent=state.events.filter(e=>!e.voided_at).length+' active events · newest 100 shown';
+ const pageCount=Math.max(1,Math.ceil(state.events.length/eventPageSize));
+ eventPage=Math.min(eventPage,pageCount-1);
+ const first=eventPage*eventPageSize;
+ const rows=[...state.events].reverse().slice(first,first+eventPageSize);
+ $('#recordCount').textContent=state.events.filter(e=>!e.voided_at).length+' active events';
+ $('#eventPage').textContent=state.events.length
+  ?'Showing '+(first+1)+'–'+Math.min(first+eventPageSize,state.events.length)+' of '+state.events.length+' records · page '+(eventPage+1)+' of '+pageCount
+  :'No records';
+ $('#newerEvents').disabled=eventPage===0;
+ $('#olderEvents').disabled=eventPage>=pageCount-1;
  rows.forEach(e=>{
   const tr=el('tr',e.voided_at?'voided':'');
   cell(tr,e.date);cell(tr,e.ticker);cell(tr,e.type+(e.voided_at?' (void)':''));
@@ -198,6 +208,7 @@ function render() {
  if(selectedLot && !openLots().some(l=>l.id===selectedLot)){selectedLot='';$('#selectedLot').hidden=true;}
 }
 async function load() {
+ selectedLot='';$('#selectedLot').hidden=true;
  const d=await api();state={...state,events:d.events,analysis:d.analysis,csrf:d.csrf};render();
  const missing=d.analysis.missing_prices||[];
  if(demoMode)notice('Read-only NVDA illustration: known screenshot buys only. Missing dividend shares and past sale allocations mean profit and share totals are NOT account totals.');
@@ -255,6 +266,8 @@ document.addEventListener('DOMContentLoaded',()=>{
  $('#eventType').addEventListener('change',setEventFields);setEventFields();
  $('#addEvent [name=ticker]').addEventListener('input',updateManualLots);
  $('#saleSimulator').addEventListener('submit',salePreview);
+ $('#newerEvents').addEventListener('click',()=>{if(eventPage>0){eventPage--;renderEvents();}});
+ $('#olderEvents').addEventListener('click',()=>{if((eventPage+1)*eventPageSize<state.events.length){eventPage++;renderEvents();}});
  $('#saleLot').addEventListener('change',()=>{$('#salePrice').value=state.analysis.holdings[openLots().find(l=>l.id===$('#saleLot').value)?.ticker]?.price||'';});
  $('#hideLot').addEventListener('click',()=>{selectedLot='';$('#selectedLot').hidden=true;render();});
  $('#addEvent').addEventListener('submit',async event=>{

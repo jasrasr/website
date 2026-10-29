@@ -104,7 +104,11 @@ function it_holding_period(string $acquiredDate, string $asOfDate): array
     $acquired=new DateTimeImmutable($acquiredDate,new DateTimeZone('UTC'));
     $asOf=new DateTimeImmutable($asOfDate,new DateTimeZone('UTC'));
     if ($asOf < $acquired) throw new InvalidArgumentException('Holding date precedes acquisition.');
-    $firstLongTerm=$acquired->modify('+1 year')->modify('+1 day');
+    $anniversary=$acquired->modify('+1 year');
+    if ($acquired->format('m-d')==='02-29' && $anniversary->format('m-d')==='03-01') {
+        $anniversary=$anniversary->modify('last day of February');
+    }
+    $firstLongTerm=$anniversary->modify('+1 day');
     $interval=$acquired->diff($asOf);
     return [
         'days_held'=>(int)$interval->format('%a'),
@@ -122,7 +126,9 @@ function it_calculate(array $events): array
         if (!is_array($event)) throw new InvalidArgumentException('Invalid ledger record.');
         $ordered[]=$event+['_order'=>$i];
     }
-    usort($ordered,static fn($a,$b)=>strcmp((string)$a['date'],(string)$b['date']) ?: ($a['_order']<=>$b['_order']));
+    usort($ordered,static fn($a,$b)=>strcmp((string)$a['date'],(string)$b['date'])
+        ?: (($a['type']==='split'?0:1)<=>($b['type']==='split'?0:1))
+        ?: ($a['_order']<=>$b['_order']));
     $lots=[]; $sales=[]; $quotes=[]; $series=[]; $cash=[]; $divs=[]; $reinvested=[]; $purchases=[]; $proceeds=[]; $realized=[];
     foreach ($ordered as $e) {
         $t=(string)$e['ticker']; $kind=(string)$e['type']; $q=(float)$e['quantity']; $a=(float)$e['amount'];
@@ -138,6 +144,7 @@ function it_calculate(array $events): array
             ];
         } elseif ($kind==='split') {
             $factor=(float)$e['numerator']/(float)$e['denominator'];
+            unset($quotes[$t]);
             foreach ($lots as &$lot) {
                 if ($lot['ticker']===$t) {
                     $lot['shares']*=$factor;
@@ -195,8 +202,9 @@ function it_calculate(array $events): array
             $lot['roi_pct']=($market!==null && $lot['remaining_cost']>0)?100*($market/$lot['remaining_cost']-1):null;
             $holding=it_holding_period($lot['date'],gmdate('Y-m-d'));
             $age=$holding['days_held'];
-            $lot['annualized_pct']=($market!==null && $lot['remaining_cost']>0 && $lot['shares']>0 && $age>0)
+            $annualized=($market!==null && $lot['remaining_cost']>0 && $lot['shares']>0 && $age>0)
                 ?100*(pow($market/$lot['remaining_cost'],365.25/$age)-1):null;
+            $lot['annualized_pct']=$annualized!==null && is_finite($annualized)?$annualized:null;
             $lot=array_merge($lot,$holding);
             $currentLots[]=$lot;
         }
