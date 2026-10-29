@@ -2,15 +2,16 @@
  * File Name: app.js
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Accessible charts, per-lot history, sale simulation and private ledger controls.
- * Revision: 1.0.0
+ * Revision: 1.1.0
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-29
- * Changelog: 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
+ * Changelog: 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
  */
 'use strict';
 const $ = s => document.querySelector(s);
 let state={events:[],analysis:{holdings:{},series:{},totals:{},missing_prices:[]},csrf:''};
 let selectedTicker='', selectedLot='',csvPreviewKey='';
+const demoMode=document.body?.dataset.demo==='1';
 const svgNS='http://www.w3.org/2000/svg';
 function el(tag,cls,text) {const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text);return n;}
 function cell(tr,value,cls) {const td=el('td',cls,value);tr.append(td);return td;}
@@ -22,7 +23,8 @@ function colorize(n) {return n===null||n===undefined?'':Number(n)>=0?'positive':
 function notice(message,error=false) {const node=$('#notice');node.textContent=message;node.className='notice'+(error?' error':'');}
 function formBody(action) {const fd=new FormData();fd.set('csrf',state.csrf);fd.set('action',action);return fd;}
 async function api(body) {
- const response=await fetch('?api=1',body?{method:'POST',credentials:'same-origin',body}:{credentials:'same-origin'});
+ const endpoint=demoMode?'?api=1&demo=1':'?api=1';
+ const response=await fetch(endpoint,body?{method:'POST',credentials:'same-origin',body}:{credentials:'same-origin'});
  let json;try{json=await response.json();}catch(_){throw new Error('Server did not return a valid JSON response.');}
  if(!response.ok||!json.success)throw new Error(json.message||'Request failed.');
  return json.data;
@@ -95,16 +97,23 @@ function renderLots(ticker) {
  const lots=openLots().filter(l=>l.ticker===ticker).sort((a,b)=>a.date.localeCompare(b.date));
  const tbody=$('#lotsBody');tbody.replaceChildren();
  $('#lotSummary').textContent=lots.length+' open purchase lot'+(lots.length===1?'':'s');
- if(!lots.length){const tr=el('tr');const td=cell(tr,'No open tax lots for the selected stock.');td.colSpan=8;tbody.append(tr);}
+ if(!lots.length){const tr=el('tr');const td=cell(tr,'No open tax lots for the selected stock.');td.colSpan=13;tbody.append(tr);}
  lots.forEach(l=>{
   const tr=el('tr',selectedLot===l.id?'selected':'');
   cell(tr,day(l.date));
   cell(tr,l.source==='reinvest'?'Reinvested dividend':'Purchase');
+  cell(tr,qty(l.original_shares),'numeric');
+  cell(tr,money(l.original_unit_cost),'numeric');
+  cell(tr,'×'+qty(l.split_factor),'numeric');
   cell(tr,qty(l.shares),'numeric');
-  cell(tr,money(l.remaining_cost/l.shares),'numeric');
+  cell(tr,money(l.remaining_unit_cost),'numeric');
+  cell(tr,money(l.remaining_cost),'numeric');
   cell(tr,money(l.market_value),'numeric');
   cell(tr,money(l.unrealized),'numeric '+colorize(l.unrealized));
   cell(tr,percent(l.roi_pct),'numeric '+colorize(l.roi_pct));
+  const age=cell(tr,'');
+  age.append(el('span','heldFor',l.held_for),el('span','term '+(l.tax_term==='long-term'?'longTerm':'shortTerm'),l.tax_term==='long-term'?'Long-term':'Short-term'));
+  if(l.tax_term!=='long-term')age.append(el('small','subtle',l.days_to_long_term+' days until long-term'));
   const td=cell(tr,'');const button=el('button','smallbtn','Explore');button.type='button';button.addEventListener('click',()=>chooseLot(l.id));td.append(button);
   tbody.append(tr);
  });
@@ -117,7 +126,21 @@ function chooseLot(id) {
  selectedLot=id;selectedTicker=lot.ticker;$('#tickerSelect').value=lot.ticker;
  render();
  $('#selectedLot').hidden=false;
- $('#selectedName').textContent=lot.ticker+' · '+day(lot.date)+' · '+qty(lot.shares)+' shares open · '+percent(lot.roi_pct)+' total return';
+ $('#selectedName').textContent=lot.ticker+' · purchased '+day(lot.date)+' · '+qty(lot.shares)+' shares currently held';
+ const facts=$('#lotFacts');facts.replaceChildren();
+ const fields=[
+  ['Original purchase',qty(lot.original_shares)+' shares × '+money(lot.original_unit_cost)],
+  ['Original total cost',money(lot.original_cost)],
+  ['Stock split factor','×'+qty(lot.split_factor)+' · '+qty(lot.adjusted_acquired_shares)+' total adjusted shares before sales'],
+  ['Shares currently held',qty(lot.shares)],
+  ['Adjusted unit basis',money(lot.remaining_unit_cost)+'/share · '+money(lot.remaining_cost)+' remaining total basis'],
+  ['Last observed share price',money(state.analysis.holdings[lot.ticker]?.price)+' · '+(state.analysis.holdings[lot.ticker]?.price_date||'not available')],
+  ['Market value / unrealized gain',money(lot.market_value)+' / '+money(lot.unrealized)+' ('+percent(lot.roi_pct)+')'],
+  ['Original holding duration',lot.held_for+' · '+lot.days_held+' days'],
+  ['Holding-period classification',lot.tax_term==='long-term'?'Long-term':('Short-term · '+lot.days_to_long_term+' days remaining')],
+  ['First potentially long-term sale date',day(lot.long_term_on)]
+ ];
+ fields.forEach(([name,val])=>{const c=el('div','fact');c.append(el('span','subtle',name),el('strong',null,val));facts.append(c);});
  const points=(state.analysis.series[lot.ticker]||[]).filter(p=>p.date>=lot.date).map(p=>{
   const x=p.lots.find(x=>x.id===lot.id);
   return x?{date:p.date,value:x.value,cost:x.cost}:null;
@@ -148,7 +171,7 @@ function renderEvents() {
   cell(tr,e.type==='price'?money(e.price):e.type==='split'?'—':money(e.amount),'numeric');
   cell(tr,e.note||'—');
   const td=cell(tr,'');
-  if(!e.voided_at){
+  if(!e.voided_at && !demoMode){
    const b=el('button','smallbtn danger','Void');b.type='button';
    b.addEventListener('click',async()=>{if(!confirm('Void this event? The original will be retained and all calculations recomputed.'))return;
     const fd=formBody('void');fd.set('id',e.id);
@@ -177,7 +200,8 @@ function render() {
 async function load() {
  const d=await api();state={...state,events:d.events,analysis:d.analysis,csrf:d.csrf};render();
  const missing=d.analysis.missing_prices||[];
- if(missing.length)notice('Missing current price observations for '+missing.join(', ')+'. Portfolio totals and XIRR are withheld until priced.');
+ if(demoMode)notice('Read-only NVDA illustration: known screenshot buys only. Missing dividend shares and past sale allocations mean profit and share totals are NOT account totals.');
+ else if(missing.length)notice('Missing current price observations for '+missing.join(', ')+'. Portfolio totals and XIRR are withheld until priced.');
  else notice('Ledger loaded. Market values use the last manually recorded price per stock; check its observation date.');
 }
 function setEventFields() {
@@ -196,10 +220,10 @@ function salePreview(event) {
   $('#saleResult').textContent='Choose a valid lot, share quantity (no more than shares remaining), and sale price.';return;
  }
  const cost=lot.remaining_cost*(q/lot.shares),sale=q*price,gain=sale-cost;
- const months=lot.days_held>365?'Potentially long-term':'Potentially short-term';
+ const months=lot.tax_term==='long-term'?'Potentially long-term':'Potentially short-term';
  $('#saleResult').replaceChildren(el('b',colorize(gain),'Estimated '+money(gain)+' '+(gain>=0?'gain':'loss')),
   el('p',null,'Proceeds '+money(sale)+' · allocated basis '+money(cost)+' · return '+percent(cost>0?100*gain/cost:null)),
-  el('p','subtle',months+' · held '+lot.days_held+' days · no order placed. Assumes no additional selling fees.'));
+  el('p','subtle',months+' · held '+lot.held_for+' ('+lot.days_held+' days) · first long-term date '+lot.long_term_on+' · no order placed. Assumes no additional selling fees.'));
 }
 function fileKey(f) {return f?f.name+':'+f.size+':'+f.lastModified:'';}
 async function csvAction(action) {
