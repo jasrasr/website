@@ -3,19 +3,21 @@
  * File Name: index.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Private investment tax-lot dashboard and authenticated ledger API.
- * Revision: 1.0.0
+ * Revision: 1.1.0
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-29
- * Changelog: 1.0.0 - Shared login, manual events, atomic CSV import and lot dashboard.
+ * Changelog: 1.1.0 - Read-only NVIDIA demo, original and split-adjusted lot display, tax-term clarity. 1.0.0 - Shared login, manual events, atomic CSV import and lot dashboard.
  */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
 require_once __DIR__ . '/ledger.php';
+require_once __DIR__ . '/demo.php';
 header('Cache-Control: no-store, private');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: no-referrer');
 header('Content-Security-Policy: default-src \'self\'; script-src \'self\'; style-src \'self\'; img-src \'self\' data:; object-src \'none\'; base-uri \'none\'; frame-ancestors \'none\'');
 $isApi=isset($_GET['api']);
+$isDemo=($_GET['demo']??'')==='1';
 $auth=\Jasr\Framework\SharedIdentity::connect();
 $user=$auth->requireProject('investment-tracker',$_SERVER['REQUEST_METHOD']==='POST'?'member':'viewer',$isApi);
 $storage=__DIR__.'/storage';
@@ -111,12 +113,13 @@ function it_append_import(array $existing,array $new): array
 if ($isApi) {
     try {
         if ($_SERVER['REQUEST_METHOD']==='GET') {
-            $rows=it_records($path);
-            it_reply(200,true,'Investment ledger loaded.',[
+            $rows=$isDemo?it_demo_events():it_records($path);
+            it_reply(200,true,$isDemo?'Read-only incomplete NVIDIA demonstration loaded.':'Investment ledger loaded.',[
                 'events'=>$rows,'analysis'=>it_calculate(it_active($rows)),'csrf'=>$auth->csrf(),
-                'as_of'=>gmdate('Y-m-d')
+                'as_of'=>gmdate('Y-m-d'),'demo'=>$isDemo,'demo_exclusions'=>$isDemo?it_demo_exclusions():[]
             ]);
         }
+        if ($isDemo) it_reply(403,false,'Demo mode is read-only. Switch to My portfolio to save personal activity.');
         if ($_SERVER['REQUEST_METHOD']!=='POST') it_reply(405,false,'Method not allowed.');
         if (!$auth->validCsrf($_POST['csrf']??null)) it_reply(403,false,'Invalid form token.');
         $action=(string)($_POST['action']??'');
@@ -178,12 +181,14 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Investment Tracker · Tax Lots</title>
-<link rel="stylesheet" href="style.css?v=1.0.0">
-<script src="app.js?v=1.0.0" defer></script>
+<link rel="stylesheet" href="style.css?v=1.1.0">
+<script src="app.js?v=1.1.0" defer></script>
 </head>
-<body>
+<body data-demo="<?=$isDemo?'1':'0'?>">
 <header class="topbar"><div><span class="eyebrow">PRIVATE PORTFOLIO ANALYTICS</span><h1>Investment Tracker</h1><p>See what each purchase is worth, not just the average.</p></div><a class="account" href="<?=it_h($auth->portal())?>">Account <span aria-hidden="true">↗</span></a></header>
 <main>
+<nav class="modes" aria-label="Portfolio data source"><a class="mode <?=$isDemo?'':'active'?>" href="?">My private portfolio</a><a class="mode <?=$isDemo?'active':''?>" href="?demo=1">NVIDIA screenshot demo</a></nav>
+<?php if($isDemo): ?><section class="demoBanner"><strong>NVIDIA DEMO · INCOMPLETE SCREENSHOT HISTORY · READ ONLY</strong><p>Separate from your private account. The illustrative results exclude earlier sold lots and all reinvested dividends because their exact lot or fractional-share data has not yet been verified. The last reference price is the October 9, 2026 execution price — not today’s market price. <strong>Do not rely on these demo totals for a trade.</strong></p></section><?php endif; ?>
 <div id="notice" class="notice" role="status" aria-live="polite">Loading private investment data…</div>
 <section class="metrics" aria-label="Portfolio totals">
   <article class="metric"><span>Market value</span><strong id="marketValue">—</strong><small>Only complete when every holding has a price</small></article>
@@ -195,17 +200,17 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
   <article class="panel chart"><div class="panel-heading"><div><span class="eyebrow">MARKED-TO-MARKET HISTORY</span><h2>Position value vs. remaining basis</h2></div><label class="compact">Stock <select id="tickerSelect" aria-label="Chart stock"></select></label></div><div id="valueChart" class="chartbox"></div><p class="hint">Points appear only on recorded price dates; previous prices are not fabricated.</p></article>
   <article class="panel chart"><div class="panel-heading"><div><span class="eyebrow">LOT COMPARISON</span><h2>Unrealized gain by purchase</h2></div></div><div id="lotChart" class="chartbox"></div><p class="hint">Tap a lot below to see its individual growth history.</p></article>
 </section>
-<section class="panel"><div class="panel-heading"><div><span class="eyebrow">EVERY PURCHASE IS UNIQUE</span><h2>Open tax lots</h2></div><div id="lotSummary" class="subtle"></div></div><div class="tablewrap"><table><thead><tr><th>Purchase</th><th>Source</th><th class="numeric">Remaining shares</th><th class="numeric">Cost / share</th><th class="numeric">Market value</th><th class="numeric">Unrealized</th><th class="numeric">Return</th><th>Action</th></tr></thead><tbody id="lotsBody"></tbody></table></div><div id="selectedLot" class="lotDetail" hidden><div class="panel-heading"><h3 id="selectedName">Lot history</h3><button type="button" id="hideLot" class="ghost">Close</button></div><div id="lotHistory" class="chartbox"></div></div></section>
+<section class="panel"><div class="panel-heading"><div><span class="eyebrow">EVERY PURCHASE IS UNIQUE</span><h2>Open tax lots</h2></div><div id="lotSummary" class="subtle"></div></div><div class="tablewrap"><table><thead><tr><th>Purchased</th><th>Source</th><th class="numeric">Original shares</th><th class="numeric">Original $/share</th><th class="numeric">Split factor</th><th class="numeric">Shares now</th><th class="numeric">Adjusted $/share</th><th class="numeric">Basis remaining</th><th class="numeric">Market value</th><th class="numeric">Unrealized $</th><th class="numeric">Unrealized %</th><th>Held / tax period</th><th>Action</th></tr></thead><tbody id="lotsBody"></tbody></table></div><div id="selectedLot" class="lotDetail" hidden><div class="panel-heading"><h3 id="selectedName">Lot history</h3><button type="button" id="hideLot" class="ghost">Close</button></div><div id="lotFacts" class="lotFacts"></div><div id="lotHistory" class="chartbox"></div></div></section>
 <section class="charts lower">
 <article class="panel"><span class="eyebrow">WHAT-IF ONLY · NEVER PLACES AN ORDER</span><h2>Simulate a partial sale</h2>
  <form id="saleSimulator" class="formgrid"><label>Purchase lot<select id="saleLot" required></select></label><label>Shares to sell<input id="saleQty" type="number" min="0.00000001" step="any" required></label><label>Assumed sale price per share<input id="salePrice" type="number" min="0.00000001" step="any" required></label><button class="primary" type="submit">Calculate sale</button></form>
  <div id="saleResult" class="result">Select a lot and quantity to preview a sale without changing records.</div>
- <p class="hint">Holding-period labels are estimates. Actual taxes depend on tax rules, broker lot elections, wash sales and other adjustments.</p>
+ <p class="hint">Shares held for MORE than one year are generally long-term; exactly one year is short-term. A split retains the original lot holding period, while each reinvestment gets its own purchase date. This is an estimate, not a tax determination.</p>
 </article>
 <article class="panel"><span class="eyebrow">PORTFOLIO DETAILS</span><h2>By ticker</h2><div id="holdings" class="holdings"></div><p class="hint">Cash dividends and reinvested dividends are distinguished to avoid double-counting cash flows.</p></article>
 </section>
 <section class="charts lower">
-<article class="panel"><span class="eyebrow">MANUAL ENTRY</span><h2>Add activity or market price</h2><form id="addEvent" class="formgrid">
+<article class="panel" data-private-write><span class="eyebrow">MANUAL ENTRY</span><h2>Add activity or market price</h2><form id="addEvent" class="formgrid">
 <label>Stock ticker<input name="ticker" maxlength="14" placeholder="NVDA" required autocapitalize="characters"></label>
 <label>Event<select name="type" id="eventType"><option value="buy">Buy shares</option><option value="sell">Sell selected lot</option><option value="dividend">Cash dividend</option><option value="reinvest">Dividend reinvestment</option><option value="split">Stock split</option><option value="price">Market price observation</option></select></label>
 <label>Date<input name="date" id="eventDate" type="date" required></label>
@@ -217,11 +222,11 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
 <label data-fields="sell">Sell from purchase<select id="manualLot" name="lot_id"></select></label>
 <label class="full">Notes (optional)<input name="note" maxlength="240" placeholder="Broker confirmation / source"></label>
 <button class="primary" type="submit">Save event</button></form><p class="hint">Buy total includes acquisition fees; sale total is net proceeds after selling fees. A reinvestment creates a new tax lot but does not count as new external cash invested.</p></article>
-<article class="panel"><span class="eyebrow">IMPORT / RECONCILE</span><h2>Bulk CSV import</h2><p>Use the normalized tracker format. A raw Robinhood report needs column and corporate-action mapping first; it is not blindly imported.</p>
+<article class="panel" data-private-write><span class="eyebrow">IMPORT / RECONCILE</span><h2>Bulk CSV import</h2><p>Use the normalized tracker format. A raw Robinhood report needs column and corporate-action mapping first; it is not blindly imported.</p>
 <form id="csvForm"><label class="full">Normalized CSV file<input id="csvFile" name="file" type="file" accept=".csv,text/csv" required></label><div class="actions"><button type="button" id="previewCsv" class="secondary">Validate &amp; preview</button><button type="button" id="commitCsv" class="primary" disabled>Import validated file</button></div></form>
 <div id="csvPreview" class="result">No import preview yet.</div><p class="hint">Download the <a href="sample.csv" download>sample CSV</a>. Every row has a unique external_id; sales reference the purchase's external_id in lot_id. All-or-nothing validation prevents partial imports or duplicate IDs.</p></article>
 </section>
 <section class="panel"><div class="panel-heading"><div><span class="eyebrow">IMMUTABLE HISTORY</span><h2>Activity ledger</h2></div><span id="recordCount" class="subtle"></span></div><div class="tablewrap"><table><thead><tr><th>Date</th><th>Stock</th><th>Type</th><th class="numeric">Shares</th><th class="numeric">Amount / price</th><th>Notes</th><th>Correction</th></tr></thead><tbody id="eventsBody"></tbody></table></div><p class="hint">Voiding retains the original record for audit. Voiding a purchase that has allocated sales is blocked until its dependencies are corrected.</p></section>
 </main>
-<footer>Investment Tracker · Revision 1.0.0 · Updated October 29, 2026 · Data private to your central account · Calculations are estimates, not trading or tax advice</footer>
+<footer>Investment Tracker · Revision 1.1.0 · Updated October 29, 2026 · Data private to your central account · Calculations are estimates, not trading or tax advice</footer>
 </body></html>
