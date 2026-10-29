@@ -41,7 +41,9 @@ function lineChart(selector,points,keys,labels) {
  if(!values.length){host.append(el('p','empty','No valued lots are available for this period.'));return;}
  let min=Math.min(0,...values),max=Math.max(0,...values);
  if(max-min<0.000001){max+=1;min-=1;}
- const sx=i=>left+(w-left-right)*(points.length===1?.5:i/(points.length-1));
+ const dates=points.map(p=>Date.parse(p.date+'T00:00:00Z'));
+ const span=dates[dates.length-1]-dates[0];
+ const sx=i=>left+(w-left-right)*(span===0?0.5:(dates[i]-dates[0])/span);
  const sy=v=>top+(max-v)/(max-min)*(h-top-bottom);
  const svg=svgEl('svg',{viewBox:'0 0 '+w+' '+h,role:'img','aria-label':labels.join(' and ')+' across recorded market price dates'});
  for(let i=0;i<=4;i++){const y=top+i*(h-top-bottom)/4;svg.append(svgEl('line',{x1:left,y1:y,x2:w-right,y2:y,class:'gridline'}));const v=max-i*(max-min)/4;svg.append(svgEl('text',{x:left-9,y:y+4,'text-anchor':'end',class:'axistext'},money(v)));}
