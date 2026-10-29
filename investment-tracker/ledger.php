@@ -3,10 +3,10 @@
  * File Name: ledger.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Deterministic split-aware per-purchase tax-lot and performance calculations.
- * Revision: 1.0.0
+ * Revision: 1.1.0
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-29
- * Changelog: 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
+ * Changelog: 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
  */
 declare(strict_types=1);
 
@@ -112,6 +112,7 @@ function it_calculate(array $events): array
             $lots[$e['id']]=[
                 'id'=>$e['id'],'ticker'=>$t,'date'=>$e['date'],'source'=>$kind,
                 'original_shares'=>$q,'shares'=>$q,'original_cost'=>$a,'remaining_cost'=>$a,
+                'original_unit_cost'=>$a/$q,'split_factor'=>1.0,
                 'realized'=>0.0, 'sold_shares'=>0.0,
             ];
         } elseif ($kind==='split') {
@@ -119,7 +120,7 @@ function it_calculate(array $events): array
             foreach ($lots as &$lot) {
                 if ($lot['ticker']===$t) {
                     $lot['shares']*=$factor;
-                    $lot['original_shares']*=$factor;
+                    $lot['split_factor']*=$factor;
                     $lot['sold_shares']*=$factor;
                 }
             }
@@ -165,11 +166,24 @@ function it_calculate(array $events): array
             $market=$price!==null ? $lot['shares']*$price : null;
             $lot['market_value']=$market;
             $lot['unrealized']=$market===null?null:$market-$lot['remaining_cost'];
+            $lot['adjusted_acquired_shares']=$lot['original_shares']*$lot['split_factor'];
+            $lot['adjusted_unit_cost']=$lot['adjusted_acquired_shares']>0
+                ?$lot['original_cost']/$lot['adjusted_acquired_shares']:null;
+            $lot['remaining_unit_cost']=$lot['shares']>0.000000001
+                ?$lot['remaining_cost']/$lot['shares']:null;
             $lot['roi_pct']=($market!==null && $lot['remaining_cost']>0)?100*($market/$lot['remaining_cost']-1):null;
             $age=max(0,(int)((strtotime(gmdate('Y-m-d').' UTC')-strtotime($lot['date'].' UTC'))/86400));
             $lot['annualized_pct']=($market!==null && $lot['remaining_cost']>0 && $lot['shares']>0 && $age>0)
                 ?100*(pow($market/$lot['remaining_cost'],365.25/$age)-1):null;
+            $acquired=new DateTimeImmutable($lot['date'],new DateTimeZone('UTC'));
+            $today=new DateTimeImmutable(gmdate('Y-m-d'),new DateTimeZone('UTC'));
+            $longTermOn=$acquired->modify('+1 year')->modify('+1 day');
+            $interval=$acquired->diff($today);
             $lot['days_held']=$age;
+            $lot['held_for']=sprintf('%dy %dm %dd',$interval->y,$interval->m,$interval->d);
+            $lot['long_term_on']=$longTermOn->format('Y-m-d');
+            $lot['tax_term']=$today >= $longTermOn?'long-term':'short-term';
+            $lot['days_to_long_term']=$today >= $longTermOn?0:(int)$today->diff($longTermOn)->format('%a');
             $currentLots[]=$lot;
         }
         $missingPrice=$qty>0.000000001 && $price===null;
