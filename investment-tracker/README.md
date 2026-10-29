@@ -2,16 +2,41 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, data contract, calculation model, privacy and test procedures.
-Revision: 1.0.0
+Revision: 1.1.0
 Created Date: 2026-10-29
 Modified Date: 2026-10-29
-Changelog: 1.0.0 - Document initial private tax-lot dashboard.
+Changelog: 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
 -->
 # Investment Tracker
 
 Private, mobile-friendly investment performance dashboard at target `https://jasr.me/github/investment-tracker/`. Source is in the public website repository **but financial data stays in ignored, HTTP-denied, per-user server storage**.
 
 **Deployment status:** Source and review PR only; do not assume deployed. Register project ID **`investment-tracker`** (path `/github/investment-tracker/`) in central `user-management` and grant each intended account the viewer/member role **before first access**. This is not a standalone login or open-registration app. All API routes require a valid central session; write/import/void routes require member or higher and a valid CSRF token. No shared portfolio access is implemented.
+
+## Isolated NVIDIA screenshot demo (v1.1)
+
+After an account has been authorized for this project, open \`?demo=1\` (the **NVIDIA screenshot demo** tab). The data is **read-only** and **embedded as demonstration source only**, not inserted in the member's personal JSON or a shared user profile. \`?api=1&demo=1\` returns that source, and ALL demo POST attempts are rejected. Switch back to **My private portfolio** for normal user-linked records. The central project role is still required even for the demo, so it cannot bypass authentication.
+
+Four screenshot-confirmed, currently open purchase rows are represented:
+
+| Acquisition | Original shares | Original total cost | Post-split shares before any sales |
+|---|---:|---:|---:|
+| 2021-11-22 | 0.059679 | $20.00 | 0.596790 after 2024 10:1 |
+| 2024-03-28 | 0.002840 | $2.55 | 0.028400 after 2024 10:1 |
+| 2025-02-12 | 1.000000 | $129.26 | 1.000000 |
+| 2026-10-09 | 0.106928 | $25.00 | 0.106928 |
+
+**1.732118 shares are from only the screenshot-confirmed purchase rows, excluding subsequent dividend reinvestments.** This is NOT a reconciled current balance. Historical 2020–2021 buys/sells are not included because specific sold-lot allocations could not be proven from screenshots. Multiple 2024–2026 reinvested dividend payments were shown but their share quantities were not; the demo therefore omits them rather than silently inventing shares. Its visual market-price points are based on screenshot **execution prices** from purchase dates, and the final 2026-10-09 $233.80 observation is not a current quote or forecast. The demo can make the portfolio look profitable or unprofitable incorrectly and **must not guide actual trading**.
+
+The personal portfolio remains empty until each account imports or creates its own data. Actual CSV import must reconcile old sales, reinvested fractional shares, fees and broker tax-lot identification before showing authoritative returns.
+
+## Original and adjusted tax lots (v1.1)
+
+- The ledger preserves **\`original_shares\`**, **\`original_cost\`** and the original per-share *basis* forever. The original per-share basis uses total cost ÷ share quantity and can differ slightly from the broker's rounded execution price.
+- Splits update **\`split_factor\`**, **\`adjusted_acquired_shares\`**, **\`remaining_unit_cost\`** and **\`shares\`** (after allocated sales), without rewriting the original quantity or initial total dollars.
+- Each open lot's **market value = all remaining shares × recorded price**; **unrealized gain = market value − remaining total basis**. Percentage gain is shown alongside dollar amount so that a 1-share holding is not confused with 100 shares.
+- The first potentially long-term sale date is the day after the purchase's one-year calendar anniversary; on the anniversary itself a holding is still generally **short-term**. A split retains original purchase date and a dividend reinvestment starts a new lot on its reinvestment date. Holding period, elapsed duration, current term and days until long term are exposed per lot and in the simulator.
+- The term classification is informational, based on a simple taxable U.S. stock purchase. Wash-sale basis adjustments, transfers, employee options, gifts, inherited shares, and other exceptions require actual brokerage/tax evidence.
 
 ## Main features
 
