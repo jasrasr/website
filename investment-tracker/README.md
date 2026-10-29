@@ -15,7 +15,7 @@ Private, mobile-friendly investment performance dashboard at target `https://jas
 
 ## Isolated NVIDIA screenshot demo (v1.1)
 
-After an account has been authorized for this project, open \`?demo=1\` (the **NVIDIA screenshot demo** tab). The data is **read-only** and **embedded as demonstration source only**, not inserted in the member's personal JSON or a shared user profile. \`?api=1&demo=1\` returns that source, and ALL demo POST attempts are rejected. Switch back to **My private portfolio** for normal user-linked records. The central project role is still required even for the demo, so it cannot bypass authentication.
+After an account has been authorized for this project, open `?demo=1` (the **NVIDIA screenshot demo** tab). The data is **read-only** and **embedded as demonstration source only**, not inserted in the member's personal JSON or a shared user profile. `?api=1&demo=1` returns that source, and ALL demo POST attempts are rejected. Switch back to **My private portfolio** for normal user-linked records. The central project role is still required even for the demo, so it cannot bypass authentication.
 
 Four screenshot-confirmed, currently open purchase rows are represented:
 
@@ -32,8 +32,8 @@ The personal portfolio remains empty until each account imports or creates its o
 
 ## Original and adjusted tax lots (v1.1)
 
-- The ledger preserves **\`original_shares\`**, **\`original_cost\`** and the original per-share *basis* forever. The original per-share basis uses total cost ÷ share quantity and can differ slightly from the broker's rounded execution price.
-- Splits update **\`split_factor\`**, **\`adjusted_acquired_shares\`**, **\`remaining_unit_cost\`** and **\`shares\`** (after allocated sales), without rewriting the original quantity or initial total dollars.
+- The ledger preserves **`original_shares`**, **`original_cost`** and the original per-share *basis* forever. The original per-share basis uses total cost ÷ share quantity and can differ slightly from the broker's rounded execution price.
+- Splits update **`split_factor`**, **`adjusted_acquired_shares`**, **`remaining_unit_cost`** and **`shares`** (after allocated sales), without rewriting the original quantity or initial total dollars.
 - Each open lot's **market value = all remaining shares × recorded price**; **unrealized gain = market value − remaining total basis**. Percentage gain is shown alongside dollar amount so that a 1-share holding is not confused with 100 shares.
 - The first potentially long-term sale date is the day after the purchase's one-year calendar anniversary; on the anniversary itself a holding is still generally **short-term**. A split retains original purchase date and a dividend reinvestment starts a new lot on its reinvestment date. Holding period, elapsed duration, current term and days until long term are exposed per lot and in the simulator.
 - The term classification is informational, based on a simple taxable U.S. stock purchase. Wash-sale basis adjustments, transfers, employee options, gifts, inherited shares, and other exceptions require actual brokerage/tax evidence.
