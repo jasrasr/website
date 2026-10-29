@@ -3,10 +3,10 @@
  * File Name: ledger.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Deterministic split-aware per-purchase tax-lot and performance calculations.
- * Revision: 1.1.0
+ * Revision: 1.1.1
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-29
- * Changelog: 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
+ * Changelog: 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
  */
 declare(strict_types=1);
 
@@ -94,6 +94,27 @@ function it_xirr(array $flows): ?float
     return ($low+$high)/2;
 }
 
+/**
+ * Standard publicly traded share holding-period indicator:
+ * begins day after trade date; more than one year is long-term.
+ * Corporate splits inherit the original lot's acquisition date.
+ */
+function it_holding_period(string $acquiredDate, string $asOfDate): array
+{
+    $acquired=new DateTimeImmutable($acquiredDate,new DateTimeZone('UTC'));
+    $asOf=new DateTimeImmutable($asOfDate,new DateTimeZone('UTC'));
+    if ($asOf < $acquired) throw new InvalidArgumentException('Holding date precedes acquisition.');
+    $firstLongTerm=$acquired->modify('+1 year')->modify('+1 day');
+    $interval=$acquired->diff($asOf);
+    return [
+        'days_held'=>(int)$interval->format('%a'),
+        'held_for'=>sprintf('%dy %dm %dd',$interval->y,$interval->m,$interval->d),
+        'long_term_on'=>$firstLongTerm->format('Y-m-d'),
+        'tax_term'=>$asOf >= $firstLongTerm?'long-term':'short-term',
+        'days_to_long_term'=>$asOf >= $firstLongTerm?0:(int)$asOf->diff($firstLongTerm)->format('%a')
+    ];
+}
+
 function it_calculate(array $events): array
 {
     $ordered=[];
@@ -172,18 +193,11 @@ function it_calculate(array $events): array
             $lot['remaining_unit_cost']=$lot['shares']>0.000000001
                 ?$lot['remaining_cost']/$lot['shares']:null;
             $lot['roi_pct']=($market!==null && $lot['remaining_cost']>0)?100*($market/$lot['remaining_cost']-1):null;
-            $age=max(0,(int)((strtotime(gmdate('Y-m-d').' UTC')-strtotime($lot['date'].' UTC'))/86400));
+            $holding=it_holding_period($lot['date'],gmdate('Y-m-d'));
+            $age=$holding['days_held'];
             $lot['annualized_pct']=($market!==null && $lot['remaining_cost']>0 && $lot['shares']>0 && $age>0)
                 ?100*(pow($market/$lot['remaining_cost'],365.25/$age)-1):null;
-            $acquired=new DateTimeImmutable($lot['date'],new DateTimeZone('UTC'));
-            $today=new DateTimeImmutable(gmdate('Y-m-d'),new DateTimeZone('UTC'));
-            $longTermOn=$acquired->modify('+1 year')->modify('+1 day');
-            $interval=$acquired->diff($today);
-            $lot['days_held']=$age;
-            $lot['held_for']=sprintf('%dy %dm %dd',$interval->y,$interval->m,$interval->d);
-            $lot['long_term_on']=$longTermOn->format('Y-m-d');
-            $lot['tax_term']=$today >= $longTermOn?'long-term':'short-term';
-            $lot['days_to_long_term']=$today >= $longTermOn?0:(int)$today->diff($longTermOn)->format('%a');
+            $lot=array_merge($lot,$holding);
             $currentLots[]=$lot;
         }
         $missingPrice=$qty>0.000000001 && $price===null;
