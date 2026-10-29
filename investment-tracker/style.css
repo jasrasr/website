@@ -2,10 +2,10 @@
  * File Name: style.css
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Mobile-first, dark financial analysis dashboard styling.
- * Revision: 1.0.0
+ * Revision: 1.1.0
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-29
- * Changelog: 1.0.0 - Responsive charts, tax lots, tables and simulation layout.
+ * Changelog: 1.1.0 - Distinguish original/adjusted lot columns, term status, and read-only demo mode. 1.0.0 - Responsive charts, tax lots, tables and simulation layout.
  */
 :root{color-scheme:dark;--bg:#0c121e;--panel:#151f30;--border:#2c3b50;--text:#e8f0f8;--muted:#9cabbe;--green:#3ee3b2;--red:#ff8295;--blue:#9eaef0;--shadow:0 14px 30px #0003}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 13% 0%,#1b3048 0,transparent 48%),var(--bg);font:15px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text)}
@@ -52,3 +52,21 @@ footer{padding:25px 0 45px;color:var(--muted);font-size:12px;text-align:center}
 @media(max-width:1050px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.charts,.charts.lower{grid-template-columns:1fr}.chartbox{min-height:200px}}
 @media(max-width:560px){.topbar,main,footer{width:min(100% - 24px,1460px)}.topbar{padding:20px 0}.topbar p{font-size:12px}.account{padding:8px 10px;font-size:12px}.metrics{gap:8px}.metric{padding:15px 12px;min-height:126px}.metric strong{font-size:21px}.metric small{font-size:10px}.panel{padding:16px;border-radius:13px}.formgrid{gap:11px}.barrow{grid-template-columns:72px minmax(0,1fr) 77px;gap:4px}.barlabel,.baramount{font-size:11px}h2{font-size:18px}.chartbox{min-height:170px}}
 @media(max-width:350px){.formgrid{grid-template-columns:1fr}.metric strong{font-size:19px}}
+
+/* V1.1: explicit demo isolation and lot-level tax horizon */
+.modes{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
+.mode{display:inline-flex;align-items:center;padding:9px 15px;border:1px solid var(--border);border-radius:999px;text-decoration:none;color:var(--muted);font-size:13px;font-weight:700}
+.mode.active{background:#1e554e;border-color:#2c9e89;color:#d0fff1}
+.demoBanner{background:#3a3022;border:1px solid #a78d54;border-radius:13px;padding:13px 18px;color:#ffe7b7;margin-bottom:16px}
+.demoBanner>strong{font-size:12px;letter-spacing:.035em}.demoBanner p{font-size:13px;line-height:1.6;margin-top:5px}
+body[data-demo="1"] [data-private-write]{display:none!important}
+.term{display:block;width:max-content;min-width:92px;border:1px solid transparent;padding:3px 8px;font-size:11px;border-radius:999px;margin-top:4px;font-weight:700}
+.longTerm{color:#5ae4b7;background:#123e36;border-color:#347866}
+.shortTerm{color:#ffd28c;background:#493621;border-color:#93714a}
+.heldFor{display:block;font-variant-numeric:tabular-nums}
+.lotFacts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:20px 0}
+.fact{background:#101d2b;border:1px solid var(--border);border-radius:10px;padding:11px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.fact strong{font-size:13px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.fact .subtle{font-size:11px}
+@media(max-width:750px){.lotFacts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:450px){.lotFacts{grid-template-columns:1fr}.demoBanner{padding:12px}.mode{font-size:12px}}
