@@ -2,12 +2,21 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release notes for private tax-lot investment dashboard.
-Revision: 1.3.0
+Revision: 1.4.0
 Created Date: 2026-10-29
 Modified Date: 2026-10-30
-Changelog: 1.3.0 - Add private staged Robinhood account import with per-ticker editable allocations and validation. 1.2.1 - Route unmodified Robinhood CSV to safe read-only preview when incorrectly selected for normalized import. 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
+Changelog: 1.4.0 - Auto-import supported broker transactions with explicitly provisional FIFO, split inference and unknown REC basis. 1.3.0 - Add private staged Robinhood account import with per-ticker editable allocations and validation. 1.2.1 - Route unmodified Robinhood CSV to safe read-only preview when incorrectly selected for normalized import. 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
 -->
 # Investment Tracker Changelog
+
+## 1.4.0 — 2026-10-30
+
+- Added user-authorized, one-click provisional import from an unchanged Robinhood activity CSV, without requiring invented broker lot confirmations or a manually entered portfolio balance.
+- Automatically derive FIFO **estimates** for past sales and infer unique common splits from credited shares with rounding tolerance; preserve whether an election is unverified.
+- Recognize Robinhood `REC` stock credits as shares with **unknown tax basis and acquisition period**. Suppress unrealized gains, lifetime profit and XIRR where basis is incomplete.
+- Continue to reject unsupported/ambiguous corporate actions rather than silently treating them as purchases or ignoring them.
+- Added prominent estimated-basis warnings and blocked misleading partial-sale simulations on received shares with unknown basis.
+- Moved advanced manual verification behind a collapsible section; raw CSV remains private and user-bound.
 
 ## 1.3.0 — 2026-10-30
 
