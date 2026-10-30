@@ -3,10 +3,10 @@
  * File Name: index.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Private investment tax-lot dashboard and authenticated ledger API.
- * Revision: 1.4.0
+ * Revision: 1.4.2
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-30
- * Changelog: 1.4.0 - Allow explicitly provisional one-click import using reported activity, inferred splits and FIFO; preserve unknown share basis. 1.3.2 - Offer explicitly unverified FIFO lot suggestions for review. 1.3.1 - Serialize stage and review edits with ticker commit to avoid concurrent draft mutation. 1.3.0 - Private draft creation, editable per-stock split and sale-lot reviews, validated atomic import. 1.2.1 - Clarify original Robinhood CSV versus normalized data, and guide misdirected uploads to safe preview. 1.2.0 - Preview Robinhood source reports without writing unverified lots; protect asset history from accidental import. 1.1.0 - Read-only NVIDIA demo, original and split-adjusted lot display, tax-term clarity. 1.0.0 - Shared login, manual events, atomic CSV import and lot dashboard.
+ * Changelog: 1.4.2 - Put estimated import first and move manual verification behind advanced details. 1.4.0 - Allow explicitly provisional one-click import using reported activity, inferred splits and FIFO; preserve unknown share basis. 1.3.2 - Offer explicitly unverified FIFO lot suggestions for review. 1.3.1 - Serialize stage and review edits with ticker commit to avoid concurrent draft mutation. 1.3.0 - Private draft creation, editable per-stock split and sale-lot reviews, validated atomic import. 1.2.1 - Clarify original Robinhood CSV versus normalized data, and guide misdirected uploads to safe preview. 1.2.0 - Preview Robinhood source reports without writing unverified lots; protect asset history from accidental import. 1.1.0 - Read-only NVIDIA demo, original and split-adjusted lot display, tax-term clarity. 1.0.0 - Shared login, manual events, atomic CSV import and lot dashboard.
  */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
@@ -310,8 +310,8 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Investment Tracker · Tax Lots</title>
-<link rel="stylesheet" href="style.css?v=1.4.0">
-<script src="app.js?v=1.4.0" defer></script>
+<link rel="stylesheet" href="style.css?v=1.4.2">
+<script src="app.js?v=1.4.2" defer></script>
 </head>
 <body data-demo="<?=$isDemo?'1':'0'?>">
 <header class="topbar"><div><span class="eyebrow">PRIVATE PORTFOLIO ANALYTICS</span><h1>Investment Tracker</h1><p>See what each purchase is worth, not just the average.</p></div><a class="account" href="<?=it_h($auth->portal())?>">Account <span aria-hidden="true">↗</span></a></header>
@@ -357,16 +357,19 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
  <p class="hint">Creating a new draft replaces any prior uncommitted review work for this user. It does not replace or delete already imported holdings.</p>
  <div id="rhPreview" class="result">Select the original downloaded CSV to inspect trade types and reconciliation issues. Nothing is saved.</div>
  <div id="rhTickers" class="rhTickers"></div>
- <section id="reconciliation" class="reconcile"><div class="panel-heading"><div><span class="eyebrow">PRIVATE · PER-TICKER REVIEW</span><h3>Correct and import brokerage activity</h3></div><span id="rhDraftStatus" class="subtle">No draft selected</span></div>
-  <p class="hint">Choose a ticker, verify the share count as of the report end, enter split ratios, and assign each sale to its actual originating purchase lot(s). Corporate actions that cannot be represented safely remain blocked.</p>
+ <section id="reconciliation" class="reconcile"><div class="panel-heading"><div><span class="eyebrow">PRIVATE · PER-TICKER REVIEW</span><h3>Import your Robinhood history</h3></div><span id="rhDraftStatus" class="subtle">No draft selected</span></div>
+  <p class="hint">Choose a stock and import its reported activity. The tracker can infer common stock splits and estimate sale allocations using FIFO. No extra brokerage verification is required for an <strong>estimated</strong> history. Tax-basis gaps are identified rather than guessed. For tax-ready results, advanced manual review remains available below.</p>
   <div class="formgrid">
    <label>Select stock<select id="rhDraftTicker"><option value="">Select stock</option></select></label>
    <label>Broker shares as of report end<input id="rhExpectedShares" type="number" min="0" step="any" placeholder="e.g. 1.736881"></label>
   </div>
+  <div class="actions" id="rhAutomaticActions"><button id="rhAutoImport" class="primary" type="button" disabled>Import selected stock as estimated</button></div>
+  <p class="hint">Estimated imports use the CSV as supplied; sale purchase-lot assignments are assumed FIFO, not verified broker elections. Shares with unknown cost basis show no taxable gain estimate. Some complex actions may still prevent an import.</p>
+  <details class="rhAdvanced"><summary>Advanced: verify tax lots and correct corporate actions</summary>
   <div id="rhReviewLines" class="rhReviewLines"></div>
   <label class="rhConfirm"><input id="rhConfirm" type="checkbox"> I verified purchases, split ratios, the broker's selected sale tax lots, and current shares against my records. An activity report alone does not establish tax-lot elections.</label>
-  <div class="actions"><button id="rhAutoImport" class="primary" type="button" disabled>Import this stock from report (estimated)</button><button id="rhSuggestFifo" class="ghost" type="button" disabled>Suggest FIFO allocations (unverified)</button><button id="rhSaveReview" class="secondary" type="button" disabled>Save corrections &amp; validate</button><button id="rhCommit" class="primary" type="button" disabled>Import this verified stock</button></div>
-  <div id="rhValidation" class="result" aria-live="polite">Upload and stage a Robinhood report to start reviewing individual stocks.</div>
+  <div class="actions"><button id="rhSuggestFifo" class="ghost" type="button" disabled>Suggest FIFO allocations (unverified)</button><button id="rhSaveReview" class="secondary" type="button" disabled>Save corrections &amp; validate</button><button id="rhCommit" class="primary" type="button" disabled>Import this verified stock</button></div>
+  <div id="rhValidation" class="result" aria-live="polite">Upload and stage a Robinhood report to start reviewing individual stocks.</div></details>
  </section>
  <p class="hint">Do not commit personal brokerage exports to this public repository. This analysis happens on the authenticated server request; this version does not persist the uploaded source or automatically assign sale lots.</p>
 </article>
@@ -376,5 +379,5 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
 </section>
 <section class="panel"><div class="panel-heading"><div><span class="eyebrow">IMMUTABLE HISTORY</span><h2>Activity ledger</h2></div><span id="recordCount" class="subtle"></span></div><div class="tablewrap"><table><thead><tr><th>Date</th><th>Stock</th><th>Type</th><th class="numeric">Shares</th><th class="numeric">Amount / price</th><th>Notes</th><th>Correction</th></tr></thead><tbody id="eventsBody"></tbody></table></div><div class="actions"><button type="button" class="secondary" id="newerEvents" disabled>Newer events</button><span id="eventPage" class="subtle" aria-live="polite"></span><button type="button" class="secondary" id="olderEvents" disabled>Older events</button></div><p class="hint">Voiding retains the original record for audit. Voiding a purchase that has allocated sales is blocked until its dependencies are corrected.</p></section>
 </main>
-<footer>Investment Tracker · Revision 1.4.0 · Updated October 29, 2026 · Data private to your central account · Calculations are estimates, not trading or tax advice</footer>
+<footer>Investment Tracker · Revision 1.4.2 · Updated October 29, 2026 · Data private to your central account · Calculations are estimates, not trading or tax advice</footer>
 </body></html>
