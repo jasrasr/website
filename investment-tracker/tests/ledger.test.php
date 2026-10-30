@@ -3,10 +3,10 @@
  * File Name: ledger.test.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Offline synthetic split, tax-lot and performance regression tests.
- * Revision: 1.1.0
+ * Revision: 1.2.0
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-29
- * Changelog: 1.1.0 - Original/adjusted quantity, proportional P&L and exact one-year tax boundary tests. 1.0.0 - Initial deterministic accounting tests.
+ * Changelog: 1.2.0 - Verify full NVDA CSV demo share reconciliation and prevent DRIP double counting. 1.1.0 - Original/adjusted quantity, proportional P&L and exact one-year tax boundary tests. 1.0.0 - Initial deterministic accounting tests.
  */
 declare(strict_types=1);
 require_once dirname(__DIR__).'/ledger.php';
@@ -104,11 +104,30 @@ t(abs($splitLot['remaining_cost']-20)<1e-9 && abs($splitLot['remaining_unit_cost
   'Two splits never change total $20 purchase basis');
 require_once dirname(__DIR__).'/demo.php';
 $demo=it_calculate(it_demo_events());
-t(abs($demo['holdings']['NVDA']['shares']-1.732118)<1e-8,
-  'Screenshot NVDA demo only tracks confirmed 1.732118 shares, without fabricated reinvestments');
-$lots=$demo['holdings']['NVDA']['lots'];
-t(abs($lots[0]['original_shares']-0.059679)<1e-9 && abs($lots[0]['shares']-0.59679)<1e-9,
-  'NVDA 2021 purchase displays original and tenfold adjusted share counts');
-t(it_holding_period($lots[count($lots)-1]['date'],'2026-10-29')['tax_term']==='short-term',
-  'October 2026 Nvidia purchase marked short-term during October 2026');
+$nvda=$demo['holdings']['NVDA'];
+t(abs($nvda['shares']-1.736881)<1e-8,
+  'Complete NVDA CSV demo includes ten fractional dividend reinvestments and reconciles 1.736881 shares');
+t(abs($nvda['dividends_reinvested']-0.95)<1e-8,
+  'Ten reinvestments total $0.95 and do not duplicate dividend cash income');
+t(abs($nvda['dividends_cash']-0.02)<1e-8,
+  'Only two historical cash dividends remain outside reinvested income');
+t(abs($nvda['purchases']-235.85)<1e-8,
+  'External cash purchases total $235.85 excluding dividend reinvestments');
+t(abs($nvda['sales_proceeds']-77.19)<1e-8,
+  'Provisional FIFO demo preserves exact $77.19 proceeds of old sales');
+t(abs($nvda['realized']-18.15)<1e-7,
+  'Fully exited historical positions have $18.15 aggregate gains regardless of lot allocation');
+t(abs($nvda['value']-406.0827778)<1e-7,
+  'Share count times stale $233.80 demonstration price is $406.0827778');
+t(abs($nvda['lifetime_profit']-247.4427778)<1e-7,
+  'Lifetime profit avoids counting both a reinvested dividend and the shares it purchased');
+$older=array_values(array_filter($nvda['lots'],static fn($l)=>$l['date']==='2021-11-22'));
+t(count($older)===2 && abs(array_sum(array_column($older,'original_shares'))-0.059679)<1e-8,
+  'NVDA split purchase original 2021 order is two fills totaling 0.059679 shares');
+t(abs(array_sum(array_column($older,'shares'))-0.59679)<1e-8,
+  'NVDA split-adjusted 2021 order becomes 0.59679 shares after 10:1 split');
+$latest=end($nvda['lots']);
+t($latest['date']==='2026-10-09' && $latest['tax_term']==='short-term',
+  'October 2026 NVDA purchase remains short-term during October 2026');
+
 echo "All synthetic ledger tests passed.\n";
