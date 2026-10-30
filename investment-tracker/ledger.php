@@ -188,11 +188,12 @@ function it_calculate(array $events): array
     $holdings=[];$missing=[];$totalValue=0.;$allFlows=[];$net=0.;
     foreach ($tickers as $t) {
         $price=$quotes[$t]['price']??null;
+        $priceUsable=$price!==null && ($quotes[$t]['date']??'') >= ($latestActivity[$t]??'');
         $qty=0.;$basis=0.;$currentLots=[];
         foreach ($lots as $lot) {
             if ($lot['ticker']!==$t) continue;
             if ($lot['shares']>0.000000001) { $qty+=$lot['shares']; $basis+=$lot['remaining_cost']; }
-            $market=$price!==null ? $lot['shares']*$price : null;
+            $market=$priceUsable ? $lot['shares']*$price : null;
             $lot['market_value']=$market;
             $lot['unrealized']=$market===null?null:$market-$lot['remaining_cost'];
             $lot['adjusted_acquired_shares']=$lot['original_shares']*$lot['split_factor'];
@@ -210,7 +211,7 @@ function it_calculate(array $events): array
             $lot=array_merge($lot,$holding);
             $currentLots[]=$lot;
         }
-        $missingPrice=$qty>0.000000001 && ($price===null || ($quotes[$t]['date']??'') < ($latestActivity[$t]??''));
+        $missingPrice=$qty>0.000000001 && !$priceUsable;
         if ($missingPrice) $missing[]=$t;
         $v=$qty<=0.000000001?0.0:($missingPrice?null:$qty*$price);
         if ($v!==null) $totalValue+=$v;
