@@ -2,16 +2,16 @@
  * File Name: app.js
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Accessible charts, per-lot history, sale simulation and private ledger controls.
- * Revision: 1.4.2
+ * Revision: 1.5.0
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-30
- * Changelog: 1.4.2 - Show unknown receipt basis and prevent false partial-sale tax calculations. 1.4.0 - Allow provisional Robinhood activity import without tax-lot attestation; display basis gaps prominently. 1.3.3 - Provide noncommitting FIFO allocation suggestions with explicit broker-verification warning. 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
+ * Changelog: 1.5.0 - Preview and import all eligible Robinhood symbols in one confirmed batch; show exceptions separately. 1.4.2 - Show unknown receipt basis and prevent false partial-sale tax calculations. 1.4.0 - Allow provisional Robinhood activity import without tax-lot attestation; display basis gaps prominently. 1.3.3 - Provide noncommitting FIFO allocation suggestions with explicit broker-verification warning. 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
  */
 'use strict';
 const $ = s => document.querySelector(s);
 let state={events:[],analysis:{holdings:{},series:{},totals:{},missing_prices:[]},csrf:''};
 let selectedTicker='', selectedLot='',csvPreviewKey='';
-let rhStage=null,rhSelected=null;
+let rhStage=null,rhSelected=null,rhBatchPreview=null;
 let eventPage=0;
 const eventPageSize=100;
 const demoMode=document.body?.dataset.demo==='1';
@@ -405,15 +405,62 @@ function rhRenderValidation(result) {
 async function rhRefresh(ticker='') {
  const data=await rhDraftApi(ticker);
  if(!data?.exists) {
-  $('#rhDraftStatus').textContent='No private draft yet';rhStage=null;return;
+  $('#rhDraftStatus').textContent='No private draft yet';rhStage=null;rhBatchPreview=null;$('#rhPreviewAll').disabled=true;$('#rhCommitAll').disabled=true;return;
  }
  rhStage=data;
+ $('#rhPreviewAll').disabled=false;
  $('#rhDraftStatus').textContent=data.source_records+' stock activity rows staged · '+data.ticker_count+' tickers · through '+(data.report_last_date||'report end unknown');
  const select=$('#rhDraftTicker');
  const prior=ticker||select.value;
  selectOptions(select,data.tickers,x=>x.ticker+' — '+x.status,x=>x.ticker,'Select a stock');
  if(data.tickers.some(x=>x.ticker===prior))select.value=prior;
  if(ticker&&data.rows)rhDrawStock(data);
+}
+
+function rhBatchDisplay(report,wasImported=false) {
+ const box=$('#rhBatchStatus');box.replaceChildren();
+ if(wasImported) {
+  box.append(el('strong',null,report.stocks+' stocks and '+report.events+' activity events imported to your private portfolio as ESTIMATED.'));
+  box.append(el('p','subtle',report.blocked.length+' stocks need special handling; '+report.skipped.length+' already imported or skipped.'));
+ } else {
+  box.append(el('strong',null,report.eligible_count+' stocks eligible · '+report.blocked_count+' need review · '+report.skipped_count+' already in portfolio'));
+  box.append(el('p',null,report.import_count+' source-derived events ready. Nothing has been saved to your permanent portfolio. Past sale-lot attribution is provisional FIFO.'));
+  if(report.error)box.append(el('p','negative',report.error));
+ }
+ const blocked=report.blocked||[];
+ if(blocked.length) {
+  const details=el('details','rhBatchExceptions');
+  details.append(el('summary',null,'Show '+blocked.length+' stocks requiring special handling'));
+  const ul=el('ul');
+  blocked.forEach(item=>ul.append(el('li',null,item.ticker+' · '+item.reason)));
+  details.append(ul);box.append(details);
+ }
+}
+async function rhPreviewAll() {
+ if(!rhStage){notice('Stage the CSV first.',true);return;}
+ const b=$('#rhPreviewAll');b.disabled=true;
+ try {
+  const result=await api(formBody('preview_auto_import_all'));
+  rhBatchPreview=result;
+  rhBatchDisplay(result);
+  $('#rhCommitAll').disabled=!result.ready;
+  notice('Full Robinhood import preview complete. No personal ledger records changed.');
+ }catch(err){rhBatchPreview=null;$('#rhCommitAll').disabled=true;notice(err.message,true);}
+ finally{b.disabled=false;}
+}
+async function rhCommitAll() {
+ if(!rhBatchPreview?.ready)return;
+ const n=rhBatchPreview.eligible_count,e=rhBatchPreview.import_count;
+ if(!confirm('Import '+n+' eligible stocks ('+e+' events) to your private portfolio using provisional FIFO for sales? Tax lots are NOT broker-verified, unknown-basis shares will remain unvalued for taxable gains, and the '+rhBatchPreview.blocked_count+' blocked stocks will remain untouched.'))return;
+ const b=$('#rhCommitAll');b.disabled=true;
+ try {
+  const fd=formBody('commit_auto_import_all');fd.set('fingerprint',rhBatchPreview.fingerprint);
+  const result=await api(fd);
+  rhBatchPreview=null;
+  await load();await rhRefresh();
+  rhBatchDisplay(result,true);
+  notice(result.stocks+' stocks successfully imported as estimated history. '+result.blocked.length+' stocks remain in the exception queue.');
+ }catch(err){notice(err.message,true);}
 }
 async function rhStageUpload(){
  const file=$('#rhFile').files[0];if(!file){notice('Select your original Robinhood CSV first.',true);return;}
@@ -422,7 +469,7 @@ async function rhStageUpload(){
  try{
   const fd=formBody('stage_robinhood');fd.set('file',file);
   await api(fd);
-  rhSelected=null;$('#rhReviewLines').replaceChildren();
+  rhSelected=null;rhBatchPreview=null;$('#rhCommitAll').disabled=true;$('#rhReviewLines').replaceChildren();
   $('#rhCommit').disabled=true;$('#rhSaveReview').disabled=true;
   await rhRefresh();
   $('#reconciliation').scrollIntoView({behavior:'smooth',block:'start'});
@@ -591,6 +638,8 @@ document.addEventListener('DOMContentLoaded',()=>{
  $('#rhSaveReview').addEventListener('click',rhSave);
  $('#rhAutoImport').addEventListener('click',rhAutoImport);
  $('#rhCommit').addEventListener('click',rhCommitTicker);
+ $('#rhPreviewAll').addEventListener('click',rhPreviewAll);
+ $('#rhCommitAll').addEventListener('click',rhCommitAll);
  if(!demoMode)rhRefresh().catch(err=>notice(err.message,true));
  $('#previewCsv').addEventListener('click',()=>csvAction('preview_csv'));
  $('#commitCsv').addEventListener('click',()=>csvAction('import_csv'));
