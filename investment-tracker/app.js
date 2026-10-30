@@ -2,10 +2,10 @@
  * File Name: app.js
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Accessible charts, per-lot history, sale simulation and private ledger controls.
- * Revision: 1.2.0
+ * Revision: 1.2.1
  * Created Date: 2026-10-29
- * Modified Date: 2026-10-29
- * Changelog: 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
+ * Modified Date: 2026-10-30
+ * Changelog: 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
  */
 'use strict';
 const $ = s => document.querySelector(s);
@@ -240,9 +240,9 @@ function describeType(code) {
  const names={buy:'Cash purchases',sell:'Sales (tax lots unresolved)',reinvest:'Dividend reinvestments',dividend:'Dividend credits',split_credit:'Split share credits (not ratios)',stock_lending:'Stock lending',cash_movement:'Deposits/transfers',fee_or_tax:'Fees and taxes',interest:'Interest',unsupported:'Other corporate actions / cancellations'};
  return names[code]||code;
 }
-async function previewRobinhood(event) {
- event.preventDefault();
- const file=$('#rhFile').files[0];if(!file){notice('Select a Robinhood activity CSV.',true);return;}
+async function previewRobinhood(event,fileOverride=null) {
+ if(event)event.preventDefault();
+ const file=fileOverride||$('#rhFile').files[0];if(!file){notice('Select a Robinhood activity CSV.',true);return;}
  const button=$('#rhForm button[type=submit]');button.disabled=true;
  try{
   const fd=formBody('preview_robinhood');fd.set('file',file);
@@ -289,10 +289,24 @@ async function previewRobinhood(event) {
  finally{button.disabled=false;}
 }
 
+async function isOriginalRobinhoodCsv(file) {
+ // Read only the header on the user's device; do not upload it twice or alter the file.
+ const header=(await file.slice(0,2048).text()).replace(/^\uFEFF/,'').split(/\r?\n/,1)[0].trim();
+ return header.split(',').map(part=>part.trim().replace(/^"|"$/g,'')).join(',')===
+  'Activity Date,Process Date,Settle Date,Instrument,Description,Trans Code,Quantity,Price,Amount';
+}
 function fileKey(f) {return f?f.name+':'+f.size+':'+f.lastModified:'';}
 async function csvAction(action) {
  const file=$('#csvFile').files[0];
  if(!file){notice('Choose a normalized CSV file.',true);return;}
+ if(action==='preview_csv' && await isOriginalRobinhoodCsv(file)) {
+  csvPreviewKey='';
+  $('#commitCsv').disabled=true;
+  $('#csvPreview').textContent='Original Robinhood activity CSV detected. Redirected to brokerage analysis. No records imported.';
+  await previewRobinhood(null,file);
+  $('#robinhood-upload').scrollIntoView({behavior:'smooth',block:'start'});
+  return;
+ }
  if(action==='import_csv' && fileKey(file)!==csvPreviewKey){notice('Preview this file before importing.',true);return;}
  const fd=formBody(action);fd.set('file',file);
  const button=action==='preview_csv'?$('#previewCsv'):$('#commitCsv');
