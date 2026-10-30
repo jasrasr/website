@@ -2,16 +2,16 @@
  * File Name: app.js
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Accessible charts, per-lot history, sale simulation and private ledger controls.
- * Revision: 1.3.3
+ * Revision: 1.5.0
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-30
- * Changelog: 1.3.3 - Provide noncommitting FIFO allocation suggestions with explicit broker-verification warning. 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
+ * Changelog: 1.5.0 - Preview and import all eligible Robinhood symbols in one confirmed batch; show exceptions separately. 1.4.2 - Show unknown receipt basis and prevent false partial-sale tax calculations. 1.4.0 - Allow provisional Robinhood activity import without tax-lot attestation; display basis gaps prominently. 1.3.3 - Provide noncommitting FIFO allocation suggestions with explicit broker-verification warning. 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
  */
 'use strict';
 const $ = s => document.querySelector(s);
 let state={events:[],analysis:{holdings:{},series:{},totals:{},missing_prices:[]},csrf:''};
 let selectedTicker='', selectedLot='',csvPreviewKey='';
-let rhStage=null,rhSelected=null;
+let rhStage=null,rhSelected=null,rhBatchPreview=null;
 let eventPage=0;
 const eventPageSize=100;
 const demoMode=document.body?.dataset.demo==='1';
@@ -104,19 +104,19 @@ function renderLots(ticker) {
  lots.forEach(l=>{
   const tr=el('tr',selectedLot===l.id?'selected':'');
   cell(tr,day(l.date));
-  cell(tr,l.source==='reinvest'?'Reinvested dividend':'Purchase');
+  cell(tr,l.source==='reinvest'?'Reinvested dividend':l.source==='receipt'?'Share credit · basis unknown':'Purchase');
   cell(tr,qty(l.original_shares),'numeric');
   cell(tr,money(l.original_unit_cost),'numeric');
   cell(tr,'×'+qty(l.split_factor),'numeric');
   cell(tr,qty(l.shares),'numeric');
   cell(tr,money(l.remaining_unit_cost),'numeric');
-  cell(tr,money(l.remaining_cost),'numeric');
+  cell(tr,money(l.basis_unknown?null:l.remaining_cost),'numeric');
   cell(tr,money(l.market_value),'numeric');
   cell(tr,money(l.unrealized),'numeric '+colorize(l.unrealized));
   cell(tr,percent(l.roi_pct),'numeric '+colorize(l.roi_pct));
   const age=cell(tr,'');
-  age.append(el('span','heldFor',l.held_for),el('span','term '+(l.tax_term==='long-term'?'longTerm':'shortTerm'),l.tax_term==='long-term'?'Long-term':'Short-term'));
-  if(l.tax_term!=='long-term')age.append(el('small','subtle',l.days_to_long_term+' days until long-term'));
+  age.append(el('span','heldFor',l.held_for),el('span','term '+(l.tax_term==='long-term'?'longTerm':'shortTerm'),l.tax_term==='unknown'?'Basis / term unknown':l.tax_term==='long-term'?'Long-term':'Short-term'));
+  if(l.tax_term==='short-term')age.append(el('small','subtle',l.days_to_long_term+' days until long-term'));
   const td=cell(tr,'');const button=el('button','smallbtn','Explore');button.type='button';button.addEventListener('click',()=>chooseLot(l.id));td.append(button);
   tbody.append(tr);
  });
@@ -141,7 +141,7 @@ function chooseLot(id) {
   ['Market value / unrealized gain',money(lot.market_value)+' / '+money(lot.unrealized)+' ('+percent(lot.roi_pct)+')'],
   ['Original holding duration',lot.held_for+' · '+lot.days_held+' days'],
   ['Holding-period classification',lot.tax_term==='long-term'?'Long-term':('Short-term · '+lot.days_to_long_term+' days remaining')],
-  ['First potentially long-term sale date',day(lot.long_term_on)]
+  ['First potentially long-term sale date',lot.long_term_on?day(lot.long_term_on):'Unknown']
  ];
  fields.forEach(([name,val])=>{const c=el('div','fact');c.append(el('span','subtle',name),el('strong',null,val));facts.append(c);});
  const points=(state.analysis.series[lot.ticker]||[]).filter(p=>p.date>=lot.date).map(p=>{
@@ -156,8 +156,9 @@ function renderHoldings() {
  const host=$('#holdings');host.replaceChildren();
  Object.values(state.analysis.holdings).forEach(h=>{
   const card=el('div','holding');const heading=el('div','holdingTop');heading.append(el('b',null,h.ticker),el('strong',colorize(h.unrealized),money(h.value)));card.append(heading);
-  card.append(el('p','subtle',qty(h.shares)+' shares · basis '+money(h.basis)+' · '+(h.price===null?'MISSING PRICE':'$'+qty(h.price)+'/share as of '+day(h.price_date))));
+  card.append(el('p','subtle',qty(h.shares)+' shares · basis '+(h.basis_unknown?'UNKNOWN (received shares)':money(h.basis))+' · '+(h.price===null?'MISSING PRICE':'$'+qty(h.price)+'/share as of '+day(h.price_date))));
   const stats=el('div','holdingStats');stats.append(el('span',colorize(h.unrealized),'Unrealized '+money(h.unrealized)),el('span',colorize(h.realized),'Realized '+money(h.realized)));
+  if(h.allocation_estimated || h.basis_unknown)card.append(el('p','rhWarning',h.basis_unknown?'UNKNOWN BASIS: share-credit tax cost and holding period cannot be calculated.':'ESTIMATED FIFO: stock sale lots have not been verified against the broker.'));
   card.append(stats);card.append(el('p','subtle','Lifetime '+money(h.lifetime_profit)+' · Cash dividends '+money(h.dividends_cash)+' · Reinvested '+money(h.dividends_reinvested)+' · Stock-lending/other income '+money(h.other_income||0)+' · Fees '+money(h.fees||0)+' · XIRR '+percent(h.xirr_pct)));
   host.append(card);
  });
@@ -228,6 +229,7 @@ function updateManualLots() {
 function salePreview(event) {
  event.preventDefault();const lot=openLots().find(l=>l.id===$('#saleLot').value);
  const q=Number($('#saleQty').value),price=Number($('#salePrice').value);
+ if(lot?.basis_unknown){$('#saleResult').textContent='This share credit has unknown cost basis and acquisition date. Its taxable gain cannot be simulated without verified basis.';return;}
  if(!lot||!Number.isFinite(q)||q<=0||q>lot.shares+1e-9||!Number.isFinite(price)||price<=0) {
   $('#saleResult').textContent='Choose a valid lot, share quantity (no more than shares remaining), and sale price.';return;
  }
@@ -332,6 +334,7 @@ function rhDrawStock(data) {
  $('#rhConfirm').checked=!!data.review.source_confirmed;
  $('#rhSaveReview').disabled=!data.rows.length||!!data.completed;
  $('#rhSuggestFifo').disabled=!!data.completed || !data.rows.some(x=>x.kind==='sell');
+ $('#rhAutoImport').disabled=!!data.completed;
  $('#rhCommit').disabled=!data.validation?.ready||!!data.completed;
  const heading=el('p','subtle',data.rows.length+' brokerage activity lines for '+data.ticker+'. Purchase lot IDs are shown so each historical sale can be assigned precisely.');
  host.append(heading);
@@ -345,11 +348,11 @@ function rhDrawStock(data) {
   buys.forEach(row=>list.append(el('p','subtle',row.id.slice(0,9)+' · '+day(row.date)+' · '+qty(row.quantity)+' shares · '+money(Math.abs(row.amount))+(row.kind==='reinvest'?' (DRIP)':''))));
   listing.append(list);host.append(listing);
  }
- const issues=data.rows.filter(r=>['sell','split_credit','unsupported'].includes(r.kind)||r.pair_issue);
+ const issues=data.rows.filter(r=>['sell','split_credit','unsupported','receipt'].includes(r.kind)||r.pair_issue);
  if(!issues.length)host.append(el('p','notice','No explicit sale or split corrections found. Verify the current broker share balance before saving.'));
  for(const row of issues) {
   const card=el('section','rhIssue');
-  const title=el('h4',null,row.kind==='sell'?'Allocate stock sale':row.kind==='split_credit'?'Verify stock split':row.kind==='unsupported'?'Unsupported corporate action':'Verify reinvested dividend');
+  const title=el('h4',null,row.kind==='sell'?'Allocate stock sale':row.kind==='split_credit'?'Verify stock split':row.kind==='unsupported'?'Unsupported corporate action':row.kind==='receipt'?'Shares received — basis unknown':'Verify reinvested dividend');
   card.append(title);
   card.append(el('p','subtle',day(row.date)+' · '+row.code+' · source line '+row.line+' · '+(row.description||'')));
   if(row.kind==='sell') {
@@ -377,7 +380,9 @@ function rhDrawStock(data) {
    n.input.className='rhRatioNum';d.input.className='rhRatioDen';
    ratio.append(n.outer,d.outer);card.append(ratio);
   }else if(row.kind==='unsupported') {
-   card.append(el('p','negative','This is a share or corporate-action code the ledger cannot safely map. It stays blocked until an explicit, verified conversion/basis treatment is implemented. No guessed adjustment will be saved.'));
+   card.append(el('p','negative','Unrecognized corporate action. This symbol cannot be automatically imported without a defined conversion. Other stocks can still be imported.'));
+  }else if(row.kind==='receipt') {
+   card.append(el('p',null,qty(row.quantity)+' received shares will be recorded with an UNKNOWN cost basis. Share count is tracked, but estimated taxable gain/loss is hidden until basis can be established.'));
   }else if(row.pair_issue){
    card.append(el('p','negative','Dividend reinvestment issue: '+row.pair_issue+'. The credit must be reconciled first.'));
   }
@@ -400,15 +405,62 @@ function rhRenderValidation(result) {
 async function rhRefresh(ticker='') {
  const data=await rhDraftApi(ticker);
  if(!data?.exists) {
-  $('#rhDraftStatus').textContent='No private draft yet';rhStage=null;return;
+  $('#rhDraftStatus').textContent='No private draft yet';rhStage=null;rhBatchPreview=null;$('#rhPreviewAll').disabled=true;$('#rhCommitAll').disabled=true;return;
  }
  rhStage=data;
+ $('#rhPreviewAll').disabled=false;
  $('#rhDraftStatus').textContent=data.source_records+' stock activity rows staged · '+data.ticker_count+' tickers · through '+(data.report_last_date||'report end unknown');
  const select=$('#rhDraftTicker');
  const prior=ticker||select.value;
  selectOptions(select,data.tickers,x=>x.ticker+' — '+x.status,x=>x.ticker,'Select a stock');
  if(data.tickers.some(x=>x.ticker===prior))select.value=prior;
  if(ticker&&data.rows)rhDrawStock(data);
+}
+
+function rhBatchDisplay(report,wasImported=false) {
+ const box=$('#rhBatchStatus');box.replaceChildren();
+ if(wasImported) {
+  box.append(el('strong',null,report.stocks+' stocks and '+report.events+' activity events imported to your private portfolio as ESTIMATED.'));
+  box.append(el('p','subtle',report.blocked.length+' stocks need special handling; '+report.skipped.length+' already imported or skipped.'));
+ } else {
+  box.append(el('strong',null,report.eligible_count+' stocks eligible · '+report.blocked_count+' need review · '+report.skipped_count+' already in portfolio'));
+  box.append(el('p',null,report.import_count+' source-derived events ready. Nothing has been saved to your permanent portfolio. Past sale-lot attribution is provisional FIFO.'));
+  if(report.error)box.append(el('p','negative',report.error));
+ }
+ const blocked=report.blocked||[];
+ if(blocked.length) {
+  const details=el('details','rhBatchExceptions');
+  details.append(el('summary',null,'Show '+blocked.length+' stocks requiring special handling'));
+  const ul=el('ul');
+  blocked.forEach(item=>ul.append(el('li',null,item.ticker+' · '+item.reason)));
+  details.append(ul);box.append(details);
+ }
+}
+async function rhPreviewAll() {
+ if(!rhStage){notice('Stage the CSV first.',true);return;}
+ const b=$('#rhPreviewAll');b.disabled=true;
+ try {
+  const result=await api(formBody('preview_auto_import_all'));
+  rhBatchPreview=result;
+  rhBatchDisplay(result);
+  $('#rhCommitAll').disabled=!result.ready;
+  notice('Full Robinhood import preview complete. No personal ledger records changed.');
+ }catch(err){rhBatchPreview=null;$('#rhCommitAll').disabled=true;notice(err.message,true);}
+ finally{b.disabled=false;}
+}
+async function rhCommitAll() {
+ if(!rhBatchPreview?.ready)return;
+ const n=rhBatchPreview.eligible_count,e=rhBatchPreview.import_count;
+ if(!confirm('Import '+n+' eligible stocks ('+e+' events) to your private portfolio using provisional FIFO for sales? Tax lots are NOT broker-verified, unknown-basis shares will remain unvalued for taxable gains, and the '+rhBatchPreview.blocked_count+' blocked stocks will remain untouched.'))return;
+ const b=$('#rhCommitAll');b.disabled=true;
+ try {
+  const fd=formBody('commit_auto_import_all');fd.set('fingerprint',rhBatchPreview.fingerprint);
+  const result=await api(fd);
+  rhBatchPreview=null;
+  await load();await rhRefresh();
+  rhBatchDisplay(result,true);
+  notice(result.stocks+' stocks successfully imported as estimated history. '+result.blocked.length+' stocks remain in the exception queue.');
+ }catch(err){notice(err.message,true);}
 }
 async function rhStageUpload(){
  const file=$('#rhFile').files[0];if(!file){notice('Select your original Robinhood CSV first.',true);return;}
@@ -417,7 +469,7 @@ async function rhStageUpload(){
  try{
   const fd=formBody('stage_robinhood');fd.set('file',file);
   await api(fd);
-  rhSelected=null;$('#rhReviewLines').replaceChildren();
+  rhSelected=null;rhBatchPreview=null;$('#rhCommitAll').disabled=true;$('#rhReviewLines').replaceChildren();
   $('#rhCommit').disabled=true;$('#rhSaveReview').disabled=true;
   await rhRefresh();
   $('#reconciliation').scrollIntoView({behavior:'smooth',block:'start'});
@@ -496,6 +548,20 @@ async function rhSave(){
  }catch(err){notice(err.message,true);}
  finally{b.disabled=false;}
 }
+async function rhAutoImport() {
+ if(!rhSelected || !rhStage)return;
+ const ticker=rhSelected.ticker;
+ if(!confirm('Import '+ticker+' from the Robinhood activity CSV as an ESTIMATED history? Sales use assumed FIFO, splits may be inferred from credited shares, and received shares have UNKNOWN cost basis. No brokerage tax-lot election will be claimed.'))return;
+ const button=$('#rhAutoImport');button.disabled=true;
+ try {
+  const fd=formBody('auto_import_stock');fd.set('ticker',ticker);fd.set('revision',rhStage.revision);
+  const result=await api(fd);
+  await load();await rhRefresh(ticker);
+  const report=(result.warnings||[]).slice(0,5).join(' ');
+  notice(ticker+' imported provisionally. '+result.imported+' activity events. '+report);
+ }catch(err){notice(err.message,true);button.disabled=false;}
+}
+
 async function rhCommitTicker(){
  if(!rhSelected||!rhStage || !rhSelected.validation?.ready)return;
  const ticker=rhSelected.ticker;
@@ -565,12 +631,15 @@ document.addEventListener('DOMContentLoaded',()=>{
  $('#rhDraftTicker').addEventListener('change',e=>{
   const ticker=e.target.value;
   rhSelected=null;$('#rhReviewLines').replaceChildren();
-  $('#rhSaveReview').disabled=true;$('#rhCommit').disabled=true;$('#rhSuggestFifo').disabled=true;
+  $('#rhSaveReview').disabled=true;$('#rhCommit').disabled=true;$('#rhAutoImport').disabled=true;$('#rhSuggestFifo').disabled=true;
   if(ticker)rhRefresh(ticker).catch(err=>notice(err.message,true));
  });
  $('#rhSuggestFifo').addEventListener('click',rhSuggestFifo);
  $('#rhSaveReview').addEventListener('click',rhSave);
+ $('#rhAutoImport').addEventListener('click',rhAutoImport);
  $('#rhCommit').addEventListener('click',rhCommitTicker);
+ $('#rhPreviewAll').addEventListener('click',rhPreviewAll);
+ $('#rhCommitAll').addEventListener('click',rhCommitAll);
  if(!demoMode)rhRefresh().catch(err=>notice(err.message,true));
  $('#previewCsv').addEventListener('click',()=>csvAction('preview_csv'));
  $('#commitCsv').addEventListener('click',()=>csvAction('import_csv'));

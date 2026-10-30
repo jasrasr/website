@@ -2,10 +2,10 @@
  * File Name: style.css
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Mobile-first, dark financial analysis dashboard styling.
- * Revision: 1.3.0
+ * Revision: 1.5.0
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-30
- * Changelog: 1.3.0 - Add responsive verified brokerage review cards, sale lot allocation editor and validation feedback. 1.2.0 - Present Robinhood CSV reconciliation summary safely. 1.1.0 - Distinguish original/adjusted lot columns, term status, and read-only demo mode. 1.0.0 - Responsive charts, tax lots, tables and simulation layout.
+ * Changelog: 1.5.0 - Add compact full-report import controls and scrollable exception display. 1.3.0 - Add responsive verified brokerage review cards, sale lot allocation editor and validation feedback. 1.2.0 - Present Robinhood CSV reconciliation summary safely. 1.1.0 - Distinguish original/adjusted lot columns, term status, and read-only demo mode. 1.0.0 - Responsive charts, tax lots, tables and simulation layout.
  */
 :root{color-scheme:dark;--bg:#0c121e;--panel:#151f30;--border:#2c3b50;--text:#e8f0f8;--muted:#9cabbe;--green:#3ee3b2;--red:#ff8295;--blue:#9eaef0;--shadow:0 14px 30px #0003}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 13% 0%,#1b3048 0,transparent 48%),var(--bg);font:15px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text)}
@@ -115,3 +115,11 @@ body[data-demo="1"] [data-private-write]{display:none!important}
 #rhValidation li{margin:4px 0}
 @media(max-width:540px){.rhAllocation{grid-template-columns:1fr 1fr}.rhAllocation select{grid-column:1/-1}.rhAllocation button{width:100%}.rhLotsGrid{grid-template-columns:1fr}}
 @media(max-width:360px){.rhRatio,.rhAllocation{grid-template-columns:1fr}.rhAllocation select{grid-column:auto}}
+
+/* One-review import of all supported stocks */
+.rhBatchActions{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 10px}
+.rhBatchActions button{flex:1 1 230px;min-height:47px}
+.rhBatchExceptions{border-top:1px solid var(--border);margin-top:12px;padding-top:10px}
+.rhBatchExceptions summary{cursor:pointer;font-weight:700;font-size:13px}
+.rhBatchExceptions ul{max-height:240px;overflow:auto;padding-left:18px;font-size:12px;line-height:1.55;color:var(--muted)}
+.rhBatchExceptions li{padding:4px 0;overflow-wrap:anywhere}

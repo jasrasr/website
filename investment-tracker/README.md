@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, data contract, calculation model, privacy and test procedures.
-Revision: 1.3.0
+Revision: 1.5.0
 Created Date: 2026-10-29
 Modified Date: 2026-10-30
-Changelog: 1.3.0 - Add private per-ticker report staging, editable sale-lot/split corrections, broker-share validation, and explicit atomic import. 1.2.1 - Clarify native Robinhood CSV upload and route misselected reports to the non-mutating analyzer. 1.2.0 - Reconcile NVDA demo using owner-authorized CSV and add preview-only Robinhood CSV parser. 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
+Changelog: 1.5.0 - Full-report batch preview, one-click import, per-ticker exceptions and privacy-safe deduplication. 1.4.0 - Enable provisional Robinhood import without impossible manual share/lot attestations. 1.3.0 - Add private per-ticker report staging, editable sale-lot/split corrections, broker-share validation, and explicit atomic import. 1.2.1 - Clarify native Robinhood CSV upload and route misselected reports to the non-mutating analyzer. 1.2.0 - Reconcile NVDA demo using owner-authorized CSV and add preview-only Robinhood CSV parser. 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
 -->
 # Investment Tracker
 
@@ -25,6 +25,41 @@ The **NVIDIA screenshot demo** tab (`?demo=1`) is now reconstructed from the own
 - The activity report does **not** identify which tax lots the broker actually selected for the two earlier NVDA sales. Demo allocates historical sale proceeds to oldest acquisitions provisionally for illustration. An actual tax-lot statement should be used before using realized gains in tax decisions.
 
 All personal user imports must still be approved and reconciled. **None of the user's 1,479-row brokerage CSV is committed to public GitHub**; only the explicitly authorized, ticker-specific NVDA demonstration entries are in source.
+
+## Import the full Robinhood report with one preview and one confirmation (v1.5)
+
+The report format has been confirmed against the owner's actual full CSV, containing 1,479 transaction rows and 104 ticker symbols. The original unedited source has nine columns in this exact order:
+
+```csv
+Activity Date,Process Date,Settle Date,Instrument,Description,Trans Code,Quantity,Price,Amount
+```
+
+The parser uses a CSV reader that understands **quoted multiline descriptions**, commas inside currency amounts, negative dollars in parentheses, fractional share quantities, optional byte-order marks, blank lines, and the final non-transaction Robinhood disclaimer row.
+
+From an authenticated **My private portfolio** page, stage the existing original report (if previously staged, reuse that existing saved draft). Then select **Preview import of all stocks**, review counts and the ticker-specific exception queue, and select **Import eligible stocks** to import all supported histories in a single atomic write. The user does not need to repeat these steps for every ticker, nor retype the broker's recorded transaction fields.
+
+- Supported tickers import together with source-derived purchase date, shares, cash outlay, reinvested dividends, distributions, common inferred splits and **assumed FIFO** allocations for earlier sales, explicitly labeled **estimated**.
+- Complex, insufficient or ambiguous corporate actions are **not silently omitted**. They are listed as per-symbol exceptions; those affected symbols stay out of this batch and can be handled later without blocking other imports.
+- Symbols already present in a user's private ledger are skipped rather than overwritten or duplicated. A preview fingerprint invalidates the import authorization if the underlying draft or personal portfolio changed between preview and commit.
+- The complete prepared ledger is replayed and tested before a single atomic account update. Source CSV is not committed or retained; only the private user-bound parsed draft and imported events are stored.
+- For `REC` share credits with no documented cost basis, share quantity is tracked as a receipt and taxable P&L and annualized return are **withheld**. Inferred FIFO is not a certified broker lot election. You can still inspect historical trades, share quantities and charts where priced.
+- The activity CSV is **not a market-price history**; the dashboard's current market value and unrealized gain still require a fresh market quote. Historical trade execution prices are not equivalent to end-of-day prices.
+
+The **Import selected stock as estimated** and optional advanced manual review remain available for inspecting or fixing individual exceptions. No transactions are submitted to Robinhood.
+
+## Import directly from Robinhood as an estimated history (v1.4)
+
+The original broker account-activity CSV is the source of record for **dates, share quantities, purchase spending, sale proceeds and cash distributions**. There is no requirement for a user to retype these values or check a box pretending the activity CSV contains tax-lot elections.
+
+1. Upload the unchanged activity CSV, select **Create private import draft**, and select any ticker.
+2. Use **Import selected stock as estimated**, shown directly below the ticker selector. A single explicit confirmation imports supported activity into that user's existing private portfolio. It does **not** place orders or require a separate share-count entry, manually assigned lots, or a tax-lot certification checkbox.
+3. The importer builds **provisional FIFO allocations** for past sales. It identifies mathematically unique common split ratios from Robinhood's credited share quantities and starting positions, with rounding tolerance; the recorded event's ratio is marked **inferred**, not independently verified. All generated events retain source identifiers and estimated status.
+4. `REC` share credits are preserved as **received shares with unknown cost basis and unknown acquisition date**, rather than ignored or treated as free zero-basis shares. The ticker's lifetime profit, unrealized gain and XIRR are **not calculated** when an unknown-basis receipt remains outstanding or was sold. Its share quantity can still be tracked.
+5. Unknown or ambiguous corporate-action codes, an unresolvable stock split, missing purchases needed to cover sales, or unsupported reinvestments prevent automatic import **for that ticker only**. They are shown as specific exceptions and are not omitted. Other stocks remain independently importable.
+6. Original screenshots and broker dividend share quantities may be rounded. The source-derived balance is labeled a **calculated share count**, not a Robinhood-confirmed current position. Imported trade execution prices are historical observations, **not current quotations**.
+7. The existing **Advanced: verify tax lots and correct corporate actions** panel remains available for users who have tax documentation and want to replace provisional assumptions. It is optional for estimated activity import.
+
+A provisional import is suitable for exploring historical holdings and trends; it is **not an accurate tax-lot election record** or a substitute for corrected broker basis and tax documents. The application must not present an estimated gain as a tax figure for unknown-basis holdings or a confirmed FIFO election. The raw CSV is not committed to GitHub and parsed drafts remain under the private, web-denied storage directory.
 
 ## Review and import Robinhood activity (v1.3)
 

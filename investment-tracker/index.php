@@ -3,10 +3,10 @@
  * File Name: index.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Private investment tax-lot dashboard and authenticated ledger API.
- * Revision: 1.3.2
+ * Revision: 1.5.0
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-30
- * Changelog: 1.3.2 - Offer explicitly unverified FIFO lot suggestions for review. 1.3.1 - Serialize stage and review edits with ticker commit to avoid concurrent draft mutation. 1.3.0 - Private draft creation, editable per-stock split and sale-lot reviews, validated atomic import. 1.2.1 - Clarify original Robinhood CSV versus normalized data, and guide misdirected uploads to safe preview. 1.2.0 - Preview Robinhood source reports without writing unverified lots; protect asset history from accidental import. 1.1.0 - Read-only NVIDIA demo, original and split-adjusted lot display, tax-term clarity. 1.0.0 - Shared login, manual events, atomic CSV import and lot dashboard.
+ * Changelog: 1.5.0 - Enable preview-first, atomic batch import of all eligible stocks with explicit exception summary. 1.4.2 - Put estimated import first and move manual verification behind advanced details. 1.4.0 - Allow explicitly provisional one-click import using reported activity, inferred splits and FIFO; preserve unknown share basis. 1.3.2 - Offer explicitly unverified FIFO lot suggestions for review. 1.3.1 - Serialize stage and review edits with ticker commit to avoid concurrent draft mutation. 1.3.0 - Private draft creation, editable per-stock split and sale-lot reviews, validated atomic import. 1.2.1 - Clarify original Robinhood CSV versus normalized data, and guide misdirected uploads to safe preview. 1.2.0 - Preview Robinhood source reports without writing unverified lots; protect asset history from accidental import. 1.1.0 - Read-only NVIDIA demo, original and split-adjusted lot display, tax-term clarity. 1.0.0 - Shared login, manual events, atomic CSV import and lot dashboard.
  */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
@@ -176,6 +176,89 @@ if ($isApi) {
             unset($validation['events']);$view['validation']=$validation;
             it_reply(200,true,$validation['ready']?'Review validated. Ledger not yet changed.':'Corrections saved; more review required.',$view);
         }
+        if ($action==='preview_auto_import_all') {
+            $draft=\Jasr\Framework\JsonStore::read($reconcilePath)['records'][0]??null;
+            if(!$draft)throw new InvalidArgumentException('Stage the original Robinhood CSV first.');
+            $rows=it_records($path);
+            $batch=it_rc_batch_preview($draft,$rows);
+            $public=it_rc_batch_public($batch,$draft,$rows);
+            it_reply(200,true,'Preview complete. No account records have been imported.',$public);
+        }
+        if ($action==='commit_auto_import_all') {
+            $provided=(string)($_POST['fingerprint']??'');
+            if(!preg_match('/^[a-f0-9]{64}$/D',$provided))
+                throw new InvalidArgumentException('Preview the entire report before importing.');
+            $lock=fopen($reconcilePath.'.work.lock','c');
+            if(!$lock || !flock($lock,LOCK_EX))throw new RuntimeException('Review lock unavailable.');
+            try {
+                $draft=\Jasr\Framework\JsonStore::read($reconcilePath)['records'][0]??null;
+                if(!$draft)throw new InvalidArgumentException('Staged report missing.');
+                $imported=null;
+                $after=\Jasr\Framework\JsonStore::update($path,static function(array $old)use($draft,$provided,&$imported):array{
+                    $batch=it_rc_batch_preview($draft,$old);
+                    $public=it_rc_batch_public($batch,$draft,$old);
+                    if(!hash_equals($public['fingerprint'],$provided))
+                        throw new InvalidArgumentException('Portfolio or report changed after preview. Preview again to avoid duplicate records.');
+                    if(!$batch['ready']||!$batch['events'])
+                        throw new InvalidArgumentException('No eligible stocks are ready for import.');
+                    $imported=$public;
+                    return it_append_import($old,$batch['events']);
+                });
+                \Jasr\Framework\JsonStore::update($reconcilePath,static function(array $records)use($imported):array{
+                    if(!isset($records[0]))throw new RuntimeException('Staged report missing after portfolio import.');
+                    foreach($imported['eligible'] as $symbol) {
+                        $records[0]['completed'][$symbol['ticker']]=[
+                            'at'=>gmdate(DATE_ATOM),'events'=>$symbol['events'],
+                            'method'=>'batch_provisional_fifo',
+                            'warnings'=>$symbol['warnings'],
+                        ];
+                    }
+                    return $records;
+                });
+                it_reply(200,true,'Eligible stocks imported with provisional tax-lot attribution; unsupported symbols remain untouched.',[
+                    'imported_symbols'=>array_column($imported['eligible'],'ticker'),
+                    'stocks'=>count($imported['eligible']),
+                    'events'=>$imported['import_count'],
+                    'blocked'=>$imported['blocked'],'skipped'=>$imported['skipped'],
+                    'ledger_events'=>count($after),'estimated'=>true
+                ]);
+            } finally {flock($lock,LOCK_UN);fclose($lock);}
+        }
+        if ($action==='auto_import_stock') {
+            $ticker=strtoupper(trim((string)($_POST['ticker']??'')));
+            $expected=(string)($_POST['revision']??'');
+            if(!preg_match('/^[A-Z0-9.^-]{1,14}$/D',$ticker))
+                throw new InvalidArgumentException('Select a valid ticker.');
+            $lock=fopen($reconcilePath.'.work.lock','c');
+            if(!$lock || !flock($lock,LOCK_EX))throw new RuntimeException('Review lock unavailable.');
+            try {
+                $draft=\Jasr\Framework\JsonStore::read($reconcilePath)['records'][0]??null;
+                if(!$draft || !hash_equals(it_rc_revision($draft),$expected))
+                    throw new InvalidArgumentException('Draft changed; refresh before importing.');
+                $auto=it_rc_auto_review($draft,$ticker);
+                if(!$auto['ready'])
+                    throw new InvalidArgumentException('Cannot safely import this stock: '.implode(' ',array_slice($auto['issues'],0,4)));
+                $events=$auto['events'];
+                $after=\Jasr\Framework\JsonStore::update($path,static function(array $old)use($ticker,$events):array{
+                    foreach(it_active($old) as $event)
+                        if(($event['ticker']??'')===$ticker)
+                            throw new InvalidArgumentException('This ticker already has ledger activity; no duplicate import performed.');
+                    return it_append_import($old,$events);
+                });
+                \Jasr\Framework\JsonStore::update($reconcilePath,static function(array $records)use($ticker,$events,$auto):array{
+                    if(!isset($records[0]))throw new RuntimeException('Missing staged report after import.');
+                    $records[0]['completed'][$ticker]=[
+                        'at'=>gmdate(DATE_ATOM),'events'=>count($events),
+                        'method'=>'provisional_fifo','warnings'=>$auto['warnings'],
+                    ];
+                    return $records;
+                });
+                it_reply(200,true,'Provisional brokerage activity imported; tax basis and elected lots NOT verified.',[
+                    'ticker'=>$ticker,'imported'=>count($events),'warnings'=>$auto['warnings'],
+                    'total_events'=>count($after),'estimated'=>true
+                ]);
+            } finally {flock($lock,LOCK_UN);fclose($lock);}
+        }
         if ($action==='commit_reconciliation') {
             $ticker=strtoupper(trim((string)($_POST['ticker']??'')));
             $expected=(string)($_POST['revision']??'');
@@ -275,8 +358,8 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Investment Tracker · Tax Lots</title>
-<link rel="stylesheet" href="style.css?v=1.3.2">
-<script src="app.js?v=1.3.2" defer></script>
+<link rel="stylesheet" href="style.css?v=1.5.0">
+<script src="app.js?v=1.5.0" defer></script>
 </head>
 <body data-demo="<?=$isDemo?'1':'0'?>">
 <header class="topbar"><div><span class="eyebrow">PRIVATE PORTFOLIO ANALYTICS</span><h1>Investment Tracker</h1><p>See what each purchase is worth, not just the average.</p></div><a class="account" href="<?=it_h($auth->portal())?>">Account <span aria-hidden="true">↗</span></a></header>
@@ -322,16 +405,25 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
  <p class="hint">Creating a new draft replaces any prior uncommitted review work for this user. It does not replace or delete already imported holdings.</p>
  <div id="rhPreview" class="result">Select the original downloaded CSV to inspect trade types and reconciliation issues. Nothing is saved.</div>
  <div id="rhTickers" class="rhTickers"></div>
- <section id="reconciliation" class="reconcile"><div class="panel-heading"><div><span class="eyebrow">PRIVATE · PER-TICKER REVIEW</span><h3>Correct and import brokerage activity</h3></div><span id="rhDraftStatus" class="subtle">No draft selected</span></div>
-  <p class="hint">Choose a ticker, verify the share count as of the report end, enter split ratios, and assign each sale to its actual originating purchase lot(s). Corporate actions that cannot be represented safely remain blocked.</p>
+ <section id="reconciliation" class="reconcile"><div class="panel-heading"><div><span class="eyebrow">PRIVATE · PER-TICKER REVIEW</span><h3>Import your Robinhood history</h3></div><span id="rhDraftStatus" class="subtle">No draft selected</span></div>
+  <p class="hint">Choose a stock and import its reported activity. The tracker can infer common stock splits and estimate sale allocations using FIFO. No extra brokerage verification is required for an <strong>estimated</strong> history. Tax-basis gaps are identified rather than guessed. For tax-ready results, advanced manual review remains available below.</p>
+  <div class="rhBatchActions">
+    <button id="rhPreviewAll" class="secondary" type="button" disabled>Preview import of all stocks</button>
+    <button id="rhCommitAll" class="primary" type="button" disabled>Import eligible stocks</button>
+  </div>
+  <div id="rhBatchStatus" class="result" aria-live="polite">Stage your unmodified Robinhood report, then preview all stocks. No account data is changed during preview.</div>
+  <p class="hint">One import can process every supported stock. Any exceptions are listed with their original transaction codes; other symbols are not held back. Past sale allocations remain estimated, not broker-certified tax lots.</p>
   <div class="formgrid">
    <label>Select stock<select id="rhDraftTicker"><option value="">Select stock</option></select></label>
    <label>Broker shares as of report end<input id="rhExpectedShares" type="number" min="0" step="any" placeholder="e.g. 1.736881"></label>
   </div>
+  <div class="actions" id="rhAutomaticActions"><button id="rhAutoImport" class="primary" type="button" disabled>Import selected stock as estimated</button></div>
+  <p class="hint">Estimated imports use the CSV as supplied; sale purchase-lot assignments are assumed FIFO, not verified broker elections. Shares with unknown cost basis show no taxable gain estimate. Some complex actions may still prevent an import.</p>
+  <details class="rhAdvanced"><summary>Advanced: verify tax lots and correct corporate actions</summary>
   <div id="rhReviewLines" class="rhReviewLines"></div>
   <label class="rhConfirm"><input id="rhConfirm" type="checkbox"> I verified purchases, split ratios, the broker's selected sale tax lots, and current shares against my records. An activity report alone does not establish tax-lot elections.</label>
   <div class="actions"><button id="rhSuggestFifo" class="ghost" type="button" disabled>Suggest FIFO allocations (unverified)</button><button id="rhSaveReview" class="secondary" type="button" disabled>Save corrections &amp; validate</button><button id="rhCommit" class="primary" type="button" disabled>Import this verified stock</button></div>
-  <div id="rhValidation" class="result" aria-live="polite">Upload and stage a Robinhood report to start reviewing individual stocks.</div>
+  <div id="rhValidation" class="result" aria-live="polite">Upload and stage a Robinhood report to start reviewing individual stocks.</div></details>
  </section>
  <p class="hint">Do not commit personal brokerage exports to this public repository. This analysis happens on the authenticated server request; this version does not persist the uploaded source or automatically assign sale lots.</p>
 </article>
@@ -341,5 +433,5 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
 </section>
 <section class="panel"><div class="panel-heading"><div><span class="eyebrow">IMMUTABLE HISTORY</span><h2>Activity ledger</h2></div><span id="recordCount" class="subtle"></span></div><div class="tablewrap"><table><thead><tr><th>Date</th><th>Stock</th><th>Type</th><th class="numeric">Shares</th><th class="numeric">Amount / price</th><th>Notes</th><th>Correction</th></tr></thead><tbody id="eventsBody"></tbody></table></div><div class="actions"><button type="button" class="secondary" id="newerEvents" disabled>Newer events</button><span id="eventPage" class="subtle" aria-live="polite"></span><button type="button" class="secondary" id="olderEvents" disabled>Older events</button></div><p class="hint">Voiding retains the original record for audit. Voiding a purchase that has allocated sales is blocked until its dependencies are corrected.</p></section>
 </main>
-<footer>Investment Tracker · Revision 1.3.2 · Updated October 29, 2026 · Data private to your central account · Calculations are estimates, not trading or tax advice</footer>
+<footer>Investment Tracker · Revision 1.5.0 · Updated October 29, 2026 · Data private to your central account · Calculations are estimates, not trading or tax advice</footer>
 </body></html>
