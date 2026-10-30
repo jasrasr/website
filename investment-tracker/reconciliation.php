@@ -3,10 +3,10 @@
  * File Name: reconciliation.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Source-preserving Robinhood import staging, per-ticker corrections and safe ledger conversion.
- * Revision: 1.3.0
+ * Revision: 1.3.1
  * Created Date: 2026-10-30
  * Modified Date: 2026-10-30
- * Changelog: 1.3.0 - Add full-report eligibility preview, exception queue and atomic batch preparation. 1.2.0 - Suggest split ratios and FIFO from source records, preserving REC credits as unknown-basis receipts and estimated status. 1.1.1 - Preserve report end date for share confirmation and reject fractional split ratios. 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
+ * Changelog: 1.3.1 - Make batch preview self-contained for CLI regression and safe combined-ledger validation. 1.3.0 - Add full-report eligibility preview, exception queue and atomic batch preparation. 1.2.0 - Suggest split ratios and FIFO from source records, preserving REC credits as unknown-basis receipts and estimated status. 1.1.1 - Preserve report end date for share confirmation and reject fractional split ratios. 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
  */
 declare(strict_types=1);
 
@@ -428,7 +428,17 @@ function it_rc_batch_preview(array $stage,array $existing): array
         ];
     }
     if(count($all)>0){
-        try {it_append_import($existing,$all);}
+        try {
+            if(count($existing)+count($all)>20000)throw new InvalidArgumentException('Portfolio exceeds 20,000 event limit.');
+            $ids=[];
+            foreach(array_merge($existing,$all) as $e) {
+                if(!empty($e['id']) && isset($ids[(string)$e['id']]))
+                    throw new InvalidArgumentException('Duplicate ledger event identity.');
+                if(!empty($e['id']))$ids[(string)$e['id']]=true;
+            }
+            it_calculate(array_values(array_filter(array_merge($existing,$all),
+                static fn($e)=>empty($e['voided_at']))));
+        }
         catch(Throwable $e) {
             // Fail closed instead of claiming any batch is ready when the
             // overall ledger cannot replay or store all of it.
