@@ -2,10 +2,10 @@
  * File Name: app.js
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Accessible charts, per-lot history, sale simulation and private ledger controls.
- * Revision: 1.3.1
+ * Revision: 1.3.2
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-30
- * Changelog: 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
+ * Changelog: 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
  */
 'use strict';
 const $ = s => document.querySelector(s);
@@ -214,7 +214,7 @@ async function load() {
  const missing=d.analysis.missing_prices||[];
  if(demoMode)notice('Read-only NVDA demonstration: full activity history reconciles 1.736881 shares including DRIPs; historical sale tax-lot attribution is provisional, and the latest example price is stale (Oct 9).');
  else if(missing.length)notice('Missing current price observations for '+missing.join(', ')+'. Portfolio totals and XIRR are withheld until priced.');
- else notice('Ledger loaded. Market values use the last manually recorded price per stock; check its observation date.');
+ else notice('Ledger loaded. Prices are last recorded observations (manual or brokerage execution), NOT live market quotes; check their dates before decisions.');
 }
 function setEventFields() {
  const type=$('#eventType').value;
@@ -402,7 +402,7 @@ async function rhRefresh(ticker='') {
   $('#rhDraftStatus').textContent='No private draft yet';rhStage=null;return;
  }
  rhStage=data;
- $('#rhDraftStatus').textContent=data.source_records+' stock activity rows staged · '+data.ticker_count+' tickers';
+ $('#rhDraftStatus').textContent=data.source_records+' stock activity rows staged · '+data.ticker_count+' tickers · through '+(data.report_last_date||'report end unknown');
  const select=$('#rhDraftTicker');
  const prior=ticker||select.value;
  selectOptions(select,data.tickers,x=>x.ticker+' — '+x.status,x=>x.ticker,'Select a stock');
