@@ -211,7 +211,7 @@ async function load() {
  selectedLot='';$('#selectedLot').hidden=true;
  const d=await api();state={...state,events:d.events,analysis:d.analysis,csrf:d.csrf};render();
  const missing=d.analysis.missing_prices||[];
- if(demoMode)notice('Read-only NVDA illustration: known screenshot buys only. Missing dividend shares and past sale allocations mean profit and share totals are NOT account totals.');
+ if(demoMode)notice('Read-only NVDA demonstration: full activity history reconciles 1.736881 shares including DRIPs; historical sale tax-lot attribution is provisional, and the latest example price is stale (Oct 9).');
  else if(missing.length)notice('Missing current price observations for '+missing.join(', ')+'. Portfolio totals and XIRR are withheld until priced.');
  else notice('Ledger loaded. Market values use the last manually recorded price per stock; check its observation date.');
 }
