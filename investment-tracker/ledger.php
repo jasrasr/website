@@ -3,10 +3,10 @@
  * File Name: ledger.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Deterministic split-aware per-purchase tax-lot and performance calculations.
- * Revision: 1.4.0
+ * Revision: 1.4.1
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-30
- * Changelog: 1.4.0 - Preserve unpriced share receipts with unknown tax basis and suppress unreliable gain calculations. 1.3.0 - Track stock-lending income and fee charges separately from dividends and basis. 1.2.0 - Date valuations at their observed price and withhold results if more recent account activity lacks a quote. 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
+ * Changelog: 1.4.1 - Mark stock receipt holding period unknown instead of using credit date as tax acquisition. 1.4.0 - Preserve unpriced share receipts with unknown tax basis and suppress unreliable gain calculations. 1.3.0 - Track stock-lending income and fee charges separately from dividends and basis. 1.2.0 - Date valuations at their observed price and withhold results if more recent account activity lacks a quote. 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
  */
 declare(strict_types=1);
 
@@ -217,6 +217,10 @@ function it_calculate(array $events): array
             $annualized=($market!==null && empty($lot['basis_unknown']) && $lot['remaining_cost']>0 && $lot['shares']>0 && $valuationAge>0)
                 ?100*(pow($market/$lot['remaining_cost'],365.25/$valuationAge)-1):null;
             $lot['annualized_pct']=$annualized!==null && is_finite($annualized)?$annualized:null;
+            if(!empty($lot['basis_unknown'])) {
+                $holding['tax_term']='unknown';$holding['held_for']='Acquisition date unknown';
+                $holding['long_term_on']=null;$holding['days_to_long_term']=null;
+            }
             $lot=array_merge($lot,$holding);
             $currentLots[]=$lot;
         }
