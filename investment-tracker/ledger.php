@@ -3,10 +3,10 @@
  * File Name: ledger.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Deterministic split-aware per-purchase tax-lot and performance calculations.
- * Revision: 1.1.1
+ * Revision: 1.2.0
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-29
- * Changelog: 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
+ * Changelog: 1.2.0 - Date valuations at their observed price and withhold results if more recent account activity lacks a quote. 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
  */
 declare(strict_types=1);
 
@@ -129,10 +129,11 @@ function it_calculate(array $events): array
     usort($ordered,static fn($a,$b)=>strcmp((string)$a['date'],(string)$b['date'])
         ?: (($a['type']==='split'?0:1)<=>($b['type']==='split'?0:1))
         ?: ($a['_order']<=>$b['_order']));
-    $lots=[]; $sales=[]; $quotes=[]; $series=[]; $cash=[]; $divs=[]; $reinvested=[]; $purchases=[]; $proceeds=[]; $realized=[];
+    $lots=[]; $sales=[]; $quotes=[]; $series=[]; $cash=[]; $divs=[]; $reinvested=[]; $purchases=[]; $proceeds=[]; $realized=[]; $latestActivity=[];
     foreach ($ordered as $e) {
         $t=(string)$e['ticker']; $kind=(string)$e['type']; $q=(float)$e['quantity']; $a=(float)$e['amount'];
         $divs[$t]??=0.0; $reinvested[$t]??=0.0; $purchases[$t]??=0.0; $proceeds[$t]??=0.0; $realized[$t]??=0.0; $cash[$t]??=[];
+        if ($kind!=='price') $latestActivity[$t]=max($latestActivity[$t]??$e['date'],$e['date']);
         if ($kind==='buy' || $kind==='reinvest') {
             if ($kind==='buy') { $purchases[$t]+=$a; $cash[$t][]=[$e['date'],-$a]; }
             else $reinvested[$t]+=$a;
@@ -202,29 +203,30 @@ function it_calculate(array $events): array
             $lot['roi_pct']=($market!==null && $lot['remaining_cost']>0)?100*($market/$lot['remaining_cost']-1):null;
             $holding=it_holding_period($lot['date'],gmdate('Y-m-d'));
             $age=$holding['days_held'];
-            $annualized=($market!==null && $lot['remaining_cost']>0 && $lot['shares']>0 && $age>0)
-                ?100*(pow($market/$lot['remaining_cost'],365.25/$age)-1):null;
+            $valuationAge=$price===null?0:(int)((strtotime($quotes[$t]['date'].' UTC')-strtotime($lot['date'].' UTC'))/86400);
+            $annualized=($market!==null && $lot['remaining_cost']>0 && $lot['shares']>0 && $valuationAge>0)
+                ?100*(pow($market/$lot['remaining_cost'],365.25/$valuationAge)-1):null;
             $lot['annualized_pct']=$annualized!==null && is_finite($annualized)?$annualized:null;
             $lot=array_merge($lot,$holding);
             $currentLots[]=$lot;
         }
-        $missingPrice=$qty>0.000000001 && $price===null;
+        $missingPrice=$qty>0.000000001 && ($price===null || ($quotes[$t]['date']??'') < ($latestActivity[$t]??''));
         if ($missingPrice) $missing[]=$t;
-        $v=$qty<=0.000000001?0.0:($price===null?null:$qty*$price);
+        $v=$qty<=0.000000001?0.0:($missingPrice?null:$qty*$price);
         if ($v!==null) $totalValue+=$v;
         $cashGain=$v===null?null:$v+$proceeds[$t]+$divs[$t]-$purchases[$t];
         $flows=$cash[$t];
-        if ($v!==null && $qty>0) $flows[]=[gmdate('Y-m-d'),$v];
+        if ($v!==null && $qty>0) $flows[]=[$quotes[$t]['date'],$v];
         $holdings[$t]=[
             'ticker'=>$t,'shares'=>$qty,'basis'=>$basis,'price'=>$price,
-            'price_date'=>$quotes[$t]['date']??null,'value'=>$v,'unrealized'=>$v===null?null:$v-$basis,
+            'price_date'=>$quotes[$t]['date']??null,'valuation_stale_or_incomplete'=>$missingPrice,'value'=>$v,'unrealized'=>$v===null?null:$v-$basis,
             'realized'=>$realized[$t],'dividends_cash'=>$divs[$t],'dividends_reinvested'=>$reinvested[$t],
             'purchases'=>$purchases[$t],'sales_proceeds'=>$proceeds[$t],
             'lifetime_profit'=>$cashGain,'xirr_pct'=>($missingPrice||!$flows)?null:(($x=it_xirr($flows))===null?null:$x*100),
             'lots'=>$currentLots,
         ];
         foreach ($cash[$t] as $f) $allFlows[]=$f;
-        if ($v!==null && $qty>0) $allFlows[]=[gmdate('Y-m-d'),$v];
+        if ($v!==null && $qty>0) $allFlows[]=[$quotes[$t]['date'],$v];
         $net += $proceeds[$t]+$divs[$t]-$purchases[$t];
     }
     return [
