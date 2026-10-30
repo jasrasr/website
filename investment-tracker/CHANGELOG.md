@@ -2,12 +2,18 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release notes for private tax-lot investment dashboard.
-Revision: 1.2.0
+Revision: 1.2.1
 Created Date: 2026-10-29
-Modified Date: 2026-10-29
-Changelog: 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
+Modified Date: 2026-10-30
+Changelog: 1.2.1 - Route unmodified Robinhood CSV to safe read-only preview when incorrectly selected for normalized import. 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
 -->
 # Investment Tracker Changelog
+
+## 1.2.1 — 2026-10-30
+
+- Clarified Robinhood original CSV analyzer versus advanced internal normalized CSV importer, with an in-page link to the correct upload section.
+- Automatically recognize the original brokerage CSV by its header when a user selects it under normalized import; redirect the file to brokerage analysis without enabling a save or changing the source file.
+- Added browser-side regression tests confirming BOM/CRLF handling and disabled normalized import for an original Robinhood file.
 
 ## 1.2.0 — 2026-10-29
 
