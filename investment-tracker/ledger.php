@@ -3,10 +3,10 @@
  * File Name: ledger.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Deterministic split-aware per-purchase tax-lot and performance calculations.
- * Revision: 1.2.0
+ * Revision: 1.3.0
  * Created Date: 2026-10-29
- * Modified Date: 2026-10-29
- * Changelog: 1.2.0 - Date valuations at their observed price and withhold results if more recent account activity lacks a quote. 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
+ * Modified Date: 2026-10-30
+ * Changelog: 1.3.0 - Track stock-lending income and fee charges separately from dividends and basis. 1.2.0 - Date valuations at their observed price and withhold results if more recent account activity lacks a quote. 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
  */
 declare(strict_types=1);
 
@@ -22,7 +22,7 @@ function it_event(array $row): array
     if (!preg_match('/^[A-Z0-9.^-]{1,14}$/D', $ticker)) {
         throw new InvalidArgumentException('Invalid ticker symbol.');
     }
-    if (!in_array($type, ['buy','sell','dividend','reinvest','split','price'], true)) {
+    if (!in_array($type, ['buy','sell','dividend','reinvest','split','price','other_income','fee'], true)) {
         throw new InvalidArgumentException('Select a supported transaction type.');
     }
     $qty = it_number($row['quantity'] ?? 0, 0, 1000000000);
@@ -33,7 +33,7 @@ function it_event(array $row): array
     if (in_array($type, ['buy','sell','reinvest'], true) && ($qty <= 0 || $amount <= 0)) {
         throw new InvalidArgumentException('This event needs positive shares and total dollars.');
     }
-    if ($type === 'dividend' && $amount <= 0) throw new InvalidArgumentException('Dividend dollars must be positive.');
+    if (in_array($type,['dividend','other_income','fee'],true) && $amount <= 0) throw new InvalidArgumentException('Income and fee amounts must be positive.');
     if ($type === 'price' && $price <= 0) throw new InvalidArgumentException('Market price must be positive.');
     if ($type === 'split' && ($num < 1 || $den < 1 || $num > 10000 || $den > 10000 || $num === $den)) {
         throw new InvalidArgumentException('Provide a non-1:1 split ratio (such as 10 and 1).');
@@ -129,10 +129,10 @@ function it_calculate(array $events): array
     usort($ordered,static fn($a,$b)=>strcmp((string)$a['date'],(string)$b['date'])
         ?: (($a['type']==='split'?0:1)<=>($b['type']==='split'?0:1))
         ?: ($a['_order']<=>$b['_order']));
-    $lots=[]; $sales=[]; $quotes=[]; $series=[]; $cash=[]; $divs=[]; $reinvested=[]; $purchases=[]; $proceeds=[]; $realized=[]; $latestActivity=[];
+    $lots=[]; $sales=[]; $quotes=[]; $series=[]; $cash=[]; $divs=[]; $reinvested=[]; $purchases=[]; $proceeds=[]; $realized=[]; $otherIncome=[]; $fees=[]; $latestActivity=[];
     foreach ($ordered as $e) {
         $t=(string)$e['ticker']; $kind=(string)$e['type']; $q=(float)$e['quantity']; $a=(float)$e['amount'];
-        $divs[$t]??=0.0; $reinvested[$t]??=0.0; $purchases[$t]??=0.0; $proceeds[$t]??=0.0; $realized[$t]??=0.0; $cash[$t]??=[];
+        $divs[$t]??=0.0; $reinvested[$t]??=0.0; $purchases[$t]??=0.0; $proceeds[$t]??=0.0; $realized[$t]??=0.0; $otherIncome[$t]??=0.0; $fees[$t]??=0.0; $cash[$t]??=[];
         if ($kind!=='price') $latestActivity[$t]=max($latestActivity[$t]??$e['date'],$e['date']);
         if ($kind==='buy' || $kind==='reinvest') {
             if ($kind==='buy') { $purchases[$t]+=$a; $cash[$t][]=[$e['date'],-$a]; }
@@ -170,6 +170,10 @@ function it_calculate(array $events): array
             $cash[$t][]=[$e['date'],$a];
         } elseif ($kind==='dividend') {
             $divs[$t]+=$a; $cash[$t][]=[$e['date'],$a];
+        } elseif ($kind==='other_income') {
+            $otherIncome[$t]+=$a; $cash[$t][]=[$e['date'],$a];
+        } elseif ($kind==='fee') {
+            $fees[$t]+=$a; $cash[$t][]=[$e['date'],-$a];
         } elseif ($kind==='price') {
             $quotes[$t]=['date'=>$e['date'],'price'=>(float)$e['price']];
             $snapshot=[];
@@ -215,20 +219,21 @@ function it_calculate(array $events): array
         if ($missingPrice) $missing[]=$t;
         $v=$qty<=0.000000001?0.0:($missingPrice?null:$qty*$price);
         if ($v!==null) $totalValue+=$v;
-        $cashGain=$v===null?null:$v+$proceeds[$t]+$divs[$t]-$purchases[$t];
+        $cashGain=$v===null?null:$v+$proceeds[$t]+$divs[$t]+$otherIncome[$t]-$fees[$t]-$purchases[$t];
         $flows=$cash[$t];
         if ($v!==null && $qty>0) $flows[]=[$quotes[$t]['date'],$v];
         $holdings[$t]=[
             'ticker'=>$t,'shares'=>$qty,'basis'=>$basis,'price'=>$price,
             'price_date'=>$quotes[$t]['date']??null,'valuation_stale_or_incomplete'=>$missingPrice,'value'=>$v,'unrealized'=>$v===null?null:$v-$basis,
             'realized'=>$realized[$t],'dividends_cash'=>$divs[$t],'dividends_reinvested'=>$reinvested[$t],
+            'other_income'=>$otherIncome[$t],'fees'=>$fees[$t],
             'purchases'=>$purchases[$t],'sales_proceeds'=>$proceeds[$t],
             'lifetime_profit'=>$cashGain,'xirr_pct'=>($missingPrice||!$flows)?null:(($x=it_xirr($flows))===null?null:$x*100),
             'lots'=>$currentLots,
         ];
         foreach ($cash[$t] as $f) $allFlows[]=$f;
         if ($v!==null && $qty>0) $allFlows[]=[$quotes[$t]['date'],$v];
-        $net += $proceeds[$t]+$divs[$t]-$purchases[$t];
+        $net += $proceeds[$t]+$divs[$t]+$otherIncome[$t]-$fees[$t]-$purchases[$t];
     }
     return [
         'holdings'=>$holdings,'series'=>$series,'sales'=>$sales,'missing_prices'=>$missing,
@@ -237,6 +242,7 @@ function it_calculate(array $events): array
             'lifetime_profit'=>count($missing)?null:$totalValue+$net,
             'unrealized'=>count($missing)?null:array_sum(array_map(static fn($h)=>$h['unrealized']??0,$holdings)),
             'realized'=>array_sum($realized),'dividends_cash'=>array_sum($divs),
+            'other_income'=>array_sum($otherIncome),'fees'=>array_sum($fees),
             'dividends_reinvested'=>array_sum($reinvested),
             'xirr_pct'=>count($missing)?null:(($x=it_xirr($allFlows))===null?null:$x*100)
         ],
