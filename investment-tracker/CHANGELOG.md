@@ -2,12 +2,19 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release notes for private tax-lot investment dashboard.
-Revision: 1.4.0
+Revision: 1.5.0
 Created Date: 2026-10-29
 Modified Date: 2026-10-30
-Changelog: 1.4.0 - Auto-import supported broker transactions with explicitly provisional FIFO, split inference and unknown REC basis. 1.3.0 - Add private staged Robinhood account import with per-ticker editable allocations and validation. 1.2.1 - Route unmodified Robinhood CSV to safe read-only preview when incorrectly selected for normalized import. 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
+Changelog: 1.5.0 - Atomic import-all workflow and exception queue for actual Robinhood export. 1.4.0 - Auto-import supported broker transactions with explicitly provisional FIFO, split inference and unknown REC basis. 1.3.0 - Add private staged Robinhood account import with per-ticker editable allocations and validation. 1.2.1 - Route unmodified Robinhood CSV to safe read-only preview when incorrectly selected for normalized import. 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
 -->
 # Investment Tracker Changelog
+
+## 1.5.0 — 2026-10-30
+
+- Verified the original nine-column Robinhood CSV shape using the complete uploaded 1,479-row account activity report, including quoted multiline descriptions, split credits and corporate-action codes.
+- Added preview-first full-report importer: identify eligible, blocked and previously imported tickers; show detailed exception reasons; import all eligible stock histories in one confirmed, atomic account write.
+- Added preview fingerprints, per-user locks and duplicate prevention so a stale or repeated import cannot silently corrupt account history.
+- Preserved provisional FIFO and unknown-basis safeguards; unsupported corporate actions are excluded from import rather than guessed.
 
 ## 1.4.0 — 2026-10-30
 
