@@ -2,15 +2,16 @@
  * File Name: app.js
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Accessible charts, per-lot history, sale simulation and private ledger controls.
- * Revision: 1.2.1
+ * Revision: 1.3.0
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-30
- * Changelog: 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
+ * Changelog: 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
  */
 'use strict';
 const $ = s => document.querySelector(s);
 let state={events:[],analysis:{holdings:{},series:{},totals:{},missing_prices:[]},csrf:''};
 let selectedTicker='', selectedLot='',csvPreviewKey='';
+let rhStage=null,rhSelected=null;
 let eventPage=0;
 const eventPageSize=100;
 const demoMode=document.body?.dataset.demo==='1';
@@ -295,6 +296,177 @@ async function isOriginalRobinhoodCsv(file) {
  return header.split(',').map(part=>part.trim().replace(/^"|"$/g,'')).join(',')===
   'Activity Date,Process Date,Settle Date,Instrument,Description,Trans Code,Quantity,Price,Amount';
 }
+// The editable review is intentionally separate from the brokerage preview.
+// Staging is server-private and does not touch the user's permanent ledger.
+async function rhDraftApi(ticker='') {
+ const uri='?api=1&reconciliation=1'+(ticker?'&ticker='+encodeURIComponent(ticker):'');
+ const res=await fetch(uri,{credentials:'same-origin'});
+ const json=await res.json();
+ if(!res.ok||!json.success)throw new Error(json.message||'Unable to read private reconciliation draft.');
+ return json.data;
+}
+function rhField(label,value,type='text') {
+ const n=el('label','rhControl');n.append(el('span',null,label));
+ const i=el('input');i.type=type;i.value=value??'';
+ if(type==='number'){i.step='any';i.min='0';i.inputMode='decimal';}
+ n.append(i);return {outer:n,input:i};
+}
+function rhAllocation(host,available,lotId='',value='') {
+ const line=el('div','rhAllocation');
+ const select=el('select');select.className='rhLotRef';
+ const blank=el('option',null,'Choose purchase lot');blank.value='';select.append(blank);
+ available.forEach(row=>{
+  const o=el('option',null,row.date+' · '+row.kind+' · '+qty(row.quantity)+' shares · '+money(Math.abs(row.amount))+' · '+row.id.slice(0,7));
+  o.value=row.id;select.append(o);
+ });
+ select.value=lotId;
+ const q=rhField('Shares from this lot',value,'number');
+ q.outer.classList.add('rhAllocationQty');
+ const remove=el('button','ghost','Remove');remove.type='button';remove.addEventListener('click',()=>line.remove());
+ line.append(select,q.outer,remove);host.append(line);
+}
+function rhDrawStock(data) {
+ rhSelected=data;
+ const host=$('#rhReviewLines');host.replaceChildren();
+ $('#rhExpectedShares').value=data.review.expected_shares??'';
+ $('#rhConfirm').checked=!!data.review.source_confirmed;
+ $('#rhSaveReview').disabled=!data.rows.length||!!data.completed;
+ $('#rhCommit').disabled=!data.validation?.ready||!!data.completed;
+ const heading=el('p','subtle',data.rows.length+' brokerage activity lines for '+data.ticker+'. Purchase lot IDs are shown so each historical sale can be assigned precisely.');
+ host.append(heading);
+ if(data.completed){
+  host.append(el('p','notice','This ticker was already imported ('+data.completed.events+' events). Review is read-only.'));return;
+ }
+ const buys=data.rows.filter(r=>r.kind==='buy'||r.kind==='reinvest');
+ if(buys.length){
+  const listing=el('details','rhLotsLegend');listing.append(el('summary',null,'Show '+buys.length+' source purchase lots and original share quantities'));
+  const list=el('div','rhLotsGrid');
+  buys.forEach(row=>list.append(el('p','subtle',row.id.slice(0,9)+' · '+day(row.date)+' · '+qty(row.quantity)+' shares · '+money(Math.abs(row.amount))+(row.kind==='reinvest'?' (DRIP)':''))));
+  listing.append(list);host.append(listing);
+ }
+ const issues=data.rows.filter(r=>['sell','split_credit','unsupported'].includes(r.kind)||r.pair_issue);
+ if(!issues.length)host.append(el('p','notice','No explicit sale or split corrections found. Verify the current broker share balance before saving.'));
+ for(const row of issues) {
+  const card=el('section','rhIssue');
+  const title=el('h4',null,row.kind==='sell'?'Allocate stock sale':row.kind==='split_credit'?'Verify stock split':row.kind==='unsupported'?'Unsupported corporate action':'Verify reinvested dividend');
+  card.append(title);
+  card.append(el('p','subtle',day(row.date)+' · '+row.code+' · source line '+row.line+' · '+(row.description||'')));
+  if(row.kind==='sell') {
+   card.dataset.saleId=row.id;
+   card.append(el('p',null,'Sold '+qty(row.quantity)+' shares for '+money(row.amount)+'. Allocate all sold shares across original purchase lots. Do not rely on FIFO unless verified with the broker.'));
+   const choices=buys.filter(b=>b.date<=row.date);
+   if(!choices.length){card.append(el('p','negative','No eligible earlier purchase lots in this export. This sale cannot be imported without earlier basis records.'));}
+   else {
+    const allocations=el('div','rhAllocations');card.append(allocations);
+    const previous=data.review.sales?.[row.id]||{};
+    const old=Object.entries(previous);
+    if(!old.length)rhAllocation(allocations,choices,'','');
+    else old.forEach(([id,q])=>rhAllocation(allocations,choices,id,q));
+    const button=el('button','smallbtn','+ Allocate another purchase lot');button.type='button';
+    button.addEventListener('click',()=>rhAllocation(allocations,choices));
+    card.append(button);
+   }
+  }else if(row.kind==='split_credit') {
+   card.dataset.splitId=row.id;
+   card.append(el('p',null,'Robinhood credited '+qty(row.credit)+' additional shares. Confirm the actual split ratio from the corporate action. Do not enter the credited-share quantity as a ratio.'));
+   const saved=data.review.ratios?.[row.id];
+   const ratio=el('div','rhRatio');
+   const n=rhField('New shares (e.g. 10)',saved?.n??'','number');
+   const d=rhField('Old shares (e.g. 1)',saved?.d??'','number');
+   n.input.className='rhRatioNum';d.input.className='rhRatioDen';
+   ratio.append(n.outer,d.outer);card.append(ratio);
+  }else if(row.kind==='unsupported') {
+   card.append(el('p','negative','This is a share or corporate-action code the ledger cannot safely map. It stays blocked until an explicit, verified conversion/basis treatment is implemented. No guessed adjustment will be saved.'));
+  }else if(row.pair_issue){
+   card.append(el('p','negative','Dividend reinvestment issue: '+row.pair_issue+'. The credit must be reconciled first.'));
+  }
+  host.append(card);
+ }
+ rhRenderValidation(data.validation);
+}
+function rhRenderValidation(result) {
+ const box=$('#rhValidation');box.replaceChildren();
+ if(!result) {box.append(el('p',null,'Save corrections to validate this stock. No ledger records have been imported.'));return;}
+ box.append(el('strong',result.ready?'Validation passed — awaiting explicit import':'Review incomplete — nothing imported'));
+ box.append(el('p',null,'Computed shares '+qty(result.computed_shares)+' · broker shares '+qty(result.expected_shares)));
+ if(result.issues?.length){
+  const ul=el('ul');result.issues.slice(0,25).forEach(issue=>ul.append(el('li',null,issue)));
+  box.append(ul);
+  if(result.issues.length>25)box.append(el('p','subtle',(result.issues.length-25)+' additional issues. Review the source report before continuing.'));
+ }
+ box.append(el('p','subtle',result.notice));
+}
+async function rhRefresh(ticker='') {
+ const data=await rhDraftApi(ticker);
+ if(!data?.exists) {
+  $('#rhDraftStatus').textContent='No private draft yet';rhStage=null;return;
+ }
+ rhStage=data;
+ $('#rhDraftStatus').textContent=data.source_records+' stock activity rows staged · '+data.ticker_count+' tickers';
+ const select=$('#rhDraftTicker');
+ const prior=ticker||select.value;
+ selectOptions(select,data.tickers,x=>x.ticker+' — '+x.status,x=>x.ticker,'Select a stock');
+ if(data.tickers.some(x=>x.ticker===prior))select.value=prior;
+ if(ticker&&data.rows)rhDrawStock(data);
+}
+async function rhStageUpload(){
+ const file=$('#rhFile').files[0];if(!file){notice('Select your original Robinhood CSV first.',true);return;}
+ if(rhStage && !confirm('Replace the current private reconciliation draft? Saved but unimported corrections in it will be lost. Existing personal holdings will NOT be deleted.'))return;
+ const b=$('#stageRh');b.disabled=true;
+ try{
+  const fd=formBody('stage_robinhood');fd.set('file',file);
+  await api(fd);
+  rhSelected=null;$('#rhReviewLines').replaceChildren();
+  $('#rhCommit').disabled=true;$('#rhSaveReview').disabled=true;
+  await rhRefresh();
+  $('#reconciliation').scrollIntoView({behavior:'smooth',block:'start'});
+  notice('Report staged privately. Select a ticker, correct flagged events, validate and explicitly import.');
+ }catch(err){notice(err.message,true);}
+ finally{b.disabled=false;}
+}
+async function rhSave(){
+ if(!rhSelected || !rhStage)return;
+ const review={
+  ticker:rhSelected.ticker,revision:rhStage.revision,
+  expected_shares:$('#rhExpectedShares').value,
+  source_confirmed:$('#rhConfirm').checked,
+  ratios:{},sales:{}
+ };
+ document.querySelectorAll('#rhReviewLines [data-split-id]').forEach(card=>{
+  const n=card.querySelector('.rhRatioNum').value,d=card.querySelector('.rhRatioDen').value;
+  if(n!==''||d!=='')review.ratios[card.dataset.splitId]={n:Number(n),d:Number(d)};
+ });
+ document.querySelectorAll('#rhReviewLines [data-sale-id]').forEach(card=>{
+  const alloc={};
+  card.querySelectorAll('.rhAllocation').forEach(row=>{
+   const id=row.querySelector('.rhLotRef').value,q=row.querySelector('input').value;
+   if(id&&q!=='')alloc[id]=(alloc[id]||0)+Number(q);
+  });
+  if(Object.keys(alloc).length)review.sales[card.dataset.saleId]=alloc;
+ });
+ const b=$('#rhSaveReview');b.disabled=true;
+ try {
+  const fd=formBody('save_reconciliation');fd.set('review',JSON.stringify(review));
+  const result=await api(fd);rhStage=result;rhDrawStock(result);
+  $('#rhCommit').disabled=!result.validation?.ready;
+  notice(result.validation?.ready?'Validation passed. Import is a separate action.':'Corrections saved. Complete remaining review issues before import.');
+ }catch(err){notice(err.message,true);}
+ finally{b.disabled=false;}
+}
+async function rhCommitTicker(){
+ if(!rhSelected||!rhStage || !rhSelected.validation?.ready)return;
+ const ticker=rhSelected.ticker;
+ if(!confirm('Import all validated '+ticker+' transactions into YOUR private portfolio? This does not place trades. The sale-lot choices must match brokerage records.'))return;
+ const b=$('#rhCommit');b.disabled=true;
+ try {
+  const fd=formBody('commit_reconciliation');fd.set('ticker',ticker);fd.set('revision',rhStage.revision);
+  const result=await api(fd);
+  await load();
+  await rhRefresh(ticker);
+  notice(result.imported+' '+ticker+' events imported into your private ledger. Add a recent price observation to calculate current gains.');
+ }catch(err){notice(err.message,true);b.disabled=false;}
+}
+
 function fileKey(f) {return f?f.name+':'+f.size+':'+f.lastModified:'';}
 async function csvAction(action) {
  const file=$('#csvFile').files[0];
@@ -346,6 +518,16 @@ document.addEventListener('DOMContentLoaded',()=>{
  });
  $('#csvFile').addEventListener('change',()=>{csvPreviewKey='';$('#commitCsv').disabled=true;$('#csvPreview').textContent='File selected. Validate and preview before import.';});
  $('#rhForm').addEventListener('submit',previewRobinhood);
+ $('#stageRh').addEventListener('click',rhStageUpload);
+ $('#rhDraftTicker').addEventListener('change',e=>{
+  const ticker=e.target.value;
+  rhSelected=null;$('#rhReviewLines').replaceChildren();
+  $('#rhSaveReview').disabled=true;$('#rhCommit').disabled=true;
+  if(ticker)rhRefresh(ticker).catch(err=>notice(err.message,true));
+ });
+ $('#rhSaveReview').addEventListener('click',rhSave);
+ $('#rhCommit').addEventListener('click',rhCommitTicker);
+ if(!demoMode)rhRefresh().catch(err=>notice(err.message,true));
  $('#previewCsv').addEventListener('click',()=>csvAction('preview_csv'));
  $('#commitCsv').addEventListener('click',()=>csvAction('import_csv'));
  load().catch(err=>notice(err.message,true));
