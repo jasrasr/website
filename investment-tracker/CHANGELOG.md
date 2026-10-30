@@ -2,12 +2,19 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release notes for private tax-lot investment dashboard.
-Revision: 1.1.0
+Revision: 1.2.0
 Created Date: 2026-10-29
 Modified Date: 2026-10-29
-Changelog: 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
+Changelog: 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
 -->
 # Investment Tracker Changelog
+
+## 1.2.0 — 2026-10-29
+
+- Added authenticated preview-only parser for the original nine-column Robinhood CSV, transaction classification, ticker-level blockers, and dividend-reinvestment matching.
+- Reconciled NVIDIA demonstration share count to 1.736881, including ten dividend reinvestments, the 2024 split, and completed historic sales; kept the source file private and excluded from Git.
+- Flagged unverified past sale tax-lot allocations, stock split credited-share records and unsupported corporate actions, rather than guessing or silently importing incomplete data.
+- Expanded parser/ledger tests and protected brokerage uploads from persistent storage.
 
 ## 1.1.0 — 2026-10-29
 
