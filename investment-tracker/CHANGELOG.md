@@ -12,6 +12,7 @@ Changelog: 1.3.0 - Add private staged Robinhood account import with per-ticker e
 ## 1.3.0 — 2026-10-30
 
 - Added private, persisted per-user Robinhood activity review drafts and a ticker selector with original purchase records, editable sale lot allocations and verified split-ratio inputs.
+- Added optional unverified FIFO allocation suggestions for eligible historical purchases, with mandatory broker verification and no automatic save.
 - Required source-record attestation and an exact broker-reported share balance before an explicit per-ticker import; block unsupported corporate actions and unresolved share-affecting records rather than guessing.
 - Added atomic portfolio append with deterministic source IDs and existing-ticker duplicate prevention; marked imported ticker drafts without modifying the original uploaded brokerage report.
 - Retained separate dividend reinvestment, cash dividend, stock-lending income and fee categories, and recorded dated transaction execution prices for historical graphs without claiming they are live quotes.
