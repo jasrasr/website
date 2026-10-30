@@ -2,10 +2,10 @@
  * File Name: app.js
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Accessible charts, per-lot history, sale simulation and private ledger controls.
- * Revision: 1.1.0
+ * Revision: 1.2.0
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-29
- * Changelog: 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
+ * Changelog: 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
  */
 'use strict';
 const $ = s => document.querySelector(s);
@@ -236,6 +236,59 @@ function salePreview(event) {
   el('p',null,'Proceeds '+money(sale)+' · allocated basis '+money(cost)+' · return '+percent(cost>0?100*gain/cost:null)),
   el('p','subtle',months+' · held '+lot.held_for+' ('+lot.days_held+' days) · first long-term date '+lot.long_term_on+' · no order placed. Assumes no additional selling fees.'));
 }
+function describeType(code) {
+ const names={buy:'Cash purchases',sell:'Sales (tax lots unresolved)',reinvest:'Dividend reinvestments',dividend:'Dividend credits',split_credit:'Split share credits (not ratios)',stock_lending:'Stock lending',cash_movement:'Deposits/transfers',fee_or_tax:'Fees and taxes',interest:'Interest',unsupported:'Other corporate actions / cancellations'};
+ return names[code]||code;
+}
+async function previewRobinhood(event) {
+ event.preventDefault();
+ const file=$('#rhFile').files[0];if(!file){notice('Select a Robinhood activity CSV.',true);return;}
+ const button=$('#rhForm button[type=submit]');button.disabled=true;
+ try{
+  const fd=formBody('preview_robinhood');fd.set('file',file);
+  const report=await api(fd);
+  const host=$('#rhPreview');host.replaceChildren();
+  host.append(el('strong',null,report.records.toLocaleString()+' account events · '+report.ticker_count+' tickers · '+report.first_date+' through '+report.last_date));
+  host.append(el('p','subtle',report.matched_dividend_reinvestments+' reinvestment dividend credits matched to buys; unmatched credits remain in their original category.'));
+  const counts=el('div','rhSummary');
+  for(const [type,count] of Object.entries(report.counts||{})) {
+   const card=el('div','rhCount');card.append(el('b',null,count.toLocaleString()),el('span',null,describeType(type)));counts.append(card);
+  }
+  host.append(counts);
+  host.append(el('p','rhWarning','No data imported or saved. Activity CSV does not identify selected tax lots for sales, nor split ratios for split-credit rows.'));
+  const target=$('#rhTickers');target.replaceChildren();
+  const heading=el('h3',null,'Ticker reconciliation');
+  target.append(heading);
+  const controls=el('label','rhFilter','Filter stock ');
+  const input=el('input');input.placeholder='NVDA, AAPL, TSLA…';input.maxLength=16;controls.append(input);target.append(controls);
+  const list=el('div','rhTickerList');target.append(list);
+  function draw(){
+   list.replaceChildren();
+   const query=input.value.trim().toUpperCase();
+   let filtered=report.tickers.filter(x=>!query||x.ticker.includes(query));
+   if(!query)filtered=filtered.slice(0,25);
+   if(!filtered.length){list.append(el('p','subtle','No matching tickers.'));return;}
+   for(const ticker of filtered){
+    const details=el('details','rhTicker');const summary=el('summary');
+    summary.append(el('strong',null,ticker.ticker));
+    summary.append(el('span','subtle',Object.entries(ticker.counts).map(([type,n])=>n+' '+type).join(' · ')));
+    summary.append(el('b','term shortTerm',ticker.review_required?'Needs review':'No explicit blockers'));
+    details.append(summary);
+    if(ticker.issues.length){
+      const ul=el('ul');
+      ticker.issues.forEach(x=>ul.append(el('li',null,x.count+' × '+x.issue)));
+      details.append(ul);
+    }else details.append(el('p','subtle','No directly detected blockers. Still reconcile opening balances and holdings before final import.'));
+    list.append(details);
+   }
+   if(!query&&report.tickers.length>filtered.length)list.append(el('p','hint','Showing first '+filtered.length+' tickers; search by symbol for others.'));
+  }
+  input.addEventListener('input',draw);draw();
+  notice('Robinhood report analyzed. No transactions were imported or saved.');
+ } catch(error){$('#rhPreview').textContent=error.message;$('#rhTickers').replaceChildren();notice(error.message,true);}
+ finally{button.disabled=false;}
+}
+
 function fileKey(f) {return f?f.name+':'+f.size+':'+f.lastModified:'';}
 async function csvAction(action) {
  const file=$('#csvFile').files[0];
@@ -278,6 +331,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   catch(err){notice(err.message,true);}
  });
  $('#csvFile').addEventListener('change',()=>{csvPreviewKey='';$('#commitCsv').disabled=true;$('#csvPreview').textContent='File selected. Validate and preview before import.';});
+ $('#rhForm').addEventListener('submit',previewRobinhood);
  $('#previewCsv').addEventListener('click',()=>csvAction('preview_csv'));
  $('#commitCsv').addEventListener('click',()=>csvAction('import_csv'));
  load().catch(err=>notice(err.message,true));
