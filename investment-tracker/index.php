@@ -3,16 +3,17 @@
  * File Name: index.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Private investment tax-lot dashboard and authenticated ledger API.
- * Revision: 1.2.1
+ * Revision: 1.3.0
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-30
- * Changelog: 1.2.1 - Clarify original Robinhood CSV versus normalized data, and guide misdirected uploads to safe preview. 1.2.0 - Preview Robinhood source reports without writing unverified lots; protect asset history from accidental import. 1.1.0 - Read-only NVIDIA demo, original and split-adjusted lot display, tax-term clarity. 1.0.0 - Shared login, manual events, atomic CSV import and lot dashboard.
+ * Changelog: 1.3.0 - Private draft creation, editable per-stock split and sale-lot reviews, validated atomic import. 1.2.1 - Clarify original Robinhood CSV versus normalized data, and guide misdirected uploads to safe preview. 1.2.0 - Preview Robinhood source reports without writing unverified lots; protect asset history from accidental import. 1.1.0 - Read-only NVIDIA demo, original and split-adjusted lot display, tax-term clarity. 1.0.0 - Shared login, manual events, atomic CSV import and lot dashboard.
  */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
 require_once __DIR__ . '/ledger.php';
 require_once __DIR__ . '/demo.php';
 require_once __DIR__ . '/robinhood.php';
+require_once __DIR__ . '/reconciliation.php';
 header('Cache-Control: no-store, private');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: no-referrer');
@@ -24,6 +25,7 @@ $user=$auth->requireProject('investment-tracker',$_SERVER['REQUEST_METHOD']==='P
 $storage=__DIR__.'/storage';
 if (!is_dir($storage) && !mkdir($storage,0700,true) && !is_dir($storage)) { http_response_code(503); exit('Storage unavailable'); }
 $path=$storage.'/'.hash('sha256',(string)$user['id']).'.json';
+$reconcilePath=$storage.'/'.hash('sha256',(string)$user['id']).'.rh-stage.json';
 
 function it_reply(int $status, bool $success, string $message, mixed $data=null): never
 {
@@ -113,6 +115,19 @@ function it_append_import(array $existing,array $new): array
 }
 if ($isApi) {
     try {
+        if ($_SERVER['REQUEST_METHOD']==='GET' && isset($_GET['reconciliation'])) {
+            $draft=\Jasr\Framework\JsonStore::read($reconcilePath)['records'][0]??null;
+            if(!$draft)it_reply(200,true,'No Robinhood draft has been staged.', ['exists'=>false]);
+            $ticker=isset($_GET['ticker'])?strtoupper(trim((string)$_GET['ticker'])):null;
+            $view=it_rc_view($draft,$ticker);
+            $view['exists']=true;
+            if($ticker!==null && isset($draft['reviews'][$ticker]) && !isset($draft['completed'][$ticker])) {
+                $check=it_rc_build($draft,$ticker);
+                unset($check['events']);
+                $view['validation']=$check;
+            }
+            it_reply(200,true,'Private reconciliation draft loaded.', $view);
+        }
         if ($_SERVER['REQUEST_METHOD']==='GET') {
             $rows=$isDemo?it_demo_events():it_records($path);
             it_reply(200,true,$isDemo?'Read-only incomplete NVIDIA demonstration loaded.':'Investment ledger loaded.',[
@@ -124,6 +139,68 @@ if ($isApi) {
         if ($_SERVER['REQUEST_METHOD']!=='POST') it_reply(405,false,'Method not allowed.');
         if (!$auth->validCsrf($_POST['csrf']??null)) it_reply(403,false,'Invalid form token.');
         $action=(string)($_POST['action']??'');
+        if ($action==='stage_robinhood') {
+            if (!isset($_FILES['file']) || ($_FILES['file']['error']??1)!==UPLOAD_ERR_OK ||
+                !is_uploaded_file((string)$_FILES['file']['tmp_name'])) {
+                throw new InvalidArgumentException('Upload the original Robinhood activity CSV.');
+            }
+            $draft=it_rc_stage((string)$_FILES['file']['tmp_name']);
+            $records=\Jasr\Framework\JsonStore::update($reconcilePath,static fn(array $old):array=>[$draft]);
+            it_reply(200,true,'Private draft staged. No portfolio records have been imported.',
+                it_rc_view($records[0]));
+        }
+        if ($action==='save_reconciliation') {
+            $raw=$_POST['review']??'';
+            if(!is_string($raw)||strlen($raw)>100000)throw new InvalidArgumentException('Invalid review size.');
+            $data=json_decode($raw,true,512,JSON_THROW_ON_ERROR);
+            if(!is_array($data))throw new InvalidArgumentException('Invalid review request.');
+            $expected=(string)($data['revision']??'');
+            $ticker=strtoupper(trim((string)($data['ticker']??'')));
+            $updated=\Jasr\Framework\JsonStore::update($reconcilePath,static function(array $records) use($expected,$ticker,$data):array {
+                $draft=$records[0]??null;
+                if(!$draft || !hash_equals(it_rc_revision($draft),$expected)) {
+                    throw new InvalidArgumentException('Draft changed in another tab; refresh and review again.');
+                }
+                return [it_rc_review($draft,$ticker,$data)];
+            });
+            $view=it_rc_view($updated[0],$ticker);
+            $validation=it_rc_build($updated[0],$ticker);
+            unset($validation['events']);$view['validation']=$validation;
+            it_reply(200,true,$validation['ready']?'Review validated. Ledger not yet changed.':'Corrections saved; more review required.',$view);
+        }
+        if ($action==='commit_reconciliation') {
+            $ticker=strtoupper(trim((string)($_POST['ticker']??'')));
+            $expected=(string)($_POST['revision']??'');
+            if(!preg_match('/^[A-Z0-9.^-]{1,14}$/D',$ticker))throw new InvalidArgumentException('Invalid ticker.');
+            $lock=fopen($reconcilePath.'.work.lock','c');
+            if(!$lock || !flock($lock,LOCK_EX))throw new RuntimeException('Review lock unavailable.');
+            try {
+                $draft=\Jasr\Framework\JsonStore::read($reconcilePath)['records'][0]??null;
+                if(!$draft || !hash_equals(it_rc_revision($draft),$expected)) {
+                    throw new InvalidArgumentException('Reconciliation changed; refresh before saving.');
+                }
+                if(isset($draft['completed'][$ticker]))throw new InvalidArgumentException('This ticker has already been imported.');
+                $built=it_rc_build($draft,$ticker);
+                if(!$built['ready'])throw new InvalidArgumentException('Unresolved items remain: '.implode(' ',array_slice($built['issues'],0,3)));
+                $new=$built['events'];
+                $after=\Jasr\Framework\JsonStore::update($path,static function(array $old)use($ticker,$new):array {
+                    foreach(it_active($old) as $e) {
+                        if(($e['ticker']??'')===$ticker)
+                            throw new InvalidArgumentException('This ticker already has personal ledger events. Reconcile duplicates before importing.');
+                    }
+                    return it_append_import($old,$new);
+                });
+                \Jasr\Framework\JsonStore::update($reconcilePath,static function(array $records)use($ticker,$new):array {
+                    if(!isset($records[0]))throw new RuntimeException('Reconciliation draft missing after import.');
+                    $records[0]['completed'][$ticker]=['at'=>gmdate(DATE_ATOM),'events'=>count($new)];
+                    return $records;
+                });
+                it_reply(200,true,'Validated '.$ticker.' ledger events imported for this user only.',
+                    ['ticker'=>$ticker,'imported'=>count($new),'total_events'=>count($after)]);
+            } finally {
+                flock($lock,LOCK_UN);fclose($lock);
+            }
+        }
         if ($action==='preview_robinhood') {
             if(!isset($_FILES['file']) || ($_FILES['file']['error']??1)!==UPLOAD_ERR_OK ||
                 !is_uploaded_file((string)$_FILES['file']['tmp_name'])) {
@@ -190,8 +267,8 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Investment Tracker · Tax Lots</title>
-<link rel="stylesheet" href="style.css?v=1.2.1">
-<script src="app.js?v=1.2.1" defer></script>
+<link rel="stylesheet" href="style.css?v=1.3.0">
+<script src="app.js?v=1.3.0" defer></script>
 </head>
 <body data-demo="<?=$isDemo?'1':'0'?>">
 <header class="topbar"><div><span class="eyebrow">PRIVATE PORTFOLIO ANALYTICS</span><h1>Investment Tracker</h1><p>See what each purchase is worth, not just the average.</p></div><a class="account" href="<?=it_h($auth->portal())?>">Account <span aria-hidden="true">↗</span></a></header>
@@ -233,9 +310,21 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
 <button class="primary" type="submit">Save event</button></form><p class="hint">Buy total includes acquisition fees; sale total is net proceeds after selling fees. A reinvestment creates a new tax lot but does not count as new external cash invested.</p></article>
 <article class="panel" data-private-write id="robinhood-upload"><span class="eyebrow">ROBINHOOD DIRECT DOWNLOAD</span><h2>Analyze original Robinhood CSV</h2>
  <p>Upload the original Robinhood Account activity CSV to analyze purchases, sales, dividends, split credits, and account events. The report is evaluated for exceptions, <strong>not automatically imported</strong> because sale tax-lot elections and some corporate actions are not stated in the CSV.</p>
- <form id="rhForm"><label>Robinhood Account activity report (.csv) — no conversion needed<input id="rhFile" type="file" accept=".csv,text/csv" required></label><button type="submit" class="secondary">Analyze original CSV — does not import</button></form>
+ <form id="rhForm"><label>Robinhood Account activity report (.csv) — no conversion needed<input id="rhFile" type="file" accept=".csv,text/csv" required></label><div class="actions"><button type="submit" class="secondary">Analyze original CSV</button><button type="button" class="primary" id="stageRh">Create private import draft</button></div></form>
+ <p class="hint">Creating a new draft replaces any prior uncommitted review work for this user. It does not replace or delete already imported holdings.</p>
  <div id="rhPreview" class="result">Select the original downloaded CSV to inspect trade types and reconciliation issues. Nothing is saved.</div>
  <div id="rhTickers" class="rhTickers"></div>
+ <section id="reconciliation" class="reconcile"><div class="panel-heading"><div><span class="eyebrow">PRIVATE · PER-TICKER REVIEW</span><h3>Correct and import brokerage activity</h3></div><span id="rhDraftStatus" class="subtle">No draft selected</span></div>
+  <p class="hint">Choose a ticker, verify the share count as of the report end, enter split ratios, and assign each sale to its actual originating purchase lot(s). Corporate actions that cannot be represented safely remain blocked.</p>
+  <div class="formgrid">
+   <label>Select stock<select id="rhDraftTicker"><option value="">Select stock</option></select></label>
+   <label>Broker shares as of report end<input id="rhExpectedShares" type="number" min="0" step="any" placeholder="e.g. 1.736881"></label>
+  </div>
+  <div id="rhReviewLines" class="rhReviewLines"></div>
+  <label class="rhConfirm"><input id="rhConfirm" type="checkbox"> I verified purchases, split ratios, the broker's selected sale tax lots, and current shares against my records. An activity report alone does not establish tax-lot elections.</label>
+  <div class="actions"><button id="rhSaveReview" class="secondary" type="button" disabled>Save corrections &amp; validate</button><button id="rhCommit" class="primary" type="button" disabled>Import this verified stock</button></div>
+  <div id="rhValidation" class="result" aria-live="polite">Upload and stage a Robinhood report to start reviewing individual stocks.</div>
+ </section>
  <p class="hint">Do not commit personal brokerage exports to this public repository. This analysis happens on the authenticated server request; this version does not persist the uploaded source or automatically assign sale lots.</p>
 </article>
 <article class="panel" data-private-write><span class="eyebrow">ADVANCED · INTERNAL TRACKER FORMAT</span><h2>Import normalized tracker CSV</h2><p><strong>This is not for Robinhood downloads.</strong> For the CSV exported directly from Robinhood, use <a href="#robinhood-upload">Analyze original Robinhood CSV</a> above. The internal import below requires mapped purchase lots, splits, dividends, and a normalized file.</p>
@@ -244,5 +333,5 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
 </section>
 <section class="panel"><div class="panel-heading"><div><span class="eyebrow">IMMUTABLE HISTORY</span><h2>Activity ledger</h2></div><span id="recordCount" class="subtle"></span></div><div class="tablewrap"><table><thead><tr><th>Date</th><th>Stock</th><th>Type</th><th class="numeric">Shares</th><th class="numeric">Amount / price</th><th>Notes</th><th>Correction</th></tr></thead><tbody id="eventsBody"></tbody></table></div><div class="actions"><button type="button" class="secondary" id="newerEvents" disabled>Newer events</button><span id="eventPage" class="subtle" aria-live="polite"></span><button type="button" class="secondary" id="olderEvents" disabled>Older events</button></div><p class="hint">Voiding retains the original record for audit. Voiding a purchase that has allocated sales is blocked until its dependencies are corrected.</p></section>
 </main>
-<footer>Investment Tracker · Revision 1.2.1 · Updated October 29, 2026 · Data private to your central account · Calculations are estimates, not trading or tax advice</footer>
+<footer>Investment Tracker · Revision 1.3.0 · Updated October 29, 2026 · Data private to your central account · Calculations are estimates, not trading or tax advice</footer>
 </body></html>
