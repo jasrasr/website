@@ -3,10 +3,10 @@
  * File Name: index.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Private investment tax-lot dashboard and authenticated ledger API.
- * Revision: 1.3.0
+ * Revision: 1.3.1
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-30
- * Changelog: 1.3.0 - Private draft creation, editable per-stock split and sale-lot reviews, validated atomic import. 1.2.1 - Clarify original Robinhood CSV versus normalized data, and guide misdirected uploads to safe preview. 1.2.0 - Preview Robinhood source reports without writing unverified lots; protect asset history from accidental import. 1.1.0 - Read-only NVIDIA demo, original and split-adjusted lot display, tax-term clarity. 1.0.0 - Shared login, manual events, atomic CSV import and lot dashboard.
+ * Changelog: 1.3.1 - Serialize stage and review edits with ticker commit to avoid concurrent draft mutation. 1.3.0 - Private draft creation, editable per-stock split and sale-lot reviews, validated atomic import. 1.2.1 - Clarify original Robinhood CSV versus normalized data, and guide misdirected uploads to safe preview. 1.2.0 - Preview Robinhood source reports without writing unverified lots; protect asset history from accidental import. 1.1.0 - Read-only NVIDIA demo, original and split-adjusted lot display, tax-term clarity. 1.0.0 - Shared login, manual events, atomic CSV import and lot dashboard.
  */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
@@ -145,7 +145,11 @@ if ($isApi) {
                 throw new InvalidArgumentException('Upload the original Robinhood activity CSV.');
             }
             $draft=it_rc_stage((string)$_FILES['file']['tmp_name']);
-            $records=\Jasr\Framework\JsonStore::update($reconcilePath,static fn(array $old):array=>[$draft]);
+            $lock=fopen($reconcilePath.'.work.lock','c');
+            if(!$lock || !flock($lock,LOCK_EX))throw new RuntimeException('Review lock unavailable.');
+            try {
+                $records=\Jasr\Framework\JsonStore::update($reconcilePath,static fn(array $old):array=>[$draft]);
+            } finally {flock($lock,LOCK_UN);fclose($lock);}
             it_reply(200,true,'Private draft staged. No portfolio records have been imported.',
                 it_rc_view($records[0]));
         }
@@ -156,13 +160,17 @@ if ($isApi) {
             if(!is_array($data))throw new InvalidArgumentException('Invalid review request.');
             $expected=(string)($data['revision']??'');
             $ticker=strtoupper(trim((string)($data['ticker']??'')));
-            $updated=\Jasr\Framework\JsonStore::update($reconcilePath,static function(array $records) use($expected,$ticker,$data):array {
-                $draft=$records[0]??null;
-                if(!$draft || !hash_equals(it_rc_revision($draft),$expected)) {
-                    throw new InvalidArgumentException('Draft changed in another tab; refresh and review again.');
-                }
-                return [it_rc_review($draft,$ticker,$data)];
-            });
+            $lock=fopen($reconcilePath.'.work.lock','c');
+            if(!$lock || !flock($lock,LOCK_EX))throw new RuntimeException('Review lock unavailable.');
+            try {
+                $updated=\Jasr\Framework\JsonStore::update($reconcilePath,static function(array $records) use($expected,$ticker,$data):array {
+                    $draft=$records[0]??null;
+                    if(!$draft || !hash_equals(it_rc_revision($draft),$expected)) {
+                        throw new InvalidArgumentException('Draft changed in another tab; refresh and review again.');
+                    }
+                    return [it_rc_review($draft,$ticker,$data)];
+                });
+            } finally {flock($lock,LOCK_UN);fclose($lock);}
             $view=it_rc_view($updated[0],$ticker);
             $validation=it_rc_build($updated[0],$ticker);
             unset($validation['events']);$view['validation']=$validation;
@@ -267,8 +275,8 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Investment Tracker · Tax Lots</title>
-<link rel="stylesheet" href="style.css?v=1.3.0">
-<script src="app.js?v=1.3.0" defer></script>
+<link rel="stylesheet" href="style.css?v=1.3.1">
+<script src="app.js?v=1.3.1" defer></script>
 </head>
 <body data-demo="<?=$isDemo?'1':'0'?>">
 <header class="topbar"><div><span class="eyebrow">PRIVATE PORTFOLIO ANALYTICS</span><h1>Investment Tracker</h1><p>See what each purchase is worth, not just the average.</p></div><a class="account" href="<?=it_h($auth->portal())?>">Account <span aria-hidden="true">↗</span></a></header>
@@ -333,5 +341,5 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
 </section>
 <section class="panel"><div class="panel-heading"><div><span class="eyebrow">IMMUTABLE HISTORY</span><h2>Activity ledger</h2></div><span id="recordCount" class="subtle"></span></div><div class="tablewrap"><table><thead><tr><th>Date</th><th>Stock</th><th>Type</th><th class="numeric">Shares</th><th class="numeric">Amount / price</th><th>Notes</th><th>Correction</th></tr></thead><tbody id="eventsBody"></tbody></table></div><div class="actions"><button type="button" class="secondary" id="newerEvents" disabled>Newer events</button><span id="eventPage" class="subtle" aria-live="polite"></span><button type="button" class="secondary" id="olderEvents" disabled>Older events</button></div><p class="hint">Voiding retains the original record for audit. Voiding a purchase that has allocated sales is blocked until its dependencies are corrected.</p></section>
 </main>
-<footer>Investment Tracker · Revision 1.3.0 · Updated October 29, 2026 · Data private to your central account · Calculations are estimates, not trading or tax advice</footer>
+<footer>Investment Tracker · Revision 1.3.1 · Updated October 29, 2026 · Data private to your central account · Calculations are estimates, not trading or tax advice</footer>
 </body></html>
