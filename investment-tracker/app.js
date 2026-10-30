@@ -2,10 +2,10 @@
  * File Name: app.js
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Accessible charts, per-lot history, sale simulation and private ledger controls.
- * Revision: 1.3.0
+ * Revision: 1.3.1
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-30
- * Changelog: 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
+ * Changelog: 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
  */
 'use strict';
 const $ = s => document.querySelector(s);
@@ -158,7 +158,7 @@ function renderHoldings() {
   const card=el('div','holding');const heading=el('div','holdingTop');heading.append(el('b',null,h.ticker),el('strong',colorize(h.unrealized),money(h.value)));card.append(heading);
   card.append(el('p','subtle',qty(h.shares)+' shares · basis '+money(h.basis)+' · '+(h.price===null?'MISSING PRICE':'$'+qty(h.price)+'/share as of '+day(h.price_date))));
   const stats=el('div','holdingStats');stats.append(el('span',colorize(h.unrealized),'Unrealized '+money(h.unrealized)),el('span',colorize(h.realized),'Realized '+money(h.realized)));
-  card.append(stats);card.append(el('p','subtle','Lifetime '+money(h.lifetime_profit)+' · Cash dividends '+money(h.dividends_cash)+' · Reinvested '+money(h.dividends_reinvested)+' · XIRR '+percent(h.xirr_pct)));
+  card.append(stats);card.append(el('p','subtle','Lifetime '+money(h.lifetime_profit)+' · Cash dividends '+money(h.dividends_cash)+' · Reinvested '+money(h.dividends_reinvested)+' · Stock-lending/other income '+money(h.other_income||0)+' · Fees '+money(h.fees||0)+' · XIRR '+percent(h.xirr_pct)));
   host.append(card);
  });
  if(!host.childElementCount)host.append(el('p','empty','No transactions recorded yet.'));
