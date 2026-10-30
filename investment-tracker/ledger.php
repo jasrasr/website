@@ -3,10 +3,10 @@
  * File Name: ledger.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Deterministic split-aware per-purchase tax-lot and performance calculations.
- * Revision: 1.3.0
+ * Revision: 1.4.0
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-30
- * Changelog: 1.3.0 - Track stock-lending income and fee charges separately from dividends and basis. 1.2.0 - Date valuations at their observed price and withhold results if more recent account activity lacks a quote. 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
+ * Changelog: 1.4.0 - Preserve unpriced share receipts with unknown tax basis and suppress unreliable gain calculations. 1.3.0 - Track stock-lending income and fee charges separately from dividends and basis. 1.2.0 - Date valuations at their observed price and withhold results if more recent account activity lacks a quote. 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
  */
 declare(strict_types=1);
 
@@ -22,7 +22,7 @@ function it_event(array $row): array
     if (!preg_match('/^[A-Z0-9.^-]{1,14}$/D', $ticker)) {
         throw new InvalidArgumentException('Invalid ticker symbol.');
     }
-    if (!in_array($type, ['buy','sell','dividend','reinvest','split','price','other_income','fee'], true)) {
+    if (!in_array($type, ['buy','sell','dividend','reinvest','split','price','other_income','fee','receipt'], true)) {
         throw new InvalidArgumentException('Select a supported transaction type.');
     }
     $qty = it_number($row['quantity'] ?? 0, 0, 1000000000);
@@ -34,6 +34,7 @@ function it_event(array $row): array
         throw new InvalidArgumentException('This event needs positive shares and total dollars.');
     }
     if (in_array($type,['dividend','other_income','fee'],true) && $amount <= 0) throw new InvalidArgumentException('Income and fee amounts must be positive.');
+    if ($type === 'receipt' && $qty <= 0) throw new InvalidArgumentException('Received shares must be positive.');
     if ($type === 'price' && $price <= 0) throw new InvalidArgumentException('Market price must be positive.');
     if ($type === 'split' && ($num < 1 || $den < 1 || $num > 10000 || $den > 10000 || $num === $den)) {
         throw new InvalidArgumentException('Provide a non-1:1 split ratio (such as 10 and 1).');
@@ -129,18 +130,20 @@ function it_calculate(array $events): array
     usort($ordered,static fn($a,$b)=>strcmp((string)$a['date'],(string)$b['date'])
         ?: (($a['type']==='split'?0:1)<=>($b['type']==='split'?0:1))
         ?: ($a['_order']<=>$b['_order']));
-    $lots=[]; $sales=[]; $quotes=[]; $series=[]; $cash=[]; $divs=[]; $reinvested=[]; $purchases=[]; $proceeds=[]; $realized=[]; $otherIncome=[]; $fees=[]; $latestActivity=[];
+    $lots=[]; $sales=[]; $quotes=[]; $series=[]; $cash=[]; $divs=[]; $reinvested=[]; $purchases=[]; $proceeds=[]; $realized=[]; $otherIncome=[]; $fees=[]; $latestActivity=[]; $basisUncertain=[]; $estimated=[];
     foreach ($ordered as $e) {
         $t=(string)$e['ticker']; $kind=(string)$e['type']; $q=(float)$e['quantity']; $a=(float)$e['amount'];
         $divs[$t]??=0.0; $reinvested[$t]??=0.0; $purchases[$t]??=0.0; $proceeds[$t]??=0.0; $realized[$t]??=0.0; $otherIncome[$t]??=0.0; $fees[$t]??=0.0; $cash[$t]??=[];
         if ($kind!=='price') $latestActivity[$t]=max($latestActivity[$t]??$e['date'],$e['date']);
-        if ($kind==='buy' || $kind==='reinvest') {
+        if(!empty($e['allocation_estimated']))$estimated[$t]=true;
+        if ($kind==='buy' || $kind==='reinvest' || $kind==='receipt') {
             if ($kind==='buy') { $purchases[$t]+=$a; $cash[$t][]=[$e['date'],-$a]; }
-            else $reinvested[$t]+=$a;
+            elseif($kind==='reinvest') $reinvested[$t]+=$a;
             $lots[$e['id']]=[
                 'id'=>$e['id'],'ticker'=>$t,'date'=>$e['date'],'source'=>$kind,
                 'original_shares'=>$q,'shares'=>$q,'original_cost'=>$a,'remaining_cost'=>$a,
-                'original_unit_cost'=>$a/$q,'split_factor'=>1.0,
+                'original_unit_cost'=>$kind==='receipt'?null:$a/$q,'split_factor'=>1.0,
+                'basis_unknown'=>$kind==='receipt',
                 'realized'=>0.0, 'sold_shares'=>0.0,
             ];
         } elseif ($kind==='split') {
@@ -161,6 +164,7 @@ function it_calculate(array $events): array
             }
             $before=$lots[$id]['shares'];
             $basis=$lots[$id]['remaining_cost']*($q/$before);
+            if(!empty($lots[$id]['basis_unknown']))$basisUncertain[$t]=true;
             $lots[$id]['shares']=max(0,$before-$q);
             $lots[$id]['remaining_cost']=max(0,$lots[$id]['remaining_cost']-$basis);
             $lots[$id]['sold_shares']+=$q;
@@ -181,7 +185,7 @@ function it_calculate(array $events): array
             foreach ($lots as $lot) {
                 if ($lot['ticker']!==$t || $lot['shares']<=0.0000000001) continue;
                 $mv=$lot['shares']*(float)$e['price'];
-                $snapshot[]=['id'=>$lot['id'],'value'=>$mv,'gain'=>$mv-$lot['remaining_cost'],'cost'=>$lot['remaining_cost']];
+                $snapshot[]=['id'=>$lot['id'],'value'=>$mv,'gain'=>!empty($lot['basis_unknown'])?null:$mv-$lot['remaining_cost'],'cost'=>!empty($lot['basis_unknown'])?null:$lot['remaining_cost']];
                 $cost+=$lot['remaining_cost']; $value+=$mv;
             }
             $series[$t][]=['date'=>$e['date'],'price'=>(float)$e['price'],'value'=>$value,'cost'=>$cost,'lots'=>$snapshot];
@@ -189,46 +193,49 @@ function it_calculate(array $events): array
     }
     $tickers=array_values(array_unique(array_merge(array_keys($purchases),array_keys($quotes))));
     sort($tickers);
-    $holdings=[];$missing=[];$totalValue=0.;$allFlows=[];$net=0.;
+    $holdings=[];$missing=[];$totalValue=0.;$allFlows=[];$net=0.;$uncertain=[];
     foreach ($tickers as $t) {
         $price=$quotes[$t]['price']??null;
         $priceUsable=$price!==null && ($quotes[$t]['date']??'') >= ($latestActivity[$t]??'');
         $qty=0.;$basis=0.;$currentLots=[];
+        $unknownBasis=!empty($basisUncertain[$t]);
         foreach ($lots as $lot) {
             if ($lot['ticker']!==$t) continue;
-            if ($lot['shares']>0.000000001) { $qty+=$lot['shares']; $basis+=$lot['remaining_cost']; }
+            if ($lot['shares']>0.000000001) { $qty+=$lot['shares']; $basis+=$lot['remaining_cost']; if(!empty($lot['basis_unknown']))$unknownBasis=true; }
             $market=$priceUsable ? $lot['shares']*$price : null;
             $lot['market_value']=$market;
-            $lot['unrealized']=$market===null?null:$market-$lot['remaining_cost'];
+            $lot['unrealized']=($market===null||!empty($lot['basis_unknown']))?null:$market-$lot['remaining_cost'];
             $lot['adjusted_acquired_shares']=$lot['original_shares']*$lot['split_factor'];
             $lot['adjusted_unit_cost']=$lot['adjusted_acquired_shares']>0
-                ?$lot['original_cost']/$lot['adjusted_acquired_shares']:null;
+                ?(!empty($lot['basis_unknown'])?null:$lot['original_cost']/$lot['adjusted_acquired_shares']):null;
             $lot['remaining_unit_cost']=$lot['shares']>0.000000001
-                ?$lot['remaining_cost']/$lot['shares']:null;
-            $lot['roi_pct']=($market!==null && $lot['remaining_cost']>0)?100*($market/$lot['remaining_cost']-1):null;
+                ?(!empty($lot['basis_unknown'])?null:$lot['remaining_cost']/$lot['shares']):null;
+            $lot['roi_pct']=($market!==null && empty($lot['basis_unknown']) && $lot['remaining_cost']>0)?100*($market/$lot['remaining_cost']-1):null;
             $holding=it_holding_period($lot['date'],gmdate('Y-m-d'));
             $age=$holding['days_held'];
             $valuationAge=$price===null?0:(int)((strtotime($quotes[$t]['date'].' UTC')-strtotime($lot['date'].' UTC'))/86400);
-            $annualized=($market!==null && $lot['remaining_cost']>0 && $lot['shares']>0 && $valuationAge>0)
+            $annualized=($market!==null && empty($lot['basis_unknown']) && $lot['remaining_cost']>0 && $lot['shares']>0 && $valuationAge>0)
                 ?100*(pow($market/$lot['remaining_cost'],365.25/$valuationAge)-1):null;
             $lot['annualized_pct']=$annualized!==null && is_finite($annualized)?$annualized:null;
             $lot=array_merge($lot,$holding);
             $currentLots[]=$lot;
         }
         $missingPrice=$qty>0.000000001 && !$priceUsable;
+        if($unknownBasis)$uncertain[]=$t;
         if ($missingPrice) $missing[]=$t;
         $v=$qty<=0.000000001?0.0:($missingPrice?null:$qty*$price);
         if ($v!==null) $totalValue+=$v;
-        $cashGain=$v===null?null:$v+$proceeds[$t]+$divs[$t]+$otherIncome[$t]-$fees[$t]-$purchases[$t];
+        $cashGain=($v===null||$unknownBasis)?null:$v+$proceeds[$t]+$divs[$t]+$otherIncome[$t]-$fees[$t]-$purchases[$t];
         $flows=$cash[$t];
         if ($v!==null && $qty>0) $flows[]=[$quotes[$t]['date'],$v];
         $holdings[$t]=[
-            'ticker'=>$t,'shares'=>$qty,'basis'=>$basis,'price'=>$price,
-            'price_date'=>$quotes[$t]['date']??null,'valuation_stale_or_incomplete'=>$missingPrice,'value'=>$v,'unrealized'=>$v===null?null:$v-$basis,
-            'realized'=>$realized[$t],'dividends_cash'=>$divs[$t],'dividends_reinvested'=>$reinvested[$t],
+            'ticker'=>$t,'shares'=>$qty,'basis'=>$unknownBasis?null:$basis,'price'=>$price,
+            'basis_unknown'=>$unknownBasis,'allocation_estimated'=>!empty($estimated[$t]),
+            'price_date'=>$quotes[$t]['date']??null,'valuation_stale_or_incomplete'=>$missingPrice,'value'=>$v,'unrealized'=>($v===null||$unknownBasis)?null:$v-$basis,
+            'realized'=>$unknownBasis?null:$realized[$t],'dividends_cash'=>$divs[$t],'dividends_reinvested'=>$reinvested[$t],
             'other_income'=>$otherIncome[$t],'fees'=>$fees[$t],
             'purchases'=>$purchases[$t],'sales_proceeds'=>$proceeds[$t],
-            'lifetime_profit'=>$cashGain,'xirr_pct'=>($missingPrice||!$flows)?null:(($x=it_xirr($flows))===null?null:$x*100),
+            'lifetime_profit'=>$cashGain,'xirr_pct'=>($missingPrice||$unknownBasis||!$flows)?null:(($x=it_xirr($flows))===null?null:$x*100),
             'lots'=>$currentLots,
         ];
         foreach ($cash[$t] as $f) $allFlows[]=$f;
@@ -236,15 +243,15 @@ function it_calculate(array $events): array
         $net += $proceeds[$t]+$divs[$t]+$otherIncome[$t]-$fees[$t]-$purchases[$t];
     }
     return [
-        'holdings'=>$holdings,'series'=>$series,'sales'=>$sales,'missing_prices'=>$missing,
+        'holdings'=>$holdings,'series'=>$series,'sales'=>$sales,'missing_prices'=>$missing,'unknown_basis_tickers'=>$uncertain,
         'totals'=>[
             'market_value'=>count($missing)?null:$totalValue,
-            'lifetime_profit'=>count($missing)?null:$totalValue+$net,
-            'unrealized'=>count($missing)?null:array_sum(array_map(static fn($h)=>$h['unrealized']??0,$holdings)),
-            'realized'=>array_sum($realized),'dividends_cash'=>array_sum($divs),
+            'lifetime_profit'=>count($missing)||count($uncertain)?null:$totalValue+$net,
+            'unrealized'=>count($missing)||count($uncertain)?null:array_sum(array_map(static fn($h)=>$h['unrealized']??0,$holdings)),
+            'realized'=>count($uncertain)?null:array_sum($realized),'dividends_cash'=>array_sum($divs),
             'other_income'=>array_sum($otherIncome),'fees'=>array_sum($fees),
             'dividends_reinvested'=>array_sum($reinvested),
-            'xirr_pct'=>count($missing)?null:(($x=it_xirr($allFlows))===null?null:$x*100)
+            'xirr_pct'=>count($missing)||count($uncertain)?null:(($x=it_xirr($allFlows))===null?null:$x*100)
         ],
     ];
 }
