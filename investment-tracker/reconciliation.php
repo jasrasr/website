@@ -3,10 +3,10 @@
  * File Name: reconciliation.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Source-preserving Robinhood import staging, per-ticker corrections and safe ledger conversion.
- * Revision: 1.1.0
+ * Revision: 1.1.1
  * Created Date: 2026-10-30
  * Modified Date: 2026-10-30
- * Changelog: 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
+ * Changelog: 1.1.1 - Preserve report end date for share confirmation and reject fractional split ratios. 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
  */
 declare(strict_types=1);
 
@@ -115,6 +115,7 @@ function it_rc_stage(string $uploadedFile): array
         'created_at'=>gmdate(DATE_ATOM),
         'source_hash'=>hash_file('sha256',$uploadedFile),
         'source_records'=>count($rows),
+        'report_last_date'=>max(array_column($rows,'date')),
         'rows'=>$rows,
         'reviews'=>[],
         'completed'=>[],
@@ -144,6 +145,7 @@ function it_rc_view(array $stage,?string $ticker=null): array
 {
     $result=[
         'created_at'=>$stage['created_at'],'source_records'=>$stage['source_records'],
+        'report_last_date'=>$stage['report_last_date']??null,
         'ticker_count'=>count(it_rc_symbols($stage)),'source_fingerprint'=>substr($stage['source_hash'],0,12),
         'tickers'=>it_rc_symbols($stage),'revision'=>it_rc_revision($stage),
         'notice'=>'Draft in private storage; no ledger holdings were imported by staging.',
@@ -173,7 +175,10 @@ function it_rc_review(array $stage,string $ticker,array $input): array
     foreach($input['ratios']??[] as $id=>$ratio) {
         if(!isset($validIds[$id]) || !is_array($ratio) || count($ratio)>3)
             throw new InvalidArgumentException('Invalid split correction.');
-        $n=(int)($ratio['n']??0);$d=(int)($ratio['d']??0);
+        $rawN=$ratio['n']??null;$rawD=$ratio['d']??null;
+        if(!is_numeric($rawN) || !is_numeric($rawD) || (float)$rawN!=(int)$rawN || (float)$rawD!=(int)$rawD)
+            throw new InvalidArgumentException('Split ratio components must be whole numbers.');
+        $n=(int)$rawN;$d=(int)$rawD;
         if ($n<1 || $d<1 || $n>10000 || $d>10000 || $n===$d)
             throw new InvalidArgumentException('Split ratio must be non-1:1 positive integers.');
         $ratios[$id]=['n'=>$n,'d'=>$d];
