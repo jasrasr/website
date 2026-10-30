@@ -3,10 +3,10 @@
  * File Name: ledger.test.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Offline synthetic split, tax-lot and performance regression tests.
- * Revision: 1.2.0
+ * Revision: 1.2.1
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-29
- * Changelog: 1.2.0 - Verify full NVDA CSV demo share reconciliation and prevent DRIP double counting. 1.1.0 - Original/adjusted quantity, proportional P&L and exact one-year tax boundary tests. 1.0.0 - Initial deterministic accounting tests.
+ * Changelog: 1.2.1 - Block valuations when a price observation precedes later purchases. 1.2.0 - Verify full NVDA CSV demo share reconciliation and prevent DRIP double counting. 1.1.0 - Original/adjusted quantity, proportional P&L and exact one-year tax boundary tests. 1.0.0 - Initial deterministic accounting tests.
  */
 declare(strict_types=1);
 require_once dirname(__DIR__).'/ledger.php';
@@ -129,5 +129,16 @@ t(abs(array_sum(array_column($older,'shares'))-0.59679)<1e-8,
 $latest=end($nvda['lots']);
 t($latest['date']==='2026-10-09' && $latest['tax_term']==='short-term',
   'October 2026 NVDA purchase remains short-term during October 2026');
+
+
+$unpriced=it_calculate([
+ event('start','2025-02-12','MSFT','buy',1,100),
+ event('q','2026-01-01','MSFT','price',0,0,['price'=>200]),
+ event('later','2026-02-01','MSFT','buy',1,150),
+]);
+t($unpriced['holdings']['MSFT']['value']===null &&
+  $unpriced['holdings']['MSFT']['lots'][0]['market_value']===null &&
+  $unpriced['totals']['xirr_pct']===null,
+  'Quote preceding a new purchase must not produce fabricated gains or portfolio XIRR');
 
 echo "All synthetic ledger tests passed.\n";
