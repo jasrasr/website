@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, data contract, calculation model, privacy and test procedures.
-Revision: 1.2.0
+Revision: 1.2.1
 Created Date: 2026-10-29
-Modified Date: 2026-10-29
-Changelog: 1.2.0 - Reconcile NVDA demo using owner-authorized CSV and add preview-only Robinhood CSV parser. 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
+Modified Date: 2026-10-30
+Changelog: 1.2.1 - Clarify native Robinhood CSV upload and route misselected reports to the non-mutating analyzer. 1.2.0 - Reconcile NVDA demo using owner-authorized CSV and add preview-only Robinhood CSV parser. 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
 -->
 # Investment Tracker
 
@@ -25,6 +25,16 @@ The **NVIDIA screenshot demo** tab (\`?demo=1\`) is now reconstructed from the o
 - The activity report does **not** identify which tax lots the broker actually selected for the two earlier NVDA sales. Demo allocates historical sale proceeds to oldest acquisitions provisionally for illustration. An actual tax-lot statement should be used before using realized gains in tax decisions.
 
 All personal user imports must still be approved and reconciled. **None of the user's 1,479-row brokerage CSV is committed to public GitHub**; only the explicitly authorized, ticker-specific NVDA demonstration entries are in source.
+
+## Choosing the correct import (v1.2.1)
+
+The direct Robinhood export is already valid. The app has two modes: **Analyze original Robinhood CSV** parses the unmodified broker report and shows transaction classifications and unresolved tax-lot issues **without saving any holdings**; **Import normalized tracker CSV** is an advanced import of a specially prepared internal ledger with explicit lot IDs.
+
+On the mobile page, the Robinhood upload is just before the internal import. If a user chooses the original Robinhood report under the advanced normalized upload by mistake and taps **Validate & preview**, the browser reads its header, keeps the normalized import button disabled, passes the same file to the original Robinhood analysis endpoint, and scrolls to that section. No brokerage records are written during this handoff. The file remains unchanged.
+
+The original Robinhood CSV cannot yet populate a real user's portfolio directly: its activity report does not contain tax-lot assignments for sales or all corporate-action basis instructions. This limitation is intentional until reconciliation can produce defensible per-lot results. Never tell users the preview saved transactions.
+
+Validation: `node investment-tracker/tests/upload-routing.test.cjs`. Check on iPhone Safari and Chrome that both picker paths go to the brokerage preview and that the advanced import button cannot commit a raw report.
 
 ## Original Robinhood CSV analysis (v1.2)
 
