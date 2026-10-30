@@ -1,0 +1,36 @@
+# File Name: investment-tracker-validation.yml
+# Author: Jason Lamb (with help from ChatGPT)
+# Description: Validate private investment tracker PHP, JavaScript, and synthetic accounting cases.
+# Revision: 1.1.0
+# Created Date: 2026-10-29
+# Modified Date: 2026-10-29
+# Changelog: 1.1.0 - Lint and test the original Robinhood CSV preview parser. 1.0.1 - Lint read-only demo loader. 1.0.0 - Initial pull-request validation.
+name: Investment Tracker validation
+on:
+  pull_request:
+    paths:
+      - 'investment-tracker/**'
+      - '.github/workflows/investment-tracker-validation.yml'
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint PHP and JavaScript
+        run: |
+          php -v
+          php -l investment-tracker/index.php
+          php -l investment-tracker/ledger.php
+          php -l investment-tracker/demo.php
+          php -l investment-tracker/robinhood.php
+          php -l investment-tracker/tests/robinhood.test.php
+          php -l investment-tracker/config.local.example.php
+          php -l investment-tracker/tests/ledger.test.php
+          node --check investment-tracker/app.js
+      - name: Run synthetic split, lot, dividend, oversale and XIRR cases
+        run: |
+          php investment-tracker/tests/ledger.test.php
+          php investment-tracker/tests/robinhood.test.php
