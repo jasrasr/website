@@ -2,10 +2,10 @@
  * File Name: app.js
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Accessible charts, per-lot history, sale simulation and private ledger controls.
- * Revision: 1.4.0
+ * Revision: 1.4.2
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-30
- * Changelog: 1.4.0 - Allow provisional Robinhood activity import without tax-lot attestation; display basis gaps prominently. 1.3.3 - Provide noncommitting FIFO allocation suggestions with explicit broker-verification warning. 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
+ * Changelog: 1.4.2 - Show unknown receipt basis and prevent false partial-sale tax calculations. 1.4.0 - Allow provisional Robinhood activity import without tax-lot attestation; display basis gaps prominently. 1.3.3 - Provide noncommitting FIFO allocation suggestions with explicit broker-verification warning. 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
  */
 'use strict';
 const $ = s => document.querySelector(s);
@@ -104,19 +104,19 @@ function renderLots(ticker) {
  lots.forEach(l=>{
   const tr=el('tr',selectedLot===l.id?'selected':'');
   cell(tr,day(l.date));
-  cell(tr,l.source==='reinvest'?'Reinvested dividend':'Purchase');
+  cell(tr,l.source==='reinvest'?'Reinvested dividend':l.source==='receipt'?'Share credit · basis unknown':'Purchase');
   cell(tr,qty(l.original_shares),'numeric');
   cell(tr,money(l.original_unit_cost),'numeric');
   cell(tr,'×'+qty(l.split_factor),'numeric');
   cell(tr,qty(l.shares),'numeric');
   cell(tr,money(l.remaining_unit_cost),'numeric');
-  cell(tr,money(l.remaining_cost),'numeric');
+  cell(tr,money(l.basis_unknown?null:l.remaining_cost),'numeric');
   cell(tr,money(l.market_value),'numeric');
   cell(tr,money(l.unrealized),'numeric '+colorize(l.unrealized));
   cell(tr,percent(l.roi_pct),'numeric '+colorize(l.roi_pct));
   const age=cell(tr,'');
-  age.append(el('span','heldFor',l.held_for),el('span','term '+(l.tax_term==='long-term'?'longTerm':'shortTerm'),l.tax_term==='long-term'?'Long-term':'Short-term'));
-  if(l.tax_term!=='long-term')age.append(el('small','subtle',l.days_to_long_term+' days until long-term'));
+  age.append(el('span','heldFor',l.held_for),el('span','term '+(l.tax_term==='long-term'?'longTerm':'shortTerm'),l.tax_term==='unknown'?'Basis / term unknown':l.tax_term==='long-term'?'Long-term':'Short-term'));
+  if(l.tax_term==='short-term')age.append(el('small','subtle',l.days_to_long_term+' days until long-term'));
   const td=cell(tr,'');const button=el('button','smallbtn','Explore');button.type='button';button.addEventListener('click',()=>chooseLot(l.id));td.append(button);
   tbody.append(tr);
  });
@@ -141,7 +141,7 @@ function chooseLot(id) {
   ['Market value / unrealized gain',money(lot.market_value)+' / '+money(lot.unrealized)+' ('+percent(lot.roi_pct)+')'],
   ['Original holding duration',lot.held_for+' · '+lot.days_held+' days'],
   ['Holding-period classification',lot.tax_term==='long-term'?'Long-term':('Short-term · '+lot.days_to_long_term+' days remaining')],
-  ['First potentially long-term sale date',day(lot.long_term_on)]
+  ['First potentially long-term sale date',lot.long_term_on?day(lot.long_term_on):'Unknown']
  ];
  fields.forEach(([name,val])=>{const c=el('div','fact');c.append(el('span','subtle',name),el('strong',null,val));facts.append(c);});
  const points=(state.analysis.series[lot.ticker]||[]).filter(p=>p.date>=lot.date).map(p=>{
@@ -156,8 +156,9 @@ function renderHoldings() {
  const host=$('#holdings');host.replaceChildren();
  Object.values(state.analysis.holdings).forEach(h=>{
   const card=el('div','holding');const heading=el('div','holdingTop');heading.append(el('b',null,h.ticker),el('strong',colorize(h.unrealized),money(h.value)));card.append(heading);
-  card.append(el('p','subtle',qty(h.shares)+' shares · basis '+money(h.basis)+' · '+(h.price===null?'MISSING PRICE':'$'+qty(h.price)+'/share as of '+day(h.price_date))));
+  card.append(el('p','subtle',qty(h.shares)+' shares · basis '+(h.basis_unknown?'UNKNOWN (received shares)':money(h.basis))+' · '+(h.price===null?'MISSING PRICE':'$'+qty(h.price)+'/share as of '+day(h.price_date))));
   const stats=el('div','holdingStats');stats.append(el('span',colorize(h.unrealized),'Unrealized '+money(h.unrealized)),el('span',colorize(h.realized),'Realized '+money(h.realized)));
+  if(h.allocation_estimated || h.basis_unknown)card.append(el('p','rhWarning',h.basis_unknown?'UNKNOWN BASIS: share-credit tax cost and holding period cannot be calculated.':'ESTIMATED FIFO: stock sale lots have not been verified against the broker.'));
   card.append(stats);card.append(el('p','subtle','Lifetime '+money(h.lifetime_profit)+' · Cash dividends '+money(h.dividends_cash)+' · Reinvested '+money(h.dividends_reinvested)+' · Stock-lending/other income '+money(h.other_income||0)+' · Fees '+money(h.fees||0)+' · XIRR '+percent(h.xirr_pct)));
   host.append(card);
  });
@@ -228,6 +229,7 @@ function updateManualLots() {
 function salePreview(event) {
  event.preventDefault();const lot=openLots().find(l=>l.id===$('#saleLot').value);
  const q=Number($('#saleQty').value),price=Number($('#salePrice').value);
+ if(lot?.basis_unknown){$('#saleResult').textContent='This share credit has unknown cost basis and acquisition date. Its taxable gain cannot be simulated without verified basis.';return;}
  if(!lot||!Number.isFinite(q)||q<=0||q>lot.shares+1e-9||!Number.isFinite(price)||price<=0) {
   $('#saleResult').textContent='Choose a valid lot, share quantity (no more than shares remaining), and sale price.';return;
  }
