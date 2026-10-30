@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, data contract, calculation model, privacy and test procedures.
-Revision: 1.2.1
+Revision: 1.3.0
 Created Date: 2026-10-29
 Modified Date: 2026-10-30
-Changelog: 1.2.1 - Clarify native Robinhood CSV upload and route misselected reports to the non-mutating analyzer. 1.2.0 - Reconcile NVDA demo using owner-authorized CSV and add preview-only Robinhood CSV parser. 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
+Changelog: 1.3.0 - Add private per-ticker report staging, editable sale-lot/split corrections, broker-share validation, and explicit atomic import. 1.2.1 - Clarify native Robinhood CSV upload and route misselected reports to the non-mutating analyzer. 1.2.0 - Reconcile NVDA demo using owner-authorized CSV and add preview-only Robinhood CSV parser. 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
 -->
 # Investment Tracker
 
@@ -25,6 +25,34 @@ The **NVIDIA screenshot demo** tab (\`?demo=1\`) is now reconstructed from the o
 - The activity report does **not** identify which tax lots the broker actually selected for the two earlier NVDA sales. Demo allocates historical sale proceeds to oldest acquisitions provisionally for illustration. An actual tax-lot statement should be used before using realized gains in tax decisions.
 
 All personal user imports must still be approved and reconciled. **None of the user's 1,479-row brokerage CSV is committed to public GitHub**; only the explicitly authorized, ticker-specific NVDA demonstration entries are in source.
+
+## Review and import Robinhood activity (v1.3)
+
+This release changes the original Robinhood uploader from **preview only** to a two-stage, explicitly authorized review-and-import workflow.
+
+1. Sign in using central user management, with at least **member** access to the investment-tracker project. Under **Analyze original Robinhood CSV**, choose the file downloaded directly from Robinhood.
+2. Tap **Create private import draft**. This creates or replaces an **ignored, HTTP-denied per-user draft** under \`investment-tracker/storage/<hashed-central-user-id>.rh-stage.json\`. Staging does **not** import or change the permanent portfolio. The original CSV file is not saved on the server, but parsed stock events/limited descriptions remain in private draft storage for correction and later review.
+3. Select a symbol in **Correct and import brokerage activity**. Enter the exact broker-held shares as of **the report's final activity date**. Record the source of that balance, especially if transactions occurred after the exported reporting period.
+4. **Sales:** each sale must be allocated to the actual purchase lot(s) by share count. The UI lists dated source purchase lots; use **Allocate another purchase lot** when a sale spans multiple lots. You must verify elections with Robinhood tax lots, cost-basis documents or trade confirmations. The app does not guess FIFO or specific identification.
+5. **Splits:** Robinhood \`SPL\` quantities represent shares **credited**, not the actual split ratio. Enter the verified new:old ratio, for example 10:1. The importer replays historical positions and validates that the credited quantity approximately matches the ratio and pre-split holdings. Reverse splits, share conversions and other unsupported actions remain blocked until specialized rules are implemented.
+6. Check the explicit source confirmation and select **Save corrections & validate**. This saves the private review only. It checks all allocated sold shares against the original lots, current share quantity and split credits; failures are listed individually without writing the permanent ledger.
+7. Once the selected ticker is ready, select **Import this verified stock**. Confirm the action. The app appends only that ticker's reviewed transactions to your **own** central-user-associated portfolio using the framework's atomic JSON store. It does not place or suggest a brokerage trade. One symbol can be imported independently from other symbols with complex unresolved events.
+8. Review open lots, historical prices and dividends. The importer may use purchase/sale **execution prices** as dated chart observations: these are *not closing prices and not live quotes*. Add a current dated market-price observation manually to calculate a valuation at that date. Verify actual shares and basis against the broker; review your 1099-B for tax-specific realized gains.
+
+### Safety, supported events and blockers
+
+The import converts stock purchases, reinvested dividend purchases, separately retained cash dividends, manually allocated sales, verified splits, stock-lending income and related fees. Matched DRIP dividend credits are not double counted. Each imported event uses a deterministic source-derived external ID, and subsequent overlapping exports cannot silently import identical events twice. Existing personal ticker histories are **not** automatically overwritten or combined with a new import: they require explicit reconciliation.
+
+The importer **blocks**, rather than guesses, unsupported share-affecting actions such as \`CONV\`, \`SPR\`, \`MRGS\`, \`REC\`, \`SXCH\`, \`LIQ\`, \`SDIV\`, and cancellations. This affects several tickers in the original report. These require separate basis-carryover and replacement-share handling; falsely marking them as ordinary purchases could produce incorrect tax gains. The UI currently allows editing **sale allocations** and **stock split ratios**. It does not yet permit arbitrary reclassification of unsupported corporate actions.
+
+Per-user stage writes and ticker commits are serialized with a work lock; permanent ledger writes use \`JsonStore::update\` for atomic replacement and duplicate checks. The app records the original Robinhood row number and code in each generated event; stage corrections cannot silently rewrite source CSV amounts, dates or share quantities. On commit, stage status becomes imported. Reuploading a newer file creates a new draft and **replaces uncommitted review progress**, but does not delete existing portfolio data; matching tickers with already-imported history are rejected until reconciled.
+
+**Important limitations:** activity CSV alone cannot prove tax-lot elections, transfers, tax-basis adjustments, or current holdings. The stage uses floating-point amounts and stock-quantity tolerances; confirm statement-level figures before using results to choose a taxable sale. Reporting covered tax lots and multi-account position reconciliation remain future work. Do not upload the CSV to the public source repository, and confirm that Hostinger denies direct HTTP access to the storage folder before allowing private brokerage data.
+
+### Tests and rollout
+
+Run \`php investment-tracker/tests/reconciliation.test.php\` and the existing ledger/parser suites, and \`node investment-tracker/tests/upload-routing.test.cjs\`. Verify live login/CSRF, viewer-versus-member roles, private staging and storage HTTP 403, duplicate import prevention, and mobile per-lot controls. No merge or live deployment is implied by this README.
+
 
 ## Choosing the correct import (v1.2.1)
 
