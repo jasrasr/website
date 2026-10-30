@@ -3,10 +3,10 @@
  * File Name: provisional.test.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Demonstrate CSV-driven stock splits, FIFO assumptions and unknown-basis stock receipts without user attestation.
- * Revision: 1.0.0
+ * Revision: 1.1.0
  * Created Date: 2026-10-30
  * Modified Date: 2026-10-30
- * Changelog: 1.0.0 - Synthetic provisional import accounting safety tests.
+ * Changelog: 1.1.0 - Validate automatic all-tickers batch preview, source exception queue and stale review fingerprint. 1.0.0 - Synthetic provisional import accounting safety tests.
  */
 declare(strict_types=1);
 require_once dirname(__DIR__).'/robinhood.php';
@@ -51,4 +51,31 @@ try {
  $bad['rows'][]=array_merge($bad['rows'][0],['id'=>'zz-top','kind'=>'unsupported','code'=>'CONV']);
  ensure(it_rc_auto_review($bad,'DEMO')['ready']===false,'Unsupported conversion is never silently ignored');
 } finally {unlink($path);}
+// Batch preview should import clean securities without importing complex actions.
+$stage2=$stage;
+$stage2['rows'][]=array_merge($stage2['rows'][0],[
+    'id'=>'zz-bad-action','ticker'=>'BLOCK','kind'=>'unsupported','code'=>'CONV',
+]);
+$stage2['rows'][]=array_merge($stage2['rows'][0],[
+    'id'=>'zz-good-buy','ticker'=>'OTHER','kind'=>'buy','amount'=>-15.0,'quantity'=>0.5
+]);
+$plan=it_rc_batch_preview($stage2,[]);
+ensure($plan['ready']===true,'Full report preview has at least one supported ticker');
+ensure(count($plan['eligible'])===2,'Batch imports both supported synthetic tickers');
+ensure(count($plan['blocked'])===1 && $plan['blocked'][0]['ticker']==='BLOCK',
+  'Unsupported corporate-action ticker remains in exception queue');
+$public=it_rc_batch_public($plan,$stage2,[]);
+ensure(!array_key_exists('events',$public) && $public['eligible_count']===2
+  && preg_match('/^[a-f0-9]{64}$/',$public['fingerprint'])===1,
+  'Public preview contains status/fingerprint, not raw imported ledger event list');
+$existing=[[
+    'id'=>'personal-other','date'=>'2020-01-01','ticker'=>'OTHER','type'=>'buy',
+    'quantity'=>0.1,'amount'=>1,'price'=>0,'numerator'=>0,'denominator'=>0,'lot_id'=>'','note'=>''
+]];
+$withExisting=it_rc_batch_preview($stage2,$existing);
+ensure(count($withExisting['eligible'])===1 && count($withExisting['skipped'])===1,
+  'Batch skips a ticker already present in the authenticated portfolio');
+ensure($public['fingerprint']!==it_rc_batch_public($withExisting,$stage2,$existing)['fingerprint'],
+  'Preview fingerprint detects changes in existing portfolio state');
+
 echo "All provisional auto-import tests passed.\n";
