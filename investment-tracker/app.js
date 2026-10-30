@@ -2,10 +2,10 @@
  * File Name: app.js
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Accessible charts, per-lot history, sale simulation and private ledger controls.
- * Revision: 1.3.2
+ * Revision: 1.3.3
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-30
- * Changelog: 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
+ * Changelog: 1.3.3 - Provide noncommitting FIFO allocation suggestions with explicit broker-verification warning. 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
  */
 'use strict';
 const $ = s => document.querySelector(s);
@@ -331,6 +331,7 @@ function rhDrawStock(data) {
  $('#rhExpectedShares').value=data.review.expected_shares??'';
  $('#rhConfirm').checked=!!data.review.source_confirmed;
  $('#rhSaveReview').disabled=!data.rows.length||!!data.completed;
+ $('#rhSuggestFifo').disabled=!!data.completed || !data.rows.some(x=>x.kind==='sell');
  $('#rhCommit').disabled=!data.validation?.ready||!!data.completed;
  const heading=el('p','subtle',data.rows.length+' brokerage activity lines for '+data.ticker+'. Purchase lot IDs are shown so each historical sale can be assigned precisely.');
  host.append(heading);
@@ -423,6 +424,48 @@ async function rhStageUpload(){
   notice('Report staged privately. Select a ticker, correct flagged events, validate and explicitly import.');
  }catch(err){notice(err.message,true);}
  finally{b.disabled=false;}
+}
+function rhSuggestFifo() {
+ if(!rhSelected?.rows)return;
+ const lots=[],allSuggestions={};
+ const rows=rhSelected.rows;
+ for(const event of rows){
+  if(event.kind==='split_credit') {
+   const card=Array.from(document.querySelectorAll('#rhReviewLines [data-split-id]')).find(x=>x.dataset.splitId===event.id);
+   const n=Number(card?.querySelector('.rhRatioNum')?.value),d=Number(card?.querySelector('.rhRatioDen')?.value);
+   if(!Number.isInteger(n)||!Number.isInteger(d)||n<=0||d<=0||n===d){
+    notice('Enter and verify all stock split ratios before suggesting FIFO allocations.',true);return;
+   }
+   lots.forEach(lot=>lot.remaining*=n/d);
+  }else if(event.kind==='buy'||event.kind==='reinvest'){
+   lots.push({id:event.id,date:event.date,remaining:Number(event.quantity)});
+  }else if(event.kind==='sell'){
+   let needed=Number(event.quantity);const allocations={};
+   for(const lot of lots){
+    if(needed<=0.0000001)break;
+    const used=Math.min(needed,lot.remaining);
+    if(used<=0)continue;
+    allocations[lot.id]=used;
+    lot.remaining=Math.max(0,lot.remaining-used);
+    needed-=used;
+   }
+   if(needed>0.0000001){notice('FIFO could not allocate '+event.ticker+' sale on '+event.date+'. Earlier purchase history or a corporate action may be missing.',true);return;}
+   allSuggestions[event.id]=allocations;
+  }else if(event.kind==='unsupported'){
+   // Still show useful proposals for sales; these cannot unlock import.
+  }
+ }
+ const purchases=rows.filter(x=>x.kind==='buy'||x.kind==='reinvest');
+ for(const card of document.querySelectorAll('#rhReviewLines [data-sale-id]')){
+  const allocation=allSuggestions[card.dataset.saleId];
+  if(!allocation)continue;
+  const target=card.querySelector('.rhAllocations');target.replaceChildren();
+  const eligible=purchases.filter(x=>x.date<=rows.find(r=>r.id===card.dataset.saleId)?.date);
+  Object.entries(allocation).forEach(([id,shares])=>rhAllocation(target,eligible,id,Number(shares.toFixed(8))));
+ }
+ $('#rhConfirm').checked=false;
+ $('#rhCommit').disabled=true;
+ notice('Provisional FIFO selections filled in. Verify each with Robinhood tax-lot records; FIFO is NOT assumed to be the actual broker election. Save corrections only after review.');
 }
 async function rhSave(){
  if(!rhSelected || !rhStage)return;
@@ -522,9 +565,10 @@ document.addEventListener('DOMContentLoaded',()=>{
  $('#rhDraftTicker').addEventListener('change',e=>{
   const ticker=e.target.value;
   rhSelected=null;$('#rhReviewLines').replaceChildren();
-  $('#rhSaveReview').disabled=true;$('#rhCommit').disabled=true;
+  $('#rhSaveReview').disabled=true;$('#rhCommit').disabled=true;$('#rhSuggestFifo').disabled=true;
   if(ticker)rhRefresh(ticker).catch(err=>notice(err.message,true));
  });
+ $('#rhSuggestFifo').addEventListener('click',rhSuggestFifo);
  $('#rhSaveReview').addEventListener('click',rhSave);
  $('#rhCommit').addEventListener('click',rhCommitTicker);
  if(!demoMode)rhRefresh().catch(err=>notice(err.message,true));
