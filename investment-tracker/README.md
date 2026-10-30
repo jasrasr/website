@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, data contract, calculation model, privacy and test procedures.
-Revision: 1.1.0
+Revision: 1.2.0
 Created Date: 2026-10-29
 Modified Date: 2026-10-29
-Changelog: 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
+Changelog: 1.2.0 - Reconcile NVDA demo using owner-authorized CSV and add preview-only Robinhood CSV parser. 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
 -->
 # Investment Tracker
 
@@ -13,22 +13,26 @@ Private, mobile-friendly investment performance dashboard at target `https://jas
 
 **Deployment status:** Source and review PR only; do not assume deployed. Register project ID **`investment-tracker`** (path `/github/investment-tracker/`) in central `user-management` and grant each intended account the viewer/member role **before first access**. This is not a standalone login or open-registration app. All API routes require a valid central session; write/import/void routes require member or higher and a valid CSRF token. No shared portfolio access is implemented.
 
-## Isolated NVIDIA screenshot demo (v1.1)
+## NVIDIA example from actual Robinhood activity (v1.2)
 
-After an account has been authorized for this project, open `?demo=1` (the **NVIDIA screenshot demo** tab). The data is **read-only** and **embedded as demonstration source only**, not inserted in the member's personal JSON or a shared user profile. `?api=1&demo=1` returns that source, and ALL demo POST attempts are rejected. Switch back to **My private portfolio** for normal user-linked records. The central project role is still required even for the demo, so it cannot bypass authentication.
+The **NVIDIA screenshot demo** tab (\`?demo=1\`) is now reconstructed from the owner's authorized Robinhood activity export. It is read-only, embedded in source with no account ID, and is completely separate from each authenticated member's personal investment ledger. The demo remains under central user-management authentication.
 
-Four screenshot-confirmed, currently open purchase rows are represented:
+- **1.736881 NVIDIA shares** after the 2024 10:1 split and ten dividend-reinvestment purchases are reconciled from the broker activity rows.
+- 2020–2021 buys and sales are included, with $77.19 in historical sale proceeds and $18.15 in aggregate realized gains on those fully exited investments.
+- Two separate purchase executions on November 22, 2021 combine to 0.059679 original shares, corresponding to 0.596790 split-adjusted shares. These remain separate tax lots, not silently merged.
+- Reinvested dividends contribute $0.95 of new purchase basis and add 0.004763 shares. $0.02 of early cash dividends is distinct from the reinvested dividends. **A dividend paid and reinvested is not counted twice as income.**
+- At the **October 9, 2026 transaction execution price** of **$233.80** (not a live market quote), illustrative holding value is ~$406.08, open basis $177.76, unrealized gain ~$228.32, and lifetime economic gain ~$247.44. These are historical illustrative values, not verified up-to-date market valuation.
+- The activity report does **not** identify which tax lots the broker actually selected for the two earlier NVDA sales. Demo allocates historical sale proceeds to oldest acquisitions provisionally for illustration. An actual tax-lot statement should be used before using realized gains in tax decisions.
 
-| Acquisition | Original shares | Original total cost | Post-split shares before any sales |
-|---|---:|---:|---:|
-| 2021-11-22 | 0.059679 | $20.00 | 0.596790 after 2024 10:1 |
-| 2024-03-28 | 0.002840 | $2.55 | 0.028400 after 2024 10:1 |
-| 2025-02-12 | 1.000000 | $129.26 | 1.000000 |
-| 2026-10-09 | 0.106928 | $25.00 | 0.106928 |
+All personal user imports must still be approved and reconciled. **None of the user's 1,479-row brokerage CSV is committed to public GitHub**; only the explicitly authorized, ticker-specific NVDA demonstration entries are in source.
 
-**1.732118 shares are from only the screenshot-confirmed purchase rows, excluding subsequent dividend reinvestments.** This is NOT a reconciled current balance. Historical 2020–2021 buys/sells are not included because specific sold-lot allocations could not be proven from screenshots. Multiple 2024–2026 reinvested dividend payments were shown but their share quantities were not; the demo therefore omits them rather than silently inventing shares. Its visual market-price points are based on screenshot **execution prices** from purchase dates, and the final 2026-10-09 $233.80 observation is not a current quote or forecast. The demo can make the portfolio look profitable or unprofitable incorrectly and **must not guide actual trading**.
+## Original Robinhood CSV analysis (v1.2)
 
-The personal portfolio remains empty until each account imports or creates its own data. Actual CSV import must reconcile old sales, reinvested fractional shares, fees and broker tax-lot identification before showing authoritative returns.
+The dashboard now includes **Preview brokerage history**, which accepts the actual 9-column Robinhood account-activity format (\`Activity Date, Process Date, Settle Date, Instrument, Description, Trans Code, Quantity, Price, Amount\`). Uploading requires member access and CSRF validation. The server processes the file in memory and immediately returns a compact classification/reconciliation summary; no raw CSV or transactions are saved.
+
+The parser recognizes buys, sells, dividend credits, dividend reinvestments, split share credits, lending income, account cash movements, interest, fees/taxes, and unsupported corporate actions. It links corresponding DRIP purchases to their dividend credits where same-ticker, same-dollar, shortly succeeding records exist, to avoid double-counting reinvestments. The report distinguishes split **credited share quantities** from split ratios and explicitly reports unresolved purchase-lot elections on sells. Tickers with potentially unsupported corporate actions, fee adjustments or cancellations remain flagged.
+
+This first mapping is **preview-only**, by design. The full export includes sales, stock splits and corporate-action events which cannot safely be converted into actual cost-basis lot events without a verified broker lot-election record and corporate-action treatment. The importer does not silently choose FIFO or omit challenging rows; it never imports a portion and then pretends portfolio totals are complete. The prior normalized CSV import remains available after reconciliation.
 
 ## Original and adjusted tax lots (v1.1)
 
