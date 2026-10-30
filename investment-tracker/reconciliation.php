@@ -3,10 +3,10 @@
  * File Name: reconciliation.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Source-preserving Robinhood import staging, per-ticker corrections and safe ledger conversion.
- * Revision: 1.0.0
+ * Revision: 1.1.0
  * Created Date: 2026-10-30
  * Modified Date: 2026-10-30
- * Changelog: 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
+ * Changelog: 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
  */
 declare(strict_types=1);
 
@@ -240,6 +240,7 @@ function it_rc_build(array $stage,string $ticker): array
             $q=(float)$r['quantity'];$balance+=$q;
             $confirmedLots[$id]=['remaining'=>$q,'date'=>$r['date']];
             $events[]=it_rc_event($r,$kind,$q,abs((float)$r['amount']));
+            if(($r['price']??0)>0)$events[]=it_rc_event($r,'price',0,0,'',0,0,(float)$r['price']);
             continue;
         }
         if($kind==='sell') {
@@ -266,6 +267,7 @@ function it_rc_build(array $stage,string $ticker): array
                 $events[]=it_rc_event($r,'sell',$shares,$proceeds*($shares/$allocated),'rh'.$lotId);
             }
             $balance-=$q;
+            if(($r['price']??0)>0)$events[]=it_rc_event($r,'price',0,0,'',0,0,(float)$r['price']);
             continue;
         }
         if($kind==='dividend' || $kind==='other_income') {
@@ -292,15 +294,15 @@ function it_rc_build(array $stage,string $ticker): array
         'expected_shares'=>$review['expected_shares'],'ready'=>!$issues,
         'notice'=>'Passing validation does not prove the broker elected these sale lots. Review tax statements separately.'];
 }
-function it_rc_event(array $r,string $kind,float $q,float $amount,string $lot='',int $num=0,int $den=0): array
+function it_rc_event(array $r,string $kind,float $q,float $amount,string $lot='',int $num=0,int $den=0,float $price=0): array
 {
     $ev=it_event([
         'date'=>$r['date'],'ticker'=>$r['ticker'],'type'=>$kind,
-        'quantity'=>$q,'amount'=>$amount,'price'=>0,
+        'quantity'=>$q,'amount'=>$amount,'price'=>$price,
         'numerator'=>$num,'denominator'=>$den,'lot_id'=>$lot,
-        'note'=>'Robinhood activity row '.$r['line'].' ('.$r['code'].')',
+        'note'=>'Robinhood row '.$r['line'].' ('.$r['code'].')'.($kind==='price'?' execution price; NOT closing quote':''),
     ]);
-    $ev['id']='rh'.$r['id'].($kind==='sell'?substr(hash('sha256',$lot),0,5):'');
+    $ev['id']='rh'.$r['id'].($kind==='sell'?substr(hash('sha256',$lot),0,5):($kind==='price'?'quote':''));
     $ev['external_id']=$ev['id'];
     return $ev;
 }
