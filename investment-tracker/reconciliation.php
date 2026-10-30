@@ -3,10 +3,10 @@
  * File Name: reconciliation.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Source-preserving Robinhood import staging, per-ticker corrections and safe ledger conversion.
- * Revision: 1.1.1
+ * Revision: 1.2.0
  * Created Date: 2026-10-30
  * Modified Date: 2026-10-30
- * Changelog: 1.1.1 - Preserve report end date for share confirmation and reject fractional split ratios. 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
+ * Changelog: 1.2.0 - Suggest split ratios and FIFO from source records, preserving REC credits as unknown-basis receipts and estimated status. 1.1.1 - Preserve report end date for share confirmation and reject fractional split ratios. 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
  */
 declare(strict_types=1);
 
@@ -49,9 +49,11 @@ function it_rc_read(string $file): array
                 'CDIV'=>'dividend',
                 'SPL'=>'split_credit',
                 'SLIP'=>'other_income',
+                'REC'=>'receipt',
                 'AFEE','DFEE','DTAX'=>'fee',
                 default=>'unsupported',
             };
+            if($kind==='receipt' && (!is_numeric($qty) || (float)$qty<=0))$kind='unsupported';
             if (in_array($kind,['buy','sell','reinvest'],true) &&
                 (!is_numeric($qty) || (float)$qty<=0 || $amount===null || $amount==0)) {
                 $kind='unsupported';
@@ -200,6 +202,7 @@ function it_rc_review(array $stage,string $ticker,array $input): array
         'expected_shares'=>(float)$expected,
         'ratios'=>$ratios,'sales'=>$sales,
         'source_confirmed'=>(bool)($input['source_confirmed']??false),
+        'estimated'=>(bool)($input['estimated']??false),
     ];
     return $stage;
 }
@@ -234,6 +237,16 @@ function it_rc_build(array $stage,string $ticker): array
             foreach ($confirmedLots as &$lot) $lot['remaining']*=$factor;
             unset($lot);
             $events[]=it_rc_event($r,'split',0,0,'',$ratio['n'],$ratio['d']);
+            continue;
+        }
+        if($kind==='receipt') {
+            // A brokerage REC is a share credit, not proof of a zero-cost purchase.
+            // Carry shares with unknown cost basis and unknown tax holding period.
+            $q=(float)($r['quantity']??0);
+            if($q<=0){$issues[]='Row '.$r['line'].' receipt has no positive share count.';continue;}
+            $balance+=$q;
+            $confirmedLots[$id]=['remaining'=>$q,'date'=>$r['date']];
+            $events[]=it_rc_event($r,'receipt',$q,0);
             continue;
         }
         if($kind==='buy' || $kind==='reinvest') {
@@ -289,16 +302,92 @@ function it_rc_build(array $stage,string $ticker): array
         $issues[]='Calculated remaining shares '.number_format($balance,8,'.','').
             ' do not match verified broker shares '.number_format((float)$review['expected_shares'],8,'.','').'.';
     }
-    if(empty($review['source_confirmed']))
-        $issues[]='Confirm that purchase dates, split ratios and selected sale lots have been reviewed against brokerage records.';
+    if(empty($review['source_confirmed']) && empty($review['estimated']))
+        $issues[]='Confirm the records or choose provisional automatic allocation with estimated results.';
     if(!$issues) {
         try {it_calculate($events);}
         catch(Throwable $error){$issues[]='Ledger validation failed: '.$error->getMessage();}
     }
+    if(!empty($review['estimated']))foreach($events as &$ev)$ev['allocation_estimated']=true;
+    unset($ev);
     return ['ticker'=>$ticker,'events'=>$events,'issues'=>$issues,'computed_shares'=>$balance,
         'expected_shares'=>$review['expected_shares'],'ready'=>!$issues,
-        'notice'=>'Passing validation does not prove the broker elected these sale lots. Review tax statements separately.'];
+        'estimated'=>!empty($review['estimated']),
+        'notice'=>!empty($review['estimated'])?'PROVISIONAL: FIFO assignment is not a verified broker election; REC shares have unknown cost basis. Do not use estimated tax lots for filing or deciding what to sell.':'Passing validation does not prove the broker elected these sale lots. Review tax statements separately.'];
 }
+
+/**
+ * Infer a common exact split ratio from shares credited vs holdings immediately
+ * beforehand. A matching quantity supports an estimate; it is NOT independent
+ * corporate action verification. Never claim the multiplier is broker certified.
+ */
+function it_rc_split_guess(float $before, float $credited): ?array
+{
+    if ($before<=0 || $credited<=0) return null;
+    $options=[];
+    foreach ([2,3,4,5,6,7,8,10,12,15,20,25,50,100] as $n) {
+        $delta=$before*($n-1);
+        if (abs($credited-$delta)<=max(0.00015,abs($delta)*0.001))$options[]=['n'=>$n,'d'=>1];
+    }
+    return count($options)===1?$options[0]:null;
+}
+function it_rc_auto_review(array $stage, string $ticker): array
+{
+    $ticker=strtoupper(trim($ticker));
+    if(isset($stage['completed'][$ticker]))throw new InvalidArgumentException('Already imported.');
+    $rows=array_values(array_filter($stage['rows'],static fn($r)=>$r['ticker']===$ticker));
+    if(!$rows)throw new InvalidArgumentException('Ticker not present in source file.');
+    $available=[];$balance=0.0;$ratios=[];$sales=[];$issues=[];$warnings=[];
+    foreach ($rows as $row) {
+        $kind=$row['kind'];$id=$row['id'];
+        if ($kind==='paired_credit' || $kind==='dividend' || $kind==='other_income' || $kind==='fee')continue;
+        if ($kind==='buy' || $kind==='reinvest' || $kind==='receipt') {
+            if($kind==='receipt')$warnings[]='Row '.$row['line'].' REC share credit adds '.(float)$row['quantity'].' shares with UNKNOWN cost basis and acquisition date.';
+            $q=(float)($row['quantity']??0);
+            if($q<=0){$issues[]='Row '.$row['line'].' missing purchase/receipt shares.';continue;}
+            $available[$id]=['remaining'=>$q,'date'=>$row['date']];
+            $balance+=$q;continue;
+        }
+        if($kind==='split_credit'){
+            $ratio=it_rc_split_guess($balance,(float)($row['credit']??0));
+            if(!$ratio){$issues[]='Row '.$row['line'].' split ratio not unambiguously inferable from share credit.';continue;}
+            $ratios[$id]=$ratio;
+            $factor=$ratio['n']/$ratio['d'];
+            $balance*=$factor;
+            foreach($available as &$lot)$lot['remaining']*=$factor;
+            unset($lot);
+            $warnings[]='Row '.$row['line'].' split ratio '.$ratio['n'].':'.$ratio['d'].' inferred from rounded credited shares; check corporate-action history.';
+            continue;
+        }
+        if($kind==='sell'){
+            $needed=(float)($row['quantity']??0);
+            if($needed<=0){$issues[]='Row '.$row['line'].' invalid sale quantity.';continue;}
+            $allocation=[];
+            foreach($available as $lotId=>&$lot){
+                if($needed<=0.0000000001)break;
+                if($lot['remaining']<=0)continue;
+                $used=min($needed,$lot['remaining']);
+                $lot['remaining']-=$used;$needed-=$used;$allocation[$lotId]=$used;
+            }
+            unset($lot);
+            if($needed>0.0000006){$issues[]='Row '.$row['line'].' sold more shares than earlier purchase and receipt history supports.';continue;}
+            $sales[$id]=$allocation;$balance-=(float)$row['quantity'];
+            $warnings[]='Row '.$row['line'].' sale allocated FIFO for performance ESTIMATE, not actual broker tax lots.';
+            continue;
+        }
+        $issues[]='Row '.$row['line'].' code '.$row['code'].' unrecognized or complex corporate action; source retained but not safely importable.';
+    }
+    if($issues)return ['ready'=>false,'ticker'=>$ticker,'issues'=>$issues,'warnings'=>$warnings,'computed_shares'=>$balance];
+    $new=it_rc_review($stage,$ticker,[
+        'expected_shares'=>max(0,$balance),'ratios'=>$ratios,'sales'=>$sales,
+        'estimated'=>true,'source_confirmed'=>false,
+    ]);
+    $out=it_rc_build($new,$ticker);
+    if(!$out['ready'])return ['ready'=>false,'ticker'=>$ticker,'issues'=>$out['issues'],'warnings'=>$warnings,'computed_shares'=>$balance];
+    return ['ready'=>true,'stage'=>$new,'ticker'=>$ticker,'warnings'=>$warnings,'events'=>$out['events'],
+        'computed_shares'=>$balance,'estimated'=>true,'issues'=>[]];
+}
+
 function it_rc_event(array $r,string $kind,float $q,float $amount,string $lot='',int $num=0,int $den=0,float $price=0): array
 {
     $ev=it_event([
