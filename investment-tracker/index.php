@@ -3,15 +3,16 @@
  * File Name: index.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Private investment tax-lot dashboard and authenticated ledger API.
- * Revision: 1.1.0
+ * Revision: 1.2.0
  * Created Date: 2026-10-29
  * Modified Date: 2026-10-29
- * Changelog: 1.1.0 - Read-only NVIDIA demo, original and split-adjusted lot display, tax-term clarity. 1.0.0 - Shared login, manual events, atomic CSV import and lot dashboard.
+ * Changelog: 1.2.0 - Preview Robinhood source reports without writing unverified lots; protect asset history from accidental import. 1.1.0 - Read-only NVIDIA demo, original and split-adjusted lot display, tax-term clarity. 1.0.0 - Shared login, manual events, atomic CSV import and lot dashboard.
  */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
 require_once __DIR__ . '/ledger.php';
 require_once __DIR__ . '/demo.php';
+require_once __DIR__ . '/robinhood.php';
 header('Cache-Control: no-store, private');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: no-referrer');
@@ -123,6 +124,14 @@ if ($isApi) {
         if ($_SERVER['REQUEST_METHOD']!=='POST') it_reply(405,false,'Method not allowed.');
         if (!$auth->validCsrf($_POST['csrf']??null)) it_reply(403,false,'Invalid form token.');
         $action=(string)($_POST['action']??'');
+        if ($action==='preview_robinhood') {
+            if(!isset($_FILES['file']) || ($_FILES['file']['error']??1)!==UPLOAD_ERR_OK ||
+                !is_uploaded_file((string)$_FILES['file']['tmp_name'])) {
+                throw new InvalidArgumentException('Select a valid Robinhood account activity CSV.');
+            }
+            $summary=it_rh_parse_csv((string)$_FILES['file']['tmp_name']);
+            it_reply(200,true,'Robinhood activity analyzed. No financial data was saved.', $summary);
+        }
         if ($action==='preview_csv') {
             $new=it_csv_events($path);
             $existing=it_records($path);
@@ -181,8 +190,8 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Investment Tracker · Tax Lots</title>
-<link rel="stylesheet" href="style.css?v=1.1.0">
-<script src="app.js?v=1.1.0" defer></script>
+<link rel="stylesheet" href="style.css?v=1.2.0">
+<script src="app.js?v=1.2.0" defer></script>
 </head>
 <body data-demo="<?=$isDemo?'1':'0'?>">
 <header class="topbar"><div><span class="eyebrow">PRIVATE PORTFOLIO ANALYTICS</span><h1>Investment Tracker</h1><p>See what each purchase is worth, not just the average.</p></div><a class="account" href="<?=it_h($auth->portal())?>">Account <span aria-hidden="true">↗</span></a></header>
@@ -222,11 +231,18 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
 <label data-fields="sell">Sell from purchase<select id="manualLot" name="lot_id"></select></label>
 <label class="full">Notes (optional)<input name="note" maxlength="240" placeholder="Broker confirmation / source"></label>
 <button class="primary" type="submit">Save event</button></form><p class="hint">Buy total includes acquisition fees; sale total is net proceeds after selling fees. A reinvestment creates a new tax lot but does not count as new external cash invested.</p></article>
+<article class="panel" data-private-write><span class="eyebrow">ROBINHOOD ACTIVITY REPORT</span><h2>Preview brokerage history</h2>
+ <p>Upload the original Robinhood Account activity CSV to analyze purchases, sales, dividends, split credits, and account events. The report is evaluated for exceptions, <strong>not automatically imported</strong> because sale tax-lot elections and some corporate actions are not stated in the CSV.</p>
+ <form id="rhForm"><label>Original Robinhood CSV<input id="rhFile" type="file" accept=".csv,text/csv" required></label><button type="submit" class="secondary">Analyze Robinhood CSV · no changes</button></form>
+ <div id="rhPreview" class="result">Select the original downloaded CSV to inspect trade types and reconciliation issues. Nothing is saved.</div>
+ <div id="rhTickers" class="rhTickers"></div>
+ <p class="hint">Do not commit personal brokerage exports to this public repository. This analysis happens on the authenticated server request; this version does not persist the uploaded source or automatically assign sale lots.</p>
+</article>
 <article class="panel" data-private-write><span class="eyebrow">IMPORT / RECONCILE</span><h2>Bulk CSV import</h2><p>Use the normalized tracker format. A raw Robinhood report needs column and corporate-action mapping first; it is not blindly imported.</p>
 <form id="csvForm"><label class="full">Normalized CSV file<input id="csvFile" name="file" type="file" accept=".csv,text/csv" required></label><div class="actions"><button type="button" id="previewCsv" class="secondary">Validate &amp; preview</button><button type="button" id="commitCsv" class="primary" disabled>Import validated file</button></div></form>
 <div id="csvPreview" class="result">No import preview yet.</div><p class="hint">Download the <a href="sample.csv" download>sample CSV</a>. Every row has a unique external_id; sales reference the purchase's external_id in lot_id. All-or-nothing validation prevents partial imports or duplicate IDs.</p></article>
 </section>
 <section class="panel"><div class="panel-heading"><div><span class="eyebrow">IMMUTABLE HISTORY</span><h2>Activity ledger</h2></div><span id="recordCount" class="subtle"></span></div><div class="tablewrap"><table><thead><tr><th>Date</th><th>Stock</th><th>Type</th><th class="numeric">Shares</th><th class="numeric">Amount / price</th><th>Notes</th><th>Correction</th></tr></thead><tbody id="eventsBody"></tbody></table></div><div class="actions"><button type="button" class="secondary" id="newerEvents" disabled>Newer events</button><span id="eventPage" class="subtle" aria-live="polite"></span><button type="button" class="secondary" id="olderEvents" disabled>Older events</button></div><p class="hint">Voiding retains the original record for audit. Voiding a purchase that has allocated sales is blocked until its dependencies are corrected.</p></section>
 </main>
-<footer>Investment Tracker · Revision 1.1.0 · Updated October 29, 2026 · Data private to your central account · Calculations are estimates, not trading or tax advice</footer>
+<footer>Investment Tracker · Revision 1.2.0 · Updated October 29, 2026 · Data private to your central account · Calculations are estimates, not trading or tax advice</footer>
 </body></html>
