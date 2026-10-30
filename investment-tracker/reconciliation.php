@@ -3,10 +3,10 @@
  * File Name: reconciliation.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Source-preserving Robinhood import staging, per-ticker corrections and safe ledger conversion.
- * Revision: 1.2.0
+ * Revision: 1.3.0
  * Created Date: 2026-10-30
  * Modified Date: 2026-10-30
- * Changelog: 1.2.0 - Suggest split ratios and FIFO from source records, preserving REC credits as unknown-basis receipts and estimated status. 1.1.1 - Preserve report end date for share confirmation and reject fractional split ratios. 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
+ * Changelog: 1.3.0 - Add full-report eligibility preview, exception queue and atomic batch preparation. 1.2.0 - Suggest split ratios and FIFO from source records, preserving REC credits as unknown-basis receipts and estimated status. 1.1.1 - Preserve report end date for share confirmation and reject fractional split ratios. 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
  */
 declare(strict_types=1);
 
@@ -386,6 +386,74 @@ function it_rc_auto_review(array $stage, string $ticker): array
     if(!$out['ready'])return ['ready'=>false,'ticker'=>$ticker,'issues'=>$out['issues'],'warnings'=>$warnings,'computed_shares'=>$balance];
     return ['ready'=>true,'stage'=>$new,'ticker'=>$ticker,'warnings'=>$warnings,'events'=>$out['events'],
         'computed_shares'=>$balance,'estimated'=>true,'issues'=>[]];
+}
+
+
+/**
+ * Inspect every symbol without mutating the permanent ledger.
+ * All eligible stock events are built and replayed before authorization
+ * to commit them in a single atomic portfolio update.
+ */
+function it_rc_batch_preview(array $stage,array $existing): array
+{
+    $symbols=it_rc_symbols($stage);
+    $already=[];
+    foreach ($existing as $event) {
+        if(is_array($event) && empty($event['voided_at']) && isset($event['ticker']))
+            $already[(string)$event['ticker']]=true;
+    }
+    $eligible=[];$blocked=[];$skipped=[];$all=[];
+    foreach ($symbols as $symbol) {
+        $ticker=$symbol['ticker'];
+        if (isset($stage['completed'][$ticker])||isset($already[$ticker])) {
+            $skipped[]=['ticker'=>$ticker,'reason'=>'Previously imported or already has ledger records.'];
+            continue;
+        }
+        try {
+            $auto=it_rc_auto_review($stage,$ticker);
+        }catch(Throwable $e){
+            $blocked[]=['ticker'=>$ticker,'reason'=>'Source rows cannot be reconstructed: '.$e->getMessage()];
+            continue;
+        }
+        if (!$auto['ready']) {
+            $blocked[]=['ticker'=>$ticker,'reason'=>implode('; ',array_slice($auto['issues']??[],0,3))];
+            continue;
+        }
+        $events=$auto['events'];
+        $all=array_merge($all,$events);
+        $eligible[]=[
+            'ticker'=>$ticker,'events'=>count($events),
+            'computed_shares'=>$auto['computed_shares'],
+            'warnings'=>array_slice($auto['warnings']??[],0,3),
+        ];
+    }
+    if(count($all)>0){
+        try {it_append_import($existing,$all);}
+        catch(Throwable $e) {
+            // Fail closed instead of claiming any batch is ready when the
+            // overall ledger cannot replay or store all of it.
+            return [
+                'ready'=>false,'eligible'=>[],'blocked'=>$blocked,'skipped'=>$skipped,
+                'error'=>'Combined ledger validation failed: '.$e->getMessage(),
+                'events'=>[],'import_count'=>0,'estimated'=>true
+            ];
+        }
+    }
+    return [
+        'ready'=>count($eligible)>0,'eligible'=>$eligible,'blocked'=>$blocked,
+        'skipped'=>$skipped,'events'=>$all,'import_count'=>count($all),'estimated'=>true,
+    ];
+}
+function it_rc_batch_public(array $batch,array $stage,array $existing): array
+{
+    unset($batch['events']);
+    $batch['eligible_count']=count($batch['eligible']);
+    $batch['blocked_count']=count($batch['blocked']);
+    $batch['skipped_count']=count($batch['skipped']);
+    $batch['fingerprint']=hash('sha256',it_rc_revision($stage).'|'.hash('sha256',json_encode($existing,JSON_THROW_ON_ERROR)).'|'.
+        json_encode($batch['eligible'],JSON_THROW_ON_ERROR));
+    $batch['explanation']='The CSV is the source of activity. FIFO sale-lot choices are estimated, inferred splits are provisional; no verified broker tax lots are claimed.';
+    return $batch;
 }
 
 function it_rc_event(array $r,string $kind,float $q,float $amount,string $lot='',int $num=0,int $den=0,float $price=0): array
