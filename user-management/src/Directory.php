@@ -65,6 +65,41 @@ final class Directory
             return $change($state);
         });
     }
+    public function requestRegistration(string $username, string $name, string $email, string $password, string $ip): void
+    {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 254) throw new \InvalidArgumentException('Enter a valid email address.');
+        $user = self::newUser($username, $name, $password, false, false);
+        $user['active'] = false;
+        $user['email'] = $email;
+        $this->update(function (array $r) use ($user, $ip): array {
+            foreach ($r['users'] as $existing) if ($existing['username'] === $user['username']) throw new \InvalidArgumentException('That username is unavailable.');
+            $pending = $r['registrations'] ?? [];
+            foreach ($pending as $entry) if ($entry['user']['username'] === $user['username']) throw new \InvalidArgumentException('That username is unavailable.');
+            $key = hash('sha256', $ip);
+            $attempts = array_filter($r['registrationAttempts'] ?? [], fn($a) => $a['time'] > time() - 86400);
+            if (count($pending) >= 100 || count(array_filter($attempts, fn($a) => $a['ip'] === $key)) >= 5) throw new \InvalidArgumentException('Registration is temporarily unavailable. Try again later.');
+            $attempts[] = ['ip' => $key, 'time' => time()];
+            $r['registrationAttempts'] = array_values($attempts);
+            $r['registrations'][$user['id']] = ['user' => $user, 'requestedAt' => gmdate(DATE_ATOM)];
+            return $r;
+        });
+    }
+    public function reviewRegistration(string $actorId, int $version, string $id, bool $approve): void
+    {
+        $this->updateAsAdministrator($actorId, $version, function (array $r) use ($actorId, $id, $approve): array {
+            if ($r['users'][$actorId]['username'] !== 'jasrasr') throw new \InvalidArgumentException('Jason must approve registration requests.');
+            $entry = $r['registrations'][$id] ?? null;
+            if (!$entry) throw new \InvalidArgumentException('Request already reviewed or unavailable.');
+            if ($approve) {
+                foreach ($r['users'] as $u) if ($u['username'] === $entry['user']['username']) throw new \InvalidArgumentException('Username now exists. Reject this request.');
+                $user = $entry['user'];
+                $user['active'] = true;
+                $r['users'][$id] = $user;
+            }
+            unset($r['registrations'][$id]);
+            return $r;
+        });
+    }
     public static function password(string $password): string
     {
         if (strlen($password) < 12 || strlen($password) > 72 || str_contains($password, "\0")) {

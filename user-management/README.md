@@ -109,3 +109,8 @@ Use the [account-linking guide](ACCOUNT-LINKING.md) and **Open account linking â
 Linking permission rule: add missing project access only after permission review; retain the lower existing permission and enforce a per-link ceiling even for global super admins. Finances requires an explicit viewer/member choice because its legacy login has no enforced roles. Mapping and new membership commit together. See [ACCOUNT-LINKING.md](ACCOUNT-LINKING.md).
 
 Hosting preservation: see [HOSTING-DATA-SAFETY.md](HOSTING-DATA-SAFETY.md) and [documentation-only examples](examples/README.md). Repository safeguards and isolated tests are implemented; verifying Hostinger deployment exclusions, taking a live backup, and checking each migrated account remain pending.
+
+### Registration approval
+The sign-in page links to `register.php`. Requests are stored in the existing private directory, with hashed passwords, and cannot sign in until approved. Only the directory administrator named `jasrasr` can approve/reject them in **Pending new users**. Approval grants no projects or elevated roles. Request emails are unverified contact information. Requests are limited to five per direct IP per day and 100 pending total.
+
+Set `'registration_notify_email' => 'YOUR_EMAIL_ADDRESS'` in the ignored server `config.local.php`. Notifications use PHP `mail()` and require a working hosting mail transport. No password or applicant information is included in notifications. Submission is retained even when delivery fails; the pending queue is authoritative. Never put real recipient settings or live directory data into Git.
