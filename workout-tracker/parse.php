@@ -118,7 +118,8 @@ function workout_parse_segment(string $segment, string $exercise, string $date):
         $matched=$duration[0][0];
         $offset=$duration[0][1];
         $preceding=substr($segment, max(0,$offset-15),min(15,$offset));
-        $withCue=preg_match('~(?:for|in|duration|elapsed|time)\s*$~i', $preceding)===1;
+        $withCue=preg_match('~^(?:for|in|duration|elapsed|time)\s+~i', $matched)===1
+            || preg_match('~(?:for|in|duration|elapsed|time)\s*$~i', $preceding)===1;
         $withUnits=preg_match('~(?:min(?:utes?)?|mm)\s*:\s*(?:sec(?:onds?)?|ss)\s*$~i', $matched)===1;
         $justTime=preg_match('~\b\d{1,4}:\d{1,2}\s*(?:am|pm)\b~i', $matched)===1;
         if (($cardio || $withCue || $withUnits) && !$justTime) {
