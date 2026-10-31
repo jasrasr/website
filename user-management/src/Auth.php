@@ -6,6 +6,11 @@ use Jasr\Framework\JsonStore;
 use Jasr\Framework\PasswordSession;
 use Jasr\Framework\Response;
 
+/* File Name: Auth.php
+Revision: 1.1.0
+Modified Date: 2026-10-27
+Changelog: 1.1.0 - Offer opt-in seven-day shared login without changing default expiry.
+*/
 final class Auth
 {
     public readonly Directory $directory;
@@ -16,7 +21,7 @@ final class Auth
             throw new \RuntimeException('HTTPS is required.');
         }
         $this->directory = new Directory($config['data_path']);
-        $this->session = new PasswordSession($config['cookie_name'], $config['cookie_path'], $config['secure_cookie'], $config['timeout']);
+        $this->session = new PasswordSession($config['cookie_name'], $config['cookie_path'], $config['secure_cookie'], $config['timeout'], $config['remember_seconds']);
         header('Cache-Control: no-store');
     }
     public function csrf(): string { return $this->session->csrf(); }
@@ -29,7 +34,7 @@ final class Auth
         if (!$user || !$user['active'] || $user['version'] !== ($_SESSION['identity_version'] ?? null)) return null;
         return Directory::publicUser($user);
     }
-    public function login(string $username, string $password): bool
+    public function login(string $username, string $password, bool $remember = false): bool
     {
         $username = strtolower(trim($username));
         $remoteIp = (string) ($_SERVER['REMOTE_ADDR'] ?? 'cli');
@@ -59,6 +64,7 @@ final class Auth
         $this->session->logout(); // Rotate ID/token before establishing the shared identity.
         $_SESSION['identity_id'] = $found['id'];
         $_SESSION['identity_version'] = $found['version'];
+        if ($remember) $this->session->enableRemember();
         // Do not clear the peer-IP counter: it also limits password spraying.
         JsonStore::update($this->config['data_path'] . '/attempts.json', function (array $r) use ($keys): array {
             unset($r[$keys[0]]);

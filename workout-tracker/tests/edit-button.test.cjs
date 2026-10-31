@@ -2,10 +2,10 @@
 File Name: edit-button.test.cjs
 Author: Jason Lamb (with help from ChatGPT)
 Description: Regression test for Edit button opening saved workouts without a DOMException.
-Revision: 1.1.4
+Revision: 1.1.5
 Created Date: 2026-10-27
 Modified Date: 2026-10-27
-Changelog: 1.1.4 - Validate cardio heart rate visibility and editing without hiding saved BPM values. 1.1.3 - Isolate previous edit button regression from advanced measurement editor. 1.1.2 - Verify mobile touch targets, optional fields location, and hidden-value indicator. 1.1.1 - Check hidden historical rep/set/weight values remain intact and manual entry adapts. 1.1.0 - Verify exercise-specific field visibility and safe retention of hidden measurements. 1.0.0 - Exercise the actual event handler and editing form against DOM class-token validation.
+Changelog: 1.1.5 - Verify saved-photo count and upload picker on Edit without altering prior records. 1.1.4 - Validate cardio heart rate visibility and editing without hiding saved BPM values. 1.1.3 - Isolate previous edit button regression from advanced measurement editor. 1.1.2 - Verify mobile touch targets, optional fields location, and hidden-value indicator. 1.1.1 - Check hidden historical rep/set/weight values remain intact and manual entry adapts. 1.1.0 - Verify exercise-specific field visibility and safe retention of hidden measurements. 1.0.0 - Exercise the actual event handler and editing form against DOM class-token validation.
 */
 'use strict';
 const assert = require('node:assert/strict');
@@ -50,7 +50,11 @@ const dom = new Map([
   ['#recent',element('ul')],
   ['#editFields',element('div')],
   ['#editPanel',element('section')],
-  ['#editStatus',element('p')]
+  ['#editStatus',element('p')],
+  ['#existingPhotos',element('p')],
+  ['#addPhotosButton',element('button')],
+  ['#savedPhotos',element('input')],
+  ['#photoStatus',element('p')]
 ]);
 dom.get('#editPanel').hidden=true;
 const original={
@@ -82,6 +86,7 @@ const context={
 const declarations =
   functionSection('function fieldInput(', 'function describe(') +
   functionSection('function visibleFieldsForExercise(', 'function renderReview(suggestions){') +
+  functionSection('function workoutPhotoCount(entry) {', '/** Mobile-readable workout detail view.') +
   functionSection('function editField(', 'function closeEdit(');
 vm.runInNewContext(declarations, context, {filename:'workout-tracker/app.js'});
 const clickListener=code.split('\n').find(line=>line.includes("$('#recent').addEventListener('click'"));
@@ -98,6 +103,9 @@ assert.equal(dom.get('#editPanel').hidden,false,'Edit panel should open after ta
 assert.equal(dom.get('#editPanel').scrolled,true,'Edit panel should scroll into view.');
 assert.equal(context.editingId,original.id,'Correct saved record selected.');
 assert.equal(context.editingRevision,original._revision,'Existing revision used for safe editing.');
+assert.match(dom.get('#existingPhotos').textContent,/1 picture already saved/,
+ 'Legacy attached photo is retained in edit page.');
+assert.equal(dom.get('#savedPhotos').value,'', 'New picture upload input starts empty.');
 const fields=dom.get('#editFields').children
   .flatMap(wrapper=>(wrapper.children||[]).filter(child=>child.dataset?.field));
 const byName=name=>fields.find(input=>input.dataset.field===name);

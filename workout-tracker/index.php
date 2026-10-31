@@ -2,10 +2,10 @@
 /* File Name: index.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: Authenticated workout dashboard and JSON API.
-Revision: 1.6.0
+Revision: 1.7.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.6.0 - Add rolling and since-first attendance with weekday-only rates and workout streaks. 1.5.1 - Add optional heart rate (BPM) to parsing, manual entry, editing, AI fallback and trends. 1.5.0 - Authenticated workout detail/photo viewing and read-only user backup ZIP. 1.4.0 - Backward-compatible calories, configurable metrics and detailed weightlifting sets; closes #128. 1.3.2 - Mobile input layout and context-sensitive exercise measurements (display only, no storage changes). 1.3.1 - Bust cached JavaScript and mark Edit button UI repair. 1.3.0 - Edit prior entries safely, optional tracking tags, treadmill incline and retained edit history. 1.2.0 - Add explicit optional AI retry with private config and multi-exercise validation. 1.1.0 - No-key text parsing and atomic multi-exercise logging. 1.0.1 - Use framework JsonStore for private entries. 1.0.0 - Initial release. */
+Changelog: 1.7.0 - Multiple photos on saved workouts, secure User Management navigation and shared sign-out. 1.6.0 - Add rolling and since-first attendance with weekday-only rates and workout streaks. 1.5.1 - Add optional heart rate (BPM) to parsing, manual entry, editing, AI fallback and trends. 1.5.0 - Authenticated workout detail/photo viewing and read-only user backup ZIP. 1.4.0 - Backward-compatible calories, configurable metrics and detailed weightlifting sets; closes #128. 1.3.2 - Mobile input layout and context-sensitive exercise measurements (display only, no storage changes). 1.3.1 - Bust cached JavaScript and mark Edit button UI repair. 1.3.0 - Edit prior entries safely, optional tracking tags, treadmill incline and retained edit history. 1.2.0 - Add explicit optional AI retry with private config and multi-exercise validation. 1.1.0 - No-key text parsing and atomic multi-exercise logging. 1.0.1 - Use framework JsonStore for private entries. 1.0.0 - Initial release. */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
 require_once __DIR__ . '/parse.php';
@@ -13,6 +13,7 @@ require_once __DIR__ . '/entries.php';
 require_once __DIR__ . '/measurements.php';
 require_once __DIR__ . '/photo.php';
 require_once __DIR__ . '/backup.php';
+require_once __DIR__ . '/photo-upload.php';
 $auth = \Jasr\Framework\SharedIdentity::connect();
 $user = $auth->requireProject('workout-tracker', $_SERVER['REQUEST_METHOD'] === 'POST' ? 'member' : 'viewer', isset($_GET['api']));
 $uid = (string)$user['id'];
@@ -49,8 +50,11 @@ function workoutAiConfig(): ?array {
 // Private photo stream. The client supplies only an entry ID; never a path.
 if (isset($_GET['photo'])) {
     $entryId = $_GET['photo'];
-    $photo = is_string($entryId)
-        ? workout_owned_photo(\Jasr\Framework\JsonStore::read($path)['records'], $entryId, $root, $uid)
+    $imageIndex = $_GET['image'] ?? '0';
+    $imageNumber = is_string($imageIndex) && preg_match('/^(0|[1-9][0-9]?)$/D', $imageIndex) === 1
+        ? (int)$imageIndex : -1;
+    $photo = is_string($entryId) && $imageNumber >= 0
+        ? workout_owned_photo(\Jasr\Framework\JsonStore::read($path)['records'], $entryId, $root, $uid, $imageNumber)
         : null;
     header('Cache-Control: private, no-store, max-age=0');
     header('X-Content-Type-Options: nosniff');
@@ -96,6 +100,58 @@ if (isset($_GET['api'])) {
             try { readfile($archive); }
             finally { unlink($archive); }
             exit;
+        }
+
+        if ($action === 'append_photos') {
+            $id=$_POST['entry_id']??null;
+            $revision=$_POST['expected_revision']??null;
+            if (!is_string($id) || !is_string($revision) || !isset($_FILES['photos'])) {
+                reply(422,['error'=>'Choose one or more pictures from your device.']);
+            }
+            if (!preg_match('/^[a-f0-9]{24}$/D',$id)
+                || !preg_match('/^[a-f0-9]{64}$/D',$revision)) {
+                reply(422,['error'=>'Invalid workout or revision.']);
+            }
+            // Cheap preflight avoids staging files for an obviously stale entry.
+            $current=null;
+            foreach (\Jasr\Framework\JsonStore::read($path)['records'] as $record) {
+                if (is_array($record) && ($record['id']??null)===$id) {
+                    if ($current!==null)reply(409,['error'=>'Duplicate workout identifiers.']);
+                    $current=$record;
+                }
+            }
+            if ($current===null)reply(404,['error'=>'Workout entry not found.']);
+            if (!hash_equals(workout_record_revision($current),$revision)) {
+                reply(409,['error'=>'Workout was edited elsewhere. Reload before uploading pictures.']);
+            }
+            if (count(workout_photo_names($current))>=12) {
+                reply(422,['error'=>'This workout already has the maximum of 12 photos.']);
+            }
+            $staged=[];
+            try {
+                if (!is_array($_FILES['photos']))throw new InvalidArgumentException('Invalid upload.');
+                $staged=workout_stage_photo_uploads($_FILES['photos'],$root,$uid,$id);
+                $names=array_column($staged,'filename');
+                $all=\Jasr\Framework\JsonStore::update($path,
+                    static fn(array $records):array=>workout_apply_photo_append($records,$id,$revision,$names));
+            } catch (WorkoutEditConflict $e) {
+                foreach ($staged as $item)if(is_file($item['path']))unlink($item['path']);
+                reply(409,['error'=>$e->getMessage()]);
+            } catch (WorkoutEntryNotFound $e) {
+                foreach ($staged as $item)if(is_file($item['path']))unlink($item['path']);
+                reply(404,['error'=>$e->getMessage()]);
+            } catch (InvalidArgumentException $e) {
+                foreach ($staged as $item)if(is_file($item['path']))unlink($item['path']);
+                reply(422,['error'=>$e->getMessage()]);
+            } catch (Throwable $e) {
+                foreach ($staged as $item)if(is_file($item['path']))unlink($item['path']);
+                throw $e;
+            }
+            foreach($all as $record)if(is_array($record) && ($record['id']??null)===$id){
+                $record['_revision']=workout_record_revision($record);
+                reply(200,['entry'=>$record,'attached'=>count($staged)]);
+            }
+            reply(500,['error'=>'The workout could not be read after adding its pictures.']);
         }
 
         if ($action === 'edit_entry') {
@@ -296,19 +352,27 @@ if (isset($_GET['api'])) {
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#08141f">
 <title>Workout Tracker · Keep moving</title>
-<link rel="stylesheet" href="app.css?v=1.6.0">
+<link rel="stylesheet" href="app.css?v=1.7.0">
 <script src="advanced.js?v=1.4.0" defer></script>
 <script src="attendance.js?v=1.6.0" defer></script>
-<script src="app.js?v=1.6.0" defer></script>
+<script src="app.js?v=1.7.0" defer></script>
 </head>
 <body><main>
 <header class="hero">
  <div><div class="eyebrow">Personal fitness · Your pace</div>
   <h1>Keep moving.</h1>
   <p class="subtitle">Every session counts. Progress happens one workout at a time.</p>
-  <p class="version">Workout Tracker v1.6.0 · Updated October 27, 2026</p>
+  <p class="version">Workout Tracker v1.7.0 · Updated October 27, 2026</p>
  </div>
  <div class="hero-mark" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 25h9l6-11 9 22 7-14h11"/></svg></div>
+ <nav class="account-nav" aria-label="Account navigation">
+  <a class="account-link" href="<?= htmlspecialchars($auth->portal(),ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8') ?>">User Management</a>
+  <form method="post" action="<?= htmlspecialchars($auth->portal(),ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8') ?>" class="logout-form">
+   <input type="hidden" name="csrf" value="<?= htmlspecialchars($auth->csrf(),ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8') ?>">
+   <input type="hidden" name="action" value="logout">
+   <button class="account-signout" type="submit" title="Sign out of User Management and connected projects">Sign out</button>
+  </form>
+ </nav>
 </header>
 <section class="stats" aria-label="Workout totals">
  <div class="stat"><span>Sessions</span><strong id="sessions">—</strong></div>
@@ -445,7 +509,7 @@ if (isset($_GET['api'])) {
     <p id="detailDate" class="muted"></p>
     <div id="detailSummary" class="detail-summary" aria-live="polite"></div>
     <div id="detailImage" class="detail-image" hidden></div>
-    <div class="detail-actions"><button type="button" class="secondary-action" id="editFromDetail">Edit this workout</button></div>
+    <div class="detail-actions"><button type="button" class="secondary-action" id="editFromDetail">Edit or add pictures</button></div>
    </section>
    <section id="editPanel" class="review edit-panel" hidden aria-labelledby="editTitle">
     <h2 id="editTitle">Edit saved workout</h2>
@@ -455,6 +519,16 @@ if (isset($_GET['api'])) {
      <p id="editStatus" class="footnote" role="status" aria-live="polite"></p>
      <button class="primary" type="submit" id="confirmEdit">Save changes to this entry</button>
      <button class="secondary-action" type="button" id="cancelEdit">Cancel</button>
+    </form>
+    <form id="photosForm" class="add-photos-form" enctype="multipart/form-data" aria-labelledby="addPhotosTitle">
+     <h3 id="addPhotosTitle">Add pictures to this workout</h3>
+     <p class="muted">Upload up to five JPEG, PNG, or WebP pictures at once (5 MB each). Existing pictures stay saved. Maximum 12 pictures per workout.</p>
+     <p id="existingPhotos" class="footnote"></p>
+     <label class="field full"><span>Choose pictures (camera or photo library)</span>
+      <input id="savedPhotos" name="photos[]" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+     </label>
+     <button type="submit" class="secondary-action" id="addPhotosButton" disabled>Add selected pictures</button>
+     <p id="photoStatus" role="status" aria-live="polite" class="footnote"></p>
     </form>
    </section>
    <form id="backupForm" action="?api=1" method="post" class="backup-form">

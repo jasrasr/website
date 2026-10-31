@@ -2,10 +2,10 @@
 File Name: workout-detail.test.cjs
 Author: Jason Lamb (with help from ChatGPT)
 Description: DOM regression for mobile workout detail and private photo viewing.
-Revision: 1.0.1
+Revision: 1.1.0
 Created Date: 2026-10-27
 Modified Date: 2026-10-27
-Changelog: 1.0.1 - Verify saved BPM appears in authenticated mobile workout details. 1.0.0 - Verify safe UI rendering, set details, photo ID URL, and old entries without photos.
+Changelog: 1.1.0 - Verify indexed legacy and multiple new workout images in private detail gallery. 1.0.1 - Verify saved BPM appears in authenticated mobile workout details. 1.0.0 - Verify safe UI rendering, set details, photo ID URL, and old entries without photos.
 */
 'use strict';
 const assert=require('node:assert/strict');
@@ -13,7 +13,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 const script=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
-const start=script.indexOf('function openWorkoutDetails(id){');
+const start=script.indexOf('function workoutPhotoCount(entry) {');
 const end=script.indexOf('function renderHistory(){',start);
 assert.ok(start>=0 && end>start,'Detail-view implementation is present');
 
@@ -36,7 +36,7 @@ const old='bbbbbbbbbbbbbbbbbbbbbbbb';
 const first={
  id,exercise:'bench press',date:'2026-10-22',performed_at:'2026-10-22T08:37:00-04:00',
  notes:'Warmup <img src=x onerror=alert(1)>',tag:'Strength',heart_rate_bpm:148,
- photo:id+'.png',sets_detail:[{weight_lb:95,reps:12},{weight_lb:115,reps:10},{weight_lb:135,reps:8}],
+ photo:id+'.png',photos:[id+'-new1.png',id+'-new2.png'],sets_detail:[{weight_lb:95,reps:12},{weight_lb:115,reps:10},{weight_lb:135,reps:8}],
  custom_metrics:[{name:'Tempo<script>',unit:'sec',value:2.5}],
  edit_history:[{edited_at:'2026-10-23T00:00:00Z',previous:{exercise:'bench press',date:'2026-10-22',notes:'previous value'}}]
 };
@@ -73,8 +73,10 @@ const imageNodes=flatten(elements.get('#detailImage'));
 const img=imageNodes.find(x=>x.tagName==='img');
 const link=imageNodes.find(x=>x.tagName==='a');
 assert.ok(img && link,'authenticated photo preview and full-size link exist');
-assert.equal(img.src,'?photo='+id,'image source uses only a record ID');
-assert.equal(link.href,'?photo='+id,'full-size link does not expose storage filenames');
+assert.equal(img.src,'?photo='+id+'&image=0','image URL uses entry ID and index only');
+assert.equal(imageNodes.filter(x=>x.tagName==='img').length,3,'all three private photos are present in gallery');
+assert.equal(imageNodes.filter(x=>x.tagName==='img')[2].src,'?photo='+id+'&image=2','third photo uses safe numeric index');
+assert.equal(link.href,'?photo='+id+'&image=0','full-size link never exposes storage filenames');
 assert.equal(link.rel,'noopener noreferrer','external tab is isolated');
 assert.equal(imageNodes.some(x=>x.tagName==='script'),false,'no injected script element');
 assert.equal(JSON.stringify([first,second]),before,'opening details makes no storage mutations');
@@ -91,4 +93,4 @@ const css=fs.readFileSync(path.join(__dirname,'..','app.css'),'utf8');
 assert.match(css,/history-actions/,'history must have accessible details/edit controls');
 assert.match(css,/min-height:44px/,'tap targets must be at least 44px');
 assert.match(css,/max-height:min\(70vh/,'attached photos must fit mobile screens');
-console.log('Passed: details, notes, sets, private photo URLs, legacy records and mobile layout.');
+console.log('Passed: details, notes, sets, indexed private gallery, legacy records and mobile layout.');

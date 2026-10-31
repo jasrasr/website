@@ -14,6 +14,12 @@ function jasr_users_config(): array
     $local = is_file($file) ? require $file : [];
     if (!is_array($local)) throw new RuntimeException('Invalid user management configuration.');
     $config = array_replace($defaults, $local);
+    if (!is_int($config['timeout']) || $config['timeout'] < 60
+        || !is_int($config['remember_seconds'])
+        || $config['remember_seconds'] < $config['timeout']
+        || $config['remember_seconds'] > 30 * 86400) {
+        throw new RuntimeException('Invalid identity session lifetime configuration.');
+    }
     if (!is_bool($config['debug']) || !is_array($config['rate_limit_exempt_ips'])) {
         throw new RuntimeException('Invalid development configuration.');
     }

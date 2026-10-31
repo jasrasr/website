@@ -8,7 +8,8 @@ return [
     'cookie_name' => 'JASR_IDENTITY',
     'cookie_path' => '/',
     'secure_cookie' => true, // HTTPS required. Set false ONLY for local HTTP tests.
-    'timeout' => 1800,
+    'timeout' => 1800, // Unchanged default: sign out after 30 minutes idle.
+    'remember_seconds' => 7 * 86400, // Only for an explicitly checked login: max 7 days.
     // Development only. Keep false and empty on production hosting.
     'debug' => false,
     'rate_limit_exempt_ips' => [],

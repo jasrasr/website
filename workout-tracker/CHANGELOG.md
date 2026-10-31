@@ -2,12 +2,21 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release history for private Workout Tracker.
-Revision: 1.5.0
+Revision: 1.6.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.5.0 - Record v1.6.0 attendance dates, weekend-excluded percentages, and streaks. 1.4.1 - Document optional heart-rate BPM field and local parser in v1.5.1. 1.4.0 - Document v1.5.0 authenticated photos, workout details and ZIP backups. 1.3.0 - Document v1.4.0 calories, custom numeric metrics and per-set strength logging. 1.2.2 - Document workout-specific fields and iPhone-safe date/time layout in v1.3.2. 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
+Changelog: 1.6.0 - Record v1.7.0 photo attachments, account links, and remembered login. 1.5.0 - Record v1.6.0 attendance dates, weekend-excluded percentages, and streaks. 1.4.1 - Document optional heart-rate BPM field and local parser in v1.5.1. 1.4.0 - Document v1.5.0 authenticated photos, workout details and ZIP backups. 1.3.0 - Document v1.4.0 calories, custom numeric metrics and per-set strength logging. 1.2.2 - Document workout-specific fields and iPhone-safe date/time layout in v1.3.2. 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
 -->
 # Workout Tracker changelog
+
+## v1.7.0 — 2026-10-27 (Issue #135)
+
+- Allow adding **multiple private pictures to an already-saved workout** from the Edit screen using a mobile file picker (up to 5 files per request, 12 total, max 5 MB each); no older image is replaced.
+- Retain legacy single `photo` and add optional append-only `photos` filename list with entry ID ownership, unique names, strict MIME/image validation, and stale-revision rejection.
+- Display all saved pictures inside the authenticated Details gallery. Photo links accept only entry ID and zero-based index; private ZIP export includes both legacy and new images.
+- Provide a responsive User Management link and CSRF-protected **Sign out** action through the existing shared portal.
+- Add explicit **Stay signed in for 7 days** checkbox at central login, retaining normal 30-minute idle session by default. Bounded persistent cookie uses HttpOnly, SameSite Strict, secure HTTPS and server-side session expiry; logout still revokes access.
+- Add synthetic regression tests for multiple media references and backups and an isolated HTTP login/expiry/logout test. No migration or direct live storage changes.
 
 ## v1.6.0 — 2026-10-27
 

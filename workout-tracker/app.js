@@ -1,10 +1,10 @@
 /* File Name: app.js
 Author: Jason Lamb (with help from ChatGPT)
 Description: Workout quick entry, editable review, and per-exercise trends.
-Revision: 1.6.0
+Revision: 1.7.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.6.0 - Read-only workout attendance, weekday percentages and calendar/weekday streaks. 1.5.1 - Display and edit heart rate BPM with cardio-focused fields and separate trends. 1.5.0 - Add authenticated workout details/photo viewer and private backup download UI. 1.4.0 - Editable set-by-set weight/reps, custom measurements, calories and exercise-specific progress. 1.3.2 - Optimize mobile exercise fields, retain hidden measurements, and keep optional metrics near the measurements. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
+Changelog: 1.7.0 - Multi-photo galleries and upload-after-save controls while keeping earlier uploads. 1.6.0 - Read-only workout attendance, weekday percentages and calendar/weekday streaks. 1.5.1 - Display and edit heart rate BPM with cardio-focused fields and separate trends. 1.5.0 - Add authenticated workout details/photo viewer and private backup download UI. 1.4.0 - Editable set-by-set weight/reps, custom measurements, calories and exercise-specific progress. 1.3.2 - Optimize mobile exercise fields, retain hidden measurements, and keep optional metrics near the measurements. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
 'use strict';
 const $=selector=>document.querySelector(selector);
 const measures=[['distance_miles','Miles'],['duration_minutes','Minutes'],['speed_mph','Speed (mph)'],['incline_percent','Treadmill incline (%)'],['calories_kcal','Calories (kcal)'],['heart_rate_bpm','Heart rate (BPM)'],['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']];
@@ -222,6 +222,20 @@ function historyItems(){
   .sort((a,b)=>(b.performed_at||b.date).localeCompare(a.performed_at||a.date));
 }
 
+
+/** Existing single-photo records and new arrays coexist without migration. */
+function workoutPhotoCount(entry) {
+ return (typeof entry.photo==='string' && entry.photo!==''?1:0)+
+  (Array.isArray(entry.photos)?entry.photos.filter(name=>typeof name==='string'&&name!=='').length:0);
+}
+function renderExistingPhotoCount(entry){
+ const count=workoutPhotoCount(entry);
+ $('#existingPhotos').textContent=count+
+  ' picture'+(count===1?'':'s')+' already saved. You can add '+Math.max(0,12-count)+' more.';
+ const button=$('#addPhotosButton');button.disabled=count>=12;
+ $('#savedPhotos').disabled=count>=12;
+}
+
 /** Mobile-readable workout detail view. All user-provided content uses textContent. */
 function openWorkoutDetails(id){
  const entry=entries.find(row=>row.id===id);
@@ -303,20 +317,31 @@ function openWorkoutDetails(id){
   region.append(history);
  }
  const media=$('#detailImage');media.replaceChildren();media.hidden=true;
- if(typeof entry.photo==='string' && entry.photo!==''){
-  const image=document.createElement('img');
-  const src='?photo='+encodeURIComponent(id);
-  image.src=src;image.alt='Private photo attached to '+entry.exercise+' workout';
-  image.loading='lazy';
-  const fallback=document.createElement('p');fallback.className='footnote';fallback.textContent=
-   'Photo unavailable. Check that private storage is preserved on Hostinger.';
-  fallback.hidden=true;
-  image.addEventListener('error',()=>{image.hidden=true;fallback.hidden=false;});
-  const link=document.createElement('a');link.href=src;link.target='_blank';
-  link.rel='noopener noreferrer';link.textContent='Open full-size photo';
-  const caption=document.createElement('p');caption.className='footnote';
-  caption.textContent='Only your authenticated account can view this image.';
-  media.append(image,link,fallback,caption);media.hidden=false;
+ const photoCount=workoutPhotoCount(entry);
+ if(photoCount>0){
+  const heading=document.createElement('h3');
+  heading.textContent='Workout pictures ('+photoCount+')';
+  const gallery=document.createElement('div');gallery.className='detail-gallery';
+  for(let index=0;index<photoCount;index++){
+   const item=document.createElement('figure');item.className='detail-photo';
+   const image=document.createElement('img');
+   const src='?photo='+encodeURIComponent(id)+'&image='+index;
+   image.src=src;image.alt='Private workout picture '+(index+1)+' of '+photoCount;
+   image.loading='lazy';
+   const fallback=document.createElement('p');
+   fallback.className='footnote';fallback.textContent='Picture unavailable. Check private storage.';
+   fallback.hidden=true;
+   image.addEventListener('error',()=>{image.hidden=true;fallback.hidden=false;});
+   const caption=document.createElement('figcaption');
+   const link=document.createElement('a');
+   link.href=src;link.target='_blank';link.rel='noopener noreferrer';
+   link.textContent='Open picture '+(index+1)+' full size';
+   caption.append(link);
+   item.append(image,fallback,caption);gallery.append(item);
+  }
+  const privacy=document.createElement('p');privacy.className='footnote';
+  privacy.textContent='Pictures are visible only to your authenticated account.';
+  media.append(heading,gallery,privacy);media.hidden=false;
  }
  $('#detailPanel').hidden=false;
  $('#detailPanel').scrollIntoView({behavior:'smooth',block:'start'});
@@ -330,7 +355,7 @@ function renderHistory(){
  $('#recent').replaceChildren(...visible.map(e=>{
   const li=document.createElement('li'),name=document.createElement('strong');name.textContent=titleCase(e.exercise);
   const day=document.createElement('span');day.textContent=niceDay(e.date);
-  const detail=document.createElement('small');detail.textContent=describe(e)+(e.tag?' · #'+e.tag:'')+(e.photo?' · Photo saved':'');
+  const detail=document.createElement('small');detail.textContent=describe(e)+(e.tag?' · #'+e.tag:'')+(workoutPhotoCount(e)?' · '+workoutPhotoCount(e)+' picture'+(workoutPhotoCount(e)===1?'':'s'):'');
   const actions=document.createElement('div');actions.className='history-actions';
   const view=document.createElement('button');view.type='button';view.className='history-edit history-view';
   view.textContent='Details';view.disabled=!e.id;
@@ -436,12 +461,51 @@ function beginEdit(id){
  timezone.value=match?match[2]:offset();grid.append(timezone);
  installExerciseVisibility(grid,exerciseField.children[1]);
  WorkoutAdvanced.attach(grid,entry,exerciseField.children[1]);
+ renderExistingPhotoCount(entry);
+ $('#savedPhotos').value='';
+ $('#photoStatus').textContent='';
  $('#editPanel').hidden=false;$('#editStatus').textContent='Original entry and changes are kept in your private workout history.';
  $('#editPanel').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function closeEdit(){
  editingId=null;editingRevision=null;$('#editPanel').hidden=true;$('#editFields').replaceChildren();
 }
+async function uploadSavedPhotos(){
+ const fileInput=$('#savedPhotos'),files=Array.from(fileInput.files||[]);
+ if(!editingId||!editingRevision){$('#photoStatus').textContent='Open a saved workout to attach pictures.';return;}
+ if(!files.length){$('#photoStatus').textContent='Choose pictures to add.';return;}
+ if(files.length>5){$('#photoStatus').textContent='Select up to five pictures at a time.';return;}
+ if(files.some(file=>file.size===0||file.size>5*1024*1024)){
+  $('#photoStatus').textContent='Each picture must be between 1 byte and 5 MB.';return;
+ }
+ const existing=entries.find(e=>e.id===editingId);
+ if(!existing||workoutPhotoCount(existing)+files.length>12){
+  $('#photoStatus').textContent='This workout has a limit of 12 pictures.';return;
+ }
+ const btn=$('#addPhotosButton'),csrf=payload('append_photos');
+ csrf.set('entry_id',editingId);csrf.set('expected_revision',editingRevision);
+ files.forEach(file=>csrf.append('photos[]',file,file.name));
+ btn.disabled=true;btn.textContent='Uploading pictures…';
+ try{
+  const result=await api(csrf);
+  editingRevision=result.entry._revision;
+  fileInput.value='';
+  $('#photoStatus').textContent=result.attached+' picture'+(result.attached===1?'':'s')+' saved.';
+  await load();
+  renderExistingPhotoCount(result.entry);
+  message('Pictures attached to the selected workout. No existing pictures were replaced.');
+ }catch(err){
+  $('#photoStatus').textContent=err.message;
+  if(/changed elsewhere|edited elsewhere|reload/i.test(err.message)){
+   message('Workout changed since the editor opened. Refresh and try again.',true);
+  }
+ }finally{
+  btn.textContent='Add selected pictures';
+  const current=entries.find(e=>e.id===editingId);
+  btn.disabled=!current||workoutPhotoCount(current)>=12;
+ }
+}
+
 async function submitEdit(){
  if(!editingId||!editingRevision)return;
  const button=$('#confirmEdit'),row={};
@@ -518,6 +582,12 @@ $('#toggleHistory').addEventListener('click',()=>{showAllHistory=!showAllHistory
 $('#recent').addEventListener('click',e=>{const button=e.target.closest('[data-edit-id]');if(button)beginEdit(button.dataset.editId);});
 $('#editForm').addEventListener('submit',e=>{e.preventDefault();submitEdit();});
 $('#cancelEdit').addEventListener('click',closeEdit);
+$('#photosForm').addEventListener('submit',event=>{event.preventDefault();uploadSavedPhotos();});
+$('#savedPhotos').addEventListener('change',()=>{
+ const current=entries.find(e=>e.id===editingId);
+ const files=$('#savedPhotos').files||[];
+ $('#addPhotosButton').disabled=!files.length||!current||workoutPhotoCount(current)+files.length>12;
+});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden && entries.length)refreshAttendance();});
 $('#closeDetail').addEventListener('click',closeWorkoutDetails);
 $('#editFromDetail').addEventListener('click',()=>{if(detailEntryId)beginEdit(detailEntryId);});
