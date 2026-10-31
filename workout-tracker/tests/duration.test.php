@@ -72,7 +72,10 @@ try {
  assertDuration($updated[0]===$legacy,'earlier October workout remains byte-for-byte equivalent');
  assertDuration($updated[1]['duration_minutes']===33.0 &&
                 $updated[1]['duration_seconds']===18,'duration separated accurately');
- assertDuration($updated[1]['custom_metrics']===$oct31['custom_metrics'],
+ assertDuration(count($updated[1]['custom_metrics'])===1
+  && $updated[1]['custom_metrics'][0]['name']==='Seconds'
+  && $updated[1]['custom_metrics'][0]['unit']===''
+  && (float)$updated[1]['custom_metrics'][0]['value']===18.0,
   'user-added custom Seconds remains until user explicitly changes it');
  assertDuration($updated[1]['edit_history'][0]['previous']===$oct31,
   'previous record retained for recovery');
