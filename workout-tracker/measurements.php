@@ -2,10 +2,10 @@
 /* File Name: measurements.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: Backward-compatible optional workout metrics and ordered strength set validation.
-Revision: 1.0.0
+Revision: 1.1.0
 Created Date: 2026-10-27
 Modified Date: 2026-10-27
-Changelog: 1.0.0 - Validate calories, flexible named numeric measurements and individual weighted sets without schema migrations. */
+Changelog: 1.1.0 - Validate optional heart rate BPM (integer 1–300) without backfilling old records. 1.0.0 - Validate calories, flexible named numeric measurements and individual weighted sets without schema migrations. */
 declare(strict_types=1);
 
 /**
@@ -26,6 +26,24 @@ function workout_advanced_fields(array $input): array {
             throw new InvalidArgumentException('Calories must be between 0 and 100000.');
         } else {
             $out['calories_kcal'] = round((float)$value, 2);
+        }
+    }
+
+    // A dedicated heart-rate field is separate from arbitrary custom metrics.
+    // Only process it when supplied: old workouts and older clients keep their
+    // original JSON shape and any previously recorded heart rate.
+    if (array_key_exists('heart_rate_bpm', $input)) {
+        $value = $input['heart_rate_bpm'];
+        if ($value === null || $value === '') {
+            $out['heart_rate_bpm'] = null;
+        } elseif (
+            (is_int($value) || (is_float($value) && is_finite($value) && floor($value) === $value)
+                || (is_string($value) && preg_match('/^[0-9]{1,3}$/D', trim($value)) === 1))
+            && (int)$value >= 1 && (int)$value <= 300
+        ) {
+            $out['heart_rate_bpm'] = (int)$value;
+        } else {
+            throw new InvalidArgumentException('Heart rate must be a whole number between 1 and 300 BPM.');
         }
     }
 
