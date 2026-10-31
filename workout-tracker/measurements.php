@@ -2,10 +2,10 @@
 /* File Name: measurements.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: Backward-compatible optional workout metrics and ordered strength set validation.
-Revision: 1.1.0
+Revision: 1.2.0
 Created Date: 2026-10-27
 Modified Date: 2026-10-27
-Changelog: 1.1.0 - Validate optional heart rate BPM (integer 1–300) without backfilling old records. 1.0.0 - Validate calories, flexible named numeric measurements and individual weighted sets without schema migrations. */
+Changelog: 1.2.0 - Validate optional 0–59 duration seconds and whole minutes when combined. 1.1.0 - Validate optional heart rate BPM (integer 1–300) without backfilling old records. 1.0.0 - Validate calories, flexible named numeric measurements and individual weighted sets without schema migrations. */
 declare(strict_types=1);
 
 /**
@@ -14,6 +14,29 @@ declare(strict_types=1);
  */
 function workout_advanced_fields(array $input): array {
     $out = [];
+
+    // New duration_seconds stores the *remaining* seconds (0–59). Existing
+    // duration_minutes without this field remains unchanged and valid.
+    if (array_key_exists('duration_seconds', $input)) {
+        $seconds=$input['duration_seconds'];
+        if ($seconds === '' || $seconds === null) {
+            $out['duration_seconds']=null;
+        } elseif ((is_int($seconds)
+                || (is_string($seconds) && preg_match('/^[0-9]{1,2}$/D',trim($seconds))===1))
+            && (int)$seconds>=0 && (int)$seconds<=59) {
+            $out['duration_seconds']=(int)$seconds;
+        } else {
+            throw new InvalidArgumentException('Duration seconds must be a whole number from 0 to 59.');
+        }
+        if ($out['duration_seconds'] !== null) {
+            $minutes=$input['duration_minutes']??null;
+            if ($minutes !== null && $minutes !== '' &&
+                (!is_scalar($minutes) || !is_numeric($minutes) || !is_finite((float)$minutes)
+                || (float)$minutes<0 || floor((float)$minutes)!==(float)$minutes)) {
+                throw new InvalidArgumentException('When entering seconds, minutes must be a whole number.');
+            }
+        }
+    }
 
     if (array_key_exists('calories_kcal', $input)) {
         $value = $input['calories_kcal'];
