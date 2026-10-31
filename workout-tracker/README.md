@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, key-free quick entry, optional AI and screenshot import guidance for Workout Tracker.
-Revision: 1.7.0
+Revision: 1.8.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.7.0 - Multiple photo uploads on saved workouts, central logout/navigation and opt-in seven-day login. 1.6.0 - Read-only workout-day attendance and weekday streak dashboard. 1.5.1 - Optional heart rate in BPM, including local parsing, charts and safe edits. 1.5.0 - Authenticated photo/detail view and per-user ZIP backup, preserving live data. 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
+Changelog: 1.8.0 - First-class MM:SS duration and per-workout versus accumulated exercise trends. 1.7.0 - Multiple photo uploads on saved workouts, central logout/navigation and opt-in seven-day login. 1.6.0 - Read-only workout-day attendance and weekday streak dashboard. 1.5.1 - Optional heart rate in BPM, including local parsing, charts and safe edits. 1.5.0 - Authenticated photo/detail view and per-user ZIP backup, preserving live data. 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
 -->
 # Workout Tracker
 
@@ -20,6 +20,29 @@ Private PHP workout logger at https://jasr.me/github/workout-tracker/ using shar
 5. Dates default to the user's **browser-local current date**. Time defaults to the current local time at review. "Yesterday", "last Monday", an ISO date, and US numeric MM/DD/YYYY dates are supported for backdating. An optional time control exists under review details.
 
 The parser is rule-based rather than a general LLM. It recognizes common exercises and explicit numbers but does **not guess missing values**. Unrecognized exercises use the collapsed manual entry form. It does not analyze photos.
+
+## Exact workout duration and cumulative progress (v1.8.0)
+
+**Fix for 33:18:** Type *"Treadmill, 0 incline, 2.07 mile at 4 mph for 33:18 min:sec, 180 calories"*. The local parser recognizes **33 minutes, 18 seconds**, instead of incorrectly reading **18 minutes**. It also understands *"33 minutes 18 seconds"*, *"33:18"*, and *"for 33:18"*. The optional AI fallback has a matching seconds field.
+
+- **Form:** Cardio entries show **Minutes** and **Seconds (0–59)**. Seconds is now a dedicated field, not a user-defined metric. Any earlier user-created custom measurement called *Seconds* remains intact unless deliberately removed.
+- **Storage:** Optional duration_seconds stores remaining seconds (0–59) and duration_minutes stores whole minutes when the seconds field is present. Charting calculates duration_minutes + duration_seconds / 60. Example: 33:18 is **33.3 minutes**.
+- **Backward compatibility:** Existing records without duration_seconds retain their full previous duration_minutes value, including fractions. No migration, reset, deletion, or automatic edit. Old clients that omit the new field do not clear it. Edits remain revision-checked and audited.
+- **Updating the October 31 saved entry:** In **Edit**, set Minutes = 33 and Seconds = 18. The old custom Additional measurements → Seconds = 18 can then be manually removed if redundant. **Nothing is changed automatically** in live Hostinger data.
+- **Viewing:** Summaries and private workout details show 33:18 min:sec while calculations use 33.3 minutes.
+
+**Progress graph:** Select an exercise and measurement. For additive measurements (distance, duration, calories, total repetitions, set count and lifted volume), the Graph view offers **Each workout + running total** (default), **Each workout**, or **Running total**. The two colored series share a timeline and legend. Accumulation is restricted to the selected exercise and tag filter, and missing measurements are excluded. **Speed, heart rate, incline and weight are not summed**; they show per-session trends only.
+
+Example treadmill distances October 21, 22, 27 and 31: **1.16, 2.06, 2.05 and 2.07 miles**; running sums are **1.16, 3.22, 5.27 and 7.34 miles**. The four durations are 22, 37, 27 and **33.3 minutes**; running total **119.3 minutes**.
+
+Test commands (synthetic files, never live records):
+
+    php workout-tracker/tests/parse.test.php
+    php workout-tracker/tests/duration.test.php
+    node workout-tracker/tests/duration-trends.test.cjs
+    node workout-tracker/tests/chart-modes.test.cjs
+
+Verify the graph and edit UI on an iPhone after deployment, inspect old records/photos, and confirm the Hostinger webhook leaves runtime files untouched.
 
 ## Multiple photos, account navigation and remembered login (v1.7.0; issue #135)
 
