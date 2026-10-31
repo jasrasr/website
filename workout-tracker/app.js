@@ -35,7 +35,7 @@ function fieldInput(name,label,value,type='number'){
  if(name==='calories_kcal')input.max='100000';
  if(name==='duration_seconds'){input.max='59';input.step='1';input.inputMode='numeric';}
  if(name==='heart_rate_bpm'){input.min='1';input.max='300';input.step='1';input.inputMode='numeric';}
- if(type==='number')input.inputMode='decimal';
+ if(type==='number'&&name!=='duration_seconds'&&name!=='heart_rate_bpm')input.inputMode='decimal';
  wrapper.append(caption,input);return wrapper;
 }
 function describe(entry){
