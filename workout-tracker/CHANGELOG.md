@@ -2,12 +2,21 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release history for private Workout Tracker.
-Revision: 1.6.0
+Revision: 1.7.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.6.0 - Record v1.7.0 photo attachments, account links, and remembered login. 1.5.0 - Record v1.6.0 attendance dates, weekend-excluded percentages, and streaks. 1.4.1 - Document optional heart-rate BPM field and local parser in v1.5.1. 1.4.0 - Document v1.5.0 authenticated photos, workout details and ZIP backups. 1.3.0 - Document v1.4.0 calories, custom numeric metrics and per-set strength logging. 1.2.2 - Document workout-specific fields and iPhone-safe date/time layout in v1.3.2. 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
+Changelog: 1.7.0 - Record v1.8.0 precise duration and dual-session/cumulative charts. 1.6.0 - Record v1.7.0 photo attachments, account links, and remembered login. 1.5.0 - Record v1.6.0 attendance dates, weekend-excluded percentages, and streaks. 1.4.1 - Document optional heart-rate BPM field and local parser in v1.5.1. 1.4.0 - Document v1.5.0 authenticated photos, workout details and ZIP backups. 1.3.0 - Document v1.4.0 calories, custom numeric metrics and per-set strength logging. 1.2.2 - Document workout-specific fields and iPhone-safe date/time layout in v1.3.2. 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
 -->
 # Workout Tracker changelog
+
+## v1.8.0 — 2026-10-31
+
+- Fix parsing of **33:18 min:sec** as 33 whole minutes and 18 remaining seconds, not 18 minutes. Recognize colon-form and explicit minute/second descriptions without an external AI key.
+- Add a separate optional **Seconds (0–59)** input in mobile quick-review, manual entry and historical edit forms; display accurate MM:SS on saved workout cards and details.
+- Keep existing duration_minutes records and user-created custom "Seconds" measurements untouched; only new or deliberately edited entries gain duration_seconds. Maintain edit audit/conflict checks and older-client compatibility.
+- Add a **Graph view** selector for **Each workout + running total**, **Each workout** or **Running total** for additive measures, including miles, duration, calories, repetition totals and lifted volume. Display a two-series legend and exact cumulative totals.
+- Prevent misleading summation of non-additive values such as MPH, incline, BPM and single-set weight. Respect exercise and tracking-tag selections.
+- Add isolated PHP and Node.js parsing, storage, chart and phone-layout regression tests to CI. No production data migrations or writes.
 
 ## v1.7.0 — 2026-10-27 (Issue #135)
 

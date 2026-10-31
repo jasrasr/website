@@ -1,13 +1,13 @@
 /* File Name: app.js
 Author: Jason Lamb (with help from ChatGPT)
 Description: Workout quick entry, editable review, and per-exercise trends.
-Revision: 1.7.0
+Revision: 1.8.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.7.0 - Multi-photo galleries and upload-after-save controls while keeping earlier uploads. 1.6.0 - Read-only workout attendance, weekday percentages and calendar/weekday streaks. 1.5.1 - Display and edit heart rate BPM with cardio-focused fields and separate trends. 1.5.0 - Add authenticated workout details/photo viewer and private backup download UI. 1.4.0 - Editable set-by-set weight/reps, custom measurements, calories and exercise-specific progress. 1.3.2 - Optimize mobile exercise fields, retain hidden measurements, and keep optional metrics near the measurements. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
+Changelog: 1.8.0 - Keep MM:SS precise and overlay cumulative totals on each-workout charts. 1.7.0 - Multi-photo galleries and upload-after-save controls while keeping earlier uploads. 1.6.0 - Read-only workout attendance, weekday percentages and calendar/weekday streaks. 1.5.1 - Display and edit heart rate BPM with cardio-focused fields and separate trends. 1.5.0 - Add authenticated workout details/photo viewer and private backup download UI. 1.4.0 - Editable set-by-set weight/reps, custom measurements, calories and exercise-specific progress. 1.3.2 - Optimize mobile exercise fields, retain hidden measurements, and keep optional metrics near the measurements. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
 'use strict';
 const $=selector=>document.querySelector(selector);
-const measures=[['distance_miles','Miles'],['duration_minutes','Minutes'],['speed_mph','Speed (mph)'],['incline_percent','Treadmill incline (%)'],['calories_kcal','Calories (kcal)'],['heart_rate_bpm','Heart rate (BPM)'],['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']];
+const measures=[['distance_miles','Miles'],['duration_minutes','Minutes'],['duration_seconds','Seconds (0–59)'],['speed_mph','Speed (mph)'],['incline_percent','Treadmill incline (%)'],['calories_kcal','Calories (kcal)'],['heart_rate_bpm','Heart rate (BPM)'],['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']];
 let entries=[];
 let editingId=null;
 let editingRevision=null;
@@ -33,15 +33,16 @@ function fieldInput(name,label,value,type='number'){
  if(type==='number'){input.min='0';input.step='any';}if(type==='text')input.maxLength=name==='tag'?64:80;
  if(name==='incline_percent')input.max='100';
  if(name==='calories_kcal')input.max='100000';
+ if(name==='duration_seconds'){input.max='59';input.step='1';input.inputMode='numeric';}
  if(name==='heart_rate_bpm'){input.min='1';input.max='300';input.step='1';input.inputMode='numeric';}
- if(type==='number')input.inputMode='decimal';
+ if(type==='number'&&name!=='duration_seconds'&&name!=='heart_rate_bpm')input.inputMode='decimal';
  wrapper.append(caption,input);return wrapper;
 }
 function describe(entry){
  const perSet=WorkoutAdvanced.stats(entry);
  const parts=[
   entry.distance_miles!=null?entry.distance_miles+' mi':'',
-  entry.duration_minutes!=null?entry.duration_minutes+' min':'',
+  WorkoutTrends.formatDuration(entry)||'',
   entry.speed_mph!=null?entry.speed_mph+' mph':'',
   entry.incline_percent!=null?entry.incline_percent+'% incline':'',
   entry.calories_kcal!=null?entry.calories_kcal+' kcal':'',
@@ -69,14 +70,14 @@ function describe(entry){
  */
 function visibleFieldsForExercise(exercise){
  const name=String(exercise||'').toLowerCase().trim().replace(/\s+/g,' ');
- if(/tread\s?mill/.test(name)) return ['distance_miles','duration_minutes','speed_mph','incline_percent','calories_kcal','heart_rate_bpm'];
+ if(/tread\s?mill/.test(name)) return ['distance_miles','duration_minutes','duration_seconds','speed_mph','incline_percent','calories_kcal','heart_rate_bpm'];
  if(/^(walking|walk|hiking|running|run|cycling|bike|biking|stationary bike|rowing|swimming|elliptical|stairs)$/.test(name))
-  return ['distance_miles','duration_minutes','speed_mph','calories_kcal','heart_rate_bpm'];
+  return ['distance_miles','duration_minutes','duration_seconds','speed_mph','calories_kcal','heart_rate_bpm'];
  if(/^(bench press|deadlift|weight training|weight lifting)$/.test(name))
   return ['weight_lb','reps','sets'];
  if(/^(push-ups|pushups|sit-ups|situps|squats|lunges|crunches|jumping jacks)$/.test(name))
   return ['reps','sets'];
- if(/^(plank|yoga)$/.test(name)) return ['duration_minutes','sets'];
+ if(/^(plank|yoga)$/.test(name)) return ['duration_minutes','duration_seconds','sets'];
  return measures.map(([key])=>key); // Unknown/custom exercises can use all existing metrics.
 }
 /**
@@ -126,7 +127,9 @@ function refreshChartMetrics(){
  const exercise=$('#exerciseFilter').value;
  const allowed=new Set(visibleFieldsForExercise(exercise));
  const existing=entries.filter(record=>record.exercise===exercise);
- const base=measures.filter(([key])=>allowed.has(key)||existing.some(row=>row[key]!=null));
+ const base=measures.filter(([key])=>key!=='duration_seconds' && (allowed.has(key)||existing.some(row=>row[key]!=null)));
+ if(existing.some(row=>row.duration_seconds!=null) && !base.some(([key])=>key==='duration_minutes'))
+  base.push(['duration_minutes','Duration (minutes)']);
  const detailed=existing.some(row=>Array.isArray(row.sets_detail)&&row.sets_detail.length>0);
  if(detailed)base.push(
   ['set_count','Set count'],['total_reps','Total reps'],
@@ -254,7 +257,7 @@ function openWorkoutDetails(id){
  };
  const labels={
   distance_miles:['Distance', ' miles'],
-  duration_minutes:['Duration',' minutes'],
+  // Seconds are combined with minutes into a single accurate duration value.
   speed_mph:['Speed',' mph'],
   incline_percent:['Treadmill incline','%'],
   calories_kcal:['Calories burned',' kcal'],
@@ -263,6 +266,8 @@ function openWorkoutDetails(id){
   sets:['Sets (legacy summary)',''],
   weight_lb:['Weight (legacy summary)',' lb']
  };
+ const formattedDuration=WorkoutTrends.formatDuration(entry);
+ if(formattedDuration)fact('Duration',formattedDuration);
  Object.entries(labels).forEach(([key,[label,unit]])=>{
   if(entry[key]!==null && entry[key]!==undefined && entry[key]!=='')
    fact(label,entry[key]+unit);
@@ -511,10 +516,12 @@ async function submitEdit(){
  const button=$('#confirmEdit'),row={};
  $('#editFields').querySelectorAll('[data-field]').forEach(input=>{row[input.dataset.field]=input.value;});
  // Old records without heart rate must remain unchanged unless the user enters one.
- if(row.heart_rate_bpm==='' && editingId){
-  const original=entries.find(entry=>entry.id===editingId);
-  if(original && !Object.prototype.hasOwnProperty.call(original,'heart_rate_bpm'))
-   delete row.heart_rate_bpm;
+ for(const optional of ['heart_rate_bpm','duration_seconds']){
+  if(row[optional]==='' && editingId){
+   const original=entries.find(entry=>entry.id===editingId);
+   if(original && !Object.prototype.hasOwnProperty.call(original,optional))
+    delete row[optional];
+  }
  }
  if(!row.time_local){delete row.time_local;delete row.utc_offset;}
  try{Object.assign(row,WorkoutAdvanced.collect($('#editFields')));}catch(e){$('#editStatus').textContent=e.message;return;}
@@ -531,31 +538,72 @@ async function submitEdit(){
   if(e.message.toLowerCase().includes('changed elsewhere'))message('This entry was changed in another session. Refresh before editing.',true);
  }finally{button.disabled=false;button.textContent='Save changes to this entry';}
 }
+/**
+ * Additive measurements can be viewed per-session, running total, or both.
+ * Heart rate, speed, weight, and incline remain per-session only: adding them
+ * would not describe fitness progress. Existing JSON is never changed.
+ */
 function draw(){
- const c=$('#chart'),ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);
- const metric=$('#metric').value,exercise=$('#exerciseFilter').value;
- const tag=$('#historyTag').value;
- const points=entries.filter(e=>e.exercise===exercise&&(!tag||(e.tag||'')===tag))
-  .map(e=>({...e,_selectedValue:WorkoutAdvanced.metricValue(e,metric)}))
-  .filter(e=>e._selectedValue!=null&&Number.isFinite(Number(e._selectedValue)))
-  .sort((a,b)=>(a.performed_at||a.date).localeCompare(b.performed_at||b.date));
- const left=54,right=c.width-23,top=22,bottom=c.height-46;
+ const canvas=$('#chart'),ctx=canvas.getContext('2d');
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+ const metric=$('#metric').value,exercise=$('#exerciseFilter').value,tag=$('#historyTag').value;
+ const data=WorkoutTrends.chartSeries(entries,exercise,metric,tag,WorkoutAdvanced.metricValue);
+ const points=data.points;
+ const select=$('#trendMode'),scope=$('#trendScope'),modeLabel=$('#trendModeLabel');
+ const available=data.additive;
+ select.disabled=!available;
+ modeLabel.hidden=!available;
+ scope.textContent=available?
+  'Running total adds the selected measurement across these '+exercise+' workouts'+(tag?' tagged #'+tag:'')+'.':
+  'This metric is a rate or measurement, not an additive total. Showing each workout only.';
+ const requested=select.value;
+ const mode=available?requested:'individual';
+ const series=[];
+ if(mode==='both'||mode==='individual')series.push({key:'individual',label:'Each workout',color:'#59dbc3'});
+ if(available && (mode==='both'||mode==='running'))series.push({key:'running',label:'Running total',color:'#e2b56e'});
+ const legend=$('#trendLegend');legend.replaceChildren(...series.map(item=>{
+  const span=document.createElement('span');span.className='trend-key';
+  const swatch=document.createElement('span');swatch.className='trend-swatch';
+  swatch.style.backgroundColor=item.color;swatch.setAttribute('aria-hidden','true');
+  span.append(swatch,document.createTextNode(item.label));
+  return span;
+ }));
+ const c=canvas,left=54,right=c.width-23,top=22,bottom=c.height-46;
  ctx.font='14px system-ui';ctx.strokeStyle='#36546d';ctx.fillStyle='#aebfd0';ctx.lineWidth=1;
  ctx.beginPath();ctx.moveTo(left,top);ctx.lineTo(left,bottom);ctx.lineTo(right,bottom);ctx.stroke();
  if(!points.length){$('#trend').textContent='Choose a logged measurement to see its trend.';return;}
- const vals=points.map(e=>Number(e._selectedValue));let high=Math.max(...vals),low=Math.min(0,...vals);if(high===low)high=low+1;
- for(let i=0;i<4;i++){const value=low+(high-low)*i/3,y=bottom-i*(bottom-top)/3;
-  ctx.fillText(value.toFixed(value<10?1:0),5,y+5);
-  ctx.strokeStyle='#21394d';ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();
+ const values=points.flatMap(point=>series.map(item=>point[item.key]));
+ let high=Math.max(...values),low=Math.min(0,...values);
+ if(high===low)high=low+1;
+ const pretty=value=>Number(value.toFixed(2)).toLocaleString(undefined,{maximumFractionDigits:2});
+ for(let tick=0;tick<4;tick++){
+  const value=low+(high-low)*tick/3,y=bottom-tick*(bottom-top)/3;
+  ctx.fillStyle='#aebfd0';ctx.fillText(value.toFixed(Math.abs(value)<10?1:0),5,y+5);
+  ctx.strokeStyle='#21394d';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();
  }
- const coords=vals.map((v,i)=>({x:left+(right-left)*(points.length===1?.5:i/(points.length-1)),y:bottom-(v-low)/(high-low)*(bottom-top)}));
- ctx.strokeStyle='#59dbc3';ctx.lineWidth=3;ctx.beginPath();
- coords.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();
- ctx.fillStyle='#59dbc3';coords.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill();});
+ for(const item of series){
+  const coords=points.map((point,i)=>({
+   x:left+(right-left)*(points.length===1?.5:i/(points.length-1)),
+   y:bottom-(point[item.key]-low)/(high-low)*(bottom-top)
+  }));
+  ctx.strokeStyle=item.color;ctx.lineWidth=3;ctx.beginPath();
+  coords.forEach((point,i)=>i?ctx.lineTo(point.x,point.y):ctx.moveTo(point.x,point.y));
+  ctx.stroke();ctx.fillStyle=item.color;
+  coords.forEach(point=>{ctx.beginPath();ctx.arc(point.x,point.y,4,0,Math.PI*2);ctx.fill();});
+ }
  ctx.fillStyle='#aebfd0';ctx.fillText(niceDay(points[0].date),left,bottom+26);
- if(points.length>1){const text=niceDay(points.at(-1).date);ctx.fillText(text,right-ctx.measureText(text).width,bottom+26);}
- const change=vals.at(-1)-vals[0];
- $('#trend').textContent=points.length>1?points.length+' measurements · First '+vals[0]+' · Latest '+vals.at(-1)+' · Change '+(change>0?'+':'')+Number(change.toFixed(2)):'First measurement logged. Add another to see your trend.';
+ if(points.length>1){
+  const last=niceDay(points.at(-1).date);
+  ctx.fillText(last,right-ctx.measureText(last).width,bottom+26);
+ }
+ const first=points[0].individual,last=points.at(-1).individual;
+ const change=last-first;
+ const unit=metric==='duration_minutes'?' min':metric==='distance_miles'?' mi':
+  metric==='calories_kcal'?' kcal':metric==='total_volume_lb'?' lb':'';
+ $('#trend').textContent=points.length+' workouts · Latest '+pretty(last)+unit+
+  ' · First '+pretty(first)+unit+' · Change '+(change>0?'+':'')+pretty(change)+unit+
+  (available?' · Running total '+pretty(data.total)+unit:'');
 }
 async function load(){try{const data=await api();entries=data.entries;$('#csrf').value=data.csrf;
  const retry=$('#aiParseBtn');retry.dataset.enabled=data.ai_available?'yes':'';
@@ -576,7 +624,7 @@ $('#parseBtn').addEventListener('click',review);
 $('#aiParseBtn').addEventListener('click',retryWithAi);
 $('#note').addEventListener('input',()=>{$('#review').hidden=true;});
 $('#saveBtn').addEventListener('click',()=>{try{save(collect(),$('#photo').files[0]||null);}catch(e){message(e.message,true);}});
-$('#exerciseFilter').addEventListener('change',()=>{refreshChartMetrics();draw();});$('#metric').addEventListener('change',draw);
+$('#exerciseFilter').addEventListener('change',()=>{refreshChartMetrics();draw();});$('#metric').addEventListener('change',draw);$('#trendMode').addEventListener('change',draw);
 $('#historyTag').addEventListener('change',()=>{showAllHistory=false;renderHistory();draw();});
 $('#toggleHistory').addEventListener('click',()=>{showAllHistory=!showAllHistory;renderHistory();});
 $('#recent').addEventListener('click',e=>{const button=e.target.closest('[data-edit-id]');if(button)beginEdit(button.dataset.editId);});

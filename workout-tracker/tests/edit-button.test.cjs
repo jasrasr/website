@@ -2,10 +2,10 @@
 File Name: edit-button.test.cjs
 Author: Jason Lamb (with help from ChatGPT)
 Description: Regression test for Edit button opening saved workouts without a DOMException.
-Revision: 1.1.5
+Revision: 1.2.0
 Created Date: 2026-10-27
 Modified Date: 2026-10-27
-Changelog: 1.1.5 - Verify saved-photo count and upload picker on Edit without altering prior records. 1.1.4 - Validate cardio heart rate visibility and editing without hiding saved BPM values. 1.1.3 - Isolate previous edit button regression from advanced measurement editor. 1.1.2 - Verify mobile touch targets, optional fields location, and hidden-value indicator. 1.1.1 - Check hidden historical rep/set/weight values remain intact and manual entry adapts. 1.1.0 - Verify exercise-specific field visibility and safe retention of hidden measurements. 1.0.0 - Exercise the actual event handler and editing form against DOM class-token validation.
+Changelog: 1.2.0 - Verify dedicated 0–59 second input on phone Edit and manual forms. 1.1.5 - Verify saved-photo count and upload picker on Edit without altering prior records. 1.1.4 - Validate cardio heart rate visibility and editing without hiding saved BPM values. 1.1.3 - Isolate previous edit button regression from advanced measurement editor. 1.1.2 - Verify mobile touch targets, optional fields location, and hidden-value indicator. 1.1.1 - Check hidden historical rep/set/weight values remain intact and manual entry adapts. 1.1.0 - Verify exercise-specific field visibility and safe retention of hidden measurements. 1.0.0 - Exercise the actual event handler and editing form against DOM class-token validation.
 */
 'use strict';
 const assert = require('node:assert/strict');
@@ -72,7 +72,7 @@ const context={
   entries:[original],
   editingId:null,editingRevision:null,
   measures:[
-    ['distance_miles','Miles'],['duration_minutes','Minutes'],
+    ['distance_miles','Miles'],['duration_minutes','Minutes'],['duration_seconds','Seconds (0–59)'],
     ['speed_mph','Speed (mph)'],['incline_percent','Treadmill incline (%)'],
     ['calories_kcal','Calories (kcal)'],['heart_rate_bpm','Heart rate (BPM)'],
     ['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']
@@ -124,6 +124,10 @@ assert.equal(fieldLabel('date').hidden,false,'Date must remain visible.');
 assert.equal(fieldLabel('time_local').hidden,false,'Time must remain visible.');
 assert.equal(fieldLabel('distance_miles').hidden,false,'Treadmill distance visible.');
 assert.equal(fieldLabel('duration_minutes').hidden,false,'Treadmill duration visible.');
+assert.equal(fieldLabel('duration_seconds').hidden,false,'Treadmill second remainder visible.');
+assert.equal(byName('duration_seconds')?.value,'','Previous sessions without seconds retain blank seconds.');
+assert.equal(byName('duration_seconds')?.max,'59','Seconds limited to 59 in Edit.');
+assert.equal(byName('duration_seconds')?.step,'1','Seconds must be whole in Edit.');
 assert.equal(fieldLabel('speed_mph').hidden,false,'Treadmill speed visible.');
 assert.equal(fieldLabel('incline_percent').hidden,false,'Treadmill incline visible.');
 assert.equal(fieldLabel('heart_rate_bpm').hidden,false,'Treadmill heart rate visible.');

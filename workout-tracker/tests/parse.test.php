@@ -2,10 +2,10 @@
 /* File Name: parse.test.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: Standalone CLI regression tests for key-free workout descriptions.
-Revision: 1.4.0
+Revision: 1.5.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-22
-Changelog: 1.4.0 - Test BPM, HR/pulse aliases and reject speed/duration confusion. 1.3.0 - Parse calorie totals and varying bench-press weights in one exercise. 1.2.0 - Assert explicit treadmill incline and tracking hashtag parsing. 1.1.0 - Validate workouts, multi-exercise separation, dates, and invalid input. */
+Changelog: 1.5.0 - Preserve exact 33:18 min:sec and parse explicit hours/minutes/seconds. 1.4.0 - Test BPM, HR/pulse aliases and reject speed/duration confusion. 1.3.0 - Parse calorie totals and varying bench-press weights in one exercise. 1.2.0 - Assert explicit treadmill incline and tracking hashtag parsing. 1.1.0 - Validate workouts, multi-exercise separation, dates, and invalid input. */
 declare(strict_types=1);
 require dirname(__DIR__) . '/parse.php';
 $cases=[
@@ -32,7 +32,28 @@ $cases=[
  ['Treadmill 2 miles 1 hr 15 minutes',[['exercise'=>'treadmill','distance_miles'=>2,'duration_minutes'=>75,'heart_rate_bpm'=>null]]],
  ['Running 3 miles with 150 beats per minute',[['exercise'=>'running','distance_miles'=>3,'heart_rate_bpm'=>150]]],
  ['Rowing for 10 mins, pulse 132',[['exercise'=>'rowing','duration_minutes'=>10,'heart_rate_bpm'=>132]]],
- ['Treadmill 2 miles 30 min HR 143 and 20 push-ups',[['exercise'=>'treadmill','distance_miles'=>2,'heart_rate_bpm'=>143],['exercise'=>'push-ups','reps'=>20]]]
+ ['Treadmill 2 miles 30 min HR 143 and 20 push-ups',[['exercise'=>'treadmill','distance_miles'=>2,'heart_rate_bpm'=>143],['exercise'=>'push-ups','reps'=>20]]],
+ ['Treadmill, 0 incline, 2.07 mile at 4 mph for 33:18 min:sec, 180 calories',[
+  ['exercise'=>'treadmill','distance_miles'=>2.07,'speed_mph'=>4,'duration_minutes'=>33,'duration_seconds'=>18,'calories_kcal'=>180]
+ ]],
+ ['Treadmill 2.07 miles for 33 minutes 18 seconds',[
+  ['exercise'=>'treadmill','distance_miles'=>2.07,'duration_minutes'=>33,'duration_seconds'=>18]
+ ]],
+ ['Treadmill 2 miles for 33:18',[
+  ['exercise'=>'treadmill','distance_miles'=>2,'duration_minutes'=>33,'duration_seconds'=>18]
+ ]],
+ ['Treadmill for 7:08 min:sec',[
+  ['exercise'=>'treadmill','duration_minutes'=>7,'duration_seconds'=>8]
+ ]],
+ ['Plank for 00:45',[
+  ['exercise'=>'plank','duration_minutes'=>0,'duration_seconds'=>45]
+ ]],
+ ['Cycling for 1 hr 15 min 18 sec',[
+  ['exercise'=>'cycling','duration_minutes'=>75,'duration_seconds'=>18]
+ ]],
+ ['Treadmill 33:18 2 miles 180 calories',[
+  ['exercise'=>'treadmill','duration_minutes'=>33,'duration_seconds'=>18,'distance_miles'=>2,'calories_kcal'=>180]
+ ]]
 
 ];
 foreach($cases as $i=>[$input,$expected]){
@@ -49,8 +70,8 @@ foreach($cases as $i=>[$input,$expected]){
    throw new RuntimeException('Case '.$i.' '.$field.' mismatch: '.json_encode($records[$j]));
  }
 }
-foreach(['','gym workout','treadmill on 2026-02-30', 'treadmill 1 mile at heart rate 301 bpm', 'walking HR 0'] as $bad){
+foreach(['','gym workout','treadmill on 2026-02-30', 'treadmill 1 mile at heart rate 301 bpm', 'walking HR 0','treadmill for 33:60 min:sec'] as $bad){
  try{workout_parse_text($bad,'2026-10-21');throw new RuntimeException('Invalid input accepted.');}
  catch(InvalidArgumentException $e){}
 }
-echo 'Passed '.count($cases).' extraction examples and 5 invalid-input cases.'.PHP_EOL;
+echo 'Passed '.count($cases).' extraction examples and 6 invalid-input cases.'.PHP_EOL;

@@ -2,10 +2,10 @@
 /* File Name: parse.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: API-key-free natural-language extraction for workout tracking.
-Revision: 1.4.0
+Revision: 1.5.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.4.0 - Extract explicit BPM/heart-rate/HR values without mistaking pulse for treadmill speed. 1.3.0 - Recognize explicit calories and ordered varying weight-rep pairs. 1.2.0 - Extract optional tracking tags and treadmill incline percentage. 1.1.0 - Extract workout activities, dates, and metrics without external services. */
+Changelog: 1.5.0 - Parse precise mm:ss treadmill duration instead of interpreting seconds as minutes. 1.4.0 - Extract explicit BPM/heart-rate/HR values without mistaking pulse for treadmill speed. 1.3.0 - Recognize explicit calories and ordered varying weight-rep pairs. 1.2.0 - Extract optional tracking tags and treadmill incline percentage. 1.1.0 - Extract workout activities, dates, and metrics without external services. */
 declare(strict_types=1);
 
 /** Recognize common exercise descriptions conservatively; never invent missing measurements. */
@@ -102,18 +102,53 @@ function workout_parse_segment(string $segment, string $exercise, string $date):
 {
     $cardio = in_array($exercise, ['treadmill','walking','running','cycling','rowing','swimming','elliptical','stairs'], true);
     $strength = in_array($exercise, ['push-ups','sit-ups','squats','lunges','crunches','plank','bench press','deadlift','jumping jacks','weight training'], true);
-    $out = ['exercise' => $exercise, 'date' => $date, 'distance_miles'=>null, 'duration_minutes'=>null,
+    $out = ['exercise' => $exercise, 'date' => $date, 'distance_miles'=>null, 'duration_minutes'=>null, 'duration_seconds'=>null,
         'speed_mph'=>null, 'reps'=>null, 'sets'=>null, 'weight_lb'=>null, 'incline_percent'=>null, 'calories_kcal'=>null, 'heart_rate_bpm'=>null, 'tag'=>'', 'notes'=>$segment];
     if (preg_match('~\b(\d+(?:\.\d+)?)\s*(miles?|mi|kilomet(?:er|re)s?|km)\b~i', $segment, $m)) {
         $out['distance_miles'] = round((float)$m[1] * (str_starts_with(strtolower($m[2]), 'k') ? 0.621371 : 1), 3);
     }
-    if (preg_match_all('~\b(\d+(?:\.\d+)?)\s*(hours?|hrs?|hr|minutes?|mins?|min|seconds?|secs?|sec)\b~i', $segment, $parts, PREG_SET_ORDER)) {
-        $minutes=0.0;
+    // Parse "33:18 min:sec" as 33 minutes + 18 seconds. Never let the
+    // "18 min" substring become the whole duration. Without a stated unit,
+    // only accept colon time with a duration cue or as a standalone cardio
+    // value; clock-time "10:15 AM" is not workout duration.
+    if (preg_match('~\b(?:(?:for|in|duration|elapsed|time)\s+)?'
+        . '(\d{1,4}):(\d{1,2})\s*'
+        . '(?:(?:min(?:utes?)?|mm)\s*:\s*(?:sec(?:onds?)?|ss))?\b'
+        . '(?!\s*(?:am|pm)\b)~i', $segment, $duration, PREG_OFFSET_CAPTURE)) {
+        $matched=$duration[0][0];
+        $offset=$duration[0][1];
+        $preceding=substr($segment, max(0,$offset-15),min(15,$offset));
+        $withCue=preg_match('~^(?:for|in|duration|elapsed|time)\s+~i', $matched)===1
+            || preg_match('~(?:for|in|duration|elapsed|time)\s*$~i', $preceding)===1;
+        $withUnits=preg_match('~(?:min(?:utes?)?|mm)\s*:\s*(?:sec(?:onds?)?|ss)\s*$~i', $matched)===1;
+        $justTime=preg_match('~\b\d{1,4}:\d{1,2}\s*(?:am|pm)\b~i', $matched)===1;
+        if (($cardio || $withCue || $withUnits) && !$justTime) {
+            $mins=(int)$duration[1][0];
+            $secs=(int)$duration[2][0];
+            if ($secs>59 || $mins>10000) throw new InvalidArgumentException('Duration seconds must be 00 to 59.');
+            $out['duration_minutes']=$mins;
+            $out['duration_seconds']=$secs;
+        }
+    }
+    // Units such as "33 minutes 18 seconds", "1 hr 15 minutes", or
+    // "60 seconds" are also supported. Keep explicit seconds separate
+    // from whole minutes for editing; never round 18/60 prematurely.
+    if ($out['duration_minutes']===null
+        && preg_match_all('~\b(\d+(?:\.\d+)?)\s*(hours?|hrs?|hr|minutes?|mins?|min|seconds?|secs?|sec)\b~i',
+            $segment, $parts, PREG_SET_ORDER)) {
+        $totalSeconds=0.0;
+        $explicitSeconds=false;
         foreach ($parts as $part) {
             $unit=strtolower($part[2]);
-            $minutes += (float)$part[1] * (str_starts_with($unit,'h') ? 60 : (str_starts_with($unit,'s') ? 1/60 : 1));
+            $totalSeconds+=(float)$part[1] * (str_starts_with($unit,'h')?3600:(str_starts_with($unit,'s')?1:60));
+            if (str_starts_with($unit,'s'))$explicitSeconds=true;
         }
-        $out['duration_minutes']=round($minutes, 2);
+        if ($explicitSeconds && floor($totalSeconds)===$totalSeconds && $totalSeconds<=600000) {
+            $out['duration_minutes']=floor($totalSeconds/60);
+            $out['duration_seconds']=(int)fmod($totalSeconds,60);
+        } else {
+            $out['duration_minutes']=round($totalSeconds/60, 3);
+        }
     }
     if (preg_match('~\b(\d+(?:\.\d+)?)\s*(mph|km/h|kph)\b~i', $segment, $m)) {
         $out['speed_mph']=round((float)$m[1]*(strtolower($m[2]) === 'mph'?1:0.621371),3);
