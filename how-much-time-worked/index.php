@@ -16,6 +16,7 @@ include __DIR__ . '/header.php';
 <div class="card">
     <p>Upload a clock-out slip photo. The app saves the image, attempts OCR if configured, then sends you to a review screen before writing to JSON.</p>
     <form action="upload.php" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="csrf" value="<?= h($auth->csrf()) ?>">
         <label for="slip">Clock-out slip photo</label>
         <input type="file" id="slip" name="slip" accept="image/jpeg,image/png,image/webp" required>
         <button type="submit">Upload and Review</button>

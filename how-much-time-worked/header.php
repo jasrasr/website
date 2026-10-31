@@ -10,6 +10,7 @@
     1.0.0 initial release
     1.1.0 removed Raw JSON nav link
 */
+require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/config.php'; ensureAppFolders(); ?>
 <!doctype html>
 <html lang="en">

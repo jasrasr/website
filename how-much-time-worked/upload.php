@@ -12,6 +12,7 @@
     1.2.0 removed unused fields
     1.2.1 resize image before OCR to stay under free plan 1.5 MB limit
 */
+require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
 
@@ -19,6 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: index.php');
     exit;
 }
+
+requireTimeclockFormToken($auth);
 
 if (!isset($_FILES['slip']) || $_FILES['slip']['error'] !== UPLOAD_ERR_OK) {
     die('Upload failed. Check file size and try again.');

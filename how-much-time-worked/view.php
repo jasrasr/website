@@ -12,6 +12,7 @@
     1.2.0 removed unit, job, and tip columns
     1.2.3 removed Week Printed and Warning columns
 */
+require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/config.php';
 $entries = readEntries();
 $totalMinutes = array_sum(array_map(fn($e) => (int)($e['shift_minutes'] ?? 0), $entries));
@@ -41,7 +42,7 @@ include __DIR__ . '/header.php';
             <td><?= h($e['printed_shift_hours'] ?? '') ?></td>
             <td>
                 <?php if (!empty($e['source_file']) && ($e['source_file'] !== 'manual-entry')): ?>
-                    <a href="uploads/<?= h($e['source_file']) ?>">photo</a>
+                    <a href="photo.php?file=<?= rawurlencode((string)$e['source_file']) ?>">photo</a>
                 <?php else: ?>manual<?php endif; ?>
             </td>
         </tr>

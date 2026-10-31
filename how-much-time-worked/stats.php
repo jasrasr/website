@@ -11,6 +11,7 @@
     1.1.0 reads from per-employee JSON files
     1.3.0 add current pay period summary per employee
 */
+require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/config.php';
 $entries     = readEntries();
 $pp          = getCurrentPayPeriod();

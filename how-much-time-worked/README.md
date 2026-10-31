@@ -22,13 +22,14 @@ A self-hosted PHP web app for logging employee hours from clock-out slip photos.
 
 ## Installation
 
-1. Upload the folder contents to your PHP host, e.g. into `/timeclock/`
-2. Ensure these paths are writable by the web server:
+1. Configure shared identity in `1-Framework` and `user-management`. Register project ID `how-much-time-worked` with the app's path, then grant the intended staff `member` access. The app denies access until the project is registered and the user has a grant.
+2. Upload the folder contents to your PHP host, e.g. into `/timeclock/`
+3. Ensure these paths are writable by the web server:
    - `data/`
    - `uploads/`
 
    *(The app will create them automatically on first run if permissions allow.)*
-3. Open `config.php` and configure as needed.
+4. Open `config.php` and configure as needed. Verify the host honors `.htaccess` by requesting a known file in `data/` and `uploads/` directly: both must return 403. Photos are served to authorized users through `photo.php`.
 
 ## Configuration
 

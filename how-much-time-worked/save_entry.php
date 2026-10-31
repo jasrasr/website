@@ -11,6 +11,7 @@
     1.1.0 switched to per-employee JSON files
     1.2.0 removed unit, job, and tip fields
 */
+require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
 
@@ -18,6 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: index.php');
     exit;
 }
+
+requireTimeclockFormToken($auth);
 
 $date = normalizeDateInput($_POST['date'] ?? '');
 $timeIn = trim($_POST['time_in'] ?? '');

@@ -15,6 +15,7 @@ include __DIR__ . '/header.php';
 <h1>Manual Entry</h1>
 <div class="card">
 <form action="save_entry.php" method="post">
+    <input type="hidden" name="csrf" value="<?= h($auth->csrf()) ?>">
     <input type="hidden" name="source_file" value="manual-entry">
     <label>Employee</label><input name="employee" required>
     <label>Date</label><input type="date" name="date" value="<?= h(date('Y-m-d')) ?>" required>

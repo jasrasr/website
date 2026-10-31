@@ -28,8 +28,10 @@ time-clock/weather-demo.json
 .worktrees/
 
 # App data and uploads
-how-much-time-worked/data/
-how-much-time-worked/uploads/
+how-much-time-worked/data/*
+!how-much-time-worked/data/.htaccess
+how-much-time-worked/uploads/*
+!how-much-time-worked/uploads/.htaccess
 computers/logs/*.json
 computers/logs1/*.json
 computers/ratelimit/*.json

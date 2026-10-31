@@ -10,6 +10,7 @@
     1.0.0 initial release
     1.2.0 removed unit, job, and tip fields
 */
+require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/config.php';
 ensureAppFolders();
 $file = basename($_GET['file'] ?? '');
@@ -23,9 +24,10 @@ include __DIR__ . '/header.php';
 <div class="notice">Review every field before saving. OCR is helpful, but it also occasionally reads “10:10 PM” as “banana cannon.”</div>
 <div class="card">
     <?php if ($file && file_exists(UPLOAD_DIR . '/' . $file)): ?>
-        <p><img class="preview" src="uploads/<?= h($file) ?>" alt="Uploaded slip preview"></p>
+        <p><img class="preview" src="photo.php?file=<?= rawurlencode($file) ?>" alt="Uploaded slip preview"></p>
     <?php endif; ?>
     <form action="save_entry.php" method="post">
+        <input type="hidden" name="csrf" value="<?= h($auth->csrf()) ?>">
         <input type="hidden" name="source_file" value="<?= h($file) ?>">
         <label>Employee</label><input name="employee" value="<?= h($data['employee']) ?>" required>
         <label>Date</label><input type="date" name="date" value="<?= h($data['date']) ?>" required>
