@@ -68,18 +68,27 @@ final class Directory
     public function requestRegistration(string $username, string $name, string $email, string $password, string $ip): void
     {
         if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 254) throw new \InvalidArgumentException('Enter a valid email address.');
-        $user = self::newUser($username, $name, $password, false, false);
-        $user['active'] = false;
-        $user['email'] = $email;
-        $this->update(function (array $r) use ($user, $ip): array {
-            foreach ($r['users'] as $existing) if ($existing['username'] === $user['username']) throw new \InvalidArgumentException('That username is unavailable.');
+        // Cheap validation and per-IP/duplicate checks MUST precede password_hash:
+        // a public endpoint must not burn bcrypt CPU on invalid or throttled requests.
+        $username = strtolower(trim($username));
+        $name = trim($name);
+        if (!preg_match('/^[a-z0-9][a-z0-9._-]{2,63}$/D', $username)) throw new \InvalidArgumentException('Username must be 3–64 ASCII letters, numbers, dots, underscores or hyphens.');
+        if ($name === '' || strlen($name) > 120) throw new \InvalidArgumentException('Enter a display name up to 120 bytes.');
+        if (strlen($password) < 12 || strlen($password) > 72 || str_contains($password, "\0")) throw new \InvalidArgumentException('Use a password between 12 and 72 bytes.');
+        $this->update(function (array $r) use ($username, $name, $email, $password, $ip): array {
             $pending = $r['registrations'] ?? [];
-            foreach ($pending as $entry) if ($entry['user']['username'] === $user['username']) throw new \InvalidArgumentException('That username is unavailable.');
             $key = hash('sha256', $ip);
-            $attempts = array_filter($r['registrationAttempts'] ?? [], fn($a) => $a['time'] > time() - 86400);
+            $attempts = array_values(array_filter($r['registrationAttempts'] ?? [], fn($a) => $a['time'] > time() - 86400));
             if (count($pending) >= 100 || count(array_filter($attempts, fn($a) => $a['ip'] === $key)) >= 5) throw new \InvalidArgumentException('Registration is temporarily unavailable. Try again later.');
+            foreach ($r['users'] as $existing) if ($existing['username'] === $username) throw new \InvalidArgumentException('That username is unavailable.');
+            foreach ($pending as $entry) if ($entry['user']['username'] === $username) throw new \InvalidArgumentException('That username is unavailable.');
+            // Hash only one actually eligible request. This remains within the
+            // directory's exclusive JsonStore lock to prevent duplicate races.
+            $user = self::newUser($username, $name, $password, false, false);
+            $user['active'] = false;
+            $user['email'] = $email;
             $attempts[] = ['ip' => $key, 'time' => time()];
-            $r['registrationAttempts'] = array_values($attempts);
+            $r['registrationAttempts'] = $attempts;
             $r['registrations'][$user['id']] = ['user' => $user, 'requestedAt' => gmdate(DATE_ATOM)];
             return $r;
         });
