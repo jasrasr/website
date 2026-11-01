@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, key-free quick entry, optional AI and screenshot import guidance for Workout Tracker.
-Revision: 1.8.0
+Revision: 1.8.1
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.8.0 - First-class MM:SS duration and per-workout versus accumulated exercise trends. 1.7.0 - Multiple photo uploads on saved workouts, central logout/navigation and opt-in seven-day login. 1.6.0 - Read-only workout-day attendance and weekday streak dashboard. 1.5.1 - Optional heart rate in BPM, including local parsing, charts and safe edits. 1.5.0 - Authenticated photo/detail view and per-user ZIP backup, preserving live data. 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
+Changelog: 1.8.1 - Document paid AI quotas and private configuration backup protection. 1.8.0 - First-class MM:SS duration and per-workout versus accumulated exercise trends. 1.7.0 - Multiple photo uploads on saved workouts, central logout/navigation and opt-in seven-day login. 1.6.0 - Read-only workout-day attendance and weekday streak dashboard. 1.5.1 - Optional heart rate in BPM, including local parsing, charts and safe edits. 1.5.0 - Authenticated photo/detail view and per-user ZIP backup, preserving live data. 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
 -->
 # Workout Tracker
 
@@ -20,6 +20,17 @@ Private PHP workout logger at https://jasr.me/github/workout-tracker/ using shar
 5. Dates default to the user's **browser-local current date**. Time defaults to the current local time at review. "Yesterday", "last Monday", an ISO date, and US numeric MM/DD/YYYY dates are supported for backdating. An optional time control exists under review details.
 
 The parser is rule-based rather than a general LLM. It recognizes common exercises and explicit numbers but does **not guess missing values**. Unrecognized exercises use the collapsed manual entry form. It does not analyze photos.
+
+
+## Optional paid AI request limits and config protection (v1.8.1)
+
+Both paid interpretation actions (`parse` and `parse_ai`) share one **per-account rolling request-count limit** of **5 per 60 seconds and 50 per 24 hours** by default. Requests are reserved atomically before external AI calls. When exhausted, the API returns HTTP **429** with `Retry-After`. Local parsing, edits, saves, photos and backups are not limited. Failed provider attempts count. The existing 1,800 maximum output-token setting is unchanged; quotas are **not billed-token or dollar budgets**.
+
+A trusted, **non-demo central Super Admin** is exempt after project authorization and CSRF validation. Additional user exemptions must use **stable central IDs**, never names, in private `config.local.php`. Optional `request_limits` can set integer `per_minute` and `per_day` thresholds (1–10,000) and a string-list `exempt_user_ids`. The committed `config.local.example.php` template documents these settings; existing ignored config files and API keys are never overwritten. Invalid optional quotas make **paid AI unavailable only**, without interrupting dashboard history or free entry.
+
+Per-user quota counters are stored as hashed-ID timestamps in ignored, HTTP-denied `storage/` files. No prompts or workouts are written to those counters. Preserve counters and lock files during Hostinger deployment and backup. The Workout Tracker `.htaccess` now denies HTTP access to `config.local` backup/editor variants such as `config.local.php.bak`, `config.local.php~`, `.config.local.php.swp`, and uppercase variants. **Verify HTTP 403 on Hostinger** with harmless fixtures and remove them; CI filename checks alone cannot establish server enforcement.
+
+Validate with `php workout-tracker/tests/ai-limits.test.php` (quota rollovers, parallel requests, corruption fail-closed, identity exemptions and backup pattern checks).
 
 ## Exact workout duration and cumulative progress (v1.8.0)
 
