@@ -44,7 +44,10 @@ function readHistory(string $path): array
     }
 
     $handle = fopen($path, 'rb');
-    if ($handle === false) {
+    if ($handle === false || !flock($handle, LOCK_SH)) {
+        if ($handle !== false) {
+            fclose($handle);
+        }
         return ['heads' => 0, 'tails' => 0, 'recent' => []];
     }
 
@@ -70,6 +73,7 @@ function readHistory(string $path): array
         }
     }
 
+    flock($handle, LOCK_UN);
     fclose($handle);
     return ['heads' => $heads, 'tails' => $tails, 'recent' => array_reverse($recent)];
 }
@@ -137,12 +141,13 @@ if (!flock($handle, LOCK_EX)) {
     respond(500, ['success' => false, 'error' => 'Could not lock flip history.']);
 }
 
-$written = fwrite($handle, $line . PHP_EOL);
+$lineToWrite = $line . PHP_EOL;
+$written = fwrite($handle, $lineToWrite);
 fflush($handle);
 flock($handle, LOCK_UN);
 fclose($handle);
 
-if ($written === false) {
+if ($written !== strlen($lineToWrite)) {
     respond(500, ['success' => false, 'error' => 'Could not save this flip.']);
 }
 
