@@ -13,7 +13,7 @@ Changelog: 1.1.0 - Add automatic page-load toss and shared server-side history. 
 - Add a PHP endpoint for shared totals, percentages, and the 50 most recent outcomes.
 - Store history in `coin-flip/data/history.jsonl`, including UTC time, result, IP address, and browser metadata.
 - Block direct web access to the data folder and exclude the runtime history file from Git.
-- Keep the existing page URL and disclose collected metadata in the history panel.
+- Use `coin-flip/index.html` as the subfolder entry point and disclose collected metadata in the history panel.
 
 ## 1.0.4 - 2026-10-27
 - Explicitly hide the inactive face after landing to prevent mirrored labels bleeding through on mobile.
