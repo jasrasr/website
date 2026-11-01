@@ -26,7 +26,7 @@ try {
             if (field($_POST, 'password') !== field($_POST, 'confirm_password')) throw new InvalidArgumentException('Passwords do not match.');
             $directory->setup(field($_POST, 'username'), field($_POST, 'name'), field($_POST, 'password'));
         } elseif ($action === 'login') {
-            if (!$auth->login(field($_POST, 'username'), field($_POST, 'password'))) {
+            if (!$auth->login(field($_POST, 'username'), field($_POST, 'password'), field($_POST, 'remember') === 'yes')) {
                 http_response_code(401); throw new InvalidArgumentException('Sign-in failed. Check your credentials or wait 15 minutes if attempts were limited.');
             }
         } elseif ($action === 'logout') {
@@ -95,7 +95,7 @@ function roleFields(array $account): void
 <?php form('setup'); ?><label>Setup key <input type="password" name="setup_key" autocomplete="off" required></label><label>Username <input name="username" autocomplete="username" required></label><label>Display name <input name="name" required></label><?php passwordFields(); ?><button>Create administrator</button></form>
 <?php else: ?><p>Browser setup is disabled. Set a private setup key in <code>config.local.php</code> or run the CLI setup described in the README.</p><?php endif ?></section>
 <?php elseif (!$user): ?>
-<section class="compact"><h2>Sign in</h2><?php form('login'); ?><label>Username <input name="username" autocomplete="username" maxlength="64" required></label><label>Password <input type="password" name="password" autocomplete="current-password" maxlength="72" required></label><button>Sign in</button></form><p>Need a password reset? Ask your site administrator.</p></section>
+<section class="compact"><h2>Sign in</h2><?php form('login'); ?><label>Username <input name="username" autocomplete="username" maxlength="64" required></label><label>Password <input type="password" name="password" autocomplete="current-password" maxlength="72" required></label><label class="check"><input type="checkbox" name="remember" value="yes"> Stay signed in for 7 days on this browser</label><p class="muted">Optional. Leave unchecked for the usual 30-minute inactivity timeout. Don't enable on a shared device.</p><button>Sign in</button></form><p>Need a password reset? Ask your site administrator.</p></section>
 <?php else: ?>
 <div class="account"><p>Signed in as <strong><?= e($user['name']) ?></strong></p><?php form('logout'); ?><button class="secondary">Sign out of all connected projects in this browser</button></form></div>
 <?php if ($user['mustChangePassword']): ?><p class="notice">Change your temporary password before opening a project or managing users.</p><?php else: ?>

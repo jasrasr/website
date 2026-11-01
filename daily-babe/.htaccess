@@ -1,10 +1,17 @@
 Options -Indexes
 
+<IfModule mod_mime.c>
+    AddCharset UTF-8 .md
+</IfModule>
+
 <FilesMatch "^(?:bootstrap\.php|config\.php)$">
     Require all denied
 </FilesMatch>
 
 <IfModule mod_headers.c>
+    <Files "CHANGELOG.md">
+        Header set Content-Type "text/plain; charset=UTF-8"
+    </Files>
     Header always set X-Content-Type-Options "nosniff"
     Header always set Referrer-Policy "same-origin"
     Header always set X-Frame-Options "DENY"

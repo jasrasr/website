@@ -73,3 +73,9 @@ workout-tracker/storage/*
 !workout-tracker/storage/photos/
 workout-tracker/storage/photos/*
 !workout-tracker/storage/photos/.placeholder
+
+# Investment tracker — per-user private investment history and runtime locks
+investment-tracker/config.local.php
+investment-tracker/storage/*
+!investment-tracker/storage/.htaccess
+!investment-tracker/storage/.placeholder

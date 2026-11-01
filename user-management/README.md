@@ -2,12 +2,22 @@
 
 Shared PHP/JSON accounts for projects in this repository. PHP 8.1+, no database or Composer dependencies. Uses the framework's `JsonStore` and `PasswordSession`; the framework exposes the configured provider through `SharedIdentity::connect()`.
 
+## Optional remembered sign-in (2026-10-27)
+
+The central login now includes **Stay signed in for 7 days on this browser**. This is deliberately unchecked by default. Standard sign-in still expires after **30 minutes idle** and uses a session cookie. Choosing the checkbox issues a persistent browser cookie with an absolute seven-day maximum; on every request, the server checks the remembered session's expiry and identity version. Session rotation, CSRF verification, strict/HttpOnly/secure cookies, password resets, disabled-account invalidation and central logout remain enforced across all registered projects.
+
+The duration is configurable with `remember_seconds` in `config.local.php` (default 604800; limited to 30 days), while `timeout` remains 1800 seconds by default. Both are server settings; do not write secrets to this repository. **Existing sessions do not automatically become remembered.** Sign out and sign back in with the checkbox selected. The login checkbox is not recommended for shared devices. Hosts that purge PHP session data earlier than seven days require compatible server/session storage configuration. Test signed-in persistence and sign-out on the actual Hostinger installation.
+
+Validation:
+
+    node --test user-management/tests/remember.test.cjs
+
 ## Features
 
 - One same-host login/session for integrated projects.
 - Central account creation, disable/enable, temporary password reset and password change.
 - User, Admin and Super Admin account roles are separate from project scope. Any role can access multiple selected projects; all-project access is an explicit flag. Central directory administration is a separate permission.
-- Server-side permission checks, CSRF tokens, secure cookies, session rotation, 30-minute idle expiry and persisted account/IP login limits.
+- Server-side permission checks, CSRF tokens, secure cookies, session rotation, standard 30-minute idle expiry, **opt-in bounded seven-day remembered sessions**, and persisted account/IP login limits.
 - Password/account/access changes revoke the affected user's sessions; required password changes block project access.
 - Last active administrator protection. Users are disabled instead of deleted so project ownership remains stable.
 - Runtime files stay in ignored storage; normal Git updates do not overwrite accounts.

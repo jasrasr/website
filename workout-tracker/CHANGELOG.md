@@ -2,12 +2,86 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release history for private Workout Tracker.
-Revision: 1.2.0
+Revision: 1.8.0
 Created Date: 2026-10-21
-Modified Date: 2026-10-22
-Changelog: 1.3.0 - Document v1.3.0 non-destructive edits, tags and incline. 1.2.1 - Document paid AI quotas and config backup protection. 1.2.0 - Document optional AI retry, prepared screenshots and secrets convention. 1.1.0 - Initial local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
+Modified Date: 2026-10-27
+Changelog: 1.8.0 - Document v1.8.1 AI request quotas and private configuration filename denial. 1.7.0 - Record v1.8.0 precise duration and dual-session/cumulative charts. 1.6.0 - Record v1.7.0 photo attachments, account links, and remembered login. 1.5.0 - Record v1.6.0 attendance dates, weekend-excluded percentages, and streaks. 1.4.1 - Document optional heart-rate BPM field and local parser in v1.5.1. 1.4.0 - Document v1.5.0 authenticated photos, workout details and ZIP backups. 1.3.0 - Document v1.4.0 calories, custom numeric metrics and per-set strength logging. 1.2.2 - Document workout-specific fields and iPhone-safe date/time layout in v1.3.2. 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
 -->
 # Workout Tracker changelog
+
+## v1.8.1 — 2026-11-01
+
+- Add atomic per-account paid AI request-count quotas (5/minute, 50/day) shared by both AI routes, HTTP 429 with Retry-After, and non-demo central Super Admin / explicit stable ID exemptions.
+- When private optional quota configuration is invalid, disable paid AI without interrupting normal workout history, free parsing, edits or saves.
+- Deny HTTP access to private config, editor files and plaintext backup variants, including mixed-case names, when Apache/LiteSpeed honors .htaccess.
+- Retain all current workout fields, photos, user data and versioned history; persist only quota timestamp counters in ignored private storage. Add concurrency and config-filename tests.
+
+## v1.8.0 — 2026-10-31
+
+- Fix parsing of **33:18 min:sec** as 33 whole minutes and 18 remaining seconds, not 18 minutes. Recognize colon-form and explicit minute/second descriptions without an external AI key.
+- Add a separate optional **Seconds (0–59)** input in mobile quick-review, manual entry and historical edit forms; display accurate MM:SS on saved workout cards and details.
+- Keep existing duration_minutes records and user-created custom "Seconds" measurements untouched; only new or deliberately edited entries gain duration_seconds. Maintain edit audit/conflict checks and older-client compatibility.
+- Add a **Graph view** selector for **Each workout + running total**, **Each workout** or **Running total** for additive measures, including miles, duration, calories, repetition totals and lifted volume. Display a two-series legend and exact cumulative totals.
+- Prevent misleading summation of non-additive values such as MPH, incline, BPM and single-set weight. Respect exercise and tracking-tag selections.
+- Add isolated PHP and Node.js parsing, storage, chart and phone-layout regression tests to CI. No production data migrations or writes.
+
+## v1.7.0 — 2026-10-27 (Issue #135)
+
+- Allow adding **multiple private pictures to an already-saved workout** from the Edit screen using a mobile file picker (up to 5 files per request, 12 total, max 5 MB each); no older image is replaced.
+- Retain legacy single `photo` and add optional append-only `photos` filename list with entry ID ownership, unique names, strict MIME/image validation, and stale-revision rejection.
+- Display all saved pictures inside the authenticated Details gallery. Photo links accept only entry ID and zero-based index; private ZIP export includes both legacy and new images.
+- Provide a responsive User Management link and CSRF-protected **Sign out** action through the existing shared portal.
+- Add explicit **Stay signed in for 7 days** checkbox at central login, retaining normal 30-minute idle session by default. Bounded persistent cookie uses HttpOnly, SameSite Strict, secure HTTPS and server-side session expiry; logout still revokes access.
+- Add synthetic regression tests for multiple media references and backups and an isolated HTTP login/expiry/logout test. No migration or direct live storage changes.
+
+## v1.6.0 — 2026-10-27
+
+- Add four attendance metrics: 7-day calendar / weekday percentages and overall calendar / weekday percentages, each starting no earlier than the first workout date.
+- Count distinct workout dates, not individual exercises. Example on October 27 for dates 21, 22, 27: **3/7 = 42.9%** and **3/5 = 60.0%**.
+- Show current and longest streaks for calendar days and weekdays only; weekends do not break weekday streaks, and today is treated as unfinished.
+- Mobile-ready two-column cards and a seven-day history strip with completed, missing and weekend statuses. Adapt to very narrow phone screens.
+- Keep everything read-only from existing per-user workout dates: no migration, new database table, JSON edits, or data reset.
+- Add isolated calendar/DST/weekday regression tests and safe DOM mobile rendering tests.
+
+## v1.5.1 — 2026-10-27
+
+- Add optional, validated `heart_rate_bpm` (1–300 integer BPM) to exercise records without any JSON migration, replacement or legacy backfill.
+- Parse explicitly reported heart rate from no-key natural workout descriptions including **heart rate 143 bpm**, **HR 143**, **pulse 143**, or **143 bpm**. Avoid false positives from `1 hr 15 min` and avoid interpreting BPM as treadmill speed.
+- Show heart rate in mobile treadmill/cardio manual entry, review, editing, workout history and the private details viewer; other exercises can use **Show other measurements**.
+- Chart BPM per exercise, separate from speed/calories. Support explicit optional AI fallback output for BPM, with user review required before saving.
+- Keep past record/photo/session data intact and prevent older API clients from clearing heart-rate fields. Add parser, validation, stale-write, and mobile regression checks.
+
+## v1.5.0 — 2026-10-27
+
+- Add a mobile-first **Details** view for each saved workout, including notes, individual lifting sets, custom measurements, totals and edit history. Continue editing through the existing revision-checked **Edit** flow.
+- Serve uploaded photos through a **session-authorized, per-user file resolver**. Requests accept workout entry IDs, not filenames or paths, and reject cross-account access, traversal, symlinks and non-image content. Private storage remains denied by Apache/LiteSpeed.
+- Add an authenticated, CSRF-protected **Download my workout backup** ZIP action with unchanged original JSON plus only owned referenced photos. Archives are prepared outside the web root and never replace or delete live data.
+- Reject incomplete exports when a stored photo is missing. Keep restoration as a separate, explicitly authorized administrator process.
+- Add PHP media/backup integrity tests and JavaScript detail-view/mobile regression tests to CI, plus a Hostinger backup and recovery runbook.
+- No database migration or change to existing JSON file names, record IDs, edit history, photos or version-1 schema.
+
+## v1.4.0 — 2026-10-27 (Issue #128)
+
+- Optional calories burned (kcal) and arbitrary validated named numeric measurements, each with unit and individual exercise chart.
+- Repeatable per-set weight/reps entries for a single strength session; calculate total repetitions, heaviest set and accurate total lifted volume.
+- Extract calories and ordered varying set loads from natural-language workout descriptions without an AI key; extend explicit optional AI schema.
+- Add thumb-friendly per-set and custom-measurement editors in quick-entry review, manual entry and existing-record editing.
+- Protect historical user data: optional fields only, unchanged per-user JSON files and schema envelope, locked revision-checked edits, audit snapshots, backward-compatible older-client updates.
+- Add PHP preservation/regression tests, Node editor tests and CI validation. No migration or automatic modifications of stored workouts.
+
+## v1.3.2 — 2026-10-27
+
+- Display only measurements relevant to the named exercise across natural-language review, manual entry and editing saved workouts (e.g. no reps/sets for treadmill; weights/reps/sets for bench press).
+- Provide **Show other measurements** for unusual combinations, retaining hidden historical values in the existing form and JSON fields without any storage migration.
+- Make mobile fields single-column and ensure date/time inputs cannot overlap adjacent fields on iOS.
+- Limit trend measurement choices to relevant exercise fields plus any atypical values already stored.
+- Add regression checks for treadmill/strength field visibility, preservation of untouched entry values and date/time layout rules.
+
+## v1.3.1 — 2026-10-27
+
+- Fix tapping **Edit** silently failing because the editor attempted to add an empty CSS class token and stopped with a browser `DOMException`.
+- Add a regression test simulating the actual history Edit click and verifying the form opens with existing values, including missing optional fields, without modifying data.
+- Bump the JavaScript cache query to `app.js?v=1.3.1`; no storage schema changes or workout-file migrations.
 
 ## v1.3.0 — 2026-10-22
 
@@ -17,14 +91,6 @@ Changelog: 1.3.0 - Document v1.3.0 non-destructive edits, tags and incline. 1.2.
 - Add freeform **tracking tag** labels to new and existing workouts; filter workout history and the exercise chart by tag.
 - Track optional treadmill `incline_percent` separately from speed/distance with local parsing and charting; existing workouts keep missing incline until explicitly entered.
 - Add isolated JSON preservation tests, parser cases, PHP/JS validation workflow and Apache/LiteSpeed protection for CLI-only tests.
-
-## v1.2.1 — 2026-10-21
-
-- Deny case-insensitive `config.local` prefixes, including hidden editor files and backup suffixes.
-- Limit both optional paid AI action aliases to 5 attempts per rolling minute and 50 per rolling 24 hours per central account; atomically reserve before provider calls and return 429 with retry timing when exhausted.
-- Exempt non-demo central Super Admins and optionally configured stable user IDs; retain all authentication, project-access, CSRF and per-call token controls. Demo accounts remain limited.
-- Keep existing private configs intact and apply defaults when new settings are absent. Persist private quota records separately from workout entries with framework locks/atomic writes.
-- Add quota/concurrency/config-filename regressions and Workout Tracker CI. Hostinger deny enforcement and live role/provider checks remain deployment validation steps.
 
 ## v1.2.0 — 2026-10-21
 

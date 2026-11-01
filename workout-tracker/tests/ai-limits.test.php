@@ -81,6 +81,11 @@ try {
     }
     check($allowed === 2, 'Atomic reservation prevents concurrent quota bypass.');
 
+    // Corrupt optional quota settings must be rejected without making local
+    // workout history, parsing or saves depend on an external provider.
+    rejects(fn() => workout_ai_limits(['request_limits'=>['per_day'=>'50']]));
+    check(is_file(dirname(__DIR__).'/parse.php'), 'Local parser remains independent from paid AI.');
+
     $htaccess = file_get_contents(dirname(__DIR__).'/.htaccess');
     check(preg_match('/<FilesMatch "([^"]+)">/', $htaccess, $match) === 1, 'Deny expression exists.');
     $pattern = '%'.$match[1].'%';

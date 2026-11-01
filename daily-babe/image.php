@@ -35,7 +35,7 @@ if (!is_file($path)) {
 
 header('Content-Type: ' . (string) $match['mimeType']);
 header('Content-Length: ' . filesize($path));
-header('Cache-Control: private, max-age=86400');
+header('Cache-Control: private, no-store');
 header('X-Content-Type-Options: nosniff');
 readfile($path);
 

@@ -1,0 +1,8 @@
+date,ticker,type,quantity,amount,price,numerator,denominator,lot_id,note,external_id
+2020-07-01,DEMO,buy,0.25,25,0,0,0,,Synthetic purchase,demo-buy-1
+2021-07-20,DEMO,split,0,0,0,4,1,,Synthetic split,demo-split-1
+2024-06-10,DEMO,split,0,0,0,10,1,,Synthetic split,demo-split-2
+2025-02-12,DEMO,buy,1,130,0,0,0,,Synthetic later purchase,demo-buy-2
+2026-10-01,DEMO,dividend,0,0.10,0,0,0,,Synthetic cash dividend,demo-div-1
+2026-10-02,DEMO,sell,1,220,0,0,0,demo-buy-1,Synthetic allocated sale,demo-sell-1
+2026-10-28,DEMO,price,0,0,215,0,0,,Synthetic price snapshot,demo-price-1

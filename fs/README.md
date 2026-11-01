@@ -47,7 +47,7 @@ The scheduler pulls hourly on weekdays from 6:00 AM through 5:59 PM, every four 
 
 ### By-organization report (optional, separate from the main tracker)
 
-`index-org.php` charts new tickets per day by requester email domain. It is not linked from the main dashboard and is only reachable by its direct URL. It reads its own collector, `api/collect-org.php`, which pulls tickets for a configurable whitelist of agents (`org_agent_ids` in `config.local.php`) instead of the single `agent_id` the main dashboard tracks—so it can cover a small team without changing what the main dashboard's unresolved/goal numbers measure. Set `org_agent_ids` to the list of Freshservice agent IDs to include, then run it the same way as the main collector:
+`org.php` charts new tickets per day by requester email domain. It is not linked from the main dashboard and is only reachable by its direct URL. It reads its own collector, `api/collect-org.php`, which pulls tickets for a configurable whitelist of agents (`org_agent_ids` in `config.local.php`) instead of the single `agent_id` the main dashboard tracks—so it can cover a small team without changing what the main dashboard's unresolved/goal numbers measure. Set `org_agent_ids` to the list of Freshservice agent IDs to include, then run it the same way as the main collector:
 
 ```bash
 curl -fsS -H "Authorization: Bearer YOUR_COLLECTOR_TOKEN" https://jasr.me/github/fs/api/collect-org.php
@@ -86,4 +86,4 @@ Because Freshservice only provides the current ticket state in list results, the
 
 ## Private ticket review
 
-The review page is not linked from the main dashboard, like `index-org.php`. Open `review/` directly for a private companion workspace that reads the configured agent's unresolved tickets, full descriptions and paginated public/private conversations. It ranks attention by priority, SLA, age and idle time and offers optional AI next-step recommendations with verified evidence quotations and editable drafts. It never sends messages or changes ticket status. Add a separate `review_token` and optional AI settings to the existing local config. See [review setup and limitations](review/README.md).
+The review page is not linked from the main dashboard, like `org.php`. Open `review/` directly for a private companion workspace that reads the configured agent's unresolved tickets, full descriptions and paginated public/private conversations. It ranks attention by priority, SLA, age and idle time and offers optional AI next-step recommendations with verified evidence quotations and editable drafts. It never sends messages or changes ticket status. Add a separate `review_token` and optional AI settings to the existing local config. See [review setup and limitations](review/README.md).

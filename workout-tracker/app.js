@@ -1,17 +1,19 @@
 /* File Name: app.js
 Author: Jason Lamb (with help from ChatGPT)
 Description: Workout quick entry, editable review, and per-exercise trends.
-Revision: 1.3.0
+Revision: 1.8.0
 Created Date: 2026-10-21
-Modified Date: 2026-10-22
-Changelog: 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
+Modified Date: 2026-10-27
+Changelog: 1.8.0 - Keep MM:SS precise and overlay cumulative totals on each-workout charts. 1.7.0 - Multi-photo galleries and upload-after-save controls while keeping earlier uploads. 1.6.0 - Read-only workout attendance, weekday percentages and calendar/weekday streaks. 1.5.1 - Display and edit heart rate BPM with cardio-focused fields and separate trends. 1.5.0 - Add authenticated workout details/photo viewer and private backup download UI. 1.4.0 - Editable set-by-set weight/reps, custom measurements, calories and exercise-specific progress. 1.3.2 - Optimize mobile exercise fields, retain hidden measurements, and keep optional metrics near the measurements. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
 'use strict';
 const $=selector=>document.querySelector(selector);
-const measures=[['distance_miles','Miles'],['duration_minutes','Minutes'],['speed_mph','Speed (mph)'],['incline_percent','Treadmill incline (%)'],['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']];
+const measures=[['distance_miles','Miles'],['duration_minutes','Minutes'],['duration_seconds','Seconds (0–59)'],['speed_mph','Speed (mph)'],['incline_percent','Treadmill incline (%)'],['calories_kcal','Calories (kcal)'],['heart_rate_bpm','Heart rate (BPM)'],['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']];
 let entries=[];
 let editingId=null;
 let editingRevision=null;
 let showAllHistory=false;
+let manualAdvanced=null;
+let detailEntryId=null;
 function localDate(d=new Date()){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
 function localTime(d=new Date()){return [String(d.getHours()).padStart(2,'0'),String(d.getMinutes()).padStart(2,'0')].join(':');}
 function offset(d=new Date()){const n=-d.getTimezoneOffset(),a=Math.abs(n);return (n>=0?'+':'-')+String(Math.floor(a/60)).padStart(2,'0')+':'+String(a%60).padStart(2,'0');}
@@ -30,12 +32,127 @@ function fieldInput(name,label,value,type='number'){
  const input=document.createElement('input');input.type=type;input.dataset.field=name;input.value=value??'';
  if(type==='number'){input.min='0';input.step='any';}if(type==='text')input.maxLength=name==='tag'?64:80;
  if(name==='incline_percent')input.max='100';
+ if(name==='calories_kcal')input.max='100000';
+ if(name==='duration_seconds'){input.max='59';input.step='1';input.inputMode='numeric';}
+ if(name==='heart_rate_bpm'){input.min='1';input.max='300';input.step='1';input.inputMode='numeric';}
+ if(type==='number'&&name!=='duration_seconds'&&name!=='heart_rate_bpm')input.inputMode='decimal';
  wrapper.append(caption,input);return wrapper;
 }
 function describe(entry){
- return [entry.distance_miles!=null?entry.distance_miles+' mi':'',entry.duration_minutes!=null?entry.duration_minutes+' min':'',
- entry.speed_mph!=null?entry.speed_mph+' mph':'',entry.sets!=null?entry.sets+' sets':'',
- entry.reps!=null?entry.reps+' reps'+(entry.sets!=null?'/set':''):'',entry.weight_lb!=null?entry.weight_lb+' lb':'',entry.incline_percent!=null?entry.incline_percent+'% incline':''].filter(Boolean).join(' · ')||'Add measurements below';
+ const perSet=WorkoutAdvanced.stats(entry);
+ const parts=[
+  entry.distance_miles!=null?entry.distance_miles+' mi':'',
+  WorkoutTrends.formatDuration(entry)||'',
+  entry.speed_mph!=null?entry.speed_mph+' mph':'',
+  entry.incline_percent!=null?entry.incline_percent+'% incline':'',
+  entry.calories_kcal!=null?entry.calories_kcal+' kcal':'',
+  entry.heart_rate_bpm!=null?entry.heart_rate_bpm+' bpm':'',
+ ];
+ if(perSet){
+  parts.push(perSet.set_count+' sets',perSet.total_reps+' total reps');
+  if(perSet.max_weight_lb!==null){
+   parts.push(perSet.max_weight_lb+' lb heaviest');
+   parts.push(perSet.total_volume_lb+' lb volume');
+  }
+ }else{
+  parts.push(entry.sets!=null?entry.sets+' sets':'',
+    entry.reps!=null?entry.reps+' reps'+(entry.sets!=null?'/set':''):'',
+    entry.weight_lb!=null?entry.weight_lb+' lb':'');
+ }
+ if(Array.isArray(entry.custom_metrics)&&entry.custom_metrics.length)
+  parts.push(entry.custom_metrics.length+' custom metric'+(entry.custom_metrics.length===1?'':'s'));
+ return parts.filter(Boolean).join(' · ')||'Add measurements below';
+}
+
+/**
+ * Presentation only: no schema migration or data deletion. A hidden measurement
+ * stays in the input and is submitted unchanged when editing an older record.
+ */
+function visibleFieldsForExercise(exercise){
+ const name=String(exercise||'').toLowerCase().trim().replace(/\s+/g,' ');
+ if(/tread\s?mill/.test(name)) return ['distance_miles','duration_minutes','duration_seconds','speed_mph','incline_percent','calories_kcal','heart_rate_bpm'];
+ if(/^(walking|walk|hiking|running|run|cycling|bike|biking|stationary bike|rowing|swimming|elliptical|stairs)$/.test(name))
+  return ['distance_miles','duration_minutes','duration_seconds','speed_mph','calories_kcal','heart_rate_bpm'];
+ if(/^(bench press|deadlift|weight training|weight lifting)$/.test(name))
+  return ['weight_lb','reps','sets'];
+ if(/^(push-ups|pushups|sit-ups|situps|squats|lunges|crunches|jumping jacks)$/.test(name))
+  return ['reps','sets'];
+ if(/^(plank|yoga)$/.test(name)) return ['duration_minutes','duration_seconds','sets'];
+ return measures.map(([key])=>key); // Unknown/custom exercises can use all existing metrics.
+}
+/**
+ * Hide unrelated fields by default but offer a safe override.
+ * Empty/historical values remain in the DOM and are never discarded.
+ */
+function installExerciseVisibility(grid,exerciseInput){
+ const button=document.createElement('button');
+ button.type='button';button.className='secondary-action other-metrics';
+ button.textContent='Show other measurements';
+ button.hidden=true;button.dataset.expanded='no';
+ // Keep the expand control alongside measurements, not below notes or photos.
+ const detailsStart=Array.from(grid.children).find(label=>
+  String(label.tagName).toLowerCase()==='label' &&
+  Array.from(label.children).some(child=>['tag','notes','photo','time_local'].includes(
+   child.dataset?.field||child.name
+  ))
+ );
+ if(detailsStart)grid.insertBefore(button,detailsStart);
+ else grid.append(button);
+ const allKeys=new Set(measures.map(([key])=>key));
+ function update(){
+  const visible=new Set(visibleFieldsForExercise(exerciseInput?.value));
+  let others=0,savedHidden=0;
+  for(const label of Array.from(grid.children)){
+   if(String(label.tagName).toLowerCase()!=='label')continue;
+   const field=Array.from(label.children).find(child=>{
+    const key=child.dataset?.field||child.name;
+    return allKeys.has(key);
+   });
+   if(!field)continue;
+   const key=field.dataset?.field||field.name;
+   const extra=!visible.has(key);
+   if(extra){others++;if(field.value!==''&&field.value!=null)savedHidden++;}
+   label.hidden=extra&&button.dataset.expanded!=='yes';
+  }
+  button.hidden=others===0;
+  button.textContent=button.dataset.expanded==='yes'?'Hide other measurements':
+   'Show other measurements'+(savedHidden?' ('+savedHidden+' saved)':'');
+ }
+ button.addEventListener('click',()=>{button.dataset.expanded=button.dataset.expanded==='yes'?'no':'yes';update();});
+ exerciseInput?.addEventListener('input',()=>{button.dataset.expanded='no';update();});
+ update();
+ return update;
+}
+function refreshChartMetrics(){
+ const exercise=$('#exerciseFilter').value;
+ const allowed=new Set(visibleFieldsForExercise(exercise));
+ const existing=entries.filter(record=>record.exercise===exercise);
+ const base=measures.filter(([key])=>key!=='duration_seconds' && (allowed.has(key)||existing.some(row=>row[key]!=null)));
+ if(existing.some(row=>row.duration_seconds!=null) && !base.some(([key])=>key==='duration_minutes'))
+  base.push(['duration_minutes','Duration (minutes)']);
+ const detailed=existing.some(row=>Array.isArray(row.sets_detail)&&row.sets_detail.length>0);
+ if(detailed)base.push(
+  ['set_count','Set count'],['total_reps','Total reps'],
+  ['max_weight_lb','Heaviest set (lb)'],['total_volume_lb','Total volume (lb)']
+ );
+ const known=new Set();
+ for(const row of existing){
+  if(!Array.isArray(row.custom_metrics))continue;
+  for(const metric of row.custom_metrics){
+   if(typeof metric?.name!=='string'||typeof metric?.unit!=='string')continue;
+   const key=WorkoutAdvanced.customKey(metric.name,metric.unit);
+   if(!known.has(key)){
+    known.add(key);
+    base.push([key,metric.name+(metric.unit?' ('+metric.unit+')':'')]);
+   }
+  }
+ }
+ const select=$('#metric'),previous=select.value;
+ select.replaceChildren(...base.map(([key,label])=>{
+  const option=document.createElement('option');option.value=key;
+  option.textContent=label;return option;
+ }));
+ if(base.some(([key])=>key===previous))select.value=previous;
 }
 function renderReview(suggestions){
  const list=$('#reviewList');list.replaceChildren();$('#sessionTime').value=localTime();
@@ -49,13 +166,18 @@ function renderReview(suggestions){
   const date=document.createElement('span');date.className='date-chip';date.textContent=niceDay(entry.date);top.append(left,date);
   const details=document.createElement('details'),heading=document.createElement('summary');heading.textContent='Edit measurements or date';
   const grid=document.createElement('div');grid.className='field-grid';
-  grid.append(fieldInput('exercise','Exercise',entry.exercise,'text'),fieldInput('date','Workout date',entry.date,'date'));
+  const exerciseField=fieldInput('exercise','Exercise',entry.exercise,'text');
+  exerciseField.classList.add('full');
+  grid.append(exerciseField,fieldInput('date','Workout date',entry.date,'date'));
   measures.forEach(item=>grid.append(fieldInput(item[0],item[1],entry[item[0]])));
   const tagInput=fieldInput('tag','Tracking tag',entry.tag||'','text');tagInput.classList.add('full');grid.append(tagInput);
   const notes=document.createElement('label');notes.className='field full';
   const nt=document.createElement('span');nt.textContent='Notes';
   const ta=document.createElement('textarea');ta.dataset.field='notes';ta.rows=2;ta.maxLength=2000;ta.value=entry.notes||'';
-  notes.append(nt,ta);grid.append(notes);details.append(heading,grid);card.append(top,details);list.append(card);
+  notes.append(nt,ta);grid.append(notes);
+  installExerciseVisibility(grid,exerciseField.children[1]);
+  WorkoutAdvanced.attach(grid,entry,exerciseField.children[1]);
+  details.append(heading,grid);card.append(top,details);list.append(card);
  });
  $('#review').hidden=false;$('#review').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
@@ -63,6 +185,7 @@ function collect(){
  return Array.from($('#reviewList').querySelectorAll('.review-card'),card=>{
   const row={};card.querySelectorAll('[data-field]').forEach(input=>{row[input.dataset.field]=input.value;});
   if(!row.exercise.trim())throw Error('Enter an exercise name.');if(!row.date)throw Error('Select an exercise date.');
+  Object.assign(row,WorkoutAdvanced.collect(card));
   return row;
  });
 }
@@ -93,29 +216,215 @@ async function save(rows,photo=null){
   const result=await api(data);$('#note').value='';$('#photo').value='';$('#entryTag').value='';$('#review').hidden=true;
   message('Saved '+result.entries.length+' exercise'+(result.entries.length===1?'':'s')+'. Every session counts.');
   await load();window.scrollTo({top:0,behavior:'smooth'});
- }catch(e){message(e.message,true);}finally{button.disabled=false;button.textContent='Save workout';}
+  return true;
+ }catch(e){message(e.message,true);return false;}finally{button.disabled=false;button.textContent='Save workout';}
 }
 function historyItems(){
  const tag=$('#historyTag').value;
  return entries.slice().filter(e=>!tag||(e.tag||'')===tag)
   .sort((a,b)=>(b.performed_at||b.date).localeCompare(a.performed_at||a.date));
 }
+
+
+/** Existing single-photo records and new arrays coexist without migration. */
+function workoutPhotoCount(entry) {
+ return (typeof entry.photo==='string' && entry.photo!==''?1:0)+
+  (Array.isArray(entry.photos)?entry.photos.filter(name=>typeof name==='string'&&name!=='').length:0);
+}
+function renderExistingPhotoCount(entry){
+ const count=workoutPhotoCount(entry);
+ $('#existingPhotos').textContent=count+
+  ' picture'+(count===1?'':'s')+' already saved. You can add '+Math.max(0,12-count)+' more.';
+ const button=$('#addPhotosButton');button.disabled=count>=12;
+ $('#savedPhotos').disabled=count>=12;
+}
+
+/** Mobile-readable workout detail view. All user-provided content uses textContent. */
+function openWorkoutDetails(id){
+ const entry=entries.find(row=>row.id===id);
+ if(!entry){message('That workout is no longer available. Refresh your history.',true);return;}
+ detailEntryId=id;
+ const title=$('#detailTitle');title.textContent=titleCase(entry.exercise)+' details';
+ $('#detailDate').textContent=niceDay(entry.date)+
+  (typeof entry.performed_at==='string'?' · '+entry.performed_at.slice(11,16)+' local time':'')+
+  (entry.tag?' · #'+entry.tag:'');
+ const region=$('#detailSummary');region.replaceChildren();
+ const fact=(label,value)=>{
+  const row=document.createElement('div');row.className='detail-fact';
+  const term=document.createElement('span');term.className='detail-label';term.textContent=label;
+  const amount=document.createElement('strong');amount.textContent=String(value);
+  row.append(term,amount);region.append(row);
+ };
+ const labels={
+  distance_miles:['Distance', ' miles'],
+  // Seconds are combined with minutes into a single accurate duration value.
+  speed_mph:['Speed',' mph'],
+  incline_percent:['Treadmill incline','%'],
+  calories_kcal:['Calories burned',' kcal'],
+  heart_rate_bpm:['Heart rate',' BPM'],
+  reps:['Reps (legacy summary)',''],
+  sets:['Sets (legacy summary)',''],
+  weight_lb:['Weight (legacy summary)',' lb']
+ };
+ const formattedDuration=WorkoutTrends.formatDuration(entry);
+ if(formattedDuration)fact('Duration',formattedDuration);
+ Object.entries(labels).forEach(([key,[label,unit]])=>{
+  if(entry[key]!==null && entry[key]!==undefined && entry[key]!=='')
+   fact(label,entry[key]+unit);
+ });
+ const stats=WorkoutAdvanced.stats(entry);
+ if(stats){
+  const heading=document.createElement('h3');heading.textContent='Individual sets';region.append(heading);
+  const list=document.createElement('ol');list.className='detail-sets';
+  entry.sets_detail.forEach((set,index)=>{
+   const item=document.createElement('li');
+   const label=document.createElement('span');label.textContent=
+    'Set '+(index+1)+': '+(set.weight_lb==null?'Bodyweight':set.weight_lb+' lb')+' × '+set.reps+' reps';
+   item.append(label);
+   if(set.note){const note=document.createElement('small');note.textContent=String(set.note);item.append(note);}
+   list.append(item);
+  });
+  region.append(list);
+  fact('Total repetitions',stats.total_reps);
+  if(stats.max_weight_lb!==null){
+   fact('Heaviest set',stats.max_weight_lb+' lb');
+   fact('Total lifted volume',stats.total_volume_lb+' lb');
+  }
+ }
+ if(Array.isArray(entry.custom_metrics) && entry.custom_metrics.length){
+  const heading=document.createElement('h3');heading.textContent='Additional measurements';region.append(heading);
+  entry.custom_metrics.forEach(metric=>{
+   if(typeof metric?.name==='string')
+    fact(metric.name,String(metric.value??'')+(metric.unit?' '+metric.unit:''));
+  });
+ }
+ if(entry.notes){
+  const heading=document.createElement('h3');heading.textContent='Notes';region.append(heading);
+  const note=document.createElement('p');note.className='detail-notes';note.textContent=entry.notes;
+  region.append(note);
+ }
+ if(Array.isArray(entry.edit_history) && entry.edit_history.length){
+  const history=document.createElement('details');
+  const summary=document.createElement('summary');
+  summary.textContent='Edit history · '+entry.edit_history.length+' previous version'+
+   (entry.edit_history.length===1?'':'s');
+  history.append(summary);
+  // Read-only audit details: no restoration/write operation.
+  entry.edit_history.slice(-10).reverse().forEach(change=>{
+   const previous=change.previous;
+   if(!previous || typeof previous!=='object')return;
+   const paragraph=document.createElement('p');paragraph.className='footnote';
+   paragraph.textContent=(change.edited_at||'Edited')+' — '+
+    (previous.exercise||'Workout')+' · '+(previous.date||'')+
+    ' · '+describe(previous)+(previous.notes?' · '+previous.notes:'');
+   history.append(paragraph);
+  });
+  region.append(history);
+ }
+ const media=$('#detailImage');media.replaceChildren();media.hidden=true;
+ const photoCount=workoutPhotoCount(entry);
+ if(photoCount>0){
+  const heading=document.createElement('h3');
+  heading.textContent='Workout pictures ('+photoCount+')';
+  const gallery=document.createElement('div');gallery.className='detail-gallery';
+  for(let index=0;index<photoCount;index++){
+   const item=document.createElement('figure');item.className='detail-photo';
+   const image=document.createElement('img');
+   const src='?photo='+encodeURIComponent(id)+'&image='+index;
+   image.src=src;image.alt='Private workout picture '+(index+1)+' of '+photoCount;
+   image.loading='lazy';
+   const fallback=document.createElement('p');
+   fallback.className='footnote';fallback.textContent='Picture unavailable. Check private storage.';
+   fallback.hidden=true;
+   image.addEventListener('error',()=>{image.hidden=true;fallback.hidden=false;});
+   const caption=document.createElement('figcaption');
+   const link=document.createElement('a');
+   link.href=src;link.target='_blank';link.rel='noopener noreferrer';
+   link.textContent='Open picture '+(index+1)+' full size';
+   caption.append(link);
+   item.append(image,fallback,caption);gallery.append(item);
+  }
+  const privacy=document.createElement('p');privacy.className='footnote';
+  privacy.textContent='Pictures are visible only to your authenticated account.';
+  media.append(heading,gallery,privacy);media.hidden=false;
+ }
+ $('#detailPanel').hidden=false;
+ $('#detailPanel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function closeWorkoutDetails(){
+ detailEntryId=null;$('#detailPanel').hidden=true;$('#detailImage').replaceChildren();
+}
+
 function renderHistory(){
  const history=historyItems(),visible=showAllHistory?history:history.slice(0,10);
  $('#recent').replaceChildren(...visible.map(e=>{
   const li=document.createElement('li'),name=document.createElement('strong');name.textContent=titleCase(e.exercise);
   const day=document.createElement('span');day.textContent=niceDay(e.date);
-  const detail=document.createElement('small');detail.textContent=describe(e)+(e.tag?' · #'+e.tag:'')+(e.photo?' · Photo saved':'');
+  const detail=document.createElement('small');detail.textContent=describe(e)+(e.tag?' · #'+e.tag:'')+(workoutPhotoCount(e)?' · '+workoutPhotoCount(e)+' picture'+(workoutPhotoCount(e)===1?'':'s'):'');
+  const actions=document.createElement('div');actions.className='history-actions';
+  const view=document.createElement('button');view.type='button';view.className='history-edit history-view';
+  view.textContent='Details';view.disabled=!e.id;
+  view.setAttribute('aria-label','View '+e.exercise+' details from '+niceDay(e.date));
+  view.addEventListener('click',()=>openWorkoutDetails(e.id));
   const edit=document.createElement('button');edit.type='button';edit.className='history-edit';
   edit.textContent='Edit';edit.dataset.editId=e.id||'';
   edit.disabled=!e.id||!e._revision;edit.setAttribute('aria-label','Edit '+e.exercise+' from '+niceDay(e.date));
-  li.append(name,day,detail,edit);return li;
+  actions.append(view,edit);li.append(name,day,detail,actions);return li;
  }));
  const toggle=$('#toggleHistory');toggle.hidden=history.length<=10;
  toggle.textContent=showAllHistory?'Show latest 10':'View all '+history.length+' entries';
  $('#empty').hidden=entries.length>0;
 }
+/**
+ * All attendance comes from existing saved workout dates: zero writes or new
+ * schema fields. Calculate using the browser's local today and unique dates.
+ */
+function refreshAttendance(){
+ const stats=WorkoutAttendance.calculate(entries,localDate());
+ const panel=$('#attendancePanel');panel.hidden=!stats.hasData;
+ if(!stats.hasData)return;
+ $('#attendanceStart').textContent='Since '+niceDay(stats.firstDate);
+ const pairs=[
+  ['attendance7',stats.rollingCalendar],
+  ['attendanceWeek7',stats.rollingWeekdays],
+  ['attendanceOverall',stats.calendar],
+  ['attendanceOverallWeek',stats.weekdays]
+ ];
+ pairs.forEach(([prefix,value])=>{
+  $('#'+prefix+'Percentage').textContent=value.percentage.toFixed(1)+'%';
+  $('#'+prefix+'Count').textContent=value.attended+' of '+value.eligible+
+   (prefix.includes('Week')?' weekdays':' days');
+ });
+ const streaks=[
+  ['attendanceCurrentStreak',stats.calendarStreak.current],
+  ['attendanceLongestStreak',stats.calendarStreak.longest],
+  ['attendanceCurrentWeekStreak',stats.weekdayStreak.current],
+  ['attendanceLongestWeekStreak',stats.weekdayStreak.longest]
+ ];
+ streaks.forEach(([id,value])=>{$('#'+id).textContent=value+' day'+(value===1?'':'s');});
+ const strip=$('#attendanceStrip');
+ strip.replaceChildren(...stats.lastSeven.map(item=>{
+  const el=document.createElement('div');el.className='attendance-day';
+  if(item.attended)el.classList.add('attended');
+  else if(!item.weekday)el.classList.add('weekend');
+  if(item.today)el.classList.add('today');
+  const date=new Date(item.date+'T12:00:00');
+  const weekday=document.createElement('span');weekday.className='attendance-dayname';
+  weekday.textContent=date.toLocaleDateString(undefined,{weekday:'short'});
+  const mark=document.createElement('span');mark.className='attendance-mark';
+  mark.textContent=item.attended?'✓':(item.weekday?'·':'–');
+  const day=document.createElement('span');day.className='attendance-daynumber';
+  day.textContent=String(date.getDate());
+  el.setAttribute('aria-label',date.toLocaleDateString(undefined,{
+   weekday:'long',month:'long',day:'numeric',year:'numeric'})+
+   ': '+(item.attended?'workout recorded':item.weekday?'no workout recorded':'weekend, no workout recorded'));
+  el.append(weekday,mark,day);
+  return el;
+ }));
+}
+
 function refresh(){
+ refreshAttendance();
  $('#sessions').textContent=new Set(entries.map(e=>e.session_id||e.date)).size;
  $('#count').textContent=entries.length;
  $('#minutes').textContent=entries.reduce((v,e)=>v+(Number(e.duration_minutes)||0),0).toFixed(0);
@@ -130,11 +439,11 @@ function refresh(){
  const kinds=[...new Set(entries.map(e=>e.exercise))].sort(),select=$('#exerciseFilter'),old=select.value;
  select.replaceChildren(...kinds.map(k=>{const o=document.createElement('option');o.value=k;o.textContent=titleCase(k);return o;}));
  if(kinds.includes(old))select.value=old;
- $('#trendPanel').hidden=kinds.length===0;draw();
+ $('#trendPanel').hidden=kinds.length===0;refreshChartMetrics();draw();
 }
 function editField(name,label,value,type='number'){
  const input=fieldInput(name,label,value,type);
- input.classList.add(name==='exercise'||name==='tag'?'full':'');
+ if(name==='exercise'||name==='tag')input.classList.add('full');
  return input;
 }
 function beginEdit(id){
@@ -142,7 +451,8 @@ function beginEdit(id){
  if(!entry||!entry._revision){message('Entry no longer available. Refresh the page.',true);return;}
  editingId=id;editingRevision=entry._revision;
  const grid=$('#editFields');grid.replaceChildren();
- grid.append(editField('exercise','Exercise',entry.exercise,'text'),editField('date','Workout date',entry.date,'date'));
+ const exerciseField=editField('exercise','Exercise',entry.exercise,'text');
+ grid.append(exerciseField,editField('date','Workout date',entry.date,'date'));
  measures.forEach(([key,label])=>grid.append(editField(key,label,entry[key])));
  grid.append(editField('tag','Tracking tag (optional)',entry.tag||'','text'));
  const notes=document.createElement('label');notes.className='field full';
@@ -154,17 +464,67 @@ function beginEdit(id){
  grid.append(editField('time_local','Local time (optional)',match?match[1]:'','time'));
  const timezone=document.createElement('input');timezone.type='hidden';timezone.dataset.field='utc_offset';
  timezone.value=match?match[2]:offset();grid.append(timezone);
+ installExerciseVisibility(grid,exerciseField.children[1]);
+ WorkoutAdvanced.attach(grid,entry,exerciseField.children[1]);
+ renderExistingPhotoCount(entry);
+ $('#savedPhotos').value='';
+ $('#photoStatus').textContent='';
  $('#editPanel').hidden=false;$('#editStatus').textContent='Original entry and changes are kept in your private workout history.';
  $('#editPanel').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function closeEdit(){
  editingId=null;editingRevision=null;$('#editPanel').hidden=true;$('#editFields').replaceChildren();
 }
+async function uploadSavedPhotos(){
+ const fileInput=$('#savedPhotos'),files=Array.from(fileInput.files||[]);
+ if(!editingId||!editingRevision){$('#photoStatus').textContent='Open a saved workout to attach pictures.';return;}
+ if(!files.length){$('#photoStatus').textContent='Choose pictures to add.';return;}
+ if(files.length>5){$('#photoStatus').textContent='Select up to five pictures at a time.';return;}
+ if(files.some(file=>file.size===0||file.size>5*1024*1024)){
+  $('#photoStatus').textContent='Each picture must be between 1 byte and 5 MB.';return;
+ }
+ const existing=entries.find(e=>e.id===editingId);
+ if(!existing||workoutPhotoCount(existing)+files.length>12){
+  $('#photoStatus').textContent='This workout has a limit of 12 pictures.';return;
+ }
+ const btn=$('#addPhotosButton'),csrf=payload('append_photos');
+ csrf.set('entry_id',editingId);csrf.set('expected_revision',editingRevision);
+ files.forEach(file=>csrf.append('photos[]',file,file.name));
+ btn.disabled=true;btn.textContent='Uploading pictures…';
+ try{
+  const result=await api(csrf);
+  editingRevision=result.entry._revision;
+  fileInput.value='';
+  $('#photoStatus').textContent=result.attached+' picture'+(result.attached===1?'':'s')+' saved.';
+  await load();
+  renderExistingPhotoCount(result.entry);
+  message('Pictures attached to the selected workout. No existing pictures were replaced.');
+ }catch(err){
+  $('#photoStatus').textContent=err.message;
+  if(/changed elsewhere|edited elsewhere|reload/i.test(err.message)){
+   message('Workout changed since the editor opened. Refresh and try again.',true);
+  }
+ }finally{
+  btn.textContent='Add selected pictures';
+  const current=entries.find(e=>e.id===editingId);
+  btn.disabled=!current||workoutPhotoCount(current)>=12;
+ }
+}
+
 async function submitEdit(){
  if(!editingId||!editingRevision)return;
  const button=$('#confirmEdit'),row={};
  $('#editFields').querySelectorAll('[data-field]').forEach(input=>{row[input.dataset.field]=input.value;});
+ // Old records without heart rate must remain unchanged unless the user enters one.
+ for(const optional of ['heart_rate_bpm','duration_seconds']){
+  if(row[optional]==='' && editingId){
+   const original=entries.find(entry=>entry.id===editingId);
+   if(original && !Object.prototype.hasOwnProperty.call(original,optional))
+    delete row[optional];
+  }
+ }
  if(!row.time_local){delete row.time_local;delete row.utc_offset;}
+ try{Object.assign(row,WorkoutAdvanced.collect($('#editFields')));}catch(e){$('#editStatus').textContent=e.message;return;}
  if(!row.exercise.trim()||!row.date){$('#editStatus').textContent='Exercise and date are required.';return;}
  button.disabled=true;button.textContent='Saving changes…';
  try{
@@ -178,29 +538,72 @@ async function submitEdit(){
   if(e.message.toLowerCase().includes('changed elsewhere'))message('This entry was changed in another session. Refresh before editing.',true);
  }finally{button.disabled=false;button.textContent='Save changes to this entry';}
 }
+/**
+ * Additive measurements can be viewed per-session, running total, or both.
+ * Heart rate, speed, weight, and incline remain per-session only: adding them
+ * would not describe fitness progress. Existing JSON is never changed.
+ */
 function draw(){
- const c=$('#chart'),ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);
- const metric=$('#metric').value,exercise=$('#exerciseFilter').value;
- const tag=$('#historyTag').value;
- const points=entries.filter(e=>e.exercise===exercise&&(!tag||(e.tag||'')===tag)&&e[metric]!=null&&Number.isFinite(Number(e[metric])))
-  .sort((a,b)=>(a.performed_at||a.date).localeCompare(b.performed_at||b.date));
- const left=54,right=c.width-23,top=22,bottom=c.height-46;
+ const canvas=$('#chart'),ctx=canvas.getContext('2d');
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+ const metric=$('#metric').value,exercise=$('#exerciseFilter').value,tag=$('#historyTag').value;
+ const data=WorkoutTrends.chartSeries(entries,exercise,metric,tag,WorkoutAdvanced.metricValue);
+ const points=data.points;
+ const select=$('#trendMode'),scope=$('#trendScope'),modeLabel=$('#trendModeLabel');
+ const available=data.additive;
+ select.disabled=!available;
+ modeLabel.hidden=!available;
+ scope.textContent=available?
+  'Running total adds the selected measurement across these '+exercise+' workouts'+(tag?' tagged #'+tag:'')+'.':
+  'This metric is a rate or measurement, not an additive total. Showing each workout only.';
+ const requested=select.value;
+ const mode=available?requested:'individual';
+ const series=[];
+ if(mode==='both'||mode==='individual')series.push({key:'individual',label:'Each workout',color:'#59dbc3'});
+ if(available && (mode==='both'||mode==='running'))series.push({key:'running',label:'Running total',color:'#e2b56e'});
+ const legend=$('#trendLegend');legend.replaceChildren(...series.map(item=>{
+  const span=document.createElement('span');span.className='trend-key';
+  const swatch=document.createElement('span');swatch.className='trend-swatch';
+  swatch.style.backgroundColor=item.color;swatch.setAttribute('aria-hidden','true');
+  span.append(swatch,document.createTextNode(item.label));
+  return span;
+ }));
+ const c=canvas,left=54,right=c.width-23,top=22,bottom=c.height-46;
  ctx.font='14px system-ui';ctx.strokeStyle='#36546d';ctx.fillStyle='#aebfd0';ctx.lineWidth=1;
  ctx.beginPath();ctx.moveTo(left,top);ctx.lineTo(left,bottom);ctx.lineTo(right,bottom);ctx.stroke();
  if(!points.length){$('#trend').textContent='Choose a logged measurement to see its trend.';return;}
- const vals=points.map(e=>Number(e[metric]));let high=Math.max(...vals),low=Math.min(0,...vals);if(high===low)high=low+1;
- for(let i=0;i<4;i++){const value=low+(high-low)*i/3,y=bottom-i*(bottom-top)/3;
-  ctx.fillText(value.toFixed(value<10?1:0),5,y+5);
-  ctx.strokeStyle='#21394d';ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();
+ const values=points.flatMap(point=>series.map(item=>point[item.key]));
+ let high=Math.max(...values),low=Math.min(0,...values);
+ if(high===low)high=low+1;
+ const pretty=value=>Number(value.toFixed(2)).toLocaleString(undefined,{maximumFractionDigits:2});
+ for(let tick=0;tick<4;tick++){
+  const value=low+(high-low)*tick/3,y=bottom-tick*(bottom-top)/3;
+  ctx.fillStyle='#aebfd0';ctx.fillText(value.toFixed(Math.abs(value)<10?1:0),5,y+5);
+  ctx.strokeStyle='#21394d';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();
  }
- const coords=vals.map((v,i)=>({x:left+(right-left)*(points.length===1?.5:i/(points.length-1)),y:bottom-(v-low)/(high-low)*(bottom-top)}));
- ctx.strokeStyle='#59dbc3';ctx.lineWidth=3;ctx.beginPath();
- coords.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();
- ctx.fillStyle='#59dbc3';coords.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill();});
+ for(const item of series){
+  const coords=points.map((point,i)=>({
+   x:left+(right-left)*(points.length===1?.5:i/(points.length-1)),
+   y:bottom-(point[item.key]-low)/(high-low)*(bottom-top)
+  }));
+  ctx.strokeStyle=item.color;ctx.lineWidth=3;ctx.beginPath();
+  coords.forEach((point,i)=>i?ctx.lineTo(point.x,point.y):ctx.moveTo(point.x,point.y));
+  ctx.stroke();ctx.fillStyle=item.color;
+  coords.forEach(point=>{ctx.beginPath();ctx.arc(point.x,point.y,4,0,Math.PI*2);ctx.fill();});
+ }
  ctx.fillStyle='#aebfd0';ctx.fillText(niceDay(points[0].date),left,bottom+26);
- if(points.length>1){const text=niceDay(points.at(-1).date);ctx.fillText(text,right-ctx.measureText(text).width,bottom+26);}
- const change=vals.at(-1)-vals[0];
- $('#trend').textContent=points.length>1?points.length+' measurements · First '+vals[0]+' · Latest '+vals.at(-1)+' · Change '+(change>0?'+':'')+Number(change.toFixed(2)):'First measurement logged. Add another to see your trend.';
+ if(points.length>1){
+  const last=niceDay(points.at(-1).date);
+  ctx.fillText(last,right-ctx.measureText(last).width,bottom+26);
+ }
+ const first=points[0].individual,last=points.at(-1).individual;
+ const change=last-first;
+ const unit=metric==='duration_minutes'?' min':metric==='distance_miles'?' mi':
+  metric==='calories_kcal'?' kcal':metric==='total_volume_lb'?' lb':'';
+ $('#trend').textContent=points.length+' workouts · Latest '+pretty(last)+unit+
+  ' · First '+pretty(first)+unit+' · Change '+(change>0?'+':'')+pretty(change)+unit+
+  (available?' · Running total '+pretty(data.total)+unit:'');
 }
 async function load(){try{const data=await api();entries=data.entries;$('#csrf').value=data.csrf;
  const retry=$('#aiParseBtn');retry.dataset.enabled=data.ai_available?'yes':'';
@@ -208,23 +611,46 @@ async function load(){try{const data=await api();entries=data.entries;$('#csrf')
  $('#aiHint').textContent=data.ai_available
   ?'AI fallback is configured. Select it only when the local interpretation needs another try. Your description will be sent to your configured AI provider.'
   :'AI fallback is optional and disabled until config.local.example.php is copied to config.local.php on Hostinger with a private API key.';
- refresh();}catch(e){message(e.message,true);}}
+ $('#backupCsrf').value=data.csrf;
+ $('#backupBtn').disabled=!data.backup_available;
+ $('#backupStatus').textContent=data.backup_available
+  ?'This ZIP contains your original workout records, edit history and attached photos. Store it privately.'
+  :'ZIP exports are unavailable on this server; PHP ZipArchive must be enabled.';
+ refresh();
+ if(detailEntryId && !$('#detailPanel').hidden)openWorkoutDetails(detailEntryId);
+ }catch(e){message(e.message,true);}}
 $('#dateLabel').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
 $('#parseBtn').addEventListener('click',review);
 $('#aiParseBtn').addEventListener('click',retryWithAi);
 $('#note').addEventListener('input',()=>{$('#review').hidden=true;});
 $('#saveBtn').addEventListener('click',()=>{try{save(collect(),$('#photo').files[0]||null);}catch(e){message(e.message,true);}});
-$('#exerciseFilter').addEventListener('change',draw);$('#metric').addEventListener('change',draw);
+$('#exerciseFilter').addEventListener('change',()=>{refreshChartMetrics();draw();});$('#metric').addEventListener('change',draw);$('#trendMode').addEventListener('change',draw);
 $('#historyTag').addEventListener('change',()=>{showAllHistory=false;renderHistory();draw();});
 $('#toggleHistory').addEventListener('click',()=>{showAllHistory=!showAllHistory;renderHistory();});
 $('#recent').addEventListener('click',e=>{const button=e.target.closest('[data-edit-id]');if(button)beginEdit(button.dataset.editId);});
 $('#editForm').addEventListener('submit',e=>{e.preventDefault();submitEdit();});
 $('#cancelEdit').addEventListener('click',closeEdit);
+$('#photosForm').addEventListener('submit',event=>{event.preventDefault();uploadSavedPhotos();});
+$('#savedPhotos').addEventListener('change',()=>{
+ const current=entries.find(e=>e.id===editingId);
+ const files=$('#savedPhotos').files||[];
+ $('#addPhotosButton').disabled=!files.length||!current||workoutPhotoCount(current)+files.length>12;
+});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden && entries.length)refreshAttendance();});
+$('#closeDetail').addEventListener('click',closeWorkoutDetails);
+$('#editFromDetail').addEventListener('click',()=>{if(detailEntryId)beginEdit(detailEntryId);});
+$('#backupForm').addEventListener('submit',()=>{$('#backupStatus').textContent='Preparing your private backup download…';});
 $('#manualForm').addEventListener('submit',async e=>{
- e.preventDefault();const fd=new FormData(e.currentTarget),row=Object.fromEntries(fd.entries());
+ e.preventDefault();
+ const fd=new FormData(e.currentTarget),row=Object.fromEntries(fd.entries());
  const file=fd.get('photo'),photo=file instanceof File&&file.size?file:null;
  delete row.photo;row.date=row.date||localDate();$('#sessionTime').value=localTime();
- await save([row],photo);if(!$('#message').classList.contains('error'))e.currentTarget.reset();
+ try{Object.assign(row,WorkoutAdvanced.collect($('#manualForm .field-grid')));}
+ catch(err){message(err.message,true);return;}
+ const saved=await save([row],photo);
+ if(saved){e.currentTarget.reset();manualAdvanced?.reset();$('#manualDate').value=localDate();}
 });
 $('#manualDate').value=localDate();
+installExerciseVisibility($('#manualForm .field-grid'),$('#manualForm [name="exercise"]'));
+manualAdvanced=WorkoutAdvanced.attach($('#manualForm .field-grid'),{},$('#manualForm [name="exercise"]'));
 load();

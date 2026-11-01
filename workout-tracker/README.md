@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, key-free quick entry, optional AI and screenshot import guidance for Workout Tracker.
-Revision: 1.3.0
+Revision: 1.8.1
 Created Date: 2026-10-21
-Modified Date: 2026-10-22
-Changelog: 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.1 - Limit paid AI requests and deny config backups. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
+Modified Date: 2026-10-27
+Changelog: 1.8.1 - Document paid AI quotas and private configuration backup protection. 1.8.0 - First-class MM:SS duration and per-workout versus accumulated exercise trends. 1.7.0 - Multiple photo uploads on saved workouts, central logout/navigation and opt-in seven-day login. 1.6.0 - Read-only workout-day attendance and weekday streak dashboard. 1.5.1 - Optional heart rate in BPM, including local parsing, charts and safe edits. 1.5.0 - Authenticated photo/detail view and per-user ZIP backup, preserving live data. 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
 -->
 # Workout Tracker
 
@@ -14,12 +14,171 @@ Private PHP workout logger at https://jasr.me/github/workout-tracker/ using shar
 ## Quick entry — no API key required
 
 1. Open the tracker after signing into user-management. Type a sentence such as **"1.16 miles at 3.3 on treadmill for today for 22 minutes"**.
-2. Tap **Review workout**. The built-in PHP parser extracts exercise, distance, duration, speed, reps, sets, weight and date. Nothing is sent to an external AI provider.
+2. Tap **Review workout**. The built-in PHP parser extracts exercise, distance, duration, speed, **heart rate (BPM)**, reps, sets, weight and date when stated. Nothing is sent to an external AI provider.
 3. Review the compact result (e.g. Treadmill · 1.16 mi · 22 min · 3.3 mph), expand **Edit measurements or date** only if a correction is needed, then tap **Save workout** once.
 4. A sentence with multiple recognized exercises (e.g. "treadmill 1 mile in 20 minutes, then 20 push-ups") creates multiple separate exercise entries as one atomic session. Trends remain isolated by exercise and measurement.
 5. Dates default to the user's **browser-local current date**. Time defaults to the current local time at review. "Yesterday", "last Monday", an ISO date, and US numeric MM/DD/YYYY dates are supported for backdating. An optional time control exists under review details.
 
 The parser is rule-based rather than a general LLM. It recognizes common exercises and explicit numbers but does **not guess missing values**. Unrecognized exercises use the collapsed manual entry form. It does not analyze photos.
+
+
+## Optional paid AI request limits and config protection (v1.8.1)
+
+Both paid interpretation actions (`parse` and `parse_ai`) share one **per-account rolling request-count limit** of **5 per 60 seconds and 50 per 24 hours** by default. Requests are reserved atomically before external AI calls. When exhausted, the API returns HTTP **429** with `Retry-After`. Local parsing, edits, saves, photos and backups are not limited. Failed provider attempts count. The existing 1,800 maximum output-token setting is unchanged; quotas are **not billed-token or dollar budgets**.
+
+A trusted, **non-demo central Super Admin** is exempt after project authorization and CSRF validation. Additional user exemptions must use **stable central IDs**, never names, in private `config.local.php`. Optional `request_limits` can set integer `per_minute` and `per_day` thresholds (1–10,000) and a string-list `exempt_user_ids`. The committed `config.local.example.php` template documents these settings; existing ignored config files and API keys are never overwritten. Invalid optional quotas make **paid AI unavailable only**, without interrupting dashboard history or free entry.
+
+Per-user quota counters are stored as hashed-ID timestamps in ignored, HTTP-denied `storage/` files. No prompts or workouts are written to those counters. Preserve counters and lock files during Hostinger deployment and backup. The Workout Tracker `.htaccess` now denies HTTP access to `config.local` backup/editor variants such as `config.local.php.bak`, `config.local.php~`, `.config.local.php.swp`, and uppercase variants. **Verify HTTP 403 on Hostinger** with harmless fixtures and remove them; CI filename checks alone cannot establish server enforcement.
+
+Validate with `php workout-tracker/tests/ai-limits.test.php` (quota rollovers, parallel requests, corruption fail-closed, identity exemptions and backup pattern checks).
+
+## Exact workout duration and cumulative progress (v1.8.0)
+
+**Fix for 33:18:** Type *"Treadmill, 0 incline, 2.07 mile at 4 mph for 33:18 min:sec, 180 calories"*. The local parser recognizes **33 minutes, 18 seconds**, instead of incorrectly reading **18 minutes**. It also understands *"33 minutes 18 seconds"*, *"33:18"*, and *"for 33:18"*. The optional AI fallback has a matching seconds field.
+
+- **Form:** Cardio entries show **Minutes** and **Seconds (0–59)**. Seconds is now a dedicated field, not a user-defined metric. Any earlier user-created custom measurement called *Seconds* remains intact unless deliberately removed.
+- **Storage:** Optional duration_seconds stores remaining seconds (0–59) and duration_minutes stores whole minutes when the seconds field is present. Charting calculates duration_minutes + duration_seconds / 60. Example: 33:18 is **33.3 minutes**.
+- **Backward compatibility:** Existing records without duration_seconds retain their full previous duration_minutes value, including fractions. No migration, reset, deletion, or automatic edit. Old clients that omit the new field do not clear it. Edits remain revision-checked and audited.
+- **Updating the October 31 saved entry:** In **Edit**, set Minutes = 33 and Seconds = 18. The old custom Additional measurements → Seconds = 18 can then be manually removed if redundant. **Nothing is changed automatically** in live Hostinger data.
+- **Viewing:** Summaries and private workout details show 33:18 min:sec while calculations use 33.3 minutes.
+
+**Progress graph:** Select an exercise and measurement. For additive measurements (distance, duration, calories, total repetitions, set count and lifted volume), the Graph view offers **Each workout + running total** (default), **Each workout**, or **Running total**. The two colored series share a timeline and legend. Accumulation is restricted to the selected exercise and tag filter, and missing measurements are excluded. **Speed, heart rate, incline and weight are not summed**; they show per-session trends only.
+
+Example treadmill distances October 21, 22, 27 and 31: **1.16, 2.06, 2.05 and 2.07 miles**; running sums are **1.16, 3.22, 5.27 and 7.34 miles**. The four durations are 22, 37, 27 and **33.3 minutes**; running total **119.3 minutes**.
+
+Test commands (synthetic files, never live records):
+
+    php workout-tracker/tests/parse.test.php
+    php workout-tracker/tests/duration.test.php
+    node workout-tracker/tests/duration-trends.test.cjs
+    node workout-tracker/tests/chart-modes.test.cjs
+
+Verify the graph and edit UI on an iPhone after deployment, inspect old records/photos, and confirm the Hostinger webhook leaves runtime files untouched.
+
+## Multiple photos, account navigation and remembered login (v1.7.0; issue #135)
+
+**Photo uploads after saving:** Tap **Edit** on a previous workout, then scroll to **Add pictures to this workout**. Choose up to five JPEG, PNG or WebP images at once (max 5 MB each, 12 total per workout) using the phone's camera or photo library; tap **Add selected pictures**. Existing measurements and photos are not overwritten. The editor reports existing photo count and retains all earlier uploads. The upload is a separate CSRF-protected action, using the same authenticated user and revision-lock checks as other edits.
+
+**View multiple photos:** Tap **Details** from Workout history. The private gallery displays every photo attached to that record in order, including an original legacy `photo`. Each full-size link uses only an entry ID and numeric image index (`?photo=<entry-id>&image=0`); clients cannot supply filenames or paths. All images remain behind central authentication and owner checks. The protected data files are still ignored by Git and denied by the web-server rule.
+
+**How records remain safe:** Existing single-photo references `photo` remain unchanged. New filenames are appended to an optional `photos` array. The current `schemaVersion:1`, IDs, sessions, workout notes, dates and old entries are preserved. Uploads are checked (size, MIME, actual image data, path traversal and symlink rules), named uniquely, and attached atomically under `JsonStore::update`. If the entry has changed or a validation error occurs, newly staged uploads are removed and the old record is not modified. Photos are never automatically deleted. The account ZIP export includes every legacy and new image and fails if one is missing.
+
+**User Management and sign-out:** The top of Workout Tracker provides a **User Management** link and a **Sign out** button. The sign-out form submits with CSRF to the existing central account portal, signing out **all connected JASR projects in that browser**. This is not a local-only logoff.
+
+**Stay signed in:** The User Management login offers an optional **Stay signed in for 7 days on this browser** checkbox. **Unchecked remains the normal 30-minute inactivity timeout**, with a session-only cookie. Checked uses a seven-day, secure/HttpOnly/SameSite=Strict persistent session cookie with a fixed maximum expiry and server-side session lifetime. It is not enabled automatically for current sessions. After deploying, sign out and sign back in with the checkbox selected to activate it. Do not select it on shared devices. Logout, account disabling, password changes and permissions revocation still invalidate sessions. If hosting aggressively cleans PHP session files, server configuration may need adjustment; the new PHP session code raises the configured garbage-collection lifetime for remembered sessions.
+
+**Verification:** GitHub CI exercises synthetic multi-photo uploads, cross-account image denial, missing-file ZIP safety and the existing Edit button. It also runs an isolated User Management HTTP test for normal versus remembered cookies, expiry and logout. On Hostinger, verify the portal's remembered sign-in behavior, cross-account photo denial, private storage HTTP 403, ZIP completeness and multi-file iPhone upload. No hosted accounts/records are used in CI. The hosting webhook must never delete `workout-tracker/storage/` or `user-management/data/`.
+
+## Attendance and workout streaks (v1.6.0)
+
+The mobile dashboard uses only the **existing workout dates** in the authenticated user's saved records. A day counts at most once, even if multiple exercises were recorded that day. **No migration, backfill, or change to existing JSON** is needed.
+
+- **Last seven calendar days:** unique workout dates divided by eligible calendar dates in the seven-day window ending today, **not before the first logged workout**.
+- **Last seven days, weekdays only:** the same rolling window but excluding Saturdays and Sundays from both the numerator and denominator. A gym workout recorded on a weekend still appears in the calendar view but does not count as an eligible weekday.
+- **Overall calendar attendance:** unique workout dates since the **earliest saved workout**, inclusive, divided by all calendar dates through today.
+- **Overall weekday attendance:** workouts on Monday–Friday since that first recorded workout divided by eligible Monday–Friday dates, inclusive.
+- **Calendar streak:** continuous days with workouts; **weekday streak** skips Saturday and Sunday. The current streak does not reset until a full eligible day was missed; today is treated as unfinished.
+- **Last-seven-day strip:** a small, phone-friendly view of attended days, missed weekdays, and weekends. These counts do not distinguish a home workout from a gym visit—any saved workout date currently means attendance.
+
+Example from **October 21, 22, and 27, 2026**, evaluated Tuesday, October 27:
+
+| Measurement | Attendance | Percentage |
+| --- | --- | --- |
+| Calendar, last 7 days | 3 / 7 | **42.9%** |
+| Weekdays, last 7 days | 3 / 5 | **60.0%** |
+| Calendar, since first workout | 3 / 7 | **42.9%** |
+| Weekdays, since first workout | 3 / 5 | **60.0%** |
+| Calendar streak | Current 1 day, longest 2 days | |
+| Weekday streak | Current 1 eligible day, longest 2 days | |
+
+The attendance percentage **3 / 5 is 60%, not 66.7%**. All calculations are browser-local date based; date-only arithmetic uses UTC calendar day numbers to avoid DST date shifting. They run on every data refresh and when returning to the page after midnight.
+
+Run:
+
+    node workout-tracker/tests/attendance.test.cjs
+    node workout-tracker/tests/attendance-ui.test.cjs
+
+The test data is synthetic and never touches Hostinger records. For on-device acceptance, verify the October 21/22/27 dates, weekday and calendar rates, first-workout start, week boundary, and mobile readability. Attendance stays read-only and has no new API endpoints.
+
+## Heart rate tracking (v1.5.1)
+
+Heart rate is an **optional first-class measurement** in beats per minute, saved as `heart_rate_bpm` (whole-number BPM from 1 to 300). It is separate from calorie estimates, treadmill speed and organization tags. The app does not estimate or diagnose heart rate and does not automatically read a wearable.
+
+- **No API key required:** local descriptions such as **"Treadmill 1.16 miles for 22 minutes at 3.3 mph, heart rate 143 bpm"**, **"Walking 2 miles, average heart rate 128"**, **"HR 143"** attached to a recognized exercise, and **"145 bpm"** are parsed as an explicitly reported pulse. The parser does **not** mistake `1 hr 15 min` for a 15 BPM pulse or `at 145 bpm` for a treadmill speed of 145 mph.
+- **Phone entry:** `Heart rate (BPM)` appears with treadmill, walking, running, cycling, rowing, swimming, elliptical and stair measurements in the natural-language review, manual entry and saved-workout editor. It remains accessible under **Show other measurements** for strength exercises.
+- **Progress tracking:** select an exercise, then **Heart rate (BPM)** for a separate chart. The authenticated **Details** view and workout-history summaries display recorded BPM.
+- **Existing records remain intact:** older JSON entries without `heart_rate_bpm` remain valid and are **not assigned made-up heart rates**. Editing an old entry without entering BPM does not add a new value. An older API client omitting this field cannot erase an already saved pulse.
+- The optional AI fallback may also return `heart_rate_bpm` when explicitly stated. Any suggestion must be reviewed before saving. The number is associated with the workout, not a continuous heart-rate time series; use the notes or additional measurements for distinct heart-rate readings.
+
+Run `php workout-tracker/tests/heart-rate.test.php` and the existing parser, edit and mobile-view tests. All tests operate on synthetic entries and temporary JSON files—not live Hostinger workout data.
+
+## Authenticated workout details, photos and backups (v1.5.0)
+
+From **Workout history**, select **Details** on any saved entry. The mobile-friendly panel shows date/time, notes, scalar and custom measurements, ordered strength sets, summary totals and prior edit versions. **Edit this workout** opens the existing revision-checked editor; there is no delete operation.
+
+An attached photo appears in the details panel with an **Open full-size photo** link. The server accepts only an entry ID, verifies that the photo belongs to that user's saved workout, and checks the file is a non-symlinked JPEG/PNG/WebP within that user's protected storage. Images cannot be served by guessing a filename or asking for another user's record. The existing **storage/.htaccess** continues to block direct requests.
+
+**Download my workout backup** sends a CSRF-protected, authenticated POST. PHP ZipArchive creates a temporary ZIP *outside the site* containing the existing account's JsonStore document and only its referenced private photos. The server reads data but never rewrites records, changes permissions or modifies the live photo folder. Incomplete exports fail if a photo is missing. On Hostinger, PHP **ZipArchive** is required; the UI disables backups if the extension is unavailable.
+
+A separate Hostinger backup/snapshot should be taken **before deployment**, including the existing private JSON and photos. See **[BACKUP-RECOVERY.md](docs/BACKUP-RECOVERY.md)** for the exact checklist, secure download verification and controlled administrator recovery. There is intentionally no automatic Restore button.
+
+Run the new tests alongside existing suites:
+
+    php workout-tracker/tests/photo-backup.test.php
+    node workout-tracker/tests/workout-detail.test.cjs
+
+GitHub Actions installs ZIP support for a full archive-content check using **temporary synthetic data**. Production session authorization, Hostinger .htaccess behavior, ZIP downloading and physical iPhone layout remain manual acceptance checks and are not assumed to have passed.
+
+## Flexible measurements and weighted sets (v1.4.0; issue #128)
+
+Organization **tags** (such as strength or cardio) remain separate from **measured numeric values**. Filters still organize workouts by tag.
+
+### Treadmill and other cardio
+
+- Record miles, minutes, speed, incline and **calories burned (kcal)** independently. The local parser recognizes "treadmill 2 miles for 30 minutes, incline 5%, 320 calories"; it never guesses calories.
+- Under **Additional measurements**, tap **+ Add measurement** to log user-defined numeric metrics such as **Elevation gain / ft / 250**, **Resistance level / (blank) / 7**, or **Heart rate / bpm / 132**. You can track up to 12 custom metrics for one workout.
+- Progress charts match custom metrics by a normalized name plus unit. Keep that pair consistent across dates. Custom metrics allow signed values for measurements such as change from baseline.
+
+### Multiple weightlifting sets in ONE exercise
+
+- Select bench press, deadlift, or another supported strength exercise. Under **Individual sets**, tap **+ Add set** to record each load and repetition count in order, up to 40 sets in one workout record.
+- Example on one date: **95 lb × 12**, **115 lb × 10**, **135 lb × 8**, **115 lb × 10**.
+- Show **40 total reps**, **135 lb heaviest set**, **4,520 lb total volume** (95×12 + 115×10 + 135×8 + 115×10), and **4 sets**. The chart offers these separate strength-progress metrics.
+- Bodyweight sets may leave the load blank. Do not report an average weight for sets with varying loads.
+- Local natural-language parsing recognizes ordered wording such as "bench press 95 lb x 12, 115 lb x 10, 135 lb x 8". Review the result before saving; optional AI fallback remains opt-in.
+- A legacy bench-press entry with a scalar reps/sets/weight summary remains a **legacy summary**. The application never invents individual sets from those totals.
+
+### Persistence and privacy
+
+- The per-user JsonStore files retain their current IDs, session IDs, timestamps, notes, photo references, tags, edit history, record order and schemaVersion 1 envelope. **No database migration, reset, delete or destructive import.**
+- Optional per-record additions: calories_kcal (number/null), custom_metrics (array of name, unit, value), and sets_detail (ordered reps, weight_lb and note). Existing records without them still work.
+- Older clients that omit these optional fields must never clear them. Edits remain authenticated, CSRF protected, locked, revision-checked and audited; stale edits return HTTP 409.
+- Custom labels/units and numeric values receive strict server validation. The browser builds labels using safe textContent, not HTML injection.
+- Before Hostinger deployment, **back up the ignored storage directory, JSON files and private photos**, verify the webhook does not wipe runtime storage, and compare old records before and after.
+- Manual verification: save treadmill with calories/custom metric, save one bench press with different loads, refresh, edit the last set, and verify the original treadmill entries and uploaded photos remain accessible.
+
+### New test commands
+
+    php workout-tracker/tests/measurements.test.php
+    node workout-tracker/tests/advanced.test.cjs
+
+The new tests operate on synthetic data and temporary JSON files only. Existing parser, edit, security and mobile validation remain mandatory.
+
+## Exercise-specific measurements and mobile layout (v1.3.2)
+
+- **Treadmill:** the quick-entry review, manual form, and saved-workout editor show **miles, minutes, speed (mph), incline (%)** by default; reps, sets and lifting weight are collapsed under **Show other measurements**.
+- **Walking/running/cycling/rowing/swimming/elliptical/stairs:** miles, minutes and speed are primary. **Push-ups/squats/sit-ups/lunges/crunches:** reps and sets. **Bench press/deadlift/weight training:** weight, reps and sets. **Yoga/plank:** duration and sets. Unrecognized/custom exercise names show all currently supported fields.
+- Exercise field visibility is **presentation-only**. Every measurement remains in the page's controls—even when collapsed—so old records containing unusual values are not cleared by opening/editing an entry. **Show other measurements** now sits directly after the primary measurements, before tags or notes, and indicates when an older workout has extra saved values. Changing the exercise name dynamically refreshes its suggested fields without discarding values.
+- Trends also offer measurements relevant to the selected exercise, plus any *nonstandard historical metrics* already saved for that exercise. No JSON schema changes or migrations.
+- On **typical phones (375–560 CSS pixels)**, compact measurements use two columns while the exercise name, date, time, tag, and notes occupy a full-width row. On very narrow phones (360 CSS pixels and below), fields stack in one column. Native iOS date/time pickers remain enabled and must not overlap adjacent fields. Trend selectors and optional time/photo controls stack on narrow screens; form inputs use 16px text to avoid Safari focus zoom and buttons meet a 44px minimum touch height.
+- Run `node workout-tracker/tests/edit-button.test.cjs`; it checks exercise-specific field visibility, Edit actions, unchanged saved records, placement of extra measurements, and the mobile date/time styling rules. A local Chromium preview with representative workout markup was checked at viewport widths **320, 360, 375, 390, 430, 560, 667, 768, and 1024 CSS pixels**: no horizontal overflow or date/mileage intersection was observed. That preview is **not a live production or WebKit/iOS device test**; verify the date/time pickers on a physical iPhone after deployment.
+
+## Edit button repair (v1.3.1)
+
+- Fix a JavaScript `DOMException` that prevented an existing workout's **Edit** button from opening its form. Empty CSS class tokens were being added to ordinary date/number fields; classes are now only added when needed.
+- `app.js?v=1.3.1` forces browser refresh of the corrected code after Hostinger deployment; PHP storage schema and saved workout files are unchanged.
+- `node workout-tracker/tests/edit-button.test.cjs` exercises the actual history click listener and populated editor with realistic class-token validation, including legacy workouts that have no tag or incline; the CI workflow now runs it.
+- After deployment, tap **Edit** on both the October 21 and October 22 workouts. Each should open a prefilled form; **Cancel** should leave values unchanged. The live workout files must be preserved as before.
 
 ## Edit saved workouts, tracking tags and treadmill incline (v1.3.0)
 
@@ -39,26 +198,14 @@ Hostinger setup (never do this inside GitHub):
 
 1. The tracked template is **`config.local.example.php`**. On Hostinger copy it to **`config.local.php`** by **removing only `.example`**, keeping the rest of the name unchanged.
 2. Enter the provider endpoint, model and secret API key in `config.local.php`. Never commit or show the real key in screenshots.
-3. The app's root `.htaccess` denies HTTP access to every `config.local` prefix (case insensitive), including `.bak`, `~`, template, placeholder, hidden swap and editor backup variants. For nginx or other servers configure an equivalent deny rule or store secrets outside the public web directory.
+3. The root `.htaccess` denies HTTP access to private local configuration. For nginx or other servers configure an equivalent deny rule or store secrets outside the public web directory.
 4. Reload the app. Once configured, its optional AI button becomes enabled. The app sends workout text to your configured external provider **only after explicit opt-in**. Suggestions may be wrong; check every metric and date.
 
 `config.local.php.placeholder` is a tracked, safe marker explaining the host-only file. It is **not** loaded as a config and must not contain a key. The app never auto-generates actual API credentials.
 
-### Paid AI request limits
-
-Both `parse_ai` and the legacy `parse` route share a persisted per-account budget: **5 attempts per rolling minute and 50 per rolling 24 hours**. Reservations happen atomically before the external request, survive refreshes/new sessions, and count provider failures too. Invalid input, rejected authorization/CSRF, and missing provider configuration do not consume the budget. A blocked request returns HTTP **429**, `Retry-After` seconds, and JSON `retry_after`; no provider call is made. Storage/limit configuration failures block AI calls rather than allowing unlimited usage.
-
-These are **request-count limits**, alongside the existing **1,800 output-token maximum per call** and 4,000-byte input validation. They are not a billed-token or dollar budget: input tokens, model prices and failed-call billing vary. Set provider-side billing controls as appropriate. Local parsing and saving workouts are not rate limited.
-
-Authenticated **non-demo central Super Admins are exempt** from these request limits. The repository's Jason account provisioning assigns `jasrasr` this central role; verify the actual live account role in user-management. Project admins and demo Super Admins remain limited. Exemption never bypasses project access, CSRF, input validation or the per-call output-token maximum.
-
-For another specific account, add its immutable central user ID to `request_limits.exempt_user_ids` in the private `config.local.php` (not its username/display name). The tracked template shows the optional `request_limits` keys. Existing configs automatically receive the defaults above; **do not overwrite an existing config or API key**. Thresholds must be integers from 1 to 10,000. Exemption decisions use only the central provider's server-side identity.
-
-Counters are auto-created as ignored `storage/ai-requests-<hashed-user-id>.json` plus stable lock files, using framework `JsonStore`. They contain attempt timestamps, no workout text or credentials, and are separate from workout history. Preserve them through deployments so quotas do not reset; include them in private storage backups. Expired timestamps are pruned on the next request.
-
 ## Setup
 
-1. Deploy workout-tracker beside 1-Framework and user-management on the same host. PHP 8.1+, fileinfo and HTTPS are required; cURL is only needed if using an optional external AI service.
+1. Deploy workout-tracker beside 1-Framework and user-management on the same host. PHP 8.1+, fileinfo and HTTPS are required; ZipArchive is additionally required for backup downloads, and cURL is only needed for optional external AI.
 2. In central user-management register project ID workout-tracker with path /github/workout-tracker/, then grant the intended account member access. Existing all-project access works once the project is registered.
 3. Ensure storage/ is writable by PHP but inaccessible over HTTP. Apache/LiteSpeed must honor storage/.htaccess; verify a direct request for a private test file receives **403**. On nginx, configure a deny rule or use a private directory outside the public web root.
 4. The tracked `storage/.placeholder` and `storage/photos/.placeholder` keep private directories in deployment. PHP creates per-user JSON files and photo subdirectories **automatically** when used. Only optional `config.local.php` is copied manually. Never auto-copy or overwrite an existing private config.
@@ -69,17 +216,16 @@ Counters are auto-created as ignored `storage/ai-requests-<hashed-user-id>.json`
 - index.php: authenticated page/API, CSRF validation, optional authenticated AI fallback, per-user isolation, atomic multi-exercise writes using the shared framework JsonStore.
 - parse.php: no-key text interpretation of workouts and relative or explicit dates.
 - app.js / app.css: responsive, progressive entry UI, review and isolated exercise trends.
-- storage/.htaccess: deny direct access to JSON records and photos. Photos are private but not yet viewable in the app.
+- storage/.htaccess: deny direct access to JSON records and photos. The authenticated photo endpoint now verifies user ownership and serves images privately.
 - JSON follows the 1-Framework schemaVersion 1 records envelope, separated by hashed stable user ID.
 - Saved exercises share a session_id, the chosen date, local time with UTC offset, and creation timestamp. Each batch is written atomically.
-- Existing entries support revision-checked editing and retained previous values. OCR, authenticated photo viewing, body weight and blood-pressure logs are future work.
+- Existing entries support revision-checked editing and retained previous values, optional calories/custom metrics, and per-set weights. Photo viewing and read-only account ZIP backups are available. OCR, automatic restore, body weight and blood-pressure logs remain future work.
 
 ## Verification
 
 Run these from the repository root:
 
     php workout-tracker/tests/parse.test.php
-    php workout-tracker/tests/ai-limits.test.php
     php workout-tracker/tests/edit.test.php
     php -l workout-tracker/entries.php
     node --check workout-tracker/app.js
@@ -87,10 +233,6 @@ Run these from the repository root:
     php -l workout-tracker/parse.php
 
 Also test the optional AI fallback with a safe test account/endpoint: disabled without credentials, enabled after server-only setup, failure without exposing keys, returned one or multiple activity suggestions requiring review, and no automatic saves.
-
-The Workout Tracker validation workflow runs syntax, parser and quota regressions, including parallel reservations, rolling-window boundaries, cross-account isolation, corrupt/missing storage, role/ID exemptions and config filename patterns. Before enabling a real key on Hostinger, verify with harmless config-named fixtures that HTTP requests for `config.local.php.bak`, `config.local.php~`, `.config.local.php.swp` and uppercase variants receive 403, then remove the fixtures. Verify valid app routes still load. Pattern tests cannot establish the host honors `.htaccess`.
-
-On staging with a mock provider, use a member account to consume the limit through both AI action aliases and confirm the next request returns 429 with `Retry-After`, across a new session. Confirm failures count and invalid-CSRF requests do not. Verify the intended central Super Admin can exceed both thresholds, a demo Super Admin cannot, and changing client-supplied role/ID fields cannot claim exemption. Confirm local parsing and saves still work while AI is limited, and repeat with Hostinger's PHP version. No automated check proves deployment or live account provisioning.
 
 The edit tests create an **isolated temporary JSON file**, start with three preexisting legacy entries, edit exactly one, and verify the other two remain byte-for-byte equivalent in decoded records; they also assert timestamps/photos/session IDs remain, the original values are preserved in edit history, bad inputs are rejected, and a stale revision cannot overwrite concurrent updates. CI runs these tests without touching Hostinger storage. Browser execution of the CLI tests is denied by `tests/.htaccess`.
 

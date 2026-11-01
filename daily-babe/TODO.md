@@ -13,7 +13,7 @@ Changelog     :
 ## Documented next work
 
 - [ ] Replace or delete an incorrect dated photo with confirmation and audit history; `api.php` currently rejects duplicate dates.
-- [ ] Add separate sign-ins for authorized family members.
+- [x] Add separate sign-ins for authorized family members and admin-managed gallery access.
 - [ ] Add encrypted backup/export of originals and metadata.
 - [ ] Evaluate server-generated thumbnails for long galleries.
 
