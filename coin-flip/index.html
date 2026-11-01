@@ -1,10 +1,11 @@
 <!-- File Name: index.html
 Author: Jason Lamb (with help from ChatGPT)
-Description: Giant animated random coin flip, no dependencies or data storage.
-Revision: 1.0.4
+Description: Accessible animated coin flip with automatic page-load toss and shared server-side history.
+Revision: 1.1.0
 Created Date: 2026-10-27
-Modified Date: 2026-10-27
-Changelog: 1.0.4 - Prevent mobile face and label bleed-through after landing.
+Modified Date: 2026-11-01
+Changelog: 1.1.0 - Flip once on page load and store shared history with totals and recent outcomes.
+1.0.4 - Prevent mobile face and label bleed-through after landing.
 1.0.3 - Show a face for heads and a cross for tails.
 1.0.2 - Make the coin an accessible flip control.
 1.0.1 - Fit the coin and controls to the available screen height.
@@ -49,6 +50,21 @@ h1{font-size:clamp(30px,min(6vw,8dvh),90px)}
 .face{-webkit-backface-visibility:hidden;transform:translateZ(1px)}
 .back{transform:rotateY(180deg) translateZ(1px)}
 .coin[data-side="heads"] .back,.coin[data-side="tails"] .front{visibility:hidden}
+
+.history{position:fixed;left:14px;bottom:10px;z-index:5;text-align:left;color:#57554f;font:12px/1.45 system-ui,sans-serif}
+.history>summary{list-style:none;cursor:pointer;background:#fffcf4eF;border:1px solid #e5ddcc;border-radius:99px;padding:7px 12px;box-shadow:0 2px 9px #00000012}
+.history>summary::-webkit-details-marker{display:none}
+.history-panel{position:absolute;left:0;bottom:38px;width:min(390px,calc(100vw - 28px));max-height:min(54dvh,420px);overflow:auto;background:#fffdf8;border:1px solid #e5ddcc;border-radius:18px;padding:16px;box-shadow:0 12px 40px #0002}
+.history-panel h2{font-size:17px;margin:0 0 10px;color:#171716}
+.history-counts{display:flex;gap:8px;margin:0 0 12px}
+.history-counts span{background:#f8f0dc;border-radius:10px;padding:7px 9px;flex:1}
+.history-list{list-style:none;padding:0;margin:0;display:grid;gap:5px}
+.history-list li{display:flex;justify-content:space-between;gap:10px;border-top:1px solid #eee8dc;padding:6px 0}
+.history-list time{color:#77756e}
+.history-privacy{font-size:11px;color:#77756e;margin:12px 0 0}
+#save-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:550px){.history{left:10px;bottom:8px;font-size:11px}.history>summary{padding:6px 9px}.history-panel{bottom:34px}}
+
 </style>
 </head>
 <body>
@@ -65,8 +81,18 @@ h1{font-size:clamp(30px,min(6vw,8dvh),90px)}
 <p id="result" role="status" aria-live="polite">Ready when you are.</p>
 <button id="flip" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M5.1 7a8 8 0 0 1 13.8-1L20 9M4 15l1.1 3A8 8 0 0 0 18.9 17"/></svg><span>Flip coin</span></button>
 <p class="hint">Press Space to flip</p>
+<p id="save-status" role="status" aria-live="polite"></p>
+<details class="history" id="history">
+  <summary>Shared history · <span id="history-total">0 flips</span></summary>
+  <section class="history-panel" aria-label="Coin flip history">
+    <h2>Flip history</h2>
+    <div class="history-counts"><span id="history-heads">Heads: 0 (0%)</span><span id="history-tails">Tails: 0 (0%)</span></div>
+    <ol class="history-list" id="history-list"><li>Loading history…</li></ol>
+    <p class="history-privacy">Each flip is saved with its time, result, IP address, and browser details (user agent, language, platform, time zone, and screen size). Raw IP and browser details stay private; only totals and recent results are shown here.</p>
+  </section>
+</details>
 </main>
-<footer>v1.0.4 · 2026-10-27</footer>
+<footer>v1.1.0 · 2026-11-01</footer>
 <script>
 const coin = document.querySelector('#coin');
 const button = document.querySelector('#flip');
@@ -81,6 +107,71 @@ function celebrate() {
     piece.style.cssText = `background:${['#eebc39','#ff927a','#b09ae2','#79bda3'][i % 4]};--x:${(Math.random()-.5)*Math.min(innerWidth,1000)}px;--y:${(Math.random()-.7)*700}px;--r:${Math.random()*900}deg;border-radius:${i%3===0?'50%':'2px'}`;
     document.body.append(piece);
     piece.addEventListener('animationend', () => piece.remove(), {once:true});
+  }
+}
+function percent(value, total) {
+  return total ? Math.round(value / total * 100) : 0;
+}
+async function loadHistory() {
+  const list = document.querySelector('#history-list');
+  try {
+    const response = await fetch('api.php', {headers:{Accept:'application/json'}});
+    if (!response.ok) throw new Error('History unavailable');
+    const data = await response.json();
+    if (!data.success) throw new Error('History unavailable');
+    document.querySelector('#history-total').textContent = `${data.total} ${data.total === 1 ? 'flip' : 'flips'}`;
+    document.querySelector('#history-heads').textContent = `Heads: ${data.heads} (${percent(data.heads,data.total)}%)`;
+    document.querySelector('#history-tails').textContent = `Tails: ${data.tails} (${percent(data.tails,data.total)}%)`;
+    list.replaceChildren();
+    if (!data.recent.length) {
+      const empty = document.createElement('li');
+      empty.textContent = 'No flips recorded yet.';
+      list.append(empty);
+      return;
+    }
+    for (const item of data.recent) {
+      const row = document.createElement('li');
+      const outcome = document.createElement('strong');
+      outcome.textContent = item.outcome === 'heads' ? 'Heads' : 'Tails';
+      const time = document.createElement('time');
+      const date = new Date(item.timestamp);
+      time.dateTime = date.toISOString();
+      time.textContent = new Intl.DateTimeFormat(undefined,{dateStyle:'short',timeStyle:'short'}).format(date);
+      row.append(outcome,time);
+      list.append(row);
+    }
+  } catch {
+    document.querySelector('#history-total').textContent = 'unavailable';
+    list.replaceChildren();
+    const row = document.createElement('li');
+    row.textContent = 'Shared history could not be loaded.';
+    list.append(row);
+  }
+}
+async function saveFlip(outcome) {
+  const status = document.querySelector('#save-status');
+  status.textContent = 'Saving this flip to shared history.';
+  try {
+    const response = await fetch('api.php', {
+      method:'POST',
+      headers:{'Content-Type':'application/json',Accept:'application/json'},
+      body:JSON.stringify({
+        outcome,
+        browser:{
+          language:navigator.language || '',
+          platform:navigator.platform || '',
+          timezone:Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+          screen:`${screen.width}x${screen.height}`
+        }
+      })
+    });
+    if (!response.ok) throw new Error('Save failed');
+    const data = await response.json();
+    if (!data.success) throw new Error('Save failed');
+    status.textContent = 'Flip saved to shared history.';
+    await loadHistory();
+  } catch {
+    status.textContent = 'The coin flipped, but shared history could not be saved.';
   }
 }
 async function flip() {
@@ -107,6 +198,7 @@ async function flip() {
   button.disabled = false;
   coin.disabled = false;
   celebrate();
+  await saveFlip(tails ? 'tails' : 'heads');
 }
 button.addEventListener('click', flip);
 coin.addEventListener('click', flip);
@@ -116,6 +208,8 @@ document.addEventListener('keydown', event => {
     flip();
   }
 });
+loadHistory();
+flip();
 </script>
 </body>
 </html>
