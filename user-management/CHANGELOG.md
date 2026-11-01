@@ -39,3 +39,8 @@
 - Preserve unknown income fields, including nested metadata, during budget saves while keeping expense deletion effective.
 - Revoke target sessions after every successful ownership link, including accounts with existing project access.
 - Verify self-provisioning safely renders the existing sign-in branch after session invalidation, displays new credentials once, and permits reauthentication; no template change was needed.
+
+### Registration requests
+- Add a public account request form and Jason-only approval/rejection queue.
+- Keep applicants outside active users until approval; grant no project access by default.
+- Add configurable email notification through hosting mail transport.
