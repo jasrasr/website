@@ -1,12 +1,19 @@
 <!-- File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Coin Flip cumulative release history.
-Revision: 1.0.4
+Revision: 1.1.0
 Created Date: 2026-10-27
-Modified Date: 2026-10-27
-Changelog: 1.0.4 - Document mobile rendering fix. 1.0.3 - Document face and cross artwork. 1.0.2 - Document clickable coin. 1.0.1 - Document viewport-height layout fix. 1.0.0 - Initial release.
+Modified Date: 2026-11-01
+Changelog: 1.1.0 - Add automatic page-load toss and shared server-side history. 1.0.4 - Document mobile rendering fix. 1.0.3 - Document face and cross artwork. 1.0.2 - Document clickable coin. 1.0.1 - Document viewport-height layout fix. 1.0.0 - Initial release.
 -->
 # Changelog
+
+## 1.1.0 - 2026-11-01
+- Automatically flip and save one result each time the page loads.
+- Add a PHP endpoint for shared totals, percentages, and the 50 most recent outcomes.
+- Store history in `coin-flip/data/history.jsonl`, including UTC time, result, IP address, and browser metadata.
+- Block direct web access to the data folder and exclude the runtime history file from Git.
+- Keep the existing page URL and disclose collected metadata in the history panel.
 
 ## 1.0.4 - 2026-10-27
 - Explicitly hide the inactive face after landing to prevent mirrored labels bleeding through on mobile.
