@@ -8,7 +8,7 @@ Changelog: 1.1.0 - Document automatic flips, server history, and visitor metadat
 -->
 # Coin Flip
 
-Version 1.1.0. Open `index.html` in a PHP-enabled web host or serve this directory as static files with PHP support. Target: https://jasr.me/github/coin-flip/; the page URL remains unchanged. PHP 7.3+ is required for `api.php`. The web server must be able to create and write `coin-flip/data/history.jsonl`; `data/.htaccess` denies direct web access, and `data/.gitignore` keeps the runtime log out of Git.
+Version 1.1.0. Open `index.html` in a PHP-enabled web host or serve this directory as static files with PHP support. Page entry point: `coin-flip/index.html`, served at https://jasr.me/github/coin-flip/. PHP 7.3+ is required for `api.php`. The web server must be able to create and write `coin-flip/data/history.jsonl`; `data/.htaccess` denies direct web access, and `data/.gitignore` keeps the runtime log out of Git.
 
 Every page load automatically flips and records the result. Click or tap the coin, click **Flip coin**, or press Space to flip again. The coin supports Tab focus and Enter activation. A browser cryptographic random bit chooses heads or tails with equal probability on every flip. Outcomes are independent. A smiling face represents heads and a cross represents tails. The collapsible shared-history panel shows lifetime counts, percentages, and the 50 most recent results.
 
