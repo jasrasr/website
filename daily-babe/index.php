@@ -101,7 +101,7 @@ if ($authenticated) {
         <label>Actual birth date<input type="date" name="birthDate" value="<?= htmlspecialchars((string) $settings['birthDate']) ?>"><small>Once entered, this date—not the due date—controls Day 1 and all age calculations.</small></label>
         <div class="settings-grid">
             <label>Time born <span>(optional)</span><input type="time" name="birthTime" value="<?= htmlspecialchars((string) ($settings['birthTime'] ?? '')) ?>"></label>
-            <label>Length in inches <span>(optional)</span><input type="number" name="birthLengthInches" min="5" max="30" step="0.25" inputmode="decimal" value="<?= htmlspecialchars((string) ($settings['birthLengthInches'] ?? '')) ?>" placeholder="20.5"></label>
+            <label>Length in inches <span>(optional)</span><input type="number" name="birthLengthInches" min="5" max="30" step="0.01" inputmode="decimal" value="<?= htmlspecialchars((string) ($settings['birthLengthInches'] ?? '')) ?>" placeholder="19.69"></label>
             <label>Weight pounds <span>(optional)</span><input type="number" name="birthWeightPounds" min="0" max="25" step="1" inputmode="numeric" value="<?= htmlspecialchars((string) ($settings['birthWeightPounds'] ?? '')) ?>" placeholder="7"></label>
             <label>Weight ounces <span>(optional)</span><input type="number" name="birthWeightOunces" min="0" max="15" step="1" inputmode="numeric" value="<?= htmlspecialchars((string) ($settings['birthWeightOunces'] ?? '')) ?>" placeholder="8"></label>
         </div>

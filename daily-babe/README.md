@@ -2,14 +2,14 @@
 
 A mobile-first PHP/JSON gallery for one baby photo per day. Daily Babe uses the site-wide User Management service for adult accounts and keeps baby galleries, photos, and metadata isolated inside the project.
 
-## Included in v2.0.0
+## Included in v2.0.1
 
 - Central User Management sign-in, password changes, sessions, and account status
 - Multiple babies and multiple adults, with per-gallery membership
 - Central `viewer`, `member`, and `admin` project roles
 - Daily or backdated JPEG, PNG, and WebP uploads
 - One photo per calendar date
-- Editable due date, actual birth date, birth time, length, and weight
+- Editable due date, actual birth date, birth time, length to hundredths of an inch, and weight
 - Day numbering based on actual birth date when present
 - Missing-day and streak tracking
 - Collage and animated GIF exports with a day label on every image

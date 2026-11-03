@@ -1,7 +1,7 @@
 :root {
     color-scheme: light;
     --ink: #1b2430;
-    --muted: #69717c;
+    --muted: #59616b;
     --paper: #faf9f6;
     --surface: #fff;
     --soft: #f3f1ec;
@@ -164,7 +164,8 @@ footer a { color: var(--sage); }
     border: 1px solid var(--line);
     border-radius: 16px;
     padding: 1rem;
-    background: rgba(14, 23, 44, .65);
+    background: var(--soft);
+    color: var(--ink);
 }
 .public-toggle {
     display: flex;
@@ -177,7 +178,7 @@ footer a { color: var(--sage); }
     width: 1.2rem;
     height: 1.2rem;
     margin-top: .15rem;
-    accent-color: var(--rose);
+    accent-color: var(--coral-dark);
     flex: 0 0 auto;
 }
 .public-toggle span {
@@ -208,7 +209,7 @@ footer a { color: var(--sage); }
     opacity: .5;
 }
 .public-sharing code {
-    color: var(--gold);
+    color: var(--ink);
 }
 @media (max-width: 520px) {
     .public-link-actions { grid-template-columns: 1fr; }

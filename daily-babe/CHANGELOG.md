@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.1 - 2026-11-03
+
+- Allow birth length measurements in hundredths of an inch, including 19.69 and 19.7.
+- Improve text contrast in the public-sharing settings panel and darken secondary text throughout the app.
+
 ## 2.0.0 - 2026-11-03
 
 - Replace Daily Babe usernames, passwords, and local sessions with central User Management.
