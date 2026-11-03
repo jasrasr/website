@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.2 - 2026-11-03
+
+- Let public gallery visitors open each original photo at full size from its thumbnail.
+
 ## 2.0.1 - 2026-11-03
 
 - Allow birth length measurements in hundredths of an inch, including 19.69 and 19.7.

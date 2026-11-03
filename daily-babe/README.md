@@ -2,7 +2,7 @@
 
 A mobile-first PHP/JSON gallery for one baby photo per day. Daily Babe uses the site-wide User Management service for adult accounts and keeps baby galleries, photos, and metadata isolated inside the project.
 
-## Included in v2.0.1
+## Included in v2.0.2
 
 - Central User Management sign-in, password changes, sessions, and account status
 - Multiple babies and multiple adults, with per-gallery membership
@@ -68,7 +68,7 @@ Public access is off by default for every baby. After entering the baby’s firs
 https://jasr.me/github/daily-babe/public.php?baby=hudson-11022026
 ```
 
-The public page is read-only. Turning sharing off immediately disables both the public page and its image endpoint. Changing the first name or birth date changes the public link.
+The public page is read-only. Visitors can select a photo to open its full-size original in a new tab. To make the gallery private later, clear **Make this gallery fully open and public** in Settings and save. This immediately disables both the public page and its image endpoint. It cannot remove copies that visitors saved while sharing was on. Changing the first name or birth date changes the public link.
 
 ## Backups and privacy
 

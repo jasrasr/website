@@ -59,7 +59,7 @@ function public_date_label(string $date): string
     <title><?= htmlspecialchars($babyName) ?> · Baby Daily</title>
     <link rel="stylesheet" href="assets/app.css?v=<?= BABY_TRACKER_VERSION ?>">
     <style>
-        .public-hero{margin-bottom:1rem}.public-hero h1{font-family:Georgia,serif;font-size:clamp(2.3rem,7vw,5rem);line-height:1;margin:.45rem 0}.public-summary{color:var(--muted);margin:.35rem 0 0}.public-gallery .tile{cursor:default}.public-gallery .tile:hover img{transform:none}.public-footer-note{color:var(--muted);text-align:center;margin:2rem auto 0;max-width:42rem}
+        .public-hero{margin-bottom:1rem}.public-hero h1{font-family:Georgia,serif;font-size:clamp(2.3rem,7vw,5rem);line-height:1;margin:.45rem 0}.public-summary{color:var(--muted);margin:.35rem 0 0}.public-gallery .tile{cursor:default}.public-gallery .tile:hover img{transform:none}.public-photo-link{display:block;position:relative}.public-photo-link:focus-visible{outline:3px solid var(--sage);outline-offset:-3px}.public-photo-link img{display:block}.public-photo-link span{position:absolute;right:.65rem;bottom:.65rem;padding:.35rem .55rem;border-radius:7px;background:rgba(27,36,48,.88);color:#fff;font-size:.72rem;font-weight:700}.public-footer-note{color:var(--muted);text-align:center;margin:2rem auto 0;max-width:42rem}
     </style>
 </head>
 <body>
@@ -89,7 +89,10 @@ function public_date_label(string $date): string
                 $imageUrl = 'public-image.php?baby=' . rawurlencode($slug) . '&id=' . rawurlencode((string) ($record['id'] ?? ''));
             ?>
                 <article class="tile">
-                    <img loading="lazy" src="<?= htmlspecialchars($imageUrl) ?>" alt="<?= htmlspecialchars($babyName . ' on ' . public_date_label($photoDate)) ?>">
+                    <a class="public-photo-link" href="<?= htmlspecialchars($imageUrl) ?>" target="_blank" rel="noopener" aria-label="View full photo of <?= htmlspecialchars($babyName . ' from ' . public_date_label($photoDate)) ?> in a new tab">
+                        <img loading="lazy" src="<?= htmlspecialchars($imageUrl) ?>" alt="<?= htmlspecialchars($babyName . ' on ' . public_date_label($photoDate)) ?>">
+                        <span aria-hidden="true">View full photo</span>
+                    </a>
                     <div class="caption">
                         <div>
                             <strong><?= htmlspecialchars(public_date_label($photoDate)) ?></strong>
