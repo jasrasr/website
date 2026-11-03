@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.0 - 2026-11-03
+
+- Add an optional fully open, read-only public view for each baby gallery.
+- Derive the public identifier from the baby’s first name and actual birthday as `firstname-MMDDYYYY`.
+- Keep uploads, deletions, settings, exports, and account controls authenticated.
+- Add dedicated public gallery and public image endpoints that fail closed when sharing is disabled.
+- Prevent two public galleries from claiming the same first-name/birthday link.
+
 ## 1.4.0 - 2026-10-26
 
 - Separate user accounts from baby galleries while retaining existing usernames, password hashes, baby IDs, settings, and photos.
@@ -70,3 +78,4 @@
 - Added authenticated image delivery and runtime storage exclusions.
 - Added a browser-generated downloadable collage.
 - Added responsive mobile design, configuration example, audit events, and deployment documentation.
+

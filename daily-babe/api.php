@@ -32,6 +32,7 @@ try {
             'birthLengthInches' => '',
             'birthWeightPounds' => '',
             'birthWeightOunces' => '',
+            'publicEnabled' => false,
             'updatedAt' => gmdate('c'),
         ]);
         write_auth([
@@ -113,8 +114,10 @@ try {
         $records = array_values($entries['records'] ?? []);
         usort($records, static fn(array $a, array $b): int => strcmp((string) $b['photoDate'], (string) $a['photoDate']));
         $account = current_account();
+        $settings = tracker_settings();
+        $settings['publicSlug'] = public_gallery_slug($settings);
         json_response(true, 'Gallery loaded.', [
-            'settings' => tracker_settings(),
+            'settings' => $settings,
             'records' => $records,
             'account' => ['username' => (string) $account['username'], 'role' => (string) ($account['role'] ?? 'user')],
             'babyId' => current_baby_id(),
@@ -181,6 +184,7 @@ try {
             'birthLengthInches' => '',
             'birthWeightPounds' => '',
             'birthWeightOunces' => '',
+            'publicEnabled' => false,
             'updatedAt' => gmdate('c'),
         ]);
         $auth['babies'][$babyId] = ['name' => $babyName, 'createdAt' => gmdate('c')];
@@ -277,6 +281,8 @@ try {
         $birthLength = trim((string) ($_POST['birthLengthInches'] ?? ''));
         $birthWeightPounds = trim((string) ($_POST['birthWeightPounds'] ?? ''));
         $birthWeightOunces = trim((string) ($_POST['birthWeightOunces'] ?? ''));
+        $publicEnabled = (string) ($_POST['publicEnabled'] ?? '') === '1';
+        $babyName = trim(substr((string) ($_POST['babyName'] ?? ''), 0, 80));
         $latestClientDate = date('Y-m-d', strtotime('+1 day'));
         if (!valid_date($dueDate) || ($birthDate !== '' && (!valid_date($birthDate) || $birthDate > $latestClientDate))) {
             json_response(false, 'Enter valid due and birth dates.', null, [['code' => 'INVALID_DATE']], 422);
@@ -289,15 +295,31 @@ try {
             || ($birthWeightOunces !== '' && (!ctype_digit($birthWeightOunces) || (int) $birthWeightOunces > 15))) {
             json_response(false, 'Enter valid optional birth measurements.', null, [['code' => 'INVALID_MEASUREMENT']], 422);
         }
+        $publicCandidate = [
+            'babyName' => $babyName,
+            'birthDate' => $birthDate,
+            'publicEnabled' => $publicEnabled,
+        ];
+        $publicSlug = public_gallery_slug($publicCandidate);
+        if ($publicEnabled && $publicSlug === '') {
+            json_response(false, 'Add the baby’s first name and actual birth date before making the gallery public.', null, [['code' => 'PUBLIC_LINK_REQUIRES_BIRTH_DETAILS']], 422);
+        }
+        if ($publicEnabled) {
+            $existingPublicGallery = public_gallery_by_slug($publicSlug);
+            if ($existingPublicGallery !== null && $existingPublicGallery['babyId'] !== current_baby_id()) {
+                json_response(false, 'That public baby link is already in use.', null, [['code' => 'PUBLIC_LINK_EXISTS']], 409);
+            }
+        }
         $settings = [
             'schemaVersion' => 2,
-            'babyName' => trim(substr((string) ($_POST['babyName'] ?? ''), 0, 80)),
+            'babyName' => $babyName,
             'dueDate' => $dueDate,
             'birthDate' => $birthDate,
             'birthTime' => $birthTime,
             'birthLengthInches' => $birthLength,
             'birthWeightPounds' => $birthWeightPounds,
             'birthWeightOunces' => $birthWeightOunces,
+            'publicEnabled' => $publicEnabled,
             'updatedAt' => gmdate('c'),
         ];
         baby_json_write('data/settings.json', $settings);
@@ -309,6 +331,7 @@ try {
             write_auth($auth);
         }
         audit_event('settings.updated');
+        $settings['publicSlug'] = $publicSlug;
         json_response(true, 'Settings saved.', $settings);
     }
 
@@ -420,3 +443,4 @@ try {
     error_log('Baby Daily [' . request_id() . '] ' . $exception->getMessage());
     json_response(false, 'Something went wrong. Try again.', null, [['code' => 'SERVER_ERROR']], 500);
 }
+

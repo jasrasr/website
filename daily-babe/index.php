@@ -117,6 +117,17 @@ if ($authenticated) {
             <label>Weight pounds <span>(optional)</span><input type="number" name="birthWeightPounds" min="0" max="25" step="1" inputmode="numeric" value="<?= htmlspecialchars((string) ($settings['birthWeightPounds'] ?? '')) ?>" placeholder="7"></label>
             <label>Weight ounces <span>(optional)</span><input type="number" name="birthWeightOunces" min="0" max="15" step="1" inputmode="numeric" value="<?= htmlspecialchars((string) ($settings['birthWeightOunces'] ?? '')) ?>" placeholder="8"></label>
         </div>
+        <div class="public-sharing">
+            <label class="public-toggle"><input type="checkbox" name="publicEnabled" value="1" <?= !empty($settings['publicEnabled']) ? 'checked' : '' ?>><span><strong>Make this gallery fully open and public</strong><small>Anyone with the link can view the photos, dates, day numbers, and notes. Uploads and settings still require sign-in.</small></span></label>
+            <div id="publicLinkPanel" <?= !empty($settings['publicEnabled']) ? '' : 'hidden' ?>>
+                <label>Public link<input id="publicLink" type="text" readonly value=""></label>
+                <div class="public-link-actions">
+                    <button type="button" class="secondary" id="copyPublicLink">Copy link</button>
+                    <button type="button" class="secondary" id="openPublicLink">Open public gallery</button>
+                </div>
+                <small>The link uses the baby’s first name and birthday: <code>firstname-MMDDYYYY</code>. Changing either will change the link.</small>
+            </div>
+        </div>
         <button type="submit">Save settings</button>
     </form>
     <div class="account-section">
@@ -180,3 +191,4 @@ if ($authenticated) {
 <script src="assets/app.js?v=<?= BABY_TRACKER_VERSION ?>" defer></script>
 </body>
 </html>
+

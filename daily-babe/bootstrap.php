@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '1.4.0';
+const BABY_TRACKER_VERSION = '1.5.0';
 
 $configFile = __DIR__ . '/config/config.php';
 $config = require is_file($configFile) ? $configFile : __DIR__ . '/config/config.example.php';
@@ -335,6 +335,7 @@ function migrate_legacy_gallery(string $babyId, string $username): void
             'birthLengthInches' => '',
             'birthWeightPounds' => '',
             'birthWeightOunces' => '',
+            'publicEnabled' => false,
             'updatedAt' => gmdate('c'),
         ];
     } elseif (trim((string) ($settings['babyName'] ?? '')) === '') {
@@ -357,6 +358,7 @@ function tracker_settings(): array
         'birthLengthInches' => '',
         'birthWeightPounds' => '',
         'birthWeightOunces' => '',
+        'publicEnabled' => false,
         'updatedAt' => gmdate('c'),
     ]);
 }
@@ -371,3 +373,45 @@ function valid_date(string $date): bool
     $parsed = DateTimeImmutable::createFromFormat('!Y-m-d', $date);
     return $parsed !== false && $parsed->format('Y-m-d') === $date;
 }
+
+function public_gallery_slug(array $settings): string
+{
+    $birthDate = (string) ($settings['birthDate'] ?? '');
+    if (!valid_date($birthDate)) {
+        return '';
+    }
+    $name = trim((string) ($settings['babyName'] ?? ''));
+    $firstName = preg_split('/\s+/', $name, 2)[0] ?? '';
+    $asciiName = function_exists('iconv') ? iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $firstName) : $firstName;
+    $slugName = strtolower((string) preg_replace('/[^A-Za-z0-9]+/', '-', (string) $asciiName));
+    $slugName = trim($slugName, '-');
+    if ($slugName === '') {
+        return '';
+    }
+    $birth = DateTimeImmutable::createFromFormat('!Y-m-d', $birthDate);
+    return $birth === false ? '' : $slugName . '-' . $birth->format('mdY');
+}
+
+function public_gallery_by_slug(string $slug): ?array
+{
+    if (preg_match('/^[a-z0-9][a-z0-9-]{1,88}-\d{8}$/', $slug) !== 1) {
+        return null;
+    }
+    $auth = auth_data();
+    foreach ($auth['babies'] ?? [] as $babyId => $_baby) {
+        $babyId = (string) $babyId;
+        if (preg_match('/^[a-f0-9]{24}$/', $babyId) !== 1) {
+            continue;
+        }
+        $settings = json_read('babies/' . $babyId . '/data/settings.json', []);
+        if (($settings['publicEnabled'] ?? false) !== true) {
+            continue;
+        }
+        $candidate = public_gallery_slug($settings);
+        if ($candidate !== '' && hash_equals($candidate, $slug)) {
+            return ['babyId' => $babyId, 'settings' => $settings];
+        }
+    }
+    return null;
+}
+

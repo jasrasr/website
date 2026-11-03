@@ -1,8 +1,8 @@
 # Baby Daily Photo Tracker
 
-A private, mobile-first PHP/JSON gallery for one baby photo per day. Built from the conventions in `1-Framework` for shared Hostinger hosting.
+A mobile-first PHP/JSON gallery for one baby photo per day. Editing stays private, while each baby gallery can optionally expose a read-only public link.
 
-## Included in v1.4.0
+## Included in v1.5.0
 
 - First-run password setup and protected sessions
 - Separate user sign-ins and baby galleries, with admin-managed gallery access
@@ -19,6 +19,8 @@ A private, mobile-first PHP/JSON gallery for one baby photo per day. Built from 
 - Day labels on every collage tile and GIF frame
 - Atomic JSON writes, private image delivery, request IDs, and audit events
 - Responsive iPhone-friendly layout
+- Optional fully open, read-only public gallery
+- Public links derived from the baby’s first name and actual birthday, such as `hudson-11022026`
 
 ## Install
 
@@ -29,6 +31,16 @@ A private, mobile-first PHP/JSON gallery for one baby photo per day. Built from 
 5. After the baby arrives, enter the actual birth date in Settings.
 
 The due date powers the pre-birth countdown and shows whether the baby arrived early, on the due date, or afterward. Once an actual birth date is entered, it becomes the source for Day 1, age, and missing-day calculations; changing the due date will not renumber the photos.
+
+## Public gallery
+
+Public access is off by default for every baby. In Settings, enable **Make this gallery fully open and public** after entering the baby’s first name and actual birth date. The app creates a link in this format:
+
+```text
+https://jasr.me/github/daily-babe/public.php?baby=hudson-11022026
+```
+
+The public page is read-only and displays photos, dates, day numbers, and notes. Uploads, deletions, settings, account management, and other baby galleries remain protected. Turning the option off immediately makes the public page and its image endpoint unavailable. Changing the first name or birth date changes the public link.
 
 ## Users and baby storage
 
@@ -62,3 +74,6 @@ The included Apache rules deny browser access to `storage/` and `config/`. Keep 
 - Sign out and confirm both the gallery API and `image.php` deny access.
 - Enter the actual birth date and verify day numbering and missing dates.
 - Download a collage and confirm photos remain ordered oldest to newest.
+- Enable public access and confirm the generated first-name/birthday link works in a signed-out browser.
+- Disable public access and confirm both the public page and public image URL return 404.
+
