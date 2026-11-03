@@ -1,54 +1,44 @@
 # Baby Daily Photo Tracker
 
-A mobile-first PHP/JSON gallery for one baby photo per day. Editing stays private, while each baby gallery can optionally expose a read-only public link.
+A mobile-first PHP/JSON gallery for one baby photo per day. Daily Babe uses the site-wide User Management service for adult accounts and keeps baby galleries, photos, and metadata isolated inside the project.
 
-## Included in v1.5.0
+## Included in v2.0.0
 
-- First-run password setup and protected sessions
-- Separate user sign-ins and baby galleries, with admin-managed gallery access
-- Original gallery owner keeps admin access to every baby gallery
-- Any authorized user can remove photos from an accessible gallery
+- Central User Management sign-in, password changes, sessions, and account status
+- Multiple babies and multiple adults, with per-gallery membership
+- Central `viewer`, `member`, and `admin` project roles
 - Daily or backdated JPEG, PNG, and WebP uploads
 - One photo per calendar date
-- Due date of November 2, 2026 and editable actual birth date
-- Optional birth time, length, and weight details
-- Automatic day numbering after the birth date is entered
-- Photo count, current contiguous streak, and missing-date view
-- Optional notes and full-photo viewer
-- Browser-generated downloadable collage and animated GIF slideshow of up to 100 photos
-- Day labels on every collage tile and GIF frame
-- Atomic JSON writes, private image delivery, request IDs, and audit events
-- Responsive iPhone-friendly layout
+- Editable due date, actual birth date, birth time, length, and weight
+- Day numbering based on actual birth date when present
+- Missing-day and streak tracking
+- Collage and animated GIF exports with a day label on every image
 - Optional fully open, read-only public gallery
-- Public links derived from the baby’s first name and actual birthday, such as `hudson-11022026`
+- Public links based on first name and birthday, such as `hudson-11022026`
+- Atomic JSON writes, protected image delivery, request IDs, and audit events
 
-## Install
+## Authentication and permissions
 
-1. Deploy this folder to `jasr.me/github/daily-babe/`.
-2. Ensure PHP can write to `storage/`.
-3. For stronger privacy, copy `config/config.example.php` to `config/config.php` and set `storage_path` to a writable folder above `public_html`.
-4. Open the site and create an admin username, a password of at least 10 characters, and the first baby gallery.
-5. After the baby arrives, enter the actual birth date in Settings.
+Daily Babe does not store usernames, password hashes, or its own login session. It connects to `1-Framework` shared identity using the project slug `daily-babe`.
 
-The due date powers the pre-birth countdown and shows whether the baby arrived early, on the due date, or afterward. Once an actual birth date is entered, it becomes the source for Day 1, age, and missing-day calculations; changing the due date will not renumber the photos.
+| Central project role | Daily Babe access |
+| --- | --- |
+| Viewer | View assigned galleries and exports |
+| Member | Viewer access plus uploads, deletions, and settings |
+| Admin / Super Admin | All galleries plus baby creation and gallery membership management |
 
-## Public gallery
+Create and maintain people, passwords, account status, and project roles in User Management. In Daily Babe, an admin assigns eligible central users to one or more baby galleries. The baby's name is gallery metadata, not a person's login name.
 
-Public access is off by default for every baby. In Settings, enable **Make this gallery fully open and public** after entering the baby’s first name and actual birth date. The app creates a link in this format:
+The first signed-in central administrator automatically registers the project, creates a fresh first gallery, and becomes able to configure access. Non-admin users must have both central Daily Babe project access and at least one local gallery assignment.
 
-```text
-https://jasr.me/github/daily-babe/public.php?baby=hudson-11022026
-```
+## Clean v2 cutover
 
-The public page is read-only and displays photos, dates, day numbers, and notes. Uploads, deletions, settings, account management, and other baby galleries remain protected. Turning the option off immediately makes the public page and its image endpoint unavailable. Changing the first name or birth date changes the public link.
-
-## Users and baby storage
-
-User accounts, password hashes, and baby gallery references live in the protected `storage/data/auth.json` file. Each gallery keeps its existing random internal ID and stores its records separately:
+Version 2 uses a new storage namespace and intentionally does not migrate the earlier test galleries:
 
 ```text
-storage/
-├── data/auth.json
+storage/central/
+├── data/state.json
+├── logs/
 └── babies/<random-baby-id>/
     ├── data/settings.json
     ├── data/entries.json
@@ -56,24 +46,42 @@ storage/
     └── backups/
 ```
 
-Usernames are case-insensitive and unique. The admin can add baby galleries and create users from Settings, then choose which galleries each user may access. A user can switch among their permitted galleries.
+Old runtime files under `storage/data/` and `storage/babies/` are ignored by v2. They may remain on Hostinger temporarily, but they are not read or exposed by the application. Hostinger's nightly backup provides recovery coverage during the cutover.
 
-The first existing account remains the admin. Existing usernames and passwords keep working after migration, and each account retains access to its original baby gallery. The admin can open every gallery. Open a photo and choose **Remove photo** to delete it permanently; the date can then be used for a new upload.
+## Install and rollout
 
-Existing v1.2 and v1.3 installations migrate their authentication file to separate users and babies on the next page load. The migration writes a copy of the prior authentication file to `storage/backups/auth-before-user-management.json` and leaves each baby folder untouched. Existing v1.1 and earlier installations still migrate on the next successful sign-in; enter a username with the existing password. That older migration copies metadata and photos into the first baby folder before replacing the legacy authentication format.
+1. Deploy the repository so `daily-babe`, `user-management`, and `1-Framework` remain sibling folders.
+2. Ensure PHP can write to `daily-babe/storage/` and the central User Management storage location.
+3. Sign in through User Management with a central administrator account.
+4. Open `https://jasr.me/github/daily-babe/` to register the project and initialize the first clean gallery.
+5. In User Management, grant adults the appropriate `daily-babe` project role.
+6. In Daily Babe Settings → Manage users, assign non-admin adults to baby galleries.
+7. Verify sign-out, role enforcement, gallery isolation, and public sharing on Hostinger.
 
-Runtime photos, account data, logs, and settings are ignored by Git and must be backed up separately through Hostinger. The source repository contains no baby photos or production password.
+The due date powers the pre-birth countdown and the early/on-time/late message. Once an actual birth date is entered, that date controls Day 1, age, and missing-day calculations; the due date does not renumber photos.
 
-The included Apache rules deny browser access to `storage/` and `config/`. Keep those files in place even if storage is later moved above `public_html`.
+## Public gallery
 
-## Manual validation
+Public access is off by default for every baby. After entering the baby’s first name and actual birth date, enable **Make this gallery fully open and public** in Settings. The link uses this format:
 
-- Complete first-run setup and confirm a second browser must sign in.
-- Upload an image for today and a backdated image.
-- Confirm a duplicate date is rejected.
-- Sign out and confirm both the gallery API and `image.php` deny access.
-- Enter the actual birth date and verify day numbering and missing dates.
-- Download a collage and confirm photos remain ordered oldest to newest.
-- Enable public access and confirm the generated first-name/birthday link works in a signed-out browser.
-- Disable public access and confirm both the public page and public image URL return 404.
+```text
+https://jasr.me/github/daily-babe/public.php?baby=hudson-11022026
+```
 
+The public page is read-only. Turning sharing off immediately disables both the public page and its image endpoint. Changing the first name or birth date changes the public link.
+
+## Backups and privacy
+
+Runtime photos, central membership data, logs, and settings are ignored by Git. Hostinger performs a nightly backup, but a manual pre-rollout copy is still recommended before deleting old runtime folders. The included Apache rules deny browser access to `storage/` and `config/`.
+
+## Validation checklist
+
+- Sign in through User Management and open Daily Babe without a second login.
+- Confirm password changes occur only in User Management.
+- Confirm a viewer cannot upload, delete, or change settings.
+- Confirm a member can edit only an assigned gallery.
+- Confirm an admin can add babies and manage assignments.
+- Confirm an unassigned user receives a clear 403 response.
+- Confirm private `image.php` requests require central access and gallery membership.
+- Confirm public URLs work only while sharing is enabled.
+- Confirm collage and GIF exports retain day labels.

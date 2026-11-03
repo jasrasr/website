@@ -1,6 +1,6 @@
 # Shared user-management migration tracker
 
-Last updated: 2026-09-25 (America/New_York)
+Last updated: 2026-11-03 (America/New_York)
 
 **Work one project at a time.** Each project gets its own ownership/access design, adapter, tests, rollout and completion evidence. Shared infrastructure can be reused; do not apply the Finances one-to-one account model to galleries, households, groups, guests or automation without a separate design.
 
@@ -8,7 +8,8 @@ Last updated: 2026-09-25 (America/New_York)
 
 - **21 migration candidates:** 15 existing login/password systems and 6 special cases.
 - **1 implementation in review:** Finances, [PR #89](https://github.com/jasrasr/website/pull/89).
-- **20 candidates not implemented.** Preliminary repository inventory is complete; detailed project migrations remain outstanding.
+- **1 implementation ready for rollout:** Daily Babe v2.0; live Hostinger verification remains outstanding.
+- **19 candidates not implemented.** Preliminary repository inventory is complete; detailed project migrations remain outstanding.
 - **0 migrations verified complete.** A PR, merge, or deployment alone does not count as completion. Live status is unverified unless explicitly recorded below.
 - Shared identity foundation: [PR #88](https://github.com/jasrasr/website/pull/88), merged. This is infrastructure, not a completed application migration.
 
@@ -38,7 +39,7 @@ Sequence is a suggested working order, not authorization to switch live authenti
 | 10 | [khootish](../khootish/) | Shared host/admin password; player game codes | Queued | Preserve guest play and player sessions |
 | 11 | [scoreboard](../scoreboard/) | Users, Admin/Scorer roles, per-scoreboard access | Queued | Preserve individual scoreboard grants |
 | 12 | [debt-payoff](../debt-payoff/) | Accounts, admins, shared datasets | Queued | Preserve owners, sharing, backups and audit history |
-| 13 | [daily-babe](../daily-babe/) | Baby-name accounts and private galleries | Queued | Model people separately from galleries |
+| 13 | [daily-babe](../daily-babe/) | Central adult accounts; private baby galleries | **Ready for rollout** | v2.0 clean cutover; live verification pending |
 | 14 | [warranty-tracker](../warranty-tracker/) | Email accounts, household invitations | Queued | Preserve private/shared warranty visibility |
 | 15 | [tv-binge-board](../tv-binge-board/) | Accounts, persistent login, social sharing | Queued | Preserve libraries, connections and remembered login |
 | 16 | [family-tracker](../family-tracker/) | Accounts, remembered devices, group membership | Queued | Preserve consent, ownership and location privacy |
@@ -147,12 +148,15 @@ See [roles and accounts](ROLES-AND-ACCOUNTS.md). These foundation tasks do not m
 - [ ] Test personal/shared datasets, read/edit restrictions, backup recovery and history preservation.
 - [ ] Merge, back up, deploy, verify and record completion.
 
-### 13. Daily Babe
+### 13. Daily Babe — ready for rollout
 
-- [ ] Design person-to-gallery memberships, including multiple adults and multiple babies.
-- [ ] Link existing gallery/baby IDs without treating the baby's name as the adult's identity.
-- [ ] Test image endpoints, uploads, settings, collage/GIF access and cross-gallery isolation; preserve all photos and metadata.
-- [ ] Merge, back up uploads/data, deploy, verify and record completion.
+- [x] Design person-to-gallery memberships for multiple adults and multiple babies.
+- [x] Replace baby-name credentials with central User Management identity and project roles.
+- [x] Use a clean v2 storage namespace; the owner approved discarding the existing test galleries instead of linking legacy IDs.
+- [x] Add static regression coverage for protected image access, role gates, public sharing, and removal of local password handling.
+- [ ] Confirm the merged source deploys to Hostinger and initializes the first clean gallery.
+- [ ] Verify viewer/member/admin behavior, cross-gallery isolation, central logout/revocation, uploads, settings, collage/GIF, and public sharing on the live host.
+- [ ] Confirm the nightly Hostinger backup is current, record rollout evidence, and mark Complete.
 
 ### 14. Warranty Tracker
 
@@ -266,3 +270,4 @@ New integration outside the original 21-project inventory. Owner-only browser ac
 - [ ] Verify owner sign-in, activation and room creation on the live site.
 
 Not marked complete: live identity configuration and rollout still require verification.
+

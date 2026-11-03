@@ -6,105 +6,18 @@ require __DIR__ . '/bootstrap.php';
 $action = (string) ($_GET['action'] ?? $_POST['action'] ?? '');
 
 try {
-    if ($action === 'setup') {
-        require_csrf();
-        if (is_configured()) {
-            json_response(false, 'The gallery is already configured.', null, [['code' => 'ALREADY_CONFIGURED']], 409);
-        }
-        $username = trim((string) ($_POST['username'] ?? ''));
-        $babyName = trim((string) ($_POST['babyName'] ?? ''));
-        $password = (string) ($_POST['password'] ?? '');
-        $confirm = (string) ($_POST['confirmPassword'] ?? '');
-        if (!valid_username($username) || $babyName === '' || strlen($babyName) > 80) {
-            json_response(false, 'Enter a username and the baby’s name.', null, [['code' => 'INVALID_NAME']], 422);
-        }
-        if (strlen($password) < 10 || $password !== $confirm) {
-            json_response(false, 'Use at least 10 characters and make both password entries match.', null, [['code' => 'INVALID_PASSWORD']], 422);
-        }
-        $babyId = bin2hex(random_bytes(12));
-        initialize_baby_storage($babyId);
-        json_write('babies/' . $babyId . '/data/settings.json', [
-            'schemaVersion' => 2,
-            'babyName' => $babyName,
-            'dueDate' => '2026-11-02',
-            'birthDate' => '',
-            'birthTime' => '',
-            'birthLengthInches' => '',
-            'birthWeightPounds' => '',
-            'birthWeightOunces' => '',
-            'publicEnabled' => false,
-            'updatedAt' => gmdate('c'),
-        ]);
-        write_auth([
-            'babies' => [$babyId => ['name' => $babyName, 'createdAt' => gmdate('c')]],
-            'users' => [
-                normalize_username($username) => [
-                    'userId' => bin2hex(random_bytes(12)),
-                    'username' => $username,
-                    'babyIds' => [$babyId],
-                    'homeBabyId' => $babyId,
-                    'role' => 'super_admin',
-                    'passwordHash' => password_hash($password, PASSWORD_DEFAULT),
-                    'createdAt' => gmdate('c'),
-                    'updatedAt' => gmdate('c'),
-                ],
-            ],
-        ]);
-        begin_account_session(auth_data()['users'][normalize_username($username)]);
-        audit_event('gallery.setup', ['username' => $username]);
-        json_response(true, 'Private gallery created.');
-    }
-
-    if ($action === 'login') {
-        require_csrf();
-        $auth = auth_data();
-        $username = trim((string) ($_POST['username'] ?? ''));
-        $password = (string) ($_POST['password'] ?? '');
-        if (!valid_username($username)) {
-            json_response(false, 'Enter your username.', null, [['code' => 'INVALID_USERNAME']], 422);
-        }
-        $key = normalize_username($username);
-        $account = $auth['users'][$key] ?? null;
-        if (is_array($account) && password_verify($password, (string) ($account['passwordHash'] ?? ''))) {
-            begin_account_session($account);
-            audit_event('auth.login');
-            json_response(true, 'Signed in.');
-        }
-        if (isset($auth['passwordHash']) && password_verify($password, (string) $auth['passwordHash'])) {
-            $babyId = bin2hex(random_bytes(12));
-            migrate_legacy_gallery($babyId, $username);
-            $backup = storage_path('backups/auth-before-user-management.json');
-            if (!is_file($backup) && !copy(storage_path('data/auth.json'), $backup)) {
-                throw new RuntimeException('Unable to back up legacy authentication.');
-            }
-            $babyName = (string) (json_read('babies/' . $babyId . '/data/settings.json', [])['babyName'] ?? $username);
-            $account = [
-                'userId' => bin2hex(random_bytes(12)),
-                'username' => $username,
-                'babyIds' => [$babyId],
-                'homeBabyId' => $babyId,
-                'role' => 'super_admin',
-                'passwordHash' => (string) $auth['passwordHash'],
-                'createdAt' => (string) ($auth['updatedAt'] ?? gmdate('c')),
-                'updatedAt' => gmdate('c'),
-            ];
-            write_auth(['users' => [$key => $account], 'babies' => [$babyId => ['name' => $babyName, 'createdAt' => gmdate('c')]]]);
-            begin_account_session($account);
-            audit_event('auth.legacy_migrated');
-            json_response(true, 'Gallery upgraded and signed in.');
-        }
-        usleep(350000);
-        audit_event('auth.failed', ['username' => $username]);
-        json_response(false, 'That username and password did not match.', null, [['code' => 'INVALID_LOGIN']], 401);
+    if ($action === 'setup' || $action === 'login' || $action === 'change_password' || $action === 'add_user') {
+        json_response(false, 'Daily Babe now uses central User Management for accounts and passwords.', [
+            'portal' => daily_auth()->portal(),
+        ], [['code' => 'CENTRAL_AUTH_REQUIRED']], 410);
     }
 
     if ($action === 'logout') {
         require_auth();
         require_csrf();
         audit_event('auth.logout');
-        $_SESSION = [];
-        session_destroy();
-        json_response(true, 'Signed out.');
+        daily_auth()->logout();
+        json_response(true, 'Signed out.', ['portal' => daily_auth()->portal()]);
     }
 
     require_auth();
@@ -134,146 +47,76 @@ try {
         if (!can_access_baby(current_account(), $babyId, $auth)) {
             json_response(false, 'You cannot open that gallery.', null, [['code' => 'FORBIDDEN']], 403);
         }
-        $_SESSION['selectedBabyId'] = $babyId;
+        $_SESSION['daily_babe_selected_baby_id'] = $babyId;
         audit_event('baby.selected', ['selectedBabyId' => $babyId]);
         json_response(true, 'Baby gallery selected.');
     }
 
-    if ($action === 'change_password') {
-        require_csrf();
-        $currentPassword = (string) ($_POST['currentPassword'] ?? '');
-        $newPassword = (string) ($_POST['newPassword'] ?? '');
-        $confirmNewPassword = (string) ($_POST['confirmNewPassword'] ?? '');
-        $auth = auth_data();
-        $key = normalize_username((string) $_SESSION['username']);
-        $account = $auth['users'][$key] ?? null;
-        if (!is_array($account) || !password_verify($currentPassword, (string) ($account['passwordHash'] ?? ''))) {
-            json_response(false, 'The current password is incorrect.', null, [['code' => 'INVALID_CURRENT_PASSWORD']], 401);
-        }
-        if (strlen($newPassword) < 10 || $newPassword !== $confirmNewPassword) {
-            json_response(false, 'Use at least 10 characters and make both new password entries match.', null, [['code' => 'INVALID_NEW_PASSWORD']], 422);
-        }
-        if (password_verify($newPassword, (string) $account['passwordHash'])) {
-            json_response(false, 'Choose a new password that is different from the current password.', null, [['code' => 'PASSWORD_UNCHANGED']], 422);
-        }
-        $auth['users'][$key]['passwordHash'] = password_hash($newPassword, PASSWORD_DEFAULT);
-        $auth['users'][$key]['updatedAt'] = gmdate('c');
-        write_auth($auth);
-        audit_event('auth.password_changed');
-        json_response(true, 'Password changed.');
-    }
-
     if ($action === 'add_baby') {
         require_csrf();
-        if (!is_super_admin()) {
-            json_response(false, 'Only the admin can add a baby.', null, [['code' => 'FORBIDDEN']], 403);
-        }
+        require_project_role('admin');
         $babyName = trim((string) ($_POST['babyName'] ?? ''));
         if ($babyName === '' || strlen($babyName) > 80) {
             json_response(false, 'Enter the baby’s name.', null, [['code' => 'INVALID_NAME']], 422);
         }
         $auth = auth_data();
         $babyId = bin2hex(random_bytes(12));
-        initialize_baby_storage($babyId);
-        json_write('babies/' . $babyId . '/data/settings.json', [
-            'schemaVersion' => 2,
-            'babyName' => $babyName,
-            'dueDate' => '2026-11-02',
-            'birthDate' => '',
-            'birthTime' => '',
-            'birthLengthInches' => '',
-            'birthWeightPounds' => '',
-            'birthWeightOunces' => '',
-            'publicEnabled' => false,
-            'updatedAt' => gmdate('c'),
-        ]);
+        initialize_baby_storage($babyId, $babyName);
         $auth['babies'][$babyId] = ['name' => $babyName, 'createdAt' => gmdate('c')];
         write_auth($auth);
-        $_SESSION['selectedBabyId'] = $babyId;
+        $_SESSION['daily_babe_selected_baby_id'] = $babyId;
         audit_event('baby.created', ['babyId' => $babyId]);
         json_response(true, 'Baby gallery created.', ['babyId' => $babyId], [], 201);
     }
 
     if ($action === 'users') {
-        if (!is_super_admin()) {
-            json_response(false, 'Only the admin can manage users.', null, [['code' => 'FORBIDDEN']], 403);
-        }
-        $auth = auth_data();
+        require_project_role('admin');
+        $auth = tracker_state();
         $users = [];
-        foreach ($auth['users'] as $user) {
+        foreach (central_users_with_project_access() as $user) {
+            $membership = $auth['memberships'][$user['id']] ?? ['babyIds' => []];
             $users[] = [
+                'id' => $user['id'],
                 'username' => $user['username'],
-                'role' => $user['role'],
-                'babyIds' => $user['babyIds'] ?? [],
+                'name' => $user['name'],
+                'role' => $user['projectRole'],
+                'babyIds' => $membership['babyIds'] ?? [],
             ];
         }
         json_response(true, 'Users loaded.', ['users' => $users, 'babies' => $auth['babies']]);
     }
 
-    if ($action === 'add_user') {
-        require_csrf();
-        if (!is_super_admin()) {
-            json_response(false, 'Only the admin can manage users.', null, [['code' => 'FORBIDDEN']], 403);
-        }
-        $username = trim((string) ($_POST['username'] ?? ''));
-        $password = (string) ($_POST['password'] ?? '');
-        $confirm = (string) ($_POST['confirmPassword'] ?? '');
-        $babyIds = $_POST['babyIds'] ?? [];
-        $auth = auth_data();
-        if (!valid_username($username)) {
-            json_response(false, 'Enter a valid username.', null, [['code' => 'INVALID_USERNAME']], 422);
-        }
-        if (isset($auth['users'][normalize_username($username)])) {
-            json_response(false, 'That username already exists.', null, [['code' => 'USERNAME_EXISTS']], 409);
-        }
-        if (strlen($password) < 10 || $password !== $confirm) {
-            json_response(false, 'Use at least 10 characters and make both password entries match.', null, [['code' => 'INVALID_PASSWORD']], 422);
-        }
-        if (!is_array($babyIds) || $babyIds === [] || count(array_filter($babyIds, 'is_string')) !== count($babyIds) || array_diff($babyIds, array_keys($auth['babies']))) {
-            json_response(false, 'Choose at least one valid gallery.', null, [['code' => 'INVALID_ACCESS']], 422);
-        }
-        $babyIds = array_values(array_unique($babyIds));
-        $auth['users'][normalize_username($username)] = [
-            'userId' => bin2hex(random_bytes(12)),
-            'username' => $username,
-            'role' => 'user',
-            'passwordHash' => password_hash($password, PASSWORD_DEFAULT),
-            'babyIds' => $babyIds,
-            'homeBabyId' => $babyIds[0],
-            'createdAt' => gmdate('c'),
-            'updatedAt' => gmdate('c'),
-        ];
-        write_auth($auth);
-        audit_event('user.created', ['createdUsername' => $username]);
-        json_response(true, 'User created.', null, [], 201);
-    }
-
     if ($action === 'update_user_access') {
         require_csrf();
-        if (!is_super_admin()) {
-            json_response(false, 'Only the admin can manage users.', null, [['code' => 'FORBIDDEN']], 403);
-        }
-        $key = normalize_username((string) ($_POST['username'] ?? ''));
+        require_project_role('admin');
+        $userId = (string) ($_POST['userId'] ?? '');
         $babyIds = $_POST['babyIds'] ?? [];
-        $auth = auth_data();
-        if (!isset($auth['users'][$key])) {
+        $auth = tracker_state();
+        $knownUsers = array_column(central_users_with_project_access(), null, 'id');
+        if (!isset($knownUsers[$userId])) {
             json_response(false, 'User not found.', null, [['code' => 'NOT_FOUND']], 404);
         }
-        if (!is_array($babyIds) || $babyIds === [] || count(array_filter($babyIds, 'is_string')) !== count($babyIds) || array_diff($babyIds, array_keys($auth['babies']))) {
-            json_response(false, 'Choose at least one valid gallery.', null, [['code' => 'INVALID_ACCESS']], 422);
+        if (!is_array($babyIds) || count(array_filter($babyIds, 'is_string')) !== count($babyIds) || array_diff($babyIds, array_keys($auth['babies']))) {
+            json_response(false, 'Choose valid galleries.', null, [['code' => 'INVALID_ACCESS']], 422);
         }
         $babyIds = array_values(array_unique($babyIds));
-        $auth['users'][$key]['babyIds'] = $babyIds;
-        if (!in_array($auth['users'][$key]['homeBabyId'], $babyIds, true)) {
-            $auth['users'][$key]['homeBabyId'] = $babyIds[0];
+        if ($babyIds === []) {
+            unset($auth['memberships'][$userId]);
+        } else {
+            $existingHome = (string) ($auth['memberships'][$userId]['homeBabyId'] ?? '');
+            $auth['memberships'][$userId] = [
+                'babyIds' => $babyIds,
+                'homeBabyId' => in_array($existingHome, $babyIds, true) ? $existingHome : $babyIds[0],
+                'updatedAt' => gmdate('c'),
+            ];
         }
-        $auth['users'][$key]['updatedAt'] = gmdate('c');
         write_auth($auth);
-        audit_event('user.access_updated', ['updatedUsername' => $auth['users'][$key]['username']]);
+        audit_event('membership.updated', ['updatedCentralUserId' => $userId, 'babyIds' => $babyIds]);
         json_response(true, 'Gallery access updated.');
     }
 
     if ($action === 'settings') {
+        require_project_role('member');
         require_csrf();
         $dueDate = (string) ($_POST['dueDate'] ?? '');
         $birthDate = (string) ($_POST['birthDate'] ?? '');
@@ -311,7 +154,7 @@ try {
             }
         }
         $settings = [
-            'schemaVersion' => 2,
+            'schemaVersion' => 3,
             'babyName' => $babyName,
             'dueDate' => $dueDate,
             'birthDate' => $birthDate,
@@ -336,6 +179,7 @@ try {
     }
 
     if ($action === 'upload') {
+        require_project_role('member');
         require_csrf();
         $photoDate = (string) ($_POST['photoDate'] ?? '');
         // Permit one calendar day beyond server time for clients near a timezone boundary.
@@ -389,6 +233,7 @@ try {
     }
 
     if ($action === 'delete_photo') {
+        require_project_role('member');
         require_csrf();
         $id = (string) ($_POST['id'] ?? '');
         if (preg_match('/^[a-f0-9]{24}$/', $id) !== 1) {

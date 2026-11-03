@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.0 - 2026-11-03
+
+- Replace Daily Babe usernames, passwords, and local sessions with central User Management.
+- Separate adult identity from baby gallery metadata and support multiple adults across multiple babies.
+- Add central viewer/member/admin role enforcement to page, API, and private image access.
+- Keep per-baby membership and runtime data in a new `storage/central/` namespace.
+- Start with a clean gallery set; earlier test galleries are intentionally not migrated or read.
+- Keep optional public first-name/birthday links independent from authenticated editing.
+- Route password and account changes to User Management.
+
 ## 1.5.0 - 2026-11-03
 
 - Add an optional fully open, read-only public view for each baby gallery.

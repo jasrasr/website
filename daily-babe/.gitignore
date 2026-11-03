@@ -4,6 +4,8 @@ storage/logs/
 storage/backups/
 storage/uploads/
 storage/babies/
+storage/central/
 !storage/.gitkeep
 !storage/.htaccess
+
 

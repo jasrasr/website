@@ -2,11 +2,7 @@
 
 declare(strict_types=1);
 require __DIR__ . '/bootstrap.php';
-
-if (!is_authenticated()) {
-    http_response_code(401);
-    exit;
-}
+daily_require_user('viewer');
 
 $id = (string) ($_GET['id'] ?? '');
 if (!preg_match('/^[a-f0-9]{24}$/', $id)) {
@@ -38,4 +34,5 @@ header('Content-Length: ' . filesize($path));
 header('Cache-Control: private, no-store');
 header('X-Content-Type-Options: nosniff');
 readfile($path);
+
 

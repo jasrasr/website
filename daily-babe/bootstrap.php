@@ -2,30 +2,32 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '1.5.0';
+const BABY_TRACKER_VERSION = '2.0.0';
+const BABY_TRACKER_PROJECT = 'daily-babe';
 
-$configFile = __DIR__ . '/config/config.php';
-$config = require is_file($configFile) ? $configFile : __DIR__ . '/config/config.example.php';
+$dailyConfigFile = __DIR__ . '/config/config.php';
+$config = require is_file($dailyConfigFile) ? $dailyConfigFile : __DIR__ . '/config/config.example.php';
 if (!is_array($config)) {
     throw new RuntimeException('Application configuration must return an array.');
 }
 
 date_default_timezone_set((string) ($config['timezone'] ?? 'America/New_York'));
-ini_set('session.use_strict_mode', '1');
-ini_set('session.cookie_httponly', '1');
-ini_set('session.cookie_samesite', 'Lax');
-if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
-    ini_set('session.cookie_secure', '1');
-}
-session_name((string) ($config['session_name'] ?? 'baby_daily_session'));
-session_start();
+
+require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
+$dailyIdentity = \Jasr\Framework\SharedIdentity::connect();
 
 $storageRoot = rtrim((string) ($config['storage_path'] ?? (__DIR__ . '/storage')), DIRECTORY_SEPARATOR);
-foreach (['data', 'uploads', 'logs', 'backups', 'babies'] as $folder) {
-    $path = $storageRoot . DIRECTORY_SEPARATOR . $folder;
+foreach (['central/data', 'central/logs', 'central/backups', 'central/babies'] as $folder) {
+    $path = $storageRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $folder);
     if (!is_dir($path) && !mkdir($path, 0750, true) && !is_dir($path)) {
-        throw new RuntimeException('Unable to initialize application storage.');
+        throw new RuntimeException('Unable to initialize Daily Babe storage.');
     }
+}
+
+function daily_auth(): \Jasr\Users\Auth
+{
+    global $dailyIdentity;
+    return $dailyIdentity;
 }
 
 function storage_path(string $relative = ''): string
@@ -34,48 +36,9 @@ function storage_path(string $relative = ''): string
     return $storageRoot . ($relative === '' ? '' : DIRECTORY_SEPARATOR . ltrim($relative, '/\\'));
 }
 
-function baby_root(string $babyId): string
+function central_storage_path(string $relative = ''): string
 {
-    if (preg_match('/^[a-f0-9]{24}$/', $babyId) !== 1) {
-        throw new RuntimeException('Invalid baby account identifier.');
-    }
-    return storage_path('babies/' . $babyId);
-}
-
-function initialize_baby_storage(string $babyId): void
-{
-    foreach (['data', 'uploads', 'backups'] as $folder) {
-        $path = baby_root($babyId) . DIRECTORY_SEPARATOR . $folder;
-        if (!is_dir($path) && !mkdir($path, 0750, true) && !is_dir($path)) {
-            throw new RuntimeException('Unable to initialize baby storage.');
-        }
-    }
-}
-
-function current_baby_id(): string
-{
-    $account = current_account();
-    $auth = auth_data();
-    $selected = (string) ($_SESSION['selectedBabyId'] ?? '');
-    if ($selected !== '' && can_access_baby($account, $selected, $auth)) {
-        return $selected;
-    }
-    $home = (string) ($account['homeBabyId'] ?? '');
-    if (can_access_baby($account, $home, $auth)) {
-        return $home;
-    }
-    foreach ($auth['babies'] as $babyId => $_baby) {
-        if (can_access_baby($account, (string) $babyId, $auth)) {
-            return (string) $babyId;
-        }
-    }
-    throw new RuntimeException('No baby gallery is available to this user.');
-}
-
-function baby_storage_path(string $relative = ''): string
-{
-    $root = baby_root(current_baby_id());
-    return $root . ($relative === '' ? '' : DIRECTORY_SEPARATOR . ltrim($relative, '/\\'));
+    return storage_path('central' . ($relative === '' ? '' : '/' . ltrim($relative, '/\\')));
 }
 
 function json_read(string $relative, array $default): array
@@ -105,8 +68,8 @@ function json_write(string $relative, array $data): void
 {
     $path = storage_path($relative);
     $directory = dirname($path);
-    if (!is_dir($directory)) {
-        mkdir($directory, 0750, true);
+    if (!is_dir($directory) && !mkdir($directory, 0750, true) && !is_dir($directory)) {
+        throw new RuntimeException('Unable to create application data directory.');
     }
     $temporary = tempnam($directory, '.write-');
     if ($temporary === false) {
@@ -115,6 +78,7 @@ function json_write(string $relative, array $data): void
     $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . PHP_EOL;
     $handle = fopen($temporary, 'wb');
     if ($handle === false) {
+        @unlink($temporary);
         throw new RuntimeException('Unable to write application data.');
     }
     try {
@@ -128,77 +92,123 @@ function json_write(string $relative, array $data): void
     }
     chmod($temporary, 0640);
     if (!rename($temporary, $path)) {
-        unlink($temporary);
+        @unlink($temporary);
         throw new RuntimeException('Unable to finalize application data.');
     }
 }
 
-function baby_json_read(string $relative, array $default): array
+function tracker_state(): array
 {
-    return json_read('babies/' . current_baby_id() . '/' . ltrim($relative, '/\\'), $default);
+    $state = json_read('central/data/state.json', []);
+    return $state + [
+        'schemaVersion' => 1,
+        'babies' => [],
+        'memberships' => [],
+        'updatedAt' => gmdate('c'),
+    ];
 }
 
-function baby_json_write(string $relative, array $data): void
+function write_tracker_state(array $state): void
 {
-    json_write('babies/' . current_baby_id() . '/' . ltrim($relative, '/\\'), $data);
+    $state['schemaVersion'] = 1;
+    $state['updatedAt'] = gmdate('c');
+    json_write('central/data/state.json', $state);
 }
 
-function request_id(): string
+/** Compatibility name used by existing project routes; contains no credentials. */
+function auth_data(): array
 {
-    static $id;
-    return $id ??= bin2hex(random_bytes(8));
+    return tracker_state();
 }
 
-function audit_event(string $event, array $details = []): void
+/** Compatibility name used by existing project routes; writes memberships/gallery metadata only. */
+function write_auth(array $state): void
 {
-    if (!empty($_SESSION['username'])) {
-        $details['userId'] = (string) ($_SESSION['userId'] ?? '');
-        $details['username'] = (string) ($_SESSION['username'] ?? '');
+    write_tracker_state($state);
+}
+
+function ensure_project_registered(): void
+{
+    $auth = daily_auth();
+    $directory = $auth->directory->read();
+    if (isset($directory['projects'][BABY_TRACKER_PROJECT])) {
+        return;
     }
-    $entry = json_encode([
-        'timestamp' => gmdate('c'),
-        'requestId' => request_id(),
-        'event' => $event,
-        'details' => $details,
-    ], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . PHP_EOL;
-    file_put_contents(storage_path('logs/audit-' . date('Y-m') . '.jsonl'), $entry, FILE_APPEND | LOCK_EX);
+    $user = $auth->user();
+    if (!is_array($user) || empty($user['admin'])) {
+        return;
+    }
+    $auth->directory->administer(
+        (string) $user['id'],
+        (int) $user['version'],
+        'save-project',
+        [
+            'project' => BABY_TRACKER_PROJECT,
+            'name' => 'Daily Babe',
+            'path' => '/github/daily-babe/',
+        ]
+    );
+}
+
+function daily_project_role(?array $user = null): string
+{
+    $user ??= daily_auth()->user();
+    if (!is_array($user)) {
+        return '';
+    }
+    return (string) (\Jasr\Users\Permissions::projectRole($user, BABY_TRACKER_PROJECT) ?? '');
+}
+
+function daily_require_user(string $minimum = 'viewer', bool $json = false): array
+{
+    ensure_project_registered();
+    $user = daily_auth()->requireProject(BABY_TRACKER_PROJECT, $minimum, $json);
+    ensure_initial_gallery($user);
+    if (!daily_auth()->can(BABY_TRACKER_PROJECT, 'admin')) {
+        $membership = tracker_state()['memberships'][(string) $user['id']] ?? null;
+        if (!is_array($membership) || ($membership['babyIds'] ?? []) === []) {
+            if ($json) {
+                json_response(false, 'Your account has Daily Babe access but has not been assigned to a baby gallery.', null, [['code' => 'GALLERY_ACCESS_REQUIRED']], 403);
+            }
+            http_response_code(403);
+            header('Content-Type: text/plain; charset=utf-8');
+            exit('Your account has not been assigned to a Daily Babe gallery. Ask a Daily Babe administrator for access.');
+        }
+    }
+    return $user;
+}
+
+function require_project_role(string $minimum, bool $json = true): array
+{
+    return daily_require_user($minimum, $json);
+}
+
+function is_configured(): bool
+{
+    return isset(daily_auth()->directory->read()['projects'][BABY_TRACKER_PROJECT]);
+}
+
+function is_authenticated(): bool
+{
+    ensure_project_registered();
+    return daily_auth()->can(BABY_TRACKER_PROJECT, 'viewer');
+}
+
+function require_auth(): void
+{
+    daily_require_user('viewer', true);
 }
 
 function csrf_token(): string
 {
-    if (empty($_SESSION['csrf'])) {
-        $_SESSION['csrf'] = bin2hex(random_bytes(32));
-    }
-    return (string) $_SESSION['csrf'];
+    return daily_auth()->csrf();
 }
 
 function require_csrf(): void
 {
     $provided = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf'] ?? '';
-    if (!is_string($provided) || !hash_equals(csrf_token(), $provided)) {
+    if (!daily_auth()->validCsrf(is_string($provided) ? $provided : null)) {
         json_response(false, 'Your session expired. Refresh and try again.', null, [['code' => 'CSRF_FAILED']], 419);
-    }
-}
-
-function is_configured(): bool
-{
-    $auth = json_read('data/auth.json', []);
-    return isset($auth['passwordHash']) || !empty($auth['accounts']) || !empty($auth['users']);
-}
-
-function is_authenticated(): bool
-{
-    if (empty($_SESSION['authenticated']) || (string) ($_SESSION['username'] ?? '') === '') {
-        return false;
-    }
-    $user = auth_data()['users'][normalize_username((string) $_SESSION['username'])] ?? null;
-    return is_array($user) && (empty($_SESSION['userId']) || $user['userId'] === $_SESSION['userId']);
-}
-
-function require_auth(): void
-{
-    if (!is_authenticated()) {
-        json_response(false, 'Please sign in.', null, [['code' => 'AUTH_REQUIRED']], 401);
     }
 }
 
@@ -216,142 +226,37 @@ function json_response(bool $success, string $message, mixed $data = null, array
     exit;
 }
 
-function auth_data(): array
+function request_id(): string
 {
-    $auth = json_read('data/auth.json', ['schemaVersion' => 4, 'users' => [], 'babies' => []]);
-    if (!empty($auth['accounts'])) {
-        // Preserve the original file before replacing its authentication format.
-        $source = storage_path('data/auth.json');
-        $backup = storage_path('backups/auth-before-user-management.json');
-        if (!is_file($backup) && !copy($source, $backup)) {
-            throw new RuntimeException('Unable to back up existing accounts.');
-        }
-        $users = [];
-        $babies = [];
-        $first = array_key_first($auth['accounts']);
-        foreach ($auth['accounts'] as $key => $account) {
-            $babyId = (string) ($account['babyId'] ?? '');
-            if (preg_match('/^[a-f0-9]{24}$/', $babyId) !== 1) {
-                throw new RuntimeException('An existing baby identifier is invalid.');
-            }
-            $username = (string) $account['username'];
-            $settings = json_read('babies/' . $babyId . '/data/settings.json', []);
-            $babyName = trim((string) ($settings['babyName'] ?? ''));
-            $babies[$babyId] = ['name' => $babyName !== '' ? $babyName : $username, 'createdAt' => (string) ($account['createdAt'] ?? gmdate('c'))];
-            $users[$key] = [
-                'userId' => bin2hex(random_bytes(12)),
-                'username' => $username,
-                'role' => $key === $first ? 'super_admin' : (string) ($account['role'] ?? 'user'),
-                'passwordHash' => (string) $account['passwordHash'],
-                'babyIds' => [$babyId],
-                'homeBabyId' => $babyId,
-                'createdAt' => (string) ($account['createdAt'] ?? gmdate('c')),
-                'updatedAt' => (string) ($account['updatedAt'] ?? gmdate('c')),
-            ];
-        }
-        $auth = ['users' => $users, 'babies' => $babies];
-        write_auth($auth);
+    static $id;
+    return $id ??= bin2hex(random_bytes(8));
+}
+
+function audit_event(string $event, array $details = []): void
+{
+    $user = daily_auth()->user();
+    if (is_array($user)) {
+        $details['centralUserId'] = (string) $user['id'];
+        $details['username'] = (string) $user['username'];
     }
-    return $auth;
-}
-
-function write_auth(array $auth): void
-{
-    $auth['schemaVersion'] = 4;
-    $auth['updatedAt'] = gmdate('c');
-    json_write('data/auth.json', $auth);
-}
-
-function normalize_username(string $username): string
-{
-    return strtolower(trim($username));
-}
-
-function valid_username(string $username): bool
-{
-    return preg_match("/^[A-Za-z][A-Za-z0-9._'-]{0,39}$/", trim($username)) === 1;
-}
-
-function begin_account_session(array $account): void
-{
-    session_regenerate_id(true);
-    $_SESSION['authenticated'] = true;
-    $_SESSION['username'] = (string) $account['username'];
-    $_SESSION['userId'] = (string) $account['userId'];
-    unset($_SESSION['babyId']);
-    unset($_SESSION['selectedBabyId']);
-}
-
-function current_account(): array
-{
-    $auth = auth_data();
-    $key = normalize_username((string) ($_SESSION['username'] ?? ''));
-    $account = $auth['users'][$key] ?? null;
-    if (!is_array($account) || (!empty($_SESSION['userId']) && $account['userId'] !== $_SESSION['userId'])) {
-        throw new RuntimeException('The active user account could not be found.');
+    if (!empty($_SESSION['daily_babe_selected_baby_id'])) {
+        $details['babyId'] = (string) $_SESSION['daily_babe_selected_baby_id'];
     }
-    return $account;
+    $entry = json_encode([
+        'timestamp' => gmdate('c'),
+        'requestId' => request_id(),
+        'event' => $event,
+        'details' => $details,
+    ], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . PHP_EOL;
+    file_put_contents(central_storage_path('logs/audit-' . date('Y-m') . '.jsonl'), $entry, FILE_APPEND | LOCK_EX);
 }
 
-function can_access_baby(array $account, string $babyId, array $auth): bool
-{
-    return isset($auth['babies'][$babyId])
-        && (($account['role'] ?? 'user') === 'super_admin' || in_array($babyId, $account['babyIds'] ?? [], true));
-}
-
-function is_super_admin(): bool
-{
-    return is_authenticated() && (current_account()['role'] ?? 'user') === 'super_admin';
-}
-
-function migrate_legacy_gallery(string $babyId, string $username): void
-{
-    initialize_baby_storage($babyId);
-    foreach (['settings.json', 'entries.json'] as $filename) {
-        $source = storage_path('data/' . $filename);
-        $destination = baby_root($babyId) . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . $filename;
-        if (is_file($source) && !is_file($destination) && !copy($source, $destination)) {
-            throw new RuntimeException('Unable to copy existing gallery metadata.');
-        }
-    }
-    foreach (glob(storage_path('uploads/*')) ?: [] as $source) {
-        if (!is_file($source)) {
-            continue;
-        }
-        $destination = baby_root($babyId) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . basename($source);
-        if (!is_file($destination) && !copy($source, $destination)) {
-            throw new RuntimeException('Unable to copy an existing gallery photo.');
-        }
-    }
-    $settingsPath = 'babies/' . $babyId . '/data/settings.json';
-    $settings = json_read($settingsPath, []);
-    if ($settings === []) {
-        $settings = [
-            'schemaVersion' => 2,
-            'babyName' => $username,
-            'dueDate' => '2026-11-02',
-            'birthDate' => '',
-            'birthTime' => '',
-            'birthLengthInches' => '',
-            'birthWeightPounds' => '',
-            'birthWeightOunces' => '',
-            'publicEnabled' => false,
-            'updatedAt' => gmdate('c'),
-        ];
-    } elseif (trim((string) ($settings['babyName'] ?? '')) === '') {
-        $settings['babyName'] = $username;
-        $settings['updatedAt'] = gmdate('c');
-    }
-    json_write($settingsPath, $settings);
-}
-
-function tracker_settings(): array
+function default_baby_settings(string $name = 'Baby'): array
 {
     global $config;
-    $babyId = current_baby_id();
-    return baby_json_read('data/settings.json', [
-        'schemaVersion' => 2,
-        'babyName' => (string) (auth_data()['babies'][$babyId]['name'] ?? ''),
+    return [
+        'schemaVersion' => 3,
+        'babyName' => $name,
         'dueDate' => (string) ($config['due_date'] ?? '2026-11-02'),
         'birthDate' => '',
         'birthTime' => '',
@@ -360,12 +265,142 @@ function tracker_settings(): array
         'birthWeightOunces' => '',
         'publicEnabled' => false,
         'updatedAt' => gmdate('c'),
-    ]);
+    ];
+}
+
+function baby_root(string $babyId): string
+{
+    if (preg_match('/^[a-f0-9]{24}$/', $babyId) !== 1) {
+        throw new RuntimeException('Invalid baby gallery identifier.');
+    }
+    return central_storage_path('babies/' . $babyId);
+}
+
+function initialize_baby_storage(string $babyId, string $name = 'Baby'): void
+{
+    foreach (['data', 'uploads', 'backups'] as $folder) {
+        $path = baby_root($babyId) . DIRECTORY_SEPARATOR . $folder;
+        if (!is_dir($path) && !mkdir($path, 0750, true) && !is_dir($path)) {
+            throw new RuntimeException('Unable to initialize baby storage.');
+        }
+    }
+    $settingsPath = 'central/babies/' . $babyId . '/data/settings.json';
+    if (!is_file(storage_path($settingsPath))) {
+        json_write($settingsPath, default_baby_settings($name));
+    }
+}
+
+function ensure_initial_gallery(array $user): void
+{
+    $state = tracker_state();
+    if ($state['babies'] !== []) {
+        return;
+    }
+    if (!daily_auth()->can(BABY_TRACKER_PROJECT, 'admin')) {
+        throw new RuntimeException('A Daily Babe administrator must initialize the first gallery.');
+    }
+    $babyId = bin2hex(random_bytes(12));
+    initialize_baby_storage($babyId, 'Baby');
+    $state['babies'][$babyId] = ['name' => 'Baby', 'createdAt' => gmdate('c')];
+    $state['memberships'][(string) $user['id']] = [
+        'babyIds' => [$babyId],
+        'homeBabyId' => $babyId,
+        'updatedAt' => gmdate('c'),
+    ];
+    write_tracker_state($state);
+    $_SESSION['daily_babe_selected_baby_id'] = $babyId;
+    audit_event('central.gallery_initialized', ['babyId' => $babyId]);
+}
+
+function current_account(): array
+{
+    $user = daily_auth()->user();
+    if (!is_array($user)) {
+        throw new RuntimeException('No central user is signed in.');
+    }
+    $state = tracker_state();
+    $membership = $state['memberships'][(string) $user['id']] ?? ['babyIds' => [], 'homeBabyId' => ''];
+    $role = daily_project_role($user);
+    if (daily_auth()->can(BABY_TRACKER_PROJECT, 'admin')) {
+        $membership['babyIds'] = array_keys($state['babies']);
+        $membership['homeBabyId'] = in_array($membership['homeBabyId'] ?? '', $membership['babyIds'], true)
+            ? $membership['homeBabyId']
+            : (string) ($membership['babyIds'][0] ?? '');
+    }
+    return [
+        'userId' => (string) $user['id'],
+        'username' => (string) $user['username'],
+        'name' => (string) ($user['name'] ?? $user['username']),
+        'role' => $role,
+        'babyIds' => array_values($membership['babyIds'] ?? []),
+        'homeBabyId' => (string) ($membership['homeBabyId'] ?? ''),
+    ];
+}
+
+function can_access_baby(array $account, string $babyId, array $state): bool
+{
+    return isset($state['babies'][$babyId])
+        && (in_array($account['role'] ?? '', ['admin', 'super_admin'], true)
+            || in_array($babyId, $account['babyIds'] ?? [], true));
+}
+
+function is_super_admin(): bool
+{
+    return daily_auth()->can(BABY_TRACKER_PROJECT, 'admin');
+}
+
+function current_baby_id(): string
+{
+    $state = tracker_state();
+    $account = current_account();
+    $selected = (string) ($_SESSION['daily_babe_selected_baby_id'] ?? '');
+    if ($selected !== '' && can_access_baby($account, $selected, $state)) {
+        return $selected;
+    }
+    $home = (string) ($account['homeBabyId'] ?? '');
+    if ($home !== '' && can_access_baby($account, $home, $state)) {
+        $_SESSION['daily_babe_selected_baby_id'] = $home;
+        return $home;
+    }
+    foreach ($state['babies'] as $babyId => $_baby) {
+        if (can_access_baby($account, (string) $babyId, $state)) {
+            $_SESSION['daily_babe_selected_baby_id'] = (string) $babyId;
+            return (string) $babyId;
+        }
+    }
+    throw new RuntimeException('No baby gallery is assigned to this central account.');
+}
+
+function baby_storage_path(string $relative = ''): string
+{
+    $root = baby_root(current_baby_id());
+    return $root . ($relative === '' ? '' : DIRECTORY_SEPARATOR . ltrim($relative, '/\\'));
+}
+
+function baby_json_read(string $relative, array $default): array
+{
+    return json_read('central/babies/' . current_baby_id() . '/' . ltrim($relative, '/\\'), $default);
+}
+
+function baby_json_write(string $relative, array $data): void
+{
+    json_write('central/babies/' . current_baby_id() . '/' . ltrim($relative, '/\\'), $data);
+}
+
+function tracker_settings(): array
+{
+    $state = tracker_state();
+    $babyId = current_baby_id();
+    return baby_json_read('data/settings.json', default_baby_settings((string) ($state['babies'][$babyId]['name'] ?? 'Baby')));
 }
 
 function tracker_entries(): array
 {
-    return baby_json_read('data/entries.json', ['schemaVersion' => 1, 'updatedAt' => gmdate('c'), 'records' => []]);
+    return baby_json_read('data/entries.json', [
+        'schemaVersion' => 1,
+        'updatedAt' => gmdate('c'),
+        'records' => [],
+    ]);
 }
 
 function valid_date(string $date): bool
@@ -397,13 +432,13 @@ function public_gallery_by_slug(string $slug): ?array
     if (preg_match('/^[a-z0-9][a-z0-9-]{1,88}-\d{8}$/', $slug) !== 1) {
         return null;
     }
-    $auth = auth_data();
-    foreach ($auth['babies'] ?? [] as $babyId => $_baby) {
+    $state = tracker_state();
+    foreach ($state['babies'] as $babyId => $_baby) {
         $babyId = (string) $babyId;
         if (preg_match('/^[a-f0-9]{24}$/', $babyId) !== 1) {
             continue;
         }
-        $settings = json_read('babies/' . $babyId . '/data/settings.json', []);
+        $settings = json_read('central/babies/' . $babyId . '/data/settings.json', []);
         if (($settings['publicEnabled'] ?? false) !== true) {
             continue;
         }
@@ -413,5 +448,29 @@ function public_gallery_by_slug(string $slug): ?array
         }
     }
     return null;
+}
+
+function central_users_with_project_access(): array
+{
+    $directory = daily_auth()->directory->read();
+    $users = [];
+    foreach ($directory['users'] ?? [] as $user) {
+        if (!is_array($user) || empty($user['active'])) {
+            continue;
+        }
+        $public = \Jasr\Users\Directory::publicUser($user);
+        $role = \Jasr\Users\Permissions::projectRole($public, BABY_TRACKER_PROJECT);
+        if ($role === null) {
+            continue;
+        }
+        $users[] = [
+            'id' => (string) $public['id'],
+            'username' => (string) $public['username'],
+            'name' => (string) ($public['name'] ?? $public['username']),
+            'projectRole' => (string) $role,
+        ];
+    }
+    usort($users, static fn(array $left, array $right): int => strcasecmp($left['name'], $right['name']));
+    return $users;
 }
 

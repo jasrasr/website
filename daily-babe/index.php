@@ -2,13 +2,16 @@
 
 declare(strict_types=1);
 require __DIR__ . '/bootstrap.php';
-$configured = is_configured();
-$authenticated = is_authenticated();
-$authData = auth_data();
-$legacyAuth = $configured && isset($authData['passwordHash']);
-$settings = $authenticated ? tracker_settings() : [];
-$account = $authenticated ? current_account() : [];
-$superAdmin = $authenticated && is_super_admin();
+$centralUser = daily_require_user('viewer');
+$configured = true;
+$authenticated = true;
+$authData = tracker_state();
+$legacyAuth = false;
+$settings = tracker_settings();
+$account = current_account();
+$superAdmin = is_super_admin();
+$canWrite = daily_auth()->can(BABY_TRACKER_PROJECT, 'member');
+$accountPortal = daily_auth()->portal();
 $availableBabies = [];
 if ($authenticated) {
     foreach ($authData['babies'] ?? [] as $babyId => $baby) {
@@ -27,7 +30,7 @@ if ($authenticated) {
     <title><?= htmlspecialchars((string) ($config['app_name'] ?? 'Baby Daily')) ?></title>
     <link rel="stylesheet" href="assets/app.css?v=<?= BABY_TRACKER_VERSION ?>">
 </head>
-<body data-authenticated="<?= $authenticated ? 'true' : 'false' ?>" data-configured="<?= $configured ? 'true' : 'false' ?>" data-legacy-auth="<?= $legacyAuth ? 'true' : 'false' ?>">
+<body data-authenticated="<?= $authenticated ? 'true' : 'false' ?>" data-can-write="<?= $canWrite ? 'true' : 'false' ?>" data-configured="<?= $configured ? 'true' : 'false' ?>" data-legacy-auth="<?= $legacyAuth ? 'true' : 'false' ?>">
 <header class="topbar">
     <h1>Baby Daily<span class="brand-dot">.</span></h1>
     <?php if ($authenticated): ?>
@@ -48,20 +51,6 @@ if ($authenticated) {
 </header>
 
 <main>
-    <?php if (!$authenticated): ?>
-        <section class="auth-card card">
-            <div class="baby-mark" aria-hidden="true">♥</div>
-            <h2><?= $legacyAuth ? 'Name the existing gallery' : ($configured ? 'Welcome back' : 'Create the private gallery') ?></h2>
-            <p><?= $legacyAuth ? 'Enter a username and your existing password. This upgrades the gallery without deleting the current photos.' : ($configured ? 'Sign in with your username.' : 'Create your admin sign-in and the first baby gallery.') ?></p>
-            <form id="authForm">
-                <label>Your username<input name="username" maxlength="40" pattern="[A-Za-z][A-Za-z0-9._'-]{0,39}" autocomplete="username" required></label>
-                <?php if (!$configured): ?><label>Baby’s name<input name="babyName" maxlength="80" required></label><?php endif; ?>
-                <label>Password<input type="password" name="password" minlength="10" autocomplete="<?= $configured ? 'current-password' : 'new-password' ?>" required></label>
-                <?php if (!$configured): ?><label>Confirm password<input type="password" name="confirmPassword" minlength="10" autocomplete="new-password" required></label><?php endif; ?>
-                <button type="submit"><?= $configured ? 'Sign in' : 'Create gallery' ?></button>
-            </form>
-        </section>
-    <?php else: ?>
         <section class="overview" aria-label="Gallery overview">
             <div class="hero-copy">
                 <h2 id="heroTitle">A little face, one day at a time.</h2>
@@ -73,7 +62,7 @@ if ($authenticated) {
                 <div><strong id="streakCount">0</strong><span>day streak</span></div>
                 <div><strong id="missingCount">0</strong><span>days missing</span></div>
             </div>
-            <button id="openUpload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h3l2-2h6l2 2h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Add today’s photo</button>
+            <button id="openUpload" <?= $canWrite ? '' : 'disabled title="Member access is required to add photos."' ?>><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h3l2-2h6l2 2h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Add today’s photo</button>
         </section>
 
         <section class="toolbar">
@@ -84,13 +73,12 @@ if ($authenticated) {
             <div class="toolbar-actions">
                 <button class="secondary" id="collageButton"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Make collage</button>
                 <button class="secondary" id="gifButton"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="m8 4 12 8-12 8z"/></svg>Make GIF</button>
-                <button class="secondary" id="settingsButton"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M10 2h4l.5 2.1 1.6.7 1.9-1.1 2.8 2.8-1.1 1.9.7 1.6L22 10v4l-2.1.5-.7 1.6 1.1 1.9-2.8 2.8-1.9-1.1-1.6.7L14 22h-4l-.5-2.1-1.6-.7-1.9 1.1-2.8-2.8 1.1-1.9-.7-1.6L2 14v-4l2.1-.5.7-1.6-1.1-1.9 2.8-2.8 1.9 1.1 1.6-.7z"/></svg>Settings</button>
+                <button class="secondary" id="settingsButton" <?= $canWrite ? '' : 'disabled title="Member access is required to change settings."' ?>><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M10 2h4l.5 2.1 1.6.7 1.9-1.1 2.8 2.8-1.1 1.9.7 1.6L22 10v4l-2.1.5-.7 1.6 1.1 1.9-2.8 2.8-1.9-1.1-1.6.7L14 22h-4l-.5-2.1-1.6-.7-1.9 1.1-2.8-2.8 1.1-1.9-.7-1.6L2 14v-4l2.1-.5.7-1.6-1.1-1.9 2.8-2.8 1.9 1.1 1.6-.7z"/></svg>Settings</button>
             </div>
         </section>
 
         <section id="gallery" class="gallery" aria-live="polite"></section>
         <p id="emptyState" class="empty card" hidden>No photos yet. The gallery is ready when your tiny model is.</p>
-    <?php endif; ?>
 </main>
 
 <?php if ($authenticated): ?>
@@ -132,13 +120,8 @@ if ($authenticated) {
     </form>
     <div class="account-section">
         <p class="eyebrow">ACCOUNT</p>
-        <p>Signed in as: <strong><?= htmlspecialchars((string) $account['username']) ?></strong><?= $superAdmin ? ' (super admin)' : '' ?></p>
-        <form id="passwordForm">
-            <label>Current password<input type="password" name="currentPassword" minlength="10" autocomplete="current-password" required></label>
-            <label>New password<input type="password" name="newPassword" minlength="10" autocomplete="new-password" required></label>
-            <label>Confirm new password<input type="password" name="confirmNewPassword" minlength="10" autocomplete="new-password" required></label>
-            <button type="submit" class="secondary">Change password</button>
-        </form>
+        <p>Signed in through User Management as: <strong><?= htmlspecialchars((string) $account['username']) ?></strong><?= $superAdmin ? ' (Daily Babe admin)' : '' ?></p>
+        <a class="button-link secondary" href="<?= htmlspecialchars($accountPortal) ?>">Manage password and central account</a>
         <?php if ($superAdmin): ?>
         <button type="button" id="openBabyDialog">＋ Add another baby</button>
         <button type="button" class="secondary" id="openUsersDialog">Manage users</button>
@@ -160,19 +143,13 @@ if ($authenticated) {
 <?php if ($superAdmin): ?>
 <dialog id="usersDialog">
     <div class="dialog-head"><div><p class="eyebrow">ACCESS</p><h2>Manage users</h2></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>
+    <p class="save-help">People and passwords are managed in User Management. Assign existing central users to baby galleries here.</p>
     <div id="userList"></div>
-    <form id="userForm">
-        <h3>Add user</h3>
-        <label>Username<input name="username" maxlength="40" pattern="[A-Za-z][A-Za-z0-9._'-]{0,39}" autocomplete="off" required></label>
-        <label>Password<input type="password" name="password" minlength="10" autocomplete="new-password" required></label>
-        <label>Confirm password<input type="password" name="confirmPassword" minlength="10" autocomplete="new-password" required></label>
-        <fieldset id="newUserBabies"><legend>Gallery access</legend></fieldset>
-        <button type="submit">Create user</button>
-    </form>
+    <a class="button-link secondary" href="<?= htmlspecialchars($accountPortal) ?>">Open User Management</a>
 </dialog>
 <?php endif; ?>
 
-<dialog id="photoDialog"><div class="photo-view"><button type="button" class="icon-button close-dialog" aria-label="Close">×</button><img id="fullPhoto" alt=""><div id="photoDetails"></div><button type="button" class="danger" id="deletePhotoButton">Remove photo</button></div></dialog>
+<dialog id="photoDialog"><div class="photo-view"><button type="button" class="icon-button close-dialog" aria-label="Close">×</button><img id="fullPhoto" alt=""><div id="photoDetails"></div><button type="button" class="danger" id="deletePhotoButton" <?= $canWrite ? '' : 'disabled title="Member access is required to remove photos."' ?>>Remove photo</button></div></dialog>
 
 <dialog id="collageDialog">
     <div class="dialog-head"><div><p class="eyebrow">READY TO KEEP</p><h2 id="exportTitle">Your collage</h2></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>

@@ -26,7 +26,7 @@ if ($gallery === null) {
 
 $babyId = (string) $gallery['babyId'];
 $settings = $gallery['settings'];
-$entries = json_read('babies/' . $babyId . '/data/entries.json', ['records' => []]);
+$entries = json_read('central/babies/' . $babyId . '/data/entries.json', ['records' => []]);
 $records = array_values($entries['records'] ?? []);
 usort($records, static fn(array $left, array $right): int => strcmp((string) ($right['photoDate'] ?? ''), (string) ($left['photoDate'] ?? '')));
 $babyName = trim((string) ($settings['babyName'] ?? 'Baby'));

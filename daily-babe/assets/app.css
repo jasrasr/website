@@ -104,8 +104,7 @@ dialog::backdrop { background: rgba(20,29,37,.53); backdrop-filter: blur(4px); }
 .access-choice input { width: auto; }
 .user-row { display: grid; gap: .6rem; margin-bottom: .8rem; padding: 1rem; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
 .user-row small { color: var(--muted); }
-#userForm { margin-top: 1.4rem; padding-top: 1.4rem; border-top: 1px solid var(--line); }
-#userForm h3 { margin: 0; }
+.button-link { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
 .danger { background: #bd574d; color: #fff; }
 .danger:hover { background: #9e423b; }
 .photo-view .danger { width: 100%; }

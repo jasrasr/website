@@ -17,7 +17,7 @@ if ($gallery === null) {
 }
 
 $babyId = (string) $gallery['babyId'];
-$entries = json_read('babies/' . $babyId . '/data/entries.json', ['records' => []]);
+$entries = json_read('central/babies/' . $babyId . '/data/entries.json', ['records' => []]);
 $match = null;
 foreach ($entries['records'] ?? [] as $record) {
     if (($record['id'] ?? '') === $id) {
