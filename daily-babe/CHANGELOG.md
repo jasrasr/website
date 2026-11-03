@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.3 - 2026-11-03
+
+- Increase the size, weight, and contrast of the public-sharing setting text.
+
 ## 2.0.2 - 2026-11-03
 
 - Let public gallery visitors open each original photo at full size from its thumbnail.

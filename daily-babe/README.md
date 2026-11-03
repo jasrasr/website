@@ -2,7 +2,7 @@
 
 A mobile-first PHP/JSON gallery for one baby photo per day. Daily Babe uses the site-wide User Management service for adult accounts and keeps baby galleries, photos, and metadata isolated inside the project.
 
-## Included in v2.0.2
+## Included in v2.0.3
 
 - Central User Management sign-in, password changes, sessions, and account status
 - Multiple babies and multiple adults, with per-gallery membership

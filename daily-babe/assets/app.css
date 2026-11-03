@@ -184,8 +184,19 @@ footer a { color: var(--sage); }
 .public-toggle span {
     display: grid;
     gap: .3rem;
+    color: var(--ink);
+    font-weight: 700;
 }
-.public-toggle small,
+.public-toggle strong {
+    color: var(--ink);
+    font-size: 1.05rem;
+}
+.public-toggle small {
+    color: var(--ink);
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.5;
+}
 #publicLinkPanel > small {
     color: var(--muted);
     line-height: 1.4;

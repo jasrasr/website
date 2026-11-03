@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '2.0.2';
+const BABY_TRACKER_VERSION = '2.0.3';
 const BABY_TRACKER_PROJECT = 'daily-babe';
 
 $dailyConfigFile = __DIR__ . '/config/config.php';
