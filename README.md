@@ -2,10 +2,11 @@
 File Name     : README.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Repository overview, development conventions, project index, and deployment guidance.
-Revision      : 1.0.13
+Revision      : 1.0.14
 Created Date  : 2025-02-14
 Modified Date : 2026-11-03
 Changelog     :
+  Rev 1.0.14 - Reorganized the project index into readable groups and fixed its broken table formatting.
   Rev 1.0.13 - Corrected the Khootish rename history and linked the preserved deployment safety TODO.
   Rev 1.0.12 - Added preview-first full-report Robinhood import with atomic eligible-symbol batch and exception queue.
   Rev 1.0.11 - Added private staged Robinhood import with per-stock corrections, verified split/sale allocations and guarded persistence.
@@ -60,57 +61,77 @@ Folders in this repo sync under `https://jasr.me/github/<folder>/`, which is the
 
 ## Project index
 
-The entries below describe source present in the repository. Canonical URLs are live or target locations under the convention above; this inventory does not verify every deployed endpoint.
+Browse the projects by purpose. The source links open folders in this repository; site links may be live, private, or deployment targets. This index does not verify every hosted endpoint.
 
 The [repository-wide TODO list](ALL-TODOS.md) collects the TODO files kept in each project folder. The [deployment safety TODO](DEPLOYMENT-SAFETY-TODO.md) retains Hostinger follow-ups from the former `quiz-web-interactive` folder.
 
-| Project | Repo path / docs | Live or target URL | Notes |
-|---|---|---|---|\n| Build Signal walkthrough | [build-signal/](build-signal/) / [README](build-signal/README.md) | [Private ChatGPT Site](https://jason-ai-build-flow.jasrasr.chatgpt.site) | Illustrated, narrated AI development workflow. Source is here for local Codex CLI visual refinement; the linked Site remains owner-only. |
-| Coin Flip | [coin-flip/](coin-flip/) / [README](coin-flip/README.md) | <a href="https://jasr.me/github/coin-flip/" target="_new">jasr.me/github/coin-flip</a> | Giant animated coin, random heads or tails, keyboard control, and confetti. |
-| Investment Tracker | [investment-tracker/](investment-tracker/) / [README](investment-tracker/README.md) | <a href="https://jasr.me/github/investment-tracker/" target="_new">jasr.me/github/investment-tracker</a> | Private split-aware, per-purchase tax lots with original/adjusted share counts, one-year tax horizon, reconciled read-only NVIDIA demo, Robinhood CSV staging, all-eligible-symbol import and exception queue, charts, sell simulation, manual market prices and normalized CSV import; requires central project grant and protected writable storage. Source prepared; live deployment not verified. |
-| Workout Tracker | [workout-tracker/](workout-tracker/) / [README](workout-tracker/README.md) | <a href="https://jasr.me/github/workout-tracker/" target="_new">jasr.me/github/workout-tracker</a> | Private, no-key natural-language fitness logging, multiple exercises per session, mobile dashboard and separate trend charts. Requires central project access. |
-| Game Buzzer | [game-buzzer/](game-buzzer/) / [README](game-buzzer/README.md) | <a href="https://jasr.me/github/game-buzzer/" target="_new">jasr.me/github/game-buzzer</a> | Six-team phone buzzer and arrival-survey Majority Rules game, with host controls and projector scoreboard. Requires private host setup. |
-| Webstats | [webstats/](webstats/) / [README](webstats/README.md) | <a href="https://jasr.me/github/webstats/" target="_new">jasr.me/github/webstats</a> | Custom multi-site page views and clicks with a private dashboard. Requires setup and tracker installation. |
-| Availability Poll | [availability/](availability/) / [README](availability/README.md) | <a href="https://jasr.me/github/availability/" target="_new">jasr.me/github/availability</a> | Named availability polls with admin-selected dates, private admin links, and live group results. |
-| YOURLS link shortener and tracker | External app | [jasr.me](https://jasr.me) | Fork of [YOURLS](https://github.com/YOURLS/YOURLS). |
-| Secure text sender | External app | [jasr.me/secure](https://jasr.me/secure) | Fork of [PrivateBin](https://github.com/PrivateBin/PrivateBin). |
-| Random Password Generator | [random-password-generator/](random-password-generator/) | [jasr.me/pw](https://jasr.me/pw) | Client-side password generator experiments and working copies. Deployed at `/pw`; the `/github/` path is access-restricted. |
-| Text Copy / scratch pad | [text/](text/) | <a href="https://jasr.me/github/text/" target="_new">jasr.me/github/text</a> | Server-backed scratch pad for editing text and retrieving it from another device. |
-| MPG Fuel Log Tracker | [mpg/](mpg/) / [README](mpg/README.md) | <a href="https://jasr.me/github/mpg/" target="_new">jasr.me/github/mpg</a> | PHP fuel log with MPG calculations, CSV export, admin dashboard, and trend chart. |
-| Time Clock Kiosk Display | [time-clock/](time-clock/) / [README](time-clock/README.md) | <a href="https://jasr.me/github/time-clock/" target="_new">jasr.me/github/time-clock</a> | Full-screen clock, weather, and scrolling alerts for a Raspberry Pi CM4 kiosk. |
-| Trip ETA Tracker | [gps-eta/](gps-eta/) / [README](gps-eta/README.md) | <a href="https://jasr.me/github/gps-eta/" target="_new">jasr.me/github/gps-eta</a> | Mobile GPS speed, ETA, compass heading, trip sessions, and server-side history. |
-| Family GPS Tracker | [family-tracker/](family-tracker/) / [README](family-tracker/README.md) | <a href="https://jasr.me/github/family-tracker/" target="_new">jasr.me/github/family-tracker</a> | Consent-based PHP + JSON family/friend location sharing with groups, check-ins, trip sharing, geofences, and installable PWA support. |
-| TV Binge Board | [tv-binge-board/](tv-binge-board/) / [README](tv-binge-board/README.md) | <a href="https://jasr.me/github/tv-binge-board/" target="_new">jasr.me/github/tv-binge-board</a> | Mobile-first PHP/JSON tracker for what to watch, watching, and completed TV/movies, with import, sharing, and friend activity. Does not stream. |
-| Live Game Scoreboard | [scoreboard/](scoreboard/) / [README](scoreboard/README.md) | <a href="https://jasr.me/github/scoreboard/" target="_new">jasr.me/github/scoreboard</a> | PHP scoreboard app with default, Collide, Youth, and Frontlines instances. |
-| Budget Tracker | [finances/](finances/) / [README](finances/README.md) | <a href="https://jasr.me/github/finances/" target="_new">jasr.me/github/finances</a> | Private PHP budget tracker using per-user JSON files. |
-| Weather Dashboard | [weather/](weather/) / [README](weather/README.md) | <a href="https://jasr.me/github/weather/" target="_new">jasr.me/github/weather</a> | Mobile-friendly PHP weather dashboard using OpenWeather data. |
-| QR Box Inventory System | [box/](box/) / [README](box/README.md) | <a href="https://jasr.me/github/box/" target="_new">jasr.me/github/box</a> | Database-free QR inventory system for physical storage boxes. |
-| AI Writing Tool | [ai-writing-tool/](ai-writing-tool/) / [README](ai-writing-tool/README.md) | <a href="https://jasr.me/github/ai-writing-tool/" target="_new">jasr.me/github/ai-writing-tool</a> | Two-pane browser editor with local autosave and AI suggestions through a PHP proxy. |
-| Secure Upload & File Manager | [file-manager/](file-manager/) / [README](file-manager/README.md) | <a href="https://jasr.me/github/file-manager/" target="_new">jasr.me/github/file-manager</a> | Admin-only file manager with PowerShell-friendly upload API, MFA, allowlisting, and versioning. |
-| PSNotify | [psnotify/](psnotify/) / [README](psnotify/README.md) | <a href="https://jasr.me/github/psnotify/" target="_new">jasr.me/github/psnotify</a> | Self-hosted notification endpoint and viewer for long-running PowerShell jobs. |
-| License Plate Photo Logger | [license-plate/](license-plate/) / [README](license-plate/README.md) | <a href="https://jasr.me/github/license-plate/" target="_new">jasr.me/github/license-plate</a> | PHP app for uploading plate photos, extracting plate text, and logging duplicates. |
-| Khootish Multiplayer Quiz | [khootish/](khootish/) / [README](khootish/README.md) | <a href="https://jasr.me/github/khootish/" target="_new">jasr.me/github/khootish</a> | Formerly `quiz-web-interactive`; renamed in Git on 2026-08-16. Reusable quizzes, invite codes, team play, projector display, question bank, and completed-game history. |
-| Timeclock Photo Logger | [how-much-time-worked/](how-much-time-worked/) / [README](how-much-time-worked/README.md) | Target folder: `/timeclock/` | Photo/manual employee hour logger with OCR options and JSON stats. |
-| Computer Heartbeat Dashboard | [computers/](computers/) / [README](computers/readme.md) | Target folder: `/computers/` | PowerShell-to-PHP heartbeat system for Windows device status tracking. |
-| JSON Flat-File Blog | [blog/](blog/) / [README](blog/README.md) | <a href="https://jasr.me/github/blog/" target="_new">jasr.me/github/blog</a> | Static-ish JSON blog with PowerShell builder, RSS, sitemap, and admin-protected media workflow. |
-| Robot or Human? Verification Gate | [human-proof/](human-proof/) / [README](human-proof/README.md) | <a href="https://jasr.me/github/human-proof/" target="_new">jasr.me/github/human-proof</a> | Press-and-hold "prove you're human" gate with a comic racing robot, plus optional PHP server-side gating so the next page can't be reached from the source. |
-| Odometer / Speedometer | [odometer/](odometer/) | <a href="https://jasr.me/github/odometer/" target="_new">jasr.me/github/odometer</a> | Browser odometer/speedometer display (HTML/CSS/JS). |
-| Countdown to Cooper Integration | [countdown/](countdown/) | <a href="https://jasr.me/github/countdown/" target="_new">jasr.me/github/countdown</a> | Branded countdown timer page with Cooper and Altronic logos. |
-| Random URL / QR Targets | [random-url/](random-url/) | <a href="https://jasr.me/github/random-url/" target="_new">jasr.me/github/random-url</a> | Numbered static landing pages (`0.html`-`9.html`) used as QR-code targets, generated by a PowerShell script. |
-| Visual Ping Webhook API | [visual-ping-webhook-api/](visual-ping-webhook-api/) / [README](visual-ping-webhook-api/README.md) | <a href="https://jasr.me/github/visual-ping-webhook-api/" target="_new">jasr.me/github/visual-ping-webhook-api</a> | Webhook API for Visual Ping. Early/placeholder. |
-| Oregon Trail | [oregon-trail/](oregon-trail/) / [README](oregon-trail/README.md) | <a href="https://jasr.me/github/oregon-trail/" target="_new">jasr.me/github/oregon-trail</a> | Browser trail game with separate journey saves, autosaves, configurable stops/actions/events, and cached offline play. |
-| Daily Babe Photo Tracker | [daily-babe/](daily-babe/) / [README](daily-babe/README.md) | <a href="https://jasr.me/github/daily-babe/" target="_new">jasr.me/github/daily-babe</a> | Central User Management sign-in, multiple babies and adult gallery memberships, collage/GIF exports, and optional read-only public links based on first name and birthday. Requires PHP and protected writable storage. |
-| Debt Payoff Planner | [debt-payoff/](debt-payoff/) / [README](debt-payoff/README.md) | <a href="https://jasr.me/github/debt-payoff/" target="_new">jasr.me/github/debt-payoff</a> | Per-user loan tracking, amortization, snowball/avalanche comparisons, sharing, and backups. |
-| Dell Service Tag Lookup | [dell-service-tag/](dell-service-tag/) | <a href="https://jasr.me/github/dell-service-tag/" target="_new">jasr.me/github/dell-service-tag</a> | Service-tag entry page that opens the matching Dell Support page. |
-| Freshservice Ticket Tracker | [fs/](fs/) / [README](fs/README.md) | <a href="https://jasr.me/github/fs/" target="_new">jasr.me/github/fs</a> | Aggregate backlog and ticket activity charts with server-side API collection and ticket review tools. Requires private configuration. |
-| Life Group Attendance | [life-group-attendance/](life-group-attendance/) / [README](life-group-attendance/README.md) | <a href="https://jasr.me/github/life-group-attendance/" target="_new">jasr.me/github/life-group-attendance</a> | Authenticated multi-group attendance, student profiles, leader approvals, and history. |
-| Magic Word Terminal | [magic-word/](magic-word/) | <a href="https://jasr.me/github/magic-word/" target="_new">jasr.me/github/magic-word</a> | Jurassic Park-inspired interactive access-denied terminal with command entry and sound. |
-| Random Wheel | [wheel/](wheel/) | <a href="https://jasr.me/github/wheel/" target="_new">jasr.me/github/wheel</a> | Editable random-choice wheel with a winner display and recent results. |
-| Construction Sign Generator | [construction-sign/](construction-sign/) / [README](construction-sign/README.md) | <a href="https://jasr.me/github/construction-sign/" target="_new">jasr.me/github/construction-sign</a> | Client-side LED message-board preview with adjustable appearance and image/embed export. |
-| Jeremy's Trip to Cleveland | [jeremy/](jeremy/) | <a href="https://jasr.me/github/jeremy/" target="_new">jasr.me/github/jeremy</a> | Trip progress and map pages for the California-to-Cleveland journey. |
-| Ticketing | [ticketing/](ticketing/) / [README](ticketing/README.md) | <a href="https://jasr.me/github/ticketing/" target="_new">jasr.me/github/ticketing</a> | PHP/JSON requester and agent help-desk portals, categories, and CSV tools; preserve instance-local runtime data. |
-| Warranty Tracker | [warranty-tracker/](warranty-tracker/) / [README](warranty-tracker/README.md) | <a href="https://jasr.me/github/warranty-tracker/" target="_new">jasr.me/github/warranty-tracker</a> | Private/shared household warranty records, expiration tracking, and account setup; uses the sibling framework. |
-| Shared User Management | [user-management/](user-management/) / [README](user-management/README.md) | <a href="https://jasr.me/github/user-management/" target="_new">jasr.me/github/user-management</a> | Central accounts, same-host sessions, project roles, and an explicit per-application migration process. |
+[Games and interactive projects](#games-and-interactive-projects) · [Personal and group trackers](#personal-and-group-trackers) · [Tools and dashboards](#tools-and-dashboards) · [External services](#external-services)
+
+### Games and interactive projects
+
+| Project and source | Site | Highlights |
+| --- | --- | --- |
+| **Build Signal walkthrough**<br>[build-signal/](build-signal/) / [README](build-signal/README.md) | [Private ChatGPT Site](https://jason-ai-build-flow.jasrasr.chatgpt.site) | Illustrated AI development walkthrough. Linked ChatGPT Site is owner only. |
+| **Coin Flip**<br>[coin-flip/](coin-flip/) / [README](coin-flip/README.md) | <a href="https://jasr.me/github/coin-flip/" target="_new">jasr.me/github/coin-flip</a> | Giant animated coin, random heads or tails, keyboard control, and confetti. |
+| **Game Buzzer**<br>[game-buzzer/](game-buzzer/) / [README](game-buzzer/README.md) | <a href="https://jasr.me/github/game-buzzer/" target="_new">jasr.me/github/game-buzzer</a> | Six-team phone buzzer and arrival-survey Majority Rules game, with host controls and projector scoreboard. Requires private host setup. |
+| **Live Game Scoreboard**<br>[scoreboard/](scoreboard/) / [README](scoreboard/README.md) | <a href="https://jasr.me/github/scoreboard/" target="_new">jasr.me/github/scoreboard</a> | PHP scoreboard app with default, Collide, Youth, and Frontlines instances. |
+| **Khootish Multiplayer Quiz**<br>[khootish/](khootish/) / [README](khootish/README.md) | <a href="https://jasr.me/github/khootish/" target="_new">jasr.me/github/khootish</a> | Formerly `quiz-web-interactive` (renamed August 2026). Team quizzes with a projector display, question bank, and game history. |
+| **Robot or Human? Verification Gate**<br>[human-proof/](human-proof/) / [README](human-proof/README.md) | <a href="https://jasr.me/github/human-proof/" target="_new">jasr.me/github/human-proof</a> | Press-and-hold verification gate with optional PHP protection. |
+| **Odometer / Speedometer**<br>[odometer/](odometer/) | <a href="https://jasr.me/github/odometer/" target="_new">jasr.me/github/odometer</a> | Browser odometer/speedometer display (HTML/CSS/JS). |
+| **Countdown to Cooper Integration**<br>[countdown/](countdown/) | <a href="https://jasr.me/github/countdown/" target="_new">jasr.me/github/countdown</a> | Branded countdown timer page with Cooper and Altronic logos. |
+| **Random URL / QR Targets**<br>[random-url/](random-url/) | <a href="https://jasr.me/github/random-url/" target="_new">jasr.me/github/random-url</a> | Numbered static landing pages (`0.html`-`9.html`) used as QR-code targets, generated by a PowerShell script. |
+| **Oregon Trail**<br>[oregon-trail/](oregon-trail/) / [README](oregon-trail/README.md) | <a href="https://jasr.me/github/oregon-trail/" target="_new">jasr.me/github/oregon-trail</a> | Browser trail game with separate journey saves, autosaves, configurable stops/actions/events, and cached offline play. |
+| **Magic Word Terminal**<br>[magic-word/](magic-word/) | <a href="https://jasr.me/github/magic-word/" target="_new">jasr.me/github/magic-word</a> | Jurassic Park-inspired interactive access-denied terminal with command entry and sound. |
+| **Random Wheel**<br>[wheel/](wheel/) | <a href="https://jasr.me/github/wheel/" target="_new">jasr.me/github/wheel</a> | Editable random-choice wheel with a winner display and recent results. |
+| **Construction Sign Generator**<br>[construction-sign/](construction-sign/) / [README](construction-sign/README.md) | <a href="https://jasr.me/github/construction-sign/" target="_new">jasr.me/github/construction-sign</a> | Client-side LED message-board preview with adjustable appearance and image/embed export. |
+| **Jeremy's Trip to Cleveland**<br>[jeremy/](jeremy/) | <a href="https://jasr.me/github/jeremy/" target="_new">jasr.me/github/jeremy</a> | Trip progress and map pages for the California-to-Cleveland journey. |
+
+### Personal and group trackers
+
+| Project and source | Site | Highlights |
+| --- | --- | --- |
+| **Investment Tracker**<br>[investment-tracker/](investment-tracker/) / [README](investment-tracker/README.md) | <a href="https://jasr.me/github/investment-tracker/" target="_new">jasr.me/github/investment-tracker</a> | Private tax lots, split history, Robinhood imports, charts, and sell simulations. Central access; deployment unverified. |
+| **Workout Tracker**<br>[workout-tracker/](workout-tracker/) / [README](workout-tracker/README.md) | <a href="https://jasr.me/github/workout-tracker/" target="_new">jasr.me/github/workout-tracker</a> | Private fitness logging and trend charts. Requires central project access. |
+| **Availability Poll**<br>[availability/](availability/) / [README](availability/README.md) | <a href="https://jasr.me/github/availability/" target="_new">jasr.me/github/availability</a> | Named availability polls with admin-selected dates, private admin links, and live group results. |
+| **MPG Fuel Log Tracker**<br>[mpg/](mpg/) / [README](mpg/README.md) | <a href="https://jasr.me/github/mpg/" target="_new">jasr.me/github/mpg</a> | PHP fuel log with MPG calculations, CSV export, admin dashboard, and trend chart. |
+| **Trip ETA Tracker**<br>[gps-eta/](gps-eta/) / [README](gps-eta/README.md) | <a href="https://jasr.me/github/gps-eta/" target="_new">jasr.me/github/gps-eta</a> | Mobile GPS speed, ETA, compass heading, trip sessions, and server-side history. |
+| **Family GPS Tracker**<br>[family-tracker/](family-tracker/) / [README](family-tracker/README.md) | <a href="https://jasr.me/github/family-tracker/" target="_new">jasr.me/github/family-tracker</a> | Consent-based PHP + JSON family/friend location sharing with groups, check-ins, trip sharing, geofences, and installable PWA support. |
+| **TV Binge Board**<br>[tv-binge-board/](tv-binge-board/) / [README](tv-binge-board/README.md) | <a href="https://jasr.me/github/tv-binge-board/" target="_new">jasr.me/github/tv-binge-board</a> | Mobile-first PHP/JSON tracker for what to watch, watching, and completed TV/movies, with import, sharing, and friend activity. Does not stream. |
+| **Budget Tracker**<br>[finances/](finances/) / [README](finances/README.md) | <a href="https://jasr.me/github/finances/" target="_new">jasr.me/github/finances</a> | Private PHP budget tracker using per-user JSON files. |
+| **License Plate Photo Logger**<br>[license-plate/](license-plate/) / [README](license-plate/README.md) | <a href="https://jasr.me/github/license-plate/" target="_new">jasr.me/github/license-plate</a> | PHP app for uploading plate photos, extracting plate text, and logging duplicates. |
+| **Timeclock Photo Logger**<br>[how-much-time-worked/](how-much-time-worked/) / [README](how-much-time-worked/README.md) | Target folder: `/timeclock/` | Photo/manual employee hour logger with OCR options and JSON stats. |
+| **Daily Babe Photo Tracker**<br>[daily-babe/](daily-babe/) / [README](daily-babe/README.md) | <a href="https://jasr.me/github/daily-babe/" target="_new">jasr.me/github/daily-babe</a> | Private family photo galleries, memberships, and collage/GIF exports. Requires PHP and protected storage. |
+| **Debt Payoff Planner**<br>[debt-payoff/](debt-payoff/) / [README](debt-payoff/README.md) | <a href="https://jasr.me/github/debt-payoff/" target="_new">jasr.me/github/debt-payoff</a> | Per-user loan tracking, amortization, snowball/avalanche comparisons, sharing, and backups. |
+| **Life Group Attendance**<br>[life-group-attendance/](life-group-attendance/) / [README](life-group-attendance/README.md) | <a href="https://jasr.me/github/life-group-attendance/" target="_new">jasr.me/github/life-group-attendance</a> | Authenticated multi-group attendance, student profiles, leader approvals, and history. |
+| **Warranty Tracker**<br>[warranty-tracker/](warranty-tracker/) / [README](warranty-tracker/README.md) | <a href="https://jasr.me/github/warranty-tracker/" target="_new">jasr.me/github/warranty-tracker</a> | Private/shared household warranty records, expiration tracking, and account setup; uses the sibling framework. |
+
+### Tools and dashboards
+
+| Project and source | Site | Highlights |
+| --- | --- | --- |
+| **Webstats**<br>[webstats/](webstats/) / [README](webstats/README.md) | <a href="https://jasr.me/github/webstats/" target="_new">jasr.me/github/webstats</a> | Custom multi-site page views and clicks with a private dashboard. Requires setup and tracker installation. |
+| **Random Password Generator**<br>[random-password-generator/](random-password-generator/) | [jasr.me/pw](https://jasr.me/pw) | Client-side password generator experiments and working copies. Deployed at `/pw`; the `/github/` path is access-restricted. |
+| **Text Copy / scratch pad**<br>[text/](text/) | <a href="https://jasr.me/github/text/" target="_new">jasr.me/github/text</a> | Server-backed scratch pad for editing text and retrieving it from another device. |
+| **Time Clock Kiosk Display**<br>[time-clock/](time-clock/) / [README](time-clock/README.md) | <a href="https://jasr.me/github/time-clock/" target="_new">jasr.me/github/time-clock</a> | Full-screen clock, weather, and scrolling alerts for a Raspberry Pi CM4 kiosk. |
+| **Weather Dashboard**<br>[weather/](weather/) / [README](weather/README.md) | <a href="https://jasr.me/github/weather/" target="_new">jasr.me/github/weather</a> | Mobile-friendly PHP weather dashboard using OpenWeather data. |
+| **QR Box Inventory System**<br>[box/](box/) / [README](box/README.md) | <a href="https://jasr.me/github/box/" target="_new">jasr.me/github/box</a> | Database-free QR inventory system for physical storage boxes. |
+| **AI Writing Tool**<br>[ai-writing-tool/](ai-writing-tool/) / [README](ai-writing-tool/README.md) | <a href="https://jasr.me/github/ai-writing-tool/" target="_new">jasr.me/github/ai-writing-tool</a> | Two-pane browser editor with local autosave and AI suggestions through a PHP proxy. |
+| **Secure Upload & File Manager**<br>[file-manager/](file-manager/) / [README](file-manager/README.md) | <a href="https://jasr.me/github/file-manager/" target="_new">jasr.me/github/file-manager</a> | Admin-only file manager with PowerShell-friendly upload API, MFA, allowlisting, and versioning. |
+| **PSNotify**<br>[psnotify/](psnotify/) / [README](psnotify/README.md) | <a href="https://jasr.me/github/psnotify/" target="_new">jasr.me/github/psnotify</a> | Self-hosted notification endpoint and viewer for long-running PowerShell jobs. |
+| **Computer Heartbeat Dashboard**<br>[computers/](computers/) / [README](computers/readme.md) | Target folder: `/computers/` | PowerShell-to-PHP heartbeat system for Windows device status tracking. |
+| **JSON Flat-File Blog**<br>[blog/](blog/) / [README](blog/README.md) | <a href="https://jasr.me/github/blog/" target="_new">jasr.me/github/blog</a> | Static-ish JSON blog with PowerShell builder, RSS, sitemap, and admin-protected media workflow. |
+| **Visual Ping Webhook API**<br>[visual-ping-webhook-api/](visual-ping-webhook-api/) / [README](visual-ping-webhook-api/README.md) | <a href="https://jasr.me/github/visual-ping-webhook-api/" target="_new">jasr.me/github/visual-ping-webhook-api</a> | Webhook API for Visual Ping. Early/placeholder. |
+| **Dell Service Tag Lookup**<br>[dell-service-tag/](dell-service-tag/) | <a href="https://jasr.me/github/dell-service-tag/" target="_new">jasr.me/github/dell-service-tag</a> | Service-tag entry page that opens the matching Dell Support page. |
+| **Freshservice Ticket Tracker**<br>[fs/](fs/) / [README](fs/README.md) | <a href="https://jasr.me/github/fs/" target="_new">jasr.me/github/fs</a> | Aggregate backlog and ticket activity charts with server-side API collection and ticket review tools. Requires private configuration. |
+| **Ticketing**<br>[ticketing/](ticketing/) / [README](ticketing/README.md) | <a href="https://jasr.me/github/ticketing/" target="_new">jasr.me/github/ticketing</a> | PHP/JSON requester and agent help-desk portals, categories, and CSV tools; preserve instance-local runtime data. |
+| **Shared User Management**<br>[user-management/](user-management/) / [README](user-management/README.md) | <a href="https://jasr.me/github/user-management/" target="_new">jasr.me/github/user-management</a> | Central accounts, same-host sessions, project roles, and an explicit per-application migration process. |
+
+### External services
+
+| Project and source | Site | Highlights |
+| --- | --- | --- |
+| **YOURLS link shortener and tracker**<br>External app | [jasr.me](https://jasr.me) | Fork of [YOURLS](https://github.com/YOURLS/YOURLS). |
+| **Secure text sender**<br>External app | [jasr.me/secure](https://jasr.me/secure) | Fork of [PrivateBin](https://github.com/PrivateBin/PrivateBin). |
 
 ## Repo support tools and standalone files
 
