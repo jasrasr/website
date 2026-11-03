@@ -5,6 +5,48 @@ require __DIR__ . '/bootstrap.php';
 header('Cache-Control: no-store');
 
 $slug = strtolower(trim((string) ($_GET['baby'] ?? '')));
+if ($slug === '') {
+    $publicGalleries = [];
+    foreach (tracker_state()['babies'] ?? [] as $babyId => $_baby) {
+        $babyId = (string) $babyId;
+        if (preg_match('/^[a-f0-9]{24}$/', $babyId) !== 1) {
+            continue;
+        }
+        $candidate = json_read('central/babies/' . $babyId . '/data/settings.json', []);
+        if (gallery_visibility($candidate) !== 'public') {
+            continue;
+        }
+        $candidateSlug = public_gallery_slug($candidate);
+        if ($candidateSlug !== '') {
+            $publicGalleries[] = ['name' => (string) ($candidate['babyName'] ?? 'Baby'), 'slug' => $candidateSlug];
+        }
+    }
+    usort($publicGalleries, static fn(array $a, array $b): int => strcasecmp($a['name'], $b['name']));
+    ?>
+    <!doctype html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+        <title>Public galleries · Baby Daily</title>
+        <link rel="stylesheet" href="assets/app.css?v=<?= BABY_TRACKER_VERSION ?>">
+    </head>
+    <body>
+    <header class="topbar"><h1>Baby Daily</h1></header>
+    <main><section class="overview"><div class="hero-copy"><h2>Public galleries</h2><p>These galleries are open to everyone.</p></div></section>
+    <?php if ($publicGalleries === []): ?>
+        <p class="empty card">No public galleries are available.</p>
+    <?php else: ?>
+        <section class="gallery" aria-label="Public baby galleries">
+        <?php foreach ($publicGalleries as $item): ?>
+            <a class="card public-directory-link" href="public.php?baby=<?= rawurlencode($item['slug']) ?>"><?= htmlspecialchars($item['name']) ?></a>
+        <?php endforeach; ?>
+        </section>
+    <?php endif; ?>
+    </main></body></html>
+    <?php
+    exit;
+}
 $gallery = public_gallery_by_slug($slug);
 
 if ($gallery === null) {
@@ -18,7 +60,7 @@ if ($gallery === null) {
         <title>Gallery not available</title>
         <link rel="stylesheet" href="assets/app.css?v=<?= BABY_TRACKER_VERSION ?>">
     </head>
-    <body><main><section class="empty card"><h1>Gallery not available</h1><p>This public link is invalid or the gallery owner has turned public access off.</p></section></main></body>
+    <body><main><section class="empty card"><h1>Gallery not available</h1><p>This link is invalid or the gallery owner has turned sharing off.</p></section></main></body>
     </html>
     <?php
     exit;
@@ -72,7 +114,7 @@ function public_date_label(string $date): string
 <main>
     <section class="hero card public-hero">
         <div>
-            <p class="eyebrow">PUBLIC GALLERY</p>
+            <p class="eyebrow"><?= gallery_visibility($settings) === 'public' ? 'PUBLIC GALLERY' : 'UNLISTED GALLERY' ?></p>
             <h1><?= htmlspecialchars($babyName) ?></h1>
             <p class="public-summary"><?= count($records) ?> <?= count($records) === 1 ? 'photo' : 'photos' ?><?php if (valid_date($birthDate)): ?> · Born <?= htmlspecialchars((new DateTimeImmutable($birthDate))->format('F j, Y')) ?><?php endif; ?></p>
         </div>
@@ -104,7 +146,7 @@ function public_date_label(string $date): string
             <?php endforeach; ?>
         </section>
     <?php endif; ?>
-    <p class="public-footer-note">This is a read-only public gallery. Adding photos and changing settings still require an authorized Baby Daily account.</p>
+    <p class="public-footer-note">This is a read-only shared gallery. Adding photos and changing settings still require an authorized Baby Daily account.</p>
 </main>
 <footer>Baby Daily v<?= BABY_TRACKER_VERSION ?></footer>
 </body>

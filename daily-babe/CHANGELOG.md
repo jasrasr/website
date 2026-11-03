@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.0 - 2026-11-03
+
+- Add Private, Unlisted, and Public gallery visibility choices.
+- Preserve existing shared galleries as unlisted and add a browseable list for public galleries.
+- Keep shared photo and gallery links unavailable when a gallery is private.
+
 ## 2.0.3 - 2026-11-03
 
 - Increase the size, weight, and contrast of the public-sharing setting text.

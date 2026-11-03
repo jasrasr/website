@@ -28,6 +28,7 @@ try {
         usort($records, static fn(array $a, array $b): int => strcmp((string) $b['photoDate'], (string) $a['photoDate']));
         $account = current_account();
         $settings = tracker_settings();
+        $settings['visibility'] = gallery_visibility($settings);
         $settings['publicSlug'] = public_gallery_slug($settings);
         json_response(true, 'Gallery loaded.', [
             'settings' => $settings,
@@ -124,7 +125,10 @@ try {
         $birthLength = trim((string) ($_POST['birthLengthInches'] ?? ''));
         $birthWeightPounds = trim((string) ($_POST['birthWeightPounds'] ?? ''));
         $birthWeightOunces = trim((string) ($_POST['birthWeightOunces'] ?? ''));
-        $publicEnabled = (string) ($_POST['publicEnabled'] ?? '') === '1';
+        $visibility = (string) ($_POST['visibility'] ?? (((string) ($_POST['publicEnabled'] ?? '') === '1') ? 'unlisted' : 'private'));
+        if (!in_array($visibility, ['private', 'unlisted', 'public'], true)) {
+            json_response(false, 'Choose a valid gallery visibility.', null, [['code' => 'INVALID_VISIBILITY']], 422);
+        }
         $babyName = trim(substr((string) ($_POST['babyName'] ?? ''), 0, 80));
         $latestClientDate = date('Y-m-d', strtotime('+1 day'));
         if (!valid_date($dueDate) || ($birthDate !== '' && (!valid_date($birthDate) || $birthDate > $latestClientDate))) {
@@ -141,20 +145,19 @@ try {
         $publicCandidate = [
             'babyName' => $babyName,
             'birthDate' => $birthDate,
-            'publicEnabled' => $publicEnabled,
         ];
         $publicSlug = public_gallery_slug($publicCandidate);
-        if ($publicEnabled && $publicSlug === '') {
-            json_response(false, 'Add the baby’s first name and actual birth date before making the gallery public.', null, [['code' => 'PUBLIC_LINK_REQUIRES_BIRTH_DETAILS']], 422);
+        if ($visibility !== 'private' && $publicSlug === '') {
+            json_response(false, 'Add the baby’s first name and actual birth date before sharing the gallery.', null, [['code' => 'PUBLIC_LINK_REQUIRES_BIRTH_DETAILS']], 422);
         }
-        if ($publicEnabled) {
+        if ($visibility !== 'private') {
             $existingPublicGallery = public_gallery_by_slug($publicSlug);
             if ($existingPublicGallery !== null && $existingPublicGallery['babyId'] !== current_baby_id()) {
                 json_response(false, 'That public baby link is already in use.', null, [['code' => 'PUBLIC_LINK_EXISTS']], 409);
             }
         }
         $settings = [
-            'schemaVersion' => 3,
+            'schemaVersion' => 4,
             'babyName' => $babyName,
             'dueDate' => $dueDate,
             'birthDate' => $birthDate,
@@ -162,7 +165,7 @@ try {
             'birthLengthInches' => $birthLength,
             'birthWeightPounds' => $birthWeightPounds,
             'birthWeightOunces' => $birthWeightOunces,
-            'publicEnabled' => $publicEnabled,
+            'visibility' => $visibility,
             'updatedAt' => gmdate('c'),
         ];
         baby_json_write('data/settings.json', $settings);
@@ -174,6 +177,7 @@ try {
             write_auth($auth);
         }
         audit_event('settings.updated');
+        $settings['visibility'] = $visibility;
         $settings['publicSlug'] = $publicSlug;
         json_response(true, 'Settings saved.', $settings);
     }

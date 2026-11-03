@@ -167,36 +167,14 @@ footer a { color: var(--sage); }
     background: var(--soft);
     color: var(--ink);
 }
-.public-toggle {
-    display: flex;
-    grid-template-columns: none;
-    align-items: flex-start;
-    gap: .75rem;
-    cursor: pointer;
-}
-.public-toggle input {
-    width: 1.2rem;
-    height: 1.2rem;
-    margin-top: .15rem;
-    accent-color: var(--coral-dark);
-    flex: 0 0 auto;
-}
-.public-toggle span {
-    display: grid;
-    gap: .3rem;
-    color: var(--ink);
-    font-weight: 700;
-}
-.public-toggle strong {
-    color: var(--ink);
-    font-size: 1.05rem;
-}
-.public-toggle small {
-    color: var(--ink);
-    font-size: 1rem;
-    font-weight: 500;
-    line-height: 1.5;
-}
+.visibility-options { display: grid; gap: .7rem; margin: 0; padding: 0; border: 0; }
+.visibility-options legend { margin-bottom: .7rem; color: var(--ink); font-size: 1rem; font-weight: 800; }
+.visibility-options label { display: flex; align-items: flex-start; gap: .75rem; padding: .75rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); cursor: pointer; }
+.visibility-options label:has(input:checked) { border-color: var(--sage); }
+.visibility-options input { width: 1.2rem; height: 1.2rem; margin: .15rem 0 0; accent-color: var(--sage); flex: 0 0 auto; }
+.visibility-options span { display: grid; gap: .25rem; color: var(--ink); font-weight: 700; }
+.visibility-options strong { color: var(--ink); font-size: 1.05rem; }
+.visibility-options small { color: var(--ink); font-size: .9rem; font-weight: 500; line-height: 1.45; }
 #publicLinkPanel > small {
     color: var(--muted);
     line-height: 1.4;
@@ -222,6 +200,8 @@ footer a { color: var(--sage); }
 .public-sharing code {
     color: var(--ink);
 }
+.public-directory-link { display: block; padding: 1.5rem; color: var(--ink); font-size: 1.2rem; font-weight: 700; text-decoration: none; }
+.public-directory-link:hover { color: var(--sage); }
 @media (max-width: 520px) {
     .public-link-actions { grid-template-columns: 1fr; }
 }

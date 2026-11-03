@@ -2,7 +2,7 @@
 
 A mobile-first PHP/JSON gallery for one baby photo per day. Daily Babe uses the site-wide User Management service for adult accounts and keeps baby galleries, photos, and metadata isolated inside the project.
 
-## Included in v2.0.3
+## Included in v2.1.0
 
 - Central User Management sign-in, password changes, sessions, and account status
 - Multiple babies and multiple adults, with per-gallery membership
@@ -13,7 +13,7 @@ A mobile-first PHP/JSON gallery for one baby photo per day. Daily Babe uses the 
 - Day numbering based on actual birth date when present
 - Missing-day and streak tracking
 - Collage and animated GIF exports with a day label on every image
-- Optional fully open, read-only public gallery
+- Private, unlisted, and public gallery visibility
 - Public links based on first name and birthday, such as `hudson-11022026`
 - Atomic JSON writes, protected image delivery, request IDs, and audit events
 
@@ -60,15 +60,23 @@ Old runtime files under `storage/data/` and `storage/babies/` are ignored by v2.
 
 The due date powers the pre-birth countdown and the early/on-time/late message. Once an actual birth date is entered, that date controls Day 1, age, and missing-day calculations; the due date does not renumber photos.
 
-## Public gallery
+## Gallery visibility
 
-Public access is off by default for every baby. After entering the baby’s first name and actual birth date, enable **Make this gallery fully open and public** in Settings. The link uses this format:
+Choose a visibility setting for each baby in Settings:
+
+| Setting | Who can view |
+| --- | --- |
+| Private | Assigned signed-in users only; public gallery and image links return 404. |
+| Unlisted | Anyone with the first-name/birthday link; absent from the public gallery list. People who know those details can guess the link. |
+| Public | Anyone with the link; also listed at `public.php` with no sign-in or prompt. |
+
+Unlisted and public links use this format:
 
 ```text
 https://jasr.me/github/daily-babe/public.php?baby=hudson-11022026
 ```
 
-The public page is read-only. Visitors can select a photo to open its full-size original in a new tab. To make the gallery private later, clear **Make this gallery fully open and public** in Settings and save. This immediately disables both the public page and its image endpoint. It cannot remove copies that visitors saved while sharing was on. Changing the first name or birth date changes the public link.
+Existing galleries shared before v2.1.0 become unlisted, preserving their links. The shared page is read-only. Visitors can select a photo to open its full-size original in a new tab. Switching to Private immediately disables both the shared page and its image endpoint. It cannot remove copies that visitors saved while sharing was on. Changing the first name or birth date changes the shared link.
 
 ## Backups and privacy
 

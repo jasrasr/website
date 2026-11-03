@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '2.0.3';
+const BABY_TRACKER_VERSION = '2.1.0';
 const BABY_TRACKER_PROJECT = 'daily-babe';
 
 $dailyConfigFile = __DIR__ . '/config/config.php';
@@ -255,7 +255,7 @@ function default_baby_settings(string $name = 'Baby'): array
 {
     global $config;
     return [
-        'schemaVersion' => 3,
+        'schemaVersion' => 4,
         'babyName' => $name,
         'dueDate' => (string) ($config['due_date'] ?? '2026-11-02'),
         'birthDate' => '',
@@ -263,7 +263,7 @@ function default_baby_settings(string $name = 'Baby'): array
         'birthLengthInches' => '',
         'birthWeightPounds' => '',
         'birthWeightOunces' => '',
-        'publicEnabled' => false,
+        'visibility' => 'private',
         'updatedAt' => gmdate('c'),
     ];
 }
@@ -427,6 +427,16 @@ function public_gallery_slug(array $settings): string
     return $birth === false ? '' : $slugName . '-' . $birth->format('mdY');
 }
 
+function gallery_visibility(array $settings): string
+{
+    if (array_key_exists('visibility', $settings)) {
+        $visibility = (string) $settings['visibility'];
+        return in_array($visibility, ['private', 'unlisted', 'public'], true) ? $visibility : 'private';
+    }
+    // Existing shared galleries had direct links but no public directory.
+    return ($settings['publicEnabled'] ?? false) === true ? 'unlisted' : 'private';
+}
+
 function public_gallery_by_slug(string $slug): ?array
 {
     if (preg_match('/^[a-z0-9][a-z0-9-]{1,88}-\d{8}$/', $slug) !== 1) {
@@ -439,7 +449,7 @@ function public_gallery_by_slug(string $slug): ?array
             continue;
         }
         $settings = json_read('central/babies/' . $babyId . '/data/settings.json', []);
-        if (($settings['publicEnabled'] ?? false) !== true) {
+        if (gallery_visibility($settings) === 'private') {
             continue;
         }
         $candidate = public_gallery_slug($settings);

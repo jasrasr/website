@@ -8,6 +8,7 @@ $authenticated = true;
 $authData = tracker_state();
 $legacyAuth = false;
 $settings = tracker_settings();
+$visibility = gallery_visibility($settings);
 $account = current_account();
 $superAdmin = is_super_admin();
 $canWrite = daily_auth()->can(BABY_TRACKER_PROJECT, 'member');
@@ -106,14 +107,19 @@ if ($authenticated) {
             <label>Weight ounces <span>(optional)</span><input type="number" name="birthWeightOunces" min="0" max="15" step="1" inputmode="numeric" value="<?= htmlspecialchars((string) ($settings['birthWeightOunces'] ?? '')) ?>" placeholder="8"></label>
         </div>
         <div class="public-sharing">
-            <label class="public-toggle"><input type="checkbox" name="publicEnabled" value="1" <?= !empty($settings['publicEnabled']) ? 'checked' : '' ?>><span><strong>Make this gallery fully open and public</strong><small>Anyone with the link can view the photos, dates, day numbers, and notes. Uploads and settings still require sign-in.</small></span></label>
-            <div id="publicLinkPanel" <?= !empty($settings['publicEnabled']) ? '' : 'hidden' ?>>
-                <label>Public link<input id="publicLink" type="text" readonly value=""></label>
+            <fieldset class="visibility-options">
+                <legend>Who can view this gallery?</legend>
+                <label><input type="radio" name="visibility" value="private" <?= $visibility === 'private' ? 'checked' : '' ?>><span><strong>Private</strong><small>Only assigned users can view it. No public link.</small></span></label>
+                <label><input type="radio" name="visibility" value="unlisted" <?= $visibility === 'unlisted' ? 'checked' : '' ?>><span><strong>Unlisted</strong><small>Anyone who knows the name and birthday can find the link. It is not listed publicly.</small></span></label>
+                <label><input type="radio" name="visibility" value="public" <?= $visibility === 'public' ? 'checked' : '' ?>><span><strong>Public</strong><small>Anyone can open the link without a prompt, and the gallery appears in the public gallery list.</small></span></label>
+            </fieldset>
+            <div id="publicLinkPanel" <?= $visibility === 'private' ? 'hidden' : '' ?>>
+                <label>Gallery link<input id="publicLink" type="text" readonly value=""></label>
                 <div class="public-link-actions">
                     <button type="button" class="secondary" id="copyPublicLink">Copy link</button>
-                    <button type="button" class="secondary" id="openPublicLink">Open public gallery</button>
+                    <button type="button" class="secondary" id="openPublicLink">Open shared gallery</button>
                 </div>
-                <small>The link uses the baby’s first name and birthday: <code>firstname-MMDDYYYY</code>. Changing either will change the link.</small>
+                <small>The link uses the baby’s first name and birthday: <code>firstname-MMDDYYYY</code>. Changing either will change the link. Anyone with the link can view photos and notes.</small>
             </div>
         </div>
         <button type="submit">Save settings</button>
