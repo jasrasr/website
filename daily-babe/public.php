@@ -102,6 +102,7 @@ function public_date_label(string $date): string
     <link rel="stylesheet" href="assets/app.css?v=<?= BABY_TRACKER_VERSION ?>">
     <style>
         .public-hero{margin-bottom:1rem}.public-hero h1{font-family:Georgia,serif;font-size:clamp(2.3rem,7vw,5rem);line-height:1;margin:.45rem 0}.public-summary{color:var(--muted);margin:.35rem 0 0}.public-gallery .tile{cursor:default}.public-gallery .tile:hover img{transform:none}.public-photo-link{display:block;position:relative}.public-photo-link:focus-visible{outline:3px solid var(--sage);outline-offset:-3px}.public-photo-link img{display:block}.public-photo-link span{position:absolute;right:.65rem;bottom:.65rem;padding:.35rem .55rem;border-radius:7px;background:rgba(27,36,48,.88);color:#fff;font-size:.72rem;font-weight:700}.public-footer-note{color:var(--muted);text-align:center;margin:2rem auto 0;max-width:42rem}
+        .public-photo-dialog{width:calc(100vw - 1rem);max-width:none;height:calc(100dvh - 1rem);max-height:none;padding:.5rem;border:0;background:#111821;overflow:hidden}.public-photo-dialog[open]{display:flex;align-items:center;justify-content:center}.public-photo-dialog img{display:block;max-width:100%;max-height:calc(100dvh - 2rem);width:auto;height:auto;object-fit:contain}.public-photo-dialog .close-photo{position:absolute;top:max(.75rem,env(safe-area-inset-top));right:max(.75rem,env(safe-area-inset-right));z-index:1;border:1px solid rgba(255,255,255,.5);background:rgba(17,24,33,.88);color:#fff;font-size:1.5rem;line-height:1;padding:.5rem .7rem}.public-photo-dialog .close-photo:hover{background:#111821}
     </style>
 </head>
 <body>
@@ -131,9 +132,9 @@ function public_date_label(string $date): string
                 $imageUrl = 'public-image.php?baby=' . rawurlencode($slug) . '&id=' . rawurlencode((string) ($record['id'] ?? ''));
             ?>
                 <article class="tile">
-                    <a class="public-photo-link" href="<?= htmlspecialchars($imageUrl) ?>" target="_blank" rel="noopener" aria-label="View full photo of <?= htmlspecialchars($babyName . ' from ' . public_date_label($photoDate)) ?> in a new tab">
+                    <a class="public-photo-link" href="<?= htmlspecialchars($imageUrl) ?>" aria-label="View larger photo of <?= htmlspecialchars($babyName . ' from ' . public_date_label($photoDate)) ?>">
                         <img loading="lazy" src="<?= htmlspecialchars($imageUrl) ?>" alt="<?= htmlspecialchars($babyName . ' on ' . public_date_label($photoDate)) ?>">
-                        <span aria-hidden="true">View full photo</span>
+                        <span aria-hidden="true">View larger photo</span>
                     </a>
                     <div class="caption">
                         <div>
@@ -148,7 +149,26 @@ function public_date_label(string $date): string
     <?php endif; ?>
     <p class="public-footer-note">This is a read-only shared gallery. Adding photos and changing settings still require an authorized Baby Daily account.</p>
 </main>
+<dialog id="publicPhotoDialog" class="public-photo-dialog" aria-label="Larger photo">
+    <button type="button" class="close-photo" aria-label="Close photo and return to gallery">×</button>
+    <img id="publicFullPhoto" alt="">
+</dialog>
 <footer>Baby Daily v<?= BABY_TRACKER_VERSION ?></footer>
+<script>
+    const photoDialog = document.getElementById('publicPhotoDialog');
+    const fullPhoto = document.getElementById('publicFullPhoto');
+    document.querySelectorAll('.public-photo-link').forEach(link => {
+        link.addEventListener('click', event => {
+            if (typeof photoDialog.showModal !== 'function') return;
+            event.preventDefault();
+            fullPhoto.src = link.href;
+            fullPhoto.alt = link.querySelector('img').alt;
+            photoDialog.showModal();
+        });
+    });
+    photoDialog.querySelector('.close-photo').addEventListener('click', () => photoDialog.close());
+    photoDialog.addEventListener('close', () => fullPhoto.removeAttribute('src'));
+</script>
 </body>
 </html>
 

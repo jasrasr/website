@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.1 - 2026-11-03
+
+- Show larger shared-gallery photos in a screen-sized viewer with Escape and X close controls.
+
 ## 2.1.0 - 2026-11-03
 
 - Add Private, Unlisted, and Public gallery visibility choices.
