@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.2 - 2026-11-03
+
+- Add spacing inside the shared-gallery heading card and wrap long baby names within it.
+
 ## 2.1.1 - 2026-11-03
 
 - Show larger shared-gallery photos in a screen-sized viewer with Escape and X close controls.
