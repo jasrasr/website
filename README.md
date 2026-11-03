@@ -2,10 +2,11 @@
 File Name     : README.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Repository overview, development conventions, project index, and deployment guidance.
-Revision      : 1.0.12
+Revision      : 1.0.13
 Created Date  : 2025-02-14
-Modified Date : 2026-10-30
+Modified Date : 2026-11-03
 Changelog     :
+  Rev 1.0.13 - Corrected the Khootish rename history and linked the preserved deployment safety TODO.
   Rev 1.0.12 - Added preview-first full-report Robinhood import with atomic eligible-symbol batch and exception queue.
   Rev 1.0.11 - Added private staged Robinhood import with per-stock corrections, verified split/sale allocations and guarded persistence.
   Rev 1.0.10 - Documented Robinhood CSV preview and reconciled NVIDIA demo without committing personal brokerage files.
@@ -61,7 +62,7 @@ Folders in this repo sync under `https://jasr.me/github/<folder>/`, which is the
 
 The entries below describe source present in the repository. Canonical URLs are live or target locations under the convention above; this inventory does not verify every deployed endpoint.
 
-The [repository-wide TODO list](ALL-TODOS.md) collects the TODO files kept in each project folder.
+The [repository-wide TODO list](ALL-TODOS.md) collects the TODO files kept in each project folder. The [deployment safety TODO](DEPLOYMENT-SAFETY-TODO.md) retains Hostinger follow-ups from the former `quiz-web-interactive` folder.
 
 | Project | Repo path / docs | Live or target URL | Notes |
 |---|---|---|---|\n| Build Signal walkthrough | [build-signal/](build-signal/) / [README](build-signal/README.md) | [Private ChatGPT Site](https://jason-ai-build-flow.jasrasr.chatgpt.site) | Illustrated, narrated AI development workflow. Source is here for local Codex CLI visual refinement; the linked Site remains owner-only. |
@@ -88,8 +89,7 @@ The [repository-wide TODO list](ALL-TODOS.md) collects the TODO files kept in ea
 | Secure Upload & File Manager | [file-manager/](file-manager/) / [README](file-manager/README.md) | <a href="https://jasr.me/github/file-manager/" target="_new">jasr.me/github/file-manager</a> | Admin-only file manager with PowerShell-friendly upload API, MFA, allowlisting, and versioning. |
 | PSNotify | [psnotify/](psnotify/) / [README](psnotify/README.md) | <a href="https://jasr.me/github/psnotify/" target="_new">jasr.me/github/psnotify</a> | Self-hosted notification endpoint and viewer for long-running PowerShell jobs. |
 | License Plate Photo Logger | [license-plate/](license-plate/) / [README](license-plate/README.md) | <a href="https://jasr.me/github/license-plate/" target="_new">jasr.me/github/license-plate</a> | PHP app for uploading plate photos, extracting plate text, and logging duplicates. |
-| Khootish Multiplayer Quiz | [khootish/](khootish/) / [README](khootish/README.md) | <a href="https://jasr.me/github/khootish/" target="_new">jasr.me/github/khootish</a> | Reusable quizzes, invite codes, team play, projector display, question bank, and completed-game history. |
-| Quiz Web Interactive | Expected folder: `quiz-web-interactive/` (not present on `main` at this review) | Target: `https://jasr.me/github/quiz-web-interactive/` (deployment not verified) | Separate project from Khootish. Its source location needs confirmation; do not rename, merge, or replace it with Khootish. |
+| Khootish Multiplayer Quiz | [khootish/](khootish/) / [README](khootish/README.md) | <a href="https://jasr.me/github/khootish/" target="_new">jasr.me/github/khootish</a> | Formerly `quiz-web-interactive`; renamed in Git on 2026-08-16. Reusable quizzes, invite codes, team play, projector display, question bank, and completed-game history. |
 | Timeclock Photo Logger | [how-much-time-worked/](how-much-time-worked/) / [README](how-much-time-worked/README.md) | Target folder: `/timeclock/` | Photo/manual employee hour logger with OCR options and JSON stats. |
 | Computer Heartbeat Dashboard | [computers/](computers/) / [README](computers/readme.md) | Target folder: `/computers/` | PowerShell-to-PHP heartbeat system for Windows device status tracking. |
 | JSON Flat-File Blog | [blog/](blog/) / [README](blog/README.md) | <a href="https://jasr.me/github/blog/" target="_new">jasr.me/github/blog</a> | Static-ish JSON blog with PowerShell builder, RSS, sitemap, and admin-protected media workflow. |

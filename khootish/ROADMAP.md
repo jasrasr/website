@@ -1,6 +1,16 @@
+<!--
+File Name     : ROADMAP.md
+Author        : Jason Lamb (with help from ChatGPT)
+Description   : Khootish feature, reliability, and deployment roadmap.
+Revision      : 1.0.0
+Created Date  : 2026-07-19
+Modified Date : 2026-11-03
+Changelog     :
+  Rev 1.0.0 - Added file metadata and runtime JSON deployment review to the existing roadmap.
+-->
 # Khootish — Future Updates
 
-Last reviewed: August 16, 2026
+Last reviewed: November 3, 2026
 
 This file is the working backlog for planned improvements. Items can be reordered as priorities change.
 
@@ -41,6 +51,7 @@ This file is the working backlog for planned improvements. Items can be reordere
 - [ ] Add JSON validation and recovery for damaged data files.
 - [ ] Add an installation/status diagnostic page for Hostinger permissions and PHP requirements.
 - [ ] Add automated backups of quizzes before edits or deletion.
+- [ ] Review which game, quiz, Question Bank, and history JSON files are runtime data; decide tracking and ignore rules while preserving live Hostinger files. See `TODO.md` and the repository deployment safety note.
 
 ## Mobile and Accessibility
 
