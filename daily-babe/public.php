@@ -211,7 +211,7 @@ function public_date_label(string $date): string
     <button type="button" class="close-photo" aria-label="Close photo and return to gallery">×</button>
     <img id="publicFullPhoto" alt="">
 </dialog>
-<footer>Baby Daily v<?= BABY_TRACKER_VERSION ?></footer>
+<footer>Baby Daily v<?= BABY_TRACKER_VERSION ?> - Modified <?= htmlspecialchars(project_last_modified_date(__DIR__)) ?></footer>
 <script>
     const photoDialog = document.getElementById('publicPhotoDialog');
     const fullPhoto = document.getElementById('publicFullPhoto');

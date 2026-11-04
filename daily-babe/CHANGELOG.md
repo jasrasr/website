@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.4.1 - 2026-11-03
+
+- Show the overall project revision and latest project-file modification date in signed-in and shared-gallery footers.
+- Calculate the footer date automatically while excluding runtime photos, generated thumbnails, dependencies, and Git metadata.
+
 ## 2.4.0 - 2026-11-03
 
 - Serve cached 720-pixel WebP thumbnails in signed-in, unlisted, and public gallery grids.

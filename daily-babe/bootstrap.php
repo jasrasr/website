@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '2.4.0';
+const BABY_TRACKER_VERSION = '2.4.1';
 const BABY_TRACKER_PROJECT = 'daily-babe';
 
 require_once __DIR__ . '/lib/unlisted-access.php';
 require_once __DIR__ . '/lib/thumbnails.php';
+require_once __DIR__ . '/lib/project-metadata.php';
 
 $dailyConfigFile = __DIR__ . '/config/config.php';
 $config = require is_file($dailyConfigFile) ? $dailyConfigFile : __DIR__ . '/config/config.example.php';

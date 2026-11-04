@@ -176,7 +176,7 @@ if ($authenticated) {
 <?php endif; ?>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<footer>Baby Daily v<?= BABY_TRACKER_VERSION ?> · <a href="CHANGELOG.md?v=<?= BABY_TRACKER_VERSION ?>">View changelog</a></footer>
+<footer>Baby Daily v<?= BABY_TRACKER_VERSION ?> - Modified <?= htmlspecialchars(project_last_modified_date(__DIR__)) ?></footer>
 <script>window.BABY_TRACKER = {csrf: <?= json_encode(csrf_token()) ?>};</script>
 <script src="assets/app.js?v=<?= BABY_TRACKER_VERSION ?>" defer></script>
 </body>

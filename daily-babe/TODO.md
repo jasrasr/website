@@ -2,10 +2,11 @@
 File Name     : TODO.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Actionable future work for daily-babe.
-Revision      : 1.2.0
+Revision      : 1.3.0
 Created Date  : 2026-10-20
 Modified Date : 2026-11-03
 Changelog     :
+  Rev 1.3.0 - Documented automatic project revision and modified-date footers.
   Rev 1.2.0 - Marked server-generated gallery thumbnails complete.
   Rev 1.1.0 - Marked scheduled missing-photo email reminders complete.
   Rev 1.0.0 - Created a verified project follow-up list.
