@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '2.3.0';
+const BABY_TRACKER_VERSION = '2.4.0';
 const BABY_TRACKER_PROJECT = 'daily-babe';
 
 require_once __DIR__ . '/lib/unlisted-access.php';
+require_once __DIR__ . '/lib/thumbnails.php';
 
 $dailyConfigFile = __DIR__ . '/config/config.php';
 $config = require is_file($dailyConfigFile) ? $dailyConfigFile : __DIR__ . '/config/config.example.php';
@@ -283,7 +284,7 @@ function baby_root(string $babyId): string
 
 function initialize_baby_storage(string $babyId, string $name = 'Baby'): void
 {
-    foreach (['data', 'uploads', 'backups'] as $folder) {
+    foreach (['data', 'uploads', 'thumbnails', 'backups'] as $folder) {
         $path = baby_root($babyId) . DIRECTORY_SEPARATOR . $folder;
         if (!is_dir($path) && !mkdir($path, 0750, true) && !is_dir($path)) {
             throw new RuntimeException('Unable to initialize baby storage.');
@@ -293,6 +294,25 @@ function initialize_baby_storage(string $babyId, string $name = 'Baby'): void
     if (!is_file(storage_path($settingsPath))) {
         json_write($settingsPath, default_baby_settings($name));
     }
+}
+
+function baby_thumbnail_path(string $babyId, string $photoId): string
+{
+    if (preg_match('/^[a-f0-9]{24}$/', $photoId) !== 1) {
+        throw new RuntimeException('Invalid photo identifier.');
+    }
+    return baby_root($babyId) . DIRECTORY_SEPARATOR . 'thumbnails' . DIRECTORY_SEPARATOR . $photoId . '.webp';
+}
+
+function ensure_baby_thumbnail(string $babyId, array $record): ?string
+{
+    $photoId = (string) ($record['id'] ?? '');
+    $sourcePath = baby_root($babyId) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . basename((string) ($record['filename'] ?? ''));
+    $thumbnailPath = baby_thumbnail_path($babyId, $photoId);
+    if (is_file($thumbnailPath) && filemtime($thumbnailPath) >= filemtime($sourcePath)) {
+        return $thumbnailPath;
+    }
+    return create_gallery_thumbnail($sourcePath, $thumbnailPath, (string) ($record['mimeType'] ?? '')) ? $thumbnailPath : null;
 }
 
 function ensure_initial_gallery(array $user): void

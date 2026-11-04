@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.4.0 - 2026-11-03
+
+- Serve cached 720-pixel WebP thumbnails in signed-in, unlisted, and public gallery grids.
+- Keep original-resolution photos for enlarged views, collages, GIFs, and stored downloads.
+- Generate thumbnails lazily for existing photos and remove cached thumbnails when photos are deleted.
+- Fall back safely to original files when the server does not provide PHP GD/WebP support.
+
 ## 2.3.0 - 2026-11-03
 
 - Replace name-and-birthday unlisted URLs with opaque identifiers.

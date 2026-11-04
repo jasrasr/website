@@ -187,10 +187,11 @@ function public_date_label(string $date): string
                 $day = public_day_number($photoDate, $birthDate);
                 $note = trim((string) ($record['note'] ?? ''));
                 $imageUrl = 'public-image.php?baby=' . rawurlencode($slug) . '&id=' . rawurlencode((string) ($record['id'] ?? ''));
+                $thumbnailUrl = $imageUrl . '&size=thumb';
             ?>
                 <article class="tile">
                     <a class="public-photo-link" href="<?= htmlspecialchars($imageUrl) ?>" aria-label="View larger photo of <?= htmlspecialchars($babyName . ' from ' . public_date_label($photoDate)) ?>">
-                        <img loading="lazy" src="<?= htmlspecialchars($imageUrl) ?>" alt="<?= htmlspecialchars($babyName . ' on ' . public_date_label($photoDate)) ?>">
+                        <img loading="lazy" src="<?= htmlspecialchars($thumbnailUrl) ?>" alt="<?= htmlspecialchars($babyName . ' on ' . public_date_label($photoDate)) ?>">
                         <span aria-hidden="true">View larger photo</span>
                     </a>
                     <div class="caption">

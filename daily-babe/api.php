@@ -307,6 +307,10 @@ try {
         if ($moved && !unlink($temporary)) {
             error_log('Baby Daily [' . request_id() . '] Unable to remove deleted photo file.');
         }
+        $thumbnailPath = baby_thumbnail_path(current_baby_id(), $id);
+        if (is_file($thumbnailPath) && !unlink($thumbnailPath)) {
+            error_log('Baby Daily [' . request_id() . '] Unable to remove deleted photo thumbnail.');
+        }
         audit_event('photo.deleted', ['id' => $id, 'photoDate' => (string) ($record['photoDate'] ?? ''), 'selectedBabyId' => current_baby_id()]);
         json_response(true, 'Photo removed.');
     }

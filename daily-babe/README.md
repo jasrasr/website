@@ -2,7 +2,7 @@
 
 A mobile-first PHP/JSON gallery for one baby photo per day. Daily Babe uses the site-wide User Management service for adult accounts and keeps baby galleries, photos, and metadata isolated inside the project.
 
-## Included in v2.3.0
+## Included in v2.4.0
 
 - Central User Management sign-in, password changes, sessions, and account status
 - Multiple babies and multiple adults, with per-gallery membership
@@ -17,6 +17,9 @@ A mobile-first PHP/JSON gallery for one baby photo per day. Daily Babe uses the 
 - Public links based on first name and birthday, such as `hudson-11022026`
 - Atomic JSON writes, protected image delivery, request IDs, and audit events
 - Optional daily missing-photo email reminders through authenticated Titan SMTP
+- Lazy 720-pixel WebP gallery thumbnails while enlarged views and exports use the original photo
+
+Thumbnail generation requires PHP GD with JPEG, PNG, and WebP support. If it is unavailable, galleries safely fall back to the original image. Existing photos receive cached thumbnails automatically the first time a gallery tile requests them.
 
 ## Authentication and permissions
 

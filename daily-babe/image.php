@@ -29,7 +29,16 @@ if (!is_file($path)) {
     exit;
 }
 
-header('Content-Type: ' . (string) $match['mimeType']);
+$mimeType = (string) $match['mimeType'];
+if (($_GET['size'] ?? '') === 'thumb') {
+    $thumbnailPath = ensure_baby_thumbnail(current_baby_id(), $match);
+    if ($thumbnailPath !== null) {
+        $path = $thumbnailPath;
+        $mimeType = 'image/webp';
+    }
+}
+
+header('Content-Type: ' . $mimeType);
 header('Content-Length: ' . filesize($path));
 header('Cache-Control: private, no-store');
 header('X-Content-Type-Options: nosniff');
