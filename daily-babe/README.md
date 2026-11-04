@@ -2,7 +2,7 @@
 
 A mobile-first PHP/JSON gallery for one baby photo per day. Daily Babe uses the site-wide User Management service for adult accounts and keeps baby galleries, photos, and metadata isolated inside the project.
 
-## Included in v2.1.2
+## Included in v2.2.0
 
 - Central User Management sign-in, password changes, sessions, and account status
 - Multiple babies and multiple adults, with per-gallery membership
@@ -16,6 +16,7 @@ A mobile-first PHP/JSON gallery for one baby photo per day. Daily Babe uses the 
 - Private, unlisted, and public gallery visibility
 - Public links based on first name and birthday, such as `hudson-11022026`
 - Atomic JSON writes, protected image delivery, request IDs, and audit events
+- Optional daily missing-photo email reminders through authenticated Titan SMTP
 
 ## Authentication and permissions
 
@@ -82,6 +83,41 @@ Existing galleries shared before v2.1.0 become unlisted, preserving their links.
 
 Runtime photos, central membership data, logs, and settings are ignored by Git. Hostinger performs a nightly backup, but a manual pre-rollout copy is still recommended before deleting old runtime folders. The included Apache rules deny browser access to `storage/` and `config/`.
 
+## Missing-photo email reminders
+
+Each gallery can enable one daily email after a selected time when that calendar day has no photo. Enter one or more recipient addresses in Settings. The reminder starts only after the actual birth date, and a private delivery ledger prevents duplicate messages for the same gallery and date.
+
+Copy `config/config.example.php` to the ignored `config/config.php` on Hostinger and add the Titan mailbox password:
+
+```php
+'smtp' => [
+    'host' => 'smtp.titan.email',
+    'port' => 465,
+    'encryption' => 'ssl',
+    'authentication' => true,
+    'username' => 'notifications@justjason.fyi',
+    'password' => 'YOUR_TITAN_MAILBOX_PASSWORD',
+    'from_email' => 'notifications@justjason.fyi',
+    'from_name' => 'Daily Babe',
+],
+```
+
+Do not commit `config/config.php`. Test delivery from the Hostinger terminal with:
+
+```text
+php /ABSOLUTE/PATH/github/daily-babe/send-missing-photo-reminders.php --test YOUR_EMAIL_ADDRESS
+```
+
+Hostinger PHP must have OpenSSL stream support enabled for the SSL connection on port 465.
+
+Then create a Hostinger cron job that runs every 15 minutes:
+
+```text
+php /ABSOLUTE/PATH/github/daily-babe/send-missing-photo-reminders.php
+```
+
+The script uses the configured `America/New_York` timezone, checks only enabled galleries at or after their selected reminder time, and exits without sending when today already has a photo.
+
 ## Validation checklist
 
 - Sign in through User Management and open Daily Babe without a second login.
@@ -93,3 +129,4 @@ Runtime photos, central membership data, logs, and settings are ignored by Git. 
 - Confirm private `image.php` requests require central access and gallery membership.
 - Confirm public URLs work only while sharing is enabled.
 - Confirm collage and GIF exports retain day labels.
+- Enable a reminder, run the SMTP test, and confirm the scheduled check sends once when today is missing.

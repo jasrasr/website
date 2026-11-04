@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '2.1.2';
+const BABY_TRACKER_VERSION = '2.2.0';
 const BABY_TRACKER_PROJECT = 'daily-babe';
 
 $dailyConfigFile = __DIR__ . '/config/config.php';
@@ -255,7 +255,7 @@ function default_baby_settings(string $name = 'Baby'): array
 {
     global $config;
     return [
-        'schemaVersion' => 4,
+        'schemaVersion' => 5,
         'babyName' => $name,
         'dueDate' => (string) ($config['due_date'] ?? '2026-11-02'),
         'birthDate' => '',
@@ -263,6 +263,9 @@ function default_baby_settings(string $name = 'Baby'): array
         'birthLengthInches' => '',
         'birthWeightPounds' => '',
         'birthWeightOunces' => '',
+        'reminderEnabled' => false,
+        'reminderTime' => '20:00',
+        'reminderEmails' => '',
         'visibility' => 'private',
         'updatedAt' => gmdate('c'),
     ];

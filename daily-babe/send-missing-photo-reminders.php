@@ -1,0 +1,142 @@
+<?php
+
+declare(strict_types=1);
+
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
+
+require __DIR__ . '/bootstrap.php';
+require __DIR__ . '/lib/smtp.php';
+
+function reminder_recipients(string $value): array
+{
+    $items = preg_split('/[\s,;]+/', $value, -1, PREG_SPLIT_NO_EMPTY);
+    return array_values(array_unique(array_map(
+        static fn(string $email): string => strtolower(trim($email)),
+        is_array($items) ? $items : []
+    )));
+}
+
+function reminder_has_photo(array $entries, string $date): bool
+{
+    foreach ($entries['records'] ?? [] as $record) {
+        if (is_array($record) && ($record['photoDate'] ?? '') === $date) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function reminder_log(string $event, array $details = []): void
+{
+    $line = json_encode([
+        'timestamp' => gmdate(DATE_ATOM),
+        'event' => $event,
+        'details' => $details,
+    ], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . PHP_EOL;
+    file_put_contents(central_storage_path('logs/reminders-' . date('Y-m') . '.jsonl'), $line, FILE_APPEND | LOCK_EX);
+}
+
+global $config;
+$smtp = is_array($config['smtp'] ?? null) ? $config['smtp'] : [];
+$appUrl = rtrim((string) ($config['app_url'] ?? 'https://jasr.me/github/daily-babe/'), '/') . '/';
+
+if (($argv[1] ?? '') === '--test') {
+    $recipient = trim((string) ($argv[2] ?? ''));
+    if (!filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
+        fwrite(STDERR, "Usage: php send-missing-photo-reminders.php --test recipient@example.com\n");
+        exit(2);
+    }
+    smtp_send_message(
+        $smtp,
+        [$recipient],
+        'Daily Babe email test',
+        "Titan SMTP is configured correctly for Daily Babe.\n\n" . $appUrl
+    );
+    fwrite(STDOUT, "Test email accepted by Titan SMTP.\n");
+    exit(0);
+}
+
+$lockPath = central_storage_path('logs/reminder-job.lock');
+$lock = fopen($lockPath, 'c+');
+if ($lock === false) {
+    throw new RuntimeException('Unable to open the reminder job lock.');
+}
+if (!flock($lock, LOCK_EX | LOCK_NB)) {
+    fclose($lock);
+    fwrite(STDOUT, "Another reminder check is already running.\n");
+    exit(0);
+}
+
+$today = date('Y-m-d');
+$currentTime = date('H:i');
+$ledger = json_read('central/data/reminder-state.json', ['schemaVersion' => 1, 'sent' => []]);
+$sent = is_array($ledger['sent'] ?? null) ? $ledger['sent'] : [];
+$checked = 0;
+$delivered = 0;
+$failed = 0;
+
+try {
+    foreach (tracker_state()['babies'] ?? [] as $babyId => $baby) {
+        $babyId = (string) $babyId;
+        if (preg_match('/^[a-f0-9]{24}$/D', $babyId) !== 1) {
+            continue;
+        }
+        $settings = json_read('central/babies/' . $babyId . '/data/settings.json', []);
+        if (($settings['reminderEnabled'] ?? false) !== true) {
+            continue;
+        }
+        $checked++;
+        $birthDate = (string) ($settings['birthDate'] ?? '');
+        $reminderTime = (string) ($settings['reminderTime'] ?? '20:00');
+        $recipients = reminder_recipients((string) ($settings['reminderEmails'] ?? ''));
+        if (!valid_date($birthDate) || $today < $birthDate || preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/D', $reminderTime) !== 1 || $currentTime < $reminderTime || $recipients === []) {
+            continue;
+        }
+        $ledgerKey = $babyId . ':' . $today;
+        if (isset($sent[$ledgerKey])) {
+            continue;
+        }
+        $entries = json_read('central/babies/' . $babyId . '/data/entries.json', ['records' => []]);
+        if (reminder_has_photo($entries, $today)) {
+            continue;
+        }
+
+        $babyName = trim((string) ($settings['babyName'] ?? $baby['name'] ?? 'Baby')) ?: 'Baby';
+        $displayDate = (new DateTimeImmutable($today))->format('F j, Y');
+        $subject = 'Missing daily photo for ' . $babyName;
+        $body = $babyName . " does not have a photo for " . $displayDate . ".\n\n"
+            . "Open Daily Babe to add it:\n" . $appUrl;
+        try {
+            smtp_send_message($smtp, $recipients, $subject, $body);
+            $sent[$ledgerKey] = gmdate(DATE_ATOM);
+            $ledger['sent'] = $sent;
+            $ledger['updatedAt'] = gmdate(DATE_ATOM);
+            json_write('central/data/reminder-state.json', $ledger);
+            reminder_log('reminder.sent', ['babyId' => $babyId, 'photoDate' => $today, 'recipientCount' => count($recipients)]);
+            $delivered++;
+        } catch (Throwable $exception) {
+            reminder_log('reminder.failed', ['babyId' => $babyId, 'photoDate' => $today, 'error' => $exception->getMessage()]);
+            fwrite(STDERR, 'Reminder failed for ' . $babyName . ': ' . $exception->getMessage() . PHP_EOL);
+            $failed++;
+        }
+    }
+
+    $cutoff = (new DateTimeImmutable('-90 days'))->format('Y-m-d');
+    $sent = array_filter($sent, static function (mixed $_timestamp, string $key) use ($cutoff): bool {
+        $separator = strrpos($key, ':');
+        return $separator !== false && substr($key, $separator + 1) >= $cutoff;
+    }, ARRAY_FILTER_USE_BOTH);
+    $ledger['sent'] = $sent;
+    $ledger['updatedAt'] = gmdate(DATE_ATOM);
+    json_write('central/data/reminder-state.json', $ledger);
+} finally {
+    flock($lock, LOCK_UN);
+    fclose($lock);
+}
+
+fwrite(STDOUT, sprintf("Checked %d enabled galleries; sent %d reminders; %d failed.\n", $checked, $delivered, $failed));
+exit($failed === 0 ? 0 : 1);
+

@@ -2,6 +2,7 @@
 
 ## Next
 
+- [x] Scheduled email reminders when today’s photo is missing.
 - [ ] Replace or delete an incorrect daily photo with confirmation and audit history.
 - [x] Multi-user accounts with individual sign-ins and admin-managed gallery access.
 - [ ] Automated encrypted backup/export of originals and metadata.

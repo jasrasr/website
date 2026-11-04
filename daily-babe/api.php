@@ -125,6 +125,9 @@ try {
         $birthLength = trim((string) ($_POST['birthLengthInches'] ?? ''));
         $birthWeightPounds = trim((string) ($_POST['birthWeightPounds'] ?? ''));
         $birthWeightOunces = trim((string) ($_POST['birthWeightOunces'] ?? ''));
+        $reminderEnabled = (string) ($_POST['reminderEnabled'] ?? '') === '1';
+        $reminderTime = trim((string) ($_POST['reminderTime'] ?? '20:00'));
+        $reminderEmailsInput = trim((string) ($_POST['reminderEmails'] ?? ''));
         $visibility = (string) ($_POST['visibility'] ?? (((string) ($_POST['publicEnabled'] ?? '') === '1') ? 'unlisted' : 'private'));
         if (!in_array($visibility, ['private', 'unlisted', 'public'], true)) {
             json_response(false, 'Choose a valid gallery visibility.', null, [['code' => 'INVALID_VISIBILITY']], 422);
@@ -142,6 +145,22 @@ try {
             || ($birthWeightOunces !== '' && (!ctype_digit($birthWeightOunces) || (int) $birthWeightOunces > 15))) {
             json_response(false, 'Enter valid optional birth measurements.', null, [['code' => 'INVALID_MEASUREMENT']], 422);
         }
+        if (preg_match('/^(?:[01]\\d|2[0-3]):[0-5]\\d$/', $reminderTime) !== 1) {
+            json_response(false, 'Choose a valid reminder time.', null, [['code' => 'INVALID_REMINDER_TIME']], 422);
+        }
+        $reminderEmails = $reminderEmailsInput === ''
+            ? []
+            : preg_split('/[\\s,;]+/', $reminderEmailsInput, -1, PREG_SPLIT_NO_EMPTY);
+        $reminderEmails = array_values(array_unique(array_map(
+            static fn(string $email): string => strtolower(trim($email)),
+            is_array($reminderEmails) ? $reminderEmails : []
+        )));
+        if (array_filter($reminderEmails, static fn(string $email): bool => !filter_var($email, FILTER_VALIDATE_EMAIL)) !== []) {
+            json_response(false, 'Enter valid reminder email addresses.', null, [['code' => 'INVALID_REMINDER_EMAIL']], 422);
+        }
+        if ($reminderEnabled && $reminderEmails === []) {
+            json_response(false, 'Add at least one email address for reminders.', null, [['code' => 'REMINDER_EMAIL_REQUIRED']], 422);
+        }
         $publicCandidate = [
             'babyName' => $babyName,
             'birthDate' => $birthDate,
@@ -157,7 +176,7 @@ try {
             }
         }
         $settings = [
-            'schemaVersion' => 4,
+            'schemaVersion' => 5,
             'babyName' => $babyName,
             'dueDate' => $dueDate,
             'birthDate' => $birthDate,
@@ -165,6 +184,9 @@ try {
             'birthLengthInches' => $birthLength,
             'birthWeightPounds' => $birthWeightPounds,
             'birthWeightOunces' => $birthWeightOunces,
+            'reminderEnabled' => $reminderEnabled,
+            'reminderTime' => $reminderTime,
+            'reminderEmails' => implode(', ', $reminderEmails),
             'visibility' => $visibility,
             'updatedAt' => gmdate('c'),
         ];

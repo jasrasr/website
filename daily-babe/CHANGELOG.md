@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.0 - 2026-11-03
+
+- Add per-gallery missing-photo email reminders with a configurable time and recipient list.
+- Send through authenticated Titan SMTP at `smtp.titan.email:465` using SSL and `notifications@justjason.fyi` as the sender.
+- Add a CLI-only scheduled checker, duplicate-delivery ledger, delivery logs, and SMTP test command.
+
 ## 2.1.2 - 2026-11-03
 
 - Add spacing inside the shared-gallery heading card and wrap long baby names within it.
