@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '2.2.0';
+const BABY_TRACKER_VERSION = '2.3.0';
 const BABY_TRACKER_PROJECT = 'daily-babe';
+
+require_once __DIR__ . '/lib/unlisted-access.php';
 
 $dailyConfigFile = __DIR__ . '/config/config.php';
 $config = require is_file($dailyConfigFile) ? $dailyConfigFile : __DIR__ . '/config/config.example.php';
@@ -440,9 +442,58 @@ function gallery_visibility(array $settings): string
     return ($settings['publicEnabled'] ?? false) === true ? 'unlisted' : 'private';
 }
 
+function shared_gallery_identifier(string $babyId, array $settings): string
+{
+    $visibility = gallery_visibility($settings);
+    if ($visibility === 'private') {
+        return '';
+    }
+    return $visibility === 'unlisted' ? unlisted_gallery_identifier($babyId) : public_gallery_slug($settings);
+}
+
+function unlisted_gallery_access_granted(string $babyId): bool
+{
+    return isset($_SESSION['daily_babe_unlisted_access'][$babyId]);
+}
+
+function grant_unlisted_gallery_access(string $babyId): void
+{
+    $_SESSION['daily_babe_unlisted_access'][$babyId] = time();
+    unset($_SESSION['daily_babe_unlisted_attempts'][$babyId]);
+}
+
+function unlisted_gallery_csrf_token(): string
+{
+    if (empty($_SESSION['daily_babe_unlisted_csrf'])) {
+        $_SESSION['daily_babe_unlisted_csrf'] = bin2hex(random_bytes(32));
+    }
+    return (string) $_SESSION['daily_babe_unlisted_csrf'];
+}
+
+function valid_unlisted_gallery_csrf(string $token): bool
+{
+    return $token !== '' && hash_equals(unlisted_gallery_csrf_token(), $token);
+}
+
+function unlisted_gallery_attempt_allowed(string $babyId): bool
+{
+    $cutoff = time() - 900;
+    $attempts = array_values(array_filter(
+        $_SESSION['daily_babe_unlisted_attempts'][$babyId] ?? [],
+        static fn(mixed $timestamp): bool => is_int($timestamp) && $timestamp >= $cutoff
+    ));
+    $_SESSION['daily_babe_unlisted_attempts'][$babyId] = $attempts;
+    return count($attempts) < 8;
+}
+
+function record_unlisted_gallery_attempt(string $babyId): void
+{
+    $_SESSION['daily_babe_unlisted_attempts'][$babyId][] = time();
+}
+
 function public_gallery_by_slug(string $slug): ?array
 {
-    if (preg_match('/^[a-z0-9][a-z0-9-]{1,88}-\d{8}$/', $slug) !== 1) {
+    if (preg_match('/^(?:u-[a-f0-9]{40}|[a-z0-9][a-z0-9-]{1,88}-\d{8})$/D', $slug) !== 1) {
         return null;
     }
     $state = tracker_state();
@@ -455,7 +506,7 @@ function public_gallery_by_slug(string $slug): ?array
         if (gallery_visibility($settings) === 'private') {
             continue;
         }
-        $candidate = public_gallery_slug($settings);
+        $candidate = shared_gallery_identifier($babyId, $settings);
         if ($candidate !== '' && hash_equals($candidate, $slug)) {
             return ['babyId' => $babyId, 'settings' => $settings];
         }

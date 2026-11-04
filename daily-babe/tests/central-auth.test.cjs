@@ -45,6 +45,9 @@ test('keeps private images protected and public images opt-in', () => {
   assert.doesNotMatch(read('public.php'), /require_auth|daily_require_user/);
   assert.doesNotMatch(read('public-image.php'), /require_auth|daily_require_user/);
   assert.match(read('bootstrap.php'), /publicEnabled/);
+  assert.match(read('public.php'), /unlisted_gallery_credentials_match/);
+  assert.match(read('public-image.php'), /unlisted_gallery_access_granted/);
+  assert.match(read('bootstrap.php'), /shared_gallery_identifier/);
 });
 
 test('uses immutable central user IDs for gallery memberships', () => {

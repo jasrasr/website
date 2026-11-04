@@ -2,7 +2,7 @@
 
 A mobile-first PHP/JSON gallery for one baby photo per day. Daily Babe uses the site-wide User Management service for adult accounts and keeps baby galleries, photos, and metadata isolated inside the project.
 
-## Included in v2.2.0
+## Included in v2.3.0
 
 - Central User Management sign-in, password changes, sessions, and account status
 - Multiple babies and multiple adults, with per-gallery membership
@@ -68,16 +68,18 @@ Choose a visibility setting for each baby in Settings:
 | Setting | Who can view |
 | --- | --- |
 | Private | Assigned signed-in users only; public gallery and image links return 404. |
-| Unlisted | Anyone with the first-name/birthday link; absent from the public gallery list. People who know those details can guess the link. |
-| Public | Anyone with the link; also listed at `public.php` with no sign-in or prompt. |
+| Unlisted | Anyone with the opaque link who enters the baby’s name and birth date; absent from the public gallery list. |
+| Public | Anyone with the readable first-name/birthday link; also listed at `public.php` with no sign-in or prompt. |
 
-Unlisted and public links use this format:
+Public links keep this format:
 
 ```text
 https://jasr.me/github/daily-babe/public.php?baby=hudson-11022026
 ```
 
-Existing galleries shared before v2.1.0 become unlisted, preserving their links. The shared page is read-only. Visitors can select a photo to view its full-size original fitted within the screen, then press Escape or the X button to return to the gallery. Switching to Private immediately disables both the shared page and its image endpoint. It cannot remove copies that visitors saved while sharing was on. Changing the first name or birth date changes the shared link.
+Unlisted links use an opaque identifier that contains neither the baby’s name nor birth date. Opening one displays a prompt, and its photo endpoint remains unavailable until the visitor enters matching details in that browser session. The former name-and-birthday URL stops working when a gallery is unlisted. Public galleries retain the readable `firstname-MMDDYYYY` URL and open without a prompt.
+
+The shared page is read-only. Visitors can select a photo to view its full-size original fitted within the screen, then press Escape or the X button to return to the gallery. Switching to Private immediately disables both the shared page and its image endpoint. It cannot remove copies that visitors saved while sharing was on.
 
 ## Backups and privacy
 

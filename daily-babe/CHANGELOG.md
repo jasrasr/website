@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.3.0 - 2026-11-03
+
+- Replace name-and-birthday unlisted URLs with opaque identifiers.
+- Require the baby’s name and birth date before an unlisted gallery or its images can be viewed.
+- Keep public gallery URLs in the readable `firstname-MMDDYYYY` format with no prompt.
+- Limit repeated unlisted-gallery verification attempts in each browser session.
+
 ## 2.2.0 - 2026-11-03
 
 - Add per-gallery missing-photo email reminders with a configurable time and recipient list.

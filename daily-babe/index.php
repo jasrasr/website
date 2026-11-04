@@ -117,7 +117,7 @@ if ($authenticated) {
             <fieldset class="visibility-options">
                 <legend>Who can view this gallery?</legend>
                 <label><input type="radio" name="visibility" value="private" <?= $visibility === 'private' ? 'checked' : '' ?>><span><strong>Private</strong><small>Only assigned users can view it. No public link.</small></span></label>
-                <label><input type="radio" name="visibility" value="unlisted" <?= $visibility === 'unlisted' ? 'checked' : '' ?>><span><strong>Unlisted</strong><small>Anyone who knows the name and birthday can find the link. It is not listed publicly.</small></span></label>
+                <label><input type="radio" name="visibility" value="unlisted" <?= $visibility === 'unlisted' ? 'checked' : '' ?>><span><strong>Unlisted</strong><small>Anyone with the opaque link must enter the baby’s name and birth date. It is not listed publicly.</small></span></label>
                 <label><input type="radio" name="visibility" value="public" <?= $visibility === 'public' ? 'checked' : '' ?>><span><strong>Public</strong><small>Anyone can open the link without a prompt, and the gallery appears in the public gallery list.</small></span></label>
             </fieldset>
             <div id="publicLinkPanel" <?= $visibility === 'private' ? 'hidden' : '' ?>>
@@ -126,7 +126,7 @@ if ($authenticated) {
                     <button type="button" class="secondary" id="copyPublicLink">Copy link</button>
                     <button type="button" class="secondary" id="openPublicLink">Open shared gallery</button>
                 </div>
-                <small>The link uses the baby’s first name and birthday: <code>firstname-MMDDYYYY</code>. Changing either will change the link. Anyone with the link can view photos and notes.</small>
+                <small id="publicLinkHelp">The link details depend on the selected visibility.</small>
             </div>
         </div>
         <button type="submit">Save settings</button>

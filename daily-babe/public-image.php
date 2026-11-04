@@ -17,6 +17,10 @@ if ($gallery === null) {
 }
 
 $babyId = (string) $gallery['babyId'];
+if (gallery_visibility($gallery['settings']) === 'unlisted' && !unlisted_gallery_access_granted($babyId)) {
+    http_response_code(404);
+    exit;
+}
 $entries = json_read('central/babies/' . $babyId . '/data/entries.json', ['records' => []]);
 $match = null;
 foreach ($entries['records'] ?? [] as $record) {

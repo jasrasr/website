@@ -28,13 +28,14 @@ try {
         usort($records, static fn(array $a, array $b): int => strcmp((string) $b['photoDate'], (string) $a['photoDate']));
         $account = current_account();
         $settings = tracker_settings();
+        $babyId = current_baby_id();
         $settings['visibility'] = gallery_visibility($settings);
-        $settings['publicSlug'] = public_gallery_slug($settings);
+        $settings['publicSlug'] = shared_gallery_identifier($babyId, $settings);
         json_response(true, 'Gallery loaded.', [
             'settings' => $settings,
             'records' => $records,
             'account' => ['username' => (string) $account['username'], 'role' => (string) ($account['role'] ?? 'user')],
-            'babyId' => current_baby_id(),
+            'babyId' => $babyId,
         ]);
     }
 
@@ -164,12 +165,13 @@ try {
         $publicCandidate = [
             'babyName' => $babyName,
             'birthDate' => $birthDate,
+            'visibility' => $visibility,
         ];
         $publicSlug = public_gallery_slug($publicCandidate);
         if ($visibility !== 'private' && $publicSlug === '') {
             json_response(false, 'Add the baby’s first name and actual birth date before sharing the gallery.', null, [['code' => 'PUBLIC_LINK_REQUIRES_BIRTH_DETAILS']], 422);
         }
-        if ($visibility !== 'private') {
+        if ($visibility === 'public') {
             $existingPublicGallery = public_gallery_by_slug($publicSlug);
             if ($existingPublicGallery !== null && $existingPublicGallery['babyId'] !== current_baby_id()) {
                 json_response(false, 'That public baby link is already in use.', null, [['code' => 'PUBLIC_LINK_EXISTS']], 409);
@@ -200,7 +202,7 @@ try {
         }
         audit_event('settings.updated');
         $settings['visibility'] = $visibility;
-        $settings['publicSlug'] = $publicSlug;
+        $settings['publicSlug'] = shared_gallery_identifier($babyId, $settings);
         json_response(true, 'Settings saved.', $settings);
     }
 
