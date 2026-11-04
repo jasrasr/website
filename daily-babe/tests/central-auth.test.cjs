@@ -58,3 +58,21 @@ test('uses immutable central user IDs for gallery memberships', () => {
   assert.match(app, /name="userId"/);
   assert.doesNotMatch(app, /newUserBabies|userForm/);
 });
+
+test('validates gender and applies the matching gallery theme', () => {
+  const bootstrap = read('bootstrap.php');
+  const api = read('api.php');
+  const index = read('index.php');
+  const publicPage = read('public.php');
+  const app = read('assets/app.js');
+  const css = read('assets/app.css');
+  assert.match(bootstrap, /'gender' => ''/);
+  assert.match(api, /\['', 'boy', 'girl'\]/);
+  assert.match(index, /name="gender"/);
+  assert.match(index, /theme-' \. \$gender/);
+  assert.match(publicPage, /theme-' \. \$gender/);
+  assert.match(app, /theme-boy','theme-girl/);
+  assert.match(css, /body\.theme-boy/);
+  assert.match(css, /body\.theme-girl/);
+});
+

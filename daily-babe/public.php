@@ -70,6 +70,7 @@ if ($gallery === null) {
 $babyId = (string) $gallery['babyId'];
 $settings = $gallery['settings'];
 $visibility = gallery_visibility($settings);
+$gender = in_array((string) ($settings['gender'] ?? ''), ['boy', 'girl'], true) ? (string) $settings['gender'] : '';
 if ($visibility === 'unlisted' && !unlisted_gallery_access_granted($babyId)) {
     $accessError = '';
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -104,7 +105,7 @@ if ($visibility === 'unlisted' && !unlisted_gallery_access_granted($babyId)) {
             .unlisted-access{max-width:480px;margin:clamp(2rem,10vh,6rem) auto;padding:clamp(1.25rem,5vw,2.25rem)}.unlisted-access h1{font:700 clamp(2rem,8vw,3.5rem)/1 Georgia,"Times New Roman",serif;letter-spacing:-.04em;margin:.5rem 0 1rem}.unlisted-access>p{color:var(--muted);line-height:1.55}.unlisted-error{padding:.8rem 1rem;border-radius:10px;background:#f9dfdc;color:#7d2e28;font-weight:700}
         </style>
     </head>
-    <body>
+    <body class="<?= $gender !== '' ? 'theme-' . $gender : '' ?>">
     <header class="topbar"><h1>Baby Daily<span class="brand-dot">.</span></h1></header>
     <main>
         <section class="card unlisted-access">
@@ -162,7 +163,7 @@ function public_date_label(string $date): string
         .public-photo-dialog{width:calc(100vw - 1rem);max-width:none;height:calc(100dvh - 1rem);max-height:none;padding:.5rem;border:0;background:#111821;overflow:hidden}.public-photo-dialog[open]{display:flex;align-items:center;justify-content:center}.public-photo-dialog img{display:block;max-width:100%;max-height:calc(100dvh - 2rem);width:auto;height:auto;object-fit:contain}.public-photo-dialog .close-photo{position:absolute;top:max(.75rem,env(safe-area-inset-top));right:max(.75rem,env(safe-area-inset-right));z-index:1;border:1px solid rgba(255,255,255,.5);background:rgba(17,24,33,.88);color:#fff;font-size:1.5rem;line-height:1;padding:.5rem .7rem}.public-photo-dialog .close-photo:hover{background:#111821}
     </style>
 </head>
-<body>
+<body class="<?= $gender !== '' ? 'theme-' . $gender : '' ?>">
 <header class="topbar">
     <div>
         <p class="eyebrow">ONE PHOTO · EVERY DAY</p>
@@ -229,4 +230,5 @@ function public_date_label(string $date): string
 </script>
 </body>
 </html>
+
 

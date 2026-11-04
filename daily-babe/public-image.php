@@ -40,16 +40,7 @@ if (!is_file($path)) {
     exit;
 }
 
-$mimeType = (string) ($match['mimeType'] ?? 'application/octet-stream');
-if (($_GET['size'] ?? '') === 'thumb') {
-    $thumbnailPath = ensure_baby_thumbnail($babyId, $match);
-    if ($thumbnailPath !== null) {
-        $path = $thumbnailPath;
-        $mimeType = 'image/webp';
-    }
-}
-
-header('Content-Type: ' . $mimeType);
+header('Content-Type: ' . (string) ($match['mimeType'] ?? 'application/octet-stream'));
 header('Content-Length: ' . filesize($path));
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');

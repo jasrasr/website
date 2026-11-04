@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '2.4.1';
+const BABY_TRACKER_VERSION = '2.5.0';
 const BABY_TRACKER_PROJECT = 'daily-babe';
 
 require_once __DIR__ . '/lib/unlisted-access.php';
@@ -259,8 +259,9 @@ function default_baby_settings(string $name = 'Baby'): array
 {
     global $config;
     return [
-        'schemaVersion' => 5,
+        'schemaVersion' => 6,
         'babyName' => $name,
+        'gender' => '',
         'dueDate' => (string) ($config['due_date'] ?? '2026-11-02'),
         'birthDate' => '',
         'birthTime' => '',
@@ -558,4 +559,5 @@ function central_users_with_project_access(): array
     usort($users, static fn(array $left, array $right): int => strcasecmp($left['name'], $right['name']));
     return $users;
 }
+
 

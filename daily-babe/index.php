@@ -9,6 +9,7 @@ $authData = tracker_state();
 $legacyAuth = false;
 $settings = tracker_settings();
 $visibility = gallery_visibility($settings);
+$gender = in_array((string) ($settings['gender'] ?? ''), ['boy', 'girl'], true) ? (string) $settings['gender'] : '';
 $account = current_account();
 $superAdmin = is_super_admin();
 $canWrite = daily_auth()->can(BABY_TRACKER_PROJECT, 'member');
@@ -31,7 +32,7 @@ if ($authenticated) {
     <title><?= htmlspecialchars((string) ($config['app_name'] ?? 'Baby Daily')) ?></title>
     <link rel="stylesheet" href="assets/app.css?v=<?= BABY_TRACKER_VERSION ?>">
 </head>
-<body data-authenticated="<?= $authenticated ? 'true' : 'false' ?>" data-can-write="<?= $canWrite ? 'true' : 'false' ?>" data-configured="<?= $configured ? 'true' : 'false' ?>" data-legacy-auth="<?= $legacyAuth ? 'true' : 'false' ?>">
+<body class="<?= $gender !== '' ? 'theme-' . $gender : '' ?>" data-authenticated="<?= $authenticated ? 'true' : 'false' ?>" data-can-write="<?= $canWrite ? 'true' : 'false' ?>" data-configured="<?= $configured ? 'true' : 'false' ?>" data-legacy-auth="<?= $legacyAuth ? 'true' : 'false' ?>">
 <header class="topbar">
     <h1>Baby Daily<span class="brand-dot">.</span></h1>
     <?php if ($authenticated): ?>
@@ -98,6 +99,7 @@ if ($authenticated) {
     <form id="settingsForm">
         <div class="dialog-head"><div><p class="eyebrow">GALLERY DETAILS</p><h2>Settings</h2></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>
         <label>Baby’s name<input name="babyName" maxlength="80" value="<?= htmlspecialchars((string) $settings['babyName']) ?>" placeholder="Optional for now"></label>
+        <label>Gender <span>(optional)</span><select name="gender"><option value="" <?= $gender === '' ? 'selected' : '' ?>>Not selected</option><option value="boy" <?= $gender === 'boy' ? 'selected' : '' ?>>Boy</option><option value="girl" <?= $gender === 'girl' ? 'selected' : '' ?>>Girl</option></select><small>Changes this gallery to a subtle blue or pink theme.</small></label>
         <label>Due date<input type="date" name="dueDate" value="<?= htmlspecialchars((string) $settings['dueDate']) ?>" required></label>
         <label>Actual birth date<input type="date" name="birthDate" value="<?= htmlspecialchars((string) $settings['birthDate']) ?>"><small>Once entered, this date—not the due date—controls Day 1 and all age calculations.</small></label>
         <div class="settings-grid">
@@ -181,4 +183,5 @@ if ($authenticated) {
 <script src="assets/app.js?v=<?= BABY_TRACKER_VERSION ?>" defer></script>
 </body>
 </html>
+
 

@@ -134,6 +134,10 @@ try {
             json_response(false, 'Choose a valid gallery visibility.', null, [['code' => 'INVALID_VISIBILITY']], 422);
         }
         $babyName = trim(substr((string) ($_POST['babyName'] ?? ''), 0, 80));
+        $gender = strtolower(trim((string) ($_POST['gender'] ?? '')));
+        if (!in_array($gender, ['', 'boy', 'girl'], true)) {
+            json_response(false, 'Choose Boy, Girl, or leave gender unselected.', null, [['code' => 'INVALID_GENDER']], 422);
+        }
         $latestClientDate = date('Y-m-d', strtotime('+1 day'));
         if (!valid_date($dueDate) || ($birthDate !== '' && (!valid_date($birthDate) || $birthDate > $latestClientDate))) {
             json_response(false, 'Enter valid due and birth dates.', null, [['code' => 'INVALID_DATE']], 422);
@@ -178,8 +182,9 @@ try {
             }
         }
         $settings = [
-            'schemaVersion' => 5,
+            'schemaVersion' => 6,
             'babyName' => $babyName,
+            'gender' => $gender,
             'dueDate' => $dueDate,
             'birthDate' => $birthDate,
             'birthTime' => $birthTime,
@@ -320,4 +325,5 @@ try {
     error_log('Baby Daily [' . request_id() . '] ' . $exception->getMessage());
     json_response(false, 'Something went wrong. Try again.', null, [['code' => 'SERVER_ERROR']], 500);
 }
+
 

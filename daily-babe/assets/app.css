@@ -9,12 +9,33 @@
     --coral: #e77868;
     --coral-dark: #c95749;
     --sage: #6e806d;
+    --topbar: rgba(255,255,255,.84);
     --shadow: 0 14px 35px rgba(41, 37, 30, .07);
     font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 * { box-sizing: border-box; }
 body { margin: 0; min-height: 100vh; background: var(--paper); color: var(--ink); }
+body.theme-boy {
+    --paper: #f2f7fb;
+    --soft: #e8f1f8;
+    --line: #d4e3ee;
+    --coral: #6f9fbe;
+    --coral-dark: #527f9f;
+    --sage: #557d99;
+    --topbar: rgba(244,249,252,.9);
+    --shadow: 0 14px 35px rgba(56, 91, 116, .09);
+}
+body.theme-girl {
+    --paper: #fbf3f6;
+    --soft: #f6e7ed;
+    --line: #ead7df;
+    --coral: #c9879c;
+    --coral-dark: #a9687d;
+    --sage: #997181;
+    --topbar: rgba(253,246,248,.9);
+    --shadow: 0 14px 35px rgba(120, 71, 88, .09);
+}
 button, input, textarea, select { font: inherit; }
 button { border: 1px solid transparent; border-radius: 12px; padding: .82rem 1.15rem; background: var(--coral); color: #fff; font-weight: 700; cursor: pointer; transition: background .18s, transform .18s, box-shadow .18s; }
 button:hover { background: var(--coral-dark); transform: translateY(-1px); }
@@ -25,7 +46,7 @@ button svg { width: 20px; height: 20px; flex: none; }
 .secondary:hover { background: var(--soft); }
 .compact { padding: .65rem .95rem; }
 
-.topbar { min-height: 82px; padding: 1rem clamp(1.25rem, 5vw, 5rem); border-bottom: 1px solid var(--line); background: rgba(255,255,255,.84); display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.topbar { min-height: 82px; padding: 1rem clamp(1.25rem, 5vw, 5rem); border-bottom: 1px solid var(--line); background: var(--topbar); display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
 .topbar h1 { font: 700 clamp(1.7rem, 2.5vw, 2.15rem)/1 Georgia, "Times New Roman", serif; letter-spacing: -.045em; margin: 0; white-space: nowrap; }
 .brand-dot { color: var(--coral); }
 .topbar-actions, .account-actions { display: flex; align-items: center; gap: 1.5rem; }
@@ -78,7 +99,7 @@ main { max-width: 1510px; margin: auto; padding: 0 clamp(1.25rem, 5vw, 5rem) 5re
 form { display: grid; gap: 1rem; }
 label { display: grid; gap: .43rem; font-size: .9rem; font-weight: 700; }
 label span, label small { color: var(--muted); font-weight: 400; }
-input, textarea { width: 100%; padding: .78rem .86rem; border: 1px solid #dcded9; border-radius: 10px; background: #fff; color: var(--ink); }
+input, textarea, label > select { width: 100%; padding: .78rem .86rem; border: 1px solid #dcded9; border-radius: 10px; background: #fff; color: var(--ink); }
 textarea { min-height: 90px; resize: vertical; }
 input[type=file] { font-size: .85rem; }
 dialog { width: min(540px, calc(100% - 1.5rem)); max-height: calc(100dvh - 2rem); overflow: auto; border: 1px solid var(--line); border-radius: 20px; background: var(--paper); color: var(--ink); padding: 1.5rem; box-shadow: 0 24px 75px rgba(27,36,48,.24); }
@@ -211,4 +232,5 @@ footer a { color: var(--sage); }
 @media (max-width: 520px) {
     .public-link-actions { grid-template-columns: 1fr; }
 }
+
 

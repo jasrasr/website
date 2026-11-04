@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.5.0 - 2026-11-04
+
+- Add an optional Boy/Girl setting to each baby gallery.
+- Apply a subtle blue or pink palette to signed-in, unlisted, and public gallery views.
+- Keep the neutral palette when gender is not selected.
+- Restore the unlisted-gallery session check on direct shared-image requests.
+
 ## 2.4.1 - 2026-11-03
 
 - Show the overall project revision and latest project-file modification date in signed-in and shared-gallery footers.
@@ -140,4 +147,5 @@
 - Added authenticated image delivery and runtime storage exclusions.
 - Added a browser-generated downloadable collage.
 - Added responsive mobile design, configuration example, audit events, and deployment documentation.
+
 
