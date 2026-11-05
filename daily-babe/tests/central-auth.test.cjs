@@ -94,3 +94,26 @@ test('reminder links open the authorized gallery upload for the missing date', (
   assert.match(app, /uploadDialog'\)\.showModal/);
 });
 
+test('keeps Twilio secrets server-side and supports optional SMS reminders', () => {
+  const config = read('config/config.example.php');
+  const sms = read('lib/twilio.php');
+  const reminder = read('send-missing-photo-reminders.php');
+  const api = read('api.php');
+  const index = read('index.php');
+  assert.match(config, /'twilio' => \[/);
+  assert.match(config, /'account_sid' => ''/);
+  assert.match(config, /'auth_token' => ''/);
+  assert.match(sms, /api\.twilio\.com\/2010-04-01\/Accounts/);
+  assert.match(sms, /Authorization: Basic/);
+  assert.match(sms, /verify_peer_name' => true/);
+  assert.match(reminder, /--test-sms/);
+  assert.match(reminder, /reminderSmsEnabled/);
+  assert.match(reminder, /:sms/);
+  assert.match(reminder, /:email/);
+  assert.match(api, /INVALID_REMINDER_PHONE/);
+  assert.match(api, /REMINDER_PHONE_REQUIRED/);
+  assert.match(index, /name="reminderSmsEnabled"/);
+  assert.match(index, /name="reminderSmsNumber"/);
+  assert.match(read('TODO.md'), /inbound email photo uploads/);
+});
+

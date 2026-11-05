@@ -2,7 +2,7 @@
 
 A mobile-first PHP/JSON gallery for one baby photo per day. Daily Babe uses the site-wide User Management service for adult accounts and keeps baby galleries, photos, and metadata isolated inside the project.
 
-## Included in v2.5.0
+## Included in v2.7.0
 
 - Central User Management sign-in, password changes, sessions, and account status
 - Multiple babies and multiple adults, with per-gallery membership
@@ -18,6 +18,7 @@ A mobile-first PHP/JSON gallery for one baby photo per day. Daily Babe uses the 
 - Public links based on first name and birthday, such as `hudson-11022026`
 - Atomic JSON writes, protected image delivery, request IDs, and audit events
 - Optional daily missing-photo email reminders through authenticated Titan SMTP
+- Optional missing-photo SMS reminders through Twilio, with per-gallery recipient and independent retry tracking
 - Lazy 720-pixel WebP gallery thumbnails while enlarged views and exports use the original photo
 
 Thumbnail generation requires PHP GD with JPEG, PNG, and WebP support. If it is unavailable, galleries safely fall back to the original image. Existing photos receive cached thumbnails automatically the first time a gallery tile requests them.
@@ -89,11 +90,11 @@ The shared page is read-only. Visitors can select a photo to view its full-size 
 
 Runtime photos, central membership data, logs, and settings are ignored by Git. Hostinger performs a nightly backup, but a manual pre-rollout copy is still recommended before deleting old runtime folders. The included Apache rules deny browser access to `storage/` and `config/`.
 
-## Missing-photo email reminders
+## Missing-photo email and SMS reminders
 
 Each gallery can enable one daily email after a selected time when that calendar day has no photo. Enter one or more recipient addresses in Settings. The reminder starts only after the actual birth date, and a private delivery ledger prevents duplicate messages for the same gallery and date. Each reminder includes a link that selects the correct baby, opens the add-photo dialog, and preselects the missing date. The link still requires central sign-in and permission to that gallery.
 
-Copy `config/config.example.php` to the ignored `config/config.php` on Hostinger and add the Titan mailbox password:
+Copy `config/config.example.php` to the ignored `config/config.php` on Hostinger. Add the Titan mailbox password for email, and add Twilio credentials for SMS only if you want that channel:
 
 ```php
 'smtp' => [
@@ -106,12 +107,20 @@ Copy `config/config.example.php` to the ignored `config/config.php` on Hostinger
     'from_email' => 'notifications@justjason.fyi',
     'from_name' => 'Daily Babe',
 ],
+'twilio' => [
+    'account_sid' => 'ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+    'auth_token' => 'YOUR_TWILIO_AUTH_TOKEN',
+    'from_number' => '+12165550123',
+],
 ```
+
+The Twilio number must be SMS-capable and formatted as E.164. In each baby’s Settings, enable text reminders and enter the destination number in E.164 format. Keep the Account SID and Auth Token in `config/config.php` only; do not paste the Auth Token into chat or commit the config file. US recipients may require your Twilio number and messaging use case to complete A2P 10DLC or toll-free verification before delivery.
 
 Do not commit `config/config.php`. Test delivery from the Hostinger terminal with:
 
 ```text
 php /ABSOLUTE/PATH/github/daily-babe/send-missing-photo-reminders.php --test YOUR_EMAIL_ADDRESS
+php /ABSOLUTE/PATH/github/daily-babe/send-missing-photo-reminders.php --test-sms +12165550123
 ```
 
 Hostinger PHP must have OpenSSL stream support enabled for the SSL connection on port 465.
@@ -135,5 +144,5 @@ The script uses the configured `America/New_York` timezone, checks only enabled 
 - Confirm private `image.php` requests require central access and gallery membership.
 - Confirm public URLs work only while sharing is enabled.
 - Confirm collage and GIF exports retain day labels.
-- Enable a reminder, run the SMTP test, and confirm the scheduled check sends once when today is missing.
+- Enable email or SMS reminders, run the relevant email/SMS test, and confirm the scheduled check sends once per enabled channel when today is missing.
 

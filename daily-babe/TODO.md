@@ -1,28 +1,3 @@
-<!--
-File Name     : TODO.md
-Author        : Jason Lamb (with help from ChatGPT)
-Description   : Actionable future work for daily-babe.
-Revision      : 1.3.0
-Created Date  : 2026-10-20
-Modified Date : 2026-11-03
-Changelog     :
-  Rev 1.3.0 - Documented automatic project revision and modified-date footers.
-  Rev 1.2.0 - Marked server-generated gallery thumbnails complete.
-  Rev 1.1.0 - Marked scheduled missing-photo email reminders complete.
-  Rev 1.0.0 - Created a verified project follow-up list.
--->
 # Daily Babe TODO
 
-## Documented next work
-
-- [x] Add scheduled email reminders when today’s photo is missing.
-- [ ] Replace or delete an incorrect dated photo with confirmation and audit history; `api.php` currently rejects duplicate dates.
-- [x] Add separate sign-ins for authorized family members and admin-managed gallery access.
-- [ ] Add encrypted backup/export of originals and metadata.
-- [x] Add server-generated thumbnails for long galleries.
-
-## Documented later ideas
-
-- [ ] Explore face-alignment guidance, time-lapse export, milestone tags, a home-screen PWA, and configurable comparison views.
-
-See [ROADMAP.md](ROADMAP.md) for the original scope and ordering.
+- [ ] Add secure inbound email photo uploads: accept an image attachment for a missing day, map it to the correct baby/date using a revocable single-use token, validate sender and image contents/size, and record the upload in the gallery audit trail.

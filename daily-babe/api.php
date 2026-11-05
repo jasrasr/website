@@ -129,6 +129,8 @@ try {
         $reminderEnabled = (string) ($_POST['reminderEnabled'] ?? '') === '1';
         $reminderTime = trim((string) ($_POST['reminderTime'] ?? '20:00'));
         $reminderEmailsInput = trim((string) ($_POST['reminderEmails'] ?? ''));
+        $reminderSmsEnabled = (string) ($_POST['reminderSmsEnabled'] ?? '') === '1';
+        $reminderSmsNumber = trim((string) ($_POST['reminderSmsNumber'] ?? ''));
         $visibility = (string) ($_POST['visibility'] ?? (((string) ($_POST['publicEnabled'] ?? '') === '1') ? 'unlisted' : 'private'));
         if (!in_array($visibility, ['private', 'unlisted', 'public'], true)) {
             json_response(false, 'Choose a valid gallery visibility.', null, [['code' => 'INVALID_VISIBILITY']], 422);
@@ -163,8 +165,14 @@ try {
         if (array_filter($reminderEmails, static fn(string $email): bool => !filter_var($email, FILTER_VALIDATE_EMAIL)) !== []) {
             json_response(false, 'Enter valid reminder email addresses.', null, [['code' => 'INVALID_REMINDER_EMAIL']], 422);
         }
-        if ($reminderEnabled && $reminderEmails === []) {
-            json_response(false, 'Add at least one email address for reminders.', null, [['code' => 'REMINDER_EMAIL_REQUIRED']], 422);
+        if ($reminderSmsNumber !== '' && preg_match('/^\\+[1-9][0-9]{7,14}$/D', $reminderSmsNumber) !== 1) {
+            json_response(false, 'Enter the text recipient in international format, such as +12165550123.', null, [['code' => 'INVALID_REMINDER_PHONE']], 422);
+        }
+        if ($reminderSmsEnabled && $reminderSmsNumber === '') {
+            json_response(false, 'Add a text recipient phone number or turn off text reminders.', null, [['code' => 'REMINDER_PHONE_REQUIRED']], 422);
+        }
+        if ($reminderEnabled && $reminderEmails === [] && !$reminderSmsEnabled) {
+            json_response(false, 'Add an email recipient or enable text reminders.', null, [['code' => 'REMINDER_CHANNEL_REQUIRED']], 422);
         }
         $publicCandidate = [
             'babyName' => $babyName,
@@ -182,7 +190,7 @@ try {
             }
         }
         $settings = [
-            'schemaVersion' => 6,
+            'schemaVersion' => 7,
             'babyName' => $babyName,
             'gender' => $gender,
             'dueDate' => $dueDate,
@@ -194,6 +202,8 @@ try {
             'reminderEnabled' => $reminderEnabled,
             'reminderTime' => $reminderTime,
             'reminderEmails' => implode(', ', $reminderEmails),
+            'reminderSmsEnabled' => $reminderSmsEnabled,
+            'reminderSmsNumber' => $reminderSmsNumber,
             'visibility' => $visibility,
             'updatedAt' => gmdate('c'),
         ];

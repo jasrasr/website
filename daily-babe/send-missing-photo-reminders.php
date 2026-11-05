@@ -9,6 +9,7 @@ if (PHP_SAPI !== 'cli') {
 
 require __DIR__ . '/bootstrap.php';
 require __DIR__ . '/lib/smtp.php';
+require __DIR__ . '/lib/twilio.php';
 
 function reminder_recipients(string $value): array
 {
@@ -41,6 +42,7 @@ function reminder_log(string $event, array $details = []): void
 
 global $config;
 $smtp = is_array($config['smtp'] ?? null) ? $config['smtp'] : [];
+$twilio = is_array($config['twilio'] ?? null) ? $config['twilio'] : [];
 $appUrl = rtrim((string) ($config['app_url'] ?? 'https://jasr.me/github/daily-babe/'), '/') . '/';
 
 if (($argv[1] ?? '') === '--test') {
@@ -56,6 +58,17 @@ if (($argv[1] ?? '') === '--test') {
         "Titan SMTP is configured correctly for Daily Babe.\n\n" . $appUrl
     );
     fwrite(STDOUT, "Test email accepted by Titan SMTP.\n");
+    exit(0);
+}
+
+if (($argv[1] ?? '') === '--test-sms') {
+    $recipient = trim((string) ($argv[2] ?? ''));
+    if (preg_match('/^\\+[1-9][0-9]{7,14}$/D', $recipient) !== 1) {
+        fwrite(STDERR, "Usage: php send-missing-photo-reminders.php --test-sms +12165550123\n");
+        exit(2);
+    }
+    $messageId = twilio_send_sms($twilio, $recipient, 'Daily Babe Twilio test. Text reminders are configured.');
+    fwrite(STDOUT, 'Test SMS accepted by Twilio (' . $messageId . ').' . PHP_EOL);
     exit(0);
 }
 
@@ -92,11 +105,17 @@ try {
         $birthDate = (string) ($settings['birthDate'] ?? '');
         $reminderTime = (string) ($settings['reminderTime'] ?? '20:00');
         $recipients = reminder_recipients((string) ($settings['reminderEmails'] ?? ''));
-        if (!valid_date($birthDate) || $today < $birthDate || preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/D', $reminderTime) !== 1 || $currentTime < $reminderTime || $recipients === []) {
+        $smsEnabled = ($settings['reminderSmsEnabled'] ?? false) === true;
+        $smsNumber = trim((string) ($settings['reminderSmsNumber'] ?? ''));
+        $smsReady = $smsEnabled && preg_match('/^\\+[1-9][0-9]{7,14}$/D', $smsNumber) === 1;
+        if (!valid_date($birthDate) || $today < $birthDate || preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/D', $reminderTime) !== 1 || $currentTime < $reminderTime || ($recipients === [] && !$smsReady)) {
             continue;
         }
         $ledgerKey = $babyId . ':' . $today;
-        if (isset($sent[$ledgerKey])) {
+        $legacyEmailSent = isset($sent[$ledgerKey]);
+        $emailSent = $legacyEmailSent || isset($sent[$ledgerKey . ':email']);
+        $smsSent = isset($sent[$ledgerKey . ':sms']);
+        if (($recipients === [] || $emailSent) && (!$smsReady || $smsSent)) {
             continue;
         }
         $entries = json_read('central/babies/' . $babyId . '/data/entries.json', ['records' => []]);
@@ -114,18 +133,36 @@ try {
         $subject = 'Missing daily photo for ' . $babyName;
         $body = $babyName . " does not have a photo for " . $displayDate . ".\n\n"
             . "Open the correct gallery and add the missing photo:\n" . $uploadUrl;
-        try {
-            smtp_send_message($smtp, $recipients, $subject, $body);
-            $sent[$ledgerKey] = gmdate(DATE_ATOM);
-            $ledger['sent'] = $sent;
-            $ledger['updatedAt'] = gmdate(DATE_ATOM);
-            json_write('central/data/reminder-state.json', $ledger);
-            reminder_log('reminder.sent', ['babyId' => $babyId, 'photoDate' => $today, 'recipientCount' => count($recipients)]);
-            $delivered++;
-        } catch (Throwable $exception) {
-            reminder_log('reminder.failed', ['babyId' => $babyId, 'photoDate' => $today, 'error' => $exception->getMessage()]);
-            fwrite(STDERR, 'Reminder failed for ' . $babyName . ': ' . $exception->getMessage() . PHP_EOL);
-            $failed++;
+        if ($recipients !== [] && !$emailSent) {
+            try {
+                smtp_send_message($smtp, $recipients, $subject, $body);
+                $sent[$ledgerKey . ':email'] = gmdate(DATE_ATOM);
+                $ledger['sent'] = $sent;
+                $ledger['updatedAt'] = gmdate(DATE_ATOM);
+                json_write('central/data/reminder-state.json', $ledger);
+                reminder_log('reminder.email.sent', ['babyId' => $babyId, 'photoDate' => $today, 'recipientCount' => count($recipients)]);
+                $delivered++;
+            } catch (Throwable $exception) {
+                reminder_log('reminder.email.failed', ['babyId' => $babyId, 'photoDate' => $today, 'error' => $exception->getMessage()]);
+                fwrite(STDERR, 'Email reminder failed for ' . $babyName . ': ' . $exception->getMessage() . PHP_EOL);
+                $failed++;
+            }
+        }
+        if ($smsReady && !$smsSent) {
+            try {
+                $smsBody = $babyName . ' is missing the photo for ' . $displayDate . '. Add it here: ' . $uploadUrl;
+                $messageId = twilio_send_sms($twilio, $smsNumber, $smsBody);
+                $sent[$ledgerKey . ':sms'] = gmdate(DATE_ATOM);
+                $ledger['sent'] = $sent;
+                $ledger['updatedAt'] = gmdate(DATE_ATOM);
+                json_write('central/data/reminder-state.json', $ledger);
+                reminder_log('reminder.sms.sent', ['babyId' => $babyId, 'photoDate' => $today, 'messageId' => $messageId]);
+                $delivered++;
+            } catch (Throwable $exception) {
+                reminder_log('reminder.sms.failed', ['babyId' => $babyId, 'photoDate' => $today, 'error' => $exception->getMessage()]);
+                fwrite(STDERR, 'SMS reminder failed for ' . $babyName . ': ' . $exception->getMessage() . PHP_EOL);
+                $failed++;
+            }
         }
     }
 

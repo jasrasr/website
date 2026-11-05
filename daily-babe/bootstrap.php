@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '2.6.0';
+const BABY_TRACKER_VERSION = '2.7.0';
 const BABY_TRACKER_PROJECT = 'daily-babe';
 
 require_once __DIR__ . '/lib/unlisted-access.php';
@@ -259,7 +259,7 @@ function default_baby_settings(string $name = 'Baby'): array
 {
     global $config;
     return [
-        'schemaVersion' => 6,
+        'schemaVersion' => 7,
         'babyName' => $name,
         'gender' => '',
         'dueDate' => (string) ($config['due_date'] ?? '2026-11-02'),
@@ -271,6 +271,8 @@ function default_baby_settings(string $name = 'Baby'): array
         'reminderEnabled' => false,
         'reminderTime' => '20:00',
         'reminderEmails' => '',
+        'reminderSmsEnabled' => false,
+        'reminderSmsNumber' => '',
         'visibility' => 'private',
         'updatedAt' => gmdate('c'),
     ];

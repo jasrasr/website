@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.7.0 - 2026-11-05
+
+- Add optional per-gallery SMS reminders through Twilio using server-only credentials.
+- Send email and SMS reminders independently with separate delivery tracking and retries.
+- Add a command-line Twilio test-message option and E.164 recipient validation.
+- Record secure inbound email photo attachments as a future TODO.
+
 ## 2.6.0 - 2026-11-05
 
 - Link each missing-photo reminder directly to the correct authorized baby gallery.

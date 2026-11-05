@@ -118,10 +118,12 @@ if ($authenticated) {
             <label>Weight ounces <span>(optional)</span><input type="number" name="birthWeightOunces" min="0" max="15" step="1" inputmode="numeric" value="<?= htmlspecialchars((string) ($settings['birthWeightOunces'] ?? '')) ?>" placeholder="8"></label>
         </div>
         <div class="reminder-settings">
-            <label class="reminder-toggle"><input type="checkbox" name="reminderEnabled" value="1" <?= !empty($settings['reminderEnabled']) ? 'checked' : '' ?>><span><strong>Send an email when today’s photo is missing</strong><small>The scheduled check sends one reminder after the selected time.</small></span></label>
+            <label class="reminder-toggle"><input type="checkbox" name="reminderEnabled" value="1" <?= !empty($settings['reminderEnabled']) ? 'checked' : '' ?>><span><strong>Enable missing-photo reminders</strong><small>The scheduled check sends enabled reminders once after the selected time.</small></span></label>
             <div class="settings-grid">
                 <label>Reminder time<input type="time" name="reminderTime" value="<?= htmlspecialchars((string) ($settings['reminderTime'] ?? '20:00')) ?>"></label>
                 <label>Recipient email addresses<input type="email" name="reminderEmails" multiple value="<?= htmlspecialchars((string) ($settings['reminderEmails'] ?? '')) ?>" placeholder="name@example.com"><small>Separate multiple addresses with commas.</small></label>
+                <label class="reminder-toggle"><input type="checkbox" name="reminderSmsEnabled" value="1" <?= !empty($settings['reminderSmsEnabled']) ? 'checked' : '' ?>><span><strong>Also send a text message</strong><small>Requires Twilio credentials in the server configuration.</small></span></label>
+                <label>Text recipient phone number<input type="tel" name="reminderSmsNumber" inputmode="tel" autocomplete="tel" value="<?= htmlspecialchars((string) ($settings['reminderSmsNumber'] ?? '')) ?>" placeholder="+12165550123"><small>Use international E.164 format, including the + and country code.</small></label>
             </div>
         </div>
         <div class="public-sharing">

@@ -20,5 +20,11 @@ return [
         'from_email' => 'notifications@justjason.fyi',
         'from_name' => 'Daily Babe',
     ],
+    'twilio' => [
+        'account_sid' => '', // Set only in ignored config/config.php on the server.
+        'auth_token' => '', // Set only in ignored config/config.php on the server.
+        'from_number' => '', // Twilio SMS-capable number in E.164 format, for example +12165550123.
+    ],
 ];
+
 
