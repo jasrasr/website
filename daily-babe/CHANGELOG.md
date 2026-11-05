@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.6.0 - 2026-11-05
+
+- Link each missing-photo reminder directly to the correct authorized baby gallery.
+- Open the add-photo dialog automatically and preselect the missing date after sign-in.
+- Ignore invalid or unauthorized gallery identifiers in reminder links.
+
 ## 2.5.0 - 2026-11-04
 
 - Add an optional Boy/Girl setting to each baby gallery.

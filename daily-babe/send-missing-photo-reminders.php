@@ -106,9 +106,14 @@ try {
 
         $babyName = trim((string) ($settings['babyName'] ?? $baby['name'] ?? 'Baby')) ?: 'Baby';
         $displayDate = (new DateTimeImmutable($today))->format('F j, Y');
+        $uploadUrl = $appUrl . '?' . http_build_query([
+            'baby' => $babyId,
+            'upload' => '1',
+            'date' => $today,
+        ], '', '&', PHP_QUERY_RFC3986);
         $subject = 'Missing daily photo for ' . $babyName;
         $body = $babyName . " does not have a photo for " . $displayDate . ".\n\n"
-            . "Open Daily Babe to add it:\n" . $appUrl;
+            . "Open the correct gallery and add the missing photo:\n" . $uploadUrl;
         try {
             smtp_send_message($smtp, $recipients, $subject, $body);
             $sent[$ledgerKey] = gmdate(DATE_ATOM);
@@ -139,4 +144,5 @@ try {
 
 fwrite(STDOUT, sprintf("Checked %d enabled galleries; sent %d reminders; %d failed.\n", $checked, $delivered, $failed));
 exit($failed === 0 ? 0 : 1);
+
 

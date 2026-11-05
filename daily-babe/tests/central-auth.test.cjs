@@ -76,3 +76,21 @@ test('validates gender and applies the matching gallery theme', () => {
   assert.match(css, /body\.theme-girl/);
 });
 
+test('reminder links open the authorized gallery upload for the missing date', () => {
+  const reminder = read('send-missing-photo-reminders.php');
+  const index = read('index.php');
+  const app = read('assets/app.js');
+  assert.match(reminder, /http_build_query/);
+  assert.match(reminder, /'baby' => \$babyId/);
+  assert.match(reminder, /'upload' => '1'/);
+  assert.match(reminder, /'date' => \$today/);
+  assert.match(reminder, /\$uploadUrl/);
+  assert.match(index, /\$_GET\['baby'\]/);
+  assert.match(index, /can_access_baby\(\$account, \$requestedBabyId, \$authData\)/);
+  assert.match(index, /\$_SESSION\['daily_babe_selected_baby_id'\]/);
+  assert.match(index, /openUpload/);
+  assert.match(index, /uploadDate/);
+  assert.match(app, /BABY_TRACKER\.openUpload/);
+  assert.match(app, /uploadDialog'\)\.showModal/);
+});
+

@@ -91,7 +91,7 @@ Runtime photos, central membership data, logs, and settings are ignored by Git. 
 
 ## Missing-photo email reminders
 
-Each gallery can enable one daily email after a selected time when that calendar day has no photo. Enter one or more recipient addresses in Settings. The reminder starts only after the actual birth date, and a private delivery ledger prevents duplicate messages for the same gallery and date.
+Each gallery can enable one daily email after a selected time when that calendar day has no photo. Enter one or more recipient addresses in Settings. The reminder starts only after the actual birth date, and a private delivery ledger prevents duplicate messages for the same gallery and date. Each reminder includes a link that selects the correct baby, opens the add-photo dialog, and preselects the missing date. The link still requires central sign-in and permission to that gallery.
 
 Copy `config/config.example.php` to the ignored `config/config.php` on Hostinger and add the Titan mailbox password:
 

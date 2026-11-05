@@ -7,12 +7,21 @@ $configured = true;
 $authenticated = true;
 $authData = tracker_state();
 $legacyAuth = false;
+$account = current_account();
+$requestedBabyId = (string) ($_GET['baby'] ?? '');
+if (preg_match('/^[a-f0-9]{24}$/D', $requestedBabyId) === 1 && can_access_baby($account, $requestedBabyId, $authData)) {
+    $_SESSION['daily_babe_selected_baby_id'] = $requestedBabyId;
+}
 $settings = tracker_settings();
 $visibility = gallery_visibility($settings);
 $gender = in_array((string) ($settings['gender'] ?? ''), ['boy', 'girl'], true) ? (string) $settings['gender'] : '';
-$account = current_account();
 $superAdmin = is_super_admin();
 $canWrite = daily_auth()->can(BABY_TRACKER_PROJECT, 'member');
+$requestedPhotoDate = (string) ($_GET['date'] ?? '');
+$openUploadFromLink = $canWrite && (string) ($_GET['upload'] ?? '') === '1';
+if (!valid_date($requestedPhotoDate)) {
+    $requestedPhotoDate = '';
+}
 $accountPortal = daily_auth()->portal();
 $availableBabies = [];
 if ($authenticated) {
@@ -179,7 +188,7 @@ if ($authenticated) {
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <footer>Baby Daily v<?= BABY_TRACKER_VERSION ?> - Modified <?= htmlspecialchars(project_last_modified_date(__DIR__)) ?></footer>
-<script>window.BABY_TRACKER = {csrf: <?= json_encode(csrf_token()) ?>};</script>
+<script>window.BABY_TRACKER = {csrf: <?= json_encode(csrf_token()) ?>, openUpload: <?= $openUploadFromLink ? 'true' : 'false' ?>, uploadDate: <?= json_encode($requestedPhotoDate) ?>};</script>
 <script src="assets/app.js?v=<?= BABY_TRACKER_VERSION ?>" defer></script>
 </body>
 </html>
