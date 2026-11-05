@@ -97,9 +97,9 @@ main { max-width: 1510px; margin: auto; padding: 0 clamp(1.25rem, 5vw, 5rem) 5re
 .auth-card p, .save-help, .account-section > p { color: var(--muted); line-height: 1.55; }
 .baby-mark { width: 54px; height: 54px; display: grid; place-items: center; border-radius: 16px; background: #fce9e4; color: var(--coral); font-size: 1.7rem; }
 form { display: grid; gap: 1rem; }
-label { display: grid; gap: .43rem; font-size: .9rem; font-weight: 700; }
+label { min-width: 0; display: grid; gap: .43rem; font-size: .9rem; font-weight: 700; }
 label span, label small { color: var(--muted); font-weight: 400; }
-input, textarea, label > select { width: 100%; padding: .78rem .86rem; border: 1px solid #dcded9; border-radius: 10px; background: #fff; color: var(--ink); }
+input, textarea, label > select { width: 100%; min-width: 0; max-width: 100%; padding: .78rem .86rem; border: 1px solid #dcded9; border-radius: 10px; background: #fff; color: var(--ink); }
 textarea { min-height: 90px; resize: vertical; }
 input[type=file] { font-size: .85rem; }
 dialog { width: min(540px, calc(100% - 1.5rem)); max-height: calc(100dvh - 2rem); overflow: auto; border: 1px solid var(--line); border-radius: 20px; background: var(--paper); color: var(--ink); padding: 1.5rem; box-shadow: 0 24px 75px rgba(27,36,48,.24); }
@@ -230,6 +230,7 @@ footer a { color: var(--sage); }
 .public-directory-link { display: block; padding: 1.5rem; color: var(--ink); font-size: 1.2rem; font-weight: 700; text-decoration: none; }
 .public-directory-link:hover { color: var(--sage); }
 @media (max-width: 520px) {
+    .settings-grid { grid-template-columns: 1fr; }
     .public-link-actions { grid-template-columns: 1fr; }
 }
 

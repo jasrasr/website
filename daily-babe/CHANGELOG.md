@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.7.1 - 2026-11-05
+
+- Lighten the shared-gallery “View larger photo” overlay so it competes less with the photo.
+- Prevent mobile birth-detail controls from overflowing their grid cells and stack them on narrow screens.
+
 ## 2.7.0 - 2026-11-05
 
 - Add optional per-gallery SMS reminders through Twilio using server-only credentials.

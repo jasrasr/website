@@ -117,3 +117,13 @@ test('keeps Twilio secrets server-side and supports optional SMS reminders', () 
   assert.match(read('TODO.md'), /inbound email photo uploads/);
 });
 
+test('keeps mobile settings controls contained and softens public photo actions', () => {
+  const css = read('assets/app.css');
+  const publicPage = read('public.php');
+  assert.match(css, /label \{ min-width: 0;/);
+  assert.match(css, /input, textarea, label > select \{ width: 100%; min-width: 0; max-width: 100%/);
+  assert.match(css, /@media \(max-width: 520px\)[\s\S]*?\.settings-grid \{ grid-template-columns: 1fr; \}/);
+  assert.match(publicPage, /background:rgba\(255,255,255,\.84\)/);
+  assert.match(publicPage, /color:var\(--ink\)/);
+});
+
