@@ -127,7 +127,7 @@ try {
         $birthWeightPounds = trim((string) ($_POST['birthWeightPounds'] ?? ''));
         $birthWeightOunces = trim((string) ($_POST['birthWeightOunces'] ?? ''));
         $reminderEnabled = (string) ($_POST['reminderEnabled'] ?? '') === '1';
-        $reminderTime = trim((string) ($_POST['reminderTime'] ?? '20:00'));
+        $reminderTimesInput = $_POST['reminderTimes'] ?? ['12:00', '16:00', '20:00'];
         $reminderEmailsInput = trim((string) ($_POST['reminderEmails'] ?? ''));
         $reminderSmsEnabled = (string) ($_POST['reminderSmsEnabled'] ?? '') === '1';
         $reminderSmsNumber = trim((string) ($_POST['reminderSmsNumber'] ?? ''));
@@ -152,9 +152,13 @@ try {
             || ($birthWeightOunces !== '' && (!ctype_digit($birthWeightOunces) || (int) $birthWeightOunces > 15))) {
             json_response(false, 'Enter valid optional birth measurements.', null, [['code' => 'INVALID_MEASUREMENT']], 422);
         }
-        if (preg_match('/^(?:[01]\\d|2[0-3]):[0-5]\\d$/', $reminderTime) !== 1) {
-            json_response(false, 'Choose a valid reminder time.', null, [['code' => 'INVALID_REMINDER_TIME']], 422);
+        $reminderTimes = is_array($reminderTimesInput)
+            ? array_values(array_unique(array_map(static fn(mixed $time): string => trim((string) $time), $reminderTimesInput)))
+            : [];
+        if (count($reminderTimes) !== 3 || array_filter($reminderTimes, static fn(string $time): bool => preg_match('/^(?:[01]\\d|2[0-3]):[0-5]\\d$/D', $time) !== 1) !== []) {
+            json_response(false, 'Choose three valid reminder times.', null, [['code' => 'INVALID_REMINDER_TIMES']], 422);
         }
+        sort($reminderTimes, SORT_STRING);
         $reminderEmails = $reminderEmailsInput === ''
             ? []
             : preg_split('/[\\s,;]+/', $reminderEmailsInput, -1, PREG_SPLIT_NO_EMPTY);
@@ -190,7 +194,7 @@ try {
             }
         }
         $settings = [
-            'schemaVersion' => 7,
+            'schemaVersion' => 8,
             'babyName' => $babyName,
             'gender' => $gender,
             'dueDate' => $dueDate,
@@ -200,7 +204,7 @@ try {
             'birthWeightPounds' => $birthWeightPounds,
             'birthWeightOunces' => $birthWeightOunces,
             'reminderEnabled' => $reminderEnabled,
-            'reminderTime' => $reminderTime,
+            'reminderTimes' => $reminderTimes,
             'reminderEmails' => implode(', ', $reminderEmails),
             'reminderSmsEnabled' => $reminderSmsEnabled,
             'reminderSmsNumber' => $reminderSmsNumber,

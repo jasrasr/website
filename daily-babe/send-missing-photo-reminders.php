@@ -103,18 +103,25 @@ try {
         }
         $checked++;
         $birthDate = (string) ($settings['birthDate'] ?? '');
-        $reminderTime = (string) ($settings['reminderTime'] ?? '20:00');
+        $reminderTimes = normalized_reminder_times($settings);
+        $dueReminderTimes = array_values(array_filter(
+            $reminderTimes,
+            static fn(string $time): bool => $time <= $currentTime
+        ));
+        $reminderSlot = $dueReminderTimes === [] ? '' : (string) end($dueReminderTimes);
         $recipients = reminder_recipients((string) ($settings['reminderEmails'] ?? ''));
         $smsEnabled = ($settings['reminderSmsEnabled'] ?? false) === true;
         $smsNumber = trim((string) ($settings['reminderSmsNumber'] ?? ''));
         $smsReady = $smsEnabled && preg_match('/^\\+[1-9][0-9]{7,14}$/D', $smsNumber) === 1;
-        if (!valid_date($birthDate) || $today < $birthDate || preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/D', $reminderTime) !== 1 || $currentTime < $reminderTime || ($recipients === [] && !$smsReady)) {
+        if (!valid_date($birthDate) || $today < $birthDate || $reminderSlot === '' || ($recipients === [] && !$smsReady)) {
             continue;
         }
-        $ledgerKey = $babyId . ':' . $today;
-        $legacyEmailSent = isset($sent[$ledgerKey]);
+        $legacyLedgerKey = $babyId . ':' . $today;
+        $ledgerKey = $legacyLedgerKey . ':' . $reminderSlot;
+        $legacyEmailSent = $reminderSlot === '20:00' && (isset($sent[$legacyLedgerKey]) || isset($sent[$legacyLedgerKey . ':email']));
+        $legacySmsSent = $reminderSlot === '20:00' && isset($sent[$legacyLedgerKey . ':sms']);
         $emailSent = $legacyEmailSent || isset($sent[$ledgerKey . ':email']);
-        $smsSent = isset($sent[$ledgerKey . ':sms']);
+        $smsSent = $legacySmsSent || isset($sent[$ledgerKey . ':sms']);
         if (($recipients === [] || $emailSent) && (!$smsReady || $smsSent)) {
             continue;
         }
@@ -140,10 +147,10 @@ try {
                 $ledger['sent'] = $sent;
                 $ledger['updatedAt'] = gmdate(DATE_ATOM);
                 json_write('central/data/reminder-state.json', $ledger);
-                reminder_log('reminder.email.sent', ['babyId' => $babyId, 'photoDate' => $today, 'recipientCount' => count($recipients)]);
+                reminder_log('reminder.email.sent', ['babyId' => $babyId, 'photoDate' => $today, 'reminderTime' => $reminderSlot, 'recipientCount' => count($recipients)]);
                 $delivered++;
             } catch (Throwable $exception) {
-                reminder_log('reminder.email.failed', ['babyId' => $babyId, 'photoDate' => $today, 'error' => $exception->getMessage()]);
+                reminder_log('reminder.email.failed', ['babyId' => $babyId, 'photoDate' => $today, 'reminderTime' => $reminderSlot, 'error' => $exception->getMessage()]);
                 fwrite(STDERR, 'Email reminder failed for ' . $babyName . ': ' . $exception->getMessage() . PHP_EOL);
                 $failed++;
             }
@@ -156,10 +163,10 @@ try {
                 $ledger['sent'] = $sent;
                 $ledger['updatedAt'] = gmdate(DATE_ATOM);
                 json_write('central/data/reminder-state.json', $ledger);
-                reminder_log('reminder.sms.sent', ['babyId' => $babyId, 'photoDate' => $today, 'messageId' => $messageId]);
+                reminder_log('reminder.sms.sent', ['babyId' => $babyId, 'photoDate' => $today, 'reminderTime' => $reminderSlot, 'messageId' => $messageId]);
                 $delivered++;
             } catch (Throwable $exception) {
-                reminder_log('reminder.sms.failed', ['babyId' => $babyId, 'photoDate' => $today, 'error' => $exception->getMessage()]);
+                reminder_log('reminder.sms.failed', ['babyId' => $babyId, 'photoDate' => $today, 'reminderTime' => $reminderSlot, 'error' => $exception->getMessage()]);
                 fwrite(STDERR, 'SMS reminder failed for ' . $babyName . ': ' . $exception->getMessage() . PHP_EOL);
                 $failed++;
             }
@@ -168,8 +175,7 @@ try {
 
     $cutoff = (new DateTimeImmutable('-90 days'))->format('Y-m-d');
     $sent = array_filter($sent, static function (mixed $_timestamp, string $key) use ($cutoff): bool {
-        $separator = strrpos($key, ':');
-        return $separator !== false && substr($key, $separator + 1) >= $cutoff;
+        return preg_match('/^[a-f0-9]{24}:(\d{4}-\d{2}-\d{2})(?::|$)/D', $key, $match) === 1 && $match[1] >= $cutoff;
     }, ARRAY_FILTER_USE_BOTH);
     $ledger['sent'] = $sent;
     $ledger['updatedAt'] = gmdate(DATE_ATOM);

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.8.0 - 2026-11-06
+
+- Make the “View larger photo” badge visibly translucent so the underlying photo shows through.
+- Add three missing-photo reminder slots per day, defaulting to 12:00 PM, 4:00 PM, and 8:00 PM.
+- Track email and SMS delivery separately for each reminder slot and stop all later reminders once the photo is added.
+- Correct reminder-ledger cleanup for channel- and time-specific delivery keys.
+
 ## 2.7.1 - 2026-11-05
 
 - Lighten the shared-gallery “View larger photo” overlay so it competes less with the photo.

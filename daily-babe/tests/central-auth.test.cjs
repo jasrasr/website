@@ -123,7 +123,25 @@ test('keeps mobile settings controls contained and softens public photo actions'
   assert.match(css, /label \{ min-width: 0;/);
   assert.match(css, /input, textarea, label > select \{ width: 100%; min-width: 0; max-width: 100%/);
   assert.match(css, /@media \(max-width: 520px\)[\s\S]*?\.settings-grid \{ grid-template-columns: 1fr; \}/);
-  assert.match(publicPage, /background:rgba\(255,255,255,\.84\)/);
+  assert.match(publicPage, /background:rgba\(255,255,255,\.46\)/);
   assert.match(publicPage, /color:var\(--ink\)/);
+});
+
+test('schedules three independently tracked reminder slots each day', () => {
+  const bootstrap = read('bootstrap.php');
+  const api = read('api.php');
+  const index = read('index.php');
+  const reminder = read('send-missing-photo-reminders.php');
+  assert.match(bootstrap, /'reminderTimes' => \['12:00', '16:00', '20:00'\]/);
+  assert.match(bootstrap, /function normalized_reminder_times/);
+  assert.match(api, /count\(\$reminderTimes\) !== 3/);
+  assert.match(index, /name="reminderTimes\[\]"/);
+  assert.match(index, /First reminder/);
+  assert.match(index, /Second reminder/);
+  assert.match(index, /Final reminder/);
+  assert.match(reminder, /\$reminderSlot/);
+  assert.match(reminder, /\$legacyLedgerKey \. ':' \. \$reminderSlot/);
+  assert.match(reminder, /reminderTime' => \$reminderSlot/);
+  assert.match(reminder, /\(\\d\{4\}-\\d\{2\}-\\d\{2\}\)/);
 });
 

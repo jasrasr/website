@@ -13,6 +13,7 @@ if (preg_match('/^[a-f0-9]{24}$/D', $requestedBabyId) === 1 && can_access_baby($
     $_SESSION['daily_babe_selected_baby_id'] = $requestedBabyId;
 }
 $settings = tracker_settings();
+$reminderTimes = normalized_reminder_times($settings);
 $visibility = gallery_visibility($settings);
 $gender = in_array((string) ($settings['gender'] ?? ''), ['boy', 'girl'], true) ? (string) $settings['gender'] : '';
 $superAdmin = is_super_admin();
@@ -118,9 +119,11 @@ if ($authenticated) {
             <label>Weight ounces <span>(optional)</span><input type="number" name="birthWeightOunces" min="0" max="15" step="1" inputmode="numeric" value="<?= htmlspecialchars((string) ($settings['birthWeightOunces'] ?? '')) ?>" placeholder="8"></label>
         </div>
         <div class="reminder-settings">
-            <label class="reminder-toggle"><input type="checkbox" name="reminderEnabled" value="1" <?= !empty($settings['reminderEnabled']) ? 'checked' : '' ?>><span><strong>Enable missing-photo reminders</strong><small>The scheduled check sends enabled reminders once after the selected time.</small></span></label>
+            <label class="reminder-toggle"><input type="checkbox" name="reminderEnabled" value="1" <?= !empty($settings['reminderEnabled']) ? 'checked' : '' ?>><span><strong>Enable missing-photo reminders</strong><small>Reminders stop for the day as soon as a photo is added.</small></span></label>
             <div class="settings-grid">
-                <label>Reminder time<input type="time" name="reminderTime" value="<?= htmlspecialchars((string) ($settings['reminderTime'] ?? '20:00')) ?>"></label>
+                <label>First reminder<input type="time" name="reminderTimes[]" value="<?= htmlspecialchars($reminderTimes[0]) ?>"></label>
+                <label>Second reminder<input type="time" name="reminderTimes[]" value="<?= htmlspecialchars($reminderTimes[1]) ?>"></label>
+                <label>Final reminder<input type="time" name="reminderTimes[]" value="<?= htmlspecialchars($reminderTimes[2]) ?>"></label>
                 <label>Recipient email addresses<input type="email" name="reminderEmails" multiple value="<?= htmlspecialchars((string) ($settings['reminderEmails'] ?? '')) ?>" placeholder="name@example.com"><small>Separate multiple addresses with commas.</small></label>
                 <label class="reminder-toggle"><input type="checkbox" name="reminderSmsEnabled" value="1" <?= !empty($settings['reminderSmsEnabled']) ? 'checked' : '' ?>><span><strong>Also send a text message</strong><small>Requires Twilio credentials in the server configuration.</small></span></label>
                 <label>Text recipient phone number<input type="tel" name="reminderSmsNumber" inputmode="tel" autocomplete="tel" value="<?= htmlspecialchars((string) ($settings['reminderSmsNumber'] ?? '')) ?>" placeholder="+12165550123"><small>Use international E.164 format, including the + and country code.</small></label>

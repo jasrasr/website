@@ -92,7 +92,7 @@ Runtime photos, central membership data, logs, and settings are ignored by Git. 
 
 ## Missing-photo email and SMS reminders
 
-Each gallery can enable one daily email after a selected time when that calendar day has no photo. Enter one or more recipient addresses in Settings. The reminder starts only after the actual birth date, and a private delivery ledger prevents duplicate messages for the same gallery and date. Each reminder includes a link that selects the correct baby, opens the add-photo dialog, and preselects the missing date. The link still requires central sign-in and permission to that gallery.
+Each gallery can enable missing-photo reminders at three daily times, defaulting to 12:00 PM, 4:00 PM, and 8:00 PM. Enter one or more email recipients and optionally enable an SMS recipient. At each slot, the scheduled checker sends enabled channels only when that calendar day still has no photo. Adding the photo stops all later reminders for that day. A private delivery ledger prevents duplicates for each gallery, date, time, and delivery channel. Every reminder includes a link that selects the correct baby, opens the add-photo dialog, and preselects the missing date. The link still requires central sign-in and permission to that gallery.
 
 Copy `config/config.example.php` to the ignored `config/config.php` on Hostinger. Add the Titan mailbox password for email, and add Twilio credentials for SMS only if you want that channel:
 
@@ -131,7 +131,7 @@ Then create a Hostinger cron job that runs every 15 minutes:
 php /ABSOLUTE/PATH/github/daily-babe/send-missing-photo-reminders.php
 ```
 
-The script uses the configured `America/New_York` timezone, checks only enabled galleries at or after their selected reminder time, and exits without sending when today already has a photo.
+The script uses the configured `America/New_York` timezone and checks the most recent due reminder slot. With a cron interval of 15 minutes, it sends each enabled channel once per slot and exits without sending when today already has a photo.
 
 ## Validation checklist
 

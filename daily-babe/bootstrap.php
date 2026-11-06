@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '2.7.1';
+const BABY_TRACKER_VERSION = '2.8.0';
 const BABY_TRACKER_PROJECT = 'daily-babe';
 
 require_once __DIR__ . '/lib/unlisted-access.php';
@@ -259,7 +259,7 @@ function default_baby_settings(string $name = 'Baby'): array
 {
     global $config;
     return [
-        'schemaVersion' => 7,
+        'schemaVersion' => 8,
         'babyName' => $name,
         'gender' => '',
         'dueDate' => (string) ($config['due_date'] ?? '2026-11-02'),
@@ -269,13 +269,27 @@ function default_baby_settings(string $name = 'Baby'): array
         'birthWeightPounds' => '',
         'birthWeightOunces' => '',
         'reminderEnabled' => false,
-        'reminderTime' => '20:00',
+        'reminderTimes' => ['12:00', '16:00', '20:00'],
         'reminderEmails' => '',
         'reminderSmsEnabled' => false,
         'reminderSmsNumber' => '',
         'visibility' => 'private',
         'updatedAt' => gmdate('c'),
     ];
+}
+
+function normalized_reminder_times(array $settings): array
+{
+    $times = $settings['reminderTimes'] ?? null;
+    if (!is_array($times)) {
+        return ['12:00', '16:00', '20:00'];
+    }
+    $times = array_values(array_unique(array_filter(array_map(
+        static fn(mixed $time): string => trim((string) $time),
+        $times
+    ), static fn(string $time): bool => preg_match('/^(?:[01]\\d|2[0-3]):[0-5]\\d$/D', $time) === 1)));
+    sort($times, SORT_STRING);
+    return count($times) === 3 ? $times : ['12:00', '16:00', '20:00'];
 }
 
 function baby_root(string $babyId): string
