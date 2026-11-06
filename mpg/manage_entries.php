@@ -13,8 +13,9 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 if (session_status() === PHP_SESSION_NONE) session_start();
+require_once __DIR__ . '/admin_auth.php';
 require_once __DIR__ . '/device_init.php';
-if (!$isAdminTrusted) die('<h2>Access denied.</h2>');
+// Admin authorization enforced by User Management.
 
 $plate=preg_replace('/[^A-Z0-9]/','',strtoupper(trim($_GET['plate']??$_POST['plate']??'')));
 if($plate==='')die('<h2>No license plate specified.</h2>');
