@@ -200,6 +200,12 @@ footer a { color: var(--sage); }
     .focus-controls, .focus-actions, .reminder-actions { grid-template-columns: 1fr; }
     .rotation-actions { grid-template-columns: 1fr 1fr; }
     .rotation-actions span { grid-column: 1 / -1; grid-row: 1; }
+    .rotation-actions button {
+        padding-inline: .25rem;
+        font-size: clamp(.64rem, 3vw, .72rem);
+        letter-spacing: -.015em;
+        white-space: nowrap;
+    }
 }
 @media (max-width: 390px) {
     .topbar-actions { width: 100%; justify-content: space-between; }

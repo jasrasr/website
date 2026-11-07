@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '2.10.0';
+const BABY_TRACKER_VERSION = '2.10.1';
 const BABY_TRACKER_PROJECT = 'daily-babe';
 
 require_once __DIR__ . '/lib/unlisted-access.php';

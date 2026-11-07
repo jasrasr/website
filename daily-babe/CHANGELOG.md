@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.10.1 - 2026-11-07
+
+- Kept the clockwise and counterclockwise icons while tightening the mobile rotation-button typography so both labels remain on one line.
+
 ## 2.10.0 - 2026-11-07
 
 - Add optional 90° counterclockwise and clockwise controls to each photo’s crop editor.
