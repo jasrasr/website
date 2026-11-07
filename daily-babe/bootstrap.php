@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '2.9.0';
+const BABY_TRACKER_VERSION = '2.10.0';
 const BABY_TRACKER_PROJECT = 'daily-babe';
 
 require_once __DIR__ . '/lib/unlisted-access.php';
@@ -300,6 +300,27 @@ function normalized_photo_focus(array $record): array
         'x' => max(0, min(100, $focusX)),
         'y' => max(0, min(100, $focusY)),
     ];
+}
+
+function normalized_photo_rotation(array $record): int
+{
+    $rotation = is_numeric($record['rotation'] ?? null) ? (int) $record['rotation'] : 0;
+    $rotation %= 360;
+    if ($rotation < 0) {
+        $rotation += 360;
+    }
+    return in_array($rotation, [0, 90, 180, 270], true) ? $rotation : 0;
+}
+
+function photo_display_position(array $record): array
+{
+    $focus = normalized_photo_focus($record);
+    return match (normalized_photo_rotation($record)) {
+        90 => ['x' => $focus['y'], 'y' => 100 - $focus['x']],
+        180 => ['x' => 100 - $focus['x'], 'y' => 100 - $focus['y']],
+        270 => ['x' => 100 - $focus['y'], 'y' => $focus['x']],
+        default => $focus,
+    };
 }
 
 function baby_root(string $babyId): string

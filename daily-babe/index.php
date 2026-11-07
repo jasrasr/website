@@ -188,13 +188,18 @@ if ($authenticated) {
 <dialog id="photoDialog"><div class="photo-view"><button type="button" class="icon-button close-dialog" aria-label="Close">×</button><img id="fullPhoto" alt=""><div id="photoDetails"></div>
     <?php if ($canWrite): ?>
     <section class="focus-editor" aria-labelledby="focusEditorTitle">
-        <div><p class="eyebrow">GALLERY CROP</p><h3 id="focusEditorTitle">Adjust picture focus</h3><p>Move the focal point to control what stays visible in gallery tiles, collages, and GIFs. The original photo is unchanged.</p></div>
-        <div class="focus-preview"><img id="focusPreview" alt="Gallery crop preview"></div>
+        <div><p class="eyebrow">GALLERY CROP</p><h3 id="focusEditorTitle">Adjust picture focus</h3><p>Move the focal point or rotate the picture in 90° steps. Gallery tiles, shared views, collages, and GIFs update while the original photo remains unchanged.</p></div>
+        <div class="focus-preview rotatable-frame"><img id="focusPreview" alt="Gallery crop preview"></div>
         <div class="focus-controls">
             <label>Horizontal focus<input id="focusX" type="range" min="0" max="100" step="1" value="50"></label>
             <label>Vertical focus<input id="focusY" type="range" min="0" max="100" step="1" value="50"></label>
         </div>
-        <div class="focus-actions"><button type="button" class="secondary" id="centerFocusButton">Center</button><button type="button" id="saveFocusButton">Save focus</button></div>
+        <div class="rotation-actions" role="group" aria-label="Photo rotation">
+            <button type="button" class="secondary" id="rotateCounterclockwiseButton" aria-label="Rotate 90 degrees counterclockwise">↶ Counterclockwise</button>
+            <span id="rotationLabel" aria-live="polite">No rotation</span>
+            <button type="button" class="secondary" id="rotateClockwiseButton" aria-label="Rotate 90 degrees clockwise">Clockwise ↷</button>
+        </div>
+        <div class="focus-actions"><button type="button" class="secondary" id="centerFocusButton">Center focus</button><button type="button" id="saveFocusButton">Save crop &amp; rotation</button></div>
     </section>
     <?php endif; ?>
     <button type="button" class="danger" id="deletePhotoButton" <?= $canWrite ? '' : 'disabled title="Member access is required to remove photos."' ?>>Remove photo</button></div></dialog>

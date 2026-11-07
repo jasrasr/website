@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.10.0 - 2026-11-07
+
+- Add optional 90° counterclockwise and clockwise controls to each photo’s crop editor.
+- Save rotation as photo metadata without altering the uploaded original.
+- Apply saved rotation consistently to signed-in and public gallery tiles, enlarged views, collages, and GIFs.
+- Keep horizontal and vertical focus controls visually aligned after rotation.
+
 ## 2.9.0 - 2026-11-07
 
 - Add per-photo horizontal and vertical focus controls for gallery tiles, public galleries, collages, and GIFs without modifying the original image.

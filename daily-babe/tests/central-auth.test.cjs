@@ -172,8 +172,26 @@ test('stores and applies per-photo focus to galleries and exports', () => {
   assert.match(index, /Adjust picture focus/);
   assert.match(index, /id="focusX"/);
   assert.match(index, /id="focusY"/);
-  assert.match(app, /object-position:\$\{focus\.x\}% \$\{focus\.y\}%/);
+  assert.match(app, /object-position:\$\{presentation\.x\}% \$\{presentation\.y\}%/);
   assert.match(app, /drawCover\(ctx,img,x,y,w,h,record\)/);
-  assert.match(publicPage, /normalized_photo_focus/);
+  assert.match(publicPage, /photo_display_position/);
+});
+
+test('supports optional clockwise and counterclockwise photo rotation', () => {
+  const bootstrap = read('bootstrap.php');
+  const api = read('api.php');
+  const index = read('index.php');
+  const app = read('assets/app.js');
+  const publicPage = read('public.php');
+  assert.match(bootstrap, /function normalized_photo_rotation/);
+  assert.match(bootstrap, /function photo_display_position/);
+  assert.match(api, /'rotation' => 0/);
+  assert.match(api, /INVALID_ROTATION/);
+  assert.match(index, /rotateCounterclockwiseButton/);
+  assert.match(index, /rotateClockwiseButton/);
+  assert.match(app, /orientedImage/);
+  assert.match(app, /body\.set\('rotation'/);
+  assert.match(publicPage, /data-rotation/);
+  assert.match(publicPage, /rotation-<\?= \$rotation \?>/);
 });
 

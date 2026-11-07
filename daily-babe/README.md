@@ -20,7 +20,7 @@ A mobile-first PHP/JSON gallery for one baby photo per day. Daily Babe uses the 
 - Optional daily missing-photo email reminders through authenticated Titan SMTP
 - Optional missing-photo SMS reminders through Twilio, with per-gallery recipient and independent retry tracking
 - Lazy 720-pixel WebP gallery thumbnails while enlarged views and exports use the original photo
-- Per-photo gallery-crop focus controls that also carry into public tiles, collages, and GIFs
+- Per-photo gallery-crop focus and 90° rotation controls that also carry into public tiles, enlarged views, collages, and GIFs
 - In-app SMTP delivery testing and Hostinger cron-job status diagnostics
 
 Thumbnail generation requires PHP GD with JPEG, PNG, and WebP support. If it is unavailable, galleries safely fall back to the original image. Existing photos receive cached thumbnails automatically the first time a gallery tile requests them.

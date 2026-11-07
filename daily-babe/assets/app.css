@@ -80,7 +80,13 @@ main { max-width: 1510px; margin: auto; padding: 0 clamp(1.25rem, 5vw, 5rem) 5re
 .gallery { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
 .tile { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); box-shadow: var(--shadow); cursor: pointer; transition: transform .22s, box-shadow .22s; }
 .tile:hover { transform: translateY(-3px); box-shadow: 0 18px 36px rgba(41,37,30,.13); }
-.tile img { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; object-position: center; background: #e6e6e2; }
+.tile-photo { aspect-ratio: 4 / 5; background: #e6e6e2; }
+.rotatable-frame { position: relative; overflow: hidden; }
+.rotatable-frame > img { position: absolute; top: 50%; left: 50%; display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; background: #e6e6e2; transform: translate(-50%, -50%); }
+.rotatable-frame > img.rotation-90, .rotatable-frame > img.rotation-270 { width: 125%; height: 80%; }
+.rotatable-frame > img.rotation-90 { transform: translate(-50%, -50%) rotate(90deg); }
+.rotatable-frame > img.rotation-180 { transform: translate(-50%, -50%) rotate(180deg); }
+.rotatable-frame > img.rotation-270 { transform: translate(-50%, -50%) rotate(270deg); }
 .tile .caption { display: flex; align-items: end; justify-content: space-between; gap: .5rem; min-height: 68px; padding: .76rem .95rem .88rem; }
 .tile .caption > div { min-width: 0; }
 .tile strong { display: block; font-size: .89rem; line-height: 1.3; }
@@ -117,11 +123,14 @@ dialog::backdrop { background: rgba(20,29,37,.53); backdrop-filter: blur(4px); }
 .focus-editor { display: grid; gap: .9rem; margin: 0 0 1rem; padding: 1rem; border: 1px solid var(--line); border-radius: 14px; background: var(--soft); }
 .focus-editor h3 { margin: .2rem 0 .3rem; font-size: 1.08rem; }
 .focus-editor p { margin: 0; color: var(--muted); font-size: .83rem; line-height: 1.45; }
-.focus-preview { width: min(220px, 62vw); aspect-ratio: 4 / 5; justify-self: center; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: #e6e6e2; }
-.focus-preview img { width: 100%; height: 100%; max-height: none; object-fit: cover; border-radius: 0; }
+.focus-preview { width: min(220px, 62vw); aspect-ratio: 4 / 5; justify-self: center; border: 1px solid var(--line); border-radius: 12px; background: #e6e6e2; }
+.focus-preview img { max-height: none; border-radius: 0; }
 .focus-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
 .focus-controls input[type=range] { padding: .25rem 0; accent-color: var(--coral); }
 .focus-actions, .reminder-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
+.rotation-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: .55rem; }
+.rotation-actions button { padding: .7rem .55rem; font-size: .78rem; }
+.rotation-actions span { color: var(--muted); font-size: .76rem; font-weight: 700; text-align: center; white-space: nowrap; }
 .collage-preview { display: block; width: 100%; max-height: 60vh; object-fit: contain; border: 1px solid var(--line); border-radius: 12px; background: var(--soft); }
 .collage-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; }
 .settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1rem; }
@@ -189,6 +198,8 @@ footer a { color: var(--sage); }
     .upload-dialog textarea { min-height: 52px; max-height: 80px; }
     .reminder-settings .settings-grid { grid-template-columns: 1fr; }
     .focus-controls, .focus-actions, .reminder-actions { grid-template-columns: 1fr; }
+    .rotation-actions { grid-template-columns: 1fr 1fr; }
+    .rotation-actions span { grid-column: 1 / -1; grid-row: 1; }
 }
 @media (max-width: 390px) {
     .topbar-actions { width: 100%; justify-content: space-between; }

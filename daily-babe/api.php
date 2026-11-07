@@ -328,6 +328,7 @@ try {
             'note' => trim(substr((string) ($_POST['note'] ?? ''), 0, 300)),
             'focusX' => 50,
             'focusY' => 50,
+            'rotation' => 0,
             'uploadedAt' => gmdate('c'),
         ];
         $records[] = $record;
@@ -344,11 +345,15 @@ try {
         $id = (string) ($_POST['id'] ?? '');
         $focusX = $_POST['focusX'] ?? null;
         $focusY = $_POST['focusY'] ?? null;
+        $rotation = (int) ($_POST['rotation'] ?? 0);
         if (preg_match('/^[a-f0-9]{24}$/D', $id) !== 1) {
             json_response(false, 'Photo not found.', null, [['code' => 'NOT_FOUND']], 404);
         }
         if (!is_numeric($focusX) || !is_numeric($focusY) || (float) $focusX < 0 || (float) $focusX > 100 || (float) $focusY < 0 || (float) $focusY > 100) {
             json_response(false, 'Choose a valid horizontal and vertical focus.', null, [['code' => 'INVALID_FOCUS']], 422);
+        }
+        if (!in_array($rotation, [0, 90, 180, 270], true)) {
+            json_response(false, 'Choose a valid photo rotation.', null, [['code' => 'INVALID_ROTATION']], 422);
         }
         $entries = tracker_entries();
         $records = $entries['records'] ?? [];
@@ -359,6 +364,7 @@ try {
             }
             $records[$key]['focusX'] = (int) round((float) $focusX);
             $records[$key]['focusY'] = (int) round((float) $focusY);
+            $records[$key]['rotation'] = $rotation;
             $updatedRecord = $records[$key];
             break;
         }
@@ -368,8 +374,8 @@ try {
         $entries['records'] = array_values($records);
         $entries['updatedAt'] = gmdate('c');
         baby_json_write('data/entries.json', $entries);
-        audit_event('photo.focus_updated', ['id' => $id, 'focusX' => $updatedRecord['focusX'], 'focusY' => $updatedRecord['focusY']]);
-        json_response(true, 'Picture focus saved.', $updatedRecord);
+        audit_event('photo.presentation_updated', ['id' => $id, 'focusX' => $updatedRecord['focusX'], 'focusY' => $updatedRecord['focusY'], 'rotation' => $updatedRecord['rotation']]);
+        json_response(true, 'Picture crop and rotation saved.', $updatedRecord);
     }
 
     if ($action === 'delete_photo') {
