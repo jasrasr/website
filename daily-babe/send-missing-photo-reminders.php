@@ -90,6 +90,18 @@ $sent = is_array($ledger['sent'] ?? null) ? $ledger['sent'] : [];
 $checked = 0;
 $delivered = 0;
 $failed = 0;
+$jobStartedAt = gmdate(DATE_ATOM);
+$jobCompleted = false;
+json_write('central/data/reminder-job-status.json', [
+    'schemaVersion' => 1,
+    'state' => 'running',
+    'lastRunAt' => $jobStartedAt,
+    'serverTime' => date(DATE_ATOM),
+    'timezone' => date_default_timezone_get(),
+    'checked' => 0,
+    'delivered' => 0,
+    'failed' => 0,
+]);
 
 try {
     foreach (tracker_state()['babies'] ?? [] as $babyId => $baby) {
@@ -180,7 +192,36 @@ try {
     $ledger['sent'] = $sent;
     $ledger['updatedAt'] = gmdate(DATE_ATOM);
     json_write('central/data/reminder-state.json', $ledger);
+    json_write('central/data/reminder-job-status.json', [
+        'schemaVersion' => 1,
+        'state' => 'finished',
+        'lastRunAt' => $jobStartedAt,
+        'lastFinishedAt' => gmdate(DATE_ATOM),
+        'serverTime' => date(DATE_ATOM),
+        'timezone' => date_default_timezone_get(),
+        'checked' => $checked,
+        'delivered' => $delivered,
+        'failed' => $failed,
+    ]);
+    $jobCompleted = true;
 } finally {
+    if (!$jobCompleted) {
+        try {
+            json_write('central/data/reminder-job-status.json', [
+                'schemaVersion' => 1,
+                'state' => 'interrupted',
+                'lastRunAt' => $jobStartedAt,
+                'lastFinishedAt' => gmdate(DATE_ATOM),
+                'serverTime' => date(DATE_ATOM),
+                'timezone' => date_default_timezone_get(),
+                'checked' => $checked,
+                'delivered' => $delivered,
+                'failed' => max(1, $failed),
+            ]);
+        } catch (Throwable) {
+            // Preserve the original reminder failure if status persistence also fails.
+        }
+    }
     flock($lock, LOCK_UN);
     fclose($lock);
 }

@@ -128,6 +128,13 @@ if ($authenticated) {
                 <label class="reminder-toggle"><input type="checkbox" name="reminderSmsEnabled" value="1" <?= !empty($settings['reminderSmsEnabled']) ? 'checked' : '' ?>><span><strong>Also send a text message</strong><small>Requires Twilio credentials in the server configuration.</small></span></label>
                 <label>Text recipient phone number<input type="tel" name="reminderSmsNumber" inputmode="tel" autocomplete="tel" value="<?= htmlspecialchars((string) ($settings['reminderSmsNumber'] ?? '')) ?>" placeholder="+12165550123"><small>Use international E.164 format, including the + and country code.</small></label>
             </div>
+            <div class="reminder-diagnostics">
+                <div class="reminder-actions">
+                    <button type="button" class="secondary" id="testReminderEmail">Send test email</button>
+                    <button type="button" class="secondary" id="checkReminderStatus">Check scheduler status</button>
+                </div>
+                <p id="reminderStatus" class="reminder-status" role="status">Save recipient changes before sending a test. Automatic reminders also require the Hostinger cron job.</p>
+            </div>
         </div>
         <div class="public-sharing">
             <fieldset class="visibility-options">
@@ -178,7 +185,19 @@ if ($authenticated) {
 </dialog>
 <?php endif; ?>
 
-<dialog id="photoDialog"><div class="photo-view"><button type="button" class="icon-button close-dialog" aria-label="Close">×</button><img id="fullPhoto" alt=""><div id="photoDetails"></div><button type="button" class="danger" id="deletePhotoButton" <?= $canWrite ? '' : 'disabled title="Member access is required to remove photos."' ?>>Remove photo</button></div></dialog>
+<dialog id="photoDialog"><div class="photo-view"><button type="button" class="icon-button close-dialog" aria-label="Close">×</button><img id="fullPhoto" alt=""><div id="photoDetails"></div>
+    <?php if ($canWrite): ?>
+    <section class="focus-editor" aria-labelledby="focusEditorTitle">
+        <div><p class="eyebrow">GALLERY CROP</p><h3 id="focusEditorTitle">Adjust picture focus</h3><p>Move the focal point to control what stays visible in gallery tiles, collages, and GIFs. The original photo is unchanged.</p></div>
+        <div class="focus-preview"><img id="focusPreview" alt="Gallery crop preview"></div>
+        <div class="focus-controls">
+            <label>Horizontal focus<input id="focusX" type="range" min="0" max="100" step="1" value="50"></label>
+            <label>Vertical focus<input id="focusY" type="range" min="0" max="100" step="1" value="50"></label>
+        </div>
+        <div class="focus-actions"><button type="button" class="secondary" id="centerFocusButton">Center</button><button type="button" id="saveFocusButton">Save focus</button></div>
+    </section>
+    <?php endif; ?>
+    <button type="button" class="danger" id="deletePhotoButton" <?= $canWrite ? '' : 'disabled title="Member access is required to remove photos."' ?>>Remove photo</button></div></dialog>
 
 <dialog id="collageDialog">
     <div class="dialog-head"><div><p class="eyebrow">READY TO KEEP</p><h2 id="exportTitle">Your collage</h2></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>

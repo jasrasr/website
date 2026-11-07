@@ -145,3 +145,35 @@ test('schedules three independently tracked reminder slots each day', () => {
   assert.match(reminder, /\(\\d\{4\}-\\d\{2\}-\\d\{2\}\)/);
 });
 
+test('diagnoses email delivery and records scheduler health without exposing secrets', () => {
+  const api = read('api.php');
+  const index = read('index.php');
+  const app = read('assets/app.js');
+  const reminder = read('send-missing-photo-reminders.php');
+  assert.match(api, /test_reminder_email/);
+  assert.match(api, /reminder_status/);
+  assert.match(api, /smtp_send_message/);
+  assert.match(index, /id="testReminderEmail"/);
+  assert.match(index, /id="checkReminderStatus"/);
+  assert.match(app, /SMTP is configured, but the scheduled reminder checker has never reported a run/);
+  assert.match(reminder, /reminder-job-status\.json/);
+  assert.doesNotMatch(reminder, /reminder-job-status[\s\S]{0,400}(?:password|auth_token)/);
+});
+
+test('stores and applies per-photo focus to galleries and exports', () => {
+  const bootstrap = read('bootstrap.php');
+  const api = read('api.php');
+  const index = read('index.php');
+  const app = read('assets/app.js');
+  const publicPage = read('public.php');
+  assert.match(bootstrap, /function normalized_photo_focus/);
+  assert.match(api, /update_photo_focus/);
+  assert.match(api, /'focusX' => 50/);
+  assert.match(index, /Adjust picture focus/);
+  assert.match(index, /id="focusX"/);
+  assert.match(index, /id="focusY"/);
+  assert.match(app, /object-position:\$\{focus\.x\}% \$\{focus\.y\}%/);
+  assert.match(app, /drawCover\(ctx,img,x,y,w,h,record\)/);
+  assert.match(publicPage, /normalized_photo_focus/);
+});
+

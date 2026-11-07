@@ -2,7 +2,7 @@
 
 A mobile-first PHP/JSON gallery for one baby photo per day. Daily Babe uses the site-wide User Management service for adult accounts and keeps baby galleries, photos, and metadata isolated inside the project.
 
-## Included in v2.7.0
+## Included in v2.9.0
 
 - Central User Management sign-in, password changes, sessions, and account status
 - Multiple babies and multiple adults, with per-gallery membership
@@ -20,6 +20,8 @@ A mobile-first PHP/JSON gallery for one baby photo per day. Daily Babe uses the 
 - Optional daily missing-photo email reminders through authenticated Titan SMTP
 - Optional missing-photo SMS reminders through Twilio, with per-gallery recipient and independent retry tracking
 - Lazy 720-pixel WebP gallery thumbnails while enlarged views and exports use the original photo
+- Per-photo gallery-crop focus controls that also carry into public tiles, collages, and GIFs
+- In-app SMTP delivery testing and Hostinger cron-job status diagnostics
 
 Thumbnail generation requires PHP GD with JPEG, PNG, and WebP support. If it is unavailable, galleries safely fall back to the original image. Existing photos receive cached thumbnails automatically the first time a gallery tile requests them.
 
@@ -124,6 +126,8 @@ php /ABSOLUTE/PATH/github/daily-babe/send-missing-photo-reminders.php --test-sms
 ```
 
 Hostinger PHP must have OpenSSL stream support enabled for the SSL connection on port 465.
+
+You can also test email delivery from a phone: save the reminder recipients, then open **Settings → Send test email**. Use **Check scheduler status** to confirm the cron job has actually run. SMTP being configured and a test message succeeding do not start the schedule by themselves; the cron job below is still required.
 
 Then create a Hostinger cron job that runs every 15 minutes:
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.9.0 - 2026-11-07
+
+- Add per-photo horizontal and vertical focus controls for gallery tiles, public galleries, collages, and GIFs without modifying the original image.
+- Add a phone-friendly SMTP test button that sends to the gallery’s saved reminder recipients.
+- Add scheduler diagnostics showing whether SMTP is configured and when the Hostinger reminder cron last ran.
+- Persist a safe reminder-job heartbeat with checked, delivered, and failed counts and no credentials.
+
 ## 2.8.0 - 2026-11-06
 
 - Make the “View larger photo” badge visibly translucent so the underlying photo shows through.

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 require __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/lib/smtp.php';
 
 $action = (string) ($_GET['action'] ?? $_POST['action'] ?? '');
 
@@ -37,6 +38,62 @@ try {
             'account' => ['username' => (string) $account['username'], 'role' => (string) ($account['role'] ?? 'user')],
             'babyId' => $babyId,
         ]);
+    }
+
+    if ($action === 'reminder_status') {
+        require_project_role('member');
+        $settings = tracker_settings();
+        $status = json_read('central/data/reminder-job-status.json', []);
+        global $config;
+        $smtp = is_array($config['smtp'] ?? null) ? $config['smtp'] : [];
+        $smtpConfigured = trim((string) ($smtp['host'] ?? '')) !== ''
+            && (int) ($smtp['port'] ?? 0) > 0
+            && trim((string) ($smtp['from_email'] ?? $smtp['username'] ?? '')) !== ''
+            && (($smtp['authentication'] ?? true) !== true
+                || (trim((string) ($smtp['username'] ?? '')) !== '' && (string) ($smtp['password'] ?? '') !== ''));
+        json_response(true, 'Reminder status loaded.', [
+            'enabled' => ($settings['reminderEnabled'] ?? false) === true,
+            'times' => normalized_reminder_times($settings),
+            'emailRecipients' => (string) ($settings['reminderEmails'] ?? ''),
+            'smtpConfigured' => $smtpConfigured,
+            'lastRunAt' => (string) ($status['lastRunAt'] ?? ''),
+            'lastFinishedAt' => (string) ($status['lastFinishedAt'] ?? ''),
+            'state' => (string) ($status['state'] ?? 'never'),
+            'checked' => (int) ($status['checked'] ?? 0),
+            'delivered' => (int) ($status['delivered'] ?? 0),
+            'failed' => (int) ($status['failed'] ?? 0),
+        ]);
+    }
+
+    if ($action === 'test_reminder_email') {
+        require_project_role('member');
+        require_csrf();
+        $settings = tracker_settings();
+        $rawRecipients = trim((string) ($settings['reminderEmails'] ?? ''));
+        $recipients = $rawRecipients === '' ? [] : preg_split('/[\s,;]+/', $rawRecipients, -1, PREG_SPLIT_NO_EMPTY);
+        $recipients = array_values(array_unique(array_map(
+            static fn(string $email): string => strtolower(trim($email)),
+            is_array($recipients) ? $recipients : []
+        )));
+        if ($recipients === [] || array_filter($recipients, static fn(string $email): bool => !filter_var($email, FILTER_VALIDATE_EMAIL)) !== []) {
+            json_response(false, 'Save at least one valid reminder email address first.', null, [['code' => 'REMINDER_EMAIL_REQUIRED']], 422);
+        }
+        global $config;
+        $smtp = is_array($config['smtp'] ?? null) ? $config['smtp'] : [];
+        $babyName = trim((string) ($settings['babyName'] ?? 'Baby')) ?: 'Baby';
+        try {
+            smtp_send_message(
+                $smtp,
+                $recipients,
+                'Daily Babe test email for ' . $babyName,
+                "This is a Daily Babe reminder delivery test.\n\nIf you received it, the saved SMTP settings work. The scheduled Hostinger cron job must also run for automatic reminders."
+            );
+            audit_event('reminder.email.test_sent', ['recipientCount' => count($recipients)]);
+            json_response(true, 'Test email accepted by the mail server.', ['recipientCount' => count($recipients)]);
+        } catch (Throwable $exception) {
+            audit_event('reminder.email.test_failed', ['error' => $exception->getMessage()]);
+            json_response(false, 'Test email failed: ' . $exception->getMessage(), null, [['code' => 'SMTP_TEST_FAILED']], 502);
+        }
     }
 
     if ($action === 'select_baby') {
@@ -269,6 +326,8 @@ try {
             'filename' => $filename,
             'mimeType' => $mime,
             'note' => trim(substr((string) ($_POST['note'] ?? ''), 0, 300)),
+            'focusX' => 50,
+            'focusY' => 50,
             'uploadedAt' => gmdate('c'),
         ];
         $records[] = $record;
@@ -277,6 +336,40 @@ try {
         baby_json_write('data/entries.json', $entries);
         audit_event('photo.uploaded', ['id' => $id, 'photoDate' => $photoDate]);
         json_response(true, 'Daily photo saved.', $record, [], 201);
+    }
+
+    if ($action === 'update_photo_focus') {
+        require_project_role('member');
+        require_csrf();
+        $id = (string) ($_POST['id'] ?? '');
+        $focusX = $_POST['focusX'] ?? null;
+        $focusY = $_POST['focusY'] ?? null;
+        if (preg_match('/^[a-f0-9]{24}$/D', $id) !== 1) {
+            json_response(false, 'Photo not found.', null, [['code' => 'NOT_FOUND']], 404);
+        }
+        if (!is_numeric($focusX) || !is_numeric($focusY) || (float) $focusX < 0 || (float) $focusX > 100 || (float) $focusY < 0 || (float) $focusY > 100) {
+            json_response(false, 'Choose a valid horizontal and vertical focus.', null, [['code' => 'INVALID_FOCUS']], 422);
+        }
+        $entries = tracker_entries();
+        $records = $entries['records'] ?? [];
+        $updatedRecord = null;
+        foreach ($records as $key => $record) {
+            if (($record['id'] ?? '') !== $id) {
+                continue;
+            }
+            $records[$key]['focusX'] = (int) round((float) $focusX);
+            $records[$key]['focusY'] = (int) round((float) $focusY);
+            $updatedRecord = $records[$key];
+            break;
+        }
+        if ($updatedRecord === null) {
+            json_response(false, 'Photo not found.', null, [['code' => 'NOT_FOUND']], 404);
+        }
+        $entries['records'] = array_values($records);
+        $entries['updatedAt'] = gmdate('c');
+        baby_json_write('data/entries.json', $entries);
+        audit_event('photo.focus_updated', ['id' => $id, 'focusX' => $updatedRecord['focusX'], 'focusY' => $updatedRecord['focusY']]);
+        json_response(true, 'Picture focus saved.', $updatedRecord);
     }
 
     if ($action === 'delete_photo') {

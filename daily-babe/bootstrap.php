@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '2.8.0';
+const BABY_TRACKER_VERSION = '2.9.0';
 const BABY_TRACKER_PROJECT = 'daily-babe';
 
 require_once __DIR__ . '/lib/unlisted-access.php';
@@ -290,6 +290,16 @@ function normalized_reminder_times(array $settings): array
     ), static fn(string $time): bool => preg_match('/^(?:[01]\\d|2[0-3]):[0-5]\\d$/D', $time) === 1)));
     sort($times, SORT_STRING);
     return count($times) === 3 ? $times : ['12:00', '16:00', '20:00'];
+}
+
+function normalized_photo_focus(array $record): array
+{
+    $focusX = is_numeric($record['focusX'] ?? null) ? (int) round((float) $record['focusX']) : 50;
+    $focusY = is_numeric($record['focusY'] ?? null) ? (int) round((float) $record['focusY']) : 50;
+    return [
+        'x' => max(0, min(100, $focusX)),
+        'y' => max(0, min(100, $focusY)),
+    ];
 }
 
 function baby_root(string $babyId): string
