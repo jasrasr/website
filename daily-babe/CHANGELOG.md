@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.10.2 - 2026-11-08
+
+- Restore the crop preview's cover behavior so horizontal focus, vertical focus, and Center focus visibly reposition the picture after rotation controls were added.
+- Keep the separate enlarged-photo view contained without allowing its styling to override the crop editor.
+
 ## 2.10.1 - 2026-11-07
 
 - Kept the clockwise and counterclockwise icons while tightening the mobile rotation-button typography so both labels remain on one line.

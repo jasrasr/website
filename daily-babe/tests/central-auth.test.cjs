@@ -195,3 +195,11 @@ test('supports optional clockwise and counterclockwise photo rotation', () => {
   assert.match(publicPage, /rotation-<\?= \$rotation \?>/);
 });
 
+test('keeps the focus editor preview visibly cropped after rotation support', () => {
+  const css = read('assets/app.css');
+  const app = read('assets/app.js');
+  assert.match(css, /\.focus-preview img \{[^}]*object-fit: cover/);
+  assert.match(app, /function updateFocusPreview\(\)[\s\S]*?applyPhotoPresentation\(preview,record\)/);
+  assert.match(app, /centerFocusButton[\s\S]*?focusX\.value=50;focusY\.value=50;updateFocusPreview\(\)/);
+});
+

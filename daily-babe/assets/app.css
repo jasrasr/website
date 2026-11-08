@@ -124,7 +124,7 @@ dialog::backdrop { background: rgba(20,29,37,.53); backdrop-filter: blur(4px); }
 .focus-editor h3 { margin: .2rem 0 .3rem; font-size: 1.08rem; }
 .focus-editor p { margin: 0; color: var(--muted); font-size: .83rem; line-height: 1.45; }
 .focus-preview { width: min(220px, 62vw); aspect-ratio: 4 / 5; justify-self: center; border: 1px solid var(--line); border-radius: 12px; background: #e6e6e2; }
-.focus-preview img { max-height: none; border-radius: 0; }
+.focus-preview img { max-height: none; border-radius: 0; object-fit: cover; }
 .focus-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
 .focus-controls input[type=range] { padding: .25rem 0; accent-color: var(--coral); }
 .focus-actions, .reminder-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
