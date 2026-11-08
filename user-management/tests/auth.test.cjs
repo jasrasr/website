@@ -57,6 +57,21 @@ test('central setup, shared sessions, project permissions, revocation and persis
   assert.equal((await admin.post({action:'save-project',csrf:'bad',project:'alpha',name:'Alpha',path:'/alpha/'})).status,403);
   assert.equal((await admin.post({action:'save-project',project:'alpha',name:'Alpha',path:'//evil.example/'})).status,400);
   for(const p of ['alpha','beta']) assert.equal((await admin.post({action:'save-project',project:p,name:p,path:`/${p}/`})).status,303);
+  const returning=new Browser();
+  let bounced=await returning.request('/alpha/?view=missing&date=2026-11-07');
+  assert.equal(bounced.status,303);
+  assert.equal(bounced.headers.get('location'),'/user-management/?return=%2Falpha%2F%3Fview%3Dmissing%26date%3D2026-11-07');
+  let loginPage=await returning.request(bounced.headers.get('location'));
+  assert.match(loginPage.html,/name="return" value="\/alpha\/\?view=missing&amp;date=2026-11-07"/);
+  let returned=await returning.request(portal,{action:'login',username:'admin',password:adminPassword,remember:'yes',return:'/alpha/?view=missing&date=2026-11-07'});
+  assert.equal(returned.status,303);
+  assert.equal(returned.headers.get('location'),'/alpha/?view=missing&date=2026-11-07');
+  assert.equal((await returning.request(returned.headers.get('location'))).status,200);
+  const unsafe=new Browser();
+  await unsafe.request();
+  const rejectedReturn=await unsafe.request(portal,{action:'login',username:'admin',password:adminPassword,return:'https://evil.example/steal'});
+  assert.equal(rejectedReturn.status,303);
+  assert.equal(rejectedReturn.headers.get('location'),portal);
   const create=await admin.post({action:'create-user',username:'reader',name:'Reader <script>alert(1)</script>',password:temporary});assert.equal(create.status,303);
   assert.equal((await admin.post({action:'create-user',username:'READER',name:'Duplicate',password:temporary})).status,400);
   const readerId=userId('reader'), adminId=userId('admin');
@@ -110,3 +125,4 @@ test('central setup, shared sessions, project permissions, revocation and persis
   assert.equal((await new Browser().login('throttle',temporary)).status,401);
   assert.doesNotMatch(logs,/Fatal error|Warning:|Uncaught/);
 });
+

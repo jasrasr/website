@@ -15,6 +15,7 @@ Validation:
 ## Features
 
 - One same-host login/session for integrated projects.
+- Automatic post-login return to the originating registered project page, with strict local-path validation to prevent open redirects.
 - Central account creation, disable/enable, temporary password reset and password change.
 - User, Admin and Super Admin account roles are separate from project scope. Any role can access multiple selected projects; all-project access is an explicit flag. Central directory administration is a separate permission.
 - Server-side permission checks, CSRF tokens, secure cookies, session rotation, standard 30-minute idle expiry, **default-on bounded seven-day remembered sessions with host-cleanup recovery**, and persisted account/IP login limits.
@@ -55,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$auth->validCsrf($_POST['csrf'] ??
 }
 ```
 
-Render `<input type="hidden" name="csrf" value="...">` with the HTML-escaped `$auth->csrf()` in state-changing forms. Require POST and CSRF for writes and logout. JSON bodies need their own parsing; pass their token to `validCsrf`. Use `requireProject('mpg', 'admin')` for administrative routes. `can()` checks access without redirecting; `user()` returns safe identity fields without the password hash. `portal()` gives the login/account URL.
+Render `<input type="hidden" name="csrf" value="...">` with the HTML-escaped `$auth->csrf()` in state-changing forms. Require POST and CSRF for writes and logout. JSON bodies need their own parsing; pass their token to `validCsrf`. Use `requireProject('mpg', 'admin')` for administrative routes. `can()` checks access without redirecting; `user()` returns safe identity fields without the password hash. `portal()` gives the login/account URL, while `loginUrl($path)` includes a validated registered-project return path.
 
 | Role | Intended access | Gate |
 | --- | --- | --- |
@@ -68,7 +69,7 @@ Account role caps project grants; it does not assign project access. Central dir
 
 The provider enforces role hierarchy; each project must place gates on **every** protected page, API, download and write handler. Unknown projects/roles deny access even for site admins. Object ownership remains the project's responsibility. Store `$user['id']` as the stable ownership key; map legacy owners explicitly before removing old login code.
 
-Unauthenticated HTML requests go to the central portal; after login use the project cards to return. JSON routes return the framework envelope with 401/403. There are no arbitrary return URLs. Changing a password signs out all browsers. Logging out signs out all integrated projects **in that browser**.
+Unauthenticated HTML requests go to the central portal with the exact local request path as a return destination. After a successful login, the visitor returns to that page. Return destinations are accepted only when they are local paths beneath a project registered in User Management; external URLs, protocol-relative paths, traversal segments, fragments and unregistered paths are rejected. JSON routes return the framework envelope with 401/403. Changing a password signs out all browsers. Logging out signs out all integrated projects **in that browser**.
 
 ## Adoption and limits
 

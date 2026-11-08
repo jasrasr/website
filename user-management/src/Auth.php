@@ -7,9 +7,9 @@ use Jasr\Framework\PasswordSession;
 use Jasr\Framework\Response;
 
 /* File Name: Auth.php
-Revision: 1.2.0
-Modified Date: 2026-11-07
-Changelog: 1.2.0 - Restore remembered identities from revocable server-side tokens when shared hosting purges PHP sessions. 1.1.0 - Offer opt-in seven-day shared login without changing default expiry.
+Revision: 1.3.0
+Modified Date: 2026-11-08
+Changelog: 1.3.0 - Return successful sign-ins to the originating registered project without permitting external redirects. 1.2.0 - Restore remembered identities from revocable server-side tokens when shared hosting purges PHP sessions. 1.1.0 - Offer opt-in seven-day shared login without changing default expiry.
 */
 final class Auth
 {
@@ -30,6 +30,36 @@ final class Auth
     public function csrf(): string { return $this->session->csrf(); }
     public function validCsrf(mixed $token): bool { return $this->session->validCsrf($token); }
     public function portal(): string { return $this->config['base_path']; }
+    public function safeReturnPath(mixed $candidate): string
+    {
+        if (!is_string($candidate) || $candidate === '' || strlen($candidate) > 2048
+            || $candidate[0] !== '/' || str_starts_with($candidate, '//')
+            || preg_match('/[\\\\\x00-\x1f\x7f]/', $candidate) === 1) {
+            return '';
+        }
+        $parts = parse_url($candidate);
+        if ($parts === false || isset($parts['scheme']) || isset($parts['host']) || isset($parts['user']) || isset($parts['pass']) || isset($parts['fragment'])) {
+            return '';
+        }
+        $path = (string) ($parts['path'] ?? '');
+        $decodedPath = rawurldecode($path);
+        if ($path === '' || preg_match('~(?:^|/)\.{1,2}(?:/|$)~', $decodedPath) === 1) {
+            return '';
+        }
+        foreach ($this->directory->read()['projects'] as $project) {
+            $base = (string) ($project['path'] ?? '');
+            $basePath = parse_url($base, PHP_URL_PATH);
+            if (!is_string($basePath) || $basePath === '' || $basePath[0] !== '/') continue;
+            $directory = rtrim($basePath, '/') . '/';
+            if ($path === rtrim($directory, '/') || str_starts_with($path, $directory)) return $candidate;
+        }
+        return '';
+    }
+    public function loginUrl(mixed $returnTo = ''): string
+    {
+        $returnTo = $this->safeReturnPath($returnTo);
+        return $returnTo === '' ? $this->portal() : $this->portal() . '?' . http_build_query(['return' => $returnTo], '', '&', PHP_QUERY_RFC3986);
+    }
     public function user(): ?array
     {
         $id = $_SESSION['identity_id'] ?? '';
@@ -189,7 +219,7 @@ final class Auth
         $user = $this->user();
         if (!$user || $user['mustChangePassword']) {
             if ($json) Response::json(401, 'Sign in and complete any required password change.');
-            header('Location: ' . $this->portal(), true, 303);
+            header('Location: ' . $this->loginUrl($_SERVER['REQUEST_URI'] ?? ''), true, 303);
             exit;
         }
         if (!$this->can($project, $minimum)) {

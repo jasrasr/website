@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0 — 2026-11-08
+
+- Return successful shared sign-ins to the exact registered project page that requested authentication, including its query string.
+- Restrict return destinations to local paths beneath projects registered in User Management; reject external, protocol-relative, traversal, control-character and fragment destinations.
+- Keep forced-password-change accounts in User Management instead of redirecting them before the required change is complete.
+
 ## 1.3.0 — 2026-11-07
 
 - Select seven-day sign-in by default on the login form while retaining a clear shared-device opt-out and 30-minute unchecked fallback.
