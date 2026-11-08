@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0 — 2026-11-07
+
+- Select seven-day sign-in by default on the login form while retaining a clear shared-device opt-out and 30-minute unchecked fallback.
+- Add private, hashed, revocable remember tokens that restore the shared identity after Hostinger or another shared host removes the PHP session file.
+- Rotate the browser validator after recovery, retain an absolute seven-day expiry and revoke remembered access on logout, password/account-version changes or disabled accounts.
+
 ## 1.2.0 — 2026-09-25
 
 - Separated User/Admin/Super Admin account roles, selected/all-project scope and central directory management; retained existing explicit administrator rights.
@@ -44,3 +50,4 @@
 - Add a public account request form and Jason-only approval/rejection queue.
 - Keep applicants outside active users until approval; grant no project access by default.
 - Add configurable email notification through hosting mail transport.
+

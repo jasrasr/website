@@ -97,7 +97,7 @@ function roleFields(array $account): void
 <?php form('setup'); ?><label>Setup key <input type="password" name="setup_key" autocomplete="off" required></label><label>Username <input name="username" autocomplete="username" required></label><label>Display name <input name="name" required></label><?php passwordFields(); ?><button>Create administrator</button></form>
 <?php else: ?><p>Browser setup is disabled. Set a private setup key in <code>config.local.php</code> or run the CLI setup described in the README.</p><?php endif ?></section>
 <?php elseif (!$user): ?>
-<section class="compact"><h2>Sign in</h2><p><a href="<?= e($auth->portal()) ?>register.php">Add new user — request an account</a></p><?php form('login'); ?><label>Username <input name="username" autocomplete="username" maxlength="64" required></label><label>Password <input type="password" name="password" autocomplete="current-password" maxlength="72" required></label><label class="check"><input type="checkbox" name="remember" value="yes"> Stay signed in for 7 days on this browser</label><p class="muted">Optional. Leave unchecked for the usual 30-minute inactivity timeout. Don't enable on a shared device.</p><button>Sign in</button></form><p>Need a password reset? Ask your site administrator.</p></section>
+<section class="compact"><h2>Sign in</h2><p><a href="<?= e($auth->portal()) ?>register.php">Add new user — request an account</a></p><?php form('login'); ?><label>Username <input name="username" autocomplete="username" maxlength="64" required></label><label>Password <input type="password" name="password" autocomplete="current-password" maxlength="72" required></label><label class="check"><input type="checkbox" name="remember" value="yes" checked> Stay signed in for 7 days on this browser</label><p class="muted">Recommended for your personal phone or computer. Uncheck on a shared device; unchecked sessions expire after 30 minutes of inactivity.</p><button>Sign in</button></form><p>Need a password reset? Ask your site administrator.</p></section>
 <?php else: ?>
 <div class="account"><p>Signed in as <strong><?= e($user['name']) ?></strong></p><?php form('logout'); ?><button class="secondary">Sign out of all connected projects in this browser</button></form></div>
 <?php if ($user['mustChangePassword']): ?><p class="notice">Change your temporary password before opening a project or managing users.</p><?php else: ?>
@@ -119,4 +119,5 @@ function roleFields(array $account): void
 <details><summary>Reset password</summary><?php form('reset-password'); ?><input type="hidden" name="id" value="<?= e($managed['id']) ?>"><label>Temporary password <input type="password" name="password" minlength="12" maxlength="72" autocomplete="new-password" required></label><button>Reset password and revoke sessions</button></form></details></article>
 <?php endforeach ?></section>
 <?php endif; endif ?>
-<footer>User Management · v1.2.0</footer></main></body></html>
+<footer>User Management · v1.3.0</footer></main></body></html>
+

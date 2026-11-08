@@ -2,11 +2,11 @@
 
 Shared PHP/JSON accounts for projects in this repository. PHP 8.1+, no database or Composer dependencies. Uses the framework's `JsonStore` and `PasswordSession`; the framework exposes the configured provider through `SharedIdentity::connect()`.
 
-## Optional remembered sign-in (2026-10-27)
+## Durable remembered sign-in (2026-11-07)
 
-The central login now includes **Stay signed in for 7 days on this browser**. This is deliberately unchecked by default. Standard sign-in still expires after **30 minutes idle** and uses a session cookie. Choosing the checkbox issues a persistent browser cookie with an absolute seven-day maximum; on every request, the server checks the remembered session's expiry and identity version. Session rotation, CSRF verification, strict/HttpOnly/secure cookies, password resets, disabled-account invalidation and central logout remain enforced across all registered projects.
+The central login includes **Stay signed in for 7 days on this browser**, selected by default for personal devices. Uncheck it on shared devices. Unchecked sign-ins expire after **30 minutes idle**. A remembered sign-in uses a random browser validator whose hash, user ID, identity version and fixed expiry are stored privately in `data/remember_tokens.json`. If shared hosting removes the PHP session file, the provider validates and rotates that token before rebuilding the shared session. The raw validator is never stored server-side.
 
-The duration is configurable with `remember_seconds` in `config.local.php` (default 604800; limited to 30 days), while `timeout` remains 1800 seconds by default. Both are server settings; do not write secrets to this repository. **Existing sessions do not automatically become remembered.** Sign out and sign back in with the checkbox selected. The login checkbox is not recommended for shared devices. Hosts that purge PHP session data earlier than seven days require compatible server/session storage configuration. Test signed-in persistence and sign-out on the actual Hostinger installation.
+The duration is configurable with `remember_seconds` in `config.local.php` (default 604800; limited to 30 days), while `timeout` remains 1800 seconds by default. Both are server settings; do not write secrets to this repository. **Existing sessions do not automatically become remembered.** Sign out and sign back in once after this update. Token expiry is absolute, not sliding. Logout, password changes, disabled accounts and identity-version changes revoke access; the next successful recovery rotates the browser validator while retaining the original expiry.
 
 Validation:
 
@@ -17,7 +17,7 @@ Validation:
 - One same-host login/session for integrated projects.
 - Central account creation, disable/enable, temporary password reset and password change.
 - User, Admin and Super Admin account roles are separate from project scope. Any role can access multiple selected projects; all-project access is an explicit flag. Central directory administration is a separate permission.
-- Server-side permission checks, CSRF tokens, secure cookies, session rotation, standard 30-minute idle expiry, **opt-in bounded seven-day remembered sessions**, and persisted account/IP login limits.
+- Server-side permission checks, CSRF tokens, secure cookies, session rotation, standard 30-minute idle expiry, **default-on bounded seven-day remembered sessions with host-cleanup recovery**, and persisted account/IP login limits.
 - Password/account/access changes revoke the affected user's sessions; required password changes block project access.
 - Last active administrator protection. Users are disabled instead of deleted so project ownership remains stable.
 - Runtime files stay in ignored storage; normal Git updates do not overwrite accounts.
@@ -82,6 +82,8 @@ This is same-host, same-PHP-session-storage integration, not OAuth/OIDC or cross
 
 `data/attempts.json`: expiring hash-keyed account and direct peer-IP counters; 10 account attempts / 60 IP attempts per 15 minutes. Successful login clears only its account counter. No forwarded IP headers are trusted. A reverse proxy may group users under its peer IP; configure trusted proxy handling separately before high-volume use.
 
+`data/remember_tokens.json`: expiring, revocable remembered-login records. It stores only a hash of each random browser validator plus the central user ID, identity version and fixed expiry. It is runtime data, ignored by Git and protected with the rest of `data/`.
+
 Writes use stable locks and atomic replacement. Back up the data directory and private configuration securely. Never use `git clean -fdx` or deployment cleanup that deletes ignored data. On restore, also clear server-side identity sessions, especially if an older credential/version is restored. JSON is intended for small trusted-host deployments, not a high-volume public identity service.
 
 ## Validation
@@ -114,3 +116,4 @@ Hosting preservation: see [HOSTING-DATA-SAFETY.md](HOSTING-DATA-SAFETY.md) and [
 The sign-in page links to `register.php`. Requests are stored in the existing private directory, with hashed passwords, and cannot sign in until approved. Only the directory administrator named `jasrasr` can approve/reject them in **Pending new users**. Approval grants no projects or elevated roles. Request emails are unverified contact information. Requests are limited to five per direct IP per day and 100 pending total.
 
 Set `'registration_notify_email' => 'YOUR_EMAIL_ADDRESS'` in the ignored server `config.local.php`. Notifications use PHP `mail()` and require a working hosting mail transport. No password or applicant information is included in notifications. Submission is retained even when delivery fails; the pending queue is authoritative. Never put real recipient settings or live directory data into Git.
+

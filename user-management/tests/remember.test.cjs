@@ -1,11 +1,11 @@
 /*
 File Name: remember.test.cjs
 Author: Jason Lamb (with help from ChatGPT)
-Description: Isolated HTTP verification for opt-in seven-day central login, expiry and sign-out.
-Revision: 1.0.1
+Description: Isolated HTTP verification for durable seven-day central login, host session cleanup, expiry and sign-out.
+Revision: 1.1.0
 Created Date: 2026-10-27
-Modified Date: 2026-10-27
-Changelog: 1.0.1 - Check that remembered cookies retain fixed original expiry after a page load. 1.0.0 - Check session-only default, secure cookie flags, remembered expiry and revocation.
+Modified Date: 2026-11-07
+Changelog: 1.1.0 - Check default-on UI and server-token restoration after PHP session cleanup. 1.0.1 - Check that remembered cookies retain fixed original expiry after a page load. 1.0.0 - Check session-only default, secure cookie flags, remembered expiry and revocation.
 */
 'use strict';
 const {test,after}=require('node:test');
@@ -28,8 +28,14 @@ fs.writeFileSync(path.join(temp,'expire.php'),
  "<?php\nrequire_once __DIR__.'/1-Framework/bootstrap.php';\n"+
  "$auth=\\Jasr\\Framework\\SharedIdentity::connect();\n"+
  "if (!$auth->user()) {http_response_code(401);exit;}\n"+
+ "\\Jasr\\Framework\\JsonStore::update(__DIR__.'/user-management/data/remember_tokens.json', function(array $records): array {foreach($records as &$record)$record['expires']=time()-1;return $records;});\n"+
  "$_SESSION['remember_until']=time()-1;\n"+
  "echo 'test-only forced expiration';\n");
+fs.writeFileSync(path.join(temp,'drop-session.php'),
+ "<?php\nrequire_once __DIR__.'/1-Framework/bootstrap.php';\n"+
+ "$auth=\\Jasr\\Framework\\SharedIdentity::connect();\n"+
+ "if (!$auth->user()) {http_response_code(401);exit;}\n"+
+ "$_SESSION=[];session_regenerate_id(true);echo 'test-only host cleanup';\n");
 const port=18963,host='http://127.0.0.1:'+port;
 const server=spawn('php',['-S','127.0.0.1:'+port,'-t',temp],{stdio:['ignore','pipe','pipe']});
 let logs='';
@@ -37,15 +43,21 @@ server.stderr.on('data',chunk=>logs+=String(chunk));
 after(()=>{server.kill();fs.rmSync(temp,{recursive:true,force:true});if(/Fatal error|Parse error/.test(logs))console.error(logs);});
 
 class Browser{
- cookie='';csrf='';
+ cookies=new Map();csrf='';
+ cookieHeader(){return [...this.cookies].map(([name,value])=>name+'='+value).join('; ');}
  async request(url='/user-management/',post=null){
-  const headers={Cookie:this.cookie};
+  const headers={Cookie:this.cookieHeader()};
   if(post)headers['Content-Type']='application/x-www-form-urlencoded';
   const options={headers,redirect:'manual'};
   if(post){options.method='POST';options.body=new URLSearchParams({csrf:this.csrf,...post});}
   const res=await fetch(host+url,options);
   const cookies=res.headers.getSetCookie?.()||[];
-  if(cookies.length)this.cookie=cookies[cookies.length-1].split(';')[0];
+  for(const cookie of cookies){
+   const pair=cookie.split(';')[0],separator=pair.indexOf('=');
+   const name=pair.slice(0,separator),value=pair.slice(separator+1);
+   if(/max-age=0/i.test(cookie)||/expires=Thu, 01 Jan 1970/i.test(cookie)||value==='')this.cookies.delete(name);
+   else this.cookies.set(name,value);
+  }
   const text=await res.text();
   const match=text.match(/name="csrf" value="([a-f0-9]+)"/);
   if(match)this.csrf=match[1];
@@ -74,7 +86,9 @@ test('default idle session, opt-in remembered login, and global logout',async()=
  })).status,303);
  res=await browser.request();
  assert.match(res.text,/Stay signed in for 7 days/);
- assert.match(res.text,/30-minute inactivity/);
+ assert.match(res.text,/name="remember" value="yes" checked/,
+  'seven-day login is selected by default for personal devices');
+ assert.match(res.text,/30 minutes of inactivity/);
 
  // Without the checkbox, browser closes end the session; no persistent Expires.
  const normal=await browser.post('login',{username:'member',password});
@@ -109,6 +123,11 @@ test('default idle session, opt-in remembered login, and global logout',async()=
    'each visit retains the original fixed seven-day expiry rather than extending it');
  }
 
+ // Hostinger-style PHP session cleanup is repaired by the separate revocable token.
+ assert.equal((await browser.request('/drop-session.php')).status,200);
+ assert.match((await browser.request()).text,/Signed in as/,
+  'remember token restores identity after PHP session data disappears');
+
  // Expired remembered sessions cannot bypass server expiration even with cookie.
  assert.equal((await browser.request('/expire.php')).status,200);
  assert.match((await browser.request()).text,/<h2>Sign in<\/h2>/,
@@ -119,5 +138,6 @@ test('default idle session, opt-in remembered login, and global logout',async()=
  assert.equal(loggedOut.status,303);
  assert.match((await browser.request()).text,/<h2>Sign in<\/h2>/,
   'logging out revokes the remembered session');
- console.log('Passed: short default, opt-in seven-day cookie, absolute expiry and shared sign-out.');
+ console.log('Passed: short fallback, default-on durable seven-day login, host cleanup recovery, absolute expiry and shared sign-out.');
 });
+

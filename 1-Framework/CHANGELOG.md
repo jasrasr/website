@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0 — 2026-11-07
+
+- Allow the central identity provider to restore a server-validated remembered identity into a fresh, rotated PHP session after shared-host cleanup.
+
 ## 1.1.0 — 2026-09-24
 
 - Added lazy `SharedIdentity::connect()` adapter pointing to the configurable shared user-management provider.
@@ -13,3 +17,4 @@
 - Extracted and strengthened PasswordSession from box/lib/auth.php without changing that app.
 - Bootstrap loads new class definitions only, preserving existing initialization behavior.
 - Webstats is the first consumer; no existing application is migrated and no shared identity schema is imposed.
+

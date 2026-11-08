@@ -2,10 +2,10 @@
 /* File Name: PasswordSession.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: Shared PHP sessions with CSRF, revocation and optional bounded persistent login.
-Revision: 1.1.1
+Revision: 1.2.0
 Created Date: 2026-10-27
-Modified Date: 2026-10-27
-Changelog: 1.1.1 - Preserve fixed persistent-cookie expiry on every request and rotate expired IDs. 1.1.0 - Add explicitly opted-in 7-day cookies while retaining 30-minute default inactivity expiry.
+Modified Date: 2026-11-07
+Changelog: 1.2.0 - Allow the identity provider to restore a remembered login after host session cleanup. 1.1.1 - Preserve fixed persistent-cookie expiry on every request and rotate expired IDs. 1.1.0 - Add explicitly opted-in 7-day cookies while retaining 30-minute default inactivity expiry.
 */
 declare(strict_types=1);
 namespace Jasr\Framework;
@@ -69,6 +69,20 @@ final class PasswordSession
         $this->writeCookie(true);
     }
 
+    /** Restore a server-validated remembered identity into a fresh PHP session. */
+    public function restoreRemembered(int $expires): void
+    {
+        if ($expires <= time() || $expires > time() + $this->rememberSeconds) {
+            throw new \RuntimeException('Invalid remembered identity expiry.');
+        }
+        $_SESSION = [];
+        session_regenerate_id(true);
+        $_SESSION['remember_until'] = $expires;
+        $_SESSION['last'] = time();
+        $_SESSION['csrf'] = bin2hex(random_bytes(32));
+        $this->writeCookie(true);
+    }
+
     public function csrf(): string { return $_SESSION['csrf']; }
     public function validCsrf(mixed $token): bool {
         return is_string($token) && hash_equals($this->csrf(), $token);
@@ -94,3 +108,4 @@ final class PasswordSession
         $this->writeCookie(false);
     }
 }
+
