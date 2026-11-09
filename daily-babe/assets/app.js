@@ -35,15 +35,49 @@ function drawCover(ctx,img,x,y,w,h,record){const source=orientedImage(img,record
 function drawDayLabel(ctx,record,x,y,w,h,fontSize=20){const day=dayNumber(record.photoDate),label=day?`Day ${day}`:dateLabel(record.photoDate),bar=Math.max(40,Math.round(fontSize*2));ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(x,y+h-bar,w,bar);ctx.fillStyle='#fff';ctx.font=`700 ${fontSize}px system-ui,sans-serif`;ctx.textBaseline='middle';ctx.fillText(label,x+12,y+h-bar/2,w-24)}
 async function setExport(blob,type){if(state.exportUrl)URL.revokeObjectURL(state.exportUrl);state.exportBlob=blob;state.exportType=type;state.exportUrl=URL.createObjectURL(blob);$('#exportPreview').src=state.exportUrl;$('#exportTitle').textContent=type==='gif'?'Your daily GIF':'Your collage';$('#exportPreview').alt=type==='gif'?'Animated Baby Daily slideshow':'Generated Baby Daily collage';$('#exportHelp').innerHTML=type==='gif'?'Tap <strong>Share or save</strong> to keep the animated GIF. It includes every available day in order.':'On iPhone, tap <strong>Share or save</strong> and choose Save Image. You can also press and hold the preview.';$('#collageDialog').showModal()}
 async function makeCollage(){if(!state.records.length){toast('Add at least one photo first.');return}const button=$('#collageButton');button.disabled=true;button.textContent='Building…';try{const chosen=orderedRecords(),cols=Math.min(10,Math.ceil(Math.sqrt(chosen.length))),rows=Math.ceil(chosen.length/cols),size=360,canvas=document.createElement('canvas');canvas.width=cols*size;canvas.height=rows*size;const ctx=canvas.getContext('2d');ctx.fillStyle='#10182d';ctx.fillRect(0,0,canvas.width,canvas.height);const images=[];for(const record of chosen)images.push(await loadImage(`image.php?id=${encodeURIComponent(record.id)}`));images.forEach((img,i)=>drawCover(ctx,img,(i%cols)*size,Math.floor(i/cols)*size,size,size,chosen[i]));chosen.forEach((record,i)=>drawDayLabel(ctx,record,(i%cols)*size,Math.floor(i/cols)*size,size,size,19));await setExport(await canvasBlob(canvas),'collage');toast('Collage ready to save.')}finally{button.disabled=false;button.textContent='Make collage'}}
-function gifPalette(){const p=[];for(let r=0;r<8;r++)for(let g=0;g<8;g++)for(let b=0;b<4;b++)p.push(Math.round(r*255/7),Math.round(g*255/7),Math.round(b*255/3));return p}
-function indexedPixels(data){const src=data.data,pixels=new Uint8Array(data.width*data.height);for(let s=0,p=0;s<src.length;s+=4,p++)pixels[p]=((src[s]>>5)<<5)|((src[s+1]>>5)<<2)|(src[s+2]>>6);return pixels}
+function adaptiveGifFrame(data){
+    const src=data.data,width=data.width,height=data.height,counts=new Uint32Array(32768),colors=[];
+    for(let s=0;s<src.length;s+=4)counts[((src[s]>>3)<<10)|((src[s+1]>>3)<<5)|(src[s+2]>>3)]++;
+    for(let color=0;color<counts.length;color++)if(counts[color])colors.push(color);
+    const channel=(color,axis)=>axis===0?(color>>10)&31:axis===1?(color>>5)&31:color&31;
+    const makeBox=boxColors=>{let total=0,min=[31,31,31],max=[0,0,0];for(const color of boxColors){const count=counts[color];total+=count;for(let axis=0;axis<3;axis++){const value=channel(color,axis);if(value<min[axis])min[axis]=value;if(value>max[axis])max[axis]=value}}return{colors:boxColors,total,min,max}};
+    const boxes=[makeBox(colors)];
+    while(boxes.length<256){
+        let selected=-1,selectedScore=-1;
+        for(let i=0;i<boxes.length;i++){const box=boxes[i];if(box.colors.length<2)continue;const range=Math.max(box.max[0]-box.min[0],box.max[1]-box.min[1],box.max[2]-box.min[2]),score=range*box.total;if(score>selectedScore){selected=i;selectedScore=score}}
+        if(selected<0)break;
+        const box=boxes.splice(selected,1)[0],ranges=box.max.map((value,axis)=>value-box.min[axis]),axis=ranges.indexOf(Math.max(...ranges));
+        box.colors.sort((a,b)=>channel(a,axis)-channel(b,axis));
+        const midpoint=box.total/2;let sum=0,split=1;
+        for(let i=0;i<box.colors.length-1;i++){sum+=counts[box.colors[i]];if(sum>=midpoint){split=i+1;break}}
+        boxes.push(makeBox(box.colors.slice(0,split)),makeBox(box.colors.slice(split)));
+    }
+    const palette=[],paletteColors=[];
+    for(const box of boxes){let r=0,g=0,b=0,total=0;for(const color of box.colors){const count=counts[color];total+=count;r+=(((color>>10)&31)*8+4)*count;g+=(((color>>5)&31)*8+4)*count;b+=((color&31)*8+4)*count}const value=[Math.round(r/total),Math.round(g/total),Math.round(b/total)];palette.push(...value);paletteColors.push(value)}
+    while(palette.length<768)palette.push(0,0,0);
+    const pixels=new Uint8Array(width*height),cache=new Int16Array(32768);cache.fill(-1);
+    let current=new Float32Array((width+2)*3),next=new Float32Array((width+2)*3);
+    const clamp=value=>Math.max(0,Math.min(255,value));
+    for(let y=0,p=0;y<height;y++){
+        for(let x=0;x<width;x++,p++){
+            const source=p*4,errorOffset=(x+1)*3,r=clamp(src[source]+current[errorOffset]),g=clamp(src[source+1]+current[errorOffset+1]),b=clamp(src[source+2]+current[errorOffset+2]),key=((r>>3)<<10)|((g>>3)<<5)|(b>>3);
+            let best=cache[key];
+            if(best<0){let distance=Infinity;for(let i=0;i<paletteColors.length;i++){const color=paletteColors[i],dr=r-color[0],dg=g-color[1],db=b-color[2],candidate=dr*dr+dg*dg+db*db;if(candidate<distance){distance=candidate;best=i}}cache[key]=best}
+            pixels[p]=best;
+            const chosen=paletteColors[best],errors=[r-chosen[0],g-chosen[1],b-chosen[2]];
+            for(let axis=0;axis<3;axis++){const error=errors[axis];current[errorOffset+3+axis]+=error*7/16;next[errorOffset-3+axis]+=error*3/16;next[errorOffset+axis]+=error*5/16;next[errorOffset+3+axis]+=error/16}
+        }
+        const swap=current;current=next;next=swap;next.fill(0);
+    }
+    return{pixels,palette};
+}
 function lzwEncode(pixels){const clear=256,end=257;let size=9,next=258,dict=new Map(),out=[],acc=0,bits=0;const write=code=>{acc|=code<<bits;bits+=size;while(bits>=8){out.push(acc&255);acc>>>=8;bits-=8}},reset=()=>{dict=new Map();size=9;next=258};write(clear);let prefix=pixels[0];for(let i=1;i<pixels.length;i++){const value=pixels[i],key=prefix*256+value;if(dict.has(key)){prefix=dict.get(key);continue}write(prefix);if(next<4096){dict.set(key,next++);if(next>(1<<size)&&size<12)size++}else{write(clear);reset()}prefix=value}write(prefix);write(end);if(bits>0)out.push(acc&255);return out}
 function pushWord(bytes,value){bytes.push(value&255,(value>>8)&255)}
 function pushString(bytes,value){for(let i=0;i<value.length;i++)bytes.push(value.charCodeAt(i))}
 function pushBlocks(bytes,data){for(let i=0;i<data.length;i+=255){const block=data.slice(i,i+255);bytes.push(block.length,...block)}bytes.push(0)}
-function encodeGif(frames,w,h,delay=100){const bytes=[];pushString(bytes,'GIF89a');pushWord(bytes,w);pushWord(bytes,h);bytes.push(0xf7,0,0,...gifPalette(),0x21,0xff,0x0b);pushString(bytes,'NETSCAPE2.0');bytes.push(3,1,0,0,0);frames.forEach(pixels=>{bytes.push(0x21,0xf9,4,8);pushWord(bytes,delay);bytes.push(0,0,0x2c);pushWord(bytes,0);pushWord(bytes,0);pushWord(bytes,w);pushWord(bytes,h);bytes.push(0,8);pushBlocks(bytes,lzwEncode(pixels))});
+function encodeGif(frames,w,h,delay=100){const bytes=[];pushString(bytes,'GIF89a');pushWord(bytes,w);pushWord(bytes,h);bytes.push(0x70,0,0,0x21,0xff,0x0b);pushString(bytes,'NETSCAPE2.0');bytes.push(3,1,0,0,0);frames.forEach(frame=>{bytes.push(0x21,0xf9,4,8);pushWord(bytes,delay);bytes.push(0,0,0x2c);pushWord(bytes,0);pushWord(bytes,0);pushWord(bytes,w);pushWord(bytes,h);bytes.push(0x87,...frame.palette,8);pushBlocks(bytes,lzwEncode(frame.pixels))});
 bytes.push(0x3b);return new Blob([new Uint8Array(bytes)],{type:'image/gif'})}
-async function makeGif(){if(!state.records.length){toast('Add at least one photo first.');return}const button=$('#gifButton');button.disabled=true;button.textContent='Building…';try{const chosen=orderedRecords(),size=360,canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;const ctx=canvas.getContext('2d',{willReadFrequently:true}),frames=[];for(let i=0;i<chosen.length;i++){button.textContent=`Building ${i+1}/${chosen.length}…`;const record=chosen[i],img=await loadImage(`image.php?id=${encodeURIComponent(record.id)}`);ctx.fillStyle='#10182d';ctx.fillRect(0,0,size,size);drawCover(ctx,img,0,0,size,size,record);drawDayLabel(ctx,record,0,0,size,size,24);frames.push(indexedPixels(ctx.getImageData(0,0,size,size)));await new Promise(resolve=>setTimeout(resolve,0))}await setExport(encodeGif(frames,size,size),'gif');toast('Animated GIF ready to save.')}finally{button.disabled=false;button.textContent='Make GIF'}}
+async function makeGif(){if(!state.records.length){toast('Add at least one photo first.');return}const button=$('#gifButton');button.disabled=true;button.textContent='Building…';try{const chosen=orderedRecords(),size=720,canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;const ctx=canvas.getContext('2d',{willReadFrequently:true}),frames=[];for(let i=0;i<chosen.length;i++){button.textContent=`Building ${i+1}/${chosen.length}…`;const record=chosen[i],img=await loadImage(`image.php?id=${encodeURIComponent(record.id)}`);ctx.fillStyle='#10182d';ctx.fillRect(0,0,size,size);drawCover(ctx,img,0,0,size,size,record);drawDayLabel(ctx,record,0,0,size,size,48);frames.push(adaptiveGifFrame(ctx.getImageData(0,0,size,size)));await new Promise(resolve=>setTimeout(resolve,0))}await setExport(encodeGif(frames,size,size),'gif');toast('High-quality animated GIF ready to save.')}finally{button.disabled=false;button.textContent='Make GIF'}}
 function exportFilename(){const ext=state.exportType==='gif'?'gif':'jpg';return`baby-daily-${state.exportType}-${localToday()}.${ext}`}
 async function shareExport(){if(!state.exportBlob)return;const file=new File([state.exportBlob],exportFilename(),{type:state.exportBlob.type});
 if(navigator.share&&navigator.canShare?.({files:[file]})){try{await navigator.share({files:[file],title:state.exportType==='gif'?'Baby Daily GIF':'Baby Daily collage'});
