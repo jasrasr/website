@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.11.1 - 2026-11-08
+
+- Hide the due date and due-date comparison language from the gallery once an actual birth date has been entered.
+- Retain the due date in Settings as historical information without using valuable post-birth dashboard space.
+
 ## 2.11.0 - 2026-11-08
 
 - Increase animated GIF exports from 360×360 to 720×720 pixels.
