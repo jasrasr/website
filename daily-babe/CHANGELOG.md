@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.10.3 - 2026-11-08
+
+- Fix the animated GIF encoder's LZW code-width transition so generated slideshows are valid, decodable GIF files on iPhone and other viewers.
+
 ## 2.10.2 - 2026-11-08
 
 - Restore the crop preview's cover behavior so horizontal focus, vertical focus, and Center focus visibly reposition the picture after rotation controls were added.
