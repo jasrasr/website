@@ -67,7 +67,7 @@ if ($authenticated) {
             <div class="hero-copy">
                 <h2 id="heroTitle">A little face, one day at a time.</h2>
                 <p id="heroStatus">Loading the gallery…</p>
-                <p class="due-date">Due <?= htmlspecialchars((new DateTimeImmutable((string) $settings['dueDate']))->format('F j, Y')) ?></p>
+                <p class="due-date" <?= !empty($settings['birthDate']) ? 'hidden' : '' ?>>Due <?= htmlspecialchars((new DateTimeImmutable((string) $settings['dueDate']))->format('F j, Y')) ?></p>
             </div>
             <div class="stats" aria-label="Gallery summary">
                 <div><strong id="photoCount">0</strong><span>photos</span></div>
@@ -110,7 +110,7 @@ if ($authenticated) {
         <div class="dialog-head"><div><p class="eyebrow">GALLERY DETAILS</p><h2>Settings</h2></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>
         <label>Baby’s name<input name="babyName" maxlength="80" value="<?= htmlspecialchars((string) $settings['babyName']) ?>" placeholder="Optional for now"></label>
         <label>Gender <span>(optional)</span><select name="gender"><option value="" <?= $gender === '' ? 'selected' : '' ?>>Not selected</option><option value="boy" <?= $gender === 'boy' ? 'selected' : '' ?>>Boy</option><option value="girl" <?= $gender === 'girl' ? 'selected' : '' ?>>Girl</option></select><small>Changes this gallery to a subtle blue or pink theme.</small></label>
-        <label>Due date<input type="date" name="dueDate" value="<?= htmlspecialchars((string) $settings['dueDate']) ?>" required></label>
+        <label>Due date<input type="date" name="dueDate" value="<?= htmlspecialchars((string) $settings['dueDate']) ?>" required><small><?= !empty($settings['birthDate']) ? 'Kept in Settings as historical birth information, but hidden from the gallery after birth.' : 'Used for the pre-birth countdown until an actual birth date is entered.' ?></small></label>
         <label>Actual birth date<input type="date" name="birthDate" value="<?= htmlspecialchars((string) $settings['birthDate']) ?>"><small>Once entered, this date—not the due date—controls Day 1 and all age calculations.</small></label>
         <div class="settings-grid">
             <label>Time born <span>(optional)</span><input type="time" name="birthTime" value="<?= htmlspecialchars((string) ($settings['birthTime'] ?? '')) ?>"></label>
