@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.11.0 - 2026-11-08
+
+- Increase animated GIF exports from 360×360 to 720×720 pixels.
+- Build a photo-specific 256-color palette for every frame instead of forcing all photos through a fixed RGB palette.
+- Add Floyd–Steinberg dithering to smooth skin tones and gradients while retaining the day label on every frame.
+
 ## 2.10.3 - 2026-11-08
 
 - Fix the animated GIF encoder's LZW code-width transition so generated slideshows are valid, decodable GIF files on iPhone and other viewers.
