@@ -2,12 +2,20 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release notes for private tax-lot investment dashboard.
-Revision: 1.5.0
+Revision: 1.5.2
 Created Date: 2026-10-29
-Modified Date: 2026-10-30
-Changelog: 1.5.0 - Atomic import-all workflow and exception queue for actual Robinhood export. 1.4.0 - Auto-import supported broker transactions with explicitly provisional FIFO, split inference and unknown REC basis. 1.3.0 - Add private staged Robinhood account import with per-ticker editable allocations and validation. 1.2.1 - Route unmodified Robinhood CSV to safe read-only preview when incorrectly selected for normalized import. 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
+Modified Date: 2026-11-13
+Changelog: 1.5.2 - Recognize canceled brokerage trades, replacement purchases and staged Tesla histories. 1.5.0 - Atomic import-all workflow and exception queue for actual Robinhood export. 1.4.0 - Auto-import supported broker transactions with explicitly provisional FIFO, split inference and unknown REC basis. 1.3.0 - Add private staged Robinhood account import with per-ticker editable allocations and validation. 1.2.1 - Route unmodified Robinhood CSV to safe read-only preview when incorrectly selected for normalized import. 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
 -->
 # Investment Tracker Changelog
+
+## 1.5.2 — 2026-11-13
+
+- Pair uniquely matching \`BCXL\` buy and \`SCXL\` sell cancellations with their original fills, requiring exact ticker, date, quantity, price and refund amount.
+- Exclude both sides of a canceled order from holdings, basis, proceeds and inferred FIFO; keep corrected replacement trades and audit source rows.
+- Reconcile previously staged activity without reuploading or overwriting ledger data. Unmatched/ambiguous cancellations remain blocked.
+- Verify Tesla's 0.165635 open shares and $46.90 remaining basis after the 2020 5:1 and 2022 3:1 splits.
+- Add synthetic reversal, canceled-order and old-draft regression tests without user brokerage data.
 
 ## 1.5.0 — 2026-10-30
 
