@@ -2,10 +2,10 @@
  * File Name: closed-position-ui.test.cjs
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Check closed-position rendering from existing imported holdings without UI data mutation.
- * Revision: 1.0.0
+ * Revision: 1.0.1
  * Created Date: 2026-11-13
  * Modified Date: 2026-11-13
- * Changelog: 1.0.0 - ABNB closed trade ROI, date, no historical quote, no false FIFO warning.
+ * Changelog: 1.0.1 - Mock DOM childElementCount so empty-state logic matches browsers. 1.0.0 - ABNB closed trade ROI, date, no historical quote, no false FIFO warning.
  */
 'use strict';
 const assert=require('node:assert/strict');
@@ -15,6 +15,7 @@ const vm=require('node:vm');
 
 class FakeElement {
  constructor(tag){this.tagName=tag;this.className='';this.textContent='';this.children=[];}
+ get childElementCount(){return this.children.length;}
  append(...items){this.children.push(...items);}
  replaceChildren(...items){this.children=[...items];}
 }
