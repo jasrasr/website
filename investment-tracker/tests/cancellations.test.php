@@ -3,10 +3,10 @@
  * File Name: cancellations.test.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Synthetic brokerage cancellations must offset original trades before tax-lot reconstruction.
- * Revision: 1.0.0
+ * Revision: 1.0.1
  * Created Date: 2026-11-13
  * Modified Date: 2026-11-13
- * Changelog: 1.0.0 - Test exact BCXL, corrected buy, 5:1 and 3:1 splits, staged drafts, ambiguous and unmatched cancellation, and SCXL.
+ * Changelog: 1.0.1 - Verify original CSV analyzer counts canceled trade pairs. 1.0.0 - Test exact BCXL, corrected buy, 5:1 and 3:1 splits, staged drafts, ambiguous and unmatched cancellation, and SCXL.
  */
 declare(strict_types=1);
 require_once dirname(__DIR__).'/robinhood.php';
@@ -40,6 +40,9 @@ $rows=[
 ];
 $path=make_csv($rows);
 try {
+    $preview=it_rh_parse_csv($path);
+    assertion(($preview['matched_canceled_trade_pairs']??0)===1 && ($preview['counts']['canceled_trade']??0)===2,
+        'Original CSV analyzer recognizes canceled trade pair without adding an extra purchase.');
     $stage=it_rc_stage($path);
     $cancelled=array_values(array_filter($stage['rows'],fn($x)=>$x['kind']==='cancelled_trade'));
     assertion(count($cancelled)===2,'Exact BCXL refund and original purchase cancel as a pair.');
