@@ -2,10 +2,10 @@
  * File Name: closed-position-ui.test.cjs
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Check closed-position rendering from existing imported holdings without UI data mutation.
- * Revision: 1.0.1
+ * Revision: 1.0.2
  * Created Date: 2026-11-13
  * Modified Date: 2026-11-13
- * Changelog: 1.0.1 - Mock DOM childElementCount so empty-state logic matches browsers. 1.0.0 - ABNB closed trade ROI, date, no historical quote, no false FIFO warning.
+ * Changelog: 1.0.2 - Permit educational note mentioning XIRR but reject any displayed rate. 1.0.1 - Mock DOM childElementCount so empty-state logic matches browsers. 1.0.0 - ABNB closed trade ROI, date, no historical quote, no false FIFO warning.
  */
 'use strict';
 const assert=require('node:assert/strict');
@@ -71,7 +71,7 @@ assert.match(a,/Held 3 calendar days · Short-term/,'Historical holding period d
 assert.match(a,/Fully sold Dec 22, 2020/,'Historical sell date displayed');
 assert.doesNotMatch(a,/ESTIMATED FIFO/,'Single purchase and sale do not get false FIFO warning');
 assert.doesNotMatch(a,/172\.86/,'Historical quote is not displayed as current value');
-assert.doesNotMatch(a,/XIRR/,'Closed position avoids misleading XIRR');
+assert.doesNotMatch(a,/XIRR\s+(?:—|[-+\d.,]+%)/,'Closed position avoids showing an annualized XIRR value');
 const amb=flatten(target.children[1]);
 assert.match(amb,/ESTIMATED FIFO/,'Genuinely ambiguous lot allocations remain flagged');
 const one=flatten(target.children[2]);
