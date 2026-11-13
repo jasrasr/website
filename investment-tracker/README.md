@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, data contract, calculation model, privacy and test procedures.
-Revision: 1.5.0
+Revision: 1.5.2
 Created Date: 2026-10-29
-Modified Date: 2026-10-30
-Changelog: 1.5.0 - Full-report batch preview, one-click import, per-ticker exceptions and privacy-safe deduplication. 1.4.0 - Enable provisional Robinhood import without impossible manual share/lot attestations. 1.3.0 - Add private per-ticker report staging, editable sale-lot/split corrections, broker-share validation, and explicit atomic import. 1.2.1 - Clarify native Robinhood CSV upload and route misselected reports to the non-mutating analyzer. 1.2.0 - Reconcile NVDA demo using owner-authorized CSV and add preview-only Robinhood CSV parser. 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
+Modified Date: 2026-11-13
+Changelog: 1.5.2 - Pair Robinhood canceled trades with original fills, correcting Tesla balances and existing drafts. 1.5.0 - Full-report batch preview, one-click import, per-ticker exceptions and privacy-safe deduplication. 1.4.0 - Enable provisional Robinhood import without impossible manual share/lot attestations. 1.3.0 - Add private per-ticker report staging, editable sale-lot/split corrections, broker-share validation, and explicit atomic import. 1.2.1 - Clarify native Robinhood CSV upload and route misselected reports to the non-mutating analyzer. 1.2.0 - Reconcile NVDA demo using owner-authorized CSV and add preview-only Robinhood CSV parser. 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
 -->
 # Investment Tracker
 
@@ -25,6 +25,18 @@ The **NVIDIA screenshot demo** tab (`?demo=1`) is now reconstructed from the own
 - The activity report does **not** identify which tax lots the broker actually selected for the two earlier NVDA sales. Demo allocates historical sale proceeds to oldest acquisitions provisionally for illustration. An actual tax-lot statement should be used before using realized gains in tax decisions.
 
 All personal user imports must still be approved and reconciled. **None of the user's 1,479-row brokerage CSV is committed to public GitHub**; only the explicitly authorized, ticker-specific NVDA demonstration entries are in source.
+
+## Canceled Robinhood orders and Tesla reconciliation (v1.5.2)
+
+Robinhood's full activity CSV includes a January 6, 2021 Tesla execution for $100, a matching +$100 cancellation (code \`BCXL\`) and a separate corrected buy for $99.94. The original and reversal must not create an active share lot, invested cash or realized proceeds; the corrected buy remains a purchase.
+
+The source CSV analyzer and staged importer now pair \`BCXL\` canceled buys and \`SCXL\` canceled sells to their original trade only when **ticker, date, share quantity, per-share execution price and opposite cash amount all match uniquely**. The two raw rows remain visible as \`cancelled_trade\` for audit, but have no impact on shares, basis, sale allocation, or market price. An unmatched or ambiguous reversal remains a blocker.
+
+**Previously staged private reports are supported without reupload.** Normalization runs when saved ticker data is loaded, previewed and replayed, while preserving source IDs, drafts and existing portfolio records. Tesla can become eligible in a new full-report import preview; a ticker already present in a personal ledger is not silently overwritten.
+
+The 2020 Tesla 5:1 and 2022 3:1 split-adjusted history now gives 0.012780 shares from the November 9, 2021 $5 purchase and 0.152855 shares from the March 27, 2025 $41.90 purchase. This totals 0.165635 shares with remaining cost $46.90 and average $283.15/share, matching the Robinhood screenshot. At its *screenshot* price of $389.87/share (not live), this is $64.58 market value, $17.68 unrealized gain, or +37.69%. Closed historical transactions still have provisional tax-lot attribution.
+
+Regression tests use **fictional** purchase quantities and execution amounts, with a canceled original, refund, corrected buy, 5:1 and 3:1 splits, canceled sale, old staged draft, and ambiguous/unmatched reversals. No personal Robinhood CSV is committed.
 
 ## Import the full Robinhood report with one preview and one confirmation (v1.5)
 
