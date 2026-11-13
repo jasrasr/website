@@ -3,10 +3,10 @@
  * File Name: ledger.test.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Offline synthetic split, tax-lot and performance regression tests.
- * Revision: 1.2.1
+ * Revision: 1.5.1
  * Created Date: 2026-10-29
- * Modified Date: 2026-10-29
- * Changelog: 1.2.1 - Block valuations when a price observation precedes later purchases. 1.2.0 - Verify full NVDA CSV demo share reconciliation and prevent DRIP double counting. 1.1.0 - Original/adjusted quantity, proportional P&L and exact one-year tax boundary tests. 1.0.0 - Initial deterministic accounting tests.
+ * Modified Date: 2026-11-13
+ * Changelog: 1.5.1 - Test ABNB fully closed position ROI, 3-day holding term and genuine versus generic FIFO ambiguity. 1.2.1 - Block valuations when a price observation precedes later purchases. 1.2.0 - Verify full NVDA CSV demo share reconciliation and prevent DRIP double counting. 1.1.0 - Original/adjusted quantity, proportional P&L and exact one-year tax boundary tests. 1.0.0 - Initial deterministic accounting tests.
  */
 declare(strict_types=1);
 require_once dirname(__DIR__).'/ledger.php';
@@ -140,5 +140,57 @@ t($unpriced['holdings']['MSFT']['value']===null &&
   $unpriced['holdings']['MSFT']['lots'][0]['market_value']===null &&
   $unpriced['totals']['xirr_pct']===null,
   'Quote preceding a new purchase must not produce fabricated gains or portfolio XIRR');
+
+
+// Already imported Robinhood history must be recalculated correctly without
+// re-uploading, changing saved events or making a tax-lot FIFO claim.
+$closedAbnbEvents=[
+    event('abnb-buy','2020-12-19','ABNB','buy',0.064387,10.00,
+        ['allocation_estimated'=>true]),
+    event('abnb-sell','2020-12-22','ABNB','sell',0.064387,11.13,
+        ['lot_id'=>'abnb-buy','allocation_estimated'=>true]),
+    event('abnb-price','2020-12-22','ABNB','price',0,0,['price'=>172.86]),
+];
+$closedAbnb=it_calculate($closedAbnbEvents)['holdings']['ABNB'];
+t($closedAbnb['closed']===true && $closedAbnb['simple_closed_trade']===true,
+    'ABNB with one full purchase and full sale is recognized as a simple closed position');
+t(abs($closedAbnb['realized']-1.13)<0.0000001 &&
+    abs($closedAbnb['closed_total_return_pct']-11.3)<0.0000001,
+    'ABNB closed position displays $1.13 realized profit and 11.30% lifetime return');
+t($closedAbnb['closed_holding_days']===3 &&
+    $closedAbnb['closed_tax_term']==='short-term' &&
+    $closedAbnb['closed_on']==='2020-12-22',
+    'ABNB closed position calculates historical 3-day short-term holding period');
+t($closedAbnb['allocation_estimated']===true &&
+    $closedAbnb['sale_allocation_ambiguous']===false,
+    'Provisional import provenance retained but a single eligible buy cannot have FIFO ambiguity');
+t($closedAbnb['xirr_pct']===null && $closedAbnb['value']===0.0,
+    'Closed position does not report an extreme annualized rate or positive market holding');
+t($closedAbnb['shares']===0.0 && $closedAbnb['basis']===0.0,
+    'Closed position retains no shares or remaining cost basis');
+$ambiguous=it_calculate([
+    event('earlier','2020-01-02','AMB','buy',1,10,['allocation_estimated'=>true]),
+    event('later','2020-01-03','AMB','buy',1,20,['allocation_estimated'=>true]),
+    event('partial','2020-01-04','AMB','sell',0.5,10,
+        ['lot_id'=>'earlier','allocation_estimated'=>true]),
+]);
+t($ambiguous['holdings']['AMB']['closed']===false &&
+    $ambiguous['holdings']['AMB']['sale_allocation_ambiguous']===true,
+    'Multiple eligible open purchase lots retain FIFO warning for a partial sale');
+$oneLotPartial=it_calculate([
+    event('one','2020-01-02','ONE','buy',2,20,['allocation_estimated'=>true]),
+    event('sold','2020-01-03','ONE','sell',1,15,
+        ['lot_id'=>'one','allocation_estimated'=>true]),
+]);
+t($oneLotPartial['holdings']['ONE']['closed']===false &&
+    $oneLotPartial['holdings']['ONE']['sale_allocation_ambiguous']===false,
+    'Partial sale of a single eligible purchase lot is not flagged as FIFO ambiguous');
+$closedIncome=it_calculate([
+    event('initial','2020-12-19','INCOME','buy',1,10),
+    event('cash','2020-12-20','INCOME','dividend',0,0.10),
+    event('exit','2020-12-22','INCOME','sell',1,11.13,['lot_id'=>'initial']),
+]);
+t(abs($closedIncome['holdings']['INCOME']['closed_total_return_pct']-12.3)<0.0000001,
+    'Closed lifetime return includes cash dividends without annualizing');
 
 echo "All synthetic ledger tests passed.\n";

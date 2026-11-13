@@ -3,10 +3,10 @@
  * File Name: ledger.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Deterministic split-aware per-purchase tax-lot and performance calculations.
- * Revision: 1.4.1
+ * Revision: 1.5.1
  * Created Date: 2026-10-29
- * Modified Date: 2026-10-30
- * Changelog: 1.4.1 - Mark stock receipt holding period unknown instead of using credit date as tax acquisition. 1.4.0 - Preserve unpriced share receipts with unknown tax basis and suppress unreliable gain calculations. 1.3.0 - Track stock-lending income and fee charges separately from dividends and basis. 1.2.0 - Date valuations at their observed price and withhold results if more recent account activity lacks a quote. 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
+ * Modified Date: 2026-11-13
+ * Changelog: 1.5.1 - Recalculate closed-position status, return on purchases, holding duration, and real versus only nominal FIFO ambiguity from existing ledger records. 1.4.1 - Mark stock receipt holding period unknown instead of using credit date as tax acquisition. 1.4.0 - Preserve unpriced share receipts with unknown tax basis and suppress unreliable gain calculations. 1.3.0 - Track stock-lending income and fee charges separately from dividends and basis. 1.2.0 - Date valuations at their observed price and withhold results if more recent account activity lacks a quote. 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
  */
 declare(strict_types=1);
 
@@ -130,14 +130,16 @@ function it_calculate(array $events): array
     usort($ordered,static fn($a,$b)=>strcmp((string)$a['date'],(string)$b['date'])
         ?: (($a['type']==='split'?0:1)<=>($b['type']==='split'?0:1))
         ?: ($a['_order']<=>$b['_order']));
-    $lots=[]; $sales=[]; $quotes=[]; $series=[]; $cash=[]; $divs=[]; $reinvested=[]; $purchases=[]; $proceeds=[]; $realized=[]; $otherIncome=[]; $fees=[]; $latestActivity=[]; $basisUncertain=[]; $estimated=[];
+    $lots=[]; $sales=[]; $quotes=[]; $series=[]; $cash=[]; $divs=[]; $reinvested=[]; $purchases=[]; $proceeds=[]; $realized=[]; $otherIncome=[]; $fees=[]; $latestActivity=[]; $basisUncertain=[]; $estimated=[]; $saleAllocationAmbiguous=[]; $purchaseLotCount=[]; $saleEventCount=[]; $firstCashPurchase=[]; $lastSaleDate=[];
     foreach ($ordered as $e) {
         $t=(string)$e['ticker']; $kind=(string)$e['type']; $q=(float)$e['quantity']; $a=(float)$e['amount'];
         $divs[$t]??=0.0; $reinvested[$t]??=0.0; $purchases[$t]??=0.0; $proceeds[$t]??=0.0; $realized[$t]??=0.0; $otherIncome[$t]??=0.0; $fees[$t]??=0.0; $cash[$t]??=[];
         if ($kind!=='price') $latestActivity[$t]=max($latestActivity[$t]??$e['date'],$e['date']);
         if(!empty($e['allocation_estimated']))$estimated[$t]=true;
         if ($kind==='buy' || $kind==='reinvest' || $kind==='receipt') {
-            if ($kind==='buy') { $purchases[$t]+=$a; $cash[$t][]=[$e['date'],-$a]; }
+            $purchaseLotCount[$t]=($purchaseLotCount[$t]??0)+1;
+            if ($kind==='buy') {
+                $firstCashPurchase[$t]??=$e['date']; $purchases[$t]+=$a; $cash[$t][]=[$e['date'],-$a]; }
             elseif($kind==='reinvest') $reinvested[$t]+=$a;
             $lots[$e['id']]=[
                 'id'=>$e['id'],'ticker'=>$t,'date'=>$e['date'],'source'=>$kind,
@@ -162,6 +164,18 @@ function it_calculate(array $events): array
             if (!isset($lots[$id]) || $lots[$id]['ticker']!==$t || $lots[$id]['shares']+0.000000001<$q) {
                 throw new InvalidArgumentException('Sale on '.$e['date'].' exceeds or does not match the selected lot.');
             }
+            // A sale has genuine lot-selection ambiguity only if more than one
+            // eligible purchase lot is open when it occurs. In particular a
+            // single buy followed by a full sale has no FIFO choice to make.
+            if (!empty($e['allocation_estimated'])) {
+                $eligibleOpenLots=0;
+                foreach ($lots as $candidate) {
+                    if ($candidate['ticker']===$t && $candidate['shares']>0.000000001) $eligibleOpenLots++;
+                }
+                if ($eligibleOpenLots>1) $saleAllocationAmbiguous[$t]=true;
+            }
+            $saleEventCount[$t]=($saleEventCount[$t]??0)+1;
+            $lastSaleDate[$t]=$e['date'];
             $before=$lots[$id]['shares'];
             $basis=$lots[$id]['remaining_cost']*($q/$before);
             if(!empty($lots[$id]['basis_unknown']))$basisUncertain[$t]=true;
@@ -230,16 +244,32 @@ function it_calculate(array $events): array
         $v=$qty<=0.000000001?0.0:($missingPrice?null:$qty*$price);
         if ($v!==null) $totalValue+=$v;
         $cashGain=($v===null||$unknownBasis)?null:$v+$proceeds[$t]+$divs[$t]+$otherIncome[$t]-$fees[$t]-$purchases[$t];
+        // Every view recomputes these values from the already-saved ledger.
+        // Nothing is written back to a user's imported records or draft.
+        $closed=$qty<=0.000000001 && $purchases[$t]>0 && ($saleEventCount[$t]??0)>0;
+        $simpleClosed=$closed && !$unknownBasis && ($purchaseLotCount[$t]??0)===1
+            && ($saleEventCount[$t]??0)===1 && isset($firstCashPurchase[$t],$lastSaleDate[$t]);
+        $closedHolding=$simpleClosed
+            ?it_holding_period($firstCashPurchase[$t],$lastSaleDate[$t]):null;
+        $lifetimeReturnPct=$closed && !$unknownBasis && $purchases[$t]>0 && $cashGain!==null
+            ?100*$cashGain/$purchases[$t]:null;
         $flows=$cash[$t];
         if ($v!==null && $qty>0) $flows[]=[$quotes[$t]['date'],$v];
         $holdings[$t]=[
             'ticker'=>$t,'shares'=>$qty,'basis'=>$unknownBasis?null:$basis,'price'=>$price,
             'basis_unknown'=>$unknownBasis,'allocation_estimated'=>!empty($estimated[$t]),
+            'sale_allocation_ambiguous'=>!empty($saleAllocationAmbiguous[$t]),
+            'closed'=>$closed,'simple_closed_trade'=>$simpleClosed,
+            'first_purchased_on'=>$firstCashPurchase[$t]??null,
+            'closed_on'=>$closed?$lastSaleDate[$t]:null,
+            'closed_holding_days'=>$closedHolding['days_held']??null,
+            'closed_tax_term'=>$closedHolding['tax_term']??null,
+            'closed_total_return_pct'=>$lifetimeReturnPct,
             'price_date'=>$quotes[$t]['date']??null,'valuation_stale_or_incomplete'=>$missingPrice,'value'=>$v,'unrealized'=>($v===null||$unknownBasis)?null:$v-$basis,
             'realized'=>$unknownBasis?null:$realized[$t],'dividends_cash'=>$divs[$t],'dividends_reinvested'=>$reinvested[$t],
             'other_income'=>$otherIncome[$t],'fees'=>$fees[$t],
             'purchases'=>$purchases[$t],'sales_proceeds'=>$proceeds[$t],
-            'lifetime_profit'=>$cashGain,'xirr_pct'=>($missingPrice||$unknownBasis||!$flows)?null:(($x=it_xirr($flows))===null?null:$x*100),
+            'lifetime_profit'=>$cashGain,'xirr_pct'=>($closed||$missingPrice||$unknownBasis||!$flows)?null:(($x=it_xirr($flows))===null?null:$x*100),
             'lots'=>$currentLots,
         ];
         foreach ($cash[$t] as $f) $allFlows[]=$f;

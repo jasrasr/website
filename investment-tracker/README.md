@@ -5,7 +5,7 @@ Description: Setup, data contract, calculation model, privacy and test procedure
 Revision: 1.5.2
 Created Date: 2026-10-29
 Modified Date: 2026-11-13
-Changelog: 1.5.2 - Pair Robinhood canceled trades with original fills, correcting Tesla balances and existing drafts. 1.5.0 - Full-report batch preview, one-click import, per-ticker exceptions and privacy-safe deduplication. 1.4.0 - Enable provisional Robinhood import without impossible manual share/lot attestations. 1.3.0 - Add private per-ticker report staging, editable sale-lot/split corrections, broker-share validation, and explicit atomic import. 1.2.1 - Clarify native Robinhood CSV upload and route misselected reports to the non-mutating analyzer. 1.2.0 - Reconcile NVDA demo using owner-authorized CSV and add preview-only Robinhood CSV parser. 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
+Changelog: 1.5.2 - Pair Robinhood canceled trades with original fills, correcting Tesla balances and existing drafts. 1.5.1 - Add closed-position summaries, realized returns and clear FIFO ambiguity. 1.5.0 - Full-report batch preview, one-click import, per-ticker exceptions and privacy-safe deduplication. 1.4.0 - Enable provisional Robinhood import without impossible manual share/lot attestations. 1.3.0 - Add private per-ticker report staging, editable sale-lot/split corrections, broker-share validation, and explicit atomic import. 1.2.1 - Clarify native Robinhood CSV upload and route misselected reports to the non-mutating analyzer. 1.2.0 - Reconcile NVDA demo using owner-authorized CSV and add preview-only Robinhood CSV parser. 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
 -->
 # Investment Tracker
 
@@ -37,6 +37,22 @@ The source CSV analyzer and staged importer now pair \`BCXL\` canceled buys and 
 The 2020 Tesla 5:1 and 2022 3:1 split-adjusted history now gives 0.012780 shares from the November 9, 2021 $5 purchase and 0.152855 shares from the March 27, 2025 $41.90 purchase. This totals 0.165635 shares with remaining cost $46.90 and average $283.15/share, matching the Robinhood screenshot. At its *screenshot* price of $389.87/share (not live), this is $64.58 market value, $17.68 unrealized gain, or +37.69%. Closed historical transactions still have provisional tax-lot attribution.
 
 Regression tests use **fictional** purchase quantities and execution amounts, with a canceled original, refund, corrected buy, 5:1 and 3:1 splits, canceled sale, old staged draft, and ambiguous/unmatched reversals. No personal Robinhood CSV is committed.
+
+## Closed positions and realized performance (v1.5.1)
+
+The dashboard's **By ticker** section now separates fully sold (closed) holdings from open positions. Closed holdings display a neutral **Closed** indicator, the final sale date, **$0 remaining market value**, realized profit or loss, and the lifetime return on original cash purchases; these do not show stale execution quotes as current prices and do not show an extrapolated money-weighted XIRR for short completed trades.
+
+For a **single purchase and a single full sale**, the dashboard also shows the holding duration and short-term/long-term category measured **at the sale date**, not today. Example with the owner's ABNB screenshots: buy 0.064387 shares on 2020-12-19 for $10.00, then sell 0.064387 shares on 2020-12-22 for $11.13, resulting in **0 shares, $1.13 realized gain, +11.30% total return, three calendar days held**.
+
+The existence of \`allocation_estimated=true\` on imported rows is not itself proof of an ambiguous FIFO election. A sale from the **only available purchase lot** has no competing lot allocation, so no generic FIFO warning is displayed. When multiple purchase lots were available at a provisional sale, the warning remains. The ledger retains estimated-import provenance for audit purposes regardless of how the warning is presented.
+
+For multi-purchase or dividend-paying closed positions, **lifetime return on purchases** equals (sale proceeds + cash dividends + other income − fees − external cash purchases) divided by external cash purchases. It is not time-weighted or annualized, and should not be interpreted as a broker-certified taxable return. For positions with unknown share-receipt basis, amounts requiring that basis remain unavailable.
+
+### Impact on existing imports and pending drafts
+
+**No user data migration or Robinhood re-upload is required** for this release. The server calculates the new closed-position and ambiguity fields whenever it replays existing ledger events for an authenticated page load. It does **not** rewrite or delete imported transaction records. Existing open reconciliation drafts remain unchanged; they are not imported automatically. Any ticker imported later from an existing draft also receives the same display logic. After the PR is merged and the Hostinger deployment is verified, a refresh will apply the new view to all eligible historical holdings.
+
+Validation: run \`php investment-tracker/tests/ledger.test.php\` and \`node investment-tracker/tests/closed-position-ui.test.cjs\`. Confirm ABNB no longer shows the generic FIFO warning, retains $1.13 realized profit, and does not foreground the old $172.86 execution-price observation.
 
 ## Import the full Robinhood report with one preview and one confirmation (v1.5)
 

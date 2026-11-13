@@ -5,7 +5,7 @@ Description: Cumulative release notes for private tax-lot investment dashboard.
 Revision: 1.5.2
 Created Date: 2026-10-29
 Modified Date: 2026-11-13
-Changelog: 1.5.2 - Recognize canceled brokerage trades, replacement purchases and staged Tesla histories. 1.5.0 - Atomic import-all workflow and exception queue for actual Robinhood export. 1.4.0 - Auto-import supported broker transactions with explicitly provisional FIFO, split inference and unknown REC basis. 1.3.0 - Add private staged Robinhood account import with per-ticker editable allocations and validation. 1.2.1 - Route unmodified Robinhood CSV to safe read-only preview when incorrectly selected for normalized import. 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
+Changelog: 1.5.2 - Recognize canceled brokerage trades, replacement purchases and staged Tesla histories. 1.5.1 - Add closed-position summaries, realized returns and clearer FIFO ambiguity. 1.5.0 - Atomic import-all workflow and exception queue for actual Robinhood export. 1.4.0 - Auto-import supported broker transactions with explicitly provisional FIFO, split inference and unknown REC basis. 1.3.0 - Add private staged Robinhood account import with per-ticker editable allocations and validation. 1.2.1 - Route unmodified Robinhood CSV to safe read-only preview when incorrectly selected for normalized import. 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
 -->
 # Investment Tracker Changelog
 
@@ -16,6 +16,15 @@ Changelog: 1.5.2 - Recognize canceled brokerage trades, replacement purchases an
 - Reconcile previously staged activity without reuploading or overwriting ledger data. Unmatched/ambiguous cancellations remain blocked.
 - Verify Tesla's 0.165635 open shares and $46.90 remaining basis after the 2020 5:1 and 2022 3:1 splits.
 - Add synthetic reversal, canceled-order and old-draft regression tests without user brokerage data.
+
+## 1.5.1 — 2026-11-13
+
+- Identified fully sold holdings from their existing transaction history and rendered **Closed**, historical exit date, realized gain/loss, and nonannualized return on original cash purchases.
+- For simple one-purchase/one-sale histories, exposed historical holding duration and short-term versus long-term classification at the sale date.
+- Removed the blanket estimated FIFO warning when there was only one eligible purchase lot at sale time; retained it for genuinely multiple eligible open lots.
+- Avoided displaying stale execution quotes as current values and suppressed misleading annualized XIRR on closed position cards.
+- Added backend and UI regression tests using a synthetic ABNB history: $10.00 in, $11.13 out, $1.13 realized, +11.30% over 3 days.
+- The calculations replay **already-imported personal records** on page load, without rewriting imported data or affecting uncommitted Robinhood draft corrections.
 
 ## 1.5.0 — 2026-10-30
 

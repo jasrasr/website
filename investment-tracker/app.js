@@ -5,7 +5,7 @@
  * Revision: 1.5.2
  * Created Date: 2026-10-29
  * Modified Date: 2026-11-13
- * Changelog: 1.5.2 - Explain matched Robinhood canceled orders and remove them from import review lots. 1.5.0 - Preview and import all eligible Robinhood symbols in one confirmed batch; show exceptions separately. 1.4.2 - Show unknown receipt basis and prevent false partial-sale tax calculations. 1.4.0 - Allow provisional Robinhood activity import without tax-lot attestation; display basis gaps prominently. 1.3.3 - Provide noncommitting FIFO allocation suggestions with explicit broker-verification warning. 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
+ * Changelog: 1.5.2 - Explain matched Robinhood cancellations and closed-position returns, and remove canceled orders from review lots. 1.5.0 - Preview and import all eligible Robinhood symbols in one confirmed batch; show exceptions separately. 1.4.2 - Show unknown receipt basis and prevent false partial-sale tax calculations. 1.4.0 - Allow provisional Robinhood activity import without tax-lot attestation; display basis gaps prominently. 1.3.3 - Provide noncommitting FIFO allocation suggestions with explicit broker-verification warning. 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
  */
 'use strict';
 const $ = s => document.querySelector(s);
@@ -155,11 +155,63 @@ function chooseLot(id) {
 function renderHoldings() {
  const host=$('#holdings');host.replaceChildren();
  Object.values(state.analysis.holdings).forEach(h=>{
-  const card=el('div','holding');const heading=el('div','holdingTop');heading.append(el('b',null,h.ticker),el('strong',colorize(h.unrealized),money(h.value)));card.append(heading);
-  card.append(el('p','subtle',qty(h.shares)+' shares · basis '+(h.basis_unknown?'UNKNOWN (received shares)':money(h.basis))+' · '+(h.price===null?'MISSING PRICE':'$'+qty(h.price)+'/share as of '+day(h.price_date))));
-  const stats=el('div','holdingStats');stats.append(el('span',colorize(h.unrealized),'Unrealized '+money(h.unrealized)),el('span',colorize(h.realized),'Realized '+money(h.realized)));
-  if(h.allocation_estimated || h.basis_unknown)card.append(el('p','rhWarning',h.basis_unknown?'UNKNOWN BASIS: share-credit tax cost and holding period cannot be calculated.':'ESTIMATED FIFO: stock sale lots have not been verified against the broker.'));
-  card.append(stats);card.append(el('p','subtle','Lifetime '+money(h.lifetime_profit)+' · Cash dividends '+money(h.dividends_cash)+' · Reinvested '+money(h.dividends_reinvested)+' · Stock-lending/other income '+money(h.other_income||0)+' · Fees '+money(h.fees||0)+' · XIRR '+percent(h.xirr_pct)));
+  const closed=!!h.closed;
+  const card=el('div','holding'+(closed?' holdingClosed':''));
+  const heading=el('div','holdingTop');
+  const label=el('div','holdingIdentity');
+  label.append(el('b',null,h.ticker));
+  if(closed)label.append(el('span','positionState','Closed'));
+  const mainAmount=closed?h.lifetime_profit:h.value;
+  heading.append(label,el('strong',colorize(mainAmount),
+   closed&&mainAmount>0?'+'+money(mainAmount):money(mainAmount)));
+  card.append(heading);
+  if(closed){
+   const dates=(h.first_purchased_on?'First purchase '+day(h.first_purchased_on)+' · ':'')+
+     'Fully sold '+(h.closed_on?day(h.closed_on):'date unknown')+' · 0 shares remaining';
+   card.append(el('p','subtle',dates));
+   if(h.simple_closed_trade && h.closed_holding_days!==null){
+    card.append(el('p','subtle','Held '+h.closed_holding_days+' calendar days · '+
+      (h.closed_tax_term==='long-term'?'Long-term':'Short-term')+' realized trade'));
+   }
+  } else {
+   card.append(el('p','subtle',qty(h.shares)+' shares · basis '+
+      (h.basis_unknown?'UNKNOWN (received shares)':money(h.basis))+' · '+
+      (h.price===null?'MISSING PRICE':'$'+qty(h.price)+'/share as of '+day(h.price_date))));
+  }
+  if(h.basis_unknown){
+   card.append(el('p','rhWarning','UNKNOWN BASIS: received shares have no verified tax basis or holding period. Gain and return cannot be calculated reliably.'));
+  } else if(h.allocation_estimated && h.sale_allocation_ambiguous){
+   card.append(el('p','rhWarning','ESTIMATED FIFO: multiple purchase lots were available when a sale occurred. The broker’s elected lots are not confirmed.'));
+  }
+  const stats=el('div','holdingStats');
+  if(closed){
+   stats.append(
+    el('span',colorize(h.realized),'Realized '+(h.realized>0?'+':'')+money(h.realized)),
+    el('span',colorize(h.closed_total_return_pct),
+       (h.simple_closed_trade?'Return on purchase ':'Lifetime return on purchases ')+
+       (h.closed_total_return_pct>0?'+':'')+percent(h.closed_total_return_pct))
+   );
+  }else{
+   stats.append(
+    el('span',colorize(h.unrealized),'Unrealized '+money(h.unrealized)),
+    el('span',colorize(h.realized),'Realized '+money(h.realized))
+   );
+  }
+  card.append(stats);
+  if(closed){
+   card.append(el('p','subtle','Total cash invested '+money(h.purchases)+
+     ' · Sale proceeds '+money(h.sales_proceeds)+
+     ' · Cash dividends '+money(h.dividends_cash)+
+     ' · Reinvested '+money(h.dividends_reinvested)+
+     ' · Stock-lending/other income '+money(h.other_income||0)+
+     ' · Fees '+money(h.fees||0)));
+   card.append(el('p','hint','Return is the lifetime gain divided by total cash purchases, not an annualized XIRR. No current quote is needed for a fully sold position.'));
+  }else{
+   card.append(el('p','subtle','Lifetime '+money(h.lifetime_profit)+
+    ' · Cash dividends '+money(h.dividends_cash)+' · Reinvested '+money(h.dividends_reinvested)+
+    ' · Stock-lending/other income '+money(h.other_income||0)+
+    ' · Fees '+money(h.fees||0)+' · XIRR '+percent(h.xirr_pct)));
+  }
   host.append(card);
  });
  if(!host.childElementCount)host.append(el('p','empty','No transactions recorded yet.'));
