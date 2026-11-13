@@ -161,7 +161,9 @@ function renderHoldings() {
   const label=el('div','holdingIdentity');
   label.append(el('b',null,h.ticker));
   if(closed)label.append(el('span','positionState','Closed'));
-  heading.append(label,el('strong',colorize(closed?h.lifetime_profit:h.unrealized),money(closed?h.lifetime_profit:h.value)));
+  const mainAmount=closed?h.lifetime_profit:h.value;
+  heading.append(label,el('strong',colorize(mainAmount),
+   closed&&mainAmount>0?'+'+money(mainAmount):money(mainAmount)));
   card.append(heading);
   if(closed){
    const dates=(h.first_purchased_on?'First purchase '+day(h.first_purchased_on)+' · ':'')+
@@ -184,9 +186,10 @@ function renderHoldings() {
   const stats=el('div','holdingStats');
   if(closed){
    stats.append(
-    el('span',colorize(h.realized),'Realized '+money(h.realized)),
+    el('span',colorize(h.realized),'Realized '+(h.realized>0?'+':'')+money(h.realized)),
     el('span',colorize(h.closed_total_return_pct),
-       (h.simple_closed_trade?'Return on purchase ':'Lifetime return on purchases ')+percent(h.closed_total_return_pct))
+       (h.simple_closed_trade?'Return on purchase ':'Lifetime return on purchases ')+
+       (h.closed_total_return_pct>0?'+':'')+percent(h.closed_total_return_pct))
    );
   }else{
    stats.append(
