@@ -53,7 +53,7 @@ const ctx={
   createTextNode:text=>({textContent:text})
  },
  WorkoutAdvanced:{metricValue:(entry,key)=>entry[key]??null},
- niceDay:x=>x,
+ niceDay:x=>new Date(x+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),
 };
 ctx.WorkoutTrends=vm.runInNewContext(helper+';WorkoutTrends;',ctx);
 vm.runInNewContext(source.slice(start,end),ctx);
