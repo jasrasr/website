@@ -3,10 +3,10 @@
  * File Name: ledger.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Deterministic split-aware per-purchase tax-lot and performance calculations.
- * Revision: 1.5.1
+ * Revision: 1.5.4
  * Created Date: 2026-10-29
  * Modified Date: 2026-11-13
- * Changelog: 1.5.1 - Recalculate closed-position status, return on purchases, holding duration, and real versus only nominal FIFO ambiguity from existing ledger records. 1.4.1 - Mark stock receipt holding period unknown instead of using credit date as tax acquisition. 1.4.0 - Preserve unpriced share receipts with unknown tax basis and suppress unreliable gain calculations. 1.3.0 - Track stock-lending income and fee charges separately from dividends and basis. 1.2.0 - Date valuations at their observed price and withhold results if more recent account activity lacks a quote. 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
+ * Changelog: 1.5.4 - Recognize a single Robinhood sell liquidating every available purchase lot, avoiding false FIFO warnings while retaining partial-sale uncertainty. 1.5.1 - Recalculate closed-position status, return on purchases, holding duration, and real versus only nominal FIFO ambiguity from existing ledger records. 1.4.1 - Mark stock receipt holding period unknown instead of using credit date as tax acquisition. 1.4.0 - Preserve unpriced share receipts with unknown tax basis and suppress unreliable gain calculations. 1.3.0 - Track stock-lending income and fee charges separately from dividends and basis. 1.2.0 - Date valuations at their observed price and withhold results if more recent account activity lacks a quote. 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
  */
 declare(strict_types=1);
 
@@ -120,6 +120,24 @@ function it_holding_period(string $acquiredDate, string $asOfDate): array
     ];
 }
 
+/**
+ * Robinhood's importer splits one broker SELL execution into per-purchase-lot
+ * ledger rows: rh + 22-hex source ID + 5-hex lot suffix. Group only these
+ * audited rows, never unrelated same-day sales or user-entered events.
+ * This is a read-only derived grouping; existing saved events are unchanged.
+ */
+function it_sale_execution_key(array $event): string
+{
+    $id=(string)($event['id']??'');
+    if(($event['type']??'')==='sell' &&
+       preg_match('/^rh([a-f0-9]{22})[a-f0-9]{5}$/D',$id,$match) &&
+       preg_match('/^Robinhood row [0-9]+ \(Sell\)/D',(string)($event['note']??''))) {
+        return 'rh|'.$event['ticker'].'|'.$event['date'].'|'.$match[1];
+    }
+    // Other sale events stand alone; never group independent orders by date.
+    return 'single|'.$id;
+}
+
 function it_calculate(array $events): array
 {
     $ordered=[];
@@ -130,6 +148,15 @@ function it_calculate(array $events): array
     usort($ordered,static fn($a,$b)=>strcmp((string)$a['date'],(string)$b['date'])
         ?: (($a['type']==='split'?0:1)<=>($b['type']==='split'?0:1))
         ?: ($a['_order']<=>$b['_order']));
+    // Calculate the total quantity of each original Robinhood SELL before
+    // replaying its individual lot allocations. A sale of ALL outstanding
+    // shares cannot have competing FIFO selections, regardless of lot count.
+    $saleExecutionShares=[];$saleExecutionFullExit=[];
+    foreach($ordered as $salePart) {
+        if(($salePart['type']??'')!=='sell' || empty($salePart['allocation_estimated']))continue;
+        $key=it_sale_execution_key($salePart);
+        $saleExecutionShares[$key]=($saleExecutionShares[$key]??0.0)+(float)$salePart['quantity'];
+    }
     $lots=[]; $sales=[]; $quotes=[]; $series=[]; $cash=[]; $divs=[]; $reinvested=[]; $purchases=[]; $proceeds=[]; $realized=[]; $otherIncome=[]; $fees=[]; $latestActivity=[]; $basisUncertain=[]; $estimated=[]; $saleAllocationAmbiguous=[]; $purchaseLotCount=[]; $saleEventCount=[]; $firstCashPurchase=[]; $lastSaleDate=[];
     foreach ($ordered as $e) {
         $t=(string)$e['ticker']; $kind=(string)$e['type']; $q=(float)$e['quantity']; $a=(float)$e['amount'];
@@ -164,15 +191,26 @@ function it_calculate(array $events): array
             if (!isset($lots[$id]) || $lots[$id]['ticker']!==$t || $lots[$id]['shares']+0.000000001<$q) {
                 throw new InvalidArgumentException('Sale on '.$e['date'].' exceeds or does not match the selected lot.');
             }
-            // A sale has genuine lot-selection ambiguity only if more than one
-            // eligible purchase lot is open when it occurs. In particular a
-            // single buy followed by a full sale has no FIFO choice to make.
+            // The importer splits one broker sell across multiple lot rows.
+            // ACB: one sale of 2 shares covers both 1-share purchase lots;
+            // although two lots were open, there is no alternative allocation.
+            // Evaluate a source sale ONCE before its first lot leg is applied.
             if (!empty($e['allocation_estimated'])) {
-                $eligibleOpenLots=0;
-                foreach ($lots as $candidate) {
-                    if ($candidate['ticker']===$t && $candidate['shares']>0.000000001) $eligibleOpenLots++;
+                $group=it_sale_execution_key($e);
+                $eligibleOpenLots=0;$availableShares=0.0;
+                foreach($lots as $candidate){
+                    if($candidate['ticker']===$t && $candidate['shares']>0.000000001){
+                        $eligibleOpenLots++;
+                        $availableShares+=$candidate['shares'];
+                    }
                 }
-                if ($eligibleOpenLots>1) $saleAllocationAmbiguous[$t]=true;
+                if(!array_key_exists($group,$saleExecutionFullExit)) {
+                    $soldShares=$saleExecutionShares[$group]??$q;
+                    $tolerance=max(0.0000000001,$availableShares*0.00000000001);
+                    $saleExecutionFullExit[$group]=abs($availableShares-$soldShares)<=$tolerance;
+                }
+                if($eligibleOpenLots>1 && !$saleExecutionFullExit[$group])
+                    $saleAllocationAmbiguous[$t]=true;
             }
             $saleEventCount[$t]=($saleEventCount[$t]??0)+1;
             $lastSaleDate[$t]=$e['date'];
