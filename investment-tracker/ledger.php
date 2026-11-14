@@ -2,11 +2,11 @@
 /**
  * File Name: ledger.php
  * Author: Jason Lamb (with help from ChatGPT)
- * Description: Deterministic split-aware per-purchase tax-lot and performance calculations.
- * Revision: 1.5.4
+ * Description: Deterministic split-aware performance and broker-reported tax-basis calculations.
+ * Revision: 1.6.0
  * Created Date: 2026-10-29
- * Modified Date: 2026-11-13
- * Changelog: 1.5.4 - Recognize a single Robinhood sell liquidating every available purchase lot, avoiding false FIFO warnings while retaining partial-sale uncertainty. 1.5.1 - Recalculate closed-position status, return on purchases, holding duration, and real versus only nominal FIFO ambiguity from existing ledger records. 1.4.1 - Mark stock receipt holding period unknown instead of using credit date as tax acquisition. 1.4.0 - Preserve unpriced share receipts with unknown tax basis and suppress unreliable gain calculations. 1.3.0 - Track stock-lending income and fee charges separately from dividends and basis. 1.2.0 - Date valuations at their observed price and withhold results if more recent account activity lacks a quote. 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
+ * Modified Date: 2026-11-14
+ * Changelog: 1.6.0 - Track performance basis separately from broker-reported tax basis, accept per-lot basis adjustments and confirmed sale allocations, and retain warnings for aggregate-only 1099-B data. 1.5.4 - Recognize a single Robinhood sell liquidating every available purchase lot, avoiding false FIFO warnings while retaining partial-sale uncertainty. 1.5.1 - Recalculate closed-position status, return on purchases, holding duration, and real versus only nominal FIFO ambiguity from existing ledger records. 1.4.1 - Mark stock receipt holding period unknown instead of using credit date as tax acquisition. 1.4.0 - Preserve unpriced share receipts with unknown tax basis and suppress unreliable gain calculations. 1.3.0 - Track stock-lending income and fee charges separately from dividends and basis. 1.2.0 - Date valuations at their observed price and withhold results if more recent account activity lacks a quote. 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
  */
 declare(strict_types=1);
 
@@ -22,7 +22,7 @@ function it_event(array $row): array
     if (!preg_match('/^[A-Z0-9.^-]{1,14}$/D', $ticker)) {
         throw new InvalidArgumentException('Invalid ticker symbol.');
     }
-    if (!in_array($type, ['buy','sell','dividend','reinvest','split','price','other_income','fee','receipt'], true)) {
+    if (!in_array($type, ['buy','sell','dividend','reinvest','split','price','other_income','fee','receipt','basis_adjustment','sale_basis'], true)) {
         throw new InvalidArgumentException('Select a supported transaction type.');
     }
     $qty = it_number($row['quantity'] ?? 0, 0, 1000000000);
@@ -33,22 +33,36 @@ function it_event(array $row): array
     if (in_array($type, ['buy','sell','reinvest'], true) && ($qty <= 0 || $amount <= 0)) {
         throw new InvalidArgumentException('This event needs positive shares and total dollars.');
     }
-    if (in_array($type,['dividend','other_income','fee'],true) && $amount <= 0) throw new InvalidArgumentException('Income and fee amounts must be positive.');
+    if (in_array($type,['dividend','other_income','fee','basis_adjustment'],true) && $amount <= 0) throw new InvalidArgumentException('Income, fee and basis-adjustment amounts must be positive.');
     if ($type === 'receipt' && $qty <= 0) throw new InvalidArgumentException('Received shares must be positive.');
     if ($type === 'price' && $price <= 0) throw new InvalidArgumentException('Market price must be positive.');
     if ($type === 'split' && ($num < 1 || $den < 1 || $num > 10000 || $den > 10000 || $num === $den)) {
         throw new InvalidArgumentException('Provide a non-1:1 split ratio (such as 10 and 1).');
     }
     $lot = trim((string)($row['lot_id'] ?? ''));
-    if ($type === 'sell' && $lot === '') throw new InvalidArgumentException('Assign a specific purchase lot before recording a sale.');
+    if (in_array($type,['sell','basis_adjustment'],true) && $lot === '') throw new InvalidArgumentException('Assign a specific purchase lot before recording this event.');
     if (strlen($lot) > 64) throw new InvalidArgumentException('Invalid lot reference.');
     $note = trim((string)($row['note'] ?? ''));
     if (strlen($note) > 240) throw new InvalidArgumentException('Notes must be 240 characters or fewer.');
+    $reportedBasis=null;
+    if($type==='sell' && array_key_exists('reported_cost_basis',$row) && $row['reported_cost_basis']!=='') {
+        $reportedBasis=it_number($row['reported_cost_basis'],0,100000000000);
+    }
+    $allocationConfirmed=in_array($type,['sell','sale_basis'],true) && in_array($row['allocation_confirmed']??false,[true,1,'1','true','on'],true);
+    $saleId=$type==='sale_basis'?trim((string)($row['sale_id']??'')):'';
+    if($type==='sale_basis' && !preg_match('/^(?:[a-f0-9]{24}|rh[a-f0-9]{27})$/D',$saleId))
+        throw new InvalidArgumentException('Select the existing sale row being corrected.');
+    $basisDirection=$type==='basis_adjustment'?strtolower(trim((string)($row['basis_direction']??''))):'';
+    if($type==='basis_adjustment' && !in_array($basisDirection,['increase','decrease'],true))
+        throw new InvalidArgumentException('Choose whether the tax-basis adjustment increases or decreases basis.');
     return [
         'id' => bin2hex(random_bytes(12)), 'date' => $date, 'ticker' => $ticker,
         'type' => $type, 'quantity' => $qty, 'amount' => $amount,
         'price' => $price, 'numerator' => $num, 'denominator' => $den,
-        'lot_id' => $type === 'sell' ? $lot : '', 'note' => $note,
+        'lot_id' => in_array($type,['sell','basis_adjustment'],true) ? $lot : '', 'note' => $note,
+        'reported_cost_basis'=>$reportedBasis,'allocation_confirmed'=>$allocationConfirmed,
+        'allocation_estimated'=>$type==='sell' && !$allocationConfirmed,
+        'basis_direction'=>$basisDirection,'sale_id'=>$saleId,
     ];
 }
 
@@ -140,9 +154,35 @@ function it_sale_execution_key(array $event): string
 
 function it_calculate(array $events): array
 {
+    // Immutable sale-basis records overlay an earlier sale during replay. This
+    // lets a later broker statement correct basis/confirmation without editing
+    // or deleting the imported source transaction.
+    $saleIndexes=[];$corrections=[];
+    foreach($events as $i=>$event) {
+        if(!is_array($event))throw new InvalidArgumentException('Invalid ledger record.');
+        if(($event['type']??'')==='sell')$saleIndexes[(string)($event['id']??'')]=$i;
+        elseif(($event['type']??'')==='sale_basis')$corrections[]=$event;
+    }
+    $corrected=[];
+    foreach($corrections as $correction) {
+        $target=(string)($correction['sale_id']??'');
+        if(!isset($saleIndexes[$target]))throw new InvalidArgumentException('Sale-basis correction target is missing.');
+        if(isset($corrected[$target]))throw new InvalidArgumentException('Void the earlier sale-basis correction before recording a replacement.');
+        $sale=$events[$saleIndexes[$target]];
+        if(($sale['ticker']??'')!==($correction['ticker']??'') || ($correction['date']??'')<($sale['date']??''))
+            throw new InvalidArgumentException('Sale-basis correction must match the ticker and occur no earlier than the sale.');
+        $correctionBasis=$correction['amount']??null;
+        if(!is_numeric($correctionBasis) || !is_finite((float)$correctionBasis) || (float)$correctionBasis<0 || (float)$correctionBasis>100000000000)
+            throw new InvalidArgumentException('Sale-basis correction must contain a finite nonnegative reported basis.');
+        $events[$saleIndexes[$target]]['reported_cost_basis']=(float)$correctionBasis;
+        $events[$saleIndexes[$target]]['allocation_confirmed']=!empty($correction['allocation_confirmed']);
+        if(empty($correction['allocation_confirmed']))
+            $events[$saleIndexes[$target]]['allocation_estimated']=true;
+        $corrected[$target]=true;
+    }
     $ordered=[];
     foreach ($events as $i=>$event) {
-        if (!is_array($event)) throw new InvalidArgumentException('Invalid ledger record.');
+        if(($event['type']??'')==='sale_basis')continue;
         $ordered[]=$event+['_order'=>$i];
     }
     usort($ordered,static fn($a,$b)=>strcmp((string)$a['date'],(string)$b['date'])
@@ -157,11 +197,14 @@ function it_calculate(array $events): array
         $key=it_sale_execution_key($salePart);
         $saleExecutionShares[$key]=($saleExecutionShares[$key]??0.0)+(float)$salePart['quantity'];
     }
-    $lots=[]; $sales=[]; $quotes=[]; $series=[]; $cash=[]; $divs=[]; $reinvested=[]; $purchases=[]; $proceeds=[]; $realized=[]; $otherIncome=[]; $fees=[]; $latestActivity=[]; $basisUncertain=[]; $estimated=[]; $saleAllocationAmbiguous=[]; $purchaseLotCount=[]; $saleEventCount=[]; $firstCashPurchase=[]; $lastSaleDate=[];
+    $lots=[]; $sales=[]; $quotes=[]; $series=[]; $cash=[]; $divs=[]; $reinvested=[]; $purchases=[]; $proceeds=[]; $realized=[]; $taxRealized=[]; $otherIncome=[]; $fees=[]; $latestActivity=[]; $basisUncertain=[]; $estimated=[]; $saleAllocationAmbiguous=[]; $taxBasisUncertain=[]; $brokerBasisReported=[]; $confirmedSaleAllocation=[]; $purchaseLotCount=[]; $saleEventCount=[]; $firstCashPurchase=[]; $lastSaleDate=[];
     foreach ($ordered as $e) {
         $t=(string)$e['ticker']; $kind=(string)$e['type']; $q=(float)$e['quantity']; $a=(float)$e['amount'];
-        $divs[$t]??=0.0; $reinvested[$t]??=0.0; $purchases[$t]??=0.0; $proceeds[$t]??=0.0; $realized[$t]??=0.0; $otherIncome[$t]??=0.0; $fees[$t]??=0.0; $cash[$t]??=[];
-        if ($kind!=='price') $latestActivity[$t]=max($latestActivity[$t]??$e['date'],$e['date']);
+        $divs[$t]??=0.0; $reinvested[$t]??=0.0; $purchases[$t]??=0.0; $proceeds[$t]??=0.0; $realized[$t]??=0.0; $taxRealized[$t]??=0.0; $otherIncome[$t]??=0.0; $fees[$t]??=0.0; $cash[$t]??=[];
+        // A tax-only basis adjustment does not change shares or market value,
+        // so it must not invalidate an otherwise current price observation.
+        if (!in_array($kind,['price','basis_adjustment'],true))
+            $latestActivity[$t]=max($latestActivity[$t]??$e['date'],$e['date']);
         if(!empty($e['allocation_estimated']))$estimated[$t]=true;
         if ($kind==='buy' || $kind==='reinvest' || $kind==='receipt') {
             $purchaseLotCount[$t]=($purchaseLotCount[$t]??0)+1;
@@ -171,6 +214,8 @@ function it_calculate(array $events): array
             $lots[$e['id']]=[
                 'id'=>$e['id'],'ticker'=>$t,'date'=>$e['date'],'source'=>$kind,
                 'original_shares'=>$q,'shares'=>$q,'original_cost'=>$a,'remaining_cost'=>$a,
+                'original_tax_cost'=>$kind==='receipt'?null:$a,'remaining_tax_cost'=>$kind==='receipt'?null:$a,
+                'tax_basis_adjustments'=>0.0,
                 'original_unit_cost'=>$kind==='receipt'?null:$a/$q,'split_factor'=>1.0,
                 'basis_unknown'=>$kind==='receipt',
                 'realized'=>0.0, 'sold_shares'=>0.0,
@@ -186,6 +231,17 @@ function it_calculate(array $events): array
                 }
             }
             unset($lot);
+        } elseif ($kind==='basis_adjustment') {
+            $id=(string)$e['lot_id'];
+            if(!isset($lots[$id]) || $lots[$id]['ticker']!==$t || !empty($lots[$id]['basis_unknown']) || $lots[$id]['shares']<=0.000000001)
+                throw new InvalidArgumentException('Tax-basis adjustment does not match a known-basis purchase lot.');
+            $change=$e['basis_direction']==='increase'?$a:-$a;
+            $next=(float)$lots[$id]['remaining_tax_cost']+$change;
+            if($next < -0.0000001)
+                throw new InvalidArgumentException('Tax-basis adjustment would reduce the selected lot below zero.');
+            $lots[$id]['remaining_tax_cost']=max(0,$next);
+            $lots[$id]['tax_basis_adjustments']+=$change;
+            $brokerBasisReported[$t]=true;
         } elseif ($kind==='sell') {
             $id=(string)$e['lot_id'];
             if (!isset($lots[$id]) || $lots[$id]['ticker']!==$t || $lots[$id]['shares']+0.000000001<$q) {
@@ -195,7 +251,8 @@ function it_calculate(array $events): array
             // ACB: one sale of 2 shares covers both 1-share purchase lots;
             // although two lots were open, there is no alternative allocation.
             // Evaluate a source sale ONCE before its first lot leg is applied.
-            if (!empty($e['allocation_estimated'])) {
+            $currentSaleAmbiguous=false;
+            if (!empty($e['allocation_estimated']) && empty($e['allocation_confirmed'])) {
                 $group=it_sale_execution_key($e);
                 $eligibleOpenLots=0;$availableShares=0.0;
                 foreach($lots as $candidate){
@@ -209,20 +266,37 @@ function it_calculate(array $events): array
                     $tolerance=max(0.0000000001,$availableShares*0.00000000001);
                     $saleExecutionFullExit[$group]=abs($availableShares-$soldShares)<=$tolerance;
                 }
-                if($eligibleOpenLots>1 && !$saleExecutionFullExit[$group])
+                if($eligibleOpenLots>1 && !$saleExecutionFullExit[$group]) {
                     $saleAllocationAmbiguous[$t]=true;
+                    $currentSaleAmbiguous=true;
+                }
             }
             $saleEventCount[$t]=($saleEventCount[$t]??0)+1;
             $lastSaleDate[$t]=$e['date'];
             $before=$lots[$id]['shares'];
             $basis=$lots[$id]['remaining_cost']*($q/$before);
+            $proportionalTaxBasis=!empty($lots[$id]['basis_unknown'])?null:
+                (float)$lots[$id]['remaining_tax_cost']*($q/$before);
+            $reportedTaxBasis=array_key_exists('reported_cost_basis',$e) && $e['reported_cost_basis']!==null
+                ?(float)$e['reported_cost_basis']:null;
+            if($reportedTaxBasis!==null && $currentSaleAmbiguous)$taxBasisUncertain[$t]=true;
+            $taxBasis=$reportedTaxBasis??$proportionalTaxBasis;
+            if($taxBasis!==null && $taxBasis>(float)$lots[$id]['remaining_tax_cost']+0.0000001)
+                throw new InvalidArgumentException('Reported sale basis exceeds the selected lot tax basis; record a basis increase first.');
             if(!empty($lots[$id]['basis_unknown']))$basisUncertain[$t]=true;
             $lots[$id]['shares']=max(0,$before-$q);
             $lots[$id]['remaining_cost']=max(0,$lots[$id]['remaining_cost']-$basis);
+            if($taxBasis!==null)$lots[$id]['remaining_tax_cost']=max(0,(float)$lots[$id]['remaining_tax_cost']-$taxBasis);
+            if($lots[$id]['shares']<=0.000000001)$lots[$id]['remaining_tax_cost']=0.0;
             $lots[$id]['sold_shares']+=$q;
             $gain=$a-$basis;
+            $taxGain=$taxBasis===null?null:$a-$taxBasis;
             $lots[$id]['realized']+=$gain; $realized[$t]+=$gain; $proceeds[$t]+=$a;
-            $sales[]=['id'=>$e['id'],'lot_id'=>$id,'ticker'=>$t,'date'=>$e['date'],'quantity'=>$q,'proceeds'=>$a,'cost'=>$basis,'gain'=>$gain];
+            if($taxGain!==null)$taxRealized[$t]+=$taxGain;
+            if($reportedTaxBasis!==null)$brokerBasisReported[$t]=true;
+            if(!empty($e['allocation_confirmed']))$confirmedSaleAllocation[$t]=true;
+            $sales[]=['id'=>$e['id'],'lot_id'=>$id,'lot_date'=>$lots[$id]['date'],'ticker'=>$t,'date'=>$e['date'],'quantity'=>$q,'proceeds'=>$a,'cost'=>$basis,'gain'=>$gain,
+                'tax_cost'=>$taxBasis,'tax_gain'=>$taxGain,'reported_cost_basis'=>$reportedTaxBasis,'allocation_confirmed'=>!empty($e['allocation_confirmed'])];
             $cash[$t][]=[$e['date'],$a];
         } elseif ($kind==='dividend') {
             $divs[$t]+=$a; $cash[$t][]=[$e['date'],$a];
@@ -249,19 +323,28 @@ function it_calculate(array $events): array
     foreach ($tickers as $t) {
         $price=$quotes[$t]['price']??null;
         $priceUsable=$price!==null && ($quotes[$t]['date']??'') >= ($latestActivity[$t]??'');
-        $qty=0.;$basis=0.;$currentLots=[];
+        $qty=0.;$basis=0.;$taxBasis=0.;$currentLots=[];
         $unknownBasis=!empty($basisUncertain[$t]);
         foreach ($lots as $lot) {
             if ($lot['ticker']!==$t) continue;
-            if ($lot['shares']>0.000000001) { $qty+=$lot['shares']; $basis+=$lot['remaining_cost']; if(!empty($lot['basis_unknown']))$unknownBasis=true; }
+            if ($lot['shares']>0.000000001) { $qty+=$lot['shares']; $basis+=$lot['remaining_cost']; $taxBasis+=(float)($lot['remaining_tax_cost']??0); if(!empty($lot['basis_unknown']))$unknownBasis=true; }
             $market=$priceUsable ? $lot['shares']*$price : null;
             $lot['market_value']=$market;
             $lot['unrealized']=($market===null||!empty($lot['basis_unknown']))?null:$market-$lot['remaining_cost'];
+            $lot['tax_unrealized']=($market===null||!empty($lot['basis_unknown']))?null:$market-(float)$lot['remaining_tax_cost'];
+            $lot['tax_basis_uncertain']=!empty($taxBasisUncertain[$t]);
             $lot['adjusted_acquired_shares']=$lot['original_shares']*$lot['split_factor'];
             $lot['adjusted_unit_cost']=$lot['adjusted_acquired_shares']>0
                 ?(!empty($lot['basis_unknown'])?null:$lot['original_cost']/$lot['adjusted_acquired_shares']):null;
             $lot['remaining_unit_cost']=$lot['shares']>0.000000001
                 ?(!empty($lot['basis_unknown'])?null:$lot['remaining_cost']/$lot['shares']):null;
+            $lot['remaining_tax_unit_cost']=$lot['shares']>0.000000001
+                ?(!empty($lot['basis_unknown'])?null:(float)$lot['remaining_tax_cost']/$lot['shares']):null;
+            if($lot['tax_basis_uncertain']) {
+                $lot['remaining_tax_cost']=null;
+                $lot['remaining_tax_unit_cost']=null;
+                $lot['tax_unrealized']=null;
+            }
             $lot['roi_pct']=($market!==null && empty($lot['basis_unknown']) && $lot['remaining_cost']>0)?100*($market/$lot['remaining_cost']-1):null;
             $holding=it_holding_period($lot['date'],gmdate('Y-m-d'));
             $age=$holding['days_held'];
@@ -294,9 +377,14 @@ function it_calculate(array $events): array
         $flows=$cash[$t];
         if ($v!==null && $qty>0) $flows[]=[$quotes[$t]['date'],$v];
         $holdings[$t]=[
-            'ticker'=>$t,'shares'=>$qty,'basis'=>$unknownBasis?null:$basis,'price'=>$price,
+            'ticker'=>$t,'shares'=>$qty,'basis'=>$unknownBasis?null:$basis,
+            'tax_basis'=>($unknownBasis||!empty($taxBasisUncertain[$t]))?null:$taxBasis,'price'=>$price,
             'basis_unknown'=>$unknownBasis,'allocation_estimated'=>!empty($estimated[$t]),
             'sale_allocation_ambiguous'=>!empty($saleAllocationAmbiguous[$t]),
+            'broker_basis_reported'=>!empty($brokerBasisReported[$t]),
+            'confirmed_sale_allocation'=>!empty($confirmedSaleAllocation[$t]),
+            'tax_basis_uncertain'=>!empty($taxBasisUncertain[$t]),
+            'tax_basis_differs'=>!$unknownBasis && (!empty($taxBasisUncertain[$t]) || abs($taxBasis-$basis)>0.0000001 || abs($taxRealized[$t]-$realized[$t])>0.0000001),
             'closed'=>$closed,'simple_closed_trade'=>$simpleClosed,
             'first_purchased_on'=>$firstCashPurchase[$t]??null,
             'closed_on'=>$closed?$lastSaleDate[$t]:null,
@@ -304,7 +392,9 @@ function it_calculate(array $events): array
             'closed_tax_term'=>$closedHolding['tax_term']??null,
             'closed_total_return_pct'=>$lifetimeReturnPct,
             'price_date'=>$quotes[$t]['date']??null,'valuation_stale_or_incomplete'=>$missingPrice,'value'=>$v,'unrealized'=>($v===null||$unknownBasis)?null:$v-$basis,
-            'realized'=>$unknownBasis?null:$realized[$t],'dividends_cash'=>$divs[$t],'dividends_reinvested'=>$reinvested[$t],
+            'realized'=>$unknownBasis?null:$realized[$t],'tax_realized'=>$unknownBasis?null:$taxRealized[$t],
+            'tax_unrealized'=>($v===null||$unknownBasis||!empty($taxBasisUncertain[$t]))?null:$v-$taxBasis,
+            'dividends_cash'=>$divs[$t],'dividends_reinvested'=>$reinvested[$t],
             'other_income'=>$otherIncome[$t],'fees'=>$fees[$t],
             'purchases'=>$purchases[$t],'sales_proceeds'=>$proceeds[$t],
             'lifetime_profit'=>$cashGain,'xirr_pct'=>($closed||$missingPrice||$unknownBasis||!$flows)?null:(($x=it_xirr($flows))===null?null:$x*100),
@@ -320,7 +410,7 @@ function it_calculate(array $events): array
             'market_value'=>count($missing)?null:$totalValue,
             'lifetime_profit'=>count($missing)||count($uncertain)?null:$totalValue+$net,
             'unrealized'=>count($missing)||count($uncertain)?null:array_sum(array_map(static fn($h)=>$h['unrealized']??0,$holdings)),
-            'realized'=>count($uncertain)?null:array_sum($realized),'dividends_cash'=>array_sum($divs),
+            'realized'=>count($uncertain)?null:array_sum($realized),'tax_realized'=>count($uncertain)?null:array_sum($taxRealized),'dividends_cash'=>array_sum($divs),
             'other_income'=>array_sum($otherIncome),'fees'=>array_sum($fees),
             'dividends_reinvested'=>array_sum($reinvested),
             'xirr_pct'=>count($missing)||count($uncertain)?null:(($x=it_xirr($allFlows))===null?null:$x*100)

@@ -2,10 +2,10 @@
  * File Name: closed-position-ui.test.cjs
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Check closed-position rendering from existing imported holdings without UI data mutation.
- * Revision: 1.1.0
+ * Revision: 1.2.0
  * Created Date: 2026-11-13
- * Modified Date: 2026-11-13
- * Changelog: 1.1.0 - Show ACB fully closed multi-lot loss without a false FIFO warning. 1.0.2 - Permit educational note mentioning XIRR but reject any displayed rate. 1.0.1 - Mock DOM childElementCount so empty-state logic matches browsers. 1.0.0 - ABNB closed trade ROI, date, no historical quote, no false FIFO warning.
+ * Modified Date: 2026-11-14
+ * Changelog: 1.2.0 - Distinguish confirmed detailed broker lots from aggregate-only reported basis. 1.1.0 - Show ACB fully closed multi-lot loss without a false FIFO warning. 1.0.2 - Permit educational note mentioning XIRR but reject any displayed rate. 1.0.1 - Mock DOM childElementCount so empty-state logic matches browsers. 1.0.0 - ABNB closed trade ROI, date, no historical quote, no false FIFO warning.
  */
 'use strict';
 const assert=require('node:assert/strict');
@@ -69,10 +69,26 @@ context.examples={
   sale_allocation_ambiguous:false,shares:1,basis:10,value:20,unrealized:10,
   realized:5,price:20,price_date:'2026-11-13',lifetime_profit:15,
   dividends_cash:0,dividends_reinvested:0,other_income:0,fees:0,xirr_pct:20
+ },
+ DETAIL:{
+  ticker:'DETAIL',closed:false,basis_unknown:false,allocation_estimated:true,
+  sale_allocation_ambiguous:false,confirmed_sale_allocation:true,
+  tax_basis_differs:true,shares:3,basis:50,tax_basis:49,value:60,
+  unrealized:10,tax_unrealized:11,realized:5,tax_realized:6,
+  price:20,price_date:'2026-11-13',lifetime_profit:25,
+  dividends_cash:0,dividends_reinvested:0,other_income:0,fees:0,xirr_pct:20
+ },
+ AGG:{
+  ticker:'AGG',closed:false,basis_unknown:false,allocation_estimated:true,
+  sale_allocation_ambiguous:true,confirmed_sale_allocation:false,
+  tax_basis_differs:true,tax_basis_uncertain:true,shares:1.5,basis:25,tax_basis:null,value:45,
+  unrealized:20,tax_unrealized:null,realized:3,tax_realized:3,
+  price:30,price_date:'2026-11-13',lifetime_profit:23,
+  dividends_cash:0,dividends_reinvested:0,other_income:0,fees:0,xirr_pct:20
  }
 };
 vm.runInContext('state.analysis.holdings=examples;renderHoldings()',context);
-assert.equal(target.children.length,4,'Four positions rendered');
+assert.equal(target.children.length,6,'Six positions rendered');
 const a=flatten(target.children[0]);
 assert.match(a,/Closed/,'Closed position label exists');
 assert.match(a,/\+\$1\.13/,'Profit displayed with positive sign');
@@ -91,4 +107,13 @@ assert.match(acb,/Lifetime return on purchases -57\.14%/,'ACB exact nonannualize
 assert.doesNotMatch(acb,/ESTIMATED FIFO/,'A full liquidation over two purchase lots must not display FIFO warning');
 const one=flatten(target.children[3]);
 assert.doesNotMatch(one,/ESTIMATED FIFO/,'A partial sale from only one purchase lot is unambiguous');
+const detail=flatten(target.children[4]);
+assert.match(detail,/BROKER-CONFIRMED LOT/,'Detailed statement lot confirmation is visible');
+assert.match(detail,/Broker-reported tax basis \$49\.00/,'Adjusted open tax basis is distinct from performance basis');
+assert.match(detail,/Tax realized \$6\.00/,'Broker-reported tax gain is displayed');
+assert.doesNotMatch(detail,/ESTIMATED FIFO/,'Confirmed detailed statement lot clears estimated FIFO warning');
+const aggregate=flatten(target.children[5]);
+assert.match(aggregate,/ESTIMATED FIFO/,'Aggregate-only basis keeps the lot-selection warning');
+assert.match(aggregate,/Tax realized \$3\.00/,'Aggregate reported basis may still display tax gain');
+assert.match(aggregate,/Remaining tax basis UNKNOWN/,'Aggregate-only basis does not claim remaining tax basis');
 console.log('PASS: Closed-position rendering, return and FIFO warning semantics.');

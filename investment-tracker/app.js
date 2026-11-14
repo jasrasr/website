@@ -1,11 +1,11 @@
 /*
  * File Name: app.js
  * Author: Jason Lamb (with help from ChatGPT)
- * Description: Accessible charts, per-lot history, sale simulation and private ledger controls.
- * Revision: 1.5.2
+ * Description: Accessible performance and broker-reported tax-basis views with private ledger controls.
+ * Revision: 1.6.0
  * Created Date: 2026-10-29
- * Modified Date: 2026-11-13
- * Changelog: 1.5.2 - Explain matched Robinhood cancellations and closed-position returns, and remove canceled orders from review lots. 1.5.0 - Preview and import all eligible Robinhood symbols in one confirmed batch; show exceptions separately. 1.4.2 - Show unknown receipt basis and prevent false partial-sale tax calculations. 1.4.0 - Allow provisional Robinhood activity import without tax-lot attestation; display basis gaps prominently. 1.3.3 - Provide noncommitting FIFO allocation suggestions with explicit broker-verification warning. 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
+ * Modified Date: 2026-11-14
+ * Changelog: 1.6.0 - Distinguish investment-performance basis from broker-reported tax basis and show confirmed versus unresolved sale-lot status. 1.5.2 - Explain matched Robinhood cancellations and closed-position returns, and remove canceled orders from review lots. 1.5.0 - Preview and import all eligible Robinhood symbols in one confirmed batch; show exceptions separately. 1.4.2 - Show unknown receipt basis and prevent false partial-sale tax calculations. 1.4.0 - Allow provisional Robinhood activity import without tax-lot attestation; display basis gaps prominently. 1.3.3 - Provide noncommitting FIFO allocation suggestions with explicit broker-verification warning. 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
  */
 'use strict';
 const $ = s => document.querySelector(s);
@@ -96,6 +96,7 @@ function selectOptions(node,arr,label,value,emptyLabel) {
  if(arr.some(a=>value(a)===prior))node.value=prior;
 }
 function openLots() {return Object.values(state.analysis.holdings).flatMap(h=>h.lots).filter(l=>l.shares>0.000000001);}
+function priorSales() {return state.analysis.sales||[];}
 function renderLots(ticker) {
  const lots=openLots().filter(l=>l.ticker===ticker).sort((a,b)=>a.date.localeCompare(b.date));
  const tbody=$('#lotsBody');tbody.replaceChildren();
@@ -110,7 +111,7 @@ function renderLots(ticker) {
   cell(tr,'×'+qty(l.split_factor),'numeric');
   cell(tr,qty(l.shares),'numeric');
   cell(tr,money(l.remaining_unit_cost),'numeric');
-  cell(tr,money(l.basis_unknown?null:l.remaining_cost),'numeric');
+  cell(tr,l.basis_unknown?'—':(money(l.remaining_cost)+(l.tax_basis_uncertain?' / tax basis unknown':Math.abs(Number(l.remaining_tax_cost)-Number(l.remaining_cost))>0.0000001?' / '+money(l.remaining_tax_cost):'')),'numeric');
   cell(tr,money(l.market_value),'numeric');
   cell(tr,money(l.unrealized),'numeric '+colorize(l.unrealized));
   cell(tr,percent(l.roi_pct),'numeric '+colorize(l.roi_pct));
@@ -122,6 +123,8 @@ function renderLots(ticker) {
  });
  const manualLots=openLots().filter(l=>l.ticker===$('#addEvent [name=ticker]').value.trim().toUpperCase());
  selectOptions($('#manualLot'),manualLots,l=>day(l.date)+' · '+qty(l.shares)+' shares · '+l.id.slice(0,6),l=>l.id,'Choose a purchase lot');
+ const manualSales=priorSales().filter(s=>s.ticker===$('#addEvent [name=ticker]').value.trim().toUpperCase());
+ selectOptions($('#manualSale'),manualSales,s=>day(s.date)+' sale · '+qty(s.quantity)+' shares · acquired '+day(s.lot_date)+' · basis '+money(s.tax_cost),s=>s.id,'Choose an existing sale');
  selectOptions($('#saleLot'),lots,l=>day(l.date)+' · '+qty(l.shares)+' shares · '+money(l.remaining_cost),l=>l.id,'Choose a purchase lot');
 }
 function chooseLot(id) {
@@ -137,6 +140,7 @@ function chooseLot(id) {
   ['Stock split factor','×'+qty(lot.split_factor)+' · '+qty(lot.adjusted_acquired_shares)+' total adjusted shares before sales'],
   ['Shares currently held',qty(lot.shares)],
   ['Adjusted unit basis',money(lot.remaining_unit_cost)+'/share · '+money(lot.remaining_cost)+' remaining total basis'],
+  ['Broker-reported tax basis',money(lot.remaining_tax_unit_cost)+'/share · '+money(lot.remaining_tax_cost)+' remaining tax basis'],
   ['Last observed share price',money(state.analysis.holdings[lot.ticker]?.price)+' · '+(state.analysis.holdings[lot.ticker]?.price_date||'not available')],
   ['Market value / unrealized gain',money(lot.market_value)+' / '+money(lot.unrealized)+' ('+percent(lot.roi_pct)+')'],
   ['Original holding duration',lot.held_for+' · '+lot.days_held+' days'],
@@ -174,14 +178,18 @@ function renderHoldings() {
       (h.closed_tax_term==='long-term'?'Long-term':'Short-term')+' realized trade'));
    }
   } else {
-   card.append(el('p','subtle',qty(h.shares)+' shares · basis '+
+   card.append(el('p','subtle',qty(h.shares)+' shares · performance basis '+
       (h.basis_unknown?'UNKNOWN (received shares)':money(h.basis))+' · '+
       (h.price===null?'MISSING PRICE':'$'+qty(h.price)+'/share as of '+day(h.price_date))));
+   if(h.tax_basis_uncertain)card.append(el('p','subtle','Remaining tax basis UNKNOWN until the broker’s sale lots are confirmed.'));
+   else if(h.tax_basis_differs)card.append(el('p','subtle','Broker-reported tax basis '+money(h.tax_basis)));
   }
   if(h.basis_unknown){
    card.append(el('p','rhWarning','UNKNOWN BASIS: received shares have no verified tax basis or holding period. Gain and return cannot be calculated reliably.'));
   } else if(h.allocation_estimated && h.sale_allocation_ambiguous){
    card.append(el('p','rhWarning','ESTIMATED FIFO: multiple purchase lots were available when a sale occurred. The broker’s elected lots are not confirmed.'));
+  } else if(h.confirmed_sale_allocation){
+   card.append(el('p','subtle','BROKER-CONFIRMED LOT: the recorded statement identifies the purchase lot used for the sale.'));
   }
   const stats=el('div','holdingStats');
   if(closed){
@@ -191,10 +199,15 @@ function renderHoldings() {
        (h.simple_closed_trade?'Return on purchase ':'Lifetime return on purchases ')+
        (h.closed_total_return_pct>0?'+':'')+percent(h.closed_total_return_pct))
    );
+   if(h.tax_basis_differs)stats.append(el('span',colorize(h.tax_realized),'Tax realized '+(h.tax_realized>0?'+':'')+money(h.tax_realized)));
   }else{
    stats.append(
     el('span',colorize(h.unrealized),'Unrealized '+money(h.unrealized)),
     el('span',colorize(h.realized),'Realized '+money(h.realized))
+   );
+   if(h.tax_basis_differs)stats.append(
+    el('span',colorize(h.tax_unrealized),'Tax unrealized '+money(h.tax_unrealized)),
+    el('span',colorize(h.tax_realized),'Tax realized '+money(h.tax_realized))
    );
   }
   card.append(stats);
@@ -277,6 +290,8 @@ function updateManualLots() {
  const ticker=$('#addEvent [name=ticker]').value.trim().toUpperCase();
  selectOptions($('#manualLot'),openLots().filter(l=>l.ticker===ticker),
   l=>day(l.date)+' · '+qty(l.shares)+' shares',l=>l.id,'Choose a purchase lot');
+ selectOptions($('#manualSale'),priorSales().filter(s=>s.ticker===ticker),
+  s=>day(s.date)+' sale · '+qty(s.quantity)+' shares · acquired '+day(s.lot_date)+' · basis '+money(s.tax_cost),s=>s.id,'Choose an existing sale');
 }
 function salePreview(event) {
  event.preventDefault();const lot=openLots().find(l=>l.id===$('#saleLot').value);
