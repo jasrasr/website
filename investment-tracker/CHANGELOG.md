@@ -2,12 +2,20 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release notes for private tax-lot investment dashboard.
-Revision: 1.5.3
+Revision: 1.5.4
 Created Date: 2026-10-29
 Modified Date: 2026-11-13
-Changelog: 1.5.3 - Normalize positive cashless REC share credits in existing private Robinhood drafts on read without guessing tax basis. 1.5.2 - Apply Copilot cancellation review safeguards. Recognize canceled brokerage trades, replacement purchases and staged Tesla histories. 1.5.1 - Add closed-position summaries, realized returns and clearer FIFO ambiguity. 1.5.0 - Atomic import-all workflow and exception queue for actual Robinhood export. 1.4.0 - Auto-import supported broker transactions with explicitly provisional FIFO, split inference and unknown REC basis. 1.3.0 - Add private staged Robinhood account import with per-ticker editable allocations and validation. 1.2.1 - Route unmodified Robinhood CSV to safe read-only preview when incorrectly selected for normalized import. 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
+Changelog: 1.5.4 - Hide false FIFO warning for complete source sale across multiple original purchase lots; preserve real partial-sale warnings. 1.5.3 - Normalize positive cashless REC share credits in existing private Robinhood drafts on read without guessing tax basis. 1.5.2 - Apply Copilot cancellation review safeguards. Recognize canceled brokerage trades, replacement purchases and staged Tesla histories. 1.5.1 - Add closed-position summaries, realized returns and clearer FIFO ambiguity. 1.5.0 - Atomic import-all workflow and exception queue for actual Robinhood export. 1.4.0 - Auto-import supported broker transactions with explicitly provisional FIFO, split inference and unknown REC basis. 1.3.0 - Add private staged Robinhood account import with per-ticker editable allocations and validation. 1.2.1 - Route unmodified Robinhood CSV to safe read-only preview when incorrectly selected for normalized import. 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
 -->
 # Investment Tracker Changelog
+
+## 1.5.4 — 2026-11-13
+
+- Fixed a false **Estimated FIFO** alert for already-imported ACB: two one-share purchases, one two-share liquidation, $10.71 invested, $4.59 proceeds, $6.12 realized loss and -57.14% return.
+- Grouped the per-lot ledger legs of a **single original Robinhood sale execution** using its stable source-event identifier, and suppressed allocation warnings only when that execution sold all shares outstanding at the time.
+- Retained the estimated-source audit marker and ambiguity warnings for genuinely partial or separate sell orders, including independent same-day orders and closed histories with earlier partial sales.
+- Recomputed holdings at page load without reimporting, modifying a staged report, changing stored personal data or revising realized P&L.
+- Added PHP ledger and UI regressions for ACB, ambiguous partial sales, two independent sales on the same day, and a single-purchase partial sale.
 
 ## 1.5.3 — 2026-11-13
 

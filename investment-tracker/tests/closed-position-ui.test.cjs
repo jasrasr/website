@@ -2,10 +2,10 @@
  * File Name: closed-position-ui.test.cjs
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Check closed-position rendering from existing imported holdings without UI data mutation.
- * Revision: 1.0.2
+ * Revision: 1.1.0
  * Created Date: 2026-11-13
  * Modified Date: 2026-11-13
- * Changelog: 1.0.2 - Permit educational note mentioning XIRR but reject any displayed rate. 1.0.1 - Mock DOM childElementCount so empty-state logic matches browsers. 1.0.0 - ABNB closed trade ROI, date, no historical quote, no false FIFO warning.
+ * Changelog: 1.1.0 - Show ACB fully closed multi-lot loss without a false FIFO warning. 1.0.2 - Permit educational note mentioning XIRR but reject any displayed rate. 1.0.1 - Mock DOM childElementCount so empty-state logic matches browsers. 1.0.0 - ABNB closed trade ROI, date, no historical quote, no false FIFO warning.
  */
 'use strict';
 const assert=require('node:assert/strict');
@@ -54,6 +54,16 @@ context.examples={
   price:66.6667,price_date:'2026-11-13',lifetime_profit:80,
   dividends_cash:0,dividends_reinvested:0,other_income:0,fees:0,xirr_pct:10
  },
+ ACB:{
+  ticker:'ACB',closed:true,simple_closed_trade:false,basis_unknown:false,
+  allocation_estimated:true,sale_allocation_ambiguous:false,
+  lifetime_profit:-6.12,realized:-6.12,closed_total_return_pct:-57.14285714285714,
+  first_purchased_on:'2019-08-06',closed_on:'2019-12-20',
+  closed_holding_days:null,closed_tax_term:null,
+  shares:0,basis:0,value:0,unrealized:0,price:2.3,price_date:'2019-12-20',
+  purchases:10.71,sales_proceeds:4.59,
+  dividends_cash:0,dividends_reinvested:0,other_income:0,fees:0,xirr_pct:null
+ },
  ONE:{
   ticker:'ONE',closed:false,basis_unknown:false,allocation_estimated:true,
   sale_allocation_ambiguous:false,shares:1,basis:10,value:20,unrealized:10,
@@ -62,7 +72,7 @@ context.examples={
  }
 };
 vm.runInContext('state.analysis.holdings=examples;renderHoldings()',context);
-assert.equal(target.children.length,3,'Three positions rendered');
+assert.equal(target.children.length,4,'Four positions rendered');
 const a=flatten(target.children[0]);
 assert.match(a,/Closed/,'Closed position label exists');
 assert.match(a,/\+\$1\.13/,'Profit displayed with positive sign');
@@ -74,6 +84,11 @@ assert.doesNotMatch(a,/172\.86/,'Historical quote is not displayed as current va
 assert.doesNotMatch(a,/XIRR\s+(?:—|[-+\d.,]+%)/,'Closed position avoids showing an annualized XIRR value');
 const amb=flatten(target.children[1]);
 assert.match(amb,/ESTIMATED FIFO/,'Genuinely ambiguous lot allocations remain flagged');
-const one=flatten(target.children[2]);
+const acb=flatten(target.children[2]);
+assert.match(acb,/Closed/,'ACB fully sold position displayed as closed');
+assert.match(acb,/Realized -\$6\.12/,'ACB $6.12 realized loss displayed');
+assert.match(acb,/Lifetime return on purchases -57\.14%/,'ACB exact nonannualized loss percentage shown');
+assert.doesNotMatch(acb,/ESTIMATED FIFO/,'A full liquidation over two purchase lots must not display FIFO warning');
+const one=flatten(target.children[3]);
 assert.doesNotMatch(one,/ESTIMATED FIFO/,'A partial sale from only one purchase lot is unambiguous');
 console.log('PASS: Closed-position rendering, return and FIFO warning semantics.');

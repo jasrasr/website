@@ -3,10 +3,10 @@
  * File Name: ledger.test.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Offline synthetic split, tax-lot and performance regression tests.
- * Revision: 1.5.1
+ * Revision: 1.5.4
  * Created Date: 2026-10-29
  * Modified Date: 2026-11-13
- * Changelog: 1.5.1 - Test ABNB fully closed position ROI, 3-day holding term and genuine versus generic FIFO ambiguity. 1.2.1 - Block valuations when a price observation precedes later purchases. 1.2.0 - Verify full NVDA CSV demo share reconciliation and prevent DRIP double counting. 1.1.0 - Original/adjusted quantity, proportional P&L and exact one-year tax boundary tests. 1.0.0 - Initial deterministic accounting tests.
+ * Changelog: 1.5.4 - Regression-test ACB full liquidation across two source sale legs, independent partial sales, and conservative manual events. 1.5.1 - Test ABNB fully closed position ROI, 3-day holding term and genuine versus generic FIFO ambiguity. 1.2.1 - Block valuations when a price observation precedes later purchases. 1.2.0 - Verify full NVDA CSV demo share reconciliation and prevent DRIP double counting. 1.1.0 - Original/adjusted quantity, proportional P&L and exact one-year tax boundary tests. 1.0.0 - Initial deterministic accounting tests.
  */
 declare(strict_types=1);
 require_once dirname(__DIR__).'/ledger.php';
@@ -185,6 +185,63 @@ $oneLotPartial=it_calculate([
 t($oneLotPartial['holdings']['ONE']['closed']===false &&
     $oneLotPartial['holdings']['ONE']['sale_allocation_ambiguous']===false,
     'Partial sale of a single eligible purchase lot is not flagged as FIFO ambiguous');
+// ACB from the brokerage screenshots: two buy lots, both shares disposed
+// in ONE Robinhood sell. The importer splits a single source sale into two
+// ledger sell legs. Despite two eligible lots, NO FIFO election is possible.
+$acbSource='rh'.str_repeat('a',22);
+$acb=it_calculate([
+ event('acb-aug','2019-08-06','ACB','buy',1,6.90,['allocation_estimated'=>true]),
+ event('acb-nov','2019-11-05','ACB','buy',1,3.81,['allocation_estimated'=>true]),
+ event($acbSource.'11111','2019-12-20','ACB','sell',1,2.295,
+   ['lot_id'=>'acb-aug','allocation_estimated'=>true,'note'=>'Robinhood row 123 (Sell)']),
+ event($acbSource.'22222','2019-12-20','ACB','sell',1,2.295,
+   ['lot_id'=>'acb-nov','allocation_estimated'=>true,'note'=>'Robinhood row 123 (Sell)']),
+]);
+$acbHolding=$acb['holdings']['ACB'];
+t($acbHolding['closed']===true && $acbHolding['shares']===0.0,
+  'ACB full liquidation leaves zero shares');
+t(abs($acbHolding['realized']+6.12)<0.000001 &&
+  abs($acbHolding['closed_total_return_pct']+57.14285714285714)<0.000001,
+  'ACB realized loss remains $6.12 and nonannualized return -57.14%');
+t($acbHolding['allocation_estimated']===true &&
+  $acbHolding['sale_allocation_ambiguous']===false,
+  'One Robinhood execution selling all two purchased lots has no FIFO ambiguity');
+t($acbHolding['simple_closed_trade']===false,
+  'Multiple purchases retain correct distinction from simple one-lot closed trades');
+// Two independent sales on the same day are NOT one source execution. Even
+// if the stock eventually closes, choice of which lot each sale came from
+// can change the gain allocated to individual transactions.
+$partialTwoSales=it_calculate([
+ event('lotA','2019-08-06','TWO','buy',1,6.90,['allocation_estimated'=>true]),
+ event('lotB','2019-11-05','TWO','buy',1,3.81,['allocation_estimated'=>true]),
+ event('rh'.str_repeat('b',22).'11111','2019-12-20','TWO','sell',1,2.30,
+   ['lot_id'=>'lotA','allocation_estimated'=>true,'note'=>'Robinhood row 123 (Sell)']),
+ event('rh'.str_repeat('c',22).'11111','2019-12-20','TWO','sell',1,2.29,
+   ['lot_id'=>'lotB','allocation_estimated'=>true,'note'=>'Robinhood row 124 (Sell)']),
+]);
+t($partialTwoSales['holdings']['TWO']['closed']===true &&
+  $partialTwoSales['holdings']['TWO']['sale_allocation_ambiguous']===true,
+  'Separate partial sales preserve tax-lot warning even after full liquidation');
+$partialMultipleLots=it_calculate([
+ event('lot1','2019-08-06','PART','buy',1,6.90,['allocation_estimated'=>true]),
+ event('lot2','2019-11-05','PART','buy',1,3.81,['allocation_estimated'=>true]),
+ event('rh'.str_repeat('d',22).'11111','2019-12-20','PART','sell',1,2.29,
+   ['lot_id'=>'lot1','allocation_estimated'=>true,'note'=>'Robinhood row 123 (Sell)']),
+]);
+t($partialMultipleLots['holdings']['PART']['closed']===false &&
+  $partialMultipleLots['holdings']['PART']['sale_allocation_ambiguous']===true,
+  'Selling only part of several eligible lots remains ambiguous');
+// Two sale events with arbitrary manual IDs must never be coalesced just
+// because their symbol and date match.
+$manualSameDay=it_calculate([
+ event('x','2019-08-06','MAN','buy',1,6.90),
+ event('y','2019-11-05','MAN','buy',1,3.81),
+ event('saleX','2019-12-20','MAN','sell',1,2.30,['lot_id'=>'x','allocation_estimated'=>true]),
+ event('saleY','2019-12-20','MAN','sell',1,2.29,['lot_id'=>'y','allocation_estimated'=>true]),
+]);
+t($manualSameDay['holdings']['MAN']['sale_allocation_ambiguous']===true,
+  'Independent manual sale entries on one date are never auto-grouped');
+
 $closedIncome=it_calculate([
     event('initial','2020-12-19','INCOME','buy',1,10),
     event('cash','2020-12-20','INCOME','dividend',0,0.10),
