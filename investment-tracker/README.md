@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, data contract, calculation model, privacy and test procedures.
-Revision: 1.5.3
+Revision: 1.5.4
 Created Date: 2026-10-29
 Modified Date: 2026-11-13
-Changelog: 1.5.3 - Normalize positive cashless REC share credits in existing private Robinhood drafts on read without guessing tax basis. 1.5.2 - Guard exact signed cancellations, cancelled DRIPs and zero-event batches. Pair Robinhood canceled trades with original fills, correcting Tesla balances and existing drafts. 1.5.1 - Add closed-position summaries, realized returns and clear FIFO ambiguity. 1.5.0 - Full-report batch preview, one-click import, per-ticker exceptions and privacy-safe deduplication. 1.4.0 - Enable provisional Robinhood import without impossible manual share/lot attestations. 1.3.0 - Add private per-ticker report staging, editable sale-lot/split corrections, broker-share validation, and explicit atomic import. 1.2.1 - Clarify native Robinhood CSV upload and route misselected reports to the non-mutating analyzer. 1.2.0 - Reconcile NVDA demo using owner-authorized CSV and add preview-only Robinhood CSV parser. 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
+Changelog: 1.5.4 - Suppress false FIFO warning on a complete brokerage sale across multiple purchase lots. 1.5.3 - Normalize positive cashless REC share credits in existing private Robinhood drafts on read without guessing tax basis. 1.5.2 - Guard exact signed cancellations, cancelled DRIPs and zero-event batches. Pair Robinhood canceled trades with original fills, correcting Tesla balances and existing drafts. 1.5.1 - Add closed-position summaries, realized returns and clear FIFO ambiguity. 1.5.0 - Full-report batch preview, one-click import, per-ticker exceptions and privacy-safe deduplication. 1.4.0 - Enable provisional Robinhood import without impossible manual share/lot attestations. 1.3.0 - Add private per-ticker report staging, editable sale-lot/split corrections, broker-share validation, and explicit atomic import. 1.2.1 - Clarify native Robinhood CSV upload and route misselected reports to the non-mutating analyzer. 1.2.0 - Reconcile NVDA demo using owner-authorized CSV and add preview-only Robinhood CSV parser. 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
 -->
 # Investment Tracker
 
@@ -25,6 +25,16 @@ The **NVIDIA screenshot demo** tab (`?demo=1`) is now reconstructed from the own
 - The activity report does **not** identify which tax lots the broker actually selected for the two earlier NVDA sales. Demo allocates historical sale proceeds to oldest acquisitions provisionally for illustration. An actual tax-lot statement should be used before using realized gains in tax decisions.
 
 All personal user imports must still be approved and reconciled. **None of the user's 1,479-row brokerage CSV is committed to public GitHub**; only the explicitly authorized, ticker-specific NVDA demonstration entries are in source.
+
+## No FIFO uncertainty for a complete multi-lot liquidation (v1.5.4)
+
+The ACB Robinhood source history has two buys (2019-08-06 one share at $6.90 and 2019-11-05 one share at $3.81) and one executed **two-share sale** (2019-12-20 for $4.59). Robinhood also displays two canceled sell orders. The importer correctly recorded a **$6.12 realized loss** and **-57.14% lifetime return** but had misleadingly warned that the sale's assumed FIFO tax lots were ambiguous.
+
+This fix considers **the whole underlying sale**, not merely each per-lot ledger row into which the importer allocates it. For recognized imported Robinhood sales, the source-derived event prefix identifies multiple lot legs belonging to a single original SELL transaction. If that single sale liquidated **all shares outstanding at that moment**, no lot-selection ambiguity exists: all available purchase lots necessarily sold. The dashboard no longer displays the generic estimated FIFO warning for this case. It preserves the original purchase dates, realized profit, closed status, and estimated allocation audit provenance.
+
+**Important:** Separate partial sell transactions remain potentially lot-ambiguous, even if their combined sales later fully close a position. The importer does not group unrelated trades simply because they have the same ticker and date. Manually entered partial-sale records still retain conservative warnings unless unambiguously identified. The dashboard does not claim broker-confirmed lot choices.
+
+The calculation is performed **on every authenticated ledger read**; no saved event, cost basis, existing import, stored private draft or Hostinger personal data is rewritten. Once deployed, refresh the dashboard. Regression tests use fictional imported-event IDs to verify ACB's complete multi-lot sale, plus separate partial and same-day manual transactions.
 
 ## Existing Robinhood reports with Apple REC share credits (v1.5.3)
 
