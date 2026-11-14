@@ -3,10 +3,10 @@
  * File Name: cancellations.test.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Synthetic brokerage cancellations must offset original trades before tax-lot reconstruction.
- * Revision: 1.0.1
+ * Revision: 1.1.0
  * Created Date: 2026-11-13
  * Modified Date: 2026-11-13
- * Changelog: 1.0.1 - Verify original CSV analyzer counts canceled trade pairs. 1.0.0 - Test exact BCXL, corrected buy, 5:1 and 3:1 splits, staged drafts, ambiguous and unmatched cancellation, and SCXL.
+ * Changelog: 1.1.0 - Cover wrong-sign cancellations, exact fractional shares, canceled DRIP cash restoration, saved drafts, and zero-event no-ops. 1.0.1 - Verify original CSV analyzer counts canceled trade pairs. 1.0.0 - Test exact BCXL, corrected buy, 5:1 and 3:1 splits, staged drafts, ambiguous and unmatched cancellation, and SCXL.
  */
 declare(strict_types=1);
 require_once dirname(__DIR__).'/robinhood.php';
@@ -21,7 +21,7 @@ function make_csv(array $rows):string {
     if (!$file)throw new RuntimeException('Unable to create fixture.');
     $f=fopen($file,'wb');
     fputcsv($f,['Activity Date','Process Date','Settle Date','Instrument','Description','Trans Code','Quantity','Price','Amount']);
-    foreach ($rows as $r)fputcsv($f,[$r[0],$r[0],$r[0],$r[1],'Synthetic test trade',$r[2],$r[3],$r[4],$r[5]]);
+    foreach ($rows as $r)fputcsv($f,[$r[0],$r[0],$r[0],$r[1],$r[6]??'Synthetic test trade',$r[2],$r[3],$r[4],$r[5]]);
     fclose($f);
     return $file;
 }
@@ -97,4 +97,131 @@ try {
  assertion($auto['ready'] && abs(it_calculate($auto['events'])['holdings']['REV']['realized']-55)<1e-7,
    'Actual later sell, not canceled sell, determines realized return.');
 } finally {unlink($path2);}
+
+/**
+ * Invalid cash-sign cancellations MUST NOT hide a purchase or sale.
+ * Matching opposite amounts without checking direction can erase genuine
+ * investment basis, even when amounts seem to offset.
+ */
+foreach ([
+ ['BADBUY','Buy','BCXL','0.10000000','$100.00','$100.00','($100.00)'],
+ ['BADSELL','Sell','SCXL','0.10000000','$100.00','($100.00)','$100.00'],
+] as [$ticker,$tradeCode,$cancelCode,$q,$price,$tradeAmount,$cancelAmount]) {
+ $file=make_csv([
+  ['1/2/2025',$ticker,$cancelCode,$q,$price,$cancelAmount],
+  ['1/2/2025',$ticker,$tradeCode,$q,$price,$tradeAmount],
+ ]);
+ try {
+  $parsed=it_rh_parse_csv($file);
+  assertion(($parsed['matched_canceled_trade_pairs']??0)===0,
+   $cancelCode.' with reversed cash direction never matches in original CSV analyzer.');
+  $stage=it_rc_stage($file);
+  assertion(count(array_filter($stage['rows'],fn($r)=>$r['kind']==='cancelled_trade'))===0,
+   $cancelCode.' with reversed cash direction never hides the original trade.');
+  assertion(it_rc_auto_review($stage,$ticker)['ready']===false,
+   $cancelCode.' wrong-sign pair cannot be imported provisionally.');
+ } finally {unlink($file);}
+}
+
+/**
+ * A 0.00000004-share mismatch MUST remain a blocker even though the old
+ * cancellation matcher accepted differences less than 0.00000005.
+ */
+$file=make_csv([
+ ['1/2/2025','NEAR','BCXL','0.10000004','$100.00','$10.00'],
+ ['1/2/2025','NEAR','Buy','0.10000000','$100.00','($10.00)'],
+]);
+try {
+ $parsed=it_rh_parse_csv($file);
+ assertion(($parsed['matched_canceled_trade_pairs']??0)===0,
+  'Fractional share near-match is not a canceled order in CSV preview.');
+ $stage=it_rc_stage($file);
+ assertion(!count(array_filter($stage['rows'],fn($r)=>$r['kind']==='cancelled_trade')),
+  'Fractional share mismatch retains original records in staged importer.');
+ assertion(it_rc_auto_review($stage,'NEAR')['ready']===false,
+  'Mismatched fractional shares block provisional import.');
+} finally {unlink($file);}
+
+/**
+ * Canceling only the DRIP purchase MUST restore its cash dividend. The
+ * dividend itself was earned even when the reinvestment order was canceled.
+ */
+$file=make_csv([
+ ['5/2/2025','DIV','BCXL','0.005','$80.00','$0.40'],
+ ['5/2/2025','DIV','Buy','0.005','$80.00','($0.40)','Dividend Reinvestment'],
+ ['5/1/2025','DIV','CDIV','','','$0.40','Cash Dividend'],
+ ['4/1/2025','DIV','Buy','1','$10.00','($10.00)'],
+]);
+try {
+ $parsed=it_rh_parse_csv($file);
+ assertion(($parsed['matched_canceled_trade_pairs']??0)===1,
+  'Original CSV analyzer recognizes canceled dividend-reinvestment buy.');
+ $stage=it_rc_stage($file);
+ assertion(count(array_filter($stage['rows'],fn($r)=>$r['kind']==='cancelled_trade'))===2,
+  'Reinvested buy and its reversal are both excluded.');
+ $cash=array_values(array_filter($stage['rows'],fn($r)=>$r['code']==='CDIV'));
+ assertion(count($cash)===1 && $cash[0]['kind']==='dividend' &&
+  abs($cash[0]['amount']-0.4)<1e-12,
+  'Earned dividend restored from paired credit after cancellation.');
+ $again=it_rc_reconcile_cancellations($stage['rows']);
+ assertion($again===$stage['rows'],'Cancellation normalization is idempotent for staged drafts.');
+ $auto=it_rc_auto_review($stage,'DIV');
+ assertion($auto['ready']===true,'Canceled DRIP no longer blocks valid dividend stock.');
+ $holding=it_calculate($auto['events'])['holdings']['DIV'];
+ assertion(abs($holding['shares']-1.0)<1e-12 &&
+  abs($holding['dividends_cash']-0.4)<1e-10 &&
+  abs($holding['dividends_reinvested'])<1e-10 &&
+  abs($holding['basis']-10)<1e-10,
+  'Cash dividend counted exactly once; canceled DRIP creates no shares or basis.');
+ // Saved draft from the previous importer: credit was already paired and
+ // the canceled purchase had not been classified at first staging.
+ $old=$stage;
+ foreach($old['rows'] as &$row) {
+  if($row['code']==='CDIV') {
+   $row['kind']='paired_credit';
+   $drip=array_values(array_filter($stage['rows'],
+      fn($x)=>$x['code']==='Buy' && str_contains($x['description'],'Dividend Reinvestment')))[0];
+   $row['paired_to']=$drip['id'];
+  } else if($row['code']==='BCXL') {
+   $row['kind']='unsupported';unset($row['cancels']);
+  } else if($row['code']==='Buy' && str_contains($row['description'],'Dividend Reinvestment')) {
+   $row['kind']='reinvest';unset($row['cancelled_by']);
+  }
+ }
+ unset($row);
+ $restored=it_rc_auto_review($old,'DIV');
+ assertion($restored['ready']===true &&
+   abs(it_calculate($restored['events'])['holdings']['DIV']['dividends_cash']-0.4)<1e-10,
+  'Existing private draft also restores the original earned dividend.');
+ // If the dividend is separately reversed, it must NOT be counted as income:
+ // absent a known reversal code the ticker is deliberately rejected.
+ $reversed=$old;
+ $reverse=array_values(array_filter($reversed['rows'],fn($r)=>$r['code']==='CDIV'))[0];
+ $reverse['id']='negative-cdiv-reversal';$reverse['kind']='dividend';$reverse['amount']=-0.4;
+ $reversed['rows'][]=$reverse;
+ assertion(it_rc_auto_review($reversed,'DIV')['ready']===false,
+  'Separately reversed dividend blocks import rather than counting false income.');
+} finally {unlink($file);}
+
+/**
+ * A report consisting entirely of canceled orders has zero portfolio events.
+ * Report as a no-op, not as an eligible stock with a misleading green button.
+ */
+$file=make_csv([
+ ['2/1/2025','EMPTY','BCXL','0.25','$20.00','$5.00'],
+ ['2/1/2025','EMPTY','Buy','0.25','$20.00','($5.00)'],
+]);
+try {
+ $stage=it_rc_stage($file);
+ $auto=it_rc_auto_review($stage,'EMPTY');
+ assertion($auto['ready']===false && ($auto['noop']??false)===true &&
+  count($auto['issues'])>0,
+  'Canceled-only ticker is explicitly a no-op.');
+ $plan=it_rc_batch_preview($stage,[]);
+ assertion($plan['ready']===false && $plan['import_count']===0 &&
+  count($plan['eligible'])===0 && count($plan['skipped'])===1 &&
+  count($plan['blocked'])===0,
+  'Empty canceled-only import batch cannot be marked import-ready.');
+} finally {unlink($file);}
+
 echo "All brokerage cancellation reconciliation tests passed.\n";
