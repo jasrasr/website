@@ -3,10 +3,10 @@
  * File Name: reconciliation.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Source-preserving Robinhood import staging, per-ticker corrections and safe ledger conversion.
- * Revision: 1.3.2
+ * Revision: 1.3.3
  * Created Date: 2026-10-30
  * Modified Date: 2026-11-13
- * Changelog: 1.3.2 - Reconcile BCXL/SCXL order reversals by exact source trade before lot replay, including existing staged reports. 1.3.1 - Make batch preview self-contained for CLI regression and safe combined-ledger validation. 1.3.0 - Add full-report eligibility preview, exception queue and atomic batch preparation. 1.2.0 - Suggest split ratios and FIFO from source records, preserving REC credits as unknown-basis receipts and estimated status. 1.1.1 - Preserve report end date for share confirmation and reject fractional split ratios. 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
+ * Changelog: 1.3.3 - Require signed exact cancellation matches, preserve cash dividends on canceled DRIPs, and skip zero-event batches. 1.3.2 - Reconcile BCXL/SCXL order reversals by exact source trade before lot replay, including existing staged reports. 1.3.1 - Make batch preview self-contained for CLI regression and safe combined-ledger validation. 1.3.0 - Add full-report eligibility preview, exception queue and atomic batch preparation. 1.2.0 - Suggest split ratios and FIFO from source records, preserving REC credits as unknown-basis receipts and estimated status. 1.1.1 - Preserve report end date for share confirmation and reject fractional split ratios. 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
  */
 declare(strict_types=1);
 
@@ -127,23 +127,30 @@ function it_rc_reconcile_cancellations(array $rows): array
         $code=(string)($cancel['code']??'');
         if(!in_array($code,['BCXL','SCXL'],true) ||
             ($cancel['kind']??'unsupported')==='cancelled_trade') continue;
-        $targetKind=$code==='BCXL'?'buy':'sell';
+        $buyCancellation=$code==='BCXL';
         $q=$cancel['quantity']??null;
         $amount=$cancel['amount']??null;
         $price=$cancel['price']??null;
+        // BCXL must REFUND a buy; SCXL must REVERSE positive sale proceeds.
+        // Equal-and-opposite cash alone does not prove the correct direction.
         if(!is_numeric($q)||!is_numeric($amount)||!is_numeric($price)||
-            (float)$q<=0 || (float)$price<=0 || (float)$amount===0.0) {
-            $rows[$idx]['cancel_issue']='Reversal missing share quantity, execution price, or cash amount.';
+            (float)$q<=0 || (float)$price<=0 ||
+            ($buyCancellation?(float)$amount<=0:(float)$amount>=0)) {
+            $rows[$idx]['cancel_issue']='Reversal has invalid quantity, price or cash direction.';
             continue;
         }
         $candidates=[];
         foreach($rows as $j=>$original) {
-            if($idx===$j || isset($used[$j]) || ($original['kind']??'')!==$targetKind ||
+            $kind=$original['kind']??'';
+            if($idx===$j || isset($used[$j]) ||
+                !($buyCancellation?in_array($kind,['buy','reinvest'],true):$kind==='sell') ||
                 ($original['ticker']??'')!==$cancel['ticker'] ||
                 ($original['date']??'')!==$cancel['date']) continue;
-            if(abs((float)($original['quantity']??0)-(float)$q)>0.00000005 ||
-                abs((float)($original['price']??0)-(float)$price)>0.000001 ||
-                abs((float)($original['amount']??0)+(float)$amount)>0.000001)continue;
+            // These are raw CSV quantities, not calculated split-adjusted
+            // holdings. Never apply an epsilon that could erase real shares.
+            if((float)($original['quantity']??0)!==(float)$q ||
+                (float)($original['price']??0)!==(float)$price ||
+                (float)($original['amount']??0)!==-(float)$amount)continue;
             $candidates[]=$j;
         }
         if(count($candidates)!==1) {
@@ -152,7 +159,35 @@ function it_rc_reconcile_cancellations(array $rows): array
                 :'Multiple possible canceled trades; cannot choose safely.';
             continue;
         }
-        $originalIdx=$candidates[0];$used[$originalIdx]=true;
+        $originalIdx=$candidates[0];
+        $original=$rows[$originalIdx];
+        if(($original['kind']??'')==='reinvest') {
+            // The earlier DRIP matching pass turned the cash dividend into
+            // paired_credit. Canceling the DRIP BUY does not cancel that
+            // dividend: restore the original positive dividend payment.
+            // Any separately reversed dividend still fails validation rather
+            // than producing a misleading net-positive dividend.
+            $creditMatches=[];
+            foreach($rows as $k=>$credit) {
+                if(($credit['kind']??'')==='paired_credit' &&
+                    ($credit['paired_to']??'')===$original['id'])
+                    $creditMatches[]=$k;
+            }
+            if(count($creditMatches)>1) {
+                $rows[$idx]['cancel_issue']='Multiple dividend credits for canceled reinvestment.';
+                continue;
+            }
+            if(count($creditMatches)===1) {
+                $k=$creditMatches[0];
+                if(($rows[$k]['code']??'')!=='CDIV' || (float)($rows[$k]['amount']??0)<=0) {
+                    $rows[$idx]['cancel_issue']='Invalid dividend credit linked to canceled reinvestment.';
+                    continue;
+                }
+                $rows[$k]['kind']='dividend';
+                unset($rows[$k]['paired_to']);
+            }
+        }
+        $used[$originalIdx]=true;
         $rows[$originalIdx]['kind']='cancelled_trade';
         $rows[$originalIdx]['cancelled_by']=$cancel['id'];
         $rows[$idx]['kind']='cancelled_trade';
@@ -160,6 +195,7 @@ function it_rc_reconcile_cancellations(array $rows): array
     }
     return $rows;
 }
+
 
 function it_rc_stage(string $uploadedFile): array
 {
@@ -349,6 +385,7 @@ function it_rc_build(array $stage,string $ticker): array
             $events[]=it_rc_event($r,'fee',0,abs((float)$r['amount']));
         }
     }
+    if(!$events)$issues[]='No importable investment activity remains after excluded cancellations.';
     if(abs($balance-(float)$review['expected_shares'])>0.000001) {
         $issues[]='Calculated remaining shares '.number_format($balance,8,'.','').
             ' do not match verified broker shares '.number_format((float)$review['expected_shares'],8,'.','').'.';
@@ -434,6 +471,11 @@ function it_rc_auto_review(array $stage, string $ticker): array
         'estimated'=>true,'source_confirmed'=>false,
     ]);
     $out=it_rc_build($new,$ticker);
+    if(!$out['events'])return [
+        'ready'=>false,'noop'=>true,'ticker'=>$ticker,
+        'issues'=>['All source transactions canceled or excluded; nothing to import.'],
+        'warnings'=>$warnings,'computed_shares'=>$balance,
+    ];
     if(!$out['ready'])return ['ready'=>false,'ticker'=>$ticker,'issues'=>$out['issues'],'warnings'=>$warnings,'computed_shares'=>$balance];
     return ['ready'=>true,'stage'=>$new,'ticker'=>$ticker,'warnings'=>$warnings,'events'=>$out['events'],
         'computed_shares'=>$balance,'estimated'=>true,'issues'=>[]];
@@ -466,11 +508,19 @@ function it_rc_batch_preview(array $stage,array $existing): array
             $blocked[]=['ticker'=>$ticker,'reason'=>'Source rows cannot be reconstructed: '.$e->getMessage()];
             continue;
         }
+        if (!empty($auto['noop'])) {
+            $skipped[]=['ticker'=>$ticker,'reason'=>'Canceled activity only; no ledger events to import.'];
+            continue;
+        }
         if (!$auto['ready']) {
             $blocked[]=['ticker'=>$ticker,'reason'=>implode('; ',array_slice($auto['issues']??[],0,3))];
             continue;
         }
         $events=$auto['events'];
+        if(!$events) {
+            $skipped[]=['ticker'=>$ticker,'reason'=>'No importable ledger events.'];
+            continue;
+        }
         $all=array_merge($all,$events);
         $eligible[]=[
             'ticker'=>$ticker,'events'=>count($events),
@@ -501,7 +551,7 @@ function it_rc_batch_preview(array $stage,array $existing): array
         }
     }
     return [
-        'ready'=>count($eligible)>0,'eligible'=>$eligible,'blocked'=>$blocked,
+        'ready'=>count($eligible)>0 && count($all)>0,'eligible'=>$eligible,'blocked'=>$blocked,
         'skipped'=>$skipped,'events'=>$all,'import_count'=>count($all),'estimated'=>true,
     ];
 }
