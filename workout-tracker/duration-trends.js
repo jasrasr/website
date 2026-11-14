@@ -2,10 +2,10 @@
 File Name: duration-trends.js
 Author: Jason Lamb (with help from ChatGPT)
 Description: Exact workout mm:ss presentation, per-workout trends and running totals.
-Revision: 1.0.0
+Revision: 1.1.0
 Created Date: 2026-10-31
 Modified Date: 2026-10-31
-Changelog: 1.0.0 - Combine minutes and seconds, chart additive totals without summing rate-based metrics.
+Changelog: 1.1.0 - Select readable distinct date ticks without collisions or altering workout values. 1.0.0 - Combine minutes and seconds, chart additive totals without summing rate-based metrics.
 */
 'use strict';
 const WorkoutTrends = (() => {
@@ -60,5 +60,47 @@ const WorkoutTrends = (() => {
   });
   return {points,additive:additive.has(key),total:points.length?sum:null};
  }
- return {totalMinutes,formatDuration,measurement,chartSeries,isAdditive:key=>additive.has(key)};
+
+ /**
+  * Short, timezone-safe tick labels: every visible mark denotes an actual
+  * logged date rather than a fabricated evenly spaced calendar day.
+  * The full first/last dates remain available in the caption.
+  */
+ function shortChartDate(iso){
+  if(typeof iso!=='string'||!/^20\d\d-\d\d-\d\d$/.test(iso))return '';
+  const date=new Date(iso+'T12:00:00Z');
+  if(!Number.isFinite(date.getTime()))return '';
+  return date.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
+ }
+ /**
+  * Show as many actual distinct workout dates as fit without text collisions.
+  * First and last dates are reserved; interim ticks are added only when their
+  * rendered label does not overlap any other selected date label.
+  * Positions are calculated by the chart and remain aligned to the dots.
+  */
+ function chartDateTicks(points,positions,measureWidth){
+  if(!Array.isArray(points)||!Array.isArray(positions)||points.length!==positions.length)
+   return [];
+  const candidates=[];
+  const dates=new Set();
+  points.forEach((point,index)=>{
+   const date=point?.date,label=shortChartDate(date);
+   if(!label||dates.has(date)||!Number.isFinite(positions[index]))return;
+   dates.add(date);
+   const width=Math.max(0,Number(measureWidth(label))||0);
+   candidates.push({index,date,label,x:positions[index],start:positions[index]-width/2,end:positions[index]+width/2});
+  });
+  if(!candidates.length)return [];
+  const selected=[candidates[0]];
+  const last=candidates.at(-1);
+  const gap=9;
+  const fits=candidate=>selected.every(current=>
+   candidate.end+gap<=current.start||current.end+gap<=candidate.start);
+  if(last!==selected[0]&&fits(last))selected.push(last);
+  for(const candidate of candidates.slice(1,-1)){
+   if(fits(candidate))selected.push(candidate);
+  }
+  return selected.sort((a,b)=>a.index-b.index);
+ }
+ return {totalMinutes,formatDuration,measurement,chartSeries,shortChartDate,chartDateTicks,isAdditive:key=>additive.has(key)};
 })();
