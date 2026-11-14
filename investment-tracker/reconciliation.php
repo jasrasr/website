@@ -3,10 +3,10 @@
  * File Name: reconciliation.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Source-preserving Robinhood import staging, per-ticker corrections and safe ledger conversion.
- * Revision: 1.3.3
+ * Revision: 1.3.4
  * Created Date: 2026-10-30
  * Modified Date: 2026-11-13
- * Changelog: 1.3.3 - Require signed exact cancellation matches, preserve cash dividends on canceled DRIPs, and skip zero-event batches. 1.3.2 - Reconcile BCXL/SCXL order reversals by exact source trade before lot replay, including existing staged reports. 1.3.1 - Make batch preview self-contained for CLI regression and safe combined-ledger validation. 1.3.0 - Add full-report eligibility preview, exception queue and atomic batch preparation. 1.2.0 - Suggest split ratios and FIFO from source records, preserving REC credits as unknown-basis receipts and estimated status. 1.1.1 - Preserve report end date for share confirmation and reject fractional split ratios. 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
+ * Changelog: 1.3.4 - Restore positive cashless REC share credits in older staged CSV drafts during read-time reconciliation; preserve unknown basis. 1.3.3 - Require signed exact cancellation matches, preserve cash dividends on canceled DRIPs, and skip zero-event batches. 1.3.2 - Reconcile BCXL/SCXL order reversals by exact source trade before lot replay, including existing staged reports. 1.3.1 - Make batch preview self-contained for CLI regression and safe combined-ledger validation. 1.3.0 - Add full-report eligibility preview, exception queue and atomic batch preparation. 1.2.0 - Suggest split ratios and FIFO from source records, preserving REC credits as unknown-basis receipts and estimated status. 1.1.1 - Preserve report end date for share confirmation and reject fractional split ratios. 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
  */
 declare(strict_types=1);
 
@@ -122,6 +122,22 @@ function mb_safe_cut(string $value,int $length): string
  */
 function it_rc_reconcile_cancellations(array $rows): array
 {
+    // Backward compatibility: older private drafts were staged before positive
+    // Robinhood REC share credits were supported, so their saved kind remains
+    // "unsupported". Reclassify only an unpriced, cashless, positive share
+    // credit while reading. This preserves the staged source row, ID, and
+    // revision; it does NOT fabricate a zero-dollar purchase or cost basis.
+    foreach($rows as &$source) {
+        if(($source['code']??'')!=='REC' || ($source['kind']??'')!=='unsupported')continue;
+        $quantity=$source['quantity']??null;
+        $cash=$source['amount']??null;
+        $price=$source['price']??null;
+        if(!is_numeric($quantity) || !is_finite((float)$quantity) || (float)$quantity<=0 ||
+           ($cash!==null && (!is_numeric($cash) || (float)$cash!=0.0)) ||
+           ($price!==null && (!is_numeric($price) || (float)$price!=0.0)))continue;
+        $source['kind']='receipt';
+    }
+    unset($source);
     $used=[];
     foreach($rows as $idx=>$cancel) {
         $code=(string)($cancel['code']??'');
