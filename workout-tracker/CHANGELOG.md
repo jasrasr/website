@@ -2,12 +2,20 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release history for private Workout Tracker.
-Revision: 1.8.0
+Revision: 1.9.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.8.0 - Document v1.8.1 AI request quotas and private configuration filename denial. 1.7.0 - Record v1.8.0 precise duration and dual-session/cumulative charts. 1.6.0 - Record v1.7.0 photo attachments, account links, and remembered login. 1.5.0 - Record v1.6.0 attendance dates, weekend-excluded percentages, and streaks. 1.4.1 - Document optional heart-rate BPM field and local parser in v1.5.1. 1.4.0 - Document v1.5.0 authenticated photos, workout details and ZIP backups. 1.3.0 - Document v1.4.0 calories, custom numeric metrics and per-set strength logging. 1.2.2 - Document workout-specific fields and iPhone-safe date/time layout in v1.3.2. 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
+Changelog: 1.9.0 - Document date-axis density and unclipped mobile plot markers. 1.8.0 - Document v1.8.1 AI request quotas and private configuration filename denial. 1.7.0 - Record v1.8.0 precise duration and dual-session/cumulative charts. 1.6.0 - Record v1.7.0 photo attachments, account links, and remembered login. 1.5.0 - Record v1.6.0 attendance dates, weekend-excluded percentages, and streaks. 1.4.1 - Document optional heart-rate BPM field and local parser in v1.5.1. 1.4.0 - Document v1.5.0 authenticated photos, workout details and ZIP backups. 1.3.0 - Document v1.4.0 calories, custom numeric metrics and per-set strength logging. 1.2.2 - Document workout-specific fields and iPhone-safe date/time layout in v1.3.2. 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
 -->
 # Workout Tracker changelog
+
+## v1.9.0 — 2026-11-14
+
+- Display several real workout date ticks along the X-axis when space allows instead of showing only the first and last dates. Keep full first/last dates in a readable caption, skip duplicate dates, and avoid overlapping labels on dense histories.
+- Size and draw the canvas at the phone's actual width with pixel-ratio scaling, so text remains readable on iPhone rather than being shrunk from a fixed 650px drawing.
+- Move the first/last data markers away from the Y-axis/plot edges, strengthen the Y-axis, and allow headroom above the highest point.
+- Recalculate layout after screen rotation while retaining existing exercise and graph mode. Do not change saved workouts, calculated per-session values, cumulative totals, or history dates.
+- Add synthetic 320px mobile chart regression tests to the existing GitHub Actions validation.
 
 ## v1.8.1 — 2026-11-01
 
