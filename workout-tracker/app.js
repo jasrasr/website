@@ -1,10 +1,10 @@
 /* File Name: app.js
 Author: Jason Lamb (with help from ChatGPT)
 Description: Workout quick entry, editable review, and per-exercise trends.
-Revision: 1.8.0
+Revision: 1.9.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.8.0 - Keep MM:SS precise and overlay cumulative totals on each-workout charts. 1.7.0 - Multi-photo galleries and upload-after-save controls while keeping earlier uploads. 1.6.0 - Read-only workout attendance, weekday percentages and calendar/weekday streaks. 1.5.1 - Display and edit heart rate BPM with cardio-focused fields and separate trends. 1.5.0 - Add authenticated workout details/photo viewer and private backup download UI. 1.4.0 - Editable set-by-set weight/reps, custom measurements, calories and exercise-specific progress. 1.3.2 - Optimize mobile exercise fields, retain hidden measurements, and keep optional metrics near the measurements. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
+Changelog: 1.9.0 - Use real mobile canvas sizing, readable X-axis workout dates and inset data markers. 1.8.0 - Keep MM:SS precise and overlay cumulative totals on each-workout charts. 1.7.0 - Multi-photo galleries and upload-after-save controls while keeping earlier uploads. 1.6.0 - Read-only workout attendance, weekday percentages and calendar/weekday streaks. 1.5.1 - Display and edit heart rate BPM with cardio-focused fields and separate trends. 1.5.0 - Add authenticated workout details/photo viewer and private backup download UI. 1.4.0 - Editable set-by-set weight/reps, custom measurements, calories and exercise-specific progress. 1.3.2 - Optimize mobile exercise fields, retain hidden measurements, and keep optional metrics near the measurements. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
 'use strict';
 const $=selector=>document.querySelector(selector);
 const measures=[['distance_miles','Miles'],['duration_minutes','Minutes'],['duration_seconds','Seconds (0–59)'],['speed_mph','Speed (mph)'],['incline_percent','Treadmill incline (%)'],['calories_kcal','Calories (kcal)'],['heart_rate_bpm','Heart rate (BPM)'],['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']];
@@ -544,8 +544,19 @@ async function submitEdit(){
  * would not describe fitness progress. Existing JSON is never changed.
  */
 function draw(){
- const canvas=$('#chart'),ctx=canvas.getContext('2d');
- ctx.clearRect(0,0,canvas.width,canvas.height);
+ const canvas=$('#chart');
+ // Use the *displayed* CSS width instead of shrinking a fixed 650px bitmap
+ // onto a 300px phone. Scale drawing pixels for sharp Retina labels.
+ const cssWidth=Math.max(240,Math.round(canvas.getBoundingClientRect?.().width||canvas.clientWidth||canvas.width));
+ const cssHeight=cssWidth<450?265:290;
+ const ratio=typeof window!=='undefined'?Math.min(2,Math.max(1,window.devicePixelRatio||1)):1;
+ const pixelWidth=Math.round(cssWidth*ratio),pixelHeight=Math.round(cssHeight*ratio);
+ if(canvas.width!==pixelWidth)canvas.width=pixelWidth;
+ if(canvas.height!==pixelHeight)canvas.height=pixelHeight;
+ if(canvas.style)canvas.style.height=cssHeight+'px';
+ const ctx=canvas.getContext('2d');
+ if(typeof ctx.setTransform==='function')ctx.setTransform(ratio,0,0,ratio,0,0);
+ ctx.clearRect(0,0,cssWidth,cssHeight);
  const metric=$('#metric').value,exercise=$('#exerciseFilter').value,tag=$('#historyTag').value;
  const data=WorkoutTrends.chartSeries(entries,exercise,metric,tag,WorkoutAdvanced.metricValue);
  const points=data.points;
@@ -556,8 +567,7 @@ function draw(){
  scope.textContent=available?
   'Running total adds the selected measurement across these '+exercise+' workouts'+(tag?' tagged #'+tag:'')+'.':
   'This metric is a rate or measurement, not an additive total. Showing each workout only.';
- const requested=select.value;
- const mode=available?requested:'individual';
+ const mode=available?select.value:'individual';
  const series=[];
  if(mode==='both'||mode==='individual')series.push({key:'individual',label:'Each workout',color:'#59dbc3'});
  if(available && (mode==='both'||mode==='running'))series.push({key:'running',label:'Running total',color:'#e2b56e'});
@@ -568,37 +578,63 @@ function draw(){
   span.append(swatch,document.createTextNode(item.label));
   return span;
  }));
- const c=canvas,left=54,right=c.width-23,top=22,bottom=c.height-46;
- ctx.font='14px system-ui';ctx.strokeStyle='#36546d';ctx.fillStyle='#aebfd0';ctx.lineWidth=1;
- ctx.beginPath();ctx.moveTo(left,top);ctx.lineTo(left,bottom);ctx.lineTo(right,bottom);ctx.stroke();
- if(!points.length){$('#trend').textContent='Choose a logged measurement to see its trend.';return;}
+ const dateRange=$('#chartDateRange');
+ if(!points.length){
+  dateRange.textContent='';
+  $('#trend').textContent='Choose a logged measurement to see its trend.';
+  return;
+ }
+ dateRange.textContent=points.length===1?
+  'Workout date: '+niceDay(points[0].date):
+  'Workout dates: '+niceDay(points[0].date)+' – '+niceDay(points.at(-1).date);
+ // Keep data point markers comfortably INSIDE the plotted region. Previously
+ // the first point was drawn directly on top of the vertical Y axis.
+ const top=22,bottom=cssHeight-55,right=cssWidth-12;
  const values=points.flatMap(point=>series.map(item=>point[item.key]));
- let high=Math.max(...values),low=Math.min(0,...values);
+ let low=Math.min(0,...values),high=Math.max(...values);
  if(high===low)high=low+1;
- const pretty=value=>Number(value.toFixed(2)).toLocaleString(undefined,{maximumFractionDigits:2});
- for(let tick=0;tick<4;tick++){
-  const value=low+(high-low)*tick/3,y=bottom-tick*(bottom-top)/3;
-  ctx.fillStyle='#aebfd0';ctx.fillText(value.toFixed(Math.abs(value)<10?1:0),5,y+5);
-  ctx.strokeStyle='#21394d';ctx.lineWidth=1;
+ else high+=Math.max((high-low)*.12,.01); // room above the highest dot
+ const axisText=value=>Number(value.toFixed(Math.abs(value)<1?2:Math.abs(value)<10?1:0)).toLocaleString('en-US',{maximumFractionDigits:2});
+ const ticks=Array.from({length:5},(_,i)=>low+(high-low)*i/4);
+ ctx.font=(cssWidth<350?'11px':'12px')+' system-ui';
+ const left=Math.max(39,Math.ceil(Math.max(...ticks.map(value=>ctx.measureText(axisText(value)).width)))+13);
+ const inset=Math.max(18,Math.min(26,cssWidth*.06));
+ const pointLeft=left+inset,pointRight=right-inset;
+ // Draw light horizontal guides first, then a more distinct left axis.
+ for(let i=0;i<ticks.length;i++){
+  const value=ticks[i],y=bottom-i*(bottom-top)/(ticks.length-1);
+  ctx.fillStyle='#b8ced9';ctx.fillText(axisText(value),6,y+4);
+  ctx.strokeStyle='#263f51';ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();
  }
+ ctx.strokeStyle='#638697';ctx.lineWidth=1.4;
+ ctx.beginPath();ctx.moveTo(left,top);ctx.lineTo(left,bottom);ctx.lineTo(right,bottom);ctx.stroke();
+ const xPositions=points.map((_,i)=>
+  pointLeft+(pointRight-pointLeft)*(points.length===1?.5:i/(points.length-1)));
+ const yPosition=value=>bottom-(value-low)/(high-low)*(bottom-top);
  for(const item of series){
-  const coords=points.map((point,i)=>({
-   x:left+(right-left)*(points.length===1?.5:i/(points.length-1)),
-   y:bottom-(point[item.key]-low)/(high-low)*(bottom-top)
-  }));
-  ctx.strokeStyle=item.color;ctx.lineWidth=3;ctx.beginPath();
+  const coords=points.map((point,i)=>({x:xPositions[i],y:yPosition(point[item.key])}));
+  ctx.strokeStyle=item.color;ctx.lineWidth=2.8;ctx.beginPath();
   coords.forEach((point,i)=>i?ctx.lineTo(point.x,point.y):ctx.moveTo(point.x,point.y));
   ctx.stroke();ctx.fillStyle=item.color;
-  coords.forEach(point=>{ctx.beginPath();ctx.arc(point.x,point.y,4,0,Math.PI*2);ctx.fill();});
+  coords.forEach(point=>{
+   ctx.beginPath();ctx.arc(point.x,point.y,4.5,0,Math.PI*2);ctx.fill();
+  });
  }
- ctx.fillStyle='#aebfd0';ctx.fillText(niceDay(points[0].date),left,bottom+26);
- if(points.length>1){
-  const last=niceDay(points.at(-1).date);
-  ctx.fillText(last,right-ctx.measureText(last).width,bottom+26);
+ // Label every DISTINCT logged date that can fit; never force labels to
+ // overlap on small screens. Tick marks align with the actual data markers.
+ const dates=WorkoutTrends.chartDateTicks(points,xPositions,text=>ctx.measureText(text).width);
+ ctx.font=(cssWidth<350?'11px':'12px')+' system-ui';
+ for(const tick of dates){
+  ctx.strokeStyle='#638697';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(tick.x,bottom);ctx.lineTo(tick.x,bottom+5);ctx.stroke();
+  ctx.fillStyle='#bed0dc';
+  const width=ctx.measureText(tick.label).width;
+  ctx.fillText(tick.label,tick.x-width/2,bottom+23);
  }
  const first=points[0].individual,last=points.at(-1).individual;
  const change=last-first;
+ const pretty=value=>Number(value.toFixed(2)).toLocaleString(undefined,{maximumFractionDigits:2});
  const unit=metric==='duration_minutes'?' min':metric==='distance_miles'?' mi':
   metric==='calories_kcal'?' kcal':metric==='total_volume_lb'?' lb':'';
  $('#trend').textContent=points.length+' workouts · Latest '+pretty(last)+unit+
@@ -626,6 +662,7 @@ $('#note').addEventListener('input',()=>{$('#review').hidden=true;});
 $('#saveBtn').addEventListener('click',()=>{try{save(collect(),$('#photo').files[0]||null);}catch(e){message(e.message,true);}});
 $('#exerciseFilter').addEventListener('change',()=>{refreshChartMetrics();draw();});$('#metric').addEventListener('change',draw);$('#trendMode').addEventListener('change',draw);
 $('#historyTag').addEventListener('change',()=>{showAllHistory=false;renderHistory();draw();});
+if(typeof window!=='undefined')window.addEventListener('resize',()=>{if(entries.length&&!$('#trendPanel').hidden)draw();});
 $('#toggleHistory').addEventListener('click',()=>{showAllHistory=!showAllHistory;renderHistory();});
 $('#recent').addEventListener('click',e=>{const button=e.target.closest('[data-edit-id]');if(button)beginEdit(button.dataset.editId);});
 $('#editForm').addEventListener('submit',e=>{e.preventDefault();submitEdit();});
