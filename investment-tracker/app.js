@@ -2,10 +2,10 @@
  * File Name: app.js
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Accessible charts, per-lot history, sale simulation and private ledger controls.
- * Revision: 1.5.1
+ * Revision: 1.5.2
  * Created Date: 2026-10-29
  * Modified Date: 2026-11-13
- * Changelog: 1.5.1 - Show closed-trade gain, unannualized return and holding duration; warn about FIFO only when multiple sale lots create ambiguity. 1.5.0 - Preview and import all eligible Robinhood symbols in one confirmed batch; show exceptions separately. 1.4.2 - Show unknown receipt basis and prevent false partial-sale tax calculations. 1.4.0 - Allow provisional Robinhood activity import without tax-lot attestation; display basis gaps prominently. 1.3.3 - Provide noncommitting FIFO allocation suggestions with explicit broker-verification warning. 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
+ * Changelog: 1.5.2 - Explain matched Robinhood cancellations and closed-position returns, and remove canceled orders from review lots. 1.5.0 - Preview and import all eligible Robinhood symbols in one confirmed batch; show exceptions separately. 1.4.2 - Show unknown receipt basis and prevent false partial-sale tax calculations. 1.4.0 - Allow provisional Robinhood activity import without tax-lot attestation; display basis gaps prominently. 1.3.3 - Provide noncommitting FIFO allocation suggestions with explicit broker-verification warning. 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
  */
 'use strict';
 const $ = s => document.querySelector(s);
@@ -292,7 +292,7 @@ function salePreview(event) {
   el('p','subtle',months+' · held '+lot.held_for+' ('+lot.days_held+' days) · first long-term date '+lot.long_term_on+' · no order placed. Assumes no additional selling fees.'));
 }
 function describeType(code) {
- const names={buy:'Cash purchases',sell:'Sales (tax lots unresolved)',reinvest:'Dividend reinvestments',dividend:'Dividend credits',split_credit:'Split share credits (not ratios)',stock_lending:'Stock lending',cash_movement:'Deposits/transfers',fee_or_tax:'Fees and taxes',interest:'Interest',unsupported:'Other corporate actions / cancellations'};
+ const names={buy:'Cash purchases',sell:'Sales (tax lots unresolved)',reinvest:'Dividend reinvestments',dividend:'Dividend credits',split_credit:'Split share credits (not ratios)',stock_lending:'Stock lending',cash_movement:'Deposits/transfers',fee_or_tax:'Fees and taxes',interest:'Interest',canceled_trade:'Canceled executions / refunds (excluded)',unsupported:'Unresolved corporate actions / reversals'};
  return names[code]||code;
 }
 async function previewRobinhood(event,fileOverride=null) {
@@ -390,6 +390,11 @@ function rhDrawStock(data) {
  $('#rhCommit').disabled=!data.validation?.ready||!!data.completed;
  const heading=el('p','subtle',data.rows.length+' brokerage activity lines for '+data.ticker+'. Purchase lot IDs are shown so each historical sale can be assigned precisely.');
  host.append(heading);
+ const canceled=data.rows.filter(row=>row.kind==='cancelled_trade');
+ if(canceled.length){
+  host.append(el('p','notice',Math.floor(canceled.length/2)+' canceled order'+
+   (canceled.length===2?'':'s')+' matched to original execution and excluded from share, cost, and profit calculations.'));
+ }
  if(data.completed){
   host.append(el('p','notice','This ticker was already imported ('+data.completed.events+' events). Review is read-only.'));return;
  }

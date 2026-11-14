@@ -3,10 +3,10 @@
  * File Name: robinhood.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Privacy-preserving, preview-only parser and reconciliation report for Robinhood account activity CSV.
- * Revision: 1.0.0
+ * Revision: 1.1.1
  * Created Date: 2026-10-29
- * Modified Date: 2026-10-29
- * Changelog: 1.0.0 - Recognize source headers, split credits, reinvestment pairs, unknown actions and unresolved sale allocations.
+ * Modified Date: 2026-11-13
+ * Changelog: 1.1.1 - Require correct cancellation cash direction and exact raw quantities, including canceled DRIP buys. 1.1.0 - Match exact BCXL/SCXL offsets so canceled trade pairs do not inflate preview purchases or appear unsupported. 1.0.0 - Recognize source headers, split credits, reinvestment pairs, unknown actions and unresolved sale allocations.
  */
 declare(strict_types=1);
 
@@ -36,9 +36,48 @@ function it_rh_date(string $date): string
     if ($iso > gmdate('Y-m-d')) throw new InvalidArgumentException('Future activity date is not supported.');
     return $iso;
 }
+/**
+ * Find completed trade plus exact same-day reversal in original CSV rows.
+ * Only unambiguous same-symbol, same-share, same-price, opposite-cash pairs
+ * are canceled. Incomplete or ambiguous reversals keep their warning status.
+ */
+function it_rh_cancellation_pairs(array $records): array
+{
+    $paired=[];$used=[];
+    foreach($records as $i=>$cancel){
+        $code=trim((string)($cancel['Trans Code']??''));
+        if(!in_array($code,['BCXL','SCXL'],true))continue;
+        $buyCancellation=$code==='BCXL';
+        $target=$buyCancellation?'Buy':'Sell';
+        $q=trim((string)($cancel['Quantity']??''));
+        $price=it_rh_amount((string)($cancel['Price']??''));
+        $money=it_rh_amount((string)($cancel['Amount']??''));
+        if(!is_numeric($q)||(float)$q<=0||$price===null||$price<=0||
+            $money===null||($buyCancellation?$money<=0:$money>=0))continue;
+        $candidates=[];
+        foreach($records as $j=>$trade){
+            if($j===$i||isset($used[$j])||($trade['Trans Code']??'')!==$target||
+                ($trade['Instrument']??'')!==($cancel['Instrument']??'')||
+                ($trade['Activity Date']??'')!==($cancel['Activity Date']??''))continue;
+            // Compare original source quantity exactly; not an adjusted lot
+            // where fuzzy share tolerances would be appropriate.
+            if((float)($trade['Quantity']??0)!==(float)$q||
+                (it_rh_amount((string)($trade['Price']??''))??0)!==$price||
+                (it_rh_amount((string)($trade['Amount']??''))??0)!==-$money)continue;
+            $candidates[]=$j;
+        }
+        if(count($candidates)!==1)continue;
+        $j=$candidates[0];$used[$j]=true;
+        $paired[$i]=$j;$paired[$j]=$i;
+    }
+    return $paired;
+}
+
+
 function it_rh_classify(array $records): array
 {
     $counts=[];$tickers=[];$events=[];$dividends=[];$reinvestments=[];$allIssues=[];
+    $canceled=it_rh_cancellation_pairs($records);
     foreach ($records as $i=>$r) {
         $code=$r['Trans Code'];
         $ticker=trim($r['Instrument']);
@@ -56,6 +95,7 @@ function it_rh_classify(array $records): array
             'INT','IADJ'=>'interest',
             default=>'unsupported',
         };
+        if(isset($canceled[$i]))$type='canceled_trade';
         $date=it_rh_date($r['Activity Date']);
         $counts[$type]=($counts[$type]??0)+1;
         if ($ticker!=='') {
@@ -127,6 +167,7 @@ function it_rh_classify(array $records): array
         'counts'=>$counts,
         'ticker_count'=>count($tickers),'tickers'=>array_values($tickers),
         'matched_dividend_reinvestments'=>count($matched),
+        'matched_canceled_trade_pairs'=>intdiv(count($canceled),2),
         'reinvestment_rows'=>array_sum(array_map('count',$reinvestments)),
         'open_issues'=>array_map(static fn($name,$count)=>['issue'=>$name,'count'=>$count],array_keys($allIssues),array_values($allIssues)),
         'samples'=>array_slice(array_map(static fn($event)=>[
