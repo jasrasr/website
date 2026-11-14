@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, data contract, calculation model, privacy and test procedures.
-Revision: 1.5.2
+Revision: 1.5.3
 Created Date: 2026-10-29
 Modified Date: 2026-11-13
-Changelog: 1.5.2 - Guard exact signed cancellations, cancelled DRIPs and zero-event batches. Pair Robinhood canceled trades with original fills, correcting Tesla balances and existing drafts. 1.5.1 - Add closed-position summaries, realized returns and clear FIFO ambiguity. 1.5.0 - Full-report batch preview, one-click import, per-ticker exceptions and privacy-safe deduplication. 1.4.0 - Enable provisional Robinhood import without impossible manual share/lot attestations. 1.3.0 - Add private per-ticker report staging, editable sale-lot/split corrections, broker-share validation, and explicit atomic import. 1.2.1 - Clarify native Robinhood CSV upload and route misselected reports to the non-mutating analyzer. 1.2.0 - Reconcile NVDA demo using owner-authorized CSV and add preview-only Robinhood CSV parser. 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
+Changelog: 1.5.3 - Normalize positive cashless REC share credits in existing private Robinhood drafts on read without guessing tax basis. 1.5.2 - Guard exact signed cancellations, cancelled DRIPs and zero-event batches. Pair Robinhood canceled trades with original fills, correcting Tesla balances and existing drafts. 1.5.1 - Add closed-position summaries, realized returns and clear FIFO ambiguity. 1.5.0 - Full-report batch preview, one-click import, per-ticker exceptions and privacy-safe deduplication. 1.4.0 - Enable provisional Robinhood import without impossible manual share/lot attestations. 1.3.0 - Add private per-ticker report staging, editable sale-lot/split corrections, broker-share validation, and explicit atomic import. 1.2.1 - Clarify native Robinhood CSV upload and route misselected reports to the non-mutating analyzer. 1.2.0 - Reconcile NVDA demo using owner-authorized CSV and add preview-only Robinhood CSV parser. 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
 -->
 # Investment Tracker
 
@@ -25,6 +25,16 @@ The **NVIDIA screenshot demo** tab (`?demo=1`) is now reconstructed from the own
 - The activity report does **not** identify which tax lots the broker actually selected for the two earlier NVDA sales. Demo allocates historical sale proceeds to oldest acquisitions provisionally for illustration. An actual tax-lot statement should be used before using realized gains in tax decisions.
 
 All personal user imports must still be approved and reconciled. **None of the user's 1,479-row brokerage CSV is committed to public GitHub**; only the explicitly authorized, ticker-specific NVDA demonstration entries are in source.
+
+## Existing Robinhood reports with Apple REC share credits (v1.5.3)
+
+If a Robinhood report was staged before `REC` share credits were implemented, the private draft may still contain `kind: unsupported` even though a fresh CSV parse would classify the same record as `receipt`. For example, the owner's original brokerage export has an **August 14, 2023 AAPL REC credit of 0.0281 shares**, no dollar cash flow, and no execution price; the older draft produces the **row 773 unsupported REC** error during **Preview import of all stocks**.
+
+The importer now normalizes this specific **positive, cashless and unpriced REC record** to a share receipt *when reading the existing private draft*. This applies consistently to the ticker list, ticker review, per-ticker build and full-report batch preview. It does **not** change the saved draft, its revision, its source IDs or any already-imported ledger transactions. No reupload is required. Malformed, negative, priced, cash-bearing or other unsupported corporate-action records remain blocked; they are never silently assumed to be valid shares.
+
+A `REC` event is recorded as shares received with **unknown acquisition cost and holding-period origin**. The ticker's taxable gains, unrealized return and XIRR that depend on this unknown basis remain unavailable rather than assuming a zero cost. A full importer preview may still reject the stock for **other** unresolved anomalies; it should no longer report a valid cashless REC row itself as unsupported.
+
+Regression tests replay a synthetic previously staged report that intentionally marks a REC row as unsupported, check the new receipt and unknown-basis behavior, and verify the saved source/revision are unchanged. No personal brokerage records were added to the repository.
 
 ## Canceled Robinhood orders and Tesla reconciliation (v1.5.2)
 
