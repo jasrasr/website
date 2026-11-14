@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, key-free quick entry, optional AI and screenshot import guidance for Workout Tracker.
-Revision: 1.8.1
+Revision: 1.9.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.8.1 - Document paid AI quotas and private configuration backup protection. 1.8.0 - First-class MM:SS duration and per-workout versus accumulated exercise trends. 1.7.0 - Multiple photo uploads on saved workouts, central logout/navigation and opt-in seven-day login. 1.6.0 - Read-only workout-day attendance and weekday streak dashboard. 1.5.1 - Optional heart rate in BPM, including local parsing, charts and safe edits. 1.5.0 - Authenticated photo/detail view and per-user ZIP backup, preserving live data. 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
+Changelog: 1.9.0 - Document mobile X-axis date ticks and separated Y-axis data markers. 1.8.1 - Document paid AI quotas and private configuration backup protection. 1.8.0 - First-class MM:SS duration and per-workout versus accumulated exercise trends. 1.7.0 - Multiple photo uploads on saved workouts, central logout/navigation and opt-in seven-day login. 1.6.0 - Read-only workout-day attendance and weekday streak dashboard. 1.5.1 - Optional heart rate in BPM, including local parsing, charts and safe edits. 1.5.0 - Authenticated photo/detail view and per-user ZIP backup, preserving live data. 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
 -->
 # Workout Tracker
 
@@ -21,6 +21,19 @@ Private PHP workout logger at https://jasr.me/github/workout-tracker/ using shar
 
 The parser is rule-based rather than a general LLM. It recognizes common exercises and explicit numbers but does **not guess missing values**. Unrecognized exercises use the collapsed manual entry form. It does not analyze photos.
 
+
+## Mobile chart readability and workout-date labels (v1.9.0)
+
+The **Progress over time** graph now renders at its actual phone width (including a Retina-resolution drawing surface) instead of shrinking a fixed 650-pixel bitmap. Its X-axis labels **as many distinct recorded workout dates as fit**, keeping first and last and skipping intermediate labels only when they would overlap. A separate accessible caption gives the complete first/last dates, including the year. On a typical iPhone with four cycling workouts on November 6, 8, 10 and 14, all four date labels fit. More tightly packed sessions remain plotted and contribute to totals even if not every date can be labeled.
+
+The first plotted measurement is inset at least ~18 CSS pixels from the vertical Y-axis; the last is also inset from the edge. This fixes markers appearing on top of the axis. Y-axis numbers and guides are clearer and the highest data point receives extra headroom. Redrawing after a phone rotation/resize preserves the current exercise, measurement, tag and **Each workout / Running total / Both** setting. The existing values, cumulative totals, and private per-user storage are read-only and unchanged.
+
+Check the mobile rendering with:
+
+    node workout-tracker/tests/chart-axis.test.cjs
+    node workout-tracker/tests/chart-modes.test.cjs
+
+CI uses synthetic cycling records and checks sharp 320px phone layout, all four visible X-axis dates, separation from the Y-axis, dense-history collision avoidance, duplicate workout dates, and unchanged cumulative sums. It cannot establish actual browser rendering on Hostinger; confirm on your iPhone after deploying.
 
 ## Optional paid AI request limits and config protection (v1.8.1)
 
