@@ -3,10 +3,10 @@
  * File Name: provisional.test.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Demonstrate CSV-driven stock splits, FIFO assumptions and unknown-basis stock receipts without user attestation.
- * Revision: 1.1.0
+ * Revision: 1.2.0
  * Created Date: 2026-10-30
- * Modified Date: 2026-10-30
- * Changelog: 1.1.0 - Validate automatic all-tickers batch preview, source exception queue and stale review fingerprint. 1.0.0 - Synthetic provisional import accounting safety tests.
+ * Modified Date: 2026-11-13
+ * Changelog: 1.2.0 - Test old staged REC receipts in ticker views, import-all preview and unknown-basis valuation without mutating drafts. 1.1.0 - Validate automatic all-tickers batch preview, source exception queue and stale review fingerprint. 1.0.0 - Synthetic provisional import accounting safety tests.
  */
 declare(strict_types=1);
 require_once dirname(__DIR__).'/robinhood.php';
@@ -47,6 +47,57 @@ try {
  ensure($h['basis_unknown']===true && $h['unrealized']===null,'Unknown receipt basis suppresses incorrect gain amount');
  ensure($h['lifetime_profit']===null && $h['xirr_pct']===null,'Unknown receipt basis blocks misleading lifetime return');
  ensure($h['allocation_estimated']===true,'Broker FIFO tax-lot election is not falsely declared verified');
+ // Mimic an already staged Robinhood CSV from before REC share-credit
+ // support. It saved code=REC as "unsupported", although the original
+ // source row contains a valid 0.0281-share AAPL credit with no cash amount.
+ $oldDraft=$stage;
+ foreach($oldDraft['rows'] as &$source) {
+     if($source['code']==='REC') {
+         $source['kind']='unsupported';
+         $source['line']=773;
+         $source['quantity']=0.0281;
+         $source['amount']=null;
+         $source['price']=null;
+     }
+ }
+ unset($source);
+ $originalRevision=it_rc_revision($oldDraft);
+ $before=it_rc_view($oldDraft,'DEMO');
+ $credit=array_values(array_filter($before['rows'],static fn($x)=>$x['code']==='REC'));
+ ensure(count($credit)===1 && $credit[0]['kind']==='receipt',
+    'Previously staged row 773 REC is shown as share receipt, not unsupported.');
+ ensure(it_rc_view($oldDraft)['tickers'][0]['counts']['receipt']===1,
+    'All-stock preview counts legacy REC credits as receipts.');
+ $retro=it_rc_auto_review($oldDraft,'DEMO');
+ ensure($retro['ready']===true && count(array_filter($retro['events'],
+    static fn($e)=>$e['type']==='receipt'))===1,
+    'Existing staged CSV imports previously unsupported REC shares automatically.');
+ $retroHolding=it_calculate($retro['events'])['holdings']['DEMO'];
+ ensure($retroHolding['basis_unknown']===true &&
+    $retroHolding['unrealized']===null &&
+    $retroHolding['lifetime_profit']===null,
+    'Legacy REC adds shares while withholding unknown cost basis and profit.');
+ ensure(it_rc_revision($oldDraft)===$originalRevision &&
+    count(array_filter($oldDraft['rows'],static fn($x)=>$x['code']==='REC' && $x['kind']==='unsupported'))===1,
+    'Legacy import fix does not mutate saved source rows or draft revision.');
+ $retroBatch=it_rc_batch_preview($oldDraft,[]);
+ ensure($retroBatch['ready']===true &&
+    count($retroBatch['eligible'])===1 && count($retroBatch['blocked'])===0,
+    'Preview import of all stocks no longer blocks a valid legacy REC credit.');
+ foreach ([
+    ['quantity'=>0,'amount'=>null,'price'=>null],
+    ['quantity'=>-0.0281,'amount'=>null,'price'=>null],
+    ['quantity'=>0.0281,'amount'=>25.0,'price'=>null],
+    ['quantity'=>0.0281,'amount'=>null,'price'=>10.0],
+ ] as $invalid) {
+    $badReceipt=$oldDraft;
+    foreach($badReceipt['rows'] as &$source) {
+        if($source['code']==='REC')$source=array_merge($source,$invalid);
+    }
+    unset($source);
+    ensure(it_rc_auto_review($badReceipt,'DEMO')['ready']===false,
+        'Invalid, cash-bearing, or priced REC action is not silently converted to a share receipt.');
+ }
  $bad=$stage;
  $bad['rows'][]=array_merge($bad['rows'][0],['id'=>'zz-top','kind'=>'unsupported','code'=>'CONV']);
  ensure(it_rc_auto_review($bad,'DEMO')['ready']===false,'Unsupported conversion is never silently ignored');
