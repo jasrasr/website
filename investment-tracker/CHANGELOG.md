@@ -2,12 +2,20 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release notes for private tax-lot investment dashboard.
-Revision: 1.5.2
+Revision: 1.5.3
 Created Date: 2026-10-29
 Modified Date: 2026-11-13
-Changelog: 1.5.2 - Apply Copilot cancellation review safeguards. Recognize canceled brokerage trades, replacement purchases and staged Tesla histories. 1.5.1 - Add closed-position summaries, realized returns and clearer FIFO ambiguity. 1.5.0 - Atomic import-all workflow and exception queue for actual Robinhood export. 1.4.0 - Auto-import supported broker transactions with explicitly provisional FIFO, split inference and unknown REC basis. 1.3.0 - Add private staged Robinhood account import with per-ticker editable allocations and validation. 1.2.1 - Route unmodified Robinhood CSV to safe read-only preview when incorrectly selected for normalized import. 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
+Changelog: 1.5.3 - Normalize positive cashless REC share credits in existing private Robinhood drafts on read without guessing tax basis. 1.5.2 - Apply Copilot cancellation review safeguards. Recognize canceled brokerage trades, replacement purchases and staged Tesla histories. 1.5.1 - Add closed-position summaries, realized returns and clearer FIFO ambiguity. 1.5.0 - Atomic import-all workflow and exception queue for actual Robinhood export. 1.4.0 - Auto-import supported broker transactions with explicitly provisional FIFO, split inference and unknown REC basis. 1.3.0 - Add private staged Robinhood account import with per-ticker editable allocations and validation. 1.2.1 - Route unmodified Robinhood CSV to safe read-only preview when incorrectly selected for normalized import. 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
 -->
 # Investment Tracker Changelog
+
+## 1.5.3 — 2026-11-13
+
+- Fixed compatibility with older private Robinhood CSV drafts that saved valid cashless positive `REC` share credits as unsupported.
+- Reclassified eligible old `REC` rows on read across ticker previews, manual validation and full-report batch import, retaining the original report, event ID, and staged revision.
+- Preserved **unknown** cost basis and original acquisition date for received shares. Did not invent purchase spending, unrealized gain or tax holding period.
+- Added regression tests for the existing-draft Apple `REC` blocker, no reupload, malformed/negative/cash-bearing/price-bearing `REC` rows, and non-mutation of the private draft.
+- No impact on Robinhood canceled trades, Tesla fixes, protected private ledgers or already imported tickers.
 
 ## 1.5.2 — 2026-11-13
 
