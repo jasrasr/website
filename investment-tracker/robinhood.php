@@ -3,10 +3,10 @@
  * File Name: robinhood.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Privacy-preserving, preview-only parser and reconciliation report for Robinhood account activity CSV.
- * Revision: 1.1.0
+ * Revision: 1.1.1
  * Created Date: 2026-10-29
  * Modified Date: 2026-11-13
- * Changelog: 1.1.0 - Match exact BCXL/SCXL offsets so canceled trade pairs do not inflate preview purchases or appear unsupported. 1.0.0 - Recognize source headers, split credits, reinvestment pairs, unknown actions and unresolved sale allocations.
+ * Changelog: 1.1.1 - Require correct cancellation cash direction and exact raw quantities, including canceled DRIP buys. 1.1.0 - Match exact BCXL/SCXL offsets so canceled trade pairs do not inflate preview purchases or appear unsupported. 1.0.0 - Recognize source headers, split credits, reinvestment pairs, unknown actions and unresolved sale allocations.
  */
 declare(strict_types=1);
 
@@ -47,19 +47,23 @@ function it_rh_cancellation_pairs(array $records): array
     foreach($records as $i=>$cancel){
         $code=trim((string)($cancel['Trans Code']??''));
         if(!in_array($code,['BCXL','SCXL'],true))continue;
-        $target=$code==='BCXL'?'Buy':'Sell';
+        $buyCancellation=$code==='BCXL';
+        $target=$buyCancellation?'Buy':'Sell';
         $q=trim((string)($cancel['Quantity']??''));
         $price=it_rh_amount((string)($cancel['Price']??''));
         $money=it_rh_amount((string)($cancel['Amount']??''));
-        if(!is_numeric($q)||(float)$q<=0||$price===null||$money===null||$money==0)continue;
+        if(!is_numeric($q)||(float)$q<=0||$price===null||$price<=0||
+            $money===null||($buyCancellation?$money<=0:$money>=0))continue;
         $candidates=[];
         foreach($records as $j=>$trade){
             if($j===$i||isset($used[$j])||($trade['Trans Code']??'')!==$target||
                 ($trade['Instrument']??'')!==($cancel['Instrument']??'')||
                 ($trade['Activity Date']??'')!==($cancel['Activity Date']??''))continue;
-            if(abs((float)($trade['Quantity']??0)-(float)$q)>0.00000005||
-                abs((it_rh_amount((string)($trade['Price']??''))??0)-$price)>0.000001||
-                abs((it_rh_amount((string)($trade['Amount']??''))??0)+$money)>0.000001)continue;
+            // Compare original source quantity exactly; not an adjusted lot
+            // where fuzzy share tolerances would be appropriate.
+            if((float)($trade['Quantity']??0)!==(float)$q||
+                (it_rh_amount((string)($trade['Price']??''))??0)!==$price||
+                (it_rh_amount((string)($trade['Amount']??''))??0)!==-$money)continue;
             $candidates[]=$j;
         }
         if(count($candidates)!==1)continue;
@@ -68,6 +72,7 @@ function it_rh_cancellation_pairs(array $records): array
     }
     return $paired;
 }
+
 
 function it_rh_classify(array $records): array
 {
