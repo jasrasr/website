@@ -2,10 +2,10 @@
 File Name: chart-modes.test.cjs
 Author: Jason Lamb (with help from ChatGPT)
 Description: DOM-backed canvas test for both session and running total workout charts.
-Revision: 1.0.0
+Revision: 1.1.0
 Created Date: 2026-10-31
 Modified Date: 2026-10-31
-Changelog: 1.0.0 - Verify dual-series mobile chart and disable misleading cumulative speed/heart rate.
+Changelog: 1.1.0 - Assert date-range caption and preserve existing multi-series graph modes. 1.0.0 - Verify dual-series mobile chart and disable misleading cumulative speed/heart rate.
 */
 'use strict';
 const assert=require('node:assert/strict');
@@ -37,6 +37,7 @@ const nodes=new Map([
  ['#historyTag',{value:''}],['#trendMode',{value:'both',disabled:false}],
  ['#trendModeLabel',{hidden:false}],['#trendScope',{textContent:''}],
  ['#trendLegend',{children:[],replaceChildren(...items){this.children=items;}}],
+ ['#chartDateRange',{textContent:''}],
  ['#trend',{textContent:''}]
 ]);
 const ctx={
@@ -63,6 +64,7 @@ assert.equal(nodes.get('#trendLegend').children.length,2,'both legend items show
 assert.ok(drawColors.includes('#59dbc3'),'session line drawn');
 assert.ok(drawColors.includes('#e2b56e'),'cumulative line drawn');
 assert.match(nodes.get('#trend').textContent,/Running total 7\.34 mi/);
+assert.match(nodes.get('#chartDateRange').textContent,/Oct 21, 2026.+Oct 31, 2026/,'full date range is accessible');
 assert.match(nodes.get('#trend').textContent,/Latest 2\.07 mi/);
 assert.equal(JSON.stringify(entries),original,'drawing must never change workout data');
 
