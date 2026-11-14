@@ -2,12 +2,21 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release notes for private tax-lot investment dashboard.
-Revision: 1.5.4
+Revision: 1.6.0
 Created Date: 2026-10-29
-Modified Date: 2026-11-13
-Changelog: 1.5.4 - Hide false FIFO warning for complete source sale across multiple original purchase lots; preserve real partial-sale warnings. 1.5.3 - Normalize positive cashless REC share credits in existing private Robinhood drafts on read without guessing tax basis. 1.5.2 - Apply Copilot cancellation review safeguards. Recognize canceled brokerage trades, replacement purchases and staged Tesla histories. 1.5.1 - Add closed-position summaries, realized returns and clearer FIFO ambiguity. 1.5.0 - Atomic import-all workflow and exception queue for actual Robinhood export. 1.4.0 - Auto-import supported broker transactions with explicitly provisional FIFO, split inference and unknown REC basis. 1.3.0 - Add private staged Robinhood account import with per-ticker editable allocations and validation. 1.2.1 - Route unmodified Robinhood CSV to safe read-only preview when incorrectly selected for normalized import. 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
+Modified Date: 2026-11-14
+Changelog: 1.6.0 - Add immutable broker-statement sale corrections, confirmed lot status and separate tax-basis reporting. 1.5.4 - Hide false FIFO warning for complete source sale across multiple original purchase lots; preserve real partial-sale warnings. 1.5.3 - Normalize positive cashless REC share credits in existing private Robinhood drafts on read without guessing tax basis. 1.5.2 - Apply Copilot cancellation review safeguards. Recognize canceled brokerage trades, replacement purchases and staged Tesla histories. 1.5.1 - Add closed-position summaries, realized returns and clearer FIFO ambiguity. 1.5.0 - Atomic import-all workflow and exception queue for actual Robinhood export. 1.4.0 - Auto-import supported broker transactions with explicitly provisional FIFO, split inference and unknown REC basis. 1.3.0 - Add private staged Robinhood account import with per-ticker editable allocations and validation. 1.2.1 - Route unmodified Robinhood CSV to safe read-only preview when incorrectly selected for normalized import. 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
 -->
 # Investment Tracker Changelog
+
+## 1.6.0 — 2026-11-14
+
+- Separated cash-investment performance basis from broker-reported tax basis so tax adjustments do not distort lifetime return or XIRR.
+- Added immutable corrections that attach a later broker-reported basis and optional exact-lot confirmation to an existing sale without rewriting its imported source record.
+- Added per-lot remaining-basis increases and decreases for documented nondividend distributions, wash-sale adjustments and similar broker corrections, with below-zero and over-allocation guards.
+- Cleared estimated FIFO warnings only when a broker statement confirms the specific sale lot; retained the warning for aggregate or **Various** 1099-B basis.
+- Displayed performance and tax basis, unrealized gain and realized gain separately when they differ.
+- Added synthetic backend and UI regressions for detailed confirmed lots, aggregate-only basis, immutable corrections and invalid basis values. No personal statements or Hostinger data are included.
 
 ## 1.5.4 — 2026-11-13
 

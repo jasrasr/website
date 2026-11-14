@@ -2,16 +2,28 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, data contract, calculation model, privacy and test procedures.
-Revision: 1.5.4
+Revision: 1.6.0
 Created Date: 2026-10-29
-Modified Date: 2026-11-13
-Changelog: 1.5.4 - Suppress false FIFO warning on a complete brokerage sale across multiple purchase lots. 1.5.3 - Normalize positive cashless REC share credits in existing private Robinhood drafts on read without guessing tax basis. 1.5.2 - Guard exact signed cancellations, cancelled DRIPs and zero-event batches. Pair Robinhood canceled trades with original fills, correcting Tesla balances and existing drafts. 1.5.1 - Add closed-position summaries, realized returns and clear FIFO ambiguity. 1.5.0 - Full-report batch preview, one-click import, per-ticker exceptions and privacy-safe deduplication. 1.4.0 - Enable provisional Robinhood import without impossible manual share/lot attestations. 1.3.0 - Add private per-ticker report staging, editable sale-lot/split corrections, broker-share validation, and explicit atomic import. 1.2.1 - Clarify native Robinhood CSV upload and route misselected reports to the non-mutating analyzer. 1.2.0 - Reconcile NVDA demo using owner-authorized CSV and add preview-only Robinhood CSV parser. 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
+Modified Date: 2026-11-14
+Changelog: 1.6.0 - Separate investment-performance basis from broker-reported tax basis and add immutable 1099-B sale corrections with conservative lot confirmation. 1.5.4 - Suppress false FIFO warning on a complete brokerage sale across multiple purchase lots. 1.5.3 - Normalize positive cashless REC share credits in existing private Robinhood drafts on read without guessing tax basis. 1.5.2 - Guard exact signed cancellations, cancelled DRIPs and zero-event batches. Pair Robinhood canceled trades with original fills, correcting Tesla balances and existing drafts. 1.5.1 - Add closed-position summaries, realized returns and clear FIFO ambiguity. 1.5.0 - Full-report batch preview, one-click import, per-ticker exceptions and privacy-safe deduplication. 1.4.0 - Enable provisional Robinhood import without impossible manual share/lot attestations. 1.3.0 - Add private per-ticker report staging, editable sale-lot/split corrections, broker-share validation, and explicit atomic import. 1.2.1 - Clarify native Robinhood CSV upload and route misselected reports to the non-mutating analyzer. 1.2.0 - Reconcile NVDA demo using owner-authorized CSV and add preview-only Robinhood CSV parser. 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
 -->
 # Investment Tracker
 
 Private, mobile-friendly investment performance dashboard at target `https://jasr.me/github/investment-tracker/`. Source is in the public website repository **but financial data stays in ignored, HTTP-denied, per-user server storage**.
 
 **Deployment status:** Source and review PR only; do not assume deployed. Register project ID **`investment-tracker`** (path `/github/investment-tracker/`) in central `user-management` and grant each intended account the viewer/member role **before first access**. This is not a standalone login or open-registration app. All API routes require a valid central session; write/import/void routes require member or higher and a valid CSRF token. No shared portfolio access is implemented.
+
+## Broker statements, tax basis and FIFO warnings (v1.6.0)
+
+Investment performance and tax reporting are now separate calculations. **Performance basis** continues to reflect cash paid for purchases and therefore keeps lifetime return and XIRR comparable. **Broker-reported tax basis** may differ because of nondividend distributions, wash-sale adjustments or a basis reported for shares sold. The dashboard shows both only when they differ; a tax-basis correction does not rewrite cash invested or investment performance.
+
+Use **Correct an existing sale from a broker statement** to attach a later 1099-B basis to an already-imported sale. This saves a new immutable correction record and leaves the Robinhood source row intact. Check **Broker statement confirms this exact purchase lot** only when the statement identifies the acquisition date or lot represented by that sale row. Detailed acquisition lines can therefore clear an estimated FIFO warning after every leg of the partial sale is matched. A statement showing only **Various** or an aggregate basis can support tax gain/loss, but it does not prove which open shares remain; the FIFO warning stays and remaining tax basis is withheld.
+
+Use **Adjust remaining tax basis** for a documented increase or decrease that applies to a specific open lot. The tracker rejects reductions below zero and rejects a reported sale basis above the selected lot's available tax basis unless a documented increase is recorded first. It never infers an open-lot adjustment merely because a sold lot's reported basis differs.
+
+Annual 1099s resolve only the stocks whose sale detail identifies acquisition lots. They do not necessarily resolve transfers, uncovered basis, missing acquisition dates, or aggregate **Various** entries. The private statements themselves and their values are not committed to this repository. Regression coverage uses fictional symbols, dates and amounts.
+
+Validation: run `php investment-tracker/tests/broker-basis.test.php`, `php investment-tracker/tests/ledger.test.php`, and `node investment-tracker/tests/closed-position-ui.test.cjs`.
 
 ## NVIDIA example from actual Robinhood activity (v1.2)
 
