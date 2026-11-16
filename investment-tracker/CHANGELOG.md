@@ -2,12 +2,21 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release notes for private tax-lot investment dashboard.
-Revision: 1.7.0
+Revision: 1.8.0
 Created Date: 2026-10-29
 Modified Date: 2026-11-16
-Changelog: 1.7.0 - Reconcile gross dividends net of withholding/ADR fees without double counting or rewriting staged reports. 1.6.0 - Add immutable broker-statement sale corrections, confirmed lot status and separate tax-basis reporting. 1.5.4 - Hide false FIFO warning for complete source sale across multiple original purchase lots; preserve real partial-sale warnings. 1.5.3 - Normalize positive cashless REC share credits in existing private Robinhood drafts on read without guessing tax basis. 1.5.2 - Apply Copilot cancellation review safeguards. Recognize canceled brokerage trades, replacement purchases and staged Tesla histories. 1.5.1 - Add closed-position summaries, realized returns and clearer FIFO ambiguity. 1.5.0 - Atomic import-all workflow and exception queue for actual Robinhood export. 1.4.0 - Auto-import supported broker transactions with explicitly provisional FIFO, split inference and unknown REC basis. 1.3.0 - Add private staged Robinhood account import with per-ticker editable allocations and validation. 1.2.1 - Route unmodified Robinhood CSV to safe read-only preview when incorrectly selected for normalized import. 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
+Changelog: 1.8.0 - Reconcile uniquely paired simple reverse splits, cash closeouts and unknown-basis opening conversions without altering saved broker rows. 1.7.0 - Reconcile gross dividends net of withholding/ADR fees without double counting or rewriting staged reports. 1.6.0 - Add immutable broker-statement sale corrections, confirmed lot status and separate tax-basis reporting. 1.5.4 - Hide false FIFO warning for complete source sale across multiple original purchase lots; preserve real partial-sale warnings. 1.5.3 - Normalize positive cashless REC share credits in existing private Robinhood drafts on read without guessing tax basis. 1.5.2 - Apply Copilot cancellation review safeguards. Recognize canceled brokerage trades, replacement purchases and staged Tesla histories. 1.5.1 - Add closed-position summaries, realized returns and clearer FIFO ambiguity. 1.5.0 - Atomic import-all workflow and exception queue for actual Robinhood export. 1.4.0 - Auto-import supported broker transactions with explicitly provisional FIFO, split inference and unknown REC basis. 1.3.0 - Add private staged Robinhood account import with per-ticker editable allocations and validation. 1.2.1 - Route unmodified Robinhood CSV to safe read-only preview when incorrectly selected for normalized import. 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
 -->
 # Investment Tracker Changelog
+
+## 1.8.0 — 2026-11-16
+
+- Added conservative reconstruction of **same-day, same-symbol, unique-CUSIP reverse stock splits** when the original shares surrendered and new shares credited are paired and a unique split denominator matches the existing portfolio. Preserve original tax lots, acquisition dates, split-adjusted quantities and total basis.
+- Recognized source-only, cashless positive \`CONV\` share receipts as **unknown original cost basis/holding date**, never as zero-cost purchases. Suppress unsupported taxable/lifetime P&L instead of inventing returns.
+- Recognized fully reconciled \`LIQ + SXCH\` cash liquidations and \`MRGC + MRGS\` cash-only mergers as source-priced exits, retaining exact settled proceeds and conservatively estimated FIFO lots.
+- Re-evaluate existing private staged reports on read without modifying source events, completed tickers or broker-corrected sale basis; block non-unique, mismatched or cross-ticker corporate-action chains.
+- Retained explicit blocking for \`SOFF\`, \`SDIV\`, \`CIL\`, unpaired \`SPR\`, noncash merger conversions, and all source actions lacking safe reconstruction evidence.
+- Added synthetic CI tests for reversed stock splits, rounded source credits, sequential corporate actions, unknown-basis opening receipt, cash exits, old drafts and ambiguous unsupported cases.
 
 ## 1.7.0 — 2026-11-16
 
