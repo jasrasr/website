@@ -3,10 +3,10 @@
  * File Name: reconciliation.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Source-preserving Robinhood import staging, per-ticker corrections and safe ledger conversion.
- * Revision: 1.3.4
+ * Revision: 1.7.0
  * Created Date: 2026-10-30
- * Modified Date: 2026-11-13
- * Changelog: 1.3.4 - Restore positive cashless REC share credits in older staged CSV drafts during read-time reconciliation; preserve unknown basis. 1.3.3 - Require signed exact cancellation matches, preserve cash dividends on canceled DRIPs, and skip zero-event batches. 1.3.2 - Reconcile BCXL/SCXL order reversals by exact source trade before lot replay, including existing staged reports. 1.3.1 - Make batch preview self-contained for CLI regression and safe combined-ledger validation. 1.3.0 - Add full-report eligibility preview, exception queue and atomic batch preparation. 1.2.0 - Suggest split ratios and FIFO from source records, preserving REC credits as unknown-basis receipts and estimated status. 1.1.1 - Preserve report end date for share confirmation and reject fractional split ratios. 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
+ * Modified Date: 2026-11-16
+ * Changelog: 1.7.0 - Match dividends net of DTAX/DFEE, preserve gross/withheld amounts in imported ledger and normalize existing drafts on read. 1.3.4 - Restore positive cashless REC share credits in older staged CSV drafts during read-time reconciliation; preserve unknown basis. 1.3.3 - Require signed exact cancellation matches, preserve cash dividends on canceled DRIPs, and skip zero-event batches. 1.3.2 - Reconcile BCXL/SCXL order reversals by exact source trade before lot replay, including existing staged reports. 1.3.1 - Make batch preview self-contained for CLI regression and safe combined-ledger validation. 1.3.0 - Add full-report eligibility preview, exception queue and atomic batch preparation. 1.2.0 - Suggest split ratios and FIFO from source records, preserving REC credits as unknown-basis receipts and estimated status. 1.1.1 - Preserve report end date for share confirmation and reject fractional split ratios. 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
  */
 declare(strict_types=1);
 
@@ -78,27 +78,8 @@ function it_rc_read(string $file): array
         unset($r['key']);
     }
     unset($r);
-    // Pair a dividend credit with a subsequent SAME-SYMBOL DRIP only if unique.
-    $dividends=[];
-    foreach ($raw as $i=>$r) if ($r['kind']==='dividend') $dividends[$r['ticker']][]=$i;
-    $used=[];
-    foreach ($raw as $i=>&$r) {
-        if ($r['kind']!=='reinvest') continue;
-        $candidates=[];
-        foreach ($dividends[$r['ticker']]??[] as $j) {
-            $d=$raw[$j];
-            $days=(strtotime($r['date'].' UTC')-strtotime($d['date'].' UTC'))/86400;
-            if ($days>=0 && $days<=14 && !isset($used[$j]) &&
-                abs(($d['amount']??0)-abs((float)$r['amount']))<=0.005) $candidates[]=$j;
-        }
-        if (count($candidates)===1) {
-            $j=$candidates[0];$used[$j]=true;
-            $raw[$j]['kind']='paired_credit';
-            $raw[$j]['paired_to']=$r['id'];
-            $r['paired_to']=$raw[$j]['id'];
-        } else $r['pair_issue']=count($candidates)>1?'Ambiguous DRIP credit':'No matching dividend credit';
-    }
-    unset($r);
+    // Pairing is performed by the same read-time normalizer used for already
+    // staged private reports, including dividend tax/ADR-fee withholding.
     usort($raw,static fn($a,$b)=>
         strcmp($a['date'],$b['date'])
         ?: (($a['kind']==='split_credit'?0:1)<=>($b['kind']==='split_credit'?0:1))
@@ -120,6 +101,104 @@ function mb_safe_cut(string $value,int $length): string
  * trade exists. Ambiguous or unpaired cancellations remain unsupported and must
  * block that ticker; no cost basis is guessed or silently lost.
  */
+/**
+ * Pair a DRIP only when the source provides an unambiguous dividend, its
+ * cash-withholding fees (DTAX and/or DFEE), and the net reinvestment purchase.
+ * The original CDIV and fee rows remain preserved for audit. This is run on
+ * COPY of saved drafts on every read, not a persistent draft migration.
+ *
+ * Strict cents arithmetic prevents rounding from consuming an unrelated fee.
+ * Only a unique source dividend / fee subset within the 14-day payment window
+ * may be matched. No ticker-specific shortcuts, no guessed dividend/lot data.
+ */
+function it_rc_pair_dividends(array $rows): array
+{
+    $credits=[];$fees=[];$byId=[];
+    foreach($rows as $i=>$row) {
+        $byId[(string)($row['id']??'')]=$i;
+        if(($row['kind']??'')==='dividend' && ($row['code']??'')==='CDIV' &&
+           is_numeric($row['amount']??null) && (float)$row['amount']>0)
+            $credits[$row['ticker']][]=$i;
+        if(($row['kind']??'')==='fee' &&
+           in_array($row['code']??'',['DTAX','DFEE'],true) &&
+           is_numeric($row['amount']??null) && (float)$row['amount']<0 &&
+           empty($row['withheld_for']))
+            $fees[$row['ticker']][]=$i;
+    }
+    foreach($rows as $i=>&$r) {
+        if(($r['kind']??'')!=='reinvest')continue;
+        // Already-paired prior drafts remain valid. Add gross-dividend
+        // metadata if they were created before this release.
+        if(!empty($r['paired_to'])) {
+            $j=$byId[(string)$r['paired_to']]??null;
+            if($j!==null && ($rows[$j]['kind']??'')==='paired_credit' &&
+               ($rows[$j]['paired_to']??'')===($r['id']??null)) {
+                $r['gross_dividend']=(float)$rows[$j]['amount'];
+                unset($r['pair_issue']);
+            }
+            continue;
+        }
+        $net=$r['amount']??null;
+        if(!is_numeric($net) || (float)$net>=0) {
+            $r['pair_issue']='Invalid reinvestment cash amount';continue;
+        }
+        $netCents=(int)round(abs((float)$net)*100);
+        if(abs(abs((float)$net)*100-$netCents)>0.00001 || $netCents<1) {
+            $r['pair_issue']='Reinvestment amount is not whole cents';continue;
+        }
+        $matches=[];
+        foreach($credits[$r['ticker']]??[] as $j) {
+            $credit=$rows[$j];
+            if(($credit['kind']??'')!=='dividend')continue;
+            $age=(strtotime($r['date'].' UTC')-strtotime($credit['date'].' UTC'))/86400;
+            if($age<0 || $age>14)continue;
+            $grossCents=(int)round((float)$credit['amount']*100);
+            if(abs((float)$credit['amount']*100-$grossCents)>0.00001 ||
+               $grossCents<$netCents)continue;
+            $difference=$grossCents-$netCents;
+            if($difference===0) {
+                $matches[]=['credit'=>$j,'fees'=>[],'gross'=>$grossCents];
+                continue;
+            }
+            $candidates=[];
+            foreach($fees[$r['ticker']]??[] as $k) {
+                $fee=$rows[$k];
+                if(!empty($fee['withheld_for']))continue;
+                $feeDate=$fee['date'];
+                if($feeDate<$credit['date'] || $feeDate>$r['date'])continue;
+                $cents=(int)round(abs((float)$fee['amount'])*100);
+                if($cents<1 || abs(abs((float)$fee['amount'])*100-$cents)>0.00001)continue;
+                if($cents<=$difference)$candidates[]=['index'=>$k,'cents'=>$cents];
+            }
+            if(count($candidates)>8)continue; // Never invent a grouping.
+            for($mask=1;$mask<(1<<count($candidates));$mask++) {
+                $sum=0;$usedFees=[];
+                foreach($candidates as $bit=>$candidate) {
+                    if(!($mask&(1<<$bit)))continue;
+                    $sum+=$candidate['cents'];$usedFees[]=$candidate['index'];
+                }
+                if($sum===$difference)$matches[]=['credit'=>$j,'fees'=>$usedFees,'gross'=>$grossCents];
+                if(count($matches)>1)break;
+            }
+            if(count($matches)>1)break;
+        }
+        if(count($matches)!==1) {
+            $r['pair_issue']=count($matches)>1?'Ambiguous dividend/withholding allocation':'No matching dividend credit after withholding';
+            continue;
+        }
+        $match=$matches[0];$j=$match['credit'];
+        $rows[$j]['kind']='paired_credit';
+        $rows[$j]['paired_to']=$r['id'];
+        $r['paired_to']=$rows[$j]['id'];
+        $r['gross_dividend']=$match['gross']/100;
+        $r['withheld_amount']=($match['gross']-$netCents)/100;
+        foreach($match['fees'] as $k)$rows[$k]['withheld_for']=$r['id'];
+        unset($r['pair_issue']);
+    }
+    unset($r);
+    return $rows;
+}
+
 function it_rc_reconcile_cancellations(array $rows): array
 {
     // Backward compatibility: older private drafts were staged before positive
@@ -138,6 +217,7 @@ function it_rc_reconcile_cancellations(array $rows): array
         $source['kind']='receipt';
     }
     unset($source);
+    $rows=it_rc_pair_dividends($rows);
     $used=[];
     foreach($rows as $idx=>$cancel) {
         $code=(string)($cancel['code']??'');
@@ -201,6 +281,12 @@ function it_rc_reconcile_cancellations(array $rows): array
                 }
                 $rows[$k]['kind']='dividend';
                 unset($rows[$k]['paired_to']);
+                // A canceled DRIP does not cover its withholding. If the
+                // dividend was still paid, the fee is now a normal cash tax.
+                foreach($rows as &$fee) {
+                    if(($fee['withheld_for']??'')===$original['id'])unset($fee['withheld_for']);
+                }
+                unset($fee);
             }
         }
         $used[$originalIdx]=true;
@@ -360,7 +446,10 @@ function it_rc_build(array $stage,string $ticker): array
             }
             $q=(float)$r['quantity'];$balance+=$q;
             $confirmedLots[$id]=['remaining'=>$q,'date'=>$r['date']];
-            $events[]=it_rc_event($r,$kind,$q,abs((float)$r['amount']));
+            $purchase=it_rc_event($r,$kind,$q,abs((float)$r['amount']));
+            if($kind==='reinvest' && isset($r['gross_dividend']))
+                $purchase['gross_dividend']=(float)$r['gross_dividend'];
+            $events[]=$purchase;
             if(($r['price']??0)>0)$events[]=it_rc_event($r,'price',0,0,'',0,0,(float)$r['price']);
             continue;
         }
@@ -398,7 +487,9 @@ function it_rc_build(array $stage,string $ticker): array
         }
         if($kind==='fee') {
             if(($r['amount']??0)>=0){$issues[]='Row '.$r['line'].' expected a negative fee.';continue;}
-            $events[]=it_rc_event($r,'fee',0,abs((float)$r['amount']));
+            $feeEvent=it_rc_event($r,'fee',0,abs((float)$r['amount']));
+            if(!empty($r['withheld_for']))$feeEvent['withheld_from_drip']=true;
+            $events[]=$feeEvent;
         }
     }
     if(!$events)$issues[]='No importable investment activity remains after excluded cancellations.';
