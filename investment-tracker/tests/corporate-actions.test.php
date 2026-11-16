@@ -1,12 +1,12 @@
 <?php
 /**
  * File Name: corporate-actions.test.php
- * Revision: 1.0.0
+ * Revision: 1.0.1
  * Description: Synthetic source-paired Robinhood split, transfer, cash exit and unsupported corporate-action safeguards.
  * Author: Jason Lamb (with help from ChatGPT)
  * Created Date: 2026-11-16
  * Modified Date: 2026-11-16
- * Changelog: 1.0.0 - Safely infer original split ratios, preserve basis and reject unsupported reorganization chains.
+ * Changelog: 1.0.1 - Verify single cash merger liquidating two complete lots has no false FIFO warning. 1.0.0 - Safely infer original split ratios, preserve basis and reject unsupported reorganization chains.
  */
 declare(strict_types=1);
 require_once dirname(__DIR__).'/robinhood.php';
@@ -121,13 +121,16 @@ check($h['closed'] && abs($h['realized']-4.5)<0.00001 && abs($h['sales_proceeds'
 $merger=fixture_ca([
     act('10/31/2022','CASH','Cash received thru Merger 1.25 shares at $54.20','MRGC','','','$67.75'),
     act('10/31/2022','CASH',company('Surrendered Security','A00000001'),'MRGS','1.25S'),
-    act('2/3/2022','CASH','Buy','Buy','1.25','$40.00','($50.00)'),
+    act('2/3/2022','CASH','Buy','Buy','1','$40.00','($40.00)'),
+    act('4/3/2022','CASH','Buy','Buy','0.25','$40.00','($10.00)'),
 ]);
 $auto=it_rc_auto_review($merger,'CASH');
 check($auto['ready']===true,'Matching MRGC/MRGS cash merger becomes a sale.');
 $h=it_calculate($auto['events'])['holdings']['CASH'];
-check($h['closed'] && abs($h['realized']-17.75)<0.00001,
-    'Cash merger proceeds and actual original basis yield correct realized gain.');
+check($h['closed'] && abs($h['realized']-17.75)<0.00001 &&
+    $h['sale_allocation_ambiguous']===false &&
+    $h['allocation_estimated']===true,
+    'One cash merger closing two complete purchase lots has no false FIFO warning.');
 
 $unpaired=fixture_ca([
     act('7/1/2026','UNPAIRED',company('New security','A00000002'),'SPR','0.1'),
