@@ -3,10 +3,10 @@
  * File Name: ledger.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Deterministic split-aware performance and broker-reported tax-basis calculations.
- * Revision: 1.6.0
+ * Revision: 1.7.0
  * Created Date: 2026-10-29
- * Modified Date: 2026-11-14
- * Changelog: 1.6.0 - Track performance basis separately from broker-reported tax basis, accept per-lot basis adjustments and confirmed sale allocations, and retain warnings for aggregate-only 1099-B data. 1.5.4 - Recognize a single Robinhood sell liquidating every available purchase lot, avoiding false FIFO warnings while retaining partial-sale uncertainty. 1.5.1 - Recalculate closed-position status, return on purchases, holding duration, and real versus only nominal FIFO ambiguity from existing ledger records. 1.4.1 - Mark stock receipt holding period unknown instead of using credit date as tax acquisition. 1.4.0 - Preserve unpriced share receipts with unknown tax basis and suppress unreliable gain calculations. 1.3.0 - Track stock-lending income and fee charges separately from dividends and basis. 1.2.0 - Date valuations at their observed price and withhold results if more recent account activity lacks a quote. 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
+ * Modified Date: 2026-11-16
+ * Changelog: 1.7.0 - Report gross/net DRIP and withheld tax separately, without charging withheld dollars twice in performance or XIRR. 1.6.0 - Track performance basis separately from broker-reported tax basis, accept per-lot basis adjustments and confirmed sale allocations, and retain warnings for aggregate-only 1099-B data. 1.5.4 - Recognize a single Robinhood sell liquidating every available purchase lot, avoiding false FIFO warnings while retaining partial-sale uncertainty. 1.5.1 - Recalculate closed-position status, return on purchases, holding duration, and real versus only nominal FIFO ambiguity from existing ledger records. 1.4.1 - Mark stock receipt holding period unknown instead of using credit date as tax acquisition. 1.4.0 - Preserve unpriced share receipts with unknown tax basis and suppress unreliable gain calculations. 1.3.0 - Track stock-lending income and fee charges separately from dividends and basis. 1.2.0 - Date valuations at their observed price and withhold results if more recent account activity lacks a quote. 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
  */
 declare(strict_types=1);
 
@@ -197,10 +197,10 @@ function it_calculate(array $events): array
         $key=it_sale_execution_key($salePart);
         $saleExecutionShares[$key]=($saleExecutionShares[$key]??0.0)+(float)$salePart['quantity'];
     }
-    $lots=[]; $sales=[]; $quotes=[]; $series=[]; $cash=[]; $divs=[]; $reinvested=[]; $purchases=[]; $proceeds=[]; $realized=[]; $taxRealized=[]; $otherIncome=[]; $fees=[]; $latestActivity=[]; $basisUncertain=[]; $estimated=[]; $saleAllocationAmbiguous=[]; $taxBasisUncertain=[]; $brokerBasisReported=[]; $confirmedSaleAllocation=[]; $purchaseLotCount=[]; $saleEventCount=[]; $firstCashPurchase=[]; $lastSaleDate=[];
+    $lots=[]; $sales=[]; $quotes=[]; $series=[]; $cash=[]; $divs=[]; $reinvested=[]; $reinvestedGross=[]; $dripWithholding=[]; $cashFees=[]; $purchases=[]; $proceeds=[]; $realized=[]; $taxRealized=[]; $otherIncome=[]; $fees=[]; $latestActivity=[]; $basisUncertain=[]; $estimated=[]; $saleAllocationAmbiguous=[]; $taxBasisUncertain=[]; $brokerBasisReported=[]; $confirmedSaleAllocation=[]; $purchaseLotCount=[]; $saleEventCount=[]; $firstCashPurchase=[]; $lastSaleDate=[];
     foreach ($ordered as $e) {
         $t=(string)$e['ticker']; $kind=(string)$e['type']; $q=(float)$e['quantity']; $a=(float)$e['amount'];
-        $divs[$t]??=0.0; $reinvested[$t]??=0.0; $purchases[$t]??=0.0; $proceeds[$t]??=0.0; $realized[$t]??=0.0; $taxRealized[$t]??=0.0; $otherIncome[$t]??=0.0; $fees[$t]??=0.0; $cash[$t]??=[];
+        $divs[$t]??=0.0; $reinvested[$t]??=0.0; $reinvestedGross[$t]??=0.0; $dripWithholding[$t]??=0.0; $cashFees[$t]??=0.0; $purchases[$t]??=0.0; $proceeds[$t]??=0.0; $realized[$t]??=0.0; $taxRealized[$t]??=0.0; $otherIncome[$t]??=0.0; $fees[$t]??=0.0; $cash[$t]??=[];
         // A tax-only basis adjustment does not change shares or market value,
         // so it must not invalidate an otherwise current price observation.
         if (!in_array($kind,['price','basis_adjustment'],true))
@@ -210,7 +210,13 @@ function it_calculate(array $events): array
             $purchaseLotCount[$t]=($purchaseLotCount[$t]??0)+1;
             if ($kind==='buy') {
                 $firstCashPurchase[$t]??=$e['date']; $purchases[$t]+=$a; $cash[$t][]=[$e['date'],-$a]; }
-            elseif($kind==='reinvest') $reinvested[$t]+=$a;
+            elseif($kind==='reinvest') {
+                $gross=(float)($e['gross_dividend']??$a);
+                if(!is_finite($gross) || $gross<$a || $gross>100000000000)
+                    throw new InvalidArgumentException('Gross reinvested dividend is invalid.');
+                $reinvested[$t]+=$a;
+                $reinvestedGross[$t]+=$gross;
+            }
             $lots[$e['id']]=[
                 'id'=>$e['id'],'ticker'=>$t,'date'=>$e['date'],'source'=>$kind,
                 'original_shares'=>$q,'shares'=>$q,'original_cost'=>$a,'remaining_cost'=>$a,
@@ -303,7 +309,16 @@ function it_calculate(array $events): array
         } elseif ($kind==='other_income') {
             $otherIncome[$t]+=$a; $cash[$t][]=[$e['date'],$a];
         } elseif ($kind==='fee') {
-            $fees[$t]+=$a; $cash[$t][]=[$e['date'],-$a];
+            $fees[$t]+=$a;
+            if(!empty($e['withheld_from_drip'])) {
+                // Gross dividend minus withholding was already used to
+                // purchase fewer shares. Reporting this tax is necessary,
+                // but charging it again would understate total return/XIRR.
+                $dripWithholding[$t]+=$a;
+            } else {
+                $cashFees[$t]+=$a;
+                $cash[$t][]=[$e['date'],-$a];
+            }
         } elseif ($kind==='price') {
             $quotes[$t]=['date'=>$e['date'],'price'=>(float)$e['price']];
             $snapshot=[];
@@ -364,7 +379,9 @@ function it_calculate(array $events): array
         if ($missingPrice) $missing[]=$t;
         $v=$qty<=0.000000001?0.0:($missingPrice?null:$qty*$price);
         if ($v!==null) $totalValue+=$v;
-        $cashGain=($v===null||$unknownBasis)?null:$v+$proceeds[$t]+$divs[$t]+$otherIncome[$t]-$fees[$t]-$purchases[$t];
+        if(abs(($reinvestedGross[$t]-$reinvested[$t])-$dripWithholding[$t])>0.00001)
+            throw new InvalidArgumentException('Gross DRIP, withholding and reinvestment do not reconcile.');
+        $cashGain=($v===null||$unknownBasis)?null:$v+$proceeds[$t]+$divs[$t]+$otherIncome[$t]-$cashFees[$t]-$purchases[$t];
         // Every view recomputes these values from the already-saved ledger.
         // Nothing is written back to a user's imported records or draft.
         $closed=$qty<=0.000000001 && $purchases[$t]>0 && ($saleEventCount[$t]??0)>0;
@@ -395,6 +412,8 @@ function it_calculate(array $events): array
             'realized'=>$unknownBasis?null:$realized[$t],'tax_realized'=>$unknownBasis?null:$taxRealized[$t],
             'tax_unrealized'=>($v===null||$unknownBasis||!empty($taxBasisUncertain[$t]))?null:$v-$taxBasis,
             'dividends_cash'=>$divs[$t],'dividends_reinvested'=>$reinvested[$t],
+            'dividends_reinvested_gross'=>$reinvestedGross[$t],
+            'dividend_withholding'=>$dripWithholding[$t],
             'other_income'=>$otherIncome[$t],'fees'=>$fees[$t],
             'purchases'=>$purchases[$t],'sales_proceeds'=>$proceeds[$t],
             'lifetime_profit'=>$cashGain,'xirr_pct'=>($closed||$missingPrice||$unknownBasis||!$flows)?null:(($x=it_xirr($flows))===null?null:$x*100),
@@ -402,7 +421,7 @@ function it_calculate(array $events): array
         ];
         foreach ($cash[$t] as $f) $allFlows[]=$f;
         if ($v!==null && $qty>0) $allFlows[]=[$quotes[$t]['date'],$v];
-        $net += $proceeds[$t]+$divs[$t]+$otherIncome[$t]-$fees[$t]-$purchases[$t];
+        $net += $proceeds[$t]+$divs[$t]+$otherIncome[$t]-$cashFees[$t]-$purchases[$t];
     }
     return [
         'holdings'=>$holdings,'series'=>$series,'sales'=>$sales,'missing_prices'=>$missing,'unknown_basis_tickers'=>$uncertain,
@@ -413,6 +432,8 @@ function it_calculate(array $events): array
             'realized'=>count($uncertain)?null:array_sum($realized),'tax_realized'=>count($uncertain)?null:array_sum($taxRealized),'dividends_cash'=>array_sum($divs),
             'other_income'=>array_sum($otherIncome),'fees'=>array_sum($fees),
             'dividends_reinvested'=>array_sum($reinvested),
+            'dividends_reinvested_gross'=>array_sum($reinvestedGross),
+            'dividend_withholding'=>array_sum($dripWithholding),
             'xirr_pct'=>count($missing)||count($uncertain)?null:(($x=it_xirr($allFlows))===null?null:$x*100)
         ],
     ];
