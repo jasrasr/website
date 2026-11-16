@@ -2,10 +2,10 @@
  * File Name: app.js
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Accessible performance and broker-reported tax-basis views with private ledger controls.
- * Revision: 1.6.0
+ * Revision: 1.7.0
  * Created Date: 2026-10-29
- * Modified Date: 2026-11-14
- * Changelog: 1.6.0 - Distinguish investment-performance basis from broker-reported tax basis and show confirmed versus unresolved sale-lot status. 1.5.2 - Explain matched Robinhood cancellations and closed-position returns, and remove canceled orders from review lots. 1.5.0 - Preview and import all eligible Robinhood symbols in one confirmed batch; show exceptions separately. 1.4.2 - Show unknown receipt basis and prevent false partial-sale tax calculations. 1.4.0 - Allow provisional Robinhood activity import without tax-lot attestation; display basis gaps prominently. 1.3.3 - Provide noncommitting FIFO allocation suggestions with explicit broker-verification warning. 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
+ * Modified Date: 2026-11-16
+ * Changelog: 1.7.0 - Explain gross reinvested dividends, net DRIP shares and tax/ADR fee withholding separately. 1.6.0 - Distinguish investment-performance basis from broker-reported tax basis and show confirmed versus unresolved sale-lot status. 1.5.2 - Explain matched Robinhood cancellations and closed-position returns, and remove canceled orders from review lots. 1.5.0 - Preview and import all eligible Robinhood symbols in one confirmed batch; show exceptions separately. 1.4.2 - Show unknown receipt basis and prevent false partial-sale tax calculations. 1.4.0 - Allow provisional Robinhood activity import without tax-lot attestation; display basis gaps prominently. 1.3.3 - Provide noncommitting FIFO allocation suggestions with explicit broker-verification warning. 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
  */
 'use strict';
 const $ = s => document.querySelector(s);
@@ -224,6 +224,13 @@ function renderHoldings() {
     ' · Cash dividends '+money(h.dividends_cash)+' · Reinvested '+money(h.dividends_reinvested)+
     ' · Stock-lending/other income '+money(h.other_income||0)+
     ' · Fees '+money(h.fees||0)+' · XIRR '+percent(h.xirr_pct)));
+  }
+  if((h.dividend_withholding||0)>0){
+   card.append(el('p','subtle',
+    'Gross DRIP dividends '+money(h.dividends_reinvested_gross)+
+    ' · Net reinvested '+money(h.dividends_reinvested)+
+    ' · Withheld from dividends '+money(h.dividend_withholding)+
+    ' (already reflected in the smaller share purchase; not deducted twice)'));
   }
   host.append(card);
  });
