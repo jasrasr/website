@@ -1,10 +1,10 @@
 # File Name: investment-tracker-validation.yml
 # Author: Jason Lamb (with help from ChatGPT)
 # Description: Validate private investment tracker PHP, JavaScript, and synthetic accounting cases.
-# Revision: 1.7.0
+# Revision: 1.8.0
 # Created Date: 2026-10-29
 # Modified Date: 2026-11-16
-# Changelog: 1.7.0 - Run gross-dividend, net-of-fee DRIP and legacy draft synthetic regressions. 1.6.0 - Validate broker-confirmed lots, aggregate-only 1099 basis, and separate tax-basis calculations. 1.5.2 - Validate cancellation reconciliation and closed-position UI. 1.5.1 - Test closed-trade UI and one-lot-versus-multi-lot FIFO warnings. 1.4.1 - Run cancellation-pair and preserved-draft regression tests. 1.4.0 - Verify provisional FIFO and unknown-basis receipts stay explicitly estimated. 1.3.0 - Validate per-ticker brokerage draft and reconciled import functions. 1.2.0 - Test original Robinhood CSV detection and safe handoff from normalized import form. 1.1.0 - Lint and test the original Robinhood CSV preview parser. 1.0.1 - Lint read-only demo loader. 1.0.0 - Initial pull-request validation.
+# Changelog: 1.8.0 - Reconcile uniquely paired simple reverse splits, cash closeouts and unknown-basis opening conversions without altering saved broker rows. 1.7.0 - Run gross-dividend, net-of-fee DRIP and legacy draft synthetic regressions. 1.6.0 - Validate broker-confirmed lots, aggregate-only 1099 basis, and separate tax-basis calculations. 1.5.2 - Validate cancellation reconciliation and closed-position UI. 1.5.1 - Test closed-trade UI and one-lot-versus-multi-lot FIFO warnings. 1.4.1 - Run cancellation-pair and preserved-draft regression tests. 1.4.0 - Verify provisional FIFO and unknown-basis receipts stay explicitly estimated. 1.3.0 - Validate per-ticker brokerage draft and reconciled import functions. 1.2.0 - Test original Robinhood CSV detection and safe handoff from normalized import form. 1.1.0 - Lint and test the original Robinhood CSV preview parser. 1.0.1 - Lint read-only demo loader. 1.0.0 - Initial pull-request validation.
 name: Investment Tracker validation
 on:
   pull_request:
@@ -35,6 +35,7 @@ jobs:
           php -l investment-tracker/tests/ledger.test.php
           php -l investment-tracker/tests/broker-basis.test.php
           php -l investment-tracker/tests/drip-withholding.test.php
+          php -l investment-tracker/tests/corporate-actions.test.php
           node --check investment-tracker/app.js
           node --check investment-tracker/tests/upload-routing.test.cjs
           node investment-tracker/tests/upload-routing.test.cjs
@@ -49,3 +50,4 @@ jobs:
           php investment-tracker/tests/provisional.test.php
           php investment-tracker/tests/broker-basis.test.php
           php investment-tracker/tests/drip-withholding.test.php
+          php investment-tracker/tests/corporate-actions.test.php

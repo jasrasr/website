@@ -3,10 +3,10 @@
  * File Name: reconciliation.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Source-preserving Robinhood import staging, per-ticker corrections and safe ledger conversion.
- * Revision: 1.7.0
+ * Revision: 1.8.0
  * Created Date: 2026-10-30
  * Modified Date: 2026-11-16
- * Changelog: 1.7.0 - Match dividends net of DTAX/DFEE, preserve gross/withheld amounts in imported ledger and normalize existing drafts on read. 1.3.4 - Restore positive cashless REC share credits in older staged CSV drafts during read-time reconciliation; preserve unknown basis. 1.3.3 - Require signed exact cancellation matches, preserve cash dividends on canceled DRIPs, and skip zero-event batches. 1.3.2 - Reconcile BCXL/SCXL order reversals by exact source trade before lot replay, including existing staged reports. 1.3.1 - Make batch preview self-contained for CLI regression and safe combined-ledger validation. 1.3.0 - Add full-report eligibility preview, exception queue and atomic batch preparation. 1.2.0 - Suggest split ratios and FIFO from source records, preserving REC credits as unknown-basis receipts and estimated status. 1.1.1 - Preserve report end date for share confirmation and reject fractional split ratios. 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
+ * Changelog: 1.8.0 - Normalize matched same-day reverse splits, cash liquidations/mergers, and unknown-basis source conversions on read without mutating drafts. 1.7.0 - Match dividends net of DTAX/DFEE, preserve gross/withheld amounts in imported ledger and normalize existing drafts on read. 1.3.4 - Restore positive cashless REC share credits in older staged CSV drafts during read-time reconciliation; preserve unknown basis. 1.3.3 - Require signed exact cancellation matches, preserve cash dividends on canceled DRIPs, and skip zero-event batches. 1.3.2 - Reconcile BCXL/SCXL order reversals by exact source trade before lot replay, including existing staged reports. 1.3.1 - Make batch preview self-contained for CLI regression and safe combined-ledger validation. 1.3.0 - Add full-report eligibility preview, exception queue and atomic batch preparation. 1.2.0 - Suggest split ratios and FIFO from source records, preserving REC credits as unknown-basis receipts and estimated status. 1.1.1 - Preserve report end date for share confirmation and reject fractional split ratios. 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
  */
 declare(strict_types=1);
 
@@ -62,6 +62,7 @@ function it_rc_read(string $file): array
             $raw[]=[
                 'date'=>$date,'ticker'=>$ticker,'code'=>$code,'kind'=>$kind,
                 'quantity'=>is_numeric($qty)?(float)$qty:null,
+                'surrender_quantity'=>preg_match('/^([0-9]+(?:\.[0-9]+)?)S$/D',$qty,$oldQty)?(float)$oldQty[1]:null,
                 'amount'=>$amount,'price'=>$r['Price']!==''?it_rh_amount($r['Price']):null,
                 'credit'=>$kind==='split_credit' && is_numeric($qty)?(float)$qty:null,
                 'line'=>$line,'key'=>$normalizedKey,
@@ -199,6 +200,110 @@ function it_rc_pair_dividends(array $rows): array
     return $rows;
 }
 
+
+/**
+ * Conservative, non-mutating corporate action normalization for ORIGINAL
+ * Robinhood source records. Existing private drafts already contain stable
+ * source rows/ids, so this only edits the COPY used during preview/replay.
+ *
+ * SPR S/credited share pairs can represent an same-symbol reverse split.
+ * The actual ratio is not guessed here: it must reconcile to every open
+ * purchase lot at replay, with a UNIQUE split denominator. Other actions
+ * such as inter-ticker spinoffs and basis allocations stay blocked.
+ */
+function it_rc_simple_corporate_actions(array $rows): array
+{
+    $byGroup=[];
+    foreach($rows as $i=>$row) {
+        $code=(string)($row['code']??'');
+        if(in_array($code,['SPR','SXCH','LIQ','MRGS','MRGC'],true))
+            $byGroup[$row['ticker'].'|'.$row['date']][$code][]=$i;
+        if($code==='CONV' && ($row['kind']??'')==='unsupported' &&
+           is_numeric($row['quantity']??null) && (float)$row['quantity']>0 &&
+           ($row['price']??null)===null && ($row['amount']??null)===null) {
+            // Account conversion delivered shares, but supplies neither
+            // original purchase amount nor original holding period.
+            $rows[$i]['kind']='receipt';$rows[$i]['basis_unknown_source']='CONV';
+        }
+    }
+    foreach($byGroup as $group) {
+        $pairs=$group['SPR']??[];
+        if(count($pairs)===2) {
+            $credits=[];$surrenders=[];
+            foreach($pairs as $i) {
+                $row=$rows[$i];
+                if(($row['price']??null)!==null||($row['amount']??null)!==null)continue;
+                if(is_numeric($row['quantity']??null) && (float)$row['quantity']>0)
+                    $credits[]=$i;
+                elseif(($row['quantity']??null)===null)$surrenders[]=$i;
+            }
+            if(count($credits)===1 && count($surrenders)===1) {
+                $c=$credits[0];$old=$surrenders[0];
+                $cusipCredit=[];$cusipOld=[];
+                $hasCredit=preg_match('/\bCUSIP:\s*([A-Z0-9]{9})\b/i',(string)$rows[$c]['description'],$cusipCredit);
+                $hasOld=preg_match('/\bCUSIP:\s*([A-Z0-9]{9})\b/i',(string)$rows[$old]['description'],$cusipOld);
+                // Require documented change of the *same symbol* security
+                // identifier. Avoid treating arbitrary SPR as a split.
+                if($hasCredit && $hasOld && $cusipCredit[1]!==$cusipOld[1]) {
+                    $rows[$c]['kind']='split_credit';
+                    $rows[$c]['credit']=(float)$rows[$c]['quantity'];
+                    $rows[$c]['corporate_action']='reverse_split';
+                    $rows[$c]['paired_surrender']=$rows[$old]['id'];
+                    $rows[$c]['surrender_quantity']=$rows[$old]['surrender_quantity']??null;
+                    $rows[$old]['kind']='paired_surrender';
+                    $rows[$old]['paired_to']=$rows[$c]['id'];
+                }
+            }
+        }
+        foreach([['cash'=>'LIQ','surrender'=>'SXCH','name'=>'liquidation'],
+                 ['cash'=>'MRGC','surrender'=>'MRGS','name'=>'cash_merger']] as $spec) {
+            $cash=$group[$spec['cash']]??[];$surrender=$group[$spec['surrender']]??[];
+            if(count($cash)!==1 || count($surrender)!==1)continue;
+            $c=$cash[0];$old=$surrender[0];
+            $credit=$rows[$c];$removed=$rows[$old];
+            if(($credit['kind']??'')!=='unsupported' ||
+               ($removed['kind']??'')!=='unsupported' ||
+               !is_numeric($credit['amount']??null) || (float)$credit['amount']<=0 ||
+               ($credit['price']??null)!==null || ($removed['amount']??null)!==null ||
+               ($removed['price']??null)!==null || ($removed['quantity']??null)!==null)continue;
+            $desc=(string)($credit['description']??'');
+            $term=$spec['name']==='liquidation'?'Liquidation':'Merger';
+            if(!preg_match('/Cash received thru '. $term . '\s+([0-9]+(?:\.[0-9]+)?)\s+shares?\b/i',$desc,$match))continue;
+            $shares=(float)$match[1];
+            if(!is_finite($shares) || $shares<=0)continue;
+            $sourceSurrender=$removed['surrender_quantity']??null;
+            if($sourceSurrender!==null && abs((float)$sourceSurrender-$shares)>0.000051)continue;
+            $rows[$c]['kind']='sell';
+            $rows[$c]['quantity']=$shares;
+            $rows[$c]['corporate_action']=$spec['name'];
+            $rows[$c]['paired_surrender']=$removed['id'];
+            $rows[$old]['kind']='paired_surrender';
+            $rows[$old]['paired_to']=$rows[$c]['id'];
+        }
+    }
+    // An SPR may have been stored before this feature; new/old rows were
+    // originally "unsupported". Reorder only the copied rows so a credited
+    // reverse split executes before other same-day activity and surrendered
+    // shares are not mistaken for additional purchases.
+    usort($rows,static fn($a,$b)=>
+        strcmp($a['date'],$b['date'])
+        ?: (($a['kind']==='split_credit'?0:1)<=>($b['kind']==='split_credit'?0:1))
+        ?: ($b['line']<=>$a['line']));
+    return $rows;
+}
+
+/** Infer only a UNIQUE reverse ratio, allowing 4dp broker credit rounding. */
+function it_rc_reverse_split_guess(float $before,float $received): ?array
+{
+    if($before<=0 || $received<=0 || $received>=$before)return null;
+    $options=[];
+    for($d=2;$d<=200;$d++) {
+        if(abs($received-$before/$d)<=0.000050001)$options[]=['n'=>1,'d'=>$d];
+        if(count($options)>1)return null;
+    }
+    return count($options)===1?$options[0]:null;
+}
+
 function it_rc_reconcile_cancellations(array $rows): array
 {
     // Backward compatibility: older private drafts were staged before positive
@@ -295,7 +400,7 @@ function it_rc_reconcile_cancellations(array $rows): array
         $rows[$idx]['kind']='cancelled_trade';
         $rows[$idx]['cancels']=$rows[$originalIdx]['id'];
     }
-    return $rows;
+    return it_rc_simple_corporate_actions($rows);
 }
 
 
@@ -403,7 +508,7 @@ function it_rc_build(array $stage,string $ticker): array
     $events=[];$issues=[];$balance=0.0;$confirmedLots=[];
     foreach($rows as $r) {
         $kind=$r['kind'];$id=$r['id'];
-        if($kind==='paired_credit' || $kind==='cancelled_trade')continue;
+        if($kind==='paired_credit' || $kind==='cancelled_trade' || $kind==='paired_surrender')continue;
         if($kind==='unsupported') {
             $issues[]='Row '.$r['line'].' '.$r['code'].': unsupported stock action; needs separate verified corporate-action treatment.';
             continue;
@@ -417,8 +522,13 @@ function it_rc_build(array $stage,string $ticker): array
             if(!$ratio){$issues[]='Row '.$r['line'].' split: supply verified numerator and denominator.';continue;}
             $factor=$ratio['n']/$ratio['d'];
             $credit=(float)($r['credit']??0);
-            $expectedCredit=$balance*($factor-1);
-            if($balance<=0 || $factor<=0 || abs($credit-$expectedCredit)>max(0.0002,abs($expectedCredit)*0.002)) {
+            $reverse=($r['corporate_action']??'')==='reverse_split';
+            $expectedCredit=$reverse?$balance*$factor:$balance*($factor-1);
+            $rounding=$reverse?0.000050001:max(0.0002,abs($expectedCredit)*0.002);
+            $surrender=$r['surrender_quantity']??null;
+            if($balance<=0 || $factor<=0 || ($reverse && ($ratio['n']!==1||$ratio['d']<=1)) ||
+               abs($credit-$expectedCredit)>$rounding ||
+               ($reverse && $surrender!==null && abs((float)$surrender-$balance)>0.000050001)) {
                 $issues[]='Row '.$r['line'].' split credit '.$credit.' does not reconcile to before-split shares '.$balance.' at '.$ratio['n'].':'.$ratio['d'].'.';
                 continue;
             }
@@ -454,6 +564,11 @@ function it_rc_build(array $stage,string $ticker): array
             continue;
         }
         if($kind==='sell') {
+            if(in_array($r['corporate_action']??'',['liquidation','cash_merger'],true) &&
+               abs($balance-(float)($r['quantity']??0))>0.000001) {
+                $issues[]='Row '.$r['line'].' cash corporate action does not fully reconcile outstanding shares.';
+                continue;
+            }
             $alloc=$review['sales'][$id]??[];
             $q=(float)($r['quantity']??0);
             $proceeds=(float)($r['amount']??0);
@@ -535,16 +650,22 @@ function it_rc_auto_review(array $stage, string $ticker): array
     $available=[];$balance=0.0;$ratios=[];$sales=[];$issues=[];$warnings=[];
     foreach ($rows as $row) {
         $kind=$row['kind'];$id=$row['id'];
-        if ($kind==='paired_credit' || $kind==='cancelled_trade' || $kind==='dividend' || $kind==='other_income' || $kind==='fee')continue;
+        if ($kind==='paired_credit' || $kind==='cancelled_trade' || $kind==='paired_surrender' || $kind==='dividend' || $kind==='other_income' || $kind==='fee')continue;
         if ($kind==='buy' || $kind==='reinvest' || $kind==='receipt') {
-            if($kind==='receipt')$warnings[]='Row '.$row['line'].' REC share credit adds '.(float)$row['quantity'].' shares with UNKNOWN cost basis and acquisition date.';
+            if($kind==='receipt')$warnings[]='Row '.$row['line'].' '.$row['code'].' share credit adds '.(float)$row['quantity'].' shares with UNKNOWN cost basis and acquisition date.';
             $q=(float)($row['quantity']??0);
             if($q<=0){$issues[]='Row '.$row['line'].' missing purchase/receipt shares.';continue;}
             $available[$id]=['remaining'=>$q,'date'=>$row['date']];
             $balance+=$q;continue;
         }
         if($kind==='split_credit'){
-            $ratio=it_rc_split_guess($balance,(float)($row['credit']??0));
+            $reverse=($row['corporate_action']??'')==='reverse_split';
+            $ratio=$reverse
+                ?it_rc_reverse_split_guess($balance,(float)($row['credit']??0))
+                :it_rc_split_guess($balance,(float)($row['credit']??0));
+            if($reverse && $ratio && isset($row['surrender_quantity']) &&
+               $row['surrender_quantity']!==null &&
+               abs((float)$row['surrender_quantity']-$balance)>0.000050001)$ratio=null;
             if(!$ratio){$issues[]='Row '.$row['line'].' split ratio not unambiguously inferable from share credit.';continue;}
             $ratios[$id]=$ratio;
             $factor=$ratio['n']/$ratio['d'];
@@ -557,6 +678,11 @@ function it_rc_auto_review(array $stage, string $ticker): array
         if($kind==='sell'){
             $needed=(float)($row['quantity']??0);
             if($needed<=0){$issues[]='Row '.$row['line'].' invalid sale quantity.';continue;}
+            if(in_array($row['corporate_action']??'',['liquidation','cash_merger'],true) &&
+               abs($balance-$needed)>0.000001){
+                $issues[]='Row '.$row['line'].' cash settlement shares differ from the outstanding position.';
+                continue;
+            }
             $allocation=[];
             foreach($available as $lotId=>&$lot){
                 if($needed<=0.0000000001)break;
