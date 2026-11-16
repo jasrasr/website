@@ -2,10 +2,10 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, data contract, calculation model, privacy and test procedures.
-Revision: 1.6.0
+Revision: 1.7.0
 Created Date: 2026-10-29
-Modified Date: 2026-11-14
-Changelog: 1.6.0 - Separate investment-performance basis from broker-reported tax basis and add immutable 1099-B sale corrections with conservative lot confirmation. 1.5.4 - Suppress false FIFO warning on a complete brokerage sale across multiple purchase lots. 1.5.3 - Normalize positive cashless REC share credits in existing private Robinhood drafts on read without guessing tax basis. 1.5.2 - Guard exact signed cancellations, cancelled DRIPs and zero-event batches. Pair Robinhood canceled trades with original fills, correcting Tesla balances and existing drafts. 1.5.1 - Add closed-position summaries, realized returns and clear FIFO ambiguity. 1.5.0 - Full-report batch preview, one-click import, per-ticker exceptions and privacy-safe deduplication. 1.4.0 - Enable provisional Robinhood import without impossible manual share/lot attestations. 1.3.0 - Add private per-ticker report staging, editable sale-lot/split corrections, broker-share validation, and explicit atomic import. 1.2.1 - Clarify native Robinhood CSV upload and route misselected reports to the non-mutating analyzer. 1.2.0 - Reconcile NVDA demo using owner-authorized CSV and add preview-only Robinhood CSV parser. 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
+Modified Date: 2026-11-16
+Changelog: 1.7.0 - Reconcile gross dividends net of withholding/ADR fees without double counting or rewriting staged reports. 1.6.0 - Separate investment-performance basis from broker-reported tax basis and add immutable 1099-B sale corrections with conservative lot confirmation. 1.5.4 - Suppress false FIFO warning on a complete brokerage sale across multiple purchase lots. 1.5.3 - Normalize positive cashless REC share credits in existing private Robinhood drafts on read without guessing tax basis. 1.5.2 - Guard exact signed cancellations, cancelled DRIPs and zero-event batches. Pair Robinhood canceled trades with original fills, correcting Tesla balances and existing drafts. 1.5.1 - Add closed-position summaries, realized returns and clear FIFO ambiguity. 1.5.0 - Full-report batch preview, one-click import, per-ticker exceptions and privacy-safe deduplication. 1.4.0 - Enable provisional Robinhood import without impossible manual share/lot attestations. 1.3.0 - Add private per-ticker report staging, editable sale-lot/split corrections, broker-share validation, and explicit atomic import. 1.2.1 - Clarify native Robinhood CSV upload and route misselected reports to the non-mutating analyzer. 1.2.0 - Reconcile NVDA demo using owner-authorized CSV and add preview-only Robinhood CSV parser. 1.1.0 - Document isolated NVIDIA demo, original/adjusted lots, and holding-period boundaries. 1.0.0 - Document initial private tax-lot dashboard.
 -->
 # Investment Tracker
 
@@ -37,6 +37,18 @@ The **NVIDIA screenshot demo** tab (`?demo=1`) is now reconstructed from the own
 - The activity report does **not** identify which tax lots the broker actually selected for the two earlier NVDA sales. Demo allocates historical sale proceeds to oldest acquisitions provisionally for illustration. An actual tax-lot statement should be used before using realized gains in tax decisions.
 
 All personal user imports must still be approved and reconciled. **None of the user's 1,479-row brokerage CSV is committed to public GitHub**; only the explicitly authorized, ticker-specific NVDA demonstration entries are in source.
+
+## Robinhood gross dividends, withholding and net DRIP purchases (v1.7.0)
+
+Some Robinhood activity exports show three distinct rows for a single dividend reinvestment: a positive cash dividend (`CDIV`), a negative same-symbol withholding tax (`DTAX`) or ADR fee (`DFEE`), and a later fractional-share dividend-reinvestment purchase (`Buy` with a Dividend Reinvestment description). The net purchase is smaller than the gross dividend, **but it is not an unrelated purchase or missing cash dividend**.
+
+The source-preserving importer now matches these transactions *only* where `gross dividend − documented withholding/ADR fees = net DRIP purchase` to the nearest recorded cent. It requires the **same ticker**, dividend no more than 14 days before reinvestment, fee dates within that interval, and an **unambiguous** combination of original dividend and fee rows. It refuses to invent fees, pair cross-ticker activity, accept fractional-dollar mismatches, or guess a choice among multiple equally plausible combinations.
+
+The resulting ledger records the net reinvestment shares and their actual purchase cost basis, **gross reinvested dividend** and the tax/fee withheld. Withheld amounts are shown as fees for reporting, but are not subtracted a *second time* from returns: the withholding already reduced the number of shares purchased. Unrelated cash fees still reduce return normally. `dividends_cash` remains cash dividends *not reinvested*; `dividends_reinvested` remains the net amount actually used for new shares, and `dividends_reinvested_gross` reports the original gross distribution. Existing dividend matches with no withholding retain previous behavior. Stock-price dates and XIRR limitations are unchanged.
+
+**Previously staged private Robinhood CSV reports** with old `pair_issue: No matching dividend credit` are normalized **on read**. The staged source records, source IDs, report revision, completed symbols, and existing user ledger records do not change. Re-run **Preview import of all stocks** after deploying this release; qualifying previously blocked symbols may become eligible. **Do not re-import completed symbols**, and do not assume every complex corporate action has been solved. Users do not need to upload the same historical report again.
+
+Synthetic tests cover net-of-tax and net-of-ADR-fee DRIPs, accurate remaining shares, cash income, withholding and gain, replay of older staged drafts, ambiguous candidates and canceled purchases. Do not commit actual Robinhood exports or personal brokerage amounts to this public repository.
 
 ## No FIFO uncertainty for a complete multi-lot liquidation (v1.5.4)
 
