@@ -3,12 +3,13 @@
  * File Name: reconciliation.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Source-preserving Robinhood import staging, per-ticker corrections and safe ledger conversion.
- * Revision: 1.8.0
+ * Revision: 1.9.0
  * Created Date: 2026-10-30
  * Modified Date: 2026-11-16
- * Changelog: 1.8.0 - Normalize matched same-day reverse splits, cash liquidations/mergers, and unknown-basis source conversions on read without mutating drafts. 1.7.0 - Match dividends net of DTAX/DFEE, preserve gross/withheld amounts in imported ledger and normalize existing drafts on read. 1.3.4 - Restore positive cashless REC share credits in older staged CSV drafts during read-time reconciliation; preserve unknown basis. 1.3.3 - Require signed exact cancellation matches, preserve cash dividends on canceled DRIPs, and skip zero-event batches. 1.3.2 - Reconcile BCXL/SCXL order reversals by exact source trade before lot replay, including existing staged reports. 1.3.1 - Make batch preview self-contained for CLI regression and safe combined-ledger validation. 1.3.0 - Add full-report eligibility preview, exception queue and atomic batch preparation. 1.2.0 - Suggest split ratios and FIFO from source records, preserving REC credits as unknown-basis receipts and estimated status. 1.1.1 - Preserve report end date for share confirmation and reject fractional split ratios. 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
+ * Changelog: 1.9.0 - Carry forward documented rounded WKHS splits and paired HCWC/HOST and CHK/CHKAQ history without duplicate cost basis; preserve completed-ticker protection. 1.8.0 - Normalize matched same-day reverse splits, cash liquidations/mergers, and unknown-basis source conversions on read without mutating drafts. 1.7.0 - Match dividends net of DTAX/DFEE, preserve gross/withheld amounts in imported ledger and normalize existing drafts on read. 1.3.4 - Restore positive cashless REC share credits in older staged CSV drafts during read-time reconciliation; preserve unknown basis. 1.3.3 - Require signed exact cancellation matches, preserve cash dividends on canceled DRIPs, and skip zero-event batches. 1.3.2 - Reconcile BCXL/SCXL order reversals by exact source trade before lot replay, including existing staged reports. 1.3.1 - Make batch preview self-contained for CLI regression and safe combined-ledger validation. 1.3.0 - Add full-report eligibility preview, exception queue and atomic batch preparation. 1.2.0 - Suggest split ratios and FIFO from source records, preserving REC credits as unknown-basis receipts and estimated status. 1.1.1 - Preserve report end date for share confirmation and reject fractional split ratios. 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
  */
 declare(strict_types=1);
+require_once __DIR__.'/corporate-action-evidence.php';
 
 /* No brokerage CSV contents are committed or stored under a publicly readable URL.
  * Per-user, per-report parsed drafts remain protected by storage/.htaccess.
@@ -232,7 +233,7 @@ function it_rc_simple_corporate_actions(array $rows): array
             $credits=[];$surrenders=[];
             foreach($pairs as $i) {
                 $row=$rows[$i];
-                if(($row['price']??null)!==null||($row['amount']??null)!==null)continue;
+                if(($row['kind']??'')!=='unsupported'||($row['price']??null)!==null||($row['amount']??null)!==null)continue;
                 if(is_numeric($row['quantity']??null) && (float)$row['quantity']>0)
                     $credits[]=$i;
                 elseif(($row['quantity']??null)===null)$surrenders[]=$i;
@@ -400,7 +401,7 @@ function it_rc_reconcile_cancellations(array $rows): array
         $rows[$idx]['kind']='cancelled_trade';
         $rows[$idx]['cancels']=$rows[$originalIdx]['id'];
     }
-    return it_rc_simple_corporate_actions($rows);
+    return it_rc_verified_special_actions(it_rc_simple_corporate_actions($rows));
 }
 
 
@@ -422,12 +423,16 @@ function it_rc_symbols(array $stage): array
     $counts=[];
     foreach (it_rc_reconcile_cancellations($stage['rows']) as $r) {
         $t=$r['ticker'];
-        $counts[$t]??=['ticker'=>$t,'counts'=>[],'status'=>'not reviewed'];
+        $counts[$t]??=['ticker'=>$t,'counts'=>[],'status'=>'not reviewed','source_tickers'=>[]];
+        $counts[$t]['source_tickers'][$r['source_ticker']??$t]=true;
         $counts[$t]['counts'][$r['kind']]=($counts[$t]['counts'][$r['kind']]??0)+1;
     }
     foreach ($counts as $t=>&$info) {
-        if(isset($stage['completed'][$t]))$info['status']='imported';
-        elseif(isset($stage['reviews'][$t]))$info['status']='review in progress';
+        $sources=array_keys($info['source_tickers']);
+        $info['source_tickers']=$sources;
+        foreach($sources as $original)if(isset($stage['completed'][$original]))$info['status']='imported';
+        if($info['status']!=='imported' && isset($stage['completed'][$t]))$info['status']='imported';
+        elseif($info['status']!=='imported' && isset($stage['reviews'][$t]))$info['status']='review in progress';
     }
     unset($info);
     ksort($counts);
@@ -460,7 +465,7 @@ function it_rc_review(array $stage,string $ticker,array $input): array
     $ticker=strtoupper(trim($ticker));
     if(!preg_match('/^[A-Z0-9.^-]{1,14}$/D',$ticker))throw new InvalidArgumentException('Invalid ticker.');
     if(isset($stage['completed'][$ticker]))throw new InvalidArgumentException('This ticker is already imported; edits cannot rewrite its ledger history.');
-    $rows=array_values(array_filter($stage['rows'],static fn($x)=>$x['ticker']===$ticker));
+    $rows=array_values(array_filter(it_rc_reconcile_cancellations($stage['rows']),static fn($x)=>$x['ticker']===$ticker));
     if(!$rows)throw new InvalidArgumentException('Ticker is not in staged report.');
     $expected=$input['expected_shares']??null;
     if(!is_numeric($expected) || (float)$expected<0 || !is_finite((float)$expected)) {
@@ -522,20 +527,43 @@ function it_rc_build(array $stage,string $ticker): array
             if(!$ratio){$issues[]='Row '.$r['line'].' split: supply verified numerator and denominator.';continue;}
             $factor=$ratio['n']/$ratio['d'];
             $credit=(float)($r['credit']??0);
-            $reverse=($r['corporate_action']??'')==='reverse_split';
+            $mode=$r['corporate_action']??'';
+            $reverse=in_array($mode,['reverse_split','cross_ticker_reverse','verified_rounded_split'],true);
+            $roundUp=$mode==='verified_rounded_split';
             $expectedCredit=$reverse?$balance*$factor:$balance*($factor-1);
             $rounding=$reverse?0.000050001:max(0.0002,abs($expectedCredit)*0.002);
             $surrender=$r['surrender_quantity']??null;
-            if($balance<=0 || $factor<=0 || ($reverse && ($ratio['n']!==1||$ratio['d']<=1)) ||
-               abs($credit-$expectedCredit)>$rounding ||
-               ($reverse && $surrender!==null && abs((float)$surrender-$balance)>0.000050001)) {
-                $issues[]='Row '.$r['line'].' split credit '.$credit.' does not reconcile to before-split shares '.$balance.' at '.$ratio['n'].':'.$ratio['d'].'.';
+            $requiredRatio=$r['ratio_n']??null;
+            $requiredDenominator=$r['ratio_d']??null;
+            $ratioVerified=$requiredRatio===null ||
+                ((int)$requiredRatio===(int)$ratio['n'] && (int)$requiredDenominator===(int)$ratio['d']);
+            $validNewShares=$roundUp
+                ?abs(ceil($expectedCredit-0.0000000001)-$credit)<=0.00000001
+                :abs($credit-$expectedCredit)<=$rounding;
+            $openLots=array_keys(array_filter($confirmedLots,static fn($lot)=>($lot['remaining']??0)>0.000000001));
+            $reported=isset($r['reported_split_shares'])?(float)$r['reported_split_shares']:null;
+            // Only one outstanding lot can receive an account-level rounded
+            // share adjustment without unverified tax-lot attribution.
+            $requiresSingle=$roundUp || $reported!==null;
+            if($balance<=0 || $factor<=0 || !$ratioVerified ||
+               ($reverse && $ratio['n']>=$ratio['d']) ||
+               !$validNewShares ||
+               ($reverse && $surrender!==null && abs((float)$surrender-$balance)>0.000050001) ||
+               ($requiresSingle && count($openLots)!==1)) {
+                $issues[]='Row '.$r['line'].' corporate split cannot safely reconcile outstanding shares and rounded credit.';
                 continue;
             }
             $balance*=$factor;
-            foreach ($confirmedLots as &$lot) $lot['remaining']*=$factor;
+            foreach($confirmedLots as &$lot)$lot['remaining']*=$factor;
             unset($lot);
-            $events[]=it_rc_event($r,'split',0,0,'',$ratio['n'],$ratio['d']);
+            if($requiresSingle) {
+                $balance=$credit;
+                $confirmedLots[$openLots[0]]['remaining']=$credit;
+            }
+            $split=it_rc_event($r,'split',0,0,'',$ratio['n'],$ratio['d']);
+            if($requiresSingle)$split['reported_split_shares']=$credit;
+            if($roundUp)$split['split_round_up']=true;
+            $events[]=$split;
             continue;
         }
         if($kind==='receipt') {
@@ -564,7 +592,7 @@ function it_rc_build(array $stage,string $ticker): array
             continue;
         }
         if($kind==='sell') {
-            if(in_array($r['corporate_action']??'',['liquidation','cash_merger'],true) &&
+            if(in_array($r['corporate_action']??'',['liquidation','cash_merger','cash_in_lieu'],true) &&
                abs($balance-(float)($r['quantity']??0))>0.000001) {
                 $issues[]='Row '.$r['line'].' cash corporate action does not fully reconcile outstanding shares.';
                 continue;
@@ -659,26 +687,49 @@ function it_rc_auto_review(array $stage, string $ticker): array
             $balance+=$q;continue;
         }
         if($kind==='split_credit'){
-            $reverse=($row['corporate_action']??'')==='reverse_split';
-            $ratio=$reverse
-                ?it_rc_reverse_split_guess($balance,(float)($row['credit']??0))
-                :it_rc_split_guess($balance,(float)($row['credit']??0));
-            if($reverse && $ratio && isset($row['surrender_quantity']) &&
-               $row['surrender_quantity']!==null &&
-               abs((float)$row['surrender_quantity']-$balance)>0.000050001)$ratio=null;
+            $mode=$row['corporate_action']??'';
+            $reverse=in_array($mode,['reverse_split','cross_ticker_reverse','verified_rounded_split'],true);
+            $verified=isset($row['ratio_n'],$row['ratio_d']);
+            $roundUp=$mode==='verified_rounded_split';
+            $ratio=$verified
+                ?['n'=>(int)$row['ratio_n'],'d'=>(int)$row['ratio_d']]
+                :($reverse
+                    ?it_rc_reverse_split_guess($balance,(float)($row['credit']??0))
+                    :it_rc_split_guess($balance,(float)($row['credit']??0)));
             if(!$ratio){$issues[]='Row '.$row['line'].' split ratio not unambiguously inferable from share credit.';continue;}
-            $ratios[$id]=$ratio;
             $factor=$ratio['n']/$ratio['d'];
+            $credit=(float)($row['credit']??0);
+            $expected=$reverse?$balance*$factor:$balance*($factor-1);
+            $validCredit=$roundUp
+                ?abs(ceil($expected-0.0000000001)-$credit)<=0.00000001
+                :abs($credit-$expected)<=($reverse?0.000050001:max(0.0002,abs($expected)*0.002));
+            $openLots=array_keys(array_filter($available,static fn($l)=>($l['remaining']??0)>0.000000001));
+            $requiresSingle=$roundUp || isset($row['reported_split_shares']);
+            $surrender=$row['surrender_quantity']??null;
+            if($balance<=0 || $factor<=0 || !$validCredit ||
+               ($reverse && $ratio['n']>=$ratio['d']) ||
+               ($reverse && $surrender!==null && abs((float)$surrender-$balance)>0.000050001) ||
+               ($requiresSingle && count($openLots)!==1)) {
+                $issues[]='Row '.$row['line'].' split source does not reconcile the pre-split position and credit.';
+                continue;
+            }
+            $ratios[$id]=$ratio;
             $balance*=$factor;
             foreach($available as &$lot)$lot['remaining']*=$factor;
             unset($lot);
-            $warnings[]='Row '.$row['line'].' split ratio '.$ratio['n'].':'.$ratio['d'].' inferred from rounded credited shares; check corporate-action history.';
+            if($requiresSingle){
+                $balance=$credit;
+                $available[$openLots[0]]['remaining']=$credit;
+            }
+            $warnings[]='Row '.$row['line'].' ratio '.$ratio['n'].':'.$ratio['d'].
+                ($verified?' derived from independently published issuer terms':' inferred from brokerage credit').
+                '; confirm tax-basis adjustments with your broker.';
             continue;
         }
         if($kind==='sell'){
             $needed=(float)($row['quantity']??0);
             if($needed<=0){$issues[]='Row '.$row['line'].' invalid sale quantity.';continue;}
-            if(in_array($row['corporate_action']??'',['liquidation','cash_merger'],true) &&
+            if(in_array($row['corporate_action']??'',['liquidation','cash_merger','cash_in_lieu'],true) &&
                abs($balance-$needed)>0.000001){
                 $issues[]='Row '.$row['line'].' cash settlement shares differ from the outstanding position.';
                 continue;
@@ -731,7 +782,11 @@ function it_rc_batch_preview(array $stage,array $existing): array
     $eligible=[];$blocked=[];$skipped=[];$all=[];
     foreach ($symbols as $symbol) {
         $ticker=$symbol['ticker'];
-        if (isset($stage['completed'][$ticker])||isset($already[$ticker])) {
+        $aliasSources=$symbol['source_tickers']??[$ticker];
+        $known=isset($stage['completed'][$ticker])||isset($already[$ticker]);
+        foreach($aliasSources as $original)
+            if(isset($stage['completed'][$original])||isset($already[$original]))$known=true;
+        if($known) {
             $skipped[]=['ticker'=>$ticker,'reason'=>'Previously imported or already has ledger records.'];
             continue;
         }
@@ -806,7 +861,10 @@ function it_rc_event(array $r,string $kind,float $q,float $amount,string $lot=''
         'date'=>$r['date'],'ticker'=>$r['ticker'],'type'=>$kind,
         'quantity'=>$q,'amount'=>$amount,'price'=>$price,
         'numerator'=>$num,'denominator'=>$den,'lot_id'=>$lot,
-        'note'=>'Robinhood row '.$r['line'].' ('.$r['code'].')'.($kind==='price'?' execution price; NOT closing quote':''),
+        'note'=>'Robinhood row '.$r['line'].' ('.$r['code'].')'.
+            (isset($r['source_ticker'])?' originally '.$r['source_ticker']:'').
+            (isset($r['source_cash_line'])?' cash settlement row '.$r['source_cash_line']:'').
+            ($kind==='price'?' execution price; NOT closing quote':''),
     ]);
     $ev['id']='rh'.$r['id'].($kind==='sell'?substr(hash('sha256',$lot),0,5):($kind==='price'?'quote':''));
     $ev['external_id']=$ev['id'];
