@@ -2,12 +2,22 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release notes for private tax-lot investment dashboard.
-Revision: 1.6.0
+Revision: 1.7.0
 Created Date: 2026-10-29
-Modified Date: 2026-11-14
-Changelog: 1.6.0 - Add immutable broker-statement sale corrections, confirmed lot status and separate tax-basis reporting. 1.5.4 - Hide false FIFO warning for complete source sale across multiple original purchase lots; preserve real partial-sale warnings. 1.5.3 - Normalize positive cashless REC share credits in existing private Robinhood drafts on read without guessing tax basis. 1.5.2 - Apply Copilot cancellation review safeguards. Recognize canceled brokerage trades, replacement purchases and staged Tesla histories. 1.5.1 - Add closed-position summaries, realized returns and clearer FIFO ambiguity. 1.5.0 - Atomic import-all workflow and exception queue for actual Robinhood export. 1.4.0 - Auto-import supported broker transactions with explicitly provisional FIFO, split inference and unknown REC basis. 1.3.0 - Add private staged Robinhood account import with per-ticker editable allocations and validation. 1.2.1 - Route unmodified Robinhood CSV to safe read-only preview when incorrectly selected for normalized import. 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
+Modified Date: 2026-11-16
+Changelog: 1.7.0 - Reconcile gross dividends net of withholding/ADR fees without double counting or rewriting staged reports. 1.6.0 - Add immutable broker-statement sale corrections, confirmed lot status and separate tax-basis reporting. 1.5.4 - Hide false FIFO warning for complete source sale across multiple original purchase lots; preserve real partial-sale warnings. 1.5.3 - Normalize positive cashless REC share credits in existing private Robinhood drafts on read without guessing tax basis. 1.5.2 - Apply Copilot cancellation review safeguards. Recognize canceled brokerage trades, replacement purchases and staged Tesla histories. 1.5.1 - Add closed-position summaries, realized returns and clearer FIFO ambiguity. 1.5.0 - Atomic import-all workflow and exception queue for actual Robinhood export. 1.4.0 - Auto-import supported broker transactions with explicitly provisional FIFO, split inference and unknown REC basis. 1.3.0 - Add private staged Robinhood account import with per-ticker editable allocations and validation. 1.2.1 - Route unmodified Robinhood CSV to safe read-only preview when incorrectly selected for normalized import. 1.2.0 - Read-only Robinhood activity CSV parser and full NVDA demo reconstruction. 1.1.0 - Split-adjusted original/remaining lot comparisons, tax-term horizon, isolated screenshot demo. 1.0.0 - Initial release.
 -->
 # Investment Tracker Changelog
+
+## 1.7.0 — 2026-11-16
+
+- Added conservative, general same-symbol `CDIV` + `DTAX`/`DFEE` + fractional `Buy` (DRIP) matching: the documented dividend less withheld tax/ADR fees must exactly equal the net purchase at source-cent precision.
+- Repaired the read-time interpretation of **previously staged drafts** containing unmatched reinvestments, without reuploading the report, changing saved revisions or overwriting already imported tickers.
+- Preserved gross dividend, net reinvestment cost, withheld fees and new purchase-lot share quantity as distinct auditable facts. Prevented a second deduction of fees already subtracted before a DRIP share purchase.
+- Matched only unique candidate distributions and withholding subsets; missing or ambiguous source evidence still blocks the affected symbol.
+- Added a ticker-card explanation of gross versus net reinvestment and withholding.
+- Added synthetic CI regression tests for net-of-tax and net-of-ADR-fee purchases, old drafts, missing/ambiguous matches, canceled DRIPs, no duplicate income and current share balances.
+- Corporate-action codes `SPR`, `SOFF`, `CONV`, `MRGS`, `MRGC`, `LIQ`, `SXCH` and `CIL` remain separately blocked until their terms and basis can be reconciled. Incremental importing into existing ticker histories remains future work; no saved portfolio or Hostinger data was modified.
 
 ## 1.6.0 — 2026-11-14
 
