@@ -3,10 +3,10 @@
  * File Name: reconciliation.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Source-preserving Robinhood import staging, per-ticker corrections and safe ledger conversion.
- * Revision: 1.9.0
+ * Revision: 1.9.1
  * Created Date: 2026-10-30
  * Modified Date: 2026-11-16
- * Changelog: 1.9.0 - Carry forward documented rounded WKHS splits and paired HCWC/HOST and CHK/CHKAQ history without duplicate cost basis; preserve completed-ticker protection. 1.8.0 - Normalize matched same-day reverse splits, cash liquidations/mergers, and unknown-basis source conversions on read without mutating drafts. 1.7.0 - Match dividends net of DTAX/DFEE, preserve gross/withheld amounts in imported ledger and normalize existing drafts on read. 1.3.4 - Restore positive cashless REC share credits in older staged CSV drafts during read-time reconciliation; preserve unknown basis. 1.3.3 - Require signed exact cancellation matches, preserve cash dividends on canceled DRIPs, and skip zero-event batches. 1.3.2 - Reconcile BCXL/SCXL order reversals by exact source trade before lot replay, including existing staged reports. 1.3.1 - Make batch preview self-contained for CLI regression and safe combined-ledger validation. 1.3.0 - Add full-report eligibility preview, exception queue and atomic batch preparation. 1.2.0 - Suggest split ratios and FIFO from source records, preserving REC credits as unknown-basis receipts and estimated status. 1.1.1 - Preserve report end date for share confirmation and reject fractional split ratios. 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
+ * Changelog: 1.9.1 - Diagnose interdependent AMC/APE distribution, conversion and settlement while blocking unsupported basis transfers until broker evidence exists. 1.9.0 - Carry forward documented rounded WKHS splits and paired HCWC/HOST and CHK/CHKAQ history without duplicate cost basis; preserve completed-ticker protection. 1.8.0 - Normalize matched same-day reverse splits, cash liquidations/mergers, and unknown-basis source conversions on read without mutating drafts. 1.7.0 - Match dividends net of DTAX/DFEE, preserve gross/withheld amounts in imported ledger and normalize existing drafts on read. 1.3.4 - Restore positive cashless REC share credits in older staged CSV drafts during read-time reconciliation; preserve unknown basis. 1.3.3 - Require signed exact cancellation matches, preserve cash dividends on canceled DRIPs, and skip zero-event batches. 1.3.2 - Reconcile BCXL/SCXL order reversals by exact source trade before lot replay, including existing staged reports. 1.3.1 - Make batch preview self-contained for CLI regression and safe combined-ledger validation. 1.3.0 - Add full-report eligibility preview, exception queue and atomic batch preparation. 1.2.0 - Suggest split ratios and FIFO from source records, preserving REC credits as unknown-basis receipts and estimated status. 1.1.1 - Preserve report end date for share confirmation and reject fractional split ratios. 1.1.0 - Keep historical execution prices as dated observations, separate from live quotes. 1.0.0 - Private draft, editable sale-lot allocations, verified split ratios, share reconciliation and atomic ticker import.
  */
 declare(strict_types=1);
 require_once __DIR__.'/corporate-action-evidence.php';
@@ -767,6 +767,76 @@ function it_rc_auto_review(array $stage, string $ticker): array
 
 
 /**
+ * Review-only AMC/APE evidence diagnostic.
+ *
+ * AMC's 2022/2023 SEC filings describe APE issuance, 1:10 AMC reverse split,
+ * 1:10 APE conversion, and 1:7.5 litigation settlement. Source quantities
+ * establish shares but NOT how the broker allocated the ORIGINAL AMC basis
+ * to APE or subsequent settlement shares. Never treat SOFF/SDIV as free
+ * purchases or MRGS as a cash sale.
+ *
+ * Matches public CUSIPs, issuer action dates, and a UNIQUE sequence of source
+ * rows in a temporary read-only normalized draft; no user portfolio mutation.
+ */
+function it_rc_amc_ape_review_evidence(array $stage): ?array
+{
+    $required=[
+        'APE distributed on 2022-08-22 (SOFF) from original AMC purchase lots',
+        'AMC reverse split on 2023-08-24 (SPR), 1 share per 10',
+        'APE to AMC conversion on 2023-08-25 (MRGS), 1 AMC per 10 APE',
+        'AMC litigation settlement distribution on 2023-08-28 (SDIV), 1 AMC per 7.5 eligible post-split AMC',
+    ];
+    $patterns=[
+        ['ticker'=>'APE','date'=>'2022-08-22','code'=>'SOFF','cusip'=>'00165C203','positive'=>true],
+        ['ticker'=>'AMC','date'=>'2023-08-24','code'=>'SPR','cusip'=>'00165C104','positive'=>false],
+        ['ticker'=>'AMC','date'=>'2023-08-24','code'=>'SPR','cusip'=>'00165C302','positive'=>true],
+        ['ticker'=>'APE','date'=>'2023-08-25','code'=>'MRGS','cusip'=>'00165C203','positive'=>false],
+        ['ticker'=>'AMC','date'=>'2023-08-25','code'=>'MRGS','cusip'=>'00165C302','positive'=>true],
+        ['ticker'=>'AMC','date'=>'2023-08-28','code'=>'SDIV','cusip'=>'00165C302','positive'=>true],
+    ];
+    $rows=it_rc_reconcile_cancellations($stage['rows']);
+    $matched=[];
+    foreach($patterns as $pattern) {
+        $hits=array_values(array_filter($rows,static function($row)use($pattern) {
+            if(($row['ticker']??'')!==$pattern['ticker'] ||
+               ($row['date']??'')!==$pattern['date'] ||
+               ($row['code']??'')!==$pattern['code'] ||
+               ($row['price']??null)!==null || ($row['amount']??null)!==null ||
+               it_rc_source_cusip($row)!==$pattern['cusip'])return false;
+            $qty=$row['quantity']??null;
+            return $pattern['positive']
+                ?is_numeric($qty)&&(float)$qty>0
+                :$qty===null;
+        }));
+        if(count($hits)!==1)return null;
+        $matched[]=$hits[0];
+    }
+    // Same-day source quantities are rounded by the broker to 4dp.
+    // A mismatch is a genuine blocker, not evidence for a reconstructed lot.
+    $oldAmc=$matched[1]['surrender_quantity']??null;
+    $amcSplit=(float)$matched[2]['quantity'];
+    $oldApe=$matched[3]['surrender_quantity']??null;
+    $converted=(float)$matched[4]['quantity'];
+    $settlement=(float)$matched[5]['quantity'];
+    if($oldAmc!==null && abs((float)$oldAmc/10-$amcSplit)>0.000050001)return null;
+    if($oldApe!==null && abs((float)$oldApe/10-$converted)>0.000050001)return null;
+    if(abs($amcSplit/7.5-$settlement)>0.000050001)return null;
+    return [
+        'group'=>'AMC_APE_2022_2023',
+        'linked_tickers'=>['AMC','APE'],
+        'confirmed_source_steps'=>$required,
+        'source_lines'=>array_map(static fn($row)=>(int)$row['line'],$matched),
+        'source_quantities_match'=>true,
+        'review_status'=>'broker_basis_evidence_required',
+        'required_evidence'=>[
+            'Broker-confirmed basis and inherited acquisition dates allocated to the 2022 APE distribution from the original AMC tax lots',
+            'Broker-confirmed adjusted APE lot basis carried into AMC in the August 2023 conversion',
+            'Basis allocation for August 2023 litigation settlement shares and confirmation of eligible original AMC lots',
+        ],
+    ];
+}
+
+/**
  * Inspect every symbol without mutating the permanent ledger.
  * All eligible stock events are built and replayed before authorization
  * to commit them in a single atomic portfolio update.
@@ -774,6 +844,9 @@ function it_rc_auto_review(array $stage, string $ticker): array
 function it_rc_batch_preview(array $stage,array $existing): array
 {
     $symbols=it_rc_symbols($stage);
+    // Linked AMC/APE security actions cannot be imported one symbol at a
+    // time; supply an actionable evidence summary without weakening safety.
+    $linked=it_rc_amc_ape_review_evidence($stage);
     $already=[];
     foreach ($existing as $event) {
         if(is_array($event) && empty($event['voided_at']) && isset($event['ticker']))
@@ -801,7 +874,19 @@ function it_rc_batch_preview(array $stage,array $existing): array
             continue;
         }
         if (!$auto['ready']) {
-            $blocked[]=['ticker'=>$ticker,'reason'=>implode('; ',array_slice($auto['issues']??[],0,3))];
+            if($linked!==null && in_array($ticker,$linked['linked_tickers'],true)) {
+                $blocked[]=[
+                    'ticker'=>$ticker,
+                    'reason'=>'Linked AMC/APE distribution, reverse split, conversion and stock settlement: source shares reconcile, but tax basis for the 2022 APE distribution and 2023 settlement must be documented before an accurate import.',
+                    'related_tickers'=>$linked['linked_tickers'],
+                    'group'=>$linked['group'],
+                    'basis_status'=>$linked['review_status'],
+                    'required_evidence'=>$linked['required_evidence'],
+                    'source_lines'=>$linked['source_lines'],
+                ];
+            } else {
+                $blocked[]=['ticker'=>$ticker,'reason'=>implode('; ',array_slice($auto['issues']??[],0,3))];
+            }
             continue;
         }
         $events=$auto['events'];
