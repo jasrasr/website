@@ -2,10 +2,10 @@
  * File Name: app.js
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Accessible performance and broker-reported tax-basis views with private ledger controls.
- * Revision: 1.7.0
+ * Revision: 1.9.1
  * Created Date: 2026-10-29
  * Modified Date: 2026-11-16
- * Changelog: 1.7.0 - Explain gross reinvested dividends, net DRIP shares and tax/ADR fee withholding separately. 1.6.0 - Distinguish investment-performance basis from broker-reported tax basis and show confirmed versus unresolved sale-lot status. 1.5.2 - Explain matched Robinhood cancellations and closed-position returns, and remove canceled orders from review lots. 1.5.0 - Preview and import all eligible Robinhood symbols in one confirmed batch; show exceptions separately. 1.4.2 - Show unknown receipt basis and prevent false partial-sale tax calculations. 1.4.0 - Allow provisional Robinhood activity import without tax-lot attestation; display basis gaps prominently. 1.3.3 - Provide noncommitting FIFO allocation suggestions with explicit broker-verification warning. 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
+ * Changelog: 1.9.1 - Explain multi-security corporate-action evidence requirements without misleading users into importing unknown basis. 1.7.0 - Explain gross reinvested dividends, net DRIP shares and tax/ADR fee withholding separately. 1.6.0 - Distinguish investment-performance basis from broker-reported tax basis and show confirmed versus unresolved sale-lot status. 1.5.2 - Explain matched Robinhood cancellations and closed-position returns, and remove canceled orders from review lots. 1.5.0 - Preview and import all eligible Robinhood symbols in one confirmed batch; show exceptions separately. 1.4.2 - Show unknown receipt basis and prevent false partial-sale tax calculations. 1.4.0 - Allow provisional Robinhood activity import without tax-lot attestation; display basis gaps prominently. 1.3.3 - Provide noncommitting FIFO allocation suggestions with explicit broker-verification warning. 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
  */
 'use strict';
 const $ = s => document.querySelector(s);
@@ -511,7 +511,16 @@ function rhBatchDisplay(report,wasImported=false) {
   const details=el('details','rhBatchExceptions');
   details.append(el('summary',null,'Show '+blocked.length+' stocks requiring special handling'));
   const ul=el('ul');
-  blocked.forEach(item=>ul.append(el('li',null,item.ticker+' · '+item.reason)));
+  blocked.forEach(item=>{
+   const entry=el('li',null,item.ticker+' · '+item.reason);
+   if(Array.isArray(item.required_evidence) && item.required_evidence.length){
+    entry.append(el('p','subtle','Broker evidence needed to resolve this linked security history:'));
+    const needs=el('ul');
+    item.required_evidence.slice(0,5).forEach(needed=>needs.append(el('li',null,String(needed))));
+    entry.append(needs);
+   }
+   ul.append(entry);
+  });
   details.append(ul);box.append(details);
  }
 }
