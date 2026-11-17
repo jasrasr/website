@@ -1,0 +1,1 @@
+Runtime directory; directory.json and its lock are automatically created on first save. Never overwrite live data during deployment.
