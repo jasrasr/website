@@ -2,10 +2,10 @@
 File Name: chart-axis.test.cjs
 Author: Jason Lamb (with help from ChatGPT)
 Description: Regression test for legible mobile dates, safe axis spacing, and accurate graph values.
-Revision: 1.0.0
+Revision: 1.0.1
 Created Date: 2026-11-14
 Modified Date: 2026-11-14
-Changelog: 1.0.0 - Verify all four cycling dates, Retina layout, clear Y axis, and dense-tick collision handling.
+Changelog: 1.0.1 - Confirm v2.0.0 asset refresh while preserving all mobile chart assertions. 1.0.0 - Verify all four cycling dates, Retina layout, clear Y axis, and dense-tick collision handling.
 */
 'use strict';
 const assert=require('node:assert/strict');
@@ -126,5 +126,5 @@ assert.deepEqual(Array.from(duplicate,t=>t.date),['2026-11-06','2026-11-08'],
  'more than one exercise on a date gets just one date label');
 
 assert.match(html,/id="chartDateRange"/,'accessible full date range element exists');
-assert.match(html,/app\.js\?v=1\.9\.0/,'mobile browser receives changed code with cache bust');
+assert.match(html,/app\.js\?v=2\.0\.0/,'mobile browser receives updated code with cache bust');
 console.log('Passed: 320px Retina graph, four cycling date labels, axis inset, dense dates, duplicate days and unchanged totals.');
