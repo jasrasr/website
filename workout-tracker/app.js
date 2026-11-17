@@ -1,10 +1,10 @@
 /* File Name: app.js
 Author: Jason Lamb (with help from ChatGPT)
 Description: Workout quick entry, editable review, and per-exercise trends.
-Revision: 1.9.0
+Revision: 2.0.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.9.0 - Use real mobile canvas sizing, readable X-axis workout dates and inset data markers. 1.8.0 - Keep MM:SS precise and overlay cumulative totals on each-workout charts. 1.7.0 - Multi-photo galleries and upload-after-save controls while keeping earlier uploads. 1.6.0 - Read-only workout attendance, weekday percentages and calendar/weekday streaks. 1.5.1 - Display and edit heart rate BPM with cardio-focused fields and separate trends. 1.5.0 - Add authenticated workout details/photo viewer and private backup download UI. 1.4.0 - Editable set-by-set weight/reps, custom measurements, calories and exercise-specific progress. 1.3.2 - Optimize mobile exercise fields, retain hidden measurements, and keep optional metrics near the measurements. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
+Changelog: 2.0.0 - Render independent all-exercises time chart with each workout and cumulative duration. 1.9.0 - Use real mobile canvas sizing, readable X-axis workout dates and inset data markers. 1.8.0 - Keep MM:SS precise and overlay cumulative totals on each-workout charts. 1.7.0 - Multi-photo galleries and upload-after-save controls while keeping earlier uploads. 1.6.0 - Read-only workout attendance, weekday percentages and calendar/weekday streaks. 1.5.1 - Display and edit heart rate BPM with cardio-focused fields and separate trends. 1.5.0 - Add authenticated workout details/photo viewer and private backup download UI. 1.4.0 - Editable set-by-set weight/reps, custom measurements, calories and exercise-specific progress. 1.3.2 - Optimize mobile exercise fields, retain hidden measurements, and keep optional metrics near the measurements. 1.3.1 - Fix Edit button crash caused by adding an empty CSS class during form creation. 1.3.0 - Add safe entry editing, tags, incline and history filtering. 1.2.0 - Add opt-in AI retry and private config status. 1.1.0 - Local parsing without API key and multi-exercise saving. */
 'use strict';
 const $=selector=>document.querySelector(selector);
 const measures=[['distance_miles','Miles'],['duration_minutes','Minutes'],['duration_seconds','Seconds (0–59)'],['speed_mph','Speed (mph)'],['incline_percent','Treadmill incline (%)'],['calories_kcal','Calories (kcal)'],['heart_rate_bpm','Heart rate (BPM)'],['reps','Reps'],['sets','Sets'],['weight_lb','Weight (lb)']];
@@ -427,7 +427,8 @@ function refresh(){
  refreshAttendance();
  $('#sessions').textContent=new Set(entries.map(e=>e.session_id||e.date)).size;
  $('#count').textContent=entries.length;
- $('#minutes').textContent=entries.reduce((v,e)=>v+(Number(e.duration_minutes)||0),0).toFixed(0);
+ const timed=WorkoutTrends.allDurationSeries(entries);
+ $('#minutes').textContent=(timed.total||0).toFixed(1);
  $('#miles').textContent=entries.reduce((v,e)=>v+(Number(e.distance_miles)||0),0).toFixed(2);
  const selectedTag=$('#historyTag').value,tagSelect=$('#historyTag');
  const tags=[...new Set(entries.map(e=>e.tag||'').filter(Boolean))].sort();
@@ -440,6 +441,10 @@ function refresh(){
  select.replaceChildren(...kinds.map(k=>{const o=document.createElement('option');o.value=k;o.textContent=titleCase(k);return o;}));
  if(kinds.includes(old))select.value=old;
  $('#trendPanel').hidden=kinds.length===0;refreshChartMetrics();draw();
+ // Unlike exercise-specific trends, this separate chart includes all timed
+ // records, regardless of the Exercise or Tracking tag selectors above.
+ $('#allDurationPanel').hidden=timed.points.length===0;
+ if(timed.points.length)drawAllDuration();
 }
 function editField(name,label,value,type='number'){
  const input=fieldInput(name,label,value,type);
@@ -543,8 +548,10 @@ async function submitEdit(){
  * Heart rate, speed, weight, and incline remain per-session only: adding them
  * would not describe fitness progress. Existing JSON is never changed.
  */
-function draw(){
- const canvas=$('#chart');
+function draw(){return drawWorkoutChart(false);}
+function drawAllDuration(){return drawWorkoutChart(true);}
+function drawWorkoutChart(allDurations){
+ const canvas=$(allDurations?'#allDurationChart':'#chart');
  // Use the *displayed* CSS width instead of shrinking a fixed 650px bitmap
  // onto a 300px phone. Scale drawing pixels for sharp Retina labels.
  const cssWidth=Math.max(240,Math.round(canvas.getBoundingClientRect?.().width||canvas.clientWidth||canvas.width));
@@ -557,31 +564,38 @@ function draw(){
  const ctx=canvas.getContext('2d');
  if(typeof ctx.setTransform==='function')ctx.setTransform(ratio,0,0,ratio,0,0);
  ctx.clearRect(0,0,cssWidth,cssHeight);
- const metric=$('#metric').value,exercise=$('#exerciseFilter').value,tag=$('#historyTag').value;
- const data=WorkoutTrends.chartSeries(entries,exercise,metric,tag,WorkoutAdvanced.metricValue);
+ const metric=allDurations?'duration_minutes':$('#metric').value;
+ const exercise=allDurations?'all exercises':$('#exerciseFilter').value;
+ const tag=allDurations?'':$('#historyTag').value;
+ const data=allDurations?WorkoutTrends.allDurationSeries(entries):
+  WorkoutTrends.chartSeries(entries,exercise,metric,tag,WorkoutAdvanced.metricValue);
  const points=data.points;
- const select=$('#trendMode'),scope=$('#trendScope'),modeLabel=$('#trendModeLabel');
+ const select=$(allDurations?'#allDurationMode':'#trendMode');
+ const scope=$(allDurations?'#allDurationScope':'#trendScope');
+ const modeLabel=$(allDurations?'#allDurationModeLabel':'#trendModeLabel');
  const available=data.additive;
  select.disabled=!available;
  modeLabel.hidden=!available;
- scope.textContent=available?
-  'Running total adds the selected measurement across these '+exercise+' workouts'+(tag?' tagged #'+tag:'')+'.':
-  'This metric is a rate or measurement, not an additive total. Showing each workout only.';
+ scope.textContent=allDurations?
+  'All logged exercise types and tags are included. Only workouts with recorded minutes count.':
+  available?
+   'Running total adds the selected measurement across these '+exercise+' workouts'+(tag?' tagged #'+tag:'')+'.':
+   'This metric is a rate or measurement, not an additive total. Showing each workout only.';
  const mode=available?select.value:'individual';
  const series=[];
  if(mode==='both'||mode==='individual')series.push({key:'individual',label:'Each workout',color:'#59dbc3'});
  if(available && (mode==='both'||mode==='running'))series.push({key:'running',label:'Running total',color:'#e2b56e'});
- const legend=$('#trendLegend');legend.replaceChildren(...series.map(item=>{
+ const legend=$(allDurations?'#allDurationLegend':'#trendLegend');legend.replaceChildren(...series.map(item=>{
   const span=document.createElement('span');span.className='trend-key';
   const swatch=document.createElement('span');swatch.className='trend-swatch';
   swatch.style.backgroundColor=item.color;swatch.setAttribute('aria-hidden','true');
   span.append(swatch,document.createTextNode(item.label));
   return span;
  }));
- const dateRange=$('#chartDateRange');
+ const dateRange=$(allDurations?'#allDurationDateRange':'#chartDateRange');
  if(!points.length){
   dateRange.textContent='';
-  $('#trend').textContent='Choose a logged measurement to see its trend.';
+  $(allDurations?'#allDurationSummary':'#trend').textContent=allDurations?'No timed workouts recorded yet.':'Choose a logged measurement to see its trend.';
   return;
  }
  dateRange.textContent=points.length===1?
@@ -637,9 +651,14 @@ function draw(){
  const pretty=value=>Number(value.toFixed(2)).toLocaleString(undefined,{maximumFractionDigits:2});
  const unit=metric==='duration_minutes'?' min':metric==='distance_miles'?' mi':
   metric==='calories_kcal'?' kcal':metric==='total_volume_lb'?' lb':'';
- $('#trend').textContent=points.length+' workouts · Latest '+pretty(last)+unit+
-  ' · First '+pretty(first)+unit+' · Change '+(change>0?'+':'')+pretty(change)+unit+
-  (available?' · Running total '+pretty(data.total)+unit:'');
+ const summary=$(allDurations?'#allDurationSummary':'#trend');
+ summary.textContent=allDurations?
+  points.length+' timed workout'+(points.length===1?'':'s')+
+   ' · Latest '+pretty(last)+' min · Overall '+pretty(data.total)+' min ('+
+   pretty(data.total/60)+' hours)':
+  points.length+' workouts · Latest '+pretty(last)+unit+
+   ' · First '+pretty(first)+unit+' · Change '+(change>0?'+':'')+pretty(change)+unit+
+   (available?' · Running total '+pretty(data.total)+unit:'');
 }
 async function load(){try{const data=await api();entries=data.entries;$('#csrf').value=data.csrf;
  const retry=$('#aiParseBtn');retry.dataset.enabled=data.ai_available?'yes':'';
@@ -661,8 +680,13 @@ $('#aiParseBtn').addEventListener('click',retryWithAi);
 $('#note').addEventListener('input',()=>{$('#review').hidden=true;});
 $('#saveBtn').addEventListener('click',()=>{try{save(collect(),$('#photo').files[0]||null);}catch(e){message(e.message,true);}});
 $('#exerciseFilter').addEventListener('change',()=>{refreshChartMetrics();draw();});$('#metric').addEventListener('change',draw);$('#trendMode').addEventListener('change',draw);
+$('#allDurationMode').addEventListener('change',drawAllDuration);
 $('#historyTag').addEventListener('change',()=>{showAllHistory=false;renderHistory();draw();});
-if(typeof window!=='undefined')window.addEventListener('resize',()=>{if(entries.length&&!$('#trendPanel').hidden)draw();});
+if(typeof window!=='undefined')window.addEventListener('resize',()=>{
+ if(!entries.length)return;
+ if(!$('#trendPanel').hidden)draw();
+ if(!$('#allDurationPanel').hidden)drawAllDuration();
+});
 $('#toggleHistory').addEventListener('click',()=>{showAllHistory=!showAllHistory;renderHistory();});
 $('#recent').addEventListener('click',e=>{const button=e.target.closest('[data-edit-id]');if(button)beginEdit(button.dataset.editId);});
 $('#editForm').addEventListener('submit',e=>{e.preventDefault();submitEdit();});
