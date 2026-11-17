@@ -3,10 +3,10 @@
  * File Name: ledger.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Deterministic split-aware performance and broker-reported tax-basis calculations.
- * Revision: 1.8.0
+ * Revision: 1.9.0
  * Created Date: 2026-10-29
  * Modified Date: 2026-11-16
- * Changelog: 1.8.0 - Treat source-paired liquidation and cash merger sale legs as one execution when evaluating FIFO ambiguity. 1.7.0 - Report gross/net DRIP and withheld tax separately, without charging withheld dollars twice in performance or XIRR. 1.6.0 - Track performance basis separately from broker-reported tax basis, accept per-lot basis adjustments and confirmed sale allocations, and retain warnings for aggregate-only 1099-B data. 1.5.4 - Recognize a single Robinhood sell liquidating every available purchase lot, avoiding false FIFO warnings while retaining partial-sale uncertainty. 1.5.1 - Recalculate closed-position status, return on purchases, holding duration, and real versus only nominal FIFO ambiguity from existing ledger records. 1.4.1 - Mark stock receipt holding period unknown instead of using credit date as tax acquisition. 1.4.0 - Preserve unpriced share receipts with unknown tax basis and suppress unreliable gain calculations. 1.3.0 - Track stock-lending income and fee charges separately from dividends and basis. 1.2.0 - Date valuations at their observed price and withhold results if more recent account activity lacks a quote. 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
+ * Changelog: 1.9.0 - Preserve source-rounded reverse split share credits and documented whole-share round-ups on a single intact acquisition lot. 1.8.0 - Treat source-paired liquidation and cash merger sale legs as one execution when evaluating FIFO ambiguity. 1.7.0 - Report gross/net DRIP and withheld tax separately, without charging withheld dollars twice in performance or XIRR. 1.6.0 - Track performance basis separately from broker-reported tax basis, accept per-lot basis adjustments and confirmed sale allocations, and retain warnings for aggregate-only 1099-B data. 1.5.4 - Recognize a single Robinhood sell liquidating every available purchase lot, avoiding false FIFO warnings while retaining partial-sale uncertainty. 1.5.1 - Recalculate closed-position status, return on purchases, holding duration, and real versus only nominal FIFO ambiguity from existing ledger records. 1.4.1 - Mark stock receipt holding period unknown instead of using credit date as tax acquisition. 1.4.0 - Preserve unpriced share receipts with unknown tax basis and suppress unreliable gain calculations. 1.3.0 - Track stock-lending income and fee charges separately from dividends and basis. 1.2.0 - Date valuations at their observed price and withhold results if more recent account activity lacks a quote. 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
  */
 declare(strict_types=1);
 
@@ -145,7 +145,7 @@ function it_sale_execution_key(array $event): string
     $id=(string)($event['id']??'');
     if(($event['type']??'')==='sell' &&
        preg_match('/^rh([a-f0-9]{22})[a-f0-9]{5}$/D',$id,$match) &&
-       preg_match('/^Robinhood row [0-9]+ \((?:Sell|LIQ|MRGC)\)/D',(string)($event['note']??''))) {
+       preg_match('/^Robinhood row [0-9]+ \((?:Sell|LIQ|MRGC|SPR)\)/D',(string)($event['note']??''))) {
         return 'rh|'.$event['ticker'].'|'.$event['date'].'|'.$match[1];
     }
     // Other sale events stand alone; never group independent orders by date.
@@ -229,6 +229,23 @@ function it_calculate(array $events): array
         } elseif ($kind==='split') {
             $factor=(float)$e['numerator']/(float)$e['denominator'];
             unset($quotes[$t]);
+            $activeLotIds=[];$beforeShares=0.0;
+            foreach($lots as $lotId=>$existingLot){
+                if($existingLot['ticker']===$t && $existingLot['shares']>0.000000001){
+                    $activeLotIds[]=$lotId;$beforeShares+=(float)$existingLot['shares'];
+                }
+            }
+            $reported=array_key_exists('reported_split_shares',$e)?(float)$e['reported_split_shares']:null;
+            if($reported!==null){
+                if(count($activeLotIds)!==1 || $reported<=0 || !is_finite($reported) ||
+                   !empty($lots[$activeLotIds[0]]['sold_shares']))
+                    throw new InvalidArgumentException('A broker-rounded split requires one intact open acquisition lot.');
+                $expected=$beforeShares*$factor;
+                $valid=!empty($e['split_round_up'])
+                    ?abs(ceil($expected-0.0000000001)-$reported)<=0.00000001
+                    :abs($expected-$reported)<=0.000050001;
+                if(!$valid)throw new InvalidArgumentException('Reported split credit disagrees with ratio and shares.');
+            }
             foreach ($lots as &$lot) {
                 if ($lot['ticker']===$t) {
                     $lot['shares']*=$factor;
@@ -237,6 +254,13 @@ function it_calculate(array $events): array
                 }
             }
             unset($lot);
+            if($reported!==null){
+                $id=$activeLotIds[0];
+                $lots[$id]['shares']=$reported;
+                // An actual whole-share round-up or 4dp brokerage credit
+                // changes adjusted shares, not original cash or tax basis.
+                $lots[$id]['split_factor']=$reported/$lots[$id]['original_shares'];
+            }
         } elseif ($kind==='basis_adjustment') {
             $id=(string)$e['lot_id'];
             if(!isset($lots[$id]) || $lots[$id]['ticker']!==$t || !empty($lots[$id]['basis_unknown']) || $lots[$id]['shares']<=0.000000001)
