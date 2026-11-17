@@ -2,10 +2,10 @@
 File Name: duration-trends.js
 Author: Jason Lamb (with help from ChatGPT)
 Description: Exact workout mm:ss presentation, per-workout trends and running totals.
-Revision: 1.1.0
+Revision: 1.2.0
 Created Date: 2026-10-31
 Modified Date: 2026-10-31
-Changelog: 1.1.0 - Select readable distinct date ticks without collisions or altering workout values. 1.0.0 - Combine minutes and seconds, chart additive totals without summing rate-based metrics.
+Changelog: 1.2.0 - Sum recorded duration across every exercise for independent per-workout/overall charts. 1.1.0 - Select readable distinct date ticks without collisions or altering workout values. 1.0.0 - Combine minutes and seconds, chart additive totals without summing rate-based metrics.
 */
 'use strict';
 const WorkoutTrends = (() => {
@@ -61,6 +61,38 @@ const WorkoutTrends = (() => {
   return {points,additive:additive.has(key),total:points.length?sum:null};
  }
 
+
+ /**
+  * Overall duration ignores exercise-type and tag selections. Each saved
+  * entry containing an explicit duration represents one workout. Multiple
+  * entries on the same date remain separate workout points and their minutes
+  * accumulate once each; absent/invalid duration is skipped, never inferred.
+  * Sorting by workout DATE first prevents UTC/local timestamp conversion from
+  * reordering days around midnight. Within one date use performed_at, then
+  * original order to keep repeated uploads stable.
+  */
+ function allDurationSeries(entries){
+  const timed=(Array.isArray(entries)?entries:[])
+   .map((entry,index)=>({entry,index,minutes:totalMinutes(entry)}))
+   .filter(({entry,minutes})=>
+    entry && typeof entry.date==='string' &&
+    /^\d{4}-\d{2}-\d{2}$/.test(entry.date) &&
+    minutes!==null && Number.isFinite(minutes) && minutes>=0)
+   .sort((a,b)=>{
+    const dateOrder=a.entry.date.localeCompare(b.entry.date);
+    if(dateOrder)return dateOrder;
+    const left=typeof a.entry.performed_at==='string'?a.entry.performed_at:'';
+    const right=typeof b.entry.performed_at==='string'?b.entry.performed_at:'';
+    return left.localeCompare(right)||a.index-b.index;
+   });
+  let running=0;
+  const points=timed.map(({entry,minutes})=>{
+   running+=minutes;
+   return {date:entry.date,individual:minutes,running,exercise:entry.exercise||'workout'};
+  });
+  return {points,additive:true,total:points.length?running:null};
+ }
+
  /**
   * Short, timezone-safe tick labels: every visible mark denotes an actual
   * logged date rather than a fabricated evenly spaced calendar day.
@@ -102,5 +134,5 @@ const WorkoutTrends = (() => {
   }
   return selected.sort((a,b)=>a.index-b.index);
  }
- return {totalMinutes,formatDuration,measurement,chartSeries,shortChartDate,chartDateTicks,isAdditive:key=>additive.has(key)};
+ return {totalMinutes,formatDuration,measurement,chartSeries,allDurationSeries,shortChartDate,chartDateTicks,isAdditive:key=>additive.has(key)};
 })();
