@@ -1,0 +1,6 @@
+/storage/*.json
+/storage/*.lock
+!/storage/.placeholder
+/data/*.json
+/data/*.lock
+!/data/.placeholder
