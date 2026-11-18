@@ -90,7 +90,11 @@ final class DemoData
         foreach ($directory->all() as $business) {
             if ($business['id'] !== $id) continue;
             foreach ($business['payments'] ?? [] as $key => $payment) {
-                if ($payment['reference'] === $reference) return $key;
+                if ($payment['reference'] !== $reference) continue;
+                if ($verify && !$payment['verified']) {
+                    $directory->serviceAction('verify', ['id' => $id, 'key' => $key, 'evidence' => 'checked'], $super, true);
+                }
+                return $key;
             }
         }
         $directory->serviceAction('claim', ['id' => $id, 'reference' => $reference, 'service' => $service], $customer, false);
