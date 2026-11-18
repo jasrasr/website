@@ -11,6 +11,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id = KingdomDirectory::text($_POST,'id',80);
         if ($action === 'logout') {
             $_SESSION = []; session_destroy(); header('Location: ./',true,303); exit;
+        } elseif ($action === 'seed-demo' && $super) {
+            if (($_POST['confirm'] ?? '') !== 'yes') throw new InvalidArgumentException('Confirm adding fictional demonstration data.');
+            $_SESSION['demo_credentials'] = DemoData::populate($config['storage_path'], $auth, $directory, $user['id']);
         } elseif ($action === 'account' && $super) {
             $role = KingdomDirectory::text($_POST,'role',20,true);
             if (!in_array($role,['business','customer'],true)) throw new InvalidArgumentException('Choose a business or customer.');
@@ -52,7 +55,8 @@ $companies = $directory->all();
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Account dashboard · Kingdom Connections</title><link rel="stylesheet" href="assets/css/app.css"></head><body><?php if (!empty($config['demo'])): ?><aside class="notice">Demo directory · fictional businesses and simulated payments</aside><?php endif ?><header><a class="brand" href="./">Kingdom Connections</a><?php formStart('logout');finish('Sign out'); ?></header><main><h1><?=h(['super'=>'Super admin','business'=>'Business','customer'=>'Customer'][$user['role']])?> dashboard</h1><p>Signed in as <?=h($user['name'])?></p>
 <?php if ($error): ?><p class="alert" role="alert"><?=h($error)?></p><?php elseif(isset($_GET['saved'])): ?><p class="notice">Changes saved.</p><?php endif ?>
 <?php if ($super || $user['role']==='business'): ?><p><a class="button" href="admin.php">Register or edit <?= $super?'a business':'your business' ?></a></p><?php endif ?>
-<?php if ($super): ?><section class="card"><h2>Manage accounts</h2><?php
+<?php if ($super): ?><section class="card"><h2>Demo data</h2><p>Add 10 fictional businesses, 10 customer logins and 10 reviews backed by simulated payments. Repeating the load reuses the same demo accounts and listings.</p><?php formStart('seed-demo'); ?><label><input type="checkbox" required name="confirm" value="yes" style="width:auto;display:inline"> Add fictional demo data to this directory</label><?php finish('Load demo data'); ?>
+<?php if (isset($_SESSION['demo_credentials'])): ?><details open><summary>Demo account credentials</summary><p>Save these generated passwords privately. Loading demo data again shows these passwords again.</p><div style="overflow:auto"><table><thead><tr><th>Username</th><th>Role</th><th>Password</th></tr></thead><tbody><?php foreach ($_SESSION['demo_credentials'] as $username=>$entry): ?><tr><td><?=h($username)?></td><td><?=h($entry['role'])?></td><td><code><?=h($entry['password'])?></code></td></tr><?php endforeach ?></tbody></table></div></details><?php unset($_SESSION['demo_credentials']); endif ?></section><section class="card"><h2>Manage accounts</h2><?php
 $accounts=$auth->accounts();
 foreach (array_merge([['id'=>'','username'=>'','name'=>'','role'=>'customer']],array_values($accounts)) as $a) {
     if ($a['role']==='super') continue;

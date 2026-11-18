@@ -18,20 +18,12 @@ if (($argv[1] ?? '') === 'demo') {
     file_put_contents($target.'/config.local.php', "<?php\nreturn ['demo'=>true];\n");
     $people = new Identity($target.'/storage');
     $listings = new KingdomDirectory($target.'/storage/directory.json');
-    $credentials=[];
-    foreach (['demo-super'=>'super','demo-trades'=>'business','demo-wood'=>'business','demo-customer'=>'customer'] as $username=>$role) {
-        $password=bin2hex(random_bytes(12));
-        $ids[$role === 'business' ? $username : $role]=$people->account('',$username,ucwords(str_replace('-',' ',$username)),$role,$password);
-        $credentials[] = "$username ($role)  $password";
-    }
-    foreach ([['demo-trades','Demo Faithful Home Services','plumbing, electrical'],['demo-wood','Demo Good Neighbor Woodworking','carpentry, cabinetry']] as [$owner,$name,$skills]) {
-        $businessIds[]=$listings->save(['name'=>$name,'skills'=>$skills,'about'=>'Fictional business for the proof of concept.','testimony'=>'We seek to serve neighbors with honesty and care.'],$ids[$owner],true);
-    }
-    $listings->saveCustomer($ids['customer'],['name'=>'Demo Customer']);
-    foreach (['DEMO-SETTLED','DEMO-PENDING'] as $ref) $listings->serviceAction('claim',['id'=>$businessIds[0],'reference'=>$ref,'service'=>'Demo plumbing visit'],$ids['customer'],false);
-    $key=array_key_first($listings->all()[0]['payments']);
-    $listings->serviceAction('verify',['id'=>$businessIds[0],'key'=>$key,'evidence'=>'checked'],$ids['super'],true);
-    echo "Isolated demo created. Fictional payments only. Store these generated passwords privately.\n",implode("\n",$credentials),"\n";
+    $password = bin2hex(random_bytes(12));
+    $super = $people->account('', 'demo-super', 'Demo Super Admin', 'super', $password, true);
+    $plan = DemoData::populate($target . '/storage', $people, $listings, $super);
+    echo "Demo created with 10 businesses, 10 customers and 10 fictional reviews. Store these generated passwords privately.\n";
+    echo "demo-super (super)  " . $password . "\n";
+    foreach ($plan as $username => $entry) echo $username . ' (' . $entry['role'] . ')  ' . $entry['password'] . "\n";
     exit;
 }
 if (($argv[1] ?? '') !== 'super' || empty($argv[2])) exit("Usage: php setup.php super USERNAME < private-password-file\n       php setup.php demo NEW_DIRECTORY\n");

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0 — 2026-11-18
+
+- Add a super-admin demo loader with ten businesses, ten customers and ten reviews linked to simulated verified payments.
+- Expand isolated demo setup to the same dataset with unique generated credentials and varied services.
+- Preserve the private seed plan so retries reuse accounts, listings, payments and reviews.
+- Validate dataset counts, distinct reviewers, repeat loading and denial for customers.
+
 ## 1.1.0 — 2026-11-18
 
 - Standalone accounts, business-owned listings and photo uploads, customer payment verification and reviews, super-admin record management, and isolated demo setup.

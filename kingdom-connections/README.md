@@ -1,4 +1,4 @@
-# Kingdom Connections 1.1.0
+# Kingdom Connections 1.2.0
 A standalone PHP 8.1+ Christian business directory. Copy this folder to its own repository or host. Login, sessions, accounts, data and images are app-local. The bundled JSON helper follows the original framework's locking and atomic replacement conventions.
 
 ## Install
@@ -20,8 +20,15 @@ From the app directory, generate a fresh sibling application:
 ```sh
 php setup.php demo ../kingdom-connections-demo
 ```
-Open the sibling folder's login.php. The command prints unique credentials once for demo-super, demo-trades, demo-wood and demo-customer. It creates two fictional businesses, one pending payment and one simulated verified payment; all pages carry a demo banner. The installer refuses to replace an existing folder. Use a private staging host for demos. Keep demo output and runtime files out of Git.
+Open the sibling folder's login.php. The command prints generated credentials for demo-super, ten business owners and ten customers. It creates ten fictional businesses, ten customers, ten reviews from different customers backed by simulated verified payments, plus one pending payment and one verified payment still awaiting a review; all pages carry a demo banner. The installer refuses to replace an existing folder. Use a private staging host for demos. Keep demo output and runtime files out of Git.
 
 Sign in as demo-customer to review the settled plumbing visit. The pending one has no review button. Use demo-super to verify the pending payment, edit customer data or manage listings. Use demo-trades to upload a photo and edit skills. Demo logins, listings and payments are independent of the production application.
 
 Run php tests/directory.test.php and php tests/workflow.test.php. Also verify HTTPS, directory access denial, GD uploads and responsive layout on the deployment host.
+
+## Load demo data from the website
+Sign in as a super admin, open the account dashboard, check the demo-data confirmation and click **Load demo data**. It adds ten fictional businesses, ten customer accounts/profiles and ten customer reviews. Each business has its own owner account and each review has a different customer and a simulated verified payment. All business names and review comments identify their demo status. Two extra service records demonstrate a pending payment and a verified payment awaiting a review.
+
+Business owners use demo-trades, demo-wood, demo-hvac, demo-landscape, demo-paint, demo-cleaning, demo-roof, demo-auto, demo-tech and demo-catering. Customers use demo-customer and demo-customer-02 through demo-customer-10. The dashboard displays generated credentials to the super admin after loading.
+
+The loader stores its plan, including generated demo passwords, in private ignored storage/demo-seed.json. Keep storage inaccessible over HTTP. Repeat loads reuse their accounts and listings, leave existing fields intact and avoid duplicate payments/reviews. Interrupted runs can resume using the saved plan. An unrelated account using one of these usernames blocks loading instead of being adopted. A demo account whose password has been changed also blocks a repeat load. Live accounts and other listings are retained. Super admins may manage seeded records using the same account, listing and review controls.
