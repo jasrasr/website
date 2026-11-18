@@ -15,6 +15,7 @@ if (PHP_SAPI !== 'cli') {
 }
 require_once __DIR__ . '/ServiceRecords.php';
 require_once __DIR__ . '/Directory.php';
+require_once __DIR__ . '/DemoData.php';
 $config = ['storage_path' => __DIR__ . '/storage'];
 if (is_file(__DIR__ . '/config.local.php')) $config = array_replace($config, require __DIR__ . '/config.local.php');
 // Serialize app-level writes which may span the account and listing files.
