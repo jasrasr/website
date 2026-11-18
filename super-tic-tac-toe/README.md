@@ -7,7 +7,7 @@ Mobile-friendly game app built as a standalone PHP/JavaScript project using the 
 - **Super Tic-Tac-Toe:** nine 3×3 boards. Your cell position routes the next player to the corresponding mini-board. A completed mini-board cannot be played again; when the required board is complete, the next player may choose any available board. Three won mini-boards in a row wins the match.
 - **Classic Tic-Tac-Toe:** choose a 3×3, 4×4, or 5×5 board. The player must connect the same number of marks as the board width.
 - Choose X or O, one player versus the computer or two local players, and Easy, Medium, or Hard computer play. Medium is the default.
-- The most recent move and current playable board are highlighted. Anonymous visitors can play without an account.
+- The most recent move and current playable board are highlighted. Undo has no move-count limit during the current game; against the computer it steps back through the latest human/computer turn together. Redo replays undone moves up to the latest move. Starting a new game clears that game’s move history. Anonymous visitors can play without an account.
 
 ## User-management score history
 

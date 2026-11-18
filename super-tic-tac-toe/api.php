@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-/* File Name: api.php | Revision: 1.0.0 | Modified: 2026-11-18 */
+/* File Name: api.php | Revision: 1.1.0 | Modified: 2026-11-18 */
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
 use Jasr\Framework\JsonStore;
 use Jasr\Framework\SharedIdentity;
@@ -51,6 +51,36 @@ if (!$auth || !$user) game_reply(401, false, 'Sign in to record score history.')
 if (!$auth->can('super-tic-tac-toe', 'member')) game_reply(403, false, 'This account does not have game history access.');
 $body = json_decode((string) file_get_contents('php://input'), true);
 if (!is_array($body) || !$auth->validCsrf($body['csrf'] ?? null)) game_reply(403, false, 'Refresh the page and try again.');
+$action = $body['action'] ?? 'record';
+$gameId = $body['gameId'] ?? '';
+if (!in_array($action, ['record', 'retract'], true) || !is_string($gameId)
+    || preg_match('/^[a-zA-Z0-9-]{8,80}$/D', $gameId) !== 1) {
+    game_reply(422, false, 'The game history request is not valid.');
+}
+$userId = (string) $user['id'];
+$defaultRecord = ['games' => 0, 'wins' => 0, 'losses' => 0, 'draws' => 0, 'recent' => []];
+if ($action === 'retract') {
+    try {
+        $records = JsonStore::update($path, static function (array $records) use ($userId, $gameId, $defaultRecord): array {
+            $record = $records[$userId] ?? $defaultRecord;
+            $index = null;
+            foreach ($record['recent'] ?? [] as $i => $entry) if (($entry['gameId'] ?? '') === $gameId) { $index = $i; break; }
+            if ($index !== null) {
+                $entry = $record['recent'][$index];
+                $record['games'] = max(0, (int) ($record['games'] ?? 0) - 1);
+                $key = ['win' => 'wins', 'loss' => 'losses', 'draw' => 'draws'][$entry['result'] ?? ''] ?? '';
+                if ($key === 'wins' || $key === 'losses' || $key === 'draws') $record[$key] = max(0, (int) ($record[$key] ?? 0) - 1);
+                array_splice($record['recent'], $index, 1);
+                $record['updatedAt'] = gmdate(DATE_ATOM);
+                $records[$userId] = $record;
+            }
+            return $records;
+        });
+        game_reply(200, true, 'Score history updated.', ['record' => $records[$userId] ?? $defaultRecord]);
+    } catch (Throwable $error) {
+        game_reply(500, false, 'Score history could not be updated.');
+    }
+}
 $result = $body['result'] ?? '';
 $mode = $body['mode'] ?? '';
 $opponent = $body['opponent'] ?? '';
@@ -65,15 +95,16 @@ if (!in_array($result, ['win', 'loss', 'draw'], true)
     || ($mode === 'classic' && $size === 9)) {
     game_reply(422, false, 'The game result is not valid.');
 }
-$userId = (string) $user['id'];
 try {
-    $records = JsonStore::update($path, static function (array $records) use ($userId, $result, $mode, $opponent, $symbol, $size): array {
-        $record = $records[$userId] ?? ['games' => 0, 'wins' => 0, 'losses' => 0, 'draws' => 0, 'recent' => []];
+    $records = JsonStore::update($path, static function (array $records) use ($userId, $gameId, $result, $mode, $opponent, $symbol, $size, $defaultRecord): array {
+        $record = $records[$userId] ?? $defaultRecord;
         foreach (['games', 'wins', 'losses', 'draws'] as $key) if (!isset($record[$key]) || !is_int($record[$key])) $record[$key] = 0;
         if (!isset($record['recent']) || !is_array($record['recent'])) $record['recent'] = [];
+        foreach ($record['recent'] as $entry) if (($entry['gameId'] ?? '') === $gameId) { $records[$userId] = $record; return $records; }
         $record['games']++;
         $record[$result === 'win' ? 'wins' : ($result === 'loss' ? 'losses' : 'draws')]++;
         array_unshift($record['recent'], [
+            'gameId' => $gameId,
             'result' => $result,
             'mode' => $mode,
             'opponent' => $opponent,

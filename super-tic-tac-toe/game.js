@@ -1,4 +1,4 @@
-/* File Name: game.js | Revision: 1.0.0 | Modified: 2026-11-18 */
+/* File Name: game.js | Revision: 1.1.0 | Modified: 2026-11-18 */
 (() => {
   'use strict';
   const root = document.querySelector('.app-shell');
@@ -7,6 +7,12 @@
   const sessionScore = { X: 0, O: 0 };
   let state;
   let thinking = false;
+  let computerTimer = 0;
+  let undoStack = [];
+  let redoStack = [];
+  let gameId = '';
+  let completedResult = null;
+  let historyQueue = Promise.resolve();
   const savedHistory = root.dataset.saveHistory === 'true';
 
   function blankGame() {
@@ -43,6 +49,9 @@
     return wins(state.mini.map(b => b.winner || ''), 3, 3);
   }
   function setMark(move, mark) {
+    undoStack.push(snapshot());
+    redoStack = [];
+    state.lastMark = mark;
     if (settings.mode === 'classic') {
       state.cells[move] = mark; state.last = { cell: move };
       state.winner = wins(state.cells, settings.size, settings.size);
@@ -60,12 +69,15 @@
     else state.turn = mark === 'X' ? 'O' : 'X';
   }
   function startGame() {
+    window.clearTimeout(computerTimer); computerTimer = 0;
     settings.mode = $('gameMode').value;
     settings.size = Number($('boardSize').value);
     settings.difficulty = $('difficulty').value;
     settings.human = document.querySelector('[data-setting="symbol"][aria-pressed="true"]').dataset.value;
     settings.players = document.querySelector('[data-setting="players"][aria-pressed="true"]').dataset.value;
-    state = blankGame(); thinking = false; render(); maybeComputer();
+    state = blankGame(); thinking = false; undoStack = []; redoStack = []; completedResult = null;
+    gameId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    render(); maybeComputer();
   }
   function computerTurn() { return settings.players === 'computer' && state.turn !== settings.human && !state.over; }
 
@@ -161,7 +173,8 @@
   function maybeComputer() {
     if (!computerTurn()) return;
     thinking = true; render();
-    window.setTimeout(() => {
+    computerTimer = window.setTimeout(() => {
+      computerTimer = 0;
       if (!computerTurn()) return;
       const move = chooseMove(); thinking = false;
       if (move !== null) { setMark(move, state.turn); render(); maybeComputer(); }
@@ -179,21 +192,66 @@
   }
   function finish(result) {
     state.over = true;
+    completedResult = result === 'draw' ? 'draw' : (result === settings.human ? 'win' : 'loss');
     if (result !== 'draw') sessionScore[result]++;
     const resultName = result === 'draw' ? 'Draw' : `${result} wins`;
     $('statusText').textContent = `${resultName} · start a new game to play again`;
     $('turnHint').textContent = result === 'draw' ? 'Even match' : `${result} takes it`;
-    if (result === settings.human) recordResult('win');
-    else if (result === 'draw') recordResult('draw');
-    else recordResult('loss');
+    recordResult(completedResult);
   }
   function recordResult(result) {
     if (!savedHistory) { $('saveStatus').textContent = 'Sign in with game access to save history'; return; }
-    fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ csrf: root.dataset.csrf, result, mode: settings.mode, opponent: settings.players, size: settings.mode === 'classic' ? settings.size : 9, symbol: settings.human }) })
+    postHistory({ csrf: root.dataset.csrf, action: 'record', gameId, result, mode: settings.mode, opponent: settings.players, size: settings.mode === 'classic' ? settings.size : 9, symbol: settings.human })
       .then(r => r.json()).then(payload => {
         if (!payload.success) throw new Error('save failed');
         showHistory(payload.data.record);
       }).catch(() => { $('saveStatus').textContent = 'Could not save history; this game is still playable'; });
+  }
+  function retractResult() {
+    if (!savedHistory || !gameId) return;
+    postHistory({ csrf: root.dataset.csrf, action: 'retract', gameId })
+      .then(r => r.json()).then(payload => { if (payload.success && payload.data.record) showHistory(payload.data.record); })
+      .catch(() => { $('saveStatus').textContent = 'Could not update history after undo'; });
+  }
+  function postHistory(body) {
+    historyQueue = historyQueue.catch(() => {}).then(() => fetch('api.php', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(body)
+    }));
+    return historyQueue;
+  }
+  function snapshot() {
+    return { state: JSON.parse(JSON.stringify(state)), score: { ...sessionScore }, completedResult };
+  }
+  function restoreSnapshot(item) {
+    state = item.state;
+    sessionScore.X = item.score.X; sessionScore.O = item.score.O;
+    completedResult = item.completedResult;
+  }
+  function undoMove() {
+    if (!undoStack.length) return;
+    const wasThinking = thinking || computerTimer !== 0;
+    window.clearTimeout(computerTimer); computerTimer = 0; thinking = false;
+    let steps = 1;
+    if (settings.players === 'computer' && !wasThinking && undoStack.length > 1) {
+      if ((!state.over && state.turn === settings.human) || (state.over && state.lastMark !== settings.human)) steps = 2;
+    }
+    const wasComplete = state.over;
+    for (let i = 0; i < steps && undoStack.length; i++) {
+      redoStack.push(snapshot());
+      restoreSnapshot(undoStack.pop());
+    }
+    if (wasComplete && !state.over) retractResult();
+    render(); if (redoStack.length === 0) maybeComputer();
+  }
+  function redoMove() {
+    if (!redoStack.length) return;
+    window.clearTimeout(computerTimer); computerTimer = 0; thinking = false;
+    const next = redoStack.pop();
+    const wasComplete = state.over;
+    undoStack.push(snapshot());
+    restoreSnapshot(next);
+    if (!wasComplete && state.over && completedResult) recordResult(completedResult);
+    render(); if (redoStack.length === 0) maybeComputer();
   }
   function showHistory(record) {
     $('saveStatus').textContent = `History · ${record.games} games · ${record.wins} wins · ${record.losses} losses · ${record.draws} draws`;
@@ -261,6 +319,9 @@
     $('scoreX').classList.toggle('active', state.turn === 'X' && !state.over); $('scoreO').classList.toggle('active', state.turn === 'O' && !state.over);
     $('moveCount').textContent = `${state.moves} ${state.moves === 1 ? 'move' : 'moves'}`;
     if (!state.over) $('turnHint').textContent = `${state.turn} to move`;
+    $('undoMove').disabled = undoStack.length === 0;
+    $('redoMove').disabled = redoStack.length === 0;
+    $('historyPosition').textContent = `Move ${state.moves} · ${redoStack.length} redo`;
     if (savedHistory && !state.over) $('saveStatus').textContent = 'Signed-in game history enabled';
     else if (!savedHistory && !state.over) $('saveStatus').textContent = 'Scores stay on this device';
   }
@@ -273,5 +334,6 @@
   }));
   $('gameMode').addEventListener('change', startGame); $('boardSize').addEventListener('change', startGame); $('difficulty').addEventListener('change', startGame);
   $('newGame').addEventListener('click', startGame); $('newGameBottom').addEventListener('click', startGame);
+  $('undoMove').addEventListener('click', undoMove); $('redoMove').addEventListener('click', redoMove);
   state = blankGame(); render(); loadHistory();
 })();
