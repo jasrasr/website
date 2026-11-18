@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0 — 2026-11-18
+- Highlight the winning cells and Super Tic-Tac-Toe winning mini-boards.
+- Show a full-screen X or O overlay when a player wins, with options to review the winning line or start another game.
+
+
 ## 1.1.0 — 2026-11-18
 - Add unlimited undo and redo controls for the current game.
 - Retract and restore completed results in signed-in history when undoing or redoing the final move.

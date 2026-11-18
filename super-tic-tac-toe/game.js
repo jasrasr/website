@@ -1,4 +1,4 @@
-/* File Name: game.js | Revision: 1.1.0 | Modified: 2026-11-18 */
+/* File Name: game.js | Revision: 1.2.0 | Modified: 2026-11-18 */
 (() => {
   'use strict';
   const root = document.querySelector('.app-shell');
@@ -16,24 +16,44 @@
   const savedHistory = root.dataset.saveHistory === 'true';
 
   function blankGame() {
-    if (settings.mode === 'super') return { turn: 'X', moves: 0, last: null, target: null, mini: Array.from({ length: 9 }, () => ({ cells: Array(9).fill(''), winner: '' })), winner: '', over: false };
+    if (settings.mode === 'super') return { turn: 'X', moves: 0, last: null, target: null, mini: Array.from({ length: 9 }, () => ({ cells: Array(9).fill(''), winner: '', winningCells: [] })), winner: '', winningCells: [], winningBoards: [], over: false };
     const n = settings.size;
-    return { turn: 'X', moves: 0, last: null, cells: Array(n * n).fill(''), winner: '', over: false };
+    return { turn: 'X', moves: 0, last: null, cells: Array(n * n).fill(''), winner: '', winningCells: [], over: false };
   }
-  function wins(cells, n, k) {
+  function winningLine(cells, n, k, expectedMark = '') {
     for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
       const mark = cells[r * n + c]; if (!mark) continue;
+      if (expectedMark && mark !== expectedMark) continue;
       for (const [dr, dc] of [[0, 1], [1, 0], [1, 1], [1, -1]]) {
-        let count = 1;
+        const positions = [r * n + c];
         for (let step = 1; step < k; step++) {
           const rr = r + dr * step, cc = c + dc * step;
           if (rr < 0 || rr >= n || cc < 0 || cc >= n || cells[rr * n + cc] !== mark) break;
-          count++;
+          positions.push(rr * n + cc);
         }
-        if (count === k) return mark;
+        if (positions.length === k) return { mark, cells: positions };
       }
     }
-    return '';
+    return null;
+  }
+  function wins(cells, n, k) {
+    return winningLine(cells, n, k)?.mark || '';
+  }
+  function winningCellsFor(cells, n, k, mark) {
+    const winning = new Set();
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+      if (cells[r * n + c] !== mark) continue;
+      for (const [dr, dc] of [[0, 1], [1, 0], [1, 1], [1, -1]]) {
+        const line = [r * n + c];
+        for (let step = 1; step < k; step++) {
+          const rr = r + dr * step, cc = c + dc * step;
+          if (rr < 0 || rr >= n || cc < 0 || cc >= n || cells[rr * n + cc] !== mark) break;
+          line.push(rr * n + cc);
+        }
+        if (line.length === k) line.forEach(index => winning.add(index));
+      }
+    }
+    return [...winning];
   }
   function legalSuperBoards() {
     const open = state.mini.map((b, i) => b.winner || b.cells.every(Boolean) ? -1 : i).filter(i => i >= 0);
@@ -55,13 +75,16 @@
     if (settings.mode === 'classic') {
       state.cells[move] = mark; state.last = { cell: move };
       state.winner = wins(state.cells, settings.size, settings.size);
+      if (state.winner) state.winningCells = winningCellsFor(state.cells, settings.size, settings.size, state.winner);
     } else {
       const [bi, ci] = move; const board = state.mini[bi];
       board.cells[ci] = mark; board.winner = wins(board.cells, 3, 3);
+      if (board.winner) board.winningCells = winningCellsFor(board.cells, 3, 3, board.winner);
       state.last = { board: bi, cell: ci };
       state.target = ci;
       if (state.mini[state.target].winner || state.mini[state.target].cells.every(Boolean)) state.target = null;
       state.winner = activeWinner();
+      if (state.winner) state.winningBoards = winningCellsFor(state.mini.map(b => b.winner || ''), 3, 3, state.winner);
     }
     state.moves++;
     const full = settings.mode === 'classic' ? state.cells.every(Boolean) : state.mini.every(b => b.winner || b.cells.every(Boolean));
@@ -76,6 +99,7 @@
     settings.human = document.querySelector('[data-setting="symbol"][aria-pressed="true"]').dataset.value;
     settings.players = document.querySelector('[data-setting="players"][aria-pressed="true"]').dataset.value;
     state = blankGame(); thinking = false; undoStack = []; redoStack = []; completedResult = null;
+    $('winOverlay').hidden = true;
     gameId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     render(); maybeComputer();
   }
@@ -197,7 +221,15 @@
     const resultName = result === 'draw' ? 'Draw' : `${result} wins`;
     $('statusText').textContent = `${resultName} · start a new game to play again`;
     $('turnHint').textContent = result === 'draw' ? 'Even match' : `${result} takes it`;
+    if (result !== 'draw') showWinOverlay(result);
     recordResult(completedResult);
+  }
+  function showWinOverlay(mark) {
+    $('winSymbol').textContent = mark;
+    $('winSymbol').className = `win-symbol ${mark.toLowerCase()}-winner`;
+    $('winTitle').textContent = `${mark} wins!`;
+    $('winOverlay').hidden = false;
+    $('closeWinOverlay').focus();
   }
   function recordResult(result) {
     if (!savedHistory) { $('saveStatus').textContent = 'Sign in with game access to save history'; return; }
@@ -240,7 +272,7 @@
       redoStack.push(snapshot());
       restoreSnapshot(undoStack.pop());
     }
-    if (wasComplete && !state.over) retractResult();
+    if (wasComplete && !state.over) { retractResult(); $('winOverlay').hidden = true; }
     render(); if (redoStack.length === 0) maybeComputer();
   }
   function redoMove() {
@@ -251,6 +283,7 @@
     undoStack.push(snapshot());
     restoreSnapshot(next);
     if (!wasComplete && state.over && completedResult) recordResult(completedResult);
+    if (state.winner) showWinOverlay(state.winner);
     render(); if (redoStack.length === 0) maybeComputer();
   }
   function showHistory(record) {
@@ -287,6 +320,7 @@
         const cell = document.createElement('button'); cell.type = 'button'; cell.className = 'cell classic-cell';
         cell.setAttribute('role', 'gridcell'); cell.setAttribute('aria-label', mark ? `Cell ${i+1}, ${mark}` : `Cell ${i+1}, empty`);
         cell.textContent = mark; if (mark) cell.classList.add(mark.toLowerCase());
+        if (state.winningCells.includes(i)) cell.classList.add('winning-cell');
         if (state.last?.cell === i) cell.classList.add('previous-move');
         cell.disabled = Boolean(mark) || state.over || thinking || computerTurn(); cell.addEventListener('click', () => handleMove(0, i)); board.append(cell);
       });
@@ -299,16 +333,17 @@
         if (legal.includes(bi) && !state.over) miniEl.classList.add('playable');
         if (state.last?.board === bi) miniEl.classList.add('previous-board');
         if (mini.winner) miniEl.classList.add(`won-${mini.winner.toLowerCase()}`);
+        if (state.winningBoards.includes(bi)) miniEl.classList.add('winning-mini');
         miniEl.setAttribute('role', 'group'); miniEl.setAttribute('aria-label', `Mini-board ${bi+1}${mini.winner ? `, ${mini.winner} won` : legal.includes(bi) ? ', playable' : ', unavailable'}`);
         mini.cells.forEach((mark, ci) => {
           const cell = document.createElement('button'); cell.type = 'button'; cell.className = 'cell';
           cell.setAttribute('aria-label', `Board ${bi+1}, square ${ci+1}${mark ? `, ${mark}` : ', empty'}`);
           cell.textContent = mark; if (mark) cell.classList.add(mark.toLowerCase());
+          if (mini.winningCells.includes(ci)) cell.classList.add('winning-cell');
           if (state.last?.board === bi && state.last?.cell === ci) cell.classList.add('previous-move');
           cell.disabled = !legal.includes(bi) || Boolean(mark) || state.over || thinking || computerTurn();
           cell.addEventListener('click', () => handleMove(bi, ci)); miniEl.append(cell);
         });
-        if (mini.winner) { const overlay = document.createElement('span'); overlay.className = `mini-winner ${mini.winner.toLowerCase()}`; overlay.textContent = mini.winner; overlay.setAttribute('aria-hidden', 'true'); miniEl.append(overlay); }
         board.append(miniEl);
       });
       $('targetText').textContent = state.over ? 'Round complete' : state.target === null ? 'Choose any open mini-board' : `Play in mini-board ${state.target + 1}`;
@@ -335,5 +370,9 @@
   $('gameMode').addEventListener('change', startGame); $('boardSize').addEventListener('change', startGame); $('difficulty').addEventListener('change', startGame);
   $('newGame').addEventListener('click', startGame); $('newGameBottom').addEventListener('click', startGame);
   $('undoMove').addEventListener('click', undoMove); $('redoMove').addEventListener('click', redoMove);
+  $('closeWinOverlay').addEventListener('click', () => { $('winOverlay').hidden = true; });
+  $('overlayNewGame').addEventListener('click', () => { $('winOverlay').hidden = true; startGame(); });
+  $('winOverlay').addEventListener('click', event => { if (event.target === $('winOverlay')) $('winOverlay').hidden = true; });
+  $('winOverlay').addEventListener('keydown', event => { if (event.key === 'Escape') $('winOverlay').hidden = true; });
   state = blankGame(); render(); loadHistory();
 })();
