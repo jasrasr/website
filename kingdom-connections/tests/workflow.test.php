@@ -2,6 +2,7 @@
 declare(strict_types=1);
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require dirname(__DIR__).'/bootstrap.php';
+session_start();
 function expect(bool $value): void { if (!$value) throw new RuntimeException('Workflow assertion failed.'); }
 function denied(callable $fn): void { try { $fn(); } catch (InvalidArgumentException $e) { return; } throw new RuntimeException('Expected rejection.'); }
 $dir=sys_get_temp_dir().'/kc-'.bin2hex(random_bytes(6));

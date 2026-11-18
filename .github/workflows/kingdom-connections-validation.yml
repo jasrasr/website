@@ -19,7 +19,7 @@ jobs:
           find kingdom-connections -name '*.php' -print0 | xargs -0 -n1 php -l
           php kingdom-connections/tests/directory.test.php
           php kingdom-connections/tests/workflow.test.php
-          python3 kingdom-connections/tests/http.py
+          python3 -I kingdom-connections/tests/http.py
       - name: Public directory smoke check
         run: |
           php -S 127.0.0.1:8097 > /tmp/kingdom-php.log 2>&1 &
