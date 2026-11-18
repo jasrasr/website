@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0 — 2026-11-18
+
+- Standalone accounts, business-owned listings and photo uploads, customer payment verification and reviews, super-admin record management, and isolated demo setup.
+
 ## 1.0.0 — 2026-11-17
 
 - Introduce Kingdom Connections using shared PHP/JSON framework and central project administration.

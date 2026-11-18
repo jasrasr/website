@@ -2,6 +2,7 @@
 /** Filename: directory.test.php | Revision: 1.0.0 | Author: Jason Lamb with ChatGPT
  * Created: 2026-11-17 | Modified: 2026-11-17 | Description: Isolated directory persistence and validation tests. */
 declare(strict_types=1);
+if (PHP_SAPI !== "cli") { http_response_code(404); exit; }
 require_once dirname(__DIR__) . '/bootstrap.php';
 function check(bool $condition, string $message): void { if (!$condition) throw new RuntimeException($message); }
 function rejects(callable $action): void {

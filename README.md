@@ -110,7 +110,7 @@ The [repository-wide TODO list](ALL-TODOS.md) collects the TODO files kept in ea
 
 | Project and source | Site | Highlights |
 | --- | --- | --- |
-| **Kingdom Connections**<br>[kingdom-connections/](kingdom-connections/) / [README](kingdom-connections/README.md) | Pending deployment | Christian business directory with multiple skill tags, testimony, business profiles, and admin-recorded 1–5-star ratings. |
+| **Kingdom Connections**<br>[kingdom-connections/](kingdom-connections/) / [README](kingdom-connections/README.md) | Pending deployment | Standalone Christian business directory with local accounts, business profiles, and payment-verified customer reviews. |
 | **Webstats**<br>[webstats/](webstats/) / [README](webstats/README.md) | <a href="https://jasr.me/github/webstats/" target="_new">jasr.me/github/webstats</a> | Custom multi-site page views and clicks with a private dashboard. Requires setup and tracker installation. |
 | **Random Password Generator**<br>[random-password-generator/](random-password-generator/) | [jasr.me/pw](https://jasr.me/pw) | Client-side password generator experiments and working copies. Deployed at `/pw`; the `/github/` path is access-restricted. |
 | **Text Copy / scratch pad**<br>[text/](text/) | <a href="https://jasr.me/github/text/" target="_new">jasr.me/github/text</a> | Server-backed scratch pad for editing text and retrieving it from another device. |
