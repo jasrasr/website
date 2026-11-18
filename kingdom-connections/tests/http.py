@@ -1,5 +1,7 @@
 """Exercise the three roles against an isolated runnable demo."""
+import hashlib
 import http.cookiejar
+import shutil
 import json
 import pathlib
 import re
@@ -42,6 +44,24 @@ with tempfile.TemporaryDirectory() as folder:
                 break
             except urllib.error.URLError:
                 time.sleep(.1)
+        fresh = pathlib.Path(folder) / 'fresh'
+        shutil.copytree(demo, fresh, ignore=shutil.ignore_patterns('storage', 'config.local.php'))
+        (fresh / 'storage').mkdir()
+        fixture = 'temporary-test-password'
+        replacement = 'replacement-test-password'
+        php = fresh / 'FirstAdmin.php'
+        php.write_text(re.sub(r"(?<=TEMPORARY_DIGEST = ')[a-f0-9]{64}", hashlib.sha256(fixture.encode()).hexdigest(), php.read_text()))
+        client = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+        login = 'http://127.0.0.1:8099/fresh/login.php'
+        page = client.open(login).read().decode()
+        token = re.search(r'name="csrf" value="([a-f0-9]+)"', page)[1]
+        form = dict(csrf=token, first_admin='', temporary=fixture, new_password=replacement, confirmation=replacement)
+        assert 'Check the temporary password' in client.open(login, urllib.parse.urlencode(dict(form, temporary='wrong')).encode()).read().decode()
+        assert 'account is ready' in client.open(login, urllib.parse.urlencode(form).encode()).read().decode()
+        assert 'already has accounts' in client.open(login, urllib.parse.urlencode(form).encode()).read().decode()
+        credentials = dict(csrf=token, username='super-admin', password=fixture)
+        assert 'Check your username and password' in client.open(login, urllib.parse.urlencode(credentials).encode()).read().decode()
+        assert 'Super admin dashboard' in client.open(login, urllib.parse.urlencode(dict(credentials, password=replacement)).encode()).read().decode()
         for name, role in [('demo-super','Super admin'),('demo-trades','Business'),('demo-customer','Customer')]:
             client = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
             base = 'http://127.0.0.1:8099/demo/'

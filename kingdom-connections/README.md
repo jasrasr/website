@@ -1,4 +1,4 @@
-# Kingdom Connections 1.2.0
+# Kingdom Connections 1.2.1
 A standalone PHP 8.1+ Christian business directory. Copy this folder to its own repository or host. Login, sessions, accounts, data and images are app-local. The bundled JSON helper follows the original framework's locking and atomic replacement conventions.
 
 ## Install
@@ -32,3 +32,6 @@ Sign in as a super admin, open the account dashboard, check the demo-data confir
 Business owners use demo-trades, demo-wood, demo-hvac, demo-landscape, demo-paint, demo-cleaning, demo-roof, demo-auto, demo-tech and demo-catering. Customers use demo-customer and demo-customer-02 through demo-customer-10. The dashboard displays generated credentials to the super admin after loading.
 
 The loader stores its plan, including generated demo passwords, in private ignored storage/demo-seed.json. Keep storage inaccessible over HTTP. Repeat loads reuse their accounts and listings, leave existing fields intact and avoid duplicate payments/reviews. Interrupted runs can resume using the saved plan. An unrelated account using one of these usernames blocks loading instead of being adopted. A demo account whose password has been changed also blocks a repeat load. Live accounts and other listings are retained. Super admins may manage seeded records using the same account, listing and review controls.
+
+## First admin from a phone
+On an empty install, open login.php, enter the privately supplied temporary password, and choose and confirm a new password of 12–72 bytes. Sign in as super-admin with the new password. Setup is unavailable once an account exists. The temporary password is never stored in the account or granted a session.

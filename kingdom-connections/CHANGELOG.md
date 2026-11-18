@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1 — 2026-11-18
+
+- Add phone setup for the first super admin using a privately supplied temporary password and a required replacement.
+
 ## 1.2.0 — 2026-11-18
 
 - Add a super-admin demo loader with ten businesses, ten customers and ten reviews linked to simulated verified payments.
