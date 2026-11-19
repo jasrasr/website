@@ -42,6 +42,7 @@ jobs:
           ./blog/wordpress/Test-WordPressContentSync.ps1
           ./blog/wordpress/Test-WordPressTrackedTag.ps1
           ./blog/wordpress/Test-WordPressPublishTags.ps1
+          ./blog/wordpress/Test-WordPressWeekdaySchedule.ps1
           ./blog/tools/Test-Blog.ps1
       - name: Verify required secrets are configured
         shell: pwsh

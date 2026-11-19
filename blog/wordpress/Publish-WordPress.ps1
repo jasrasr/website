@@ -18,12 +18,6 @@ param(
     [string]$PostsPath = (Join-Path $PSScriptRoot '..\posts'),
     [string]$StatePath = (Join-Path $PSScriptRoot 'wordpress-state.json'),
 
-    [ValidateRange(1, 5)]
-    [int]$MaxPostsPerDay = 2,
-
-    [ValidateRange(0, 540)]
-    [int]$MinSpacingMinutes = 120,
-
     [switch]$PreservePostOrder,
     [switch]$CreateMissingTags = $true,
     [switch]$CreateMissingCategories,
@@ -229,30 +223,10 @@ function Get-Weekdays {
     @($result)
 }
 
-function Get-RandomTimesForDay {
-    param([datetime]$Date, [int]$Count)
+function Get-RandomTimeForDay {
+    param([datetime]$Date)
 
-    if ($Count -eq 1) {
-        return @($Date.AddHours(8).AddMinutes((Get-Random -Minimum 0 -Maximum 541)))
-    }
-
-    for ($attempt = 0; $attempt -lt 5000; $attempt++) {
-        $minutes = @(1..$Count | ForEach-Object { Get-Random -Minimum 0 -Maximum 541 } | Sort-Object)
-        $valid = $true
-
-        for ($i = 1; $i -lt $minutes.Count; $i++) {
-            if (($minutes[$i] - $minutes[$i - 1]) -lt $MinSpacingMinutes) {
-                $valid = $false
-                break
-            }
-        }
-
-        if ($valid) {
-            return @($minutes | ForEach-Object { $Date.AddHours(8).AddMinutes($_) })
-        }
-    }
-
-    throw "Cannot fit $Count posts between 8:00 AM and 5:00 PM with $MinSpacingMinutes-minute minimum spacing."
+    $Date.AddHours(8).AddMinutes((Get-Random -Minimum 0 -Maximum 541))
 }
 
 function New-PostSchedule {
@@ -260,28 +234,7 @@ function New-PostSchedule {
 
     if ($Posts.Count -eq 0) { return @() }
 
-    $dayCount = [int][Math]::Ceiling($Posts.Count / [double]$MaxPostsPerDay)
-    $days = @(Get-Weekdays -StartDate $StartDate -Count $dayCount)
-    $counts = @{}
-
-    foreach ($day in $days) {
-        $counts[$day.ToString('yyyy-MM-dd')] = 1
-    }
-
-    $remaining = $Posts.Count - $days.Count
-    while ($remaining -gt 0) {
-        $available = @($days | Where-Object { $counts[$_.ToString('yyyy-MM-dd')] -lt $MaxPostsPerDay })
-        if ($available.Count -eq 0) { throw 'Schedule allocation exceeded MaxPostsPerDay.' }
-        $chosen = Get-Random -InputObject $available
-        $counts[$chosen.ToString('yyyy-MM-dd')]++
-        $remaining--
-    }
-
-    $slots = @()
-    foreach ($day in $days) {
-        $slots += Get-RandomTimesForDay -Date $day -Count $counts[$day.ToString('yyyy-MM-dd')]
-    }
-    $slots = @($slots | Sort-Object)
+    $days = @(Get-Weekdays -StartDate $StartDate -Count $Posts.Count)
 
     if ($PreservePostOrder) {
         $orderedPosts = @($Posts | Sort-Object { $_.Data.date }, { $_.Data.slug })
@@ -294,7 +247,7 @@ function New-PostSchedule {
     for ($i = 0; $i -lt $orderedPosts.Count; $i++) {
         $result += [pscustomobject]@{
             Post      = $orderedPosts[$i]
-            Scheduled = $slots[$i]
+            Scheduled = Get-RandomTimeForDay -Date $days[$i]
         }
     }
     @($result)

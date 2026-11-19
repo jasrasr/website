@@ -29,6 +29,7 @@ jobs:
           ./blog/wordpress/Test-WordPressContentSync.ps1
           ./blog/wordpress/Test-WordPressTrackedTag.ps1
           ./blog/wordpress/Test-WordPressScheduleStartDate.ps1
+          ./blog/wordpress/Test-WordPressWeekdaySchedule.ps1
       - name: Check append-only public revision history
         shell: pwsh
         env:

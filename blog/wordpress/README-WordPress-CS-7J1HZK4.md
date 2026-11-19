@@ -13,8 +13,7 @@ Modified: 2026-09-16
 - Removes the leading static-blog `post-cover` figure from WordPress content by default so the image is not duplicated.
 - Schedules posts Monday-Friday starting tomorrow.
 - Uses random posting times from 8:00 AM through 5:00 PM Eastern.
-- Guarantees at least one scheduled post on each weekday used by the schedule.
-- Defaults to at most two posts per day, so about 40 posts span about four workweeks.
+- Schedules exactly one post per weekday, with no posts on Saturday or Sunday. About 40 posts span eight workweeks.
 - Keeps WordPress post IDs, media IDs, schedule dates, and status in `wordpress-state.json`.
 - Checks WordPress by slug before creating a post when credentials are supplied, providing a second duplicate-protection layer.
 - Can update existing draft, pending, or scheduled posts by slug without changing their schedule when `-UpdateExisting` is used.
