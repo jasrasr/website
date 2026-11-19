@@ -12,7 +12,7 @@ Modified: 2026-09-16
 - Uploads the cover image to WordPress Media and sets it as the featured image.
 - Removes the leading static-blog `post-cover` figure from WordPress content by default so the image is not duplicated.
 - Schedules posts Monday-Friday starting tomorrow.
-- Uses random posting times from 8:00 AM through 5:00 PM Eastern.
+- Schedules every post at 12:00 PM Eastern on its selected weekday.
 - Schedules exactly one post per weekday, with no posts on Saturday or Sunday. About 40 posts span eight workweeks.
 - Keeps WordPress post IDs, media IDs, schedule dates, and status in `wordpress-state.json`.
 - Checks WordPress by slug before creating a post when credentials are supplied, providing a second duplicate-protection layer.

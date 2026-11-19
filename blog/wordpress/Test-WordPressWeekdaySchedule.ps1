@@ -28,7 +28,7 @@ try {
         Stop-Transcript | Out-Null
     }
     $preview = Get-Content -LiteralPath $transcriptPath -Raw
-    $rows = @([regex]::Matches($preview, '(?m)^\s*(\d{4}-\d{2}-\d{2})\s+\d{1,2}:\d{2}\s+(?:AM|PM)\s+'))
+    $rows = @([regex]::Matches($preview, '(?m)^\s*(\d{4}-\d{2}-\d{2})\s+12:00\s+PM\s+'))
     Assert ($rows.Count -eq 7) "Expected seven scheduled post rows; found $($rows.Count)."
     $eastern = foreach ($id in @('America/New_York','Eastern Standard Time')) {
         try { [TimeZoneInfo]::FindSystemTimeZoneById($id); break } catch { }
@@ -42,7 +42,7 @@ try {
         $expected = $expected.AddDays(1)
     }
     Assert (-not (Test-Path -LiteralPath $statePath)) 'Dry run wrote a state file.'
-    Write-Host 'PASS: one post on each consecutive weekday, weekends skipped, dry run unchanged.'
+    Write-Host 'PASS: one post at noon Eastern on each consecutive weekday, weekends skipped, dry run unchanged.'
 }
 finally {
     Remove-Item -LiteralPath $temp -Recurse -Force

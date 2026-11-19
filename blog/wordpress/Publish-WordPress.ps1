@@ -223,12 +223,6 @@ function Get-Weekdays {
     @($result)
 }
 
-function Get-RandomTimeForDay {
-    param([datetime]$Date)
-
-    $Date.AddHours(8).AddMinutes((Get-Random -Minimum 0 -Maximum 541))
-}
-
 function New-PostSchedule {
     param([object[]]$Posts, [datetime]$StartDate)
 
@@ -247,7 +241,7 @@ function New-PostSchedule {
     for ($i = 0; $i -lt $orderedPosts.Count; $i++) {
         $result += [pscustomobject]@{
             Post      = $orderedPosts[$i]
-            Scheduled = Get-RandomTimeForDay -Date $days[$i]
+            Scheduled = $days[$i].AddHours(12)
         }
     }
     @($result)
