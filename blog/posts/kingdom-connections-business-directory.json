@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "filename": "kingdom-connections-business-directory.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-11-19",
+    "modified_date": "2026-11-19",
+    "revision": "1.0.0",
+    "changelog": [
+      "1.0.0: Added a project article and generated cover image."
+    ]
+  },
+  "slug": "kingdom-connections-business-directory",
+  "title": "Kingdom Connections: A Directory With Verified Service Reviews",
+  "date": "2026-11-19",
+  "updated": "2026-11-19",
+  "author": "Jason Lamb",
+  "tags": [
+    "Everyday tools",
+    "Community"
+  ],
+  "categories": [
+    "Technology"
+  ],
+  "excerpt": "A standalone Christian business directory with owner listings, customer profiles, and reviews tied to manually verified services.",
+  "cover": {
+    "src": "media/derivatives/2026/11/kingdom-connections-business-directory_640w.jpg",
+    "alt": "Illustrated neighborhood businesses linked by paths beneath a verified five-star review symbol"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/11/kingdom-connections-business-directory_640w.jpg\" alt=\"Illustrated neighborhood businesses linked by paths beneath a verified five-star review symbol\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Kingdom Connections is a directory for Christian businesses and the people looking for their services. Business owners manage listings, descriptions, contact information, and images. Customers can keep profiles and browse those listings.</p>\n<p>Its review flow is tied to a completed service. A customer submits a receipt reference, and a super admin checks the merchant&#x27;s settled payment record before the customer can leave one rating for that service. Verification is manual; the app does not collect card details or claim to process payments.</p>\n<p>The project uses its own accounts and storage rather than automatically reusing the website&#x27;s shared account system. Image uploads are resized and re-encoded, and private storage needs host-level protection and backups.</p>\n<p>A demonstration dataset can show fictional businesses, customer accounts, and simulated verified reviews. Those records identify themselves as demo content and are separate from a fresh production installation.</p>\n<p><a href=\"https://jasr.me/github/kingdom-connections/\">Open the hosted project</a> &middot; <a href=\"https://github.com/jasrasr/website/tree/main/kingdom-connections\">Explore the project on GitHub</a></p>\n\n<!-- blog-revision-history:start -->\n<section class=\"revision-history\" aria-label=\"Article update history\">\n<h2>Update history</h2>\n<p>These notes record article updates associated with repository changes. The original publication date is retained.</p>\n<ul>\n<li id=\"revision-2026-11-19-kingdom-connections-article\"><time datetime=\"2026-11-19\">2026-11-19</time> — Added an overview of business listings, account roles, manual service verification, and demo data. <a href=\"https://github.com/jasrasr/website/commit/c97052229b3a5871faa787570c0f8c0e50a8e67a\">GitHub source</a></li>\n</ul>\n</section>\n<!-- blog-revision-history:end -->\n",
+  "revision_history": [
+    {
+      "id": "2026-11-19-kingdom-connections-article",
+      "date": "2026-11-19",
+      "summary": "Added an overview of business listings, account roles, manual service verification, and demo data.",
+      "source_url": "https://github.com/jasrasr/website/commit/c97052229b3a5871faa787570c0f8c0e50a8e67a"
+    }
+  ]
+}

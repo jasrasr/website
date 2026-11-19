@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "filename": "build-signal-narrated-workflow.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-11-19",
+    "modified_date": "2026-11-19",
+    "revision": "1.0.0",
+    "changelog": [
+      "1.0.0: Added a project article and generated cover image."
+    ]
+  },
+  "slug": "build-signal-narrated-workflow",
+  "title": "Build Signal: An Illustrated Tour of a Web Workflow",
+  "date": "2026-11-19",
+  "updated": "2026-11-19",
+  "author": "Jason Lamb",
+  "tags": [
+    "IT and automation",
+    "Web projects"
+  ],
+  "categories": [
+    "Technology"
+  ],
+  "excerpt": "A narrated, illustrated walkthrough of AI-assisted coding, GitHub review, hosting, and website checks.",
+  "cover": {
+    "src": "media/derivatives/2026/11/build-signal-narrated-workflow_640w.jpg",
+    "alt": "Illustrated coding workbench connected to Git review and a hosted website with a health signal"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/11/build-signal-narrated-workflow_640w.jpg\" alt=\"Illustrated coding workbench connected to Git review and a hosted website with a health signal\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Build Signal presents a web development workflow as a guided page rather than a long list of tools. Its chapters move from AI-assisted coding through GitHub history and review to website hosting and a simple availability check.</p>\n<p>The page combines three generated illustrations with browser speech. Visitors can choose a voice for each chapter, and the page remembers those choices in that browser. A closing conversation and a separate sign-off play as recorded audio with captions for the conversation.</p>\n<p>The presentation is self-contained: one HTML page provides the layout and interactions, with no build step or third-party runtime script. The narration depends on voices installed in the visitor&#x27;s browser or operating system, so the spoken experience can vary by device.</p>\n<p>The tour distinguishes the pieces of the workflow. The repository&#x27;s GitHub Actions check watches two URLs and emails a result; it does not deploy files. Hosting synchronization and its file-preservation settings are separate host configuration, not behavior supplied by this page.</p>\n<p><a href=\"https://github.com/jasrasr/website/tree/main/build-signal\">Explore the project on GitHub</a></p>\n\n<!-- blog-revision-history:start -->\n<section class=\"revision-history\" aria-label=\"Article update history\">\n<h2>Update history</h2>\n<p>These notes record article updates associated with repository changes. The original publication date is retained.</p>\n<ul>\n<li id=\"revision-2026-11-19-build-signal-article\"><time datetime=\"2026-11-19\">2026-11-19</time> — Added an overview of the illustrated narration, recorded ending, and documented hosting workflow. <a href=\"https://github.com/jasrasr/website/commit/19aeab416d7df1b80e99e0a8eaf29da35afe3c7d\">GitHub source</a></li>\n</ul>\n</section>\n<!-- blog-revision-history:end -->\n",
+  "revision_history": [
+    {
+      "id": "2026-11-19-build-signal-article",
+      "date": "2026-11-19",
+      "summary": "Added an overview of the illustrated narration, recorded ending, and documented hosting workflow.",
+      "source_url": "https://github.com/jasrasr/website/commit/19aeab416d7df1b80e99e0a8eaf29da35afe3c7d"
+    }
+  ]
+}

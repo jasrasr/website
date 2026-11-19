@@ -3,7 +3,7 @@
     "filename": "media-manifest.json",
     "author": "Jason Lamb (with help from ChatGPT)",
     "created_date": "2026-02-04",
-    "modified_date": "2026-10-15",
+    "modified_date": "2026-11-19",
     "revision": "1.1.0",
     "changelog": [
       "1.1.0: Adds committed derivative image manifest records from post cover references",
@@ -24,7 +24,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1465161-04:00",
+        "checked": "2026-11-19T10:35:01.9288263-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -43,7 +43,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1534759-04:00",
+        "checked": "2026-11-19T10:35:01.9335238-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -62,7 +62,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1544638-04:00",
+        "checked": "2026-11-19T10:35:01.9351287-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -81,7 +81,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1554125-04:00",
+        "checked": "2026-11-19T10:35:01.9359893-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -100,7 +100,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1563539-04:00",
+        "checked": "2026-11-19T10:35:01.9369591-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -119,7 +119,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1572819-04:00",
+        "checked": "2026-11-19T10:35:01.9376606-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -138,7 +138,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1580621-04:00",
+        "checked": "2026-11-19T10:35:01.9384233-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -157,7 +157,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1588870-04:00",
+        "checked": "2026-11-19T10:35:01.9393063-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -176,7 +176,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1598442-04:00",
+        "checked": "2026-11-19T10:35:01.9400318-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -195,7 +195,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1606901-04:00",
+        "checked": "2026-11-19T10:35:01.9406633-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -214,7 +214,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1615386-04:00",
+        "checked": "2026-11-19T10:35:01.9413579-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -233,7 +233,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1623270-04:00",
+        "checked": "2026-11-19T10:35:01.9420825-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -252,7 +252,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1630869-04:00",
+        "checked": "2026-11-19T10:35:01.9428039-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -271,7 +271,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1639469-04:00",
+        "checked": "2026-11-19T10:35:01.9436788-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -290,7 +290,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1647467-04:00",
+        "checked": "2026-11-19T10:35:01.9445195-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -309,7 +309,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1655520-04:00",
+        "checked": "2026-11-19T10:35:01.9451691-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -328,7 +328,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1664577-04:00",
+        "checked": "2026-11-19T10:35:01.9457867-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -347,7 +347,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1673553-04:00",
+        "checked": "2026-11-19T10:35:01.9463394-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -366,7 +366,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1681775-04:00",
+        "checked": "2026-11-19T10:35:01.9470727-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -385,7 +385,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1691727-04:00",
+        "checked": "2026-11-19T10:35:01.9477737-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -404,7 +404,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1700003-04:00",
+        "checked": "2026-11-19T10:35:01.9483659-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -423,7 +423,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1707896-04:00",
+        "checked": "2026-11-19T10:35:01.9491901-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -442,7 +442,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1715738-04:00",
+        "checked": "2026-11-19T10:35:01.9497877-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -461,7 +461,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1724734-04:00",
+        "checked": "2026-11-19T10:35:01.9505420-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -480,7 +480,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1732120-04:00",
+        "checked": "2026-11-19T10:35:01.9511105-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -499,7 +499,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1739919-04:00",
+        "checked": "2026-11-19T10:35:01.9560416-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -518,7 +518,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1747743-04:00",
+        "checked": "2026-11-19T10:35:01.9568024-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -537,7 +537,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1755580-04:00",
+        "checked": "2026-11-19T10:35:01.9573819-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -556,7 +556,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1764321-04:00",
+        "checked": "2026-11-19T10:35:01.9581951-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -575,7 +575,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1772203-04:00",
+        "checked": "2026-11-19T10:35:01.9587484-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -594,7 +594,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1812772-04:00",
+        "checked": "2026-11-19T10:35:01.9595817-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -613,7 +613,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1821913-04:00",
+        "checked": "2026-11-19T10:35:01.9601094-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -632,7 +632,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1865577-04:00",
+        "checked": "2026-11-19T10:35:01.9608187-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -651,7 +651,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1876629-04:00",
+        "checked": "2026-11-19T10:35:01.9616348-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -670,7 +670,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1891210-04:00",
+        "checked": "2026-11-19T10:35:01.9622579-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -689,7 +689,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1949007-04:00",
+        "checked": "2026-11-19T10:35:01.9629487-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -708,7 +708,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1959906-04:00",
+        "checked": "2026-11-19T10:35:01.9636174-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -727,7 +727,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1981350-04:00",
+        "checked": "2026-11-19T10:35:01.9641831-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -746,7 +746,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.1989626-04:00",
+        "checked": "2026-11-19T10:35:01.9648614-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -765,7 +765,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.2043652-04:00",
+        "checked": "2026-11-19T10:35:01.9654342-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -784,7 +784,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.2052399-04:00",
+        "checked": "2026-11-19T10:35:01.9662253-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -803,7 +803,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.2060588-04:00",
+        "checked": "2026-11-19T10:35:01.9670748-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -822,7 +822,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-09-16T07:41:26.2075642-04:00",
+        "checked": "2026-11-19T10:35:01.9676980-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -841,7 +841,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-10-13T13:12:29.924Z",
+        "checked": "2026-11-19T10:35:01.9682829-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -860,7 +860,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-10-13T13:28:54.830Z",
+        "checked": "2026-11-19T10:35:01.9688526-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -879,7 +879,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-10-13T13:28:54.830Z",
+        "checked": "2026-11-19T10:35:01.9694661-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -898,7 +898,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-10-13T13:28:54.830Z",
+        "checked": "2026-11-19T10:35:01.9702259-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -917,7 +917,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-10-13T13:28:54.830Z",
+        "checked": "2026-11-19T10:35:01.9709102-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -936,7 +936,7 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-10-13T13:28:54.830Z",
+        "checked": "2026-11-19T10:35:01.9714293-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false
@@ -955,7 +955,121 @@
       "credit": "",
       "source": "committed-derivative",
       "health": {
-        "checked": "2026-10-15T00:00:00.000Z",
+        "checked": "2026-11-19T10:35:01.9719418-05:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "build-signal-narrated-workflow": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/11/build-signal-narrated-workflow_640w.jpg"
+      },
+      "uploaded": "",
+      "used_in": [
+        "build-signal-narrated-workflow"
+      ],
+      "alt": "Illustrated coding workbench connected to Git review and a hosted website with a health signal",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-11-19T10:35:01.9723277-05:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "coin-flip-browser-game": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/11/coin-flip-browser-game_640w.jpg"
+      },
+      "uploaded": "",
+      "used_in": [
+        "coin-flip-browser-game"
+      ],
+      "alt": "Illustrated gold smiling coin spinning above a dark background with a cross on the reverse",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-11-19T10:35:01.9726582-05:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "investment-tracker-private-portfolio": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/11/investment-tracker-private-portfolio_640w.jpg"
+      },
+      "uploaded": "",
+      "used_in": [
+        "investment-tracker-private-portfolio"
+      ],
+      "alt": "Illustrated private financial ledger, portfolio chart, and lock without account figures",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-11-19T10:35:01.9729950-05:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "kingdom-connections-business-directory": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/11/kingdom-connections-business-directory_640w.jpg"
+      },
+      "uploaded": "",
+      "used_in": [
+        "kingdom-connections-business-directory"
+      ],
+      "alt": "Illustrated neighborhood businesses linked by paths beneath a verified five-star review symbol",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-11-19T10:35:01.9733816-05:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "super-tic-tac-toe-browser-game": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/11/super-tic-tac-toe-browser-game_640w.jpg"
+      },
+      "uploaded": "",
+      "used_in": [
+        "super-tic-tac-toe-browser-game"
+      ],
+      "alt": "Glowing nine-board tic-tac-toe game with highlighted playable boards and X and O pieces",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-11-19T10:35:01.9737196-05:00",
+        "missing": [],
+        "missing_alt": false,
+        "unused": false
+      }
+    },
+    "workout-tracker-private-exercise-log": {
+      "original": "",
+      "derivatives": {
+        "640": "media/derivatives/2026/11/workout-tracker-private-exercise-log_640w.jpg"
+      },
+      "uploaded": "",
+      "used_in": [
+        "workout-tracker-private-exercise-log"
+      ],
+      "alt": "Illustrated running shoe, weight, bicycle wheel, calendar, and rising workout-duration chart",
+      "credit": "",
+      "source": "committed-derivative",
+      "health": {
+        "checked": "2026-11-19T10:35:01.9742418-05:00",
         "missing": [],
         "missing_alt": false,
         "unused": false

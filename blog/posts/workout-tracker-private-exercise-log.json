@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "filename": "workout-tracker-private-exercise-log.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-11-19",
+    "modified_date": "2026-11-19",
+    "revision": "1.0.0",
+    "changelog": [
+      "1.0.0: Added a project article and generated cover image."
+    ]
+  },
+  "slug": "workout-tracker-private-exercise-log",
+  "title": "Workout Tracker: Quick Entry and Clear Progress",
+  "date": "2026-11-19",
+  "updated": "2026-11-19",
+  "author": "Jason Lamb",
+  "tags": [
+    "Everyday tools",
+    "Health and fitness"
+  ],
+  "categories": [
+    "Technology"
+  ],
+  "excerpt": "A private exercise logger with local text parsing, editable sessions, photos, and separate workout and accumulated-time charts.",
+  "cover": {
+    "src": "media/derivatives/2026/11/workout-tracker-private-exercise-log_640w.jpg",
+    "alt": "Illustrated running shoe, weight, bicycle wheel, calendar, and rising workout-duration chart"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/11/workout-tracker-private-exercise-log_640w.jpg\" alt=\"Illustrated running shoe, weight, bicycle wheel, calendar, and rising workout-duration chart\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Workout Tracker lets a signed-in member describe an exercise in ordinary language, review the parsed measurements, and save the session. Its built-in PHP parser recognizes common activities and explicit details such as distance, duration, speed, sets, repetitions, weight, heart rate, and dates. The parser runs locally and does not require an AI service.</p>\n<p>A sentence describing several recognized activities can create several entries as one session. The review step exposes corrections before saving, and saved records can be edited later. Optional photos remain behind authenticated delivery rather than being exposed as public files.</p>\n<p>Progress charts separate each exercise&#x27;s measurements from an all-exercise duration view. The latter includes only records that actually have a duration. It can show each timed workout, the running total, or both; a missing duration is not treated as a zero-minute session.</p>\n<p>Records are stored per user in protected server-side JSON. An optional external AI suggestion path exists, but it requires server-side configuration and explicit user choice. The ordinary quick-entry path works without it, and every suggested value still needs review.</p>\n<p><a href=\"https://jasr.me/github/workout-tracker/\">Open the hosted project</a> &middot; <a href=\"https://github.com/jasrasr/website/tree/main/workout-tracker\">Explore the project on GitHub</a></p>\n\n<!-- blog-revision-history:start -->\n<section class=\"revision-history\" aria-label=\"Article update history\">\n<h2>Update history</h2>\n<p>These notes record article updates associated with repository changes. The original publication date is retained.</p>\n<ul>\n<li id=\"revision-2026-11-19-workout-tracker-article\"><time datetime=\"2026-11-19\">2026-11-19</time> — Added an overview of local workout parsing, private entries, editing, and duration trends. <a href=\"https://github.com/jasrasr/website/commit/7c6eddbad25047c3342d5d5b58f729209fd849d4\">GitHub source</a></li>\n</ul>\n</section>\n<!-- blog-revision-history:end -->\n",
+  "revision_history": [
+    {
+      "id": "2026-11-19-workout-tracker-article",
+      "date": "2026-11-19",
+      "summary": "Added an overview of local workout parsing, private entries, editing, and duration trends.",
+      "source_url": "https://github.com/jasrasr/website/commit/7c6eddbad25047c3342d5d5b58f729209fd849d4"
+    }
+  ]
+}

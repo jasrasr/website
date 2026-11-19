@@ -1,0 +1,39 @@
+{
+  "_meta": {
+    "filename": "super-tic-tac-toe-browser-game.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-11-19",
+    "modified_date": "2026-11-19",
+    "revision": "1.0.0",
+    "changelog": [
+      "1.0.0: Added a project article and generated cover image."
+    ]
+  },
+  "slug": "super-tic-tac-toe-browser-game",
+  "title": "Super Tic-Tac-Toe: Nine Boards, One Match",
+  "date": "2026-11-19",
+  "updated": "2026-11-19",
+  "author": "Jason Lamb",
+  "tags": [
+    "Browser experiments",
+    "Games"
+  ],
+  "categories": [
+    "Fun",
+    "Technology"
+  ],
+  "excerpt": "A mobile-friendly strategy game with nine linked boards, classic modes, computer play, undo and redo, and optional private score history.",
+  "cover": {
+    "src": "media/derivatives/2026/11/super-tic-tac-toe-browser-game_640w.jpg",
+    "alt": "Glowing nine-board tic-tac-toe game with highlighted playable boards and X and O pieces"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/11/super-tic-tac-toe-browser-game_640w.jpg\" alt=\"Glowing nine-board tic-tac-toe game with highlighted playable boards and X and O pieces\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Super Tic-Tac-Toe expands the familiar three-by-three grid into nine connected mini-boards. The cell chosen in one board sends the next player to the corresponding board. If that destination is complete, the next player can choose any available board. Winning three mini-boards in a row wins the match.</p>\n<p>The same app also offers classic three-by-three, four-by-four, and five-by-five games. Visitors can play against another person on the same device or choose a computer opponent and difficulty level. Highlights show the last move, playable area, and winning line. Undo and redo make it easy to examine a move without starting over.</p>\n<p>Anonymous visitors can play immediately. The browser keeps their results locally. Signed-in members with access to the project can save aggregate results and recent games in private server storage, but gameplay moves and board contents are not uploaded.</p>\n<p>It is a compact game with a useful mix of accessibility and state management: the larger board changes where a move is allowed, while optional score saving stays separate from ordinary public play.</p>\n<p><a href=\"https://jasr.me/super-tic-tac-toe/\">Open the hosted project</a> &middot; <a href=\"https://github.com/jasrasr/website/tree/main/super-tic-tac-toe\">Explore the project on GitHub</a></p>\n\n<!-- blog-revision-history:start -->\n<section class=\"revision-history\" aria-label=\"Article update history\">\n<h2>Update history</h2>\n<p>These notes record article updates associated with repository changes. The original publication date is retained.</p>\n<ul>\n<li id=\"revision-2026-11-19-super-tic-tac-toe-article\"><time datetime=\"2026-11-19\">2026-11-19</time> — Added a guide to linked-board rules, classic modes, computer play, undo and redo, and optional score history. <a href=\"https://github.com/jasrasr/website/commit/11631512f6229447135c4b1279a3c3ecfb5a0759\">GitHub source</a></li>\n</ul>\n</section>\n<!-- blog-revision-history:end -->\n",
+  "revision_history": [
+    {
+      "id": "2026-11-19-super-tic-tac-toe-article",
+      "date": "2026-11-19",
+      "summary": "Added a guide to linked-board rules, classic modes, computer play, undo and redo, and optional score history.",
+      "source_url": "https://github.com/jasrasr/website/commit/11631512f6229447135c4b1279a3c3ecfb5a0759"
+    }
+  ]
+}

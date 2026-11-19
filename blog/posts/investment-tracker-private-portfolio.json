@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "filename": "investment-tracker-private-portfolio.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "created_date": "2026-11-19",
+    "modified_date": "2026-11-19",
+    "revision": "1.0.0",
+    "changelog": [
+      "1.0.0: Added a project article and generated cover image."
+    ]
+  },
+  "slug": "investment-tracker-private-portfolio",
+  "title": "Investment Tracker: A Private View of Lots and Returns",
+  "date": "2026-11-19",
+  "updated": "2026-11-19",
+  "author": "Jason Lamb",
+  "tags": [
+    "Finance",
+    "Everyday tools"
+  ],
+  "categories": [
+    "Technology"
+  ],
+  "excerpt": "A private portfolio dashboard that separates investment performance from broker-reported tax basis and reviews imports before saving.",
+  "cover": {
+    "src": "media/derivatives/2026/11/investment-tracker-private-portfolio_640w.jpg",
+    "alt": "Illustrated private financial ledger, portfolio chart, and lock without account figures"
+  },
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/11/investment-tracker-private-portfolio_640w.jpg\" alt=\"Illustrated private financial ledger, portfolio chart, and lock without account figures\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Investment Tracker organizes share purchases, sales, dividends, splits, and price observations into a private portfolio view. It uses central site authentication and keeps each person&#x27;s records in separate server-side storage.</p>\n<p>The dashboard distinguishes investment performance from broker-reported tax basis. Cash paid for purchases remains the basis for performance calculations, while a later broker statement can supply a separate tax-basis correction for a sale. That distinction prevents a tax adjustment from silently rewriting the history of money invested.</p>\n<p>Imports begin with a preview. The tracker parses a report, identifies exceptions by ticker, and asks for explicit resolution where sale lots or corporate actions are ambiguous. A preview does not save records. The import path validates again before writing and avoids treating missing price information as a zero value.</p>\n<p>The repository contains application code and synthetic test records, not personal brokerage statements or live portfolio data. The hosted app requires a permitted account; it is a personal record and reconciliation tool rather than a source of investment advice or tax determinations.</p>\n<p><a href=\"https://jasr.me/github/investment-tracker/\">Open the hosted project</a> &middot; <a href=\"https://github.com/jasrasr/website/tree/main/investment-tracker\">Explore the project on GitHub</a></p>\n\n<!-- blog-revision-history:start -->\n<section class=\"revision-history\" aria-label=\"Article update history\">\n<h2>Update history</h2>\n<p>These notes record article updates associated with repository changes. The original publication date is retained.</p>\n<ul>\n<li id=\"revision-2026-11-19-investment-tracker-article\"><time datetime=\"2026-11-19\">2026-11-19</time> — Added a public overview of private portfolio records, separate basis calculations, and preview-first imports. <a href=\"https://github.com/jasrasr/website/commit/f5bd6f3bb3f3153ad60a4bf4fe7572bb60bccac3\">GitHub source</a></li>\n</ul>\n</section>\n<!-- blog-revision-history:end -->\n",
+  "revision_history": [
+    {
+      "id": "2026-11-19-investment-tracker-article",
+      "date": "2026-11-19",
+      "summary": "Added a public overview of private portfolio records, separate basis calculations, and preview-first imports.",
+      "source_url": "https://github.com/jasrasr/website/commit/f5bd6f3bb3f3153ad60a4bf4fe7572bb60bccac3"
+    }
+  ]
+}
