@@ -22,6 +22,7 @@ function Reset-Mock {
     $global:WordPressSyncTestRequests = @()
     $global:WordPressSyncTestRemote = @{}
     $global:WordPressSyncTestConflict = $false
+    $global:WordPressSyncTestMissingCode = ''
     foreach ($id in @(1,2)) {
         $global:WordPressSyncTestRemote[$id] = [pscustomobject]@{
             id=$id; slug="article-$id"; status=$(if ($id -eq 1) {'publish'} else {'future'}); author=77
@@ -38,6 +39,12 @@ function Invoke-RestMethod {
     Assert ($MaximumRedirection -eq 0) 'Authenticated redirects must be disabled'
     $global:WordPressSyncTestRequests += [pscustomobject]@{Method=$Method; Id=$id; Body=$Body}
     if ($Method -eq 'Get') {
+        if ($id -eq 2 -and $global:WordPressSyncTestMissingCode) {
+            $exception = [System.Net.Http.HttpRequestException]::new('Response status code does not indicate success: 404 (Not Found).', $null, [System.Net.HttpStatusCode]::NotFound)
+            $record = [System.Management.Automation.ErrorRecord]::new($exception, 'WordPressMissing', [System.Management.Automation.ErrorCategory]::ObjectNotFound, $null)
+            $record.ErrorDetails = [System.Management.Automation.ErrorDetails]::new('{"code":"' + $global:WordPressSyncTestMissingCode + '","data":{"status":404}}')
+            throw $record
+        }
         if ($global:WordPressSyncTestConflict -and $global:WordPressSyncTestRequests.Count -gt 2) { $global:WordPressSyncTestRemote[$id].modified_gmt='2026-09-29T12:00:00' }
     }
     elseif ($Method -eq 'Post') {
@@ -84,6 +91,13 @@ try {
     Assert (@($global:WordPressSyncTestRequests | Where-Object Method -eq Post).Count -eq 1) 'Unsupported status should skip only the unsupported post'
     Assert ($global:WordPressSyncTestRemote[2].content.raw -eq '<p>I like this project.</p>') 'Unsupported status should not update the skipped post'
     Reset-Mock
+    $global:WordPressSyncTestMissingCode='rest_post_invalid_id'
+    & $sync @argsForSync -Commit
+    Assert (@($global:WordPressSyncTestRequests | Where-Object Method -eq Post).Count -eq 1) 'Confirmed missing post should skip only that post'
+    Reset-Mock
+    $global:WordPressSyncTestMissingCode='rest_forbidden'
+    Expect-Failure '404' { & $sync @argsForSync -Commit }
+    Reset-Mock
     $global:WordPressSyncTestConflict=$true
     Expect-Failure 'changed since preflight' { & $sync @argsForSync -Commit }
     Reset-Mock
@@ -94,8 +108,8 @@ try {
     Reset-Mock
     & $sync @argsForSync -Slug article-1 -Commit
     Assert (@($global:WordPressSyncTestRequests | Where-Object Method -eq Post).Count -eq 1) 'Slug filter should update only one post'
-    Write-Host 'PASS: dry-run, content-only updates, published/scheduled preservation, backup, repeat-run, slug/status/site guards, concurrent-edit guard and single-post selection.'
+    Write-Host 'PASS: dry-run, content-only updates, published/scheduled preservation, backup, repeat-run, missing-post/slug/status/site guards, concurrent-edit guard and single-post selection.'
 } finally {
     Remove-Item -LiteralPath $temp -Recurse -Force
-    Remove-Variable WordPressSyncTestRequests,WordPressSyncTestRemote,WordPressSyncTestConflict -Scope Global -ErrorAction SilentlyContinue
+    Remove-Variable WordPressSyncTestRequests,WordPressSyncTestRemote,WordPressSyncTestConflict,WordPressSyncTestMissingCode -Scope Global -ErrorAction SilentlyContinue
 }

@@ -72,7 +72,7 @@ Then apply the reviewed correction to the example post:
 Omit `-Slug` to preview all tracked project articles; add `-Commit` to apply that batch.
 The command reads each tracked ID using authenticated edit context and verifies its slug and site.
 The account must have edit permission for the existing posts; an Author account cannot necessarily edit posts belonging to a different author.
-Preflight failure stops the batch before any writes. Identical content is skipped.
+Preflight failure stops the batch before any writes. A confirmed WordPress `rest_post_invalid_id` response for a tracked post is reported and skipped, as are slug mismatches and unsupported statuses; other API errors still stop the batch. Identical content is skipped.
 Only title, excerpt and body are updated. No posts are created, media uploaded, or author, slug, status, schedule, tags or categories sent in the update payload.
 The leading static cover figure is removed, as in the original publisher; the existing featured image stays assigned.
 

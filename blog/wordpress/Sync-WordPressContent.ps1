@@ -67,7 +67,27 @@ foreach ($key in $keys) {
     $content = [regex]::Replace((Get-BlogRevisionContent $post),
         '(?is)^\s*<figure\b[^>]*class=["''][^"'']*\bpost-cover\b[^"'']*["''][^>]*>.*?</figure>\s*', '')
     if ([string]::IsNullOrWhiteSpace($content)) { throw "Empty WordPress body: $key" }
-    $remote = Read-WpPost $id
+    try {
+        $remote = Read-WpPost $id
+    }
+    catch {
+        $response = $_.Exception.PSObject.Properties['Response']
+        $statusCode = if ($response -and $response.Value) { [int]$response.Value.StatusCode } else { 0 }
+        if (-not $statusCode) {
+            $status = $_.Exception.PSObject.Properties['StatusCode']
+            if ($status -and $status.Value) { $statusCode = [int]$status.Value }
+        }
+        $details = if ($_.ErrorDetails) { [string]$_.ErrorDetails.Message } else { '' }
+        if ($statusCode -eq 404 -and $details -match '"code"\s*:\s*"rest_post_invalid_id"') {
+            $skipped += [pscustomobject]@{
+                Id=$id; Slug=$key; Status='missing'; Reason='WordPress post ID no longer exists'
+                RemoteSlug=''
+            }
+            Write-Warning "Skipping $key (ID $id): WordPress reports that the post ID no longer exists."
+            continue
+        }
+        throw
+    }
     if ($remote.id -ne $id -or $remote.slug -cne $key) {
         $skipped += [pscustomobject]@{
             Id=$id; Slug=$key; Status=([string]$remote.status); Reason='WordPress ID/slug mismatch'
