@@ -4,12 +4,14 @@ Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, key-free quick entry, optional AI and screenshot import guidance for Workout Tracker.
 Revision: 2.0.0
 Created Date: 2026-10-21
-Modified Date: 2026-10-27
-Changelog: 2.0.0 - Document an independent all-workouts minutes and cumulative time graph. 1.9.0 - Document mobile X-axis date ticks and separated Y-axis data markers. 1.8.1 - Document paid AI quotas and private configuration backup protection. 1.8.0 - First-class MM:SS duration and per-workout versus accumulated exercise trends. 1.7.0 - Multiple photo uploads on saved workouts, central logout/navigation and opt-in seven-day login. 1.6.0 - Read-only workout-day attendance and weekday streak dashboard. 1.5.1 - Optional heart rate in BPM, including local parsing, charts and safe edits. 1.5.0 - Authenticated photo/detail view and per-user ZIP backup, preserving live data. 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
+Modified Date: 2026-11-18
+Changelog: 2.0.0 - Add a clear link to the live Jasr.me Workout Tracker project and document an independent all-workouts minutes and cumulative time graph. 1.9.0 - Document mobile X-axis date ticks and separated Y-axis data markers. 1.8.1 - Document paid AI quotas and private configuration backup protection. 1.8.0 - First-class MM:SS duration and per-workout versus accumulated exercise trends. 1.7.0 - Multiple photo uploads on saved workouts, central logout/navigation and opt-in seven-day login. 1.6.0 - Read-only workout-day attendance and weekday streak dashboard. 1.5.1 - Optional heart rate in BPM, including local parsing, charts and safe edits. 1.5.0 - Authenticated photo/detail view and per-user ZIP backup, preserving live data. 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
 -->
 # Workout Tracker
 
-Private PHP workout logger at https://jasr.me/github/workout-tracker/ using shared **1-Framework** storage and central **user-management** authentication.
+**Live project:** [Open Workout Tracker on Jasr.me](https://jasr.me/github/workout-tracker/)
+
+Private PHP workout logger using shared **1-Framework** storage and central **user-management** authentication.
 
 ## Quick entry — no API key required
 
