@@ -1,5 +1,7 @@
 # Super Tic-Tac-Toe
 
+**Play the game:** [Jasr.me](https://jasr.me/super-tic-tac-toe/)
+
 Mobile-friendly game app built as a standalone PHP/JavaScript project using the shared `1-Framework` and optional `user-management` identity provider.
 
 ## Game modes
