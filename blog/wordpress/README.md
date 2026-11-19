@@ -100,6 +100,7 @@ Modified: 2026-09-29
 - Can update existing draft, pending, or scheduled posts by slug without changing their schedule when `-UpdateExisting` is used.
 - In `-UpdateExisting` mode, published, deleted, missing, and otherwise ineligible posts are not scheduled or recreated.
 - Adds the `Jason AI Automation` tag to newly scheduled automation posts by default.
+- Creates missing source tags during `-Commit` by default. If WordPress denies tag creation, the post operation stops instead of silently omitting a tag. Use `-CreateMissingTags:$false` only when omitted tags are intentional.
 - Can append a standard `GitHub` tag to every processed post with `-AddGitHubTag`.
 - Reads an optional `categories` array from a source JSON file; categories are never created unless `-CreateMissingCategories` is explicitly supplied.
 - Runs as a dry run unless `-Commit` is specified.
@@ -133,17 +134,19 @@ Create the scheduled posts after reviewing the preview:
 ./blog/wordpress/Publish-WordPress.ps1 -SiteUrl 'https://your-wordpress-site.example' -Commit
 ```
 
-If the WordPress account is also allowed to create tags:
+The WordPress account needs permission to create tags that do not already exist. To keep missing tags omitted instead:
 
 ```powershell
-./blog/wordpress/Publish-WordPress.ps1 -SiteUrl 'https://your-wordpress-site.example' -CreateMissingTags -Commit
+./blog/wordpress/Publish-WordPress.ps1 -SiteUrl 'https://your-wordpress-site.example' -CreateMissingTags:$false -Commit
 ```
 
-To synchronize tags on existing scheduled or draft posts and append the `GitHub` tag:
+To create missing source tags and synchronize taxonomy on existing scheduled or draft posts without changing their schedule:
 
 ```powershell
-./blog/wordpress/Publish-WordPress.ps1 -SiteUrl 'https://your-wordpress-site.example' -UpdateExisting -AddGitHubTag -CreateMissingTags -Commit
+./blog/wordpress/Publish-WordPress.ps1 -SiteUrl 'https://your-wordpress-site.example' -UpdateExisting -Commit
 ```
+
+The main-branch publishing workflow runs this reconciliation after scheduling new posts. To add the `GitHub` tag during a manual update, include `-AddGitHubTag`.
 
 To add the shared automation tag to all tracked published and scheduled posts:
 

@@ -25,7 +25,7 @@ param(
     [int]$MinSpacingMinutes = 120,
 
     [switch]$PreservePostOrder,
-    [switch]$CreateMissingTags,
+    [switch]$CreateMissingTags = $true,
     [switch]$CreateMissingCategories,
     [switch]$AddGitHubTag,
     [string[]]$AutomationTag = @('Jason AI Automation'),
@@ -148,7 +148,7 @@ function Resolve-WpTagIds {
                 $exact = Invoke-WpJson -Method Post -Path 'tags' -Body @{ name = $tagName }
             }
             catch {
-                Write-Warning "Could not create WordPress tag '$tagName': $($_.Exception.Message)"
+                throw "Could not create WordPress tag '$tagName': $($_.Exception.Message)"
             }
         }
 
@@ -371,7 +371,13 @@ $blogRoot = [IO.Path]::GetFullPath((Join-Path $PostsPath '..'))
 $script:StatePosts = @{}
 
 if (Test-Path -LiteralPath $StatePath -PathType Leaf) {
-    $existingState = Get-Content -LiteralPath $StatePath -Raw | ConvertFrom-Json
+    $stateJson = Get-Content -LiteralPath $StatePath -Raw
+    $existingState = if ((Get-Command ConvertFrom-Json).Parameters.ContainsKey('DateKind')) {
+        $stateJson | ConvertFrom-Json -DateKind String
+    }
+    else {
+        $stateJson | ConvertFrom-Json
+    }
     if ($existingState.PSObject.Properties['posts'] -and $existingState.posts) {
         foreach ($property in $existingState.posts.PSObject.Properties) {
             $script:StatePosts[$property.Name] = $property.Value
@@ -476,28 +482,32 @@ if (-not [string]::IsNullOrWhiteSpace($Username) -and -not [string]::IsNullOrWhi
             if ($UpdateExisting -and $status -in @('future','draft','pending')) {
                 $item | Add-Member -NotePropertyName ExistingPostId -NotePropertyValue ([int]$found[0].id) -Force
                 $existingUpdates += $item
-                $script:StatePosts[[string]$item.Data.slug] = [ordered]@{
-                    source_file            = $item.File.Name
-                    wordpress_post_id      = [int]$found[0].id
-                    wordpress_media_id     = $null
-                    scheduled_date_eastern = [string]$found[0].date
-                    status                 = $status
-                    wordpress_url          = [string]$found[0].link
-                    last_sync              = (Get-Date).ToString('o')
-                    note                   = 'Found for existing-post update.'
+                if (-not $script:StatePosts.ContainsKey([string]$item.Data.slug)) {
+                    $script:StatePosts[[string]$item.Data.slug] = [ordered]@{
+                        source_file            = $item.File.Name
+                        wordpress_post_id      = [int]$found[0].id
+                        wordpress_media_id     = $null
+                        scheduled_date_eastern = [string]$found[0].date
+                        status                 = $status
+                        wordpress_url          = [string]$found[0].link
+                        last_sync              = (Get-Date).ToString('o')
+                        note                   = 'Found for existing-post update.'
+                    }
                 }
             }
             else {
                 $serverExistingSlugs += [string]$item.Data.slug
-                $script:StatePosts[[string]$item.Data.slug] = [ordered]@{
-                    source_file            = $item.File.Name
-                    wordpress_post_id      = [int]$found[0].id
-                    wordpress_media_id     = $null
-                    scheduled_date_eastern = [string]$found[0].date
-                    status                 = $status
-                    wordpress_url          = [string]$found[0].link
-                    last_sync              = (Get-Date).ToString('o')
-                    note                   = 'Discovered on WordPress by slug; duplicate creation skipped.'
+                if (-not $script:StatePosts.ContainsKey([string]$item.Data.slug)) {
+                    $script:StatePosts[[string]$item.Data.slug] = [ordered]@{
+                        source_file            = $item.File.Name
+                        wordpress_post_id      = [int]$found[0].id
+                        wordpress_media_id     = $null
+                        scheduled_date_eastern = [string]$found[0].date
+                        status                 = $status
+                        wordpress_url          = [string]$found[0].link
+                        last_sync              = (Get-Date).ToString('o')
+                        note                   = 'Discovered on WordPress by slug; duplicate creation skipped.'
+                    }
                 }
             }
         }

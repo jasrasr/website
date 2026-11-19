@@ -5,6 +5,7 @@ on:
     paths:
       - 'blog/posts/**'
       - 'blog/media/**'
+      - 'blog/wordpress/Publish-WordPress.ps1'
       - '.github/workflows/wordpress-publish-new-posts.yml'
   workflow_dispatch:
     inputs:
@@ -40,6 +41,7 @@ jobs:
           }
           ./blog/wordpress/Test-WordPressContentSync.ps1
           ./blog/wordpress/Test-WordPressTrackedTag.ps1
+          ./blog/wordpress/Test-WordPressPublishTags.ps1
           ./blog/tools/Test-Blog.ps1
       - name: Verify required secrets are configured
         shell: pwsh
@@ -67,6 +69,14 @@ jobs:
           }
           if ($env:APPLY_CHANGES -eq 'true') { $options.Commit = $true }
           ./blog/wordpress/Publish-WordPress.ps1 @options
+      - name: Reconcile taxonomy on scheduled posts
+        if: github.event_name == 'push' || inputs.apply
+        shell: pwsh
+        env:
+          WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+          WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+        run: |
+          ./blog/wordpress/Publish-WordPress.ps1 -SiteUrl 'https://jasonlamb.me' -UpdateExisting -CreateMissingCategories -Commit
       - name: Commit updated WordPress state
         if: github.event_name == 'push' || inputs.apply
         shell: bash
