@@ -79,11 +79,11 @@
       "source_file": "build-signal-narrated-workflow.json",
       "wordpress_post_id": 4622,
       "wordpress_media_id": 4621,
-      "scheduled_date_eastern": "2026-11-20T12:00:00",
+      "scheduled_date_eastern": "11/20/2026 12:00:00",
       "status": "future",
       "wordpress_url": "https://jasonlamb.me/?p=4622",
-      "last_sync": "2026-11-19T12:20:39.6963567-05:00",
-      "note": "Created by Publish-WordPress.ps1"
+      "last_sync": "2026-11-19T17:41:29.5426404+00:00",
+      "note": "Updated by Publish-WordPress.ps1"
     },
     "building-my-own-ticketing-app": {
       "source_file": "building-my-own-ticketing-app.json",
@@ -119,11 +119,11 @@
       "source_file": "coin-flip-browser-game.json",
       "wordpress_post_id": 4624,
       "wordpress_media_id": 4623,
-      "scheduled_date_eastern": "2026-11-27T12:00:00",
+      "scheduled_date_eastern": "11/27/2026 12:00:00",
       "status": "future",
       "wordpress_url": "https://jasonlamb.me/?p=4624",
-      "last_sync": "2026-11-19T12:20:47.9227068-05:00",
-      "note": "Created by Publish-WordPress.ps1"
+      "last_sync": "2026-11-19T17:41:57.5880938+00:00",
+      "note": "Updated by Publish-WordPress.ps1"
     },
     "construction-sign-text-generator": {
       "source_file": "construction-sign-text-generator.json",
@@ -239,11 +239,11 @@
       "source_file": "investment-tracker-private-portfolio.json",
       "wordpress_post_id": 4626,
       "wordpress_media_id": 4625,
-      "scheduled_date_eastern": "2026-11-25T12:00:00",
+      "scheduled_date_eastern": "11/25/2026 12:00:00",
       "status": "future",
       "wordpress_url": "https://jasonlamb.me/?p=4626",
-      "last_sync": "2026-11-19T12:20:55.2548690-05:00",
-      "note": "Created by Publish-WordPress.ps1"
+      "last_sync": "2026-11-19T17:41:46.9728683+00:00",
+      "note": "Updated by Publish-WordPress.ps1"
     },
     "json-flat-file-blog-powershell": {
       "source_file": "json-flat-file-blog-powershell.json",
@@ -279,11 +279,11 @@
       "source_file": "kingdom-connections-business-directory.json",
       "wordpress_post_id": 4628,
       "wordpress_media_id": 4627,
-      "scheduled_date_eastern": "2026-11-23T12:00:00",
+      "scheduled_date_eastern": "11/23/2026 12:00:00",
       "status": "future",
       "wordpress_url": "https://jasonlamb.me/?p=4628",
-      "last_sync": "2026-11-19T12:21:04.2575171-05:00",
-      "note": "Created by Publish-WordPress.ps1"
+      "last_sync": "2026-11-19T17:41:36.3949625+00:00",
+      "note": "Updated by Publish-WordPress.ps1"
     },
     "license-plate-photo-logger": {
       "source_file": "license-plate-photo-logger.json",
@@ -479,11 +479,11 @@
       "source_file": "super-tic-tac-toe-browser-game.json",
       "wordpress_post_id": 4630,
       "wordpress_media_id": 4629,
-      "scheduled_date_eastern": "2026-11-26T12:00:00",
+      "scheduled_date_eastern": "11/26/2026 12:00:00",
       "status": "future",
       "wordpress_url": "https://jasonlamb.me/?p=4630",
-      "last_sync": "2026-11-19T12:21:14.2264127-05:00",
-      "note": "Created by Publish-WordPress.ps1"
+      "last_sync": "2026-11-19T17:41:52.1334685+00:00",
+      "note": "Updated by Publish-WordPress.ps1"
     },
     "timeclock-photo-hours-logger": {
       "source_file": "timeclock-photo-hours-logger.json",
@@ -559,11 +559,11 @@
       "source_file": "workout-tracker-private-exercise-log.json",
       "wordpress_post_id": 4632,
       "wordpress_media_id": 4631,
-      "scheduled_date_eastern": "2026-11-24T12:00:00",
+      "scheduled_date_eastern": "11/24/2026 12:00:00",
       "status": "future",
       "wordpress_url": "https://jasonlamb.me/?p=4632",
-      "last_sync": "2026-11-19T12:21:22.6307710-05:00",
-      "note": "Created by Publish-WordPress.ps1"
+      "last_sync": "2026-11-19T17:41:41.5296202+00:00",
+      "note": "Updated by Publish-WordPress.ps1"
     }
   }
 }
