@@ -2,12 +2,12 @@
 declare(strict_types=1);
 /*
 File Name: index.php
-Revision: 1.1.0
+Revision: 1.2.0
 Description: Responsive Super Tic-Tac-Toe and configurable classic Tic-Tac-Toe.
 Author: Jason Lamb
 Created: 2026-11-18
 Modified: 2026-11-18
-Changelog: 1.1.0 - Add unlimited in-game undo and redo. 1.0.0 - Initial release.
+Changelog: 1.2.0 - Highlight winning lines and add full-screen win overlay. 1.1.0 - Add unlimited in-game undo and redo. 1.0.0 - Initial release.
 */
 $identity = null;
 $identityUser = null;
@@ -30,8 +30,8 @@ $loginUrl = $identity ? $identity->loginUrl($_SERVER['REQUEST_URI'] ?? '/super-t
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f5f8ff">
   <title>Super Tic-Tac-Toe</title>
-  <link rel="stylesheet" href="style.css?v=1.1.0">
-  <script defer src="game.js?v=1.1.0"></script>
+  <link rel="stylesheet" href="style.css?v=1.2.0">
+  <script defer src="game.js?v=1.2.0"></script>
 </head>
 <body>
   <main class="app-shell" data-csrf="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>" data-save-history="<?= $canSaveHistory ? 'true' : 'false' ?>">
@@ -88,6 +88,15 @@ $loginUrl = $identity ? $identity->loginUrl($_SERVER['REQUEST_URI'] ?? '/super-t
         <div class="bottom-row"><span id="moveCount">0 moves</span><span id="saveStatus">Scores on this device</span></div>
       </section>
     </section>
+    <div id="winOverlay" class="win-overlay" role="dialog" aria-modal="true" aria-labelledby="winTitle" hidden>
+      <div class="win-content">
+        <span id="winSymbol" class="win-symbol" aria-hidden="true">X</span>
+        <span class="win-kicker">MATCH WON</span>
+        <h2 id="winTitle">X wins!</h2>
+        <p>The winning combination is highlighted on the board.</p>
+        <div class="win-actions"><button id="closeWinOverlay" class="win-secondary" type="button">View winning line</button><button id="overlayNewGame" class="win-primary" type="button">New game</button></div>
+      </div>
+    </div>
     <footer><span>Think ahead. Have fun.</span><span id="userHistoryLink"></span></footer>
   </main>
 </body>
