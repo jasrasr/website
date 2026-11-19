@@ -47,7 +47,7 @@ with tempfile.TemporaryDirectory() as folder:
         fresh = pathlib.Path(folder) / 'fresh'
         shutil.copytree(demo, fresh, ignore=shutil.ignore_patterns('storage', 'config.local.php'))
         (fresh / 'storage').mkdir()
-        fixture = 'temporary-test-password'
+        fixture = 'ab12' * 12
         replacement = 'replacement-test-password'
         php = fresh / 'FirstAdmin.php'
         php.write_text(re.sub(r"(?<=TEMPORARY_DIGEST = ')[a-f0-9]{64}", hashlib.sha256(fixture.encode()).hexdigest(), php.read_text()))
@@ -55,7 +55,7 @@ with tempfile.TemporaryDirectory() as folder:
         login = 'http://127.0.0.1:8099/fresh/login.php'
         page = client.open(login).read().decode()
         token = re.search(r'name="csrf" value="([a-f0-9]+)"', page)[1]
-        form = dict(csrf=token, first_admin='', temporary=fixture, new_password=replacement, confirmation=replacement)
+        form = dict(csrf=token, first_admin='', temporary=' \u200b' + fixture.upper()[:24] + '\n' + fixture.upper()[24:] + '\u00a0', new_password=replacement, confirmation=replacement)
         assert 'Check the temporary password' in client.open(login, urllib.parse.urlencode(dict(form, temporary='wrong')).encode()).read().decode()
         assert 'account is ready' in client.open(login, urllib.parse.urlencode(form).encode()).read().decode()
         assert 'already has accounts' in client.open(login, urllib.parse.urlencode(form).encode()).read().decode()
