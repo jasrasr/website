@@ -43,6 +43,7 @@ function Reset-Mock {
     $originalState | Set-Content $statePath
     $global:WordPressPublishTestRequests = @()
     $global:WordPressPublishTestTags = @{'Jason AI Automation'=50}
+    $global:WordPressPublishTestRemoteTags = @(50)
     $global:WordPressPublishTestFailCreation = $false
     $global:WordPressPublishTestNextTagId = 60
 }
@@ -54,9 +55,9 @@ function Invoke-RestMethod {
     }
     if ($Uri -like 'https://example.invalid/wp-json/wp/v2/posts?slug=*') {
         if ($Uri -like '*slug=published-project*') {
-            return [pscustomobject]@{id=124;slug='published-project';status='publish';link='https://example.invalid/?p=124';date='2026-10-01T12:00:00'}
+            return [pscustomobject]@{id=124;slug='published-project';status='publish';link='https://example.invalid/?p=124';date='2026-10-01T12:00:00';tags=@();categories=@()}
         }
-        return [pscustomobject]@{id=123;slug='example-project';status='future';link='https://example.invalid/?p=123';date='2026-11-27T12:00:00'}
+        return [pscustomobject]@{id=123;slug='example-project';status='future';link='https://example.invalid/?p=123';date=[datetime]'2026-11-27T12:00:00';tags=$global:WordPressPublishTestRemoteTags;categories=@()}
     }
     if ($Method -eq 'Get' -and $Uri -like 'https://example.invalid/wp-json/wp/v2/tags?search=*') {
         $name = [uri]::UnescapeDataString((($Uri -split 'search=')[1] -split '&')[0])
@@ -76,7 +77,8 @@ function Invoke-RestMethod {
         $payload = $Body | ConvertFrom-Json
         Assert (@($payload.PSObject.Properties.Name) -join ',' -eq 'tags') 'Taxonomy update sent unrelated post fields'
         Assert (@($payload.tags | Sort-Object) -join ',' -eq '50,60,61') 'Missing source tags in WordPress update'
-        return [pscustomobject]@{id=123;slug='example-project';status='future';link='https://example.invalid/?p=123';date='2026-11-27T12:00:00'}
+        $global:WordPressPublishTestRemoteTags = @($payload.tags)
+        return [pscustomobject]@{id=123;slug='example-project';status='future';link='https://example.invalid/?p=123';date=[datetime]'2026-11-27T12:00:00'}
     }
     throw "Unexpected API request: $Method $Uri"
 }
@@ -98,6 +100,9 @@ try {
     Assert ($state.posts.'example-project'.scheduled_date_eastern -eq '2026-11-27T12:00:00') 'Schedule changed'
     Assert ($state.posts.'published-project'.wordpress_media_id -eq 789) 'Published post media ID changed'
     Assert (([datetimeoffset]$state.posts.'published-project'.last_sync).ToUniversalTime() -eq [datetimeoffset]'2026-10-01T13:00:00Z') 'Ineligible published post state changed'
+    $global:WordPressPublishTestRequests = @()
+    & (Join-Path $PSScriptRoot 'Publish-WordPress.ps1') @argsForPublisher -Commit | Out-Null
+    Assert (@($global:WordPressPublishTestRequests | Where-Object Method -eq Post).Count -eq 0) 'Unchanged taxonomy caused another WordPress update'
     Reset-Mock
     $global:WordPressPublishTestFailCreation = $true
     $failed = $false
@@ -105,8 +110,8 @@ try {
     catch { $failed = $true; Assert ($_.Exception.Message -match 'Could not create WordPress tag') 'Unexpected tag creation error' }
     Assert $failed 'Failed tag creation did not stop the update'
     Assert (@($global:WordPressPublishTestRequests | Where-Object { $_.Method -eq 'Post' -and $_.Uri -like '*/posts/123' }).Count -eq 0) 'Post changed after tag creation failed'
-    Write-Host 'PASS: default tag creation, complete taxonomy, preserved schedule/media, dry-run, and tag-creation failure.'
+    Write-Host 'PASS: default tag creation, complete taxonomy, preserved schedule/media, idempotency, dry-run, and tag-creation failure.'
 } finally {
     Remove-Item -LiteralPath $temp -Recurse -Force
-    Remove-Variable WordPressPublishTestRequests,WordPressPublishTestTags,WordPressPublishTestFailCreation,WordPressPublishTestNextTagId -Scope Global -ErrorAction SilentlyContinue
+    Remove-Variable WordPressPublishTestRequests,WordPressPublishTestTags,WordPressPublishTestRemoteTags,WordPressPublishTestFailCreation,WordPressPublishTestNextTagId -Scope Global -ErrorAction SilentlyContinue
 }

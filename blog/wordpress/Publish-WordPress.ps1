@@ -335,6 +335,13 @@ function Format-ScheduledEastern {
     }
 }
 
+function Format-StateScheduledEastern {
+    param([object]$DateValue)
+
+    if ($null -eq $DateValue -or [string]::IsNullOrWhiteSpace([string]$DateValue)) { return '' }
+    ([datetime]$DateValue).ToString('yyyy-MM-ddTHH:mm:ss', [Globalization.CultureInfo]::InvariantCulture)
+}
+
 function Get-TrackedScheduledEastern {
     param([string]$Slug)
 
@@ -475,19 +482,20 @@ if (-not [string]::IsNullOrWhiteSpace($Username) -and -not [string]::IsNullOrWhi
         $encodedSlug = [uri]::EscapeDataString([string]$item.Data.slug)
         # WordPress returns a JSON array for this endpoint.  Enumerate it before
         # wrapping it so $found[0] is a post object, not an Object[] container.
-        $found = @(Invoke-WpJson -Method Get -Path "posts?slug=$encodedSlug&status=any&per_page=1&_fields=id,slug,status,link,date" | ForEach-Object { $_ })
+        $found = @(Invoke-WpJson -Method Get -Path "posts?slug=$encodedSlug&status=any&per_page=1&_fields=id,slug,status,link,date,tags,categories" | ForEach-Object { $_ })
 
         if ($found.Count -gt 0) {
             $status = [string]$found[0].status
             if ($UpdateExisting -and $status -in @('future','draft','pending')) {
                 $item | Add-Member -NotePropertyName ExistingPostId -NotePropertyValue ([int]$found[0].id) -Force
+                $item | Add-Member -NotePropertyName RemotePost -NotePropertyValue $found[0] -Force
                 $existingUpdates += $item
                 if (-not $script:StatePosts.ContainsKey([string]$item.Data.slug)) {
                     $script:StatePosts[[string]$item.Data.slug] = [ordered]@{
                         source_file            = $item.File.Name
                         wordpress_post_id      = [int]$found[0].id
                         wordpress_media_id     = $null
-                        scheduled_date_eastern = [string]$found[0].date
+                        scheduled_date_eastern = Format-StateScheduledEastern -DateValue $found[0].date
                         status                 = $status
                         wordpress_url          = [string]$found[0].link
                         last_sync              = (Get-Date).ToString('o')
@@ -502,7 +510,7 @@ if (-not [string]::IsNullOrWhiteSpace($Username) -and -not [string]::IsNullOrWhi
                         source_file            = $item.File.Name
                         wordpress_post_id      = [int]$found[0].id
                         wordpress_media_id     = $null
-                        scheduled_date_eastern = [string]$found[0].date
+                        scheduled_date_eastern = Format-StateScheduledEastern -DateValue $found[0].date
                         status                 = $status
                         wordpress_url          = [string]$found[0].link
                         last_sync              = (Get-Date).ToString('o')
@@ -586,6 +594,13 @@ foreach ($item in @($existingUpdates | Sort-Object {
     if ($post.PSObject.Properties['categories'] -and $post.categories) {
         $body.categories = @(Resolve-WpCategoryIds -CategoryNames @($post.categories))
     }
+    $tagsMatch = (@($item.RemotePost.tags | Sort-Object) -join ',') -ceq (@($tagIds | Sort-Object) -join ',')
+    $categoriesMatch = -not $body.Contains('categories') -or
+        ((@($item.RemotePost.categories | Sort-Object) -join ',') -ceq (@($body.categories | Sort-Object) -join ','))
+    if ($tagsMatch -and $categoriesMatch) {
+        Write-Host "  Taxonomy already current for post ID $($item.ExistingPostId)."
+        continue
+    }
 
     try {
         $updated = Invoke-WpJson -Method Post -Path "posts/$([int]$item.ExistingPostId)" -Body $body
@@ -593,7 +608,7 @@ foreach ($item in @($existingUpdates | Sort-Object {
             source_file            = $item.File.Name
             wordpress_post_id      = [int]$updated.id
             wordpress_media_id     = if ($script:StatePosts.ContainsKey($slug)) { $script:StatePosts[$slug].wordpress_media_id } else { $null }
-            scheduled_date_eastern = [string]$updated.date
+            scheduled_date_eastern = Format-StateScheduledEastern -DateValue $updated.date
             status                 = [string]$updated.status
             wordpress_url          = [string]$updated.link
             last_sync              = (Get-Date).ToString('o')
