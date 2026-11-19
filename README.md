@@ -2,10 +2,11 @@
 File Name     : README.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Repository overview, development conventions, project index, and deployment guidance.
-Revision      : 1.0.15
+Revision      : 1.0.16
 Created Date  : 2025-02-14
-Modified Date : 2026-11-17
+Modified Date : 2026-11-18
 Changelog     :
+  Rev 1.0.16 - Link Kingdom Connections to its canonical Jasr.me project URL.
   Rev 1.0.15 - Add Kingdom Connections Christian business directory.
   Rev 1.0.14 - Reorganized the project index into readable groups and fixed its broken table formatting.
   Rev 1.0.13 - Corrected the Khootish rename history and linked the preserved deployment safety TODO.
@@ -110,7 +111,7 @@ The [repository-wide TODO list](ALL-TODOS.md) collects the TODO files kept in ea
 
 | Project and source | Site | Highlights |
 | --- | --- | --- |
-| **Kingdom Connections**<br>[kingdom-connections/](kingdom-connections/) / [README](kingdom-connections/README.md) | Pending deployment | Standalone Christian business directory with local accounts, business profiles, and payment-verified customer reviews. |
+| **Kingdom Connections**<br>[kingdom-connections/](kingdom-connections/) / [README](kingdom-connections/README.md) | <a href="https://jasr.me/github/kingdom-connections/" target="_new">jasr.me/github/kingdom-connections</a> | Standalone Christian business directory with local accounts, business profiles, and payment-verified customer reviews. |
 | **Webstats**<br>[webstats/](webstats/) / [README](webstats/README.md) | <a href="https://jasr.me/github/webstats/" target="_new">jasr.me/github/webstats</a> | Custom multi-site page views and clicks with a private dashboard. Requires setup and tracker installation. |
 | **Random Password Generator**<br>[random-password-generator/](random-password-generator/) | [jasr.me/pw](https://jasr.me/pw) | Client-side password generator experiments and working copies. Deployed at `/pw`; the `/github/` path is access-restricted. |
 | **Text Copy / scratch pad**<br>[text/](text/) | <a href="https://jasr.me/github/text/" target="_new">jasr.me/github/text</a> | Server-backed scratch pad for editing text and retrieving it from another device. |
