@@ -44,7 +44,7 @@ details{margin-top:10px}summary{color:#86d9d3;cursor:pointer;font-size:.92rem;pa
 #manualForm{padding-top:7px}#manualForm .primary{margin-top:18px}
 .filters{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .filters label{font-size:.79rem;color:#bed5dd}.filters select{margin-top:5px;font-size:.9rem}
-#chart{display:block;width:100%;height:auto;background:#0d2331;border-radius:14px;border:1px solid #294a5c}
+#chart,#allDurationChart{display:block;width:100%;height:auto;background:#0d2331;border-radius:14px;border:1px solid #294a5c}
 #trend{color:#c3dce2;font-size:.84rem;margin:12px 0 0}
 .recent-list{padding:0;margin:16px 0 0;list-style:none}.recent-list li{display:grid;grid-template-columns:1fr auto;gap:2px 12px;border-top:1px solid #264251;padding:12px 0}
 .recent-list span{color:#91b7c4;font-size:.8rem}.recent-list small{grid-column:1/-1;color:#a9c8d2}
@@ -267,5 +267,16 @@ details>summary{min-height:44px;display:list-item;align-content:center;}
 
 /* Mobile graphs render at their actual CSS width with a Retina-aware canvas.
    Show full date range separately so short intermediate ticks stay readable. */
-#chart{max-width:100%;min-width:0;box-sizing:border-box;}
+#chart,#allDurationChart{max-width:100%;min-width:0;box-sizing:border-box;}
 .chart-date-range{font-size:.78rem;color:#a9c3d0;line-height:1.45;margin:8px 0 0;min-height:1em;overflow-wrap:anywhere;}
+
+
+/* Independent all-exercise time chart, separated from exercise-specific data. */
+.all-workouts-duration{border-top:1px solid #315366;margin:27px 0 20px;padding-top:22px;min-width:0;}
+.all-workouts-duration h3{font-size:1.2rem;margin:0 0 7px;line-height:1.3;}
+.all-workouts-duration>.muted{font-size:.88rem;line-height:1.5;margin:0 0 13px;}
+#allDurationSummary{color:#c3dce2;font-size:.86rem;line-height:1.55;margin:10px 0 0;font-variant-numeric:tabular-nums;}
+@media(max-width:420px){
+ .all-workouts-duration{margin-top:22px;padding-top:18px;}
+ .all-workouts-duration h3{font-size:1.08rem;}
+}

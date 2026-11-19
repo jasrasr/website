@@ -2,12 +2,20 @@
 File Name: CHANGELOG.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Cumulative release history for private Workout Tracker.
-Revision: 1.9.0
+Revision: 2.0.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.9.0 - Document date-axis density and unclipped mobile plot markers. 1.8.0 - Document v1.8.1 AI request quotas and private configuration filename denial. 1.7.0 - Record v1.8.0 precise duration and dual-session/cumulative charts. 1.6.0 - Record v1.7.0 photo attachments, account links, and remembered login. 1.5.0 - Record v1.6.0 attendance dates, weekend-excluded percentages, and streaks. 1.4.1 - Document optional heart-rate BPM field and local parser in v1.5.1. 1.4.0 - Document v1.5.0 authenticated photos, workout details and ZIP backups. 1.3.0 - Document v1.4.0 calories, custom numeric metrics and per-set strength logging. 1.2.2 - Document workout-specific fields and iPhone-safe date/time layout in v1.3.2. 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
+Changelog: 2.0.0 - Record all-exercise duration graph and accurate overall minutes totals. 1.9.0 - Document date-axis density and unclipped mobile plot markers. 1.8.0 - Document v1.8.1 AI request quotas and private configuration filename denial. 1.7.0 - Record v1.8.0 precise duration and dual-session/cumulative charts. 1.6.0 - Record v1.7.0 photo attachments, account links, and remembered login. 1.5.0 - Record v1.6.0 attendance dates, weekend-excluded percentages, and streaks. 1.4.1 - Document optional heart-rate BPM field and local parser in v1.5.1. 1.4.0 - Document v1.5.0 authenticated photos, workout details and ZIP backups. 1.3.0 - Document v1.4.0 calories, custom numeric metrics and per-set strength logging. 1.2.2 - Document workout-specific fields and iPhone-safe date/time layout in v1.3.2. 1.2.1 - Document v1.3.1 Edit button DOMException repair and regression. 1.2.0 - Document v1.3.0 non-destructive edits, tags, incline and regression coverage. 1.1.0 - Document v1.2.0 AI fallback, prepared screenshots and secrets convention. 1.0.0 - Initial release history including v1.0.0 and v1.1.0.
 -->
 # Workout Tracker changelog
+
+## v2.0.0 — 2026-11-17
+
+- Add a separate **Workout minutes — all exercises** graph, independent of exercise and tracking-tag filters. Show each timed workout's minutes alongside accumulated minutes and equivalent total hours.
+- Include treadmill, cycling, strength, yoga and any other exercise with recorded duration. Each saved timed record counts as one workout, including multiple exercise entries on the same date; skip records with no duration instead of inventing zero minutes.
+- Preserve precise MM:SS, original fractional-minute values, and historical edit records. Keep original per-exercise graphs unchanged; global chart has its own Each workout / Running total / Both selector.
+- Reuse Retina-aware, mobile-responsive date axes, skip duplicate X-axis labels on the same date, and update top-level minutes summary to include saved seconds accurately.
+- Add synthetic mixed-exercise aggregation, zero-data, same-day ordering and mobile plot regression tests; no migration, backend storage writes, or deletions.
 
 ## v1.9.0 — 2026-11-14
 

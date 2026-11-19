@@ -2,14 +2,16 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: Setup, key-free quick entry, optional AI and screenshot import guidance for Workout Tracker.
-Revision: 1.9.0
+Revision: 2.0.0
 Created Date: 2026-10-21
-Modified Date: 2026-10-27
-Changelog: 1.9.0 - Document mobile X-axis date ticks and separated Y-axis data markers. 1.8.1 - Document paid AI quotas and private configuration backup protection. 1.8.0 - First-class MM:SS duration and per-workout versus accumulated exercise trends. 1.7.0 - Multiple photo uploads on saved workouts, central logout/navigation and opt-in seven-day login. 1.6.0 - Read-only workout-day attendance and weekday streak dashboard. 1.5.1 - Optional heart rate in BPM, including local parsing, charts and safe edits. 1.5.0 - Authenticated photo/detail view and per-user ZIP backup, preserving live data. 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
+Modified Date: 2026-11-18
+Changelog: 2.0.0 - Add a clear link to the live Jasr.me Workout Tracker project and document an independent all-workouts minutes and cumulative time graph. 1.9.0 - Document mobile X-axis date ticks and separated Y-axis data markers. 1.8.1 - Document paid AI quotas and private configuration backup protection. 1.8.0 - First-class MM:SS duration and per-workout versus accumulated exercise trends. 1.7.0 - Multiple photo uploads on saved workouts, central logout/navigation and opt-in seven-day login. 1.6.0 - Read-only workout-day attendance and weekday streak dashboard. 1.5.1 - Optional heart rate in BPM, including local parsing, charts and safe edits. 1.5.0 - Authenticated photo/detail view and per-user ZIP backup, preserving live data. 1.4.0 - Flexible exercise measurements, calories and variable weighted sets; safe legacy records. 1.3.2 - Responsive date/time layout and exercise-specific form measurements without losing hidden legacy fields. 1.3.1 - Fix Edit button form opening and add browser-compatible regression test. 1.3.0 - Safely edit saved workouts, add tracking tags and treadmill incline without migrating user data. 1.2.0 - Optional AI retry, exact-name config template and prepared screenshot import. 1.1.0 - Added local language parsing, batch entry, mobile-first review and tests. 1.0.0 - Initial release.
 -->
 # Workout Tracker
 
-Private PHP workout logger at https://jasr.me/github/workout-tracker/ using shared **1-Framework** storage and central **user-management** authentication.
+**Live project:** [Open Workout Tracker on Jasr.me](https://jasr.me/github/workout-tracker/)
+
+Private PHP workout logger using shared **1-Framework** storage and central **user-management** authentication.
 
 ## Quick entry — no API key required
 
@@ -21,6 +23,18 @@ Private PHP workout logger at https://jasr.me/github/workout-tracker/ using shar
 
 The parser is rule-based rather than a general LLM. It recognizes common exercises and explicit numbers but does **not guess missing values**. Unrecognized exercises use the collapsed manual entry form. It does not analyze photos.
 
+
+## All-workout minutes and accumulated time (v2.0.0)
+
+**Workout minutes — all exercises** is a second, independent graph below the existing per-exercise Progress over time chart. It ignores the exercise and tracking-tag selections above, and includes every saved entry that actually contains a recorded duration: treadmill, cycling, lifting, yoga, and other exercises. Each timed entry is one workout point, even if multiple exercises were recorded on the same day. Records without minutes are not assumed to be zero and are not included in totals. No existing data is modified or backfilled.
+
+The chart has its own **Graph view** selector: **Each workout + running total** (default), **Each workout**, or **Running total**. The teal line shows the duration of each individual saved workout; the gold line shows accumulated minutes across all timed workouts in chronological order. A summary shows workout count, latest duration, overall minutes, and equivalent hours. The existing top-level Minutes summary uses the same accurate duration calculation.
+
+For an entry with **33 minutes 18 seconds**, both the individual and total-duration series use **33.3 minutes** (not 33 or 18). Existing fractional-minute records remain supported. Previous custom metrics called Seconds are never silently repurposed into duration; update those records through Edit if needed.
+
+The mobile chart reuses the existing collision-aware date labels, high-density canvas resolution and axis spacing. Multiple timed exercises on the same date still contribute separate points while the X-axis label is shown once. The all-exercises graph is independent of workout type, tracking tag and the original chart's selected graph view.
+
+Run `node workout-tracker/tests/all-duration.test.cjs` to validate mixed exercise types, duplicate days, missing duration, accurate MM:SS, totals, display modes, mobile canvas layout and non-mutating history. CI uses entirely synthetic records. After deployment, verify both graphs on iPhone and confirm your existing workouts and photos remain intact.
 
 ## Mobile chart readability and workout-date labels (v1.9.0)
 

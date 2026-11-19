@@ -2,10 +2,10 @@
 /* File Name: index.php
 Author: Jason Lamb (with help from ChatGPT)
 Description: Authenticated workout dashboard and JSON API.
-Revision: 1.9.0
+Revision: 2.0.0
 Created Date: 2026-10-21
 Modified Date: 2026-10-27
-Changelog: 1.9.0 - Show more actual workout dates and keep chart axes clear of data markers. 1.8.1 - Guard paid AI with configurable request quotas without interrupting free workout entry. 1.8.0 - Parse MM:SS accurately, add a seconds field and show per-workout and running totals. 1.7.0 - Multiple photos on saved workouts, secure User Management navigation and shared sign-out. 1.6.0 - Add rolling and since-first attendance with weekday-only rates and workout streaks. 1.5.1 - Add optional heart rate (BPM) to parsing, manual entry, editing, AI fallback and trends. 1.5.0 - Authenticated workout detail/photo viewing and read-only user backup ZIP. 1.4.0 - Backward-compatible calories, configurable metrics and detailed weightlifting sets; closes #128. 1.3.2 - Mobile input layout and context-sensitive exercise measurements (display only, no storage changes). 1.3.1 - Bust cached JavaScript and mark Edit button UI repair. 1.3.0 - Edit prior entries safely, optional tracking tags, treadmill incline and retained edit history. 1.2.0 - Add explicit optional AI retry with private config and multi-exercise validation. 1.1.0 - No-key text parsing and atomic multi-exercise logging. 1.0.1 - Use framework JsonStore for private entries. 1.0.0 - Initial release. */
+Changelog: 2.0.0 - Add independently filtered all-exercise workout minutes and cumulative time graph. 1.9.0 - Show more actual workout dates and keep chart axes clear of data markers. 1.8.1 - Guard paid AI with configurable request quotas without interrupting free workout entry. 1.8.0 - Parse MM:SS accurately, add a seconds field and show per-workout and running totals. 1.7.0 - Multiple photos on saved workouts, secure User Management navigation and shared sign-out. 1.6.0 - Add rolling and since-first attendance with weekday-only rates and workout streaks. 1.5.1 - Add optional heart rate (BPM) to parsing, manual entry, editing, AI fallback and trends. 1.5.0 - Authenticated workout detail/photo viewing and read-only user backup ZIP. 1.4.0 - Backward-compatible calories, configurable metrics and detailed weightlifting sets; closes #128. 1.3.2 - Mobile input layout and context-sensitive exercise measurements (display only, no storage changes). 1.3.1 - Bust cached JavaScript and mark Edit button UI repair. 1.3.0 - Edit prior entries safely, optional tracking tags, treadmill incline and retained edit history. 1.2.0 - Add explicit optional AI retry with private config and multi-exercise validation. 1.1.0 - No-key text parsing and atomic multi-exercise logging. 1.0.1 - Use framework JsonStore for private entries. 1.0.0 - Initial release. */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
 require_once __DIR__ . '/parse.php';
@@ -362,18 +362,18 @@ if (isset($_GET['api'])) {
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#08141f">
 <title>Workout Tracker · Keep moving</title>
-<link rel="stylesheet" href="app.css?v=1.9.0">
+<link rel="stylesheet" href="app.css?v=2.0.0">
 <script src="advanced.js?v=1.4.0" defer></script>
 <script src="attendance.js?v=1.6.0" defer></script>
-<script src="duration-trends.js?v=1.9.0" defer></script>
-<script src="app.js?v=1.9.0" defer></script>
+<script src="duration-trends.js?v=2.0.0" defer></script>
+<script src="app.js?v=2.0.0" defer></script>
 </head>
 <body><main>
 <header class="hero">
  <div><div class="eyebrow">Personal fitness · Your pace</div>
   <h1>Keep moving.</h1>
   <p class="subtitle">Every session counts. Progress happens one workout at a time.</p>
-  <p class="version">Workout Tracker v1.9.0 · Updated November 14, 2026</p>
+  <p class="version">Workout Tracker v2.0.0 · Updated November 17, 2026</p>
  </div>
  <div class="hero-mark" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 25h9l6-11 9 22 7-14h11"/></svg></div>
  <nav class="account-nav" aria-label="Account navigation">
@@ -515,6 +515,24 @@ if (isset($_GET['api'])) {
    <div id="trendLegend" class="trend-legend" aria-label="Chart series"></div>
    <p id="trend" aria-live="polite"></p>
   </div>
+  <section class="all-workouts-duration" id="allDurationPanel" hidden aria-labelledby="allDurationTitle">
+   <h3 id="allDurationTitle">Workout minutes — all exercises</h3>
+   <p class="muted">Minutes for each saved workout and your total accumulated time, including treadmill, cycling, lifting, and every other exercise type.</p>
+   <div class="trend-controls">
+    <label class="field" id="allDurationModeLabel"><span>Graph view</span>
+     <select id="allDurationMode">
+      <option value="both">Each workout + running total</option>
+      <option value="individual">Each workout</option>
+      <option value="running">Running total</option>
+     </select>
+    </label>
+    <p class="footnote" id="allDurationScope">Across all exercises and tags. Only workouts with recorded durations count; undated or untimed workouts are not estimated.</p>
+   </div>
+   <canvas id="allDurationChart" width="650" height="280" role="img" aria-label="Minutes per workout and accumulated minutes across every exercise type"></canvas>
+   <p id="allDurationDateRange" class="footnote chart-date-range" aria-live="polite"></p>
+   <div id="allDurationLegend" class="trend-legend" aria-label="Total workout duration graph series"></div>
+   <p id="allDurationSummary" aria-live="polite"></p>
+  </section>
   <div class="panel-head history-heading">
     <h2>Workout history</h2>
     <button id="toggleHistory" class="secondary-action history-toggle" type="button" hidden>View all entries</button>
