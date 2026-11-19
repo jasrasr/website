@@ -1,4 +1,6 @@
 # Kingdom Connections 1.2.1
+
+[Open Kingdom Connections on jasr.me](https://jasr.me/github/kingdom-connections/)
 A standalone PHP 8.1+ Christian business directory. Copy this folder to its own repository or host. Login, sessions, accounts, data and images are app-local. The bundled JSON helper follows the original framework's locking and atomic replacement conventions.
 
 ## Install
