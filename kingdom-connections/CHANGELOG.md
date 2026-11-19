@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.2 — 2026-11-18
+
+- Normalize clipboard whitespace and capitalization in the initial hexadecimal setup password.
+- Add Show passwords to the initial setup form for phone users.
+
 ## 1.2.1 — 2026-11-18
 
 - Add phone setup for the first super admin using a privately supplied temporary password and a required replacement.
