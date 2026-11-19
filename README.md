@@ -2,10 +2,11 @@
 File Name     : README.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Repository overview, development conventions, project index, and deployment guidance.
-Revision      : 1.0.15
+Revision      : 1.0.16
 Created Date  : 2025-02-14
-Modified Date : 2026-11-17
+Modified Date : 2026-11-18
 Changelog     :
+  Rev 1.0.16 - Link the Investment Tracker project title directly to its hosted Jasr.me site and clarify access requirements.
   Rev 1.0.15 - Add Kingdom Connections Christian business directory.
   Rev 1.0.14 - Reorganized the project index into readable groups and fixed its broken table formatting.
   Rev 1.0.13 - Corrected the Khootish rename history and linked the preserved deployment safety TODO.
@@ -91,7 +92,7 @@ The [repository-wide TODO list](ALL-TODOS.md) collects the TODO files kept in ea
 
 | Project and source | Site | Highlights |
 | --- | --- | --- |
-| **Investment Tracker**<br>[investment-tracker/](investment-tracker/) / [README](investment-tracker/README.md) | <a href="https://jasr.me/github/investment-tracker/" target="_new">jasr.me/github/investment-tracker</a> | Private tax lots, split history, Robinhood imports, charts, and sell simulations. Central access; deployment unverified. |
+| [**Investment Tracker**](https://jasr.me/github/investment-tracker/)<br>[investment-tracker/](investment-tracker/) / [README](investment-tracker/README.md) | <a href="https://jasr.me/github/investment-tracker/" target="_new">jasr.me/github/investment-tracker</a> | Authenticated investment tracker with tax lots, split history, Robinhood imports, charts, and sell simulations. Project access required. |
 | **Workout Tracker**<br>[workout-tracker/](workout-tracker/) / [README](workout-tracker/README.md) | <a href="https://jasr.me/github/workout-tracker/" target="_new">jasr.me/github/workout-tracker</a> | Private fitness logging and trend charts. Requires central project access. |
 | **Availability Poll**<br>[availability/](availability/) / [README](availability/README.md) | <a href="https://jasr.me/github/availability/" target="_new">jasr.me/github/availability</a> | Named availability polls with admin-selected dates, private admin links, and live group results. |
 | **MPG Fuel Log Tracker**<br>[mpg/](mpg/) / [README](mpg/README.md) | <a href="https://jasr.me/github/mpg/" target="_new">jasr.me/github/mpg</a> | PHP fuel log with MPG calculations, CSV export, admin dashboard, and trend chart. |
