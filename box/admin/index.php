@@ -5,7 +5,7 @@
  Author: Jason Lamb (with help from ChatGPT)
  Created Date: 2026-01-18
  Modified Date: 2026-11-20
- Revision: 1.3.1
+ Revision: 1.3.2
 
  Description:
    Admin dashboard for managing storage boxes.
@@ -14,6 +14,7 @@
    and available actions (edit, generate QR).
 
  Changelog:
+   Rev 1.3.2 - Label the box editor for names and contents.
    Rev 1.3.1 - Show batch creation results.
    Rev 1.0 - Initial admin dashboard listing boxes
    Rev 1.1 - Added local timezone timestamp formatting
@@ -118,7 +119,7 @@ $missing = filter_input(INPUT_GET, 'missing_qr', FILTER_VALIDATE_INT, ['options'
     <td>
   <?php if ($canEdit): ?>
   <a href="edit_box.php?c=<?=urlencode($code)?>" class="btn btn-sm btn-primary mb-1">
-    Edit Items
+    Edit Box
   </a>
   <form method="post" action="generate_qr.php" class="d-inline">
     <input type="hidden" name="csrf" value="<?=$csrf?>">

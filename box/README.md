@@ -2,10 +2,11 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: QR Box Inventory setup, shared login, storage, and verification.
-Revision: 1.0.4
+Revision: 1.0.5
 Created Date: 2026-11-19
 Modified Date: 2026-11-20
-Changelog: 1.0.4 - Document individual item removal and undo.
+Changelog: 1.0.5 - Document how to rename a box.
+  1.0.4 - Document individual item removal and undo.
   1.0.3 - Document batch box creation.
   1.0.2 - Document Create Box layout verification.
   1.0.1 - Document the dashboard link and verification.
@@ -45,10 +46,11 @@ Run `node box/tests/shared-auth.test.cjs` and PHP syntax checks before deploymen
 
 With member access, open **Create Boxes** on the dashboard. Enter one box name per line, up to 50. Blank lines are skipped. All boxes are saved together with separate codes. If any QR is missing, use **Generate Missing QR Codes** from the dashboard. On desktop and mobile, check that the name field and submit button fit, that submitting returns you to the dashboard with the boxes listed, and that **Back to dashboard** exits without saving.
 
-In **Edit Items**, use the free-text field to edit the list or choose **Remove** beside an individual item. **Undo last removal** restores it until you edit the text again. **Save Items** applies the draft, and **Cancel** discards it.
+On the dashboard, select **Edit Box** and change **Box name** to rename a box while keeping its code and QR label. Use the free-text field to edit the list or choose **Remove** beside an individual item. **Undo last removal** restores it until you edit the text again. **Save Changes** applies the draft, and **Cancel** discards it.
 
 ## Changelog
 
+- Edit Box page 1.3.0 (2026-11-20) Added box renaming.
 - Edit Box page 1.2.0 (2026-11-20) Added individual draft removal and undo.
 - Create Box page 1.3.0 (2026-11-20) Added batch creation and dashboard confirmation.
 - Create Box page 1.2.1 (2026-11-20) Restyled the form to match the lookup and dashboard pages.

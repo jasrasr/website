@@ -1,10 +1,11 @@
 // File Name: shared-auth.test.cjs
 // Author: Jason Lamb (with help from ChatGPT)
 // Description: Disposable HTTP integration checks for Box Inventory.
-// Revision: 1.0.0
+// Revision: 1.0.1
 // Created Date: 2026-11-19
 // Modified Date: 2026-11-20
-// Changelog: 1.0.0 - Verify batch creation, validation, and individual QR files.
+// Changelog: 1.0.1 - Verify renaming preserves items and the existing QR code.
+// 1.0.0 - Verify batch creation, validation, and individual QR files.
 const {test, after} = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs'), os = require('node:os'), path = require('node:path');
@@ -117,6 +118,18 @@ test('shared identity guards box admin routes, isolates demo data, and enforces 
   assert.equal((await admin.request('/box/edit_box.php?c=' + created[0], {items: 'Bypass'})).status, 405);
   assert.deepEqual(boxes()[created[0]].items, ['Changed']);
 
+  const editRoute = '/box/admin/edit_box.php?c=' + created[0];
+  const invalidRename = await admin.request(editRoute, {box_name: '  ', items: 'Unsaved draft'});
+  assert.equal(invalidRename.status, 422);
+  assert.match(invalidRename.body, /Enter a box name/);
+  assert.match(invalidRename.body, /Unsaved draft/);
+  assert.equal(boxes()[created[0]].name, 'New tools');
+  const renamed = await admin.request(editRoute, {box_name: '  Garage tools  '});
+  assert.equal(renamed.status, 303);
+  assert.equal(boxes()[created[0]].name, 'Garage tools');
+  assert.deepEqual(boxes()[created[0]].items, ['Changed']);
+  assert.ok(fs.existsSync(path.join(temp, 'box/qrcodes', created[0] + '.png')));
+  assert.match((await admin.request('/box/?c=' + created[0])).body, /Garage tools/);
   assert.equal((await admin.request('/box/admin/edit_box.php?c=BOXABC123')).status, 404);
   assert.equal((await admin.request('/box/admin/generate_qr.php', {code: 'BOXABC123'})).status, 404);
   assert.equal((await admin.request('/box/admin/generate_qr.php', {code: created[0]})).status, 303);
@@ -133,7 +146,7 @@ test('shared identity guards box admin routes, isolates demo data, and enforces 
   await member.request('/user-management/');
   assert.equal((await member.request('/user-management/', {action: 'change-password', current_password: 'temporary-password-2026', password: 'permanent-password-2026', confirm_password: 'permanent-password-2026'})).status, 303);
   assert.equal((await member.login('member', 'permanent-password-2026')).status, 303);
-  assert.doesNotMatch((await member.request('/box/admin/index.php')).body, /Demo Box|New tools/);
+  assert.doesNotMatch((await member.request('/box/admin/index.php')).body, /Demo Box|Garage tools/);
   assert.equal((await member.request('/box/admin/edit_box.php?c=BOXABC123')).status, 404);
   assert.equal((await member.request('/box/admin/delete_box.php', {code: 'BOXABC123'})).status, 303);
   assert.ok(boxes().BOXABC123, 'Cross-owner delete succeeded');
