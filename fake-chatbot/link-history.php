@@ -18,8 +18,9 @@ try {
     $auth = \Jasr\Framework\SharedIdentity::connect();
     $user = $auth->user();
     if ($user === null || !empty($user['mustChangePassword'])) {
-        $auth->requireProject(FC_PROJECT, 'viewer');
-        // A valid registered project is required for login return URL handling.
+        // Signing in doesn't require an explicit project grant, only a valid central account.
+        // Register this project path in User Management for a safe return URL.
+        header('Location: ' . $auth->loginUrl($_SERVER['REQUEST_URI'] ?? '/github/fake-chatbot/link-history.php'), true, 303);
         exit;
     }
     $session = fc_browser_hash();

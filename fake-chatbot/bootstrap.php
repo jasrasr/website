@@ -79,9 +79,11 @@ function fc_rules(): array
 }
 function fc_update_rules(callable $change): void
 {
-    $seed = fc_rules();
-    \Jasr\Framework\JsonStore::update(fc_store('rules.json'), static function (array $rules) use ($change, $seed): array {
-        return $change($rules === [] ? $seed : $rules);
+    $path = fc_store('rules.json');
+    $exists = is_file($path);
+    $seed = $exists ? [] : fc_rules();
+    \Jasr\Framework\JsonStore::update($path, static function (array $rules) use ($change, $seed, $exists): array {
+        return $change($exists || $rules !== [] ? $rules : $seed);
     });
 }
 function fc_trigger_score(string $question, string $kind, string $raw, int $priority): ?int
@@ -181,10 +183,11 @@ function fc_validate_rule(array $input, ?string $existingId = null): array
 }
 function fc_recent(array $records, string $session, ?string $userId = null): array
 {
-    $result = array_values(array_filter($records, static function ($r) use ($session, $userId): bool {
+    $cutoff = time() - 90 * 86400;
+    $result = array_values(array_filter($records, static function ($r) use ($session, $userId, $cutoff): bool {
         if (!is_array($r)) return false;
         return ($userId !== null && ($r['userId'] ?? null) === $userId) ||
-            (($r['session'] ?? '') === $session && empty($r['userId']));
+            (($r['session'] ?? '') === $session && empty($r['userId']) && (int)($r['timestamp'] ?? 0) >= $cutoff);
     }));
     return array_slice(array_reverse($result), 0, 100);
 }
@@ -297,7 +300,8 @@ function fc_same_origin(): bool
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
     if (!is_string($origin) || $origin === '') return true;
     $source = parse_url($origin);
-    return is_array($source) && strtolower((string)($source['host'] ?? '')) === strtolower((string)($_SERVER['HTTP_HOST'] ?? ''))
+    $host = parse_url('http://' . (string)($_SERVER['HTTP_HOST'] ?? ''), PHP_URL_HOST);
+    return is_array($source) && strtolower((string)($source['host'] ?? '')) === strtolower((string)$host)
         && in_array((string)($source['scheme'] ?? ''), ['https','http'], true);
 }
 function fc_json(int $status, array $data): never
