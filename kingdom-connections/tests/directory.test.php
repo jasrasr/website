@@ -20,6 +20,20 @@ try {
     check(is_file(dirname(__DIR__) . '/' . $demoImages['picture']), 'Bundled avatar exists.');
     check(DemoData::defaultImages(['name'=>'Shining Light Cleaning', 'employee'=>'Skyler Grant']) === [], 'Real businesses do not inherit demo graphics.');
     check(DemoData::defaultImages(['name'=>'Demo Shining Light Cleaning', 'employee'=>'Other Person']) === [], 'Different employees do not inherit demo portraits.');
+    $faithful = ['name'=>'Demo Faithful Home Services', 'employee'=>'Sam Mercer',
+        'logo'=>'https://example.test/old-logo.png', 'picture'=>'https://example.test/old-avatar.png',
+        'images'=>['logo'=>null, 'picture'=>'https://example.test/old-upload.png']];
+    $faithfulImages = DemoData::displayImages($faithful);
+    check($faithfulImages['logo'] === 'assets/images/demo/logos/faithful-home-services.webp', 'Faithful demo gets its logo despite legacy saved images.');
+    check($faithfulImages['picture'] === 'assets/images/demo/avatars/sam-mercer.webp', 'Sam Mercer gets the matching demo portrait despite legacy saved images.');
+    check(is_file(dirname(__DIR__) . '/' . $faithfulImages['logo']), 'Faithful demo logo file exists.');
+    check(is_file(dirname(__DIR__) . '/' . $faithfulImages['picture']), 'Sam Mercer demo portrait file exists.');
+    $other = ['name'=>'Demo Shining Light Cleaning', 'employee'=>'Skyler Grant',
+        'logo'=>'https://example.test/custom-logo.png', 'picture'=>'https://example.test/custom-avatar.png'];
+    $otherImages = DemoData::displayImages($other);
+    check($otherImages['logo'] === $other['logo'] && $otherImages['picture'] === $other['picture'], 'Other demo uploads still take precedence.');
+    $unknownImages = DemoData::displayImages(['name'=>'Faithful Home Services', 'employee'=>'Sam Mercer']);
+    check($unknownImages === ['picture'=>'','logo'=>''], 'Real business with matching name does not inherit pinned demo images.');
     $store = new KingdomDirectory($temp . '/directory.json');
     check($store->all() === [], 'Fresh directory is empty.');
     $input = ['name'=>'Synthetic Test Business', 'skills'=>' Plumbing, electrical, PLUMBING ', 'testimony'=>'Synthetic faith statement', 'about'=>'<script>test</script>', 'website'=>'https://example.test'];
