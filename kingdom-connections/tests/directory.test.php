@@ -12,6 +12,14 @@ function rejects(callable $action): void {
 $temp = sys_get_temp_dir() . '/kingdom-test-' . bin2hex(random_bytes(8));
 mkdir($temp, 0700);
 try {
+
+    $demoImages = DemoData::defaultImages(['name'=>'Demo Shining Light Cleaning', 'employee'=>'Skyler Grant']);
+    check($demoImages['logo'] === 'assets/images/demo/logos/shining-light-cleaning.webp', 'Demo logo correctly matched.');
+    check($demoImages['picture'] === 'assets/images/demo/avatars/skyler-grant.webp', 'Demo avatar correctly matched.');
+    check(is_file(dirname(__DIR__) . '/' . $demoImages['logo']), 'Bundled logo exists.');
+    check(is_file(dirname(__DIR__) . '/' . $demoImages['picture']), 'Bundled avatar exists.');
+    check(DemoData::defaultImages(['name'=>'Shining Light Cleaning', 'employee'=>'Skyler Grant']) === [], 'Real businesses do not inherit demo graphics.');
+    check(DemoData::defaultImages(['name'=>'Demo Shining Light Cleaning', 'employee'=>'Other Person']) === [], 'Different employees do not inherit demo portraits.');
     $store = new KingdomDirectory($temp . '/directory.json');
     check($store->all() === [], 'Fresh directory is empty.');
     $input = ['name'=>'Synthetic Test Business', 'skills'=>' Plumbing, electrical, PLUMBING ', 'testimony'=>'Synthetic faith statement', 'about'=>'<script>test</script>', 'website'=>'https://example.test'];

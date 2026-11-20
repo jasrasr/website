@@ -1,4 +1,4 @@
-# Kingdom Connections 1.2.1
+# Kingdom Connections 1.2.3
 
 [Open Kingdom Connections on jasr.me](https://jasr.me/github/kingdom-connections/)
 A standalone PHP 8.1+ Christian business directory. Copy this folder to its own repository or host. Login, sessions, accounts, data and images are app-local. The bundled JSON helper follows the original framework's locking and atomic replacement conventions.
@@ -37,3 +37,9 @@ The loader stores its plan, including generated demo passwords, in private ignor
 
 ## First admin from a phone
 On an empty install, open login.php, enter the privately supplied temporary password, and choose and confirm a new password of 12–72 bytes. Sign in as super-admin with the new password. Setup is unavailable once an account exists. The temporary password is never stored in the account or granted a session.
+
+## Included demonstration artwork
+
+The repository includes 10 generated demonstration business logos and 10 AI-generated fictional representative portraits in `assets/images/demo/logos/` and `assets/images/demo/avatars/` (400px WebP). The directory automatically displays the matching assets for the ten known seeded businesses when no custom image URL or uploaded image is present. No live `storage` files, business records, ratings, verified payments, or account credentials are rewritten. Custom logo/picture URLs and uploads take priority.
+
+These portraits are synthetic placeholders, not photographs of real owners. Demo names, testimonials, and reviews are fictional. Replace the images before turning a demonstration entry into a real business listing.
