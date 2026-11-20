@@ -1,3 +1,10 @@
+// File Name: shared-auth.test.cjs
+// Author: Jason Lamb (with help from ChatGPT)
+// Description: Disposable HTTP integration checks for Box Inventory.
+// Revision: 1.0.0
+// Created Date: 2026-11-19
+// Modified Date: 2026-11-20
+// Changelog: 1.0.0 - Verify batch creation, validation, and individual QR files.
 const {test, after} = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs'), os = require('node:os'), path = require('node:path');
@@ -80,6 +87,24 @@ test('shared identity guards box admin routes, isolates demo data, and enforces 
   assert.equal((await admin.request('/box/admin/create_box.php')).status, 200);
   assert.equal((await admin.request('/box/admin/create_box.php', {box_name: 'Denied', csrf: 'bad'})).status, 403);
   assert.equal((await admin.request('/box/admin/create_box.php', {box_name: 'New tools'})).status, 303);
+  const beforeBatch = Object.keys(boxes()).length;
+  const blank = await admin.request('/box/admin/create_box.php', {box_name: ' \n\t'});
+  assert.match(blank.body, /Enter at least one box name/);
+  const tooMany = await admin.request('/box/admin/create_box.php', {box_name: Array(51).fill('Extra').join('\n')});
+  assert.match(tooMany.body, /Enter up to 50 box names/);
+  assert.equal(Object.keys(boxes()).length, beforeBatch);
+  const batch = await admin.request('/box/admin/create_box.php', {box_name: ' Garage \r\n\r\n0\rKitchen \n'});
+  assert.equal(batch.status, 303);
+  assert.match(batch.location, /created=3/);
+  assert.match((await admin.request('/box/admin/' + batch.location)).body, /3 boxes created/);
+  const batchBoxes = Object.entries(boxes()).filter(([, box]) => ['Garage', '0', 'Kitchen'].includes(box.name));
+  assert.equal(batchBoxes.length, 3);
+  assert.equal(Object.keys(boxes()).length, beforeBatch + 3);
+  for (const [code, box] of batchBoxes) {
+    assert.match(code, /^BOX[A-F0-9]{6}$/);
+    assert.match(box.owner, /^id:/);
+    assert.ok(fs.existsSync(path.join(temp, 'box/qrcodes', code + '.png')));
+  }
   const created = Object.entries(boxes()).find(([, box]) => box.name === 'New tools');
   assert.ok(created, 'New box was not saved');
   const adminId = Object.values(directory().users).find(user => user.username === 'jasrasr').id;

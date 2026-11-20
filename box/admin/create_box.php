@@ -5,14 +5,15 @@
  Author: Jason Lamb (with help from ChatGPT)
  Created Date: 2026-01-10
  Modified Date: 2026-11-20
- Revision: 1.2.1
+ Revision: 1.3.0
 
  Description:
-   Creates a new storage box owned by the logged-in user.
+   Creates one or more storage boxes owned by the logged-in user.
    Automatically generates a QR code PNG at creation time.
    Box ID is immutable; box name is editable later.
 
  Changelog:
+   Rev 1.3.0 - Create multiple boxes from one name per line.
    Rev 1.2.1 - Match the Box lookup and dashboard styling.
    Rev 1.0 - Initial box creation
    Rev 1.1 - Added ownership and timestamp handling
@@ -29,38 +30,58 @@ require_once __DIR__ . '/../lib/qr.php';
 date_default_timezone_set('America/New_York');
 
 $error = '';
+$entry = '';
+$limit = 50;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     box_require_post();
-    $boxName = trim($_POST['box_name'] ?? '');
+    $submitted = $_POST['box_name'] ?? '';
+    $entry = is_string($submitted) ? $submitted : '';
+    $names = array_values(array_filter(
+        array_map('trim', preg_split('/\r\n|\r|\n/', $entry)),
+        static fn(string $name): bool => $name !== ''
+    ));
 
-    if ($boxName === '') {
-        $error = 'Box name is required.';
+    if ($names === []) {
+        $error = 'Enter at least one box name.';
+    } elseif (count($names) > $limit) {
+        $error = "Enter up to $limit box names at a time.";
     } else {
-        $data = loadBoxData();
-        $boxes = $data['boxes'] ?? [];
-
-        $boxCode = generateBoxCode($boxes);
-
-        $boxes[$boxCode] = [
-            'name'    => $boxName,
-            'owner'   => box_new_owner($user),
-            'items'   => [],
-            'count'   => 0,
-            'updated' => date('c') // ISO-8601 in EST
-        ];
-
-        $data['boxes'] = $boxes;
-        if (!saveBoxData($data)) {
-            http_response_code(500);
-            exit('Could not save the box.');
+        $owner = box_new_owner($user);
+        $updated = date('c');
+        $codes = [];
+        if (updateBoxData(static function (array $data) use ($names, $owner, $updated, &$codes): array {
+            foreach ($names as $name) {
+                $code = generateBoxCode($data['boxes']);
+                $data['boxes'][$code] = [
+                    'name' => $name,
+                    'owner' => $owner,
+                    'items' => [],
+                    'count' => 0,
+                    'updated' => $updated,
+                ];
+                $codes[] = $code;
+            }
+            return $data;
+        })) {
+            $missing = 0;
+            foreach ($codes as $code) {
+                try {
+                    generateBoxQR($code);
+                    if (!qrExists($code)) {
+                        $missing++;
+                    }
+                } catch (Throwable $exception) {
+                    $missing++;
+                    error_log('Could not generate a Box QR code: ' . $code);
+                }
+            }
+            header('Location: index.php?created=' . count($codes) . '&missing_qr=' . $missing, true, 303);
+            exit;
         }
 
-        // 🔑 AUTO-GENERATE QR CODE
-        generateBoxQR($boxCode);
-
-        header('Location: index.php', true, 303);
-        exit;
+        http_response_code(500);
+        $error = 'Could not save the boxes. Your names are still in the form.';
     }
 }
 ?>
@@ -69,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Create New Box</title>
+  <title>Create New Boxes</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     .create-box-container { max-width: 640px; }
@@ -93,8 +114,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <header class="bg-success-subtle border-bottom p-3 p-sm-4 d-flex align-items-center gap-3">
       <span class="create-box-icon bg-white border rounded-3 flex-shrink-0" aria-hidden="true">📦</span>
       <div>
-        <h1 class="h3 mb-1">Create New Box</h1>
-        <p class="text-body-secondary mb-0">Add a storage box and generate its QR code.</p>
+        <h1 class="h3 mb-1">Create New Boxes</h1>
+        <p class="text-body-secondary mb-0">Create storage boxes and generate a QR code for each one.</p>
       </div>
     </header>
 
@@ -105,24 +126,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <form method="post">
         <input type="hidden" name="csrf" value="<?=htmlspecialchars(box_auth()->csrf(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')?>">
-        <label for="box-name" class="form-label fw-semibold">Box name</label>
-        <input
-          type="text"
+        <label for="box-name" class="form-label fw-semibold">Box names</label>
+        <textarea
+          rows="5"
           id="box-name"
           name="box_name"
           class="form-control form-control-lg<?=$error ? ' is-invalid' : ''?>"
-          <?php if ($error): ?>aria-invalid="true" aria-describedby="box-name-error"<?php endif; ?>
+          <?php if ($error): ?>aria-invalid="true" <?php endif; ?>
           required
-          placeholder="e.g. Garage Tools"
-        >
+          aria-describedby="box-name-help<?=$error ? ' box-name-error' : ''?>"
+        ><?=htmlspecialchars($entry, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')?></textarea>
+        <div id="box-name-help" class="form-text">Enter one name per line, up to <?=$limit?> boxes. Blank lines are skipped.</div>
         <div class="d-grid d-sm-flex justify-content-sm-end mt-4">
-          <button type="submit" class="btn btn-success px-4">Create Box</button>
+          <button type="submit" class="btn btn-success px-4">Create Boxes</button>
         </div>
       </form>
     </div>
   </div>
 
-  <p class="text-center text-body-secondary small mt-3 mb-0">Version 1.2.1 · Updated 2026-11-20</p>
+  <p class="text-center text-body-secondary small mt-3 mb-0">Version 1.3.0 · Updated 2026-11-20</p>
 </main>
 
 </body>
