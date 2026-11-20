@@ -24,19 +24,13 @@
 ===========================================================
 */
 
-// start auth
 require_once __DIR__ . '/../lib/auth.php';
-requireLogin();
-$currentUser = $_SESSION['user'];
-// end auth
+$user = box_require_user();
 
 date_default_timezone_set('America/New_York');
 
 require_once __DIR__ . '/../lib/data.php';
 require_once __DIR__ . '/../lib/fpdf.php';
-
-// TEMP user (auth later)
-$currentUser = 'jason';
 
 $data  = loadBoxData();
 $boxes = $data['boxes'] ?? [];
@@ -99,7 +93,7 @@ $col = 0;
 */
 foreach ($boxes as $code => $box) {
 
-    if (($box['owner'] ?? '') !== $currentUser) {
+    if (!box_owned_by($box, $user)) {
         continue;
     }
 

@@ -73,6 +73,9 @@ function saveBox(string $code, array $box): bool {
 /**
  * Generate a unique box code
  */
-function generateBoxCode(): string {
-    return 'BOX' . strtoupper(bin2hex(random_bytes(3)));
+function generateBoxCode(array $existingBoxes = []): string {
+    do {
+        $code = 'BOX' . strtoupper(bin2hex(random_bytes(3)));
+    } while (isset($existingBoxes[$code]));
+    return $code;
 }

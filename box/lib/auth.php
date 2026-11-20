@@ -1,55 +1,38 @@
 <?php
-/*
-===========================================================
- File: lib/auth.php
- Author: Jason Lamb (with help from AI)
- Created: 2026-01-19
- Modified: 2026-01-19
- Revision: 1.0
+declare(strict_types=1);
 
- Description:
-   Session-based authentication helper.
-===========================================================
-*/
+require_once dirname(__DIR__, 2) . '/1-Framework/bootstrap.php';
 
-date_default_timezone_set('America/New_York');
-session_start();
+function box_auth(): \Jasr\Users\Auth
+{
+    static $auth = null;
+    return $auth ??= \Jasr\Framework\SharedIdentity::connect();
+}
 
-define('USER_FILE', __DIR__ . '/../data/users.json');
+function box_require_user(string $minimum = 'viewer'): array
+{
+    return box_auth()->requireProject('box', $minimum);
+}
 
-function loadUsers(): array {
-    if (!file_exists(USER_FILE)) {
-        return [];
+function box_require_post(): void
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        header('Allow: POST');
+        http_response_code(405);
+        exit('POST required.');
     }
-    return json_decode(file_get_contents(USER_FILE), true)['users'] ?? [];
-}
-
-function isLoggedIn(): bool {
-    return isset($_SESSION['user']);
-}
-
-function requireLogin(): void {
-    if (!isLoggedIn()) {
-        header('Location: login.php');
-        exit;
+    if (!box_auth()->validCsrf($_POST['csrf'] ?? null)) {
+        http_response_code(403);
+        exit('Invalid form token.');
     }
 }
 
-function login(string $username, string $password): bool {
-    $users = loadUsers();
-
-    if (!isset($users[$username])) {
-        return false;
-    }
-
-    if (!password_verify($password, $users[$username]['password'])) {
-        return false;
-    }
-
-    $_SESSION['user'] = $username;
-    return true;
+function box_owned_by(array $box, array $user): bool
+{
+    return ($box['owner'] ?? null) === 'id:' . $user['id'];
 }
 
-function logout(): void {
-    session_destroy();
+function box_new_owner(array $user): string
+{
+    return 'id:' . $user['id'];
 }

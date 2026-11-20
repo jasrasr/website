@@ -32,7 +32,8 @@ if ($boxCode === '') {
     $path     = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
     $segments = $path === '' ? [] : explode('/', $path);
     $last     = end($segments);
-    if ($last !== false && $last !== 'box' && $last !== 'index.php') {
+    $baseSegment = basename(rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? '/box/index.php'), '/'));
+    if ($last !== false && $last !== $baseSegment && $last !== 'index.php') {
         $boxCode = $last;
     }
 }
