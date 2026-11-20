@@ -1,12 +1,12 @@
 <?php
 /*
 File Name: matching.test.php
-Revision: 2.0.0
+Revision: 2.0.1
 Description: PHP regression coverage for deterministic ranked matches and framework persistence.
 Author: Jason Lamb (with help from ChatGPT)
 Created Date: 2026-11-20
 Modified Date: 2026-11-20
-Changelog: 2.0.0 - Validate potato specificity, safe expansions, editable rules, and JsonStore atomic writes.
+Changelog: 2.0.1 - Cover duplicate all-words and one-word phrase invalid inputs. 2.0.0 - Validate potato specificity, safe expansions, editable rules, and JsonStore atomic writes.
 */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/bootstrap.php';

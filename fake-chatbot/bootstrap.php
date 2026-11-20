@@ -1,12 +1,12 @@
 <?php
 /*
 File Name: bootstrap.php
-Revision: 2.0.0
+Revision: 2.0.1
 Description: Framework-backed fake chatbot rule matching, private history and opt-in account linking.
 Author: Jason Lamb (with help from ChatGPT)
 Created Date: 2026-11-20
 Modified Date: 2026-11-20
-Changelog: 2.0.0 - Add ranked matching, JsonStore persistence, privacy controls, and shared-identity helpers.
+Changelog: 2.0.1 - Enforce distinct multiword all/phrase rule tiers and preserve empty edited rule libraries. 2.0.0 - Add ranked matching, JsonStore persistence, privacy controls, and shared-identity helpers.
 */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
