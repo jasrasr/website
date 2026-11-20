@@ -1,12 +1,12 @@
 <?php
 /**
  * Filename: DemoData.php
- * Revision: 1.2.3
+ * Revision: 1.2.4
  * Description: Repeatable fictional businesses, customers and paid-service reviews.
  * Author: Jason Lamb with ChatGPT
  * Created: 2026-11-18
  * Modified: 2026-11-20
- * Changelog: 1.2.3 - Map existing fictional demos to bundled logos and synthetic portraits.
+ * Changelog: 1.2.4 - Pin Faithful Home Services and Sam Mercer demo images on public pages.
  */
 declare(strict_types=1);
 
@@ -39,6 +39,32 @@ final class DemoData
             'logo' => 'assets/images/demo/logos/' . $match[1] . '.webp',
             'picture' => 'assets/images/demo/avatars/' . $match[2] . '.webp',
         ];
+    }
+
+    /**
+     * Resolve the images shown on a directory listing without writing to storage.
+     * The Faithful Home Services demo is explicitly pinned to its bundled assets
+     * so earlier saved URLs or removal markers cannot hide Sam Mercer's portrait.
+     */
+    public static function displayImages(array $business): array
+    {
+        $defaults = self::defaultImages($business);
+        $uploaded = is_array($business['images'] ?? null) ? $business['images'] : [];
+        $resolved = [];
+        foreach (['picture', 'logo'] as $kind) {
+            $current = $uploaded[$kind] ?? ($business[$kind] ?? '');
+            $resolved[$kind] = is_string($current) ? $current : '';
+            if ($resolved[$kind] === '' && !array_key_exists($kind, $uploaded)) {
+                $resolved[$kind] = $defaults[$kind] ?? '';
+            }
+        }
+        if (($business['name'] ?? null) === 'Demo Faithful Home Services'
+            && ($business['employee'] ?? null) === 'Sam Mercer'
+            && isset($defaults['logo'], $defaults['picture'])) {
+            $resolved['logo'] = $defaults['logo'];
+            $resolved['picture'] = $defaults['picture'];
+        }
+        return $resolved;
     }
 
     public static function populate(string $storage, Identity $identity, KingdomDirectory $directory, string $superId): array

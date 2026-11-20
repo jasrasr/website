@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.4 — 2026-11-20
+
+- Explicitly show the bundled Faithful Home Services logo and Sam Mercer portrait for that exact fictional demo pairing, even when prior listing data contains an old image URL or an uploaded-image removal marker.
+- Keep all existing listing data, user accounts, ratings, reviews and payment records unchanged. All other demo businesses continue using custom images before bundled defaults.
+- Add tests for the pinned pairing and preservation of custom images on other demo listings.
+
+
 ## 1.2.3 — 2026-11-20
 
 - Include 10 demo business logos and 10 synthetic representative portraits under versioned public assets.
