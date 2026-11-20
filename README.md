@@ -2,10 +2,11 @@
 File Name     : README.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Repository overview, development conventions, project index, and deployment guidance.
-Revision      : 1.0.16
+Revision      : 1.0.17
 Created Date  : 2025-02-14
-Modified Date : 2026-11-18
+Modified Date : 2026-11-20
 Changelog     :
+  Rev 1.0.17 - Add Super Tic-Tac-Toe to the project index.
   Rev 1.0.16 - Link the Investment Tracker project title directly to its hosted Jasr.me site and clarify access requirements.
   Rev 1.0.15 - Add Kingdom Connections Christian business directory.
   Rev 1.0.14 - Reorganized the project index into readable groups and fixed its broken table formatting.
@@ -74,6 +75,7 @@ The [repository-wide TODO list](ALL-TODOS.md) collects the TODO files kept in ea
 | Project and source | Site | Highlights |
 | --- | --- | --- |
 | **Build Signal walkthrough**<br>[build-signal/](build-signal/) / [README](build-signal/README.md) | [Private ChatGPT Site](https://jason-ai-build-flow.jasrasr.chatgpt.site) | Illustrated AI development walkthrough. Linked ChatGPT Site is owner only. |
+| **Super Tic-Tac-Toe**<br>[super-tic-tac-toe/](super-tic-tac-toe/) / [README](super-tic-tac-toe/README.md) | [jasr.me/super-tic-tac-toe](https://jasr.me/super-tic-tac-toe/) | Nine linked boards, classic modes, local two-player or computer play, undo and redo, and optional private score history. |
 | **Coin Flip**<br>[coin-flip/](coin-flip/) / [README](coin-flip/README.md) | <a href="https://jasr.me/github/coin-flip/" target="_new">jasr.me/github/coin-flip</a> | Giant animated coin, random heads or tails, keyboard control, and confetti. |
 | **Game Buzzer**<br>[game-buzzer/](game-buzzer/) / [README](game-buzzer/README.md) | <a href="https://jasr.me/github/game-buzzer/" target="_new">jasr.me/github/game-buzzer</a> | Six-team phone buzzer and arrival-survey Majority Rules game, with host controls and projector scoreboard. Requires private host setup. |
 | **Live Game Scoreboard**<br>[scoreboard/](scoreboard/) / [README](scoreboard/README.md) | <a href="https://jasr.me/github/scoreboard/" target="_new">jasr.me/github/scoreboard</a> | PHP scoreboard app with default, Collide, Youth, and Frontlines instances. |
