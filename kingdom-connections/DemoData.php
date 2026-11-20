@@ -1,12 +1,12 @@
 <?php
 /**
  * Filename: DemoData.php
- * Revision: 1.2.0
+ * Revision: 1.2.3
  * Description: Repeatable fictional businesses, customers and paid-service reviews.
  * Author: Jason Lamb with ChatGPT
  * Created: 2026-11-18
- * Modified: 2026-11-18
- * Changelog: 1.2.0 - Seed ten businesses, ten customers and ten reviews.
+ * Modified: 2026-11-20
+ * Changelog: 1.2.3 - Map existing fictional demos to bundled logos and synthetic portraits.
  */
 declare(strict_types=1);
 
@@ -14,6 +14,33 @@ use KingdomConnections\JsonStore;
 
 final class DemoData
 {
+    /**
+     * Stock photos and logos for the ten fictional directory entries.
+     * These paths are display-only defaults, never written over owner uploads.
+     */
+    public static function defaultImages(array $business): array
+    {
+        $matches = [
+            'Demo Faithful Home Services' => ['Sam Mercer', 'faithful-home-services', 'sam-mercer'],
+            'Demo Good Neighbor Woodworking' => ['Alex Sutton', 'good-neighbor-woodworking', 'alex-sutton'],
+            'Demo Grace Heating & Cooling' => ['Robin Lane', 'grace-heating-cooling', 'robin-lane'],
+            'Demo Living Waters Landscaping' => ['Dylan Carter', 'living-waters-landscaping', 'dylan-carter'],
+            'Demo New Creation Painting' => ['Peyton Shaw', 'new-creation-painting', 'peyton-shaw'],
+            'Demo Shining Light Cleaning' => ['Skyler Grant', 'shining-light-cleaning', 'skyler-grant'],
+            'Demo Cornerstone Roofing' => ['Emerson Blake', 'cornerstone-roofing', 'emerson-blake'],
+            'Demo Honest Way Auto Care' => ['Rowan Price', 'honest-way-auto-care', 'rowan-price'],
+            'Demo Servant Heart Technology' => ['Finley Ross', 'servant-heart-technology', 'finley-ross'],
+            'Demo Daily Bread Catering' => ['Harper Wells', 'daily-bread-catering', 'harper-wells'],
+        ];
+        $name = $business['name'] ?? null;
+        $match = is_string($name) ? ($matches[$name] ?? null) : null;
+        if ($match === null || ($business['employee'] ?? null) !== $match[0]) return [];
+        return [
+            'logo' => 'assets/images/demo/logos/' . $match[1] . '.webp',
+            'picture' => 'assets/images/demo/avatars/' . $match[2] . '.webp',
+        ];
+    }
+
     public static function populate(string $storage, Identity $identity, KingdomDirectory $directory, string $superId): array
     {
         // A persistent plan lets interrupted runs resume without duplicate accounts or reviews.

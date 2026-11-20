@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.3 — 2026-11-20
+
+- Include 10 demo business logos and 10 synthetic representative portraits under versioned public assets.
+- Link these to matching seeded demo listings as display-only defaults, without modifying persisted business data or overriding custom images.
+- Verify demo-only matching and asset paths in directory tests.
+
 ## 1.2.2 — 2026-11-18
 
 - Normalize clipboard whitespace and capitalization in the initial hexadecimal setup password.
