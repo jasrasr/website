@@ -19,14 +19,9 @@ if ($id !== '' && !$results) http_response_code(404);
 <div class="skills"><?php foreach ($skills as $tag): ?><a class="tag <?= $tag === $skill ? 'active' : '' ?>" href="?<?= h(http_build_query(['skill'=>$tag, 'q'=>$q])) ?>"><?= h(ucwords($tag)) ?></a><?php endforeach ?></div>
 <?php if (!$results): ?><section class="empty"><h2><?= $businesses ? 'No matching businesses' : 'A community starts with a connection.' ?></h2><p><?= $businesses ? 'Try another skill or clear your search.' : 'The directory is ready for its first business. An administrator can add a listing to get started.' ?></p><a href="<?= $businesses ? './' : 'admin.php' ?>"><?= $businesses ? 'Show all businesses' : 'Add the first business →' ?></a></section><?php endif ?>
 <div class="grid"><?php foreach ($results as $b):
-    $defaults = DemoData::defaultImages($b);
-    $uploaded = is_array($b['images'] ?? null) ? $b['images'] : [];
-    foreach (['picture', 'logo'] as $kind) {
-        $b[$kind] = $uploaded[$kind] ?? ($b[$kind] ?? '');
-        if ($b[$kind] === '' && !array_key_exists($kind, $uploaded)) {
-            $b[$kind] = $defaults[$kind] ?? '';
-        }
-    }
+    $images = DemoData::displayImages($b);
+    $b['picture'] = $images['picture'];
+    $b['logo'] = $images['logo'];
 ?><article class="card">
 <div class="company-heading"><?php if ($b['logo']): ?><img class="logo" src="<?= h($b['logo']) ?>" alt="<?= h($b['name']) ?> logo" loading="lazy"><?php else: ?><span class="logo monogram" aria-hidden="true"><?= h(strtoupper(substr($b['name'], 0, 1))) ?></span><?php endif ?><div><h2><a href="?id=<?= h($b['id']) ?>"><?= h($b['name']) ?></a></h2><p class="rating"><span aria-hidden="true">★</span> <?= h(ratingLabel($b)) ?></p></div></div>
 <div class="skills"><?php foreach ($b['skills'] as $tag): ?><a class="tag" href="?skill=<?= h(rawurlencode($tag)) ?>"><?= h(ucwords($tag)) ?></a><?php endforeach ?></div>
@@ -35,4 +30,4 @@ if ($id !== '' && !$results) http_response_code(404);
 <?php if ($b['picture'] || $b['employee']): ?><div class="person"><?php if ($b['picture']): ?><img src="<?= h($b['picture']) ?>" alt="<?= h($b['employee'] ?: 'Business representative') ?>" loading="lazy"><?php endif ?><span><?= h($b['employee']) ?></span></div><?php endif ?>
 <address><?php foreach (['address', 'phone'] as $field): if ($b[$field]): ?><p><?= h($b[$field]) ?></p><?php endif; endforeach ?><?php if ($b['email']): ?><p><a href="mailto:<?= h($b['email']) ?>"><?= h($b['email']) ?></a></p><?php endif ?><?php if ($b['website']): ?><a class="button secondary" href="<?= h($b['website']) ?>" target="_blank" rel="noopener noreferrer">Visit website ↗</a><?php endif ?></address>
 <?php if ($b['ratings']): ?><details><summary>Read ratings (<?= count($b['ratings']) ?>)</summary><p class="muted">Payment-verified reviews come from the customer whose payment was checked.</p><?php foreach ($b['ratings'] as $r): ?><blockquote><strong><?= h($r['stars']) ?>/5 stars</strong><p class="prose"><?= h($r['comment']) ?></p><small><?= h(substr($r['createdAt'], 0, 10)) ?> · <?= ($r['source'] ?? '') === 'verified-payment' ? 'Verified payment' : 'Admin-recorded' ?><?= !empty($r['editedByAdmin']) ? ' · Edited by administrator' : '' ?></small></blockquote><?php endforeach ?></details><?php endif ?>
-</article><?php endforeach ?></div><aside class="note">Faith statements are supplied by each business. Sign in as a customer to submit a paid service for verification and review.</aside></main><footer>Kingdom Connections · A working name, a growing community.<span>Revision 1.2.3 · November 20, 2026</span></footer></body></html>
+</article><?php endforeach ?></div><aside class="note">Faith statements are supplied by each business. Sign in as a customer to submit a paid service for verification and review.</aside></main><footer>Kingdom Connections · A working name, a growing community.<span>Revision 1.2.4 · November 20, 2026</span></footer></body></html>
