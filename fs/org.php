@@ -120,8 +120,13 @@ $orgCount = count($globalTotals);
 $topDomain = $topDomains[0] ?? null;
 $topDomainCount = $topDomain !== null ? (int) $globalTotals[$topDomain] : 0;
 
-$maxTotal = 1;
-foreach ($days as $day) $maxTotal = max($maxTotal, (int) $day['total']);
+$dailyTotals = array_column($days, 'total');
+rsort($dailyTotals, SORT_NUMERIC);
+$maxTotal = max(1, (int) ($dailyTotals[0] ?? 0));
+$secondHighest = (int) ($dailyTotals[1] ?? 0);
+$hasOutlier = $secondHighest > 0 && $maxTotal >= 2 * $secondHighest;
+$fullScale = ($_GET['scale'] ?? '') === 'full';
+$chartMax = $hasOutlier && !$fullScale ? (int) ceil($secondHighest * 1.25) : $maxTotal;
 
 $palette = ['#4d95ff', '#ffad4d', '#3ddc84', '#ff6b72', '#b98bff', '#4dd9ec'];
 $colors = [];
@@ -203,10 +208,20 @@ $labelStep = $dayCount > 14 ? (int) ceil($dayCount / 10) : 1;
         </section>
 
         <div class="chart-wrap">
+            <?php if ($hasOutlier): ?>
+                <p class="muted">
+                    <?php if ($fullScale): ?>
+                        <a href="?scale=typical" style="color:inherit">Focus on typical days</a>
+                    <?php else: ?>
+                        * The spike bar is shortened to show daily variation. Its label shows the actual total.
+                        <a href="?scale=full" style="color:inherit">Show full scale</a>
+                    <?php endif; ?>
+                </p>
+            <?php endif; ?>
             <svg viewBox="0 0 <?= $width ?> <?= $height ?>" role="img" aria-label="New tickets per day, stacked by organization">
                 <?php for ($i = 0; $i <= 4; $i++):
                     $y = $padT + $plotH * $i / 4;
-                    $label = (int) round($maxTotal * (1 - $i / 4));
+                    $label = (int) round($chartMax * (1 - $i / 4));
                 ?>
                     <line x1="<?= $padL ?>" y1="<?= $y ?>" x2="<?= $width - $padR ?>" y2="<?= $y ?>" stroke="#29405d" stroke-width="1" />
                     <text x="<?= $padL - 8 ?>" y="<?= $y + 4 ?>" text-anchor="end" font-size="11" fill="#93a4ba"><?= $label ?></text>
@@ -227,19 +242,22 @@ $labelStep = $dayCount > 14 ? (int) ceil($dayCount / 10) : 1;
                     if ((int) $day['total'] <= 0) continue;
                     $x = xFor($index, $dayCount, (float) $plotW, (float) $padL);
                     $barX = $x - $barWidth / 2;
+                    $total = (int) $day['total'];
+                    $shortened = $total > $chartMax;
+                    $heightPerTicket = $plotH / max($chartMax, $total);
                     $cumulative = 0;
                     foreach ($domainOrder as $domain):
                         $count = (int) ($day['series'][$domain] ?? 0);
                         if ($count <= 0) continue;
-                        $segHeight = $plotH * $count / $maxTotal;
-                        $segY = $height - $padB - $plotH * $cumulative / $maxTotal - $segHeight;
+                        $segHeight = $heightPerTicket * $count;
+                        $segY = $height - $padB - $heightPerTicket * $cumulative - $segHeight;
                         $cumulative += $count;
                 ?>
                         <rect x="<?= $barX ?>" y="<?= $segY ?>" width="<?= $barWidth ?>" height="<?= $segHeight ?>" fill="<?= e($colors[$domain]) ?>">
                             <title><?= e($domain) ?>: <?= $count ?></title>
                         </rect>
                 <?php endforeach; ?>
-                    <text x="<?= $x ?>" y="<?= $height - $padB - $plotH * $cumulative / $maxTotal - 6 ?>" text-anchor="middle" font-size="11" font-weight="700" fill="#dce7f5"><?= (int) $day['total'] ?></text>
+                    <text x="<?= $x ?>" y="<?= $height - $padB - $heightPerTicket * $cumulative - 6 ?>" text-anchor="middle" font-size="11" font-weight="700" fill="#dce7f5"><?= $total ?><?= $shortened ? '*' : '' ?></text>
                 <?php endforeach; ?>
             </svg>
         </div>

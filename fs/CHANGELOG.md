@@ -4,6 +4,9 @@ All notable changes to this project are documented here. Format is loosely based
 
 ## Unreleased
 
+## 2026-11-20
+- Rev 1.11.1 shortens isolated spikes in the organization chart by default, labels them with the actual ticket total, and offers a full-scale view.
+
 ## 2026-10-23
 - Rev 1.11.0: Renamed the organization dashboard to `org.php`, kept `index-org.php` as a compatibility redirect, and added each displayed organization's new-ticket count and percentage of the visible-history total.
 
