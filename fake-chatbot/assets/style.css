@@ -2,10 +2,10 @@
 File Name: style.css
 Author: Jason Lamb (with help from ChatGPT)
 Description: Responsive styling for the browser-only fake chatbot.
-Revision: 1.0.0
+Revision: 2.0.0
 Created Date: 2026-11-20
 Modified Date: 2026-11-20
-Changelog: 1.0.0 - Initial accessible, mobile-friendly chat layout.
+Changelog: 2.0.0 - Add admin forms, question tables, privacy controls and account history. 1.0.0 - Initial chat layout.
 */
 :root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#e7edf8;background:#0b1020;color-scheme:dark}
 *{box-sizing:border-box}
@@ -44,3 +44,45 @@ form label{display:block;margin:0 0 9px;font-size:.86rem;font-weight:650;color:#
 footer{border-top:1px solid #243651;margin-top:22px;padding-top:14px}
 @media(max-width:520px){.messages{min-height:300px;max-height:60vh;padding:16px 12px}.message{max-width:92%}.chat-header{padding:14px}.composer{flex-wrap:wrap}.composer input{flex-basis:100%}.composer button{width:100%}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
+/* Admin controls and public-history UI, revision 2.0.0 */
+.links{display:flex;gap:16px;flex-wrap:wrap;margin:0 0 22px;font-size:.87rem}
+.links a{background:#172b49;border:1px solid #3a577c;padding:9px 12px;border-radius:10px;text-decoration:none}
+.history-tools{display:flex;gap:18px;align-items:center;justify-content:space-between;border:1px solid #304361;border-radius:14px;padding:18px;margin-top:18px;background:#111b2f}
+.history-tools h2{font-size:1.05rem;margin:0 0 7px}
+.history-tools p{color:#b6c5db;margin:0;font-size:.87rem;line-height:1.5}
+.history-tools button{flex-shrink:0}
+.disclaimer{line-height:1.6}
+.match-info{display:block;margin-top:8px;font-size:.72rem;color:#a7d4fb}
+.panel{background:#101d32;border:1px solid #354c6f;border-radius:14px;padding:20px;margin:20px 0}
+.panel h2{font-size:1.3rem;margin:0 0 12px}
+.panel p{color:#c6d3e7}
+.panel form{border:0;padding:0}
+.panel form.stack{display:flex;flex-direction:column;gap:9px}
+.panel form.stack button{align-self:start}
+.panel label{display:block}
+.panel input:not([type=checkbox]),.panel textarea{font:inherit;color:#f2f6ff;background:#0c172a;border:1px solid #5c7094;border-radius:8px;padding:11px;width:100%}
+textarea{resize:vertical}
+.panel .check{display:flex;gap:10px;align-items:center}
+.panel input[type=checkbox]{width:18px;height:18px}
+.panel .actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.panel .buttonlink{display:inline-block;padding:12px;text-decoration:none;border:1px solid #6787b5;border-radius:8px}
+.notice,.error{border-radius:10px;padding:12px 16px}
+.notice{border:1px solid #516e97;background:#182c4b}
+.error{border:1px solid #ad6770;background:#4d212a}
+.danger{background:#7c2f42;border-color:#bc6c7a;color:#fff}
+.stat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0}
+.stat{padding:18px;background:#152744;border:1px solid #345174;border-radius:12px}
+.stat strong{display:block;font-size:1.8rem}
+.stat span{display:block;color:#a9c1e3;font-size:.78rem}
+.table-wrap{max-width:100%;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th,td{padding:11px;text-align:left;vertical-align:top;border-bottom:1px solid #35476a}
+td{overflow-wrap:anywhere}
+th{color:#bcd8fa}
+.inline-form{display:inline-block;margin:0 0 0 10px}
+.small{font-size:.72rem;padding:7px 9px}
+.history-entry{border-top:1px solid #34496b;padding:12px 0}
+.history-entry h3{font-size:1.02rem;margin:8px 0}
+.history-entry small{color:#a6bfdf}
+@media(max-width:600px){.history-tools{align-items:stretch;flex-direction:column}.stat-grid{grid-template-columns:1fr}.panel{padding:14px}}
