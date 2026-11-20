@@ -23,3 +23,27 @@ jobs:
         run: find fake-chatbot -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Test ranked matching and framework store
         run: php fake-chatbot/tests/matching.test.php
+      - name: Smoke test anonymous chat and durable history
+        shell: bash
+        run: |
+          cat > fake-chatbot/config.local.php <<'PHP'
+          <?php
+          return ['base_path' => '/fake-chatbot/'];
+          PHP
+          php -S 127.0.0.1:8765 -t . > /tmp/fake-chatbot-php.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in 1 2 3 4 5; do
+            if curl -fsS -c /tmp/fake-chat-cookie.txt http://127.0.0.1:8765/fake-chatbot/ -o /tmp/fake-chat-home.html; then break; fi
+            sleep 1
+          done
+          grep -q '100% FAKE' /tmp/fake-chat-home.html
+          curl -fsS -b /tmp/fake-chat-cookie.txt -H 'X-Requested-With: XMLHttpRequest' --data-urlencode 'action=chat' --data-urlencode 'question=potato salad' http://127.0.0.1:8765/fake-chatbot/api.php -o /tmp/fake-chat-answer.json
+          jq -e '.rule == "Potato salad recipes" and .matchType == "phrase"' /tmp/fake-chat-answer.json
+          curl -fsS -b /tmp/fake-chat-cookie.txt 'http://127.0.0.1:8765/fake-chatbot/api.php?action=history' -o /tmp/fake-chat-history.json
+          jq -e '.history | length == 1' /tmp/fake-chat-history.json
+          curl -fsS -b /tmp/fake-chat-cookie.txt -H 'X-Requested-With: XMLHttpRequest' -d 'action=clear_guest_history' http://127.0.0.1:8765/fake-chatbot/api.php -o /tmp/fake-chat-clear.json
+          jq -e '.ok == true' /tmp/fake-chat-clear.json
+          curl -fsS -b /tmp/fake-chat-cookie.txt 'http://127.0.0.1:8765/fake-chatbot/api.php?action=history' -o /tmp/fake-chat-history-after.json
+          jq -e '.history | length == 0' /tmp/fake-chat-history-after.json
+

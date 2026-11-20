@@ -1,75 +1,108 @@
 <!--
 File Name: README.md
+Revision: 2.0.0
+Description: Setup, privacy, administration and deployment of the deliberately fake AI web portal.
 Author: Jason Lamb (with help from ChatGPT)
-Description: Fake Chatbot browser demo and archived PowerShell implementation.
-Revision: 1.0.0
 Created Date: 2026-11-20
 Modified Date: 2026-11-20
-Changelog: 1.0.0 - Document initial web proof of concept and safe legacy migration.
+Changelog: 2.0.0 - Document framework-backed PHP chat, weighted rules, private storage, optional account linking and protected admin portal. 1.0.0 - Original browser prototype and PowerShell archive.
 -->
-# Fake Chatbot (web prototype)
+# Very Fake AI — a deliberately ridiculous but functional chatbot
 
-A static, browser-only adaptation of the [original PowerShell WinForms fake chatbot](https://github.com/jasrasr/powershell/blob/main/Miscellaneous/fake-chatbot.ps1). Responses come from a local JSON list of keywords and answers. **No generative AI, API key, account, server storage, or PHP is involved.** This is a simulation, not a real chatbot service.
+A **completely fake AI** website. Nothing in this application uses an AI model, an LLM API, or an AI key. It matches visitor questions to **human-written jokes** using deterministic PHP rules. Anyone can chat anonymously; people with existing active **User Management** accounts may explicitly link their browser's saved questions to their account. Only authorized project administrators can edit replies and inspect all visitor questions.
 
-## Web demo
+The original PowerShell v1.1 chatbot and its two prompt files are copied **unchanged** into the legacy/ folder. The separate jasrasr/powershell repository remains untouched.
 
-Once the branch has been reviewed, merged, and deployed to Hostinger, the conventional website URL is:
+## Links after deployment
 
-https://jasr.me/github/fake-chatbot/
+- Public portal: https://jasr.me/github/fake-chatbot/
+- Admin portal: https://jasr.me/github/fake-chatbot/admin/
+- Personal history / account linking: https://jasr.me/github/fake-chatbot/link-history.php
 
-GitHub source: https://github.com/jasrasr/website/tree/main/fake-chatbot/
+These are deployment targets, **not confirmation the site is already live**. This project uses PHP 8.1+, no external API keys, database, Composer, or runtime Node dependencies.
 
-The repository path does not prove the hosted site is already deployed.
+## 1-Framework and User Management integration
 
-### Teach the bot
+- The application bootstrap loads ../1-Framework/bootstrap.php. All state is saved using Jasr\Framework\JsonStore with its atomic, locked JSON writes.
+- Only protected routes use the shared account provider Jasr\Framework\SharedIdentity::connect(). No second account/password database exists.
+- Anonymous chatting does **not** use login or require a project registration. The web endpoint is public; the admin endpoint is role-protected.
+- Register project ID **fake-chatbot** with its actual URL path **/github/fake-chatbot/** in User Management. This is necessary for safe post-login return links and for admin authorization.
+- The existing super administrator (normally jasrasr with all-project privileges) may use /admin/ once the project is registered. Alternatively grant its existing account admin/super_admin rights for the fake-chatbot project.
+- Other existing users do **not** need an explicit fake-chatbot project grant to voluntarily link their own history. They must be signed in with an active account and have completed required password changes. This does **not** let them see anyone else's account history or manage rules.
+- No new default administrator credentials, accounts, project grants, or passwords are created on deploy.
 
-Edit `data/prompts.json`. Each entry has an ordered list of `keywords` and one `reply`. The first matched entry wins. Matching is case-insensitive and uses complete words or phrases, so `hi` does not accidentally match `this`. You can use `{{time}}` and `{{date}}` in replies; no other expressions are evaluated.
+Use the existing 1-Framework/README.md, 1-Framework/AI-INSTRUCTIONS.md and user-management/README.md conventions for deployment and permission management.
 
-Example:
+## Persistent data, privacy and hosting
 
-    {"keywords": ["joke", "tell me a joke"], "reply": "Why was the computer cold? It left its Windows open."}
+- Tracked data/prompts.json contains the public seed rules. Admin edits go to private storage/rules.json, initialized from the seed only on the first write. Later Git changes do not replace server-edited responses.
+- Other private files: storage/history.json (question text, answer, match, time and association), storage/links.json (opted-in browser/account association), and storage/limits.json (request-throttle counts).
+- A random HttpOnly SameSite cookie identifies the anonymous browser, and only its SHA-256 hash is stored. No raw IP address, user agent or fingerprint is logged by this application.
+- Anonymous questions expire after 90 days and are pruned on subsequent writes. Linked questions remain until their owner deletes them, subject to a global cap of 20,000 retained entries.
+- Visitors are warned not to enter confidential information. Authorized project administrators can inspect all submitted questions to teach the joke bot.
+- Signing in does NOT automatically link anonymous questions. The user explicitly selects **Link this browser's anonymous history** on the account page. Later questions are saved to that account only while the corresponding central account remains signed in.
+- **Clear screen** removes only visible messages. **Delete anonymous history** removes unlinked stored questions for that browser. The account page can unlink future saving or delete all questions owned by that account.
+- Default per-cookie rate limits: 20 questions/minute and 300/day; global limits: 120/minute and 6,000/day.
 
-Place the entry inside the existing `prompts` array with a separating comma. The `_header` metadata object should remain intact. The JSON file is public, so do not add passwords or private data.
+The tracked storage/.placeholder preserves an empty runtime directory. All runtime JSON and lock files are ignored by Git. PHP must have write permission to storage/. **Do not** wipe runtime files during Hostinger sync and include them in secure backups.
 
-Chat messages are never transmitted to a server or saved. The current browser conversation clears when the page reloads. The page shows an error and disables sending if the JSON file fails to load.
+### Required HTTP denial verification
 
-### Run locally
+storage/.htaccess denies direct public HTTP access on Apache/LiteSpeed. Before accepting public questions, check that a real file under https://jasr.me/github/fake-chatbot/storage/ returns HTTP **403**, not 200. For nginx, add equivalent host-level deny rules or change storage_path to a writable directory **outside the web root**. An unprotected storage folder exposes saved visitor questions and account association IDs; do not launch until this is verified.
 
-Host the project folder over HTTP, for example from inside `fake-chatbot/`:
+An optional ignored config.local.php can be made by copying config.local.example.php (remove ONLY .example). Change base_path if deployed to another subpath, or storage_path if using another private data location. No API configuration is needed.
 
-    python -m http.server 8000
+## Matching and jokes
 
-Then open http://localhost:8000/. Directly opening `index.html` as `file://` may block JSON loading due to browser restrictions.
+Each rule has a name, ordered alternate triggers, 1–8 human-written replies, a +/-20 tie-break priority, and an enabled flag. The first tier that matches wins, regardless of rule ordering.
 
-### Tests
+| Tier | Trigger syntax | Behavior |
+| --- | --- | --- |
+| 1 | exact: what is potato salad | Whole normalized question |
+| 2 | phrase: potato salad | Complete contiguous phrase anywhere in question |
+| 3 | all: potato salad | Both words occur, in either order and any position |
+| 4 | keyword: potato | One complete word anywhere in question |
 
-From the `fake-chatbot` folder:
+A phrase outranks a single keyword even with the maximum manual tie-break priority. Longer and more-specific matches are favored within a tier, then administrator priority, then a stable rule ID tie-break.
 
-    node --test tests/engine.test.cjs
+- "How can I make potato salad?" chooses the potato salad recipe rule.
+- "Does salad need potato?" chooses the all-words potato salad rule.
+- "What about Mr. Potato Head from Toy Story?" chooses the toy rule.
+- "What is a potato?" or simply "potato" chooses the vegetable rule.
+- A totally unmatched question receives an obviously fictional fallback and still appears in admin question review.
 
-No Node packages or build system are required.
+The initial seed contains **107 rule categories and 143 comedy answers**. Replies are randomly chosen only from human-written alternatives; no question or answer is sent to any AI service. Dynamic {{time}} and {{date}} are simple server-side replacements using America/New_York. Arbitrary code, HTML and the old PowerShell Invoke-Expression execution are **never** evaluated from rule text. All UI output is HTML-escaped.
 
-### Manual smoke tests
+## Admin features
 
-1. On desktop and mobile, open the page and verify the status says seven responses are loaded.
-2. Send `HELLO!`, `how are you?`, `what time is it?`, and an unknown phrase.
-3. Verify the displayed time uses your device timezone, and unknown text is displayed as text only.
-4. Verify `/clear` and **Clear chat** remove all prior messages.
-5. Temporarily rename the JSON file in a development copy, reload, and confirm the UI displays a load error and disables Send.
-6. Check network requests: only static project files should load; no AI API or telemetry calls.
+At /admin/, users with a server-enforced fake-chatbot admin project role can:
+- Create, edit, enable/disable, or delete a rule.
+- Specify multiple triggers, one per line, beginning with exact:, phrase:, all:, or keyword:.
+- Enter several different one-line comedic answers for random variety.
+- Set a tie-break priority without disrupting the four specificity tiers.
+- Test any question and inspect the winning rule, matching trigger, score, and sample answer.
+- Inspect the last 120 captured questions and their historic match IDs, including unmatched prompts; create a new rule from one of them.
 
-## Original PowerShell files — retained unchanged
+The admin forms use the existing central User Management CSRF protection. Editing rules does not alter source files, other account records or historical saved answers.
 
-- `legacy/fake-chatbot.ps1` — original revision 1.1 WinForms chatbot.
-- `legacy/chatbot-prompts.txt` — its original keyword/reply data.
-- `legacy/chatbot-prompts.json` — alternate JSON prompt set.
+## Testing
 
-The original Windows script assumes `C:\\temp\\chatbot-prompts.txt`; adjust that path if running the legacy app locally. **Security warning:** the old script uses `Invoke-Expression` on prompt-file content. Do not run it against untrusted data. The web prototype does not use or expose that execution feature.
+The Fake Chatbot Validation GitHub Actions workflow lints all PHP, runs matching and framework-storage tests, and runs an HTTP smoke test using PHP's built-in server and curl. No third-party packages are required. From the website repo root, run:
 
-## Design and planned evolution
+    find fake-chatbot -name '*.php' -print0 | xargs -0 -n1 php -l
+    php fake-chatbot/tests/matching.test.php
 
-This first version deliberately does not adopt the shared PHP framework or user-management because it has no users, persistence, or API. If you later add accounts, persist chat history, or integrate a real AI provider, use the repository's `1-Framework` guidance and shared user-management instead of inventing another login system. Put keys in private host-only configuration rather than committing them.
+PHP's localhost server does not honor .htaccess, so never use it to validate runtime-storage denial. On Hostinger, manually verify user-role isolation, anonymous history persistence, account opt-in and sign-out behavior, admin rule editing, and HTTP 403 for private JSON.
 
-Potential next additions: admin prompt editor, import/export tools, randomized answer variants, optional typing animation, conversation history, and optional real AI mode clearly separated from simulated mode.
+## Project files
 
-**Project revision:** 1.0.0 · **Updated:** 2026-11-20
+- index.php, assets/app.js, assets/style.css — public website.
+- bootstrap.php, api.php — matching logic and server-side history storage.
+- link-history.php — voluntary User Management history linking.
+- admin/index.php — protected rule CRUD, matching preview and question history.
+- data/prompts.json — versioned, human-written seed rules.
+- storage/ — ignored private runtime files with Apache/LiteSpeed HTTP denial.
+- tests/matching.test.php — matching regression tests.
+- legacy/ — untouched PowerShell chatbot and original prompt TXT/JSON data.
+
+**Revision:** 2.0.0 · **Updated:** 2026-11-20
