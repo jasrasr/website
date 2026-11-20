@@ -1,3 +1,12 @@
+<!--
+File Name: README.md
+Author: Jason Lamb (with help from ChatGPT)
+Description: QR Box Inventory setup, shared login, storage, and verification.
+Revision: 1.0.0
+Created Date: 2026-11-19
+Modified Date: 2026-11-20
+Changelog: 1.0.0 - Document the public lookup page login link and verification.
+-->
 # QR Box Inventory
 
 The repository directory is `box/`. It serves public QR lookup pages and a protected inventory dashboard. The live URL may have a different path; register the actual deployed path in User Management.
@@ -6,7 +15,7 @@ The repository directory is `box/`. It serves public QR lookup pages and a prote
 
 The dashboard uses the `box` project in `user-management`. Register that project with the URL path where this app is deployed, then grant users `viewer` or `member` access. A viewer can open their dashboard and print labels. A member can also create, edit, delete, and regenerate QR codes for their own boxes. Project admins have the same per-owner box scope; central account roles do not grant access to other owners' boxes.
 
-`admin/login.php` redirects to the central sign-in page. Signing out of the dashboard signs out of the shared session in that browser. The old `data/users.json` password file is no longer read by the app. Public QR lookup pages and generated QR images remain public; use codes only for information intended to be visible to anyone holding a sticker or link.
+Select **Log in** on the public Box Lookup page to open the inventory dashboard through shared sign-in. `admin/login.php` redirects to the central sign-in page. Signing out of the dashboard signs out of the shared session in that browser. The old `data/users.json` password file is no longer read by the app. Public QR lookup pages and generated QR images remain public; use codes only for information intended to be visible to anyone holding a sticker or link.
 
 New boxes store the central immutable account ID in `owner` as `id:<central-id>`. The checked-in boxes and old login were demo data, so no legacy ownership migration is needed. A valid sample lives in `examples/boxes.example.json`; runtime `data/boxes.json` starts empty and is ignored by Git.
 
@@ -26,4 +35,10 @@ If a separate installation has real legacy boxes, do not deploy this version ove
 
 ## Verification
 
+Open the public lookup page while signed out and select **Log in**. Confirm that shared sign-in opens and returns you to the Box dashboard after signing in with an authorized account.
+
 Run `node box/tests/shared-auth.test.cjs` and PHP syntax checks before deployment. The isolated HTTP test exercises sign-in, project permissions, ownership, CSRF, old entry points, logout, and revocation using disposable data. It stubs QR rendering because the local PHP runtime may lack GD. Check actual QR generation and PDF output on the host.
+
+## Changelog
+
+- 1.3.1 (2026-11-20) Added a login link to the public Box Lookup page.
