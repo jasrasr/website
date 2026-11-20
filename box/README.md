@@ -2,10 +2,11 @@
 File Name: README.md
 Author: Jason Lamb (with help from ChatGPT)
 Description: QR Box Inventory setup, shared login, storage, and verification.
-Revision: 1.0.1
+Revision: 1.0.2
 Created Date: 2026-11-19
 Modified Date: 2026-11-20
-Changelog: 1.0.1 - Document the dashboard link and verification.
+Changelog: 1.0.2 - Document Create Box layout verification.
+  1.0.1 - Document the dashboard link and verification.
   1.0.0 - Document the public lookup page login link and verification.
 -->
 # QR Box Inventory
@@ -40,7 +41,10 @@ Open the public lookup page while signed out and select **Log in**. Confirm that
 
 Run `node box/tests/shared-auth.test.cjs` and PHP syntax checks before deployment. The isolated HTTP test exercises sign-in, project permissions, ownership, CSRF, old entry points, logout, and revocation using disposable data. It stubs QR rendering because the local PHP runtime may lack GD. Check actual QR generation and PDF output on the host.
 
+With member access, open **Create New Box** on the dashboard. On desktop and mobile, check that the name field and submit button fit, that submitting returns you to the dashboard with the box listed, and that **Back to dashboard** exits without saving.
+
 ## Changelog
 
+- Create Box page 1.2.1 (2026-11-20) Restyled the form to match the lookup and dashboard pages.
 - 1.3.2 (2026-11-20) Added a Manage boxes link to the inventory dashboard.
 - 1.3.1 (2026-11-20) Added a login link to the public Box Lookup page.

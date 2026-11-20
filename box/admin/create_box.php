@@ -1,18 +1,19 @@
 <?php
 /*
 ===========================================================
- File: create_box.php
- Author: Jason Lamb (with help from AI)
- Created: 2026-01-10
- Modified: 2026-01-19
- Revision: 1.2
+ File Name: create_box.php
+ Author: Jason Lamb (with help from ChatGPT)
+ Created Date: 2026-01-10
+ Modified Date: 2026-11-20
+ Revision: 1.2.1
 
  Description:
    Creates a new storage box owned by the logged-in user.
    Automatically generates a QR code PNG at creation time.
    Box ID is immutable; box name is editable later.
 
- Changes:
+ Changelog:
+   Rev 1.2.1 - Match the Box lookup and dashboard styling.
    Rev 1.0 - Initial box creation
    Rev 1.1 - Added ownership and timestamp handling
    Rev 1.2 - Auto-generate QR code on box creation
@@ -63,38 +64,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Create New Box</title>
-  <link rel="stylesheet" href="../lib/admin.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .create-box-container { max-width: 640px; }
+    .create-box-icon {
+      width: 3.5rem;
+      height: 3.5rem;
+      display: grid;
+      place-items: center;
+      font-size: 1.75rem;
+    }
+  </style>
 </head>
-<body>
+<body class="bg-body-tertiary">
 
-<h1>Create New Box</h1>
+<main class="container create-box-container py-4 py-sm-5">
+  <a href="index.php" class="d-inline-block fw-semibold text-decoration-none mb-3">
+    <span aria-hidden="true">←</span> Back to dashboard
+  </a>
 
-<?php if ($error): ?>
-  <div class="alert alert-danger"><?=htmlspecialchars($error)?></div>
-<?php endif; ?>
+  <div class="card shadow-sm overflow-hidden">
+    <header class="bg-success-subtle border-bottom p-3 p-sm-4 d-flex align-items-center gap-3">
+      <span class="create-box-icon bg-white border rounded-3 flex-shrink-0" aria-hidden="true">📦</span>
+      <div>
+        <h1 class="h3 mb-1">Create New Box</h1>
+        <p class="text-body-secondary mb-0">Add a storage box and generate its QR code.</p>
+      </div>
+    </header>
 
-<form method="post">
-  <input type="hidden" name="csrf" value="<?=htmlspecialchars(box_auth()->csrf(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')?>">
-  <div class="mb-3">
-    <label class="form-label">Box Name</label>
-    <input
-      type="text"
-      name="box_name"
-      class="form-control"
-      required
-      autofocus
-      placeholder="e.g. Garage Tools"
-    >
+    <div class="card-body p-3 p-sm-4">
+      <?php if ($error): ?>
+        <div id="box-name-error" class="alert alert-danger" role="alert"><?=htmlspecialchars($error)?></div>
+      <?php endif; ?>
+
+      <form method="post">
+        <input type="hidden" name="csrf" value="<?=htmlspecialchars(box_auth()->csrf(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')?>">
+        <label for="box-name" class="form-label fw-semibold">Box name</label>
+        <input
+          type="text"
+          id="box-name"
+          name="box_name"
+          class="form-control form-control-lg<?=$error ? ' is-invalid' : ''?>"
+          <?php if ($error): ?>aria-invalid="true" aria-describedby="box-name-error"<?php endif; ?>
+          required
+          placeholder="e.g. Garage Tools"
+        >
+        <div class="d-grid d-sm-flex justify-content-sm-end mt-4">
+          <button type="submit" class="btn btn-success px-4">Create Box</button>
+        </div>
+      </form>
+    </div>
   </div>
 
-  <button class="btn btn-success">Create Box</button>
-  <a href="index.php" class="btn btn-secondary">Cancel</a>
-</form>
+  <p class="text-center text-body-secondary small mt-3 mb-0">Version 1.2.1 · Updated 2026-11-20</p>
+</main>
 
 </body>
 </html>
