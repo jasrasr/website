@@ -1,4 +1,4 @@
-# Kingdom Connections 1.2.3
+# Kingdom Connections 1.2.4
 
 [Open Kingdom Connections on jasr.me](https://jasr.me/github/kingdom-connections/)
 A standalone PHP 8.1+ Christian business directory. Copy this folder to its own repository or host. Login, sessions, accounts, data and images are app-local. The bundled JSON helper follows the original framework's locking and atomic replacement conventions.
@@ -40,6 +40,6 @@ On an empty install, open login.php, enter the privately supplied temporary pass
 
 ## Included demonstration artwork
 
-The repository includes 10 generated demonstration business logos and 10 AI-generated fictional representative portraits in `assets/images/demo/logos/` and `assets/images/demo/avatars/` (400px WebP). The directory automatically displays the matching assets for the ten known seeded businesses when no custom image URL or uploaded image is present. No live `storage` files, business records, ratings, verified payments, or account credentials are rewritten. Custom logo/picture URLs and uploads take priority.
+The repository includes 10 generated demonstration business logos and 10 AI-generated fictional representative portraits in `assets/images/demo/logos/` and `assets/images/demo/avatars/` (400px WebP). The directory automatically displays the matching assets for the ten known seeded businesses when no custom image URL or uploaded image is present. No live `storage` files, business records, ratings, verified payments, or account credentials are rewritten. Custom logo/picture URLs and uploads take priority for all other listings. For the exact fictional pairing **Demo Faithful Home Services / Sam Mercer**, the bundled logo and avatar are deliberately shown even when the stored demo listing has old URLs or upload-removal markers. This is a display-only exception and does not alter the saved record; rename the demo business before converting it to a real listing.
 
 These portraits are synthetic placeholders, not photographs of real owners. Demo names, testimonials, and reviews are fictional. Replace the images before turning a demonstration entry into a real business listing.
