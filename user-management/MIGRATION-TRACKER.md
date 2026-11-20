@@ -8,8 +8,8 @@ Last updated: 2026-11-19 (America/New_York)
 
 - **21 migration candidates:** 15 existing login/password systems and 6 special cases.
 - **1 implementation in review:** Finances, [PR #89](https://github.com/jasrasr/website/pull/89).
-- **1 implementation ready for rollout:** Daily Babe v2.0; live Hostinger verification remains outstanding.
-- **19 candidates not implemented.** Preliminary repository inventory is complete; detailed project migrations remain outstanding.
+- **2 implementations ready for rollout:** Daily Babe v2.0 and Box Inventory; live Hostinger verification remains outstanding.
+- **18 candidates not implemented.** Preliminary repository inventory is complete; detailed project migrations remain outstanding.
 - **0 migrations verified complete.** A PR, merge, or deployment alone does not count as completion. Live status is unverified unless explicitly recorded below.
 - Shared identity foundation: [PR #88](https://github.com/jasrasr/website/pull/88), merged. This is infrastructure, not a completed application migration.
 
@@ -31,7 +31,7 @@ Sequence is a suggested working order, not authorization to switch live authenti
 | 2 | [webstats](../webstats/) | Admin login using framework helpers | Queued | Protect reporting; preserve public collection |
 | 3 | [smart-404](../smart-404/) | Shared admin password | Queued | Keep 404 handling public |
 | 4 | [text](../text/) | Save and raw-JSON passwords | Queued | Decide public reading versus private viewing |
-| 5 | [box](../box/) | JSON user accounts and admin session | Implementing | Shared-login code and isolated tests added; approve live owner links and verify hosting before rollout |
+| 5 | [box](../box/) | Demo JSON accounts and admin session | Ready for rollout | Shared-login code and isolated tests added; demo data requires no owner mapping |
 | 6 | [ticketing](../ticketing/) | Requester/Agent accounts; test-mode password bypass | Queued | Preserve email-based ticket ownership and private notes |
 | 7 | [time-clock](../time-clock/) | Client-side admin PIN | Queued | Add server-side write authorization; keep display behavior |
 | 8 | [mpg](../mpg/) | Admin password and device/IP trust | Queued | Decide account access versus trusted-device behavior |
@@ -94,12 +94,12 @@ See [roles and accounts](ROLES-AND-ACCOUNTS.md). These foundation tasks do not m
 
 ### 5. Box
 
-- [ ] Inventory legacy users and actual admin capabilities; approve identity mappings.
+- [x] Confirmed by the owner that checked-in boxes and accounts are demo data; no live owner migration is needed.
 - [x] Replace legacy login/session helpers and gate every admin action; keep public QR lookups public.
-- [x] Test legacy-owner isolation, viewer/member permissions, direct endpoints, CSRF, logout and central revocation in an isolated deployment.
+- [x] Test demo-owner isolation, viewer/member permissions, direct endpoints, CSRF, logout and central revocation in an isolated deployment.
 - [ ] Merge, back up, deploy, verify and record completion.
 
-The code uses project ID `box`, even if the live URL is `/boxes/`. Register the actual deployed URL path. Existing records keep their legacy owner strings; a private, explicit `box/data/owner-links.json` maps central account IDs to legacy owners. New records use immutable central IDs. Live owner mappings, data backup, `.htaccess` denial, QR generation and PDF output remain to be verified on hosting.
+The code uses project ID `box`, even if the live URL is `/boxes/`. Register the actual deployed URL path. New records use immutable central IDs; the old sample data has moved to `box/examples/`. Verify deployment, data storage denial, QR generation and PDF output on hosting before marking the migration complete.
 
 ### 6. Ticketing
 

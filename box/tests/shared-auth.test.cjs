@@ -13,9 +13,7 @@ for (const name of fs.readdirSync(data)) if (name !== '.htaccess') fs.rmSync(pat
 fs.writeFileSync(path.join(temp, 'user-management/config.local.php'),
   "<?php return ['secure_cookie'=>false,'setup_key'=>'test-only-setup-key-with-at-least-32-characters'];");
 const boxData = path.join(temp, 'box/data');
-fs.writeFileSync(path.join(boxData, 'boxes.json'), JSON.stringify({boxes: {
-  BOXABC123: {name: 'Legacy tools', owner: 'jason', items: ['Hammer'], count: 1, updated: '2026-01-20T12:00:00-05:00'}
-}}));
+fs.copyFileSync(path.join(temp, 'box/examples/boxes.example.json'), path.join(boxData, 'boxes.json'));
 fs.cpSync(path.join(temp, 'box'), path.join(temp, 'boxes'), {recursive: true});
 // QR generation is stubbed because the PHP test runtime does not have GD.
 fs.writeFileSync(path.join(temp, 'box/lib/qr.php'), `<?php
@@ -53,7 +51,7 @@ class Browser {
 function directory() { return JSON.parse(fs.readFileSync(path.join(data, 'directory.json'), 'utf8')).records; }
 function boxes() { return JSON.parse(fs.readFileSync(path.join(boxData, 'boxes.json'), 'utf8')).boxes; }
 
-test('shared identity guards box admin routes, links legacy ownership explicitly, and enforces CSRF', async () => {
+test('shared identity guards box admin routes, isolates demo data, and enforces CSRF', async () => {
   let ready = false;
   for (let i = 0; i < 80; i++) {
     try { await fetch(base + '/user-management/'); ready = true; break; }
@@ -78,7 +76,7 @@ test('shared identity guards box admin routes, links legacy ownership explicitly
   await admin.request('/user-management/');
   assert.equal((await admin.request('/user-management/', {action: 'save-project', project: 'box', name: 'Box Inventory', path: '/box/'})).status, 303);
   assert.equal((await admin.request('/box/admin/index.php')).status, 200);
-  assert.doesNotMatch((await admin.request('/box/admin/index.php')).body, /Legacy tools/);
+  assert.doesNotMatch((await admin.request('/box/admin/index.php')).body, /Demo Box/);
   assert.equal((await admin.request('/box/admin/create_box.php')).status, 200);
   assert.equal((await admin.request('/box/admin/create_box.php', {box_name: 'Denied', csrf: 'bad'})).status, 403);
   assert.equal((await admin.request('/box/admin/create_box.php', {box_name: 'New tools'})).status, 303);
@@ -94,15 +92,10 @@ test('shared identity guards box admin routes, links legacy ownership explicitly
   assert.equal((await admin.request('/box/edit_box.php?c=' + created[0], {items: 'Bypass'})).status, 405);
   assert.deepEqual(boxes()[created[0]].items, ['Changed']);
 
-  fs.writeFileSync(path.join(boxData, 'owner-links.json'), JSON.stringify({links: {[adminId]: 'jason'}}));
-  assert.match((await admin.request('/box/admin/index.php')).body, /Legacy tools/);
-  fs.writeFileSync(path.join(boxData, 'owner-links.json'), JSON.stringify({links: {[adminId]: 'jason', '0123456789abcdef0123456789abcdef': 'jason'}}));
-  const corruptLinkResponse = await admin.request('/box/admin/index.php');
-  assert.equal(corruptLinkResponse.status, 503, corruptLinkResponse.body.slice(0, 300));
-  fs.writeFileSync(path.join(boxData, 'owner-links.json'), JSON.stringify({links: {[adminId]: 'jason'}}));
-  assert.equal((await admin.request('/box/admin/edit_box.php?c=BOXABC123')).status, 200);
-  assert.equal((await admin.request('/box/admin/generate_qr.php', {code: 'BOXABC123'})).status, 303);
-  assert.ok(fs.existsSync(path.join(temp, 'box/qrcodes/BOXABC123.png')));
+  assert.equal((await admin.request('/box/admin/edit_box.php?c=BOXABC123')).status, 404);
+  assert.equal((await admin.request('/box/admin/generate_qr.php', {code: 'BOXABC123'})).status, 404);
+  assert.equal((await admin.request('/box/admin/generate_qr.php', {code: created[0]})).status, 303);
+  assert.ok(fs.existsSync(path.join(temp, 'box/qrcodes', created[0] + '.png')));
 
   await admin.request('/user-management/');
   assert.equal((await admin.request('/user-management/', {action: 'create-user', username: 'member', name: 'Member', password: 'temporary-password-2026'})).status, 303);
@@ -115,7 +108,7 @@ test('shared identity guards box admin routes, links legacy ownership explicitly
   await member.request('/user-management/');
   assert.equal((await member.request('/user-management/', {action: 'change-password', current_password: 'temporary-password-2026', password: 'permanent-password-2026', confirm_password: 'permanent-password-2026'})).status, 303);
   assert.equal((await member.login('member', 'permanent-password-2026')).status, 303);
-  assert.doesNotMatch((await member.request('/box/admin/index.php')).body, /Legacy tools|New tools/);
+  assert.doesNotMatch((await member.request('/box/admin/index.php')).body, /Demo Box|New tools/);
   assert.equal((await member.request('/box/admin/edit_box.php?c=BOXABC123')).status, 404);
   assert.equal((await member.request('/box/admin/delete_box.php', {code: 'BOXABC123'})).status, 303);
   assert.ok(boxes().BOXABC123, 'Cross-owner delete succeeded');

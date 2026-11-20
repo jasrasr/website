@@ -1,0 +1,11 @@
+{
+  "boxes": {
+    "BOXABC123": {
+      "name": "Demo Box",
+      "items": ["Item A", "Item B"],
+      "count": 2,
+      "updated": "2026-01-20T12:00:00-05:00",
+      "owner": "demo"
+    }
+  }
+}
