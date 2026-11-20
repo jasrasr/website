@@ -1,0 +1,58 @@
+<!doctype html>
+<!--
+File Name: index.html
+Author: Jason Lamb (with help from ChatGPT)
+Description: Public, browser-only interface for the legacy simulated chatbot.
+Revision: 1.0.0
+Created Date: 2026-11-20
+Modified Date: 2026-11-20
+Changelog: 1.0.0 - First responsive web demo using safe, predefined responses.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A simulated chatbot powered by customizable preset answers, not artificial intelligence.">
+  <title>Fake Chatbot | JASR</title>
+  <link rel="stylesheet" href="assets/style.css?v=1.0.0">
+  <script src="assets/engine.js?v=1.0.0" defer></script>
+  <script src="assets/app.js?v=1.0.0" defer></script>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">JASR / INTERACTIVE DEMO</p>
+        <h1>Fake Chatbot<span class="dot">.</span></h1>
+        <p class="subtitle">It looks like a chatbot. It only knows what you teach it.</p>
+      </div>
+      <span class="status-pill">SIMULATED · NO AI API</span>
+    </header>
+
+    <main class="chat-card">
+      <div class="chat-header">
+        <div>
+          <h2>Conversation</h2>
+          <p id="status" role="status">Loading predefined responses...</p>
+        </div>
+        <button type="button" id="clear" class="secondary">Clear chat</button>
+      </div>
+
+      <section id="messages" class="messages" role="log" aria-live="polite" aria-relevant="additions" aria-label="Chat conversation">
+        <div class="message bot"><span class="speaker">Bot</span><p>Initializing fake intelligence...</p></div>
+      </section>
+
+      <form id="chat-form" autocomplete="off">
+        <label for="message">Your message</label>
+        <div class="composer">
+          <input id="message" name="message" type="text" maxlength="500" placeholder="Try: hello, time, weather, or help" disabled required>
+          <button type="submit" id="send" disabled>Send</button>
+        </div>
+      </form>
+    </main>
+
+    <p class="disclaimer">Demonstration only. Responses are selected from local JSON prompts. Messages are processed in your browser and are not sent to a server or an AI provider. Chat history is not saved.</p>
+    <footer>Fake Chatbot · Rev 1.0.0 · Updated 2026-11-20 · <a href="https://github.com/jasrasr/website/tree/main/fake-chatbot">Project source</a></footer>
+  </div>
+</body>
+</html>

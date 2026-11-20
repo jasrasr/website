@@ -1,0 +1,61 @@
+{
+  "_header": {
+    "file_name": "prompts.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "description": "Predefined responses migrated from the legacy PowerShell chatbot text file. No executable expressions.",
+    "revision": "1.0.0",
+    "created_date": "2026-11-20",
+    "modified_date": "2026-11-20",
+    "changelog": "1.0.0 - Browser-safe versions of original keyword and response rules."
+  },
+  "prompts": [
+    {
+      "keywords": [
+        "hello",
+        "hi",
+        "hey"
+      ],
+      "reply": "Hello there, human. Nice to see you."
+    },
+    {
+      "keywords": [
+        "time",
+        "clock"
+      ],
+      "reply": "The current time is {{time}}."
+    },
+    {
+      "keywords": [
+        "date",
+        "today"
+      ],
+      "reply": "Today is {{date}}."
+    },
+    {
+      "keywords": [
+        "weather",
+        "forecast"
+      ],
+      "reply": "I am a browser chatbot. Weather? It's probably cold. Because Ohio."
+    },
+    {
+      "keywords": [
+        "help"
+      ],
+      "reply": "I only know what you've trained me with. Edit data/prompts.json to teach me more."
+    },
+    {
+      "keywords": [
+        "how are you"
+      ],
+      "reply": "I cannot feel emotions, but I can pretend. I am 100 percent operational."
+    },
+    {
+      "keywords": [
+        "exit",
+        "quit"
+      ],
+      "reply": "You cannot escape me. Just kidding. Close the browser tab."
+    }
+  ]
+}

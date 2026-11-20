@@ -2,10 +2,11 @@
 File Name     : README.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Repository overview, development conventions, project index, and deployment guidance.
-Revision      : 1.0.16
+Revision      : 1.0.17
 Created Date  : 2025-02-14
-Modified Date : 2026-11-18
+Modified Date : 2026-11-20
 Changelog     :
+  Rev 1.0.17 - Add preserved PowerShell fake chatbot and safe browser-based simulation as a new project.
   Rev 1.0.16 - Link the Investment Tracker project title directly to its hosted Jasr.me site and clarify access requirements.
   Rev 1.0.15 - Add Kingdom Connections Christian business directory.
   Rev 1.0.14 - Reorganized the project index into readable groups and fixed its broken table formatting.
@@ -118,6 +119,7 @@ The [repository-wide TODO list](ALL-TODOS.md) collects the TODO files kept in ea
 | **Time Clock Kiosk Display**<br>[time-clock/](time-clock/) / [README](time-clock/README.md) | <a href="https://jasr.me/github/time-clock/" target="_new">jasr.me/github/time-clock</a> | Full-screen clock, weather, and scrolling alerts for a Raspberry Pi CM4 kiosk. |
 | **Weather Dashboard**<br>[weather/](weather/) / [README](weather/README.md) | <a href="https://jasr.me/github/weather/" target="_new">jasr.me/github/weather</a> | Mobile-friendly PHP weather dashboard using OpenWeather data. |
 | **QR Box Inventory System**<br>[box/](box/) / [README](box/README.md) | <a href="https://jasr.me/github/box/" target="_new">jasr.me/github/box</a> | Database-free QR inventory system for physical storage boxes. |
+| **Fake Chatbot (Web Demo)**<br>[fake-chatbot/](fake-chatbot/) / [README](fake-chatbot/README.md) | <a href="https://jasr.me/github/fake-chatbot/" target="_new">jasr.me/github/fake-chatbot</a> | Browser-only simulated chatbot using editable keyword/reply JSON. Original PowerShell chatbot preserved under `legacy/`; no API key or backend. Deployment pending merge/sync. |
 | **AI Writing Tool**<br>[ai-writing-tool/](ai-writing-tool/) / [README](ai-writing-tool/README.md) | <a href="https://jasr.me/github/ai-writing-tool/" target="_new">jasr.me/github/ai-writing-tool</a> | Two-pane browser editor with local autosave and AI suggestions through a PHP proxy. |
 | **Secure Upload & File Manager**<br>[file-manager/](file-manager/) / [README](file-manager/README.md) | <a href="https://jasr.me/github/file-manager/" target="_new">jasr.me/github/file-manager</a> | Admin-only file manager with PowerShell-friendly upload API, MFA, allowlisting, and versioning. |
 | **PSNotify**<br>[psnotify/](psnotify/) / [README](psnotify/README.md) | <a href="https://jasr.me/github/psnotify/" target="_new">jasr.me/github/psnotify</a> | Self-hosted notification endpoint and viewer for long-running PowerShell jobs. |
