@@ -90,7 +90,7 @@ function fc_trigger_score(string $question, string $kind, string $raw, int $prio
 {
     $needle = fc_normalize($raw);
     if ($needle === '' || $question === '') return null;
-    $words = array_values(array_filter(explode(' ', $needle), 'strlen'));
+    $words = array_values(array_unique(array_filter(explode(' ', $needle), 'strlen')));
     $boundaryHay = ' ' . $question . ' ';
     $whole = str_contains($boundaryHay, ' ' . $needle . ' ');
     $tier = match ($kind) {
@@ -163,7 +163,8 @@ function fc_validate_rule(array $input, ?string $existingId = null): array
         $text = trim($m[2]);
         if (strlen($text) > 120 || fc_normalize($text) === '') throw new InvalidArgumentException('Trigger text must be 1 to 120 bytes.');
         if ($type === 'keyword' && count(explode(' ', fc_normalize($text))) !== 1) throw new InvalidArgumentException('keyword: must contain one word.');
-        if ($type === 'all' && count(explode(' ', fc_normalize($text))) < 2) throw new InvalidArgumentException('all: must include at least two words.');
+        if ($type === 'phrase' && count(explode(' ', fc_normalize($text))) < 2) throw new InvalidArgumentException('phrase: must contain at least two words.');
+        if ($type === 'all' && count(array_unique(explode(' ', fc_normalize($text)))) < 2) throw new InvalidArgumentException('all: must include at least two distinct words.');
         $triggers[] = ['type' => $type, 'text' => $text];
     }
     if (count($triggers) < 1 || count($triggers) > 15) throw new InvalidArgumentException('Provide between 1 and 15 triggers.');

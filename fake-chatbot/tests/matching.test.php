@@ -42,6 +42,7 @@ fc_check(fc_match('this is a test', [$rules[array_search('hello', array_column($
 fc_check(fc_match('unmatchedzzzz', $rules) === null, 'unknown message is unmatched');
 fc_check(fc_trigger_score('potato salad', 'phrase', 'potato salad', 0) > fc_trigger_score('potato salad', 'keyword', 'potato', 20), 'phrase tier beats boosted keyword');
 fc_check(fc_trigger_score('potato salad', 'exact', 'potato salad', -20) > fc_trigger_score('potato salad', 'phrase', 'potato salad', 20), 'exact tier beats phrase tier');
+fc_check(fc_trigger_score('potato', 'all', 'potato potato', 0) === null, 'repeated all-words do not masquerade as multiple distinct terms');
 fc_check(str_contains(fc_expand('Time {{time}}, literal $(Get-Date)'), '$(Get-Date)'), 'PowerShell code is not evaluated');
 $rule = fc_validate_rule(['name'=>'Test','triggers'=>"phrase: potato salad\nall: potato salad\nkeyword: potato",'replies'=>"Answer A\nAnswer B",'priority'=>'5','enabled'=>'1']);
 fc_check(count($rule['triggers']) === 3 && count($rule['replies']) === 2, 'admin rule parser accepts multi-trigger multi-answer forms');
@@ -50,6 +51,12 @@ try {
     fc_check(false, 'keyword cannot contain spaces');
 } catch (InvalidArgumentException $expected) {
     fc_check(true, 'invalid multiword keyword rejected');
+}
+try {
+    fc_validate_rule(['name'=>'Bad','triggers'=>'phrase: potato','replies'=>'Not valid']);
+    fc_check(false, 'one-word phrases cannot bypass keyword tier');
+} catch (InvalidArgumentException $expected) {
+    fc_check(true, 'one-word phrases are rejected');
 }
 $tmp = sys_get_temp_dir() . '/fake-chatbot-test-' . bin2hex(random_bytes(8)) . '.json';
 try {

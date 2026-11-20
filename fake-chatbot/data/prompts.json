@@ -3,10 +3,10 @@
     "file_name": "prompts.json",
     "author": "Jason Lamb (with help from ChatGPT)",
     "description": "Public seed for manually authored fake AI response rules; live edits remain in private JsonStore storage.",
-    "revision": "2.0.0",
+    "revision": "2.0.1",
     "created_date": "2026-11-20",
     "modified_date": "2026-11-20",
-    "changelog": "2.0.0 - Add scored exact/phrase/all/keyword rules and many intentionally humorous human-written responses. 1.0.0 - Initial browser-only seven-rule prototype."
+    "changelog": "2.0.1 - Normalize one-word phrases as keywords so broad triggers cannot bypass specificity. 2.0.0 - Add scored exact/phrase/all/keyword rules and human-written jokes."
   },
   "rules": [
     {
@@ -1168,7 +1168,7 @@
           "text": "blue screen"
         },
         {
-          "type": "phrase",
+          "type": "keyword",
           "text": "bsod"
         },
         {
