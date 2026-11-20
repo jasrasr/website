@@ -1,0 +1,18 @@
+name: Box shared login validation
+on:
+  pull_request:
+    paths: ['box/**', 'user-management/**', '1-Framework/**', '.github/workflows/box-validation.yml']
+  push:
+    branches: [main]
+    paths: ['box/**', 'user-management/**', '1-Framework/**', '.github/workflows/box-validation.yml']
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check PHP syntax
+        run: find box -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Test shared login and box ownership
+        run: node --test box/tests/shared-auth.test.cjs

@@ -1,55 +1,69 @@
 <?php
-/*
-===========================================================
- File: lib/auth.php
- Author: Jason Lamb (with help from AI)
- Created: 2026-01-19
- Modified: 2026-01-19
- Revision: 1.0
+declare(strict_types=1);
 
- Description:
-   Session-based authentication helper.
-===========================================================
-*/
+require_once dirname(__DIR__, 2) . '/1-Framework/bootstrap.php';
 
-date_default_timezone_set('America/New_York');
-session_start();
-
-define('USER_FILE', __DIR__ . '/../data/users.json');
-
-function loadUsers(): array {
-    if (!file_exists(USER_FILE)) {
-        return [];
-    }
-    return json_decode(file_get_contents(USER_FILE), true)['users'] ?? [];
+function box_auth(): \Jasr\Users\Auth
+{
+    static $auth = null;
+    return $auth ??= \Jasr\Framework\SharedIdentity::connect();
 }
 
-function isLoggedIn(): bool {
-    return isset($_SESSION['user']);
+function box_require_user(string $minimum = 'viewer'): array
+{
+    $user = box_auth()->requireProject('box', $minimum);
+    try {
+        box_legacy_owner($user); // Validate private links before any protected page sends output.
+    } catch (Throwable $error) {
+        error_log('Box owner mapping: ' . $error->getMessage());
+        http_response_code(503);
+        exit('Box owner mapping is unavailable.');
+    }
+    return $user;
 }
 
-function requireLogin(): void {
-    if (!isLoggedIn()) {
-        header('Location: login.php');
-        exit;
+function box_require_post(): void
+{
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        header('Allow: POST');
+        http_response_code(405);
+        exit('POST required.');
+    }
+    if (!box_auth()->validCsrf($_POST['csrf'] ?? null)) {
+        http_response_code(403);
+        exit('Invalid form token.');
     }
 }
 
-function login(string $username, string $password): bool {
-    $users = loadUsers();
-
-    if (!isset($users[$username])) {
-        return false;
+/** A private, administrator-reviewed mapping; never infer ownership from a matching username. */
+function box_legacy_owner(array $user): ?string
+{
+    $path = dirname(__DIR__) . '/data/owner-links.json';
+    if (!is_file($path)) return null;
+    $data = json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
+    $links = $data['links'] ?? null;
+    if (!is_array($links)) throw new RuntimeException('Invalid box owner links.');
+    $owners = [];
+    foreach ($links as $id => $owner) {
+        if (!is_string($id) || preg_match('/^[a-f0-9]{32}$/D', $id) !== 1 ||
+            !is_string($owner) || trim($owner) === '' || isset($owners[$owner])) {
+            throw new RuntimeException('Invalid or duplicate box owner link.');
+        }
+        $owners[$owner] = true;
     }
-
-    if (!password_verify($password, $users[$username]['password'])) {
-        return false;
-    }
-
-    $_SESSION['user'] = $username;
-    return true;
+    return $links[$user['id']] ?? null;
 }
 
-function logout(): void {
-    session_destroy();
+function box_owned_by(array $box, array $user): bool
+{
+    $owner = $box['owner'] ?? null;
+    if (!is_string($owner)) return false;
+    if ($owner === 'id:' . $user['id']) return true;
+    $legacyOwner = box_legacy_owner($user);
+    return $legacyOwner !== null && $owner === $legacyOwner;
+}
+
+function box_new_owner(array $user): string
+{
+    return 'id:' . $user['id'];
 }

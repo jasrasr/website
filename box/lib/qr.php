@@ -19,8 +19,10 @@ define('QR_OUTPUT_DIR', __DIR__ . '/../qrcodes/');
 
 function generateBoxQR(string $boxCode): string {
 
-    //$url = 'https://jasr.me/box/box.php?c=' . urlencode($boxCode);
-	$url = 'https://jasr.me/box/' . urlencode($boxCode);
+    // Follow the deployed app path, whether it is /box/, /boxes/, or nested.
+    $adminPath = $_SERVER['SCRIPT_NAME'] ?? '/box/admin/create_box.php';
+    $appPath = rtrim(dirname(dirname($adminPath)), '/');
+    $url = 'https://jasr.me' . $appPath . '/' . rawurlencode($boxCode);
 
 
     if (!is_dir(QR_OUTPUT_DIR)) {

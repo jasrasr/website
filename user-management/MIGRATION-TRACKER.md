@@ -1,6 +1,6 @@
 # Shared user-management migration tracker
 
-Last updated: 2026-11-03 (America/New_York)
+Last updated: 2026-11-19 (America/New_York)
 
 **Work one project at a time.** Each project gets its own ownership/access design, adapter, tests, rollout and completion evidence. Shared infrastructure can be reused; do not apply the Finances one-to-one account model to galleries, households, groups, guests or automation without a separate design.
 
@@ -31,7 +31,7 @@ Sequence is a suggested working order, not authorization to switch live authenti
 | 2 | [webstats](../webstats/) | Admin login using framework helpers | Queued | Protect reporting; preserve public collection |
 | 3 | [smart-404](../smart-404/) | Shared admin password | Queued | Keep 404 handling public |
 | 4 | [text](../text/) | Save and raw-JSON passwords | Queued | Decide public reading versus private viewing |
-| 5 | [box](../box/) | JSON user accounts and admin session | Queued | Map users and admin permissions |
+| 5 | [box](../box/) | JSON user accounts and admin session | Implementing | Shared-login code and isolated tests added; approve live owner links and verify hosting before rollout |
 | 6 | [ticketing](../ticketing/) | Requester/Agent accounts; test-mode password bypass | Queued | Preserve email-based ticket ownership and private notes |
 | 7 | [time-clock](../time-clock/) | Client-side admin PIN | Queued | Add server-side write authorization; keep display behavior |
 | 8 | [mpg](../mpg/) | Admin password and device/IP trust | Queued | Decide account access versus trusted-device behavior |
@@ -95,9 +95,11 @@ See [roles and accounts](ROLES-AND-ACCOUNTS.md). These foundation tasks do not m
 ### 5. Box
 
 - [ ] Inventory legacy users and actual admin capabilities; approve identity mappings.
-- [ ] Replace shared login/session helpers and gate every admin action.
-- [ ] Test existing records, permissions, direct endpoints and central revocation.
+- [x] Replace legacy login/session helpers and gate every admin action; keep public QR lookups public.
+- [x] Test legacy-owner isolation, viewer/member permissions, direct endpoints, CSRF, logout and central revocation in an isolated deployment.
 - [ ] Merge, back up, deploy, verify and record completion.
+
+The code uses project ID `box`, even if the live URL is `/boxes/`. Register the actual deployed URL path. Existing records keep their legacy owner strings; a private, explicit `box/data/owner-links.json` maps central account IDs to legacy owners. New records use immutable central IDs. Live owner mappings, data backup, `.htaccess` denial, QR generation and PDF output remain to be verified on hosting.
 
 ### 6. Ticketing
 

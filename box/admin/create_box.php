@@ -20,30 +20,17 @@
 */
 
 require_once __DIR__ . '/../lib/auth.php';
-requireLogin();
+$user = box_require_user('member');
 
 require_once __DIR__ . '/../lib/data.php';
 require_once __DIR__ . '/../lib/qr.php';
 
 date_default_timezone_set('America/New_York');
 
-$currentUser = $_SESSION['user'];
-
 $error = '';
 
-/**
- * Generate a unique, non-guessable box ID
- * Format: BOX + 6 uppercase alphanumeric chars
- */
-function generateBoxCode(array $existingBoxes): string {
-    do {
-        $code = 'BOX' . strtoupper(bin2hex(random_bytes(3)));
-    } while (isset($existingBoxes[$code]));
-
-    return $code;
-}
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    box_require_post();
     $boxName = trim($_POST['box_name'] ?? '');
 
     if ($boxName === '') {
@@ -56,19 +43,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $boxes[$boxCode] = [
             'name'    => $boxName,
-            'owner'   => $currentUser,
+            'owner'   => box_new_owner($user),
             'items'   => [],
             'count'   => 0,
             'updated' => date('c') // ISO-8601 in EST
         ];
 
         $data['boxes'] = $boxes;
-        saveBoxData($data);
+        if (!saveBoxData($data)) {
+            http_response_code(500);
+            exit('Could not save the box.');
+        }
 
         // 🔑 AUTO-GENERATE QR CODE
         generateBoxQR($boxCode);
 
-        header('Location: index.php');
+        header('Location: index.php', true, 303);
         exit;
     }
 }
@@ -89,6 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php endif; ?>
 
 <form method="post">
+  <input type="hidden" name="csrf" value="<?=htmlspecialchars(box_auth()->csrf(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')?>">
   <div class="mb-3">
     <label class="form-label">Box Name</label>
     <input

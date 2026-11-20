@@ -1,168 +1,31 @@
+# QR Box Inventory
 
----
+The repository directory is `box/`. It serves public QR lookup pages and a protected inventory dashboard. The live URL may have a different path; register the actual deployed path in User Management.
 
-# 📘 `README.md`
+## Shared login
 
-```md
-# 📦 QR Box Inventory System
+The dashboard uses the `box` project in `user-management`. Register that project with the URL path where this app is deployed, then grant users `viewer` or `member` access. A viewer can open their dashboard and print labels. A member can also create, edit, delete, and regenerate QR codes for their own boxes. Project admins have the same per-owner box scope; central account roles do not grant access to other owners' boxes.
 
-A lightweight, database-free inventory system for tracking the contents of physical storage boxes using QR codes.
+`admin/login.php` redirects to the central sign-in page. Signing out of the dashboard signs out of the shared session in that browser. The old `data/users.json` password file is no longer read by the app. Public QR lookup pages and generated QR images remain public; use codes only for information intended to be visible to anyone holding a sticker or link.
 
-Each storage box has:
-- A unique, immutable ID
-- A printable QR code
-- A mobile-friendly public page
-- An editable item list
-- A dynamic item count
-- A last-updated timestamp
+New boxes store the central immutable account ID in `owner` as `id:<central-id>`. Existing boxes keep their legacy owner strings. They are invisible to central accounts until an administrator explicitly links them. Matching usernames do not create a link.
 
-Scanning a QR code opens a public webpage showing the contents of that box.
+## Link existing boxes
 
----
+1. Back up the live `box/data/` directory and `box/qrcodes/` before deployment. Keep the live `boxes.json` and legacy `users.json`; a Git checkout of repository examples must not replace them.
+2. Register `box` and grant the intended accounts access in User Management. Sign in once to complete any required password change.
+3. Inventory the distinct `owner` values in the live `boxes.json`. Confirm each person's ownership outside the app. Find the target account's immutable `id` in the private User Management directory or admin interface.
+4. Create a private `box/data/owner-links.json` from `owner-links.example.json`. Under `links`, map each central account ID to its approved legacy owner string. One legacy owner may be mapped only once. Do not commit the live mapping or account directory. The app validates the whole file and fails closed if it is malformed or duplicated.
+5. Verify each linked account sees only its own existing boxes, can edit them, and cannot view another account's boxes. Then verify a new box, QR regeneration, PDF labels, logout, and account disable/revocation.
 
-## ✨ Features
+The existing boxes are not rewritten during linking. To roll back the app code, restore the code version and live data backup together; any boxes created with `id:<central-id>` ownership need an explicit owner migration for the old login system.
 
-- 📱 Mobile-friendly public box pages
-- 🔗 Clean URLs (`/box/BOX123`)
-- 🖨️ Printable QR label PDFs (multiple layouts)
-- 🔐 Admin portal with authentication
-- 🧾 JSON-based storage (no database)
-- 🔄 QR codes auto-generated on box creation
-- 🧹 QR cleanup on box deletion
-- 👤 Per-user box ownership
-- 🕒 Timestamps stored in Eastern Time (EST/EDT)
+## Storage and hosting
 
----
+`box/data/.htaccess` denies direct HTTP access to the data directory on Apache/LiteSpeed. Confirm the live server returns 403 for `boxes.json`, `users.json`, and `owner-links.json` before placing private mapping data there. The PHP built-in test server ignores `.htaccess`. On nginx, add an equivalent deny rule or keep data outside the web root. PHP must be able to write `boxes.json` and `qrcodes/`.
 
-## 🧱 Tech Stack
+`box/data/boxes.json` and `box/data/users.json` are tracked historical examples. Do not allow deployment tooling to overwrite live runtime data with those files. The production data and owner links are not part of Git.
 
-- PHP 8.1+
-- Apache (`mod_rewrite`)
-- JSON file storage
-- PHP QR Code library
-- FPDF for PDF generation
+## Verification
 
-No MySQL. No framework. No JavaScript build tooling.
-
----
-
-## 📁 Folder Structure
-
-/box
-├── admin/ # Admin portal (auth required)
-│ ├── index.php
-│ ├── login.php
-│ ├── create_box.php
-│ ├── edit_box.php
-│ ├── delete_box.php
-│ ├── generate_qr.php
-│ ├── generate_missing_qr.php
-│ └── print_qr_pdf.php
-│
-├── data/ # JSON storage (web-protected)
-│ ├── boxes.json
-│ ├── users.json
-│ └── .htaccess
-│
-├── lib/ # Shared libraries
-│ ├── auth.php
-│ ├── data.php
-│ ├── qr.php
-│ ├── qrlib.php
-│ └── fpdf.php
-│
-├── qrcodes/ # Generated QR PNG files
-│
-├── box.php # Public box view
-├── index.php # Pretty URL router
-├── .htaccess
-├── README.md
-├── SECURITY.md
-└── RESTORE.md
-
----
-
-## 🔐 Authentication & Roles
-
-- Users authenticate via the admin portal.
-- Each user owns the boxes they create.
-- Admin users can manage all boxes.
-- Role is defined per user in `users.json`.
-
----
-
-## 🗃️ Data Storage
-
-### `boxes.json`
-Stores:
-- Box ID
-- Box name
-- Owner
-- Item list
-- Item count
-- Last updated timestamp
-
-### `users.json`
-Stores:
-- Username
-- Password hash
-- Role (`user` or `admin`)
-
-Direct web access to JSON files is blocked.
-
----
-
-## 🖨️ QR Codes & PDFs
-
-- QR codes are created automatically when a box is created.
-- QR codes point to clean URLs (`/box/BOX123`).
-- Printable PDF layouts:
-  - Small (16 per page)
-  - Medium (6 per page)
-  - Large (1 per page)
-- Missing QR codes can be regenerated safely.
-
----
-
-## 🧹 Lifecycle Rules
-
-- Create box → QR created
-- Rename box → QR unchanged
-- Delete box → QR deleted
-- Restore data → QR regenerable
-
-All operations are idempotent and safe to repeat.
-
----
-
-## 🔄 Backup & Restore
-
-See `RESTORE.md` for full recovery instructions.
-
-Minimum required backups:
-- `/box/data/boxes.json`
-- `/box/data/users.json`
-- `/box/qrcodes/` (optional)
-
----
-
-## 🧠 Design Philosophy
-
-This project emphasizes:
-- Simplicity over abstraction
-- Explicit behavior over magic
-- Recoverability over complexity
-- Real-world physical workflows
-
----
-
-## 🧑‍💻 Author
-
-**Jason Lamb**  
-(with help from AI)
-
----
-
-## 📜 License
-
-MIT (or your preferred license)
+Run `node box/tests/shared-auth.test.cjs` and PHP syntax checks before deployment. The isolated HTTP test exercises sign-in, project permissions, ownership, CSRF, old entry points, logout, and revocation using disposable data. It stubs QR rendering because the local PHP runtime may lack GD. Check actual QR generation and PDF output on the host.

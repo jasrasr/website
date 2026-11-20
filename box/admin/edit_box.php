@@ -13,28 +13,24 @@
 ===========================================================
 */
 
-// start auth
 require_once __DIR__ . '/../lib/auth.php';
-requireLogin();
-$currentUser = $_SESSION['user'];
-// end auth
+$user = box_require_user('member');
 
 date_default_timezone_set('America/New_York');
 
 require_once __DIR__ . '/../lib/data.php';
 
-// TEMP user placeholder (authentication added later)
-$currentUser = 'jason';
-
 $code = $_GET['c'] ?? '';
 $box  = getBox($code);
 
-if (!$box || $box['owner'] !== $currentUser) {
-    echo "Box not found or access denied.";
+if (!$box || !box_owned_by($box, $user)) {
+    http_response_code(404);
+    echo 'Box not found.';
     exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    box_require_post();
     $rawItems = $_POST['items'] ?? '';
 
     // Convert textarea lines into clean array
@@ -46,9 +42,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $box['count']   = count($items);
     $box['updated'] = date('c');
 
-    saveBox($code, $box);
+    if (!saveBox($code, $box)) {
+        http_response_code(500);
+        exit('Could not save the box.');
+    }
 
-    header('Location: index.php');
+    header('Location: index.php', true, 303);
     exit;
 }
 ?>
@@ -65,6 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <h2>Edit Box: <?=htmlspecialchars($box['name'])?></h2>
 
 <form method="post" id="editForm">
+  <input type="hidden" name="csrf" value="<?=htmlspecialchars(box_auth()->csrf(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')?>">
 
   <div class="mb-3">
     <label class="form-label">Items (one per line)</label>

@@ -21,20 +21,17 @@
 ===========================================================
 */
 
-// start auth
 require_once __DIR__ . '/../lib/auth.php';
-requireLogin();
-$currentUser = $_SESSION['user'];
-// end auth
+$user = box_require_user();
+$currentUser = $user['username'];
+$canEdit = box_auth()->can('box', 'member');
+$csrf = htmlspecialchars(box_auth()->csrf(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
 date_default_timezone_set('America/New_York');
 
 require_once __DIR__ . '/../lib/data.php';
 require_once __DIR__ . '/../lib/util.php';
 
-
-// TEMP user (auth comes later)
-// $currentUser = 'jason';
 
 $data = loadBoxData();
 $boxes = $data['boxes'] ?? [];
@@ -48,17 +45,18 @@ $boxes = $data['boxes'] ?? [];
 </head>
 <body class="container mt-4">
 
-<!-- // start logout -->
 <div class="mb-3 text-end">
   Logged in as <strong><?=htmlspecialchars($currentUser)?></strong> |
-  <a href="logout.php">Logout</a>
+  <form method="post" action="logout.php" class="d-inline">
+    <input type="hidden" name="csrf" value="<?=$csrf?>">
+    <button type="submit" class="btn btn-link p-0">Logout</button>
+  </form>
 </div>
-<!-- //  end logout -->
 
 
 <h2>Your Storage Boxes</h2>
 
-<a href="create_box.php" class="btn btn-success mb-3">+ Create New Box</a>
+<?php if ($canEdit): ?><a href="create_box.php" class="btn btn-success mb-3">+ Create New Box</a><?php endif; ?>
 
 <div class="mb-3">
   <a href="print_qr_pdf.php?size=small" class="btn btn-outline-primary me-2">
@@ -72,10 +70,12 @@ $boxes = $data['boxes'] ?? [];
   <a href="print_qr_pdf.php?size=large" class="btn btn-outline-primary">
     Print Large Labels (4 / page)
   </a>
-  <a href="generate_missing_qr.php"
-   class="btn btn-outline-secondary mb-3">
-  Generate Missing QR Codes
-</a>
+  <?php if ($canEdit): ?>
+  <form method="post" action="generate_missing_qr.php" class="d-inline">
+    <input type="hidden" name="csrf" value="<?=$csrf?>">
+    <button class="btn btn-outline-secondary mb-3">Generate Missing QR Codes</button>
+  </form>
+  <?php endif; ?>
 
 </div>
 
@@ -94,7 +94,7 @@ $boxes = $data['boxes'] ?? [];
 <tbody>
 
 <?php foreach ($boxes as $code => $box): ?>
-  <?php if ($box['owner'] !== $currentUser) continue; ?>
+  <?php if (!box_owned_by($box, $user)) continue; ?>
   <tr>
     <td><?=htmlspecialchars($box['name'])?></td>
     <td><?=htmlspecialchars($code)?></td>
@@ -102,13 +102,21 @@ $boxes = $data['boxes'] ?? [];
     <td><?=htmlspecialchars(formatTimestampLocal($box['updated']))?></td>
     
     <td>
+  <?php if ($canEdit): ?>
   <a href="edit_box.php?c=<?=urlencode($code)?>" class="btn btn-sm btn-primary mb-1">
     Edit Items
   </a>
-
-  <a href="generate_qr.php?c=<?=urlencode($code)?>" class="btn btn-sm btn-outline-secondary">
-    Generate QR
-  </a>
+  <form method="post" action="generate_qr.php" class="d-inline">
+    <input type="hidden" name="csrf" value="<?=$csrf?>">
+    <input type="hidden" name="code" value="<?=htmlspecialchars($code, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')?>">
+    <button class="btn btn-sm btn-outline-secondary">Generate QR</button>
+  </form>
+  <form method="post" action="delete_box.php" class="d-inline" onsubmit="return confirm('Delete this box permanently?');">
+    <input type="hidden" name="csrf" value="<?=$csrf?>">
+    <input type="hidden" name="code" value="<?=htmlspecialchars($code, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')?>">
+    <button class="btn btn-sm btn-danger">Delete</button>
+  </form>
+  <?php endif; ?>
 </td>
 
   </tr>
@@ -116,15 +124,6 @@ $boxes = $data['boxes'] ?? [];
 
 </tbody>
 </table>
-<form method="post" action="delete_box.php"
-      style="display:inline"
-      onsubmit="return confirm('Delete this box permanently?');">
-
-  <input type="hidden" name="code" value="<?=htmlspecialchars($code)?>">
-  <button class="btn btn-sm btn-danger">
-    Delete
-  </button>
-</form>
 
 </body>
 </html>

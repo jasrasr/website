@@ -1,11 +1,10 @@
 <?php
 require_once __DIR__ . '/../lib/auth.php';
-requireLogin();
+$user = box_require_user('member');
+box_require_post();
 
 require_once __DIR__ . '/../lib/data.php';
 require_once __DIR__ . '/../lib/qr.php';
-
-$currentUser = $_SESSION['user'];
 
 $data  = loadBoxData();
 $boxes = $data['boxes'] ?? [];
@@ -13,7 +12,7 @@ $boxes = $data['boxes'] ?? [];
 $created = 0;
 
 foreach ($boxes as $code => $box) {
-    if (($box['owner'] ?? '') !== $currentUser) {
+    if (!box_owned_by($box, $user)) {
         continue;
     }
 
@@ -23,5 +22,5 @@ foreach ($boxes as $code => $box) {
     }
 }
 
-header('Location: index.php?qr_created=' . $created);
+header('Location: index.php?qr_created=' . $created, true, 303);
 exit;
