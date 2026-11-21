@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0 — 2026-11-21
+
+- Record who opened or replaced an item and who refilled its stock.
+- Show refill history with quantities, dates, and storage locations.
+
 ## 1.1.0 — 2026-11-21
 
 - Track storage balances, transfers, and opening history by room.

@@ -20,9 +20,9 @@ Each account gets one framework JSON file keyed by the hash of its stable User M
 
 ## Storage, usage, and order timing
 
-Add the same item to multiple storage locations from its inventory card. Move spares to transfer stock without changing the household total. Older records start with their existing balance under **Unassigned** and can be distributed using Move spares.
+Add the same item to multiple storage locations from its inventory card using Log refill or Correct count. Move spares to transfer stock without changing the household total. Older records start with their existing balance under **Unassigned** and can be distributed using Move spares.
 
-Choose **Opened one** to subtract one from the source storage location and log the current time and the room where it will be used. Stock corrections and moves leave the opening history intact. Room and storage inputs suggest names already used in your inventory.
+Choose **Opened or replaced one** to subtract one from the source storage location and log the current time and the room where it will be used. Stock corrections and moves leave the opening history intact. Room and storage inputs suggest names already used in your inventory.
 
 Two openings at different times establish an initial average interval. The app shows the household average and room-specific averages in Opening history. The suggested order date estimates when the last spare will be opened, minus a fixed three-day lead time, and shows today when that date has passed. Use the estimate when choosing a delivery schedule. The app records opening times and calculates estimates without placing orders.
 
@@ -31,3 +31,9 @@ Two openings at different times establish an initial average interval. The app s
 - Add two spares to the hall closet and three to the bathroom cabinet. Move one between them and verify the total stays five.
 - Log an opening in a bathroom and verify only the selected source drops by one. Check that the history shows both locations. Correct a count and verify the opening history is unchanged.
 - Check that two openings at different times produce a suggested date and that room-specific intervals use only openings for that room.
+
+## Who used or refilled an item
+
+Use **Opened or replaced one** when someone starts a new carton of milk, opens a box of tissues, or replaces a toothbrush. Enter who used it, where it was used, and where the spare came from. This action tracks one whole unit, such as a carton, roll, bottle, or toothbrush. Set the unit when adding each item. Use the same workflow for frequent and occasional replacements.
+
+Use **Log refill** when someone adds spares. Enter their name, the quantity, and the storage location. The refill history shows these details and the time. Select **Correct count** for a bookkeeping adjustment. Corrections and stock transfers leave both histories alone. Names are household labels, and previously used names appear as suggestions. Older opening entries show that the person was not recorded.

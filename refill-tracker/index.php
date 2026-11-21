@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-/** Refill Tracker, revision 1.1.0. */
+/** Refill Tracker, revision 1.2.0. */
 use Jasr\Framework\JsonStore;
 use Jasr\Framework\SharedIdentity;
 
@@ -70,6 +70,7 @@ function refill_change(array $records): array
             'restockAt' => refill_count('restockAt'),
             'stock' => [refill_text('location', 80) => $quantity],
             'openings' => [],
+            'refills' => [],
         ];
         return $records;
     }
@@ -81,6 +82,7 @@ function refill_change(array $records): array
         $stock = refill_stock($item);
         switch ($action) {
             case 'increase':
+            case 'refill':
                 $location = refill_text('location', 80);
                 $amount = refill_count('amount');
                 if ($amount < 1) {
@@ -90,6 +92,14 @@ function refill_change(array $records): array
                     throw new InvalidArgumentException('Inventory cannot exceed 9,999 spares.');
                 }
                 $stock[$location] = ($stock[$location] ?? 0) + $amount;
+                if ($action === 'refill') {
+                    $item['refills'][] = [
+                        'at' => time(),
+                        'storage' => $location,
+                        'quantity' => $amount,
+                        'person' => refill_text('person', 80),
+                    ];
+                }
                 break;
             case 'decrease':
             case 'open':
@@ -114,6 +124,7 @@ function refill_change(array $records): array
                         'at' => time(),
                         'storage' => $location,
                         'room' => refill_text('room', 80),
+                        'person' => refill_text('person', 80),
                     ];
                 }
                 break;
@@ -166,9 +177,15 @@ try {
     $items = JsonStore::read($path)['records'];
     $storageLocations = [];
     $rooms = [];
+    $people = [];
     foreach ($items as $item) {
         $storageLocations = array_merge($storageLocations, array_map('strval', array_keys(refill_stock($item))));
         $rooms = array_merge($rooms, array_column($item['openings'] ?? [], 'room'));
+        $people = array_merge(
+            $people,
+            array_column($item['openings'] ?? [], 'person'),
+            array_column($item['refills'] ?? [], 'person')
+        );
     }
     $restock = array_filter($items, static fn (array $item): bool => $item['quantity'] <= $item['restockAt']);
 } catch (Throwable $exception) {
@@ -183,7 +200,7 @@ try {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Refill Tracker</title>
-    <link rel="stylesheet" href="assets/css/app.css?v=1.1.0">
+    <link rel="stylesheet" href="assets/css/app.css?v=1.2.0">
 </head>
 <body>
 <main>
@@ -195,6 +212,11 @@ try {
     <datalist id="usage-rooms">
         <?php foreach (array_unique($rooms) as $room): ?>
             <option value="<?= refill_escape($room) ?>"></option>
+        <?php endforeach; ?>
+    </datalist>
+    <datalist id="household-people">
+        <?php foreach (array_unique($people) as $person): ?>
+            <option value="<?= refill_escape($person) ?>"></option>
         <?php endforeach; ?>
     </datalist>
     <h1>Refill Tracker</h1>
@@ -246,7 +268,7 @@ try {
                     <?php endforeach; ?>
                 </ul>
                 <?php if ($last): ?>
-                    <p>Last opened <time data-local datetime="<?= gmdate('c', $last['at']) ?>"><?= gmdate('M j, Y H:i', $last['at']) ?> UTC</time> in <?= refill_escape($last['room']) ?>.</p>
+                    <p>Last opened <time data-local datetime="<?= gmdate('c', $last['at']) ?>"><?= gmdate('M j, Y H:i', $last['at']) ?> UTC</time> in <?= refill_escape($last['room']) ?><?php if (isset($last['person'])): ?> by <?= refill_escape($last['person']) ?><?php endif; ?>.</p>
                     <p><?= refill_escape(refill_usage($openings)) ?> across the household.</p>
                     <?php if ($pace > 0): ?>
                         <?php $orderBy = max(time(), (int) ($last['at'] + $pace * $item['quantity'] - 3 * 86400)); ?>
@@ -260,16 +282,27 @@ try {
                             <p><?= refill_escape(refill_usage($roomOpenings)) ?></p>
                             <ul>
                                 <?php foreach (array_reverse($roomOpenings) as $entry): ?>
-                                    <li><time data-local datetime="<?= gmdate('c', $entry['at']) ?>"><?= gmdate('M j, Y H:i', $entry['at']) ?> UTC</time> · from <?= refill_escape($entry['storage']) ?></li>
+                                    <li><time data-local datetime="<?= gmdate('c', $entry['at']) ?>"><?= gmdate('M j, Y H:i', $entry['at']) ?> UTC</time> · from <?= refill_escape($entry['storage']) ?> · <?= refill_escape($entry['person'] ?? 'Person not recorded') ?></li>
                                 <?php endforeach; ?>
                             </ul>
                         <?php endforeach; ?>
                     </details>
                 <?php endif; ?>
+                <?php if (!empty($item['refills'])): ?>
+                    <details>
+                        <summary>Refill history</summary>
+                        <ul>
+                            <?php foreach (array_reverse($item['refills']) as $entry): ?>
+                                <li><time data-local datetime="<?= gmdate('c', $entry['at']) ?>"><?= gmdate('M j, Y H:i', $entry['at']) ?> UTC</time>
+                                    · <?= refill_escape($entry['person']) ?> added <?= $entry['quantity'] ?> to <?= refill_escape($entry['storage']) ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </details>
+                <?php endif; ?>
                 <?php if ($canEdit): ?>
                     <?php if ($item['quantity'] > 0): ?>
                         <details>
-                            <summary>Opened one</summary>
+                            <summary>Opened or replaced one</summary>
                             <form method="post" class="fields">
                                 <input type="hidden" name="csrf" value="<?= $csrf ?>">
                                 <input type="hidden" name="id" value="<?= $id ?>">
@@ -279,18 +312,22 @@ try {
                                     <?php endforeach; ?>
                                 </select></label>
                                 <label>Used in <input name="room" list="usage-rooms" maxlength="80" required placeholder="Upstairs bathroom"></label>
-                                <button name="action" value="open">Log opening</button>
+                                <label>Who used it <input name="person" list="household-people" maxlength="80" required></label>
+                                <button name="action" value="open">Log use</button>
                             </form>
                         </details>
                     <?php endif; ?>
                     <details>
-                        <summary>Add spares</summary>
+                        <summary>Refill stock or add to a count</summary>
                         <form method="post" class="fields">
                             <input type="hidden" name="csrf" value="<?= $csrf ?>">
                             <input type="hidden" name="id" value="<?= $id ?>">
                             <label>Storage location <input name="location" list="storage-locations" maxlength="80" required></label>
                             <label>Amount <input name="amount" type="number" min="1" max="9999" value="1" required></label>
-                            <button name="action" value="increase">Add spares</button>
+                            <label>Who refilled it <input name="person" list="household-people" maxlength="80" aria-describedby="refill-person-<?= $id ?>"></label>
+                            <p id="refill-person-<?= $id ?>">Enter a name to log a refill. Use Correct count for inventory adjustments.</p>
+                            <button name="action" value="refill">Log refill</button>
+                            <button name="action" value="increase">Correct count</button>
                         </form>
                     </details>
                     <?php if ($item['quantity'] > 0): ?>
@@ -326,8 +363,8 @@ try {
             </article>
         <?php endforeach; ?>
     </section>
-    <footer>Revision 1.1.0</footer>
+    <footer>Revision 1.2.0</footer>
 </main>
-<script src="assets/js/dates.js?v=1.1.0"></script>
+<script src="assets/js/dates.js?v=1.2.0"></script>
 </body>
 </html>
