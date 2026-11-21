@@ -362,10 +362,20 @@ try {
     }
     $items = JsonStore::read($path)['records'];
     $storageLocations = [];
+    $purchaseLocations = [];
     $rooms = [];
     $people = [];
     foreach ($items as $item) {
         $storageLocations = array_merge($storageLocations, array_map('strval', array_keys(refill_stock($item))));
+        foreach ($item['refills'] ?? [] as $entry) {
+            if (!empty($entry['storage'])) {
+                $storageLocations[] = $entry['storage'];
+            }
+            $seller = $entry['purchase']['seller'] ?? '';
+            if ($seller !== '') {
+                $purchaseLocations[] = $seller;
+            }
+        }
         $rooms = array_merge($rooms, array_column($item['openings'] ?? [], 'room'));
         $people = array_merge(
             $people,
@@ -373,6 +383,8 @@ try {
             array_column($item['refills'] ?? [], 'person')
         );
     }
+    natcasesort($storageLocations);
+    natcasesort($purchaseLocations);
     $restock = array_filter($items, static fn (array $item): bool => refill_stock($item) !== [] && $item['quantity'] <= $item['restockAt']);
 } catch (Throwable $exception) {
     error_log('Refill Tracker: ' . $exception->getMessage());
@@ -393,6 +405,11 @@ try {
     <datalist id="storage-locations">
         <?php foreach (array_unique($storageLocations) as $location): ?>
             <option value="<?= refill_escape($location) ?>"></option>
+        <?php endforeach; ?>
+    </datalist>
+    <datalist id="purchase-locations">
+        <?php foreach (array_unique($purchaseLocations) as $seller): ?>
+            <option value="<?= refill_escape($seller) ?>"></option>
         <?php endforeach; ?>
     </datalist>
     <datalist id="usage-rooms">
@@ -429,7 +446,7 @@ try {
                     <summary>Add items from a receipt</summary>
                     <form method="post" class="fields" data-receipt>
                         <input type="hidden" name="csrf" value="<?= $csrf ?>">
-                        <label>Purchased from <input name="seller" maxlength="120" required></label>
+                        <label>Purchased from <input name="seller" list="purchase-locations" maxlength="120" required></label>
                         <label>Who refilled it <input name="person" list="household-people" maxlength="80" required></label>
                         <label>Sales tax rate (%) <input name="taxRate" type="number" min="0" max="100" step="0.01" value="8" required></label>
                         <p>Enter totals before tax. Clear Taxable for exempt lines.</p>
@@ -576,7 +593,7 @@ try {
                             <label>Quantity (packs if pack size is entered) <input name="amount" type="number" min="1" max="9999" value="1" required></label>
                             <details>
                                 <summary>Purchase details (optional)</summary>
-                                <label>Purchased from <input name="seller" maxlength="120" placeholder="Amazon or Costco"></label>
+                                <label>Purchased from <input name="seller" list="purchase-locations" maxlength="120" placeholder="Amazon or Costco"></label>
                                 <label>Units per pack <input name="unitsPerPack" type="number" min="1" max="9999" placeholder="1"></label>
                                 <label>Total paid (USD) <input name="totalCost" type="text" inputmode="decimal" maxlength="10" placeholder="12.99"></label>
                             </details>
@@ -620,9 +637,10 @@ try {
             </article>
         <?php endforeach; ?>
     </section>
-    <footer>Revision 1.5.3 <span aria-hidden="true">·</span> Modified <time datetime="2026-11-21">Nov 21, 2026</time></footer>
+    <footer>Revision 1.5.4 <span aria-hidden="true">·</span> Modified <time datetime="2026-11-21">Nov 21, 2026</time></footer>
 </main>
 <script src="assets/js/dates.js?v=1.5.3"></script>
+<script src="assets/js/locations.js?v=1.5.4"></script>
 <script src="assets/js/receipt.js?v=1.5.3"></script>
 </body>
 </html>
