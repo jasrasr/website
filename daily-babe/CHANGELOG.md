@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.12.0 - 2026-11-21
+
+- Add the abbreviated weekday to gallery dates, such as `Fri, Nov 20, 2026`.
+- Use the same weekday-and-date format for missing-photo cards, regular photo details, and public gallery cards.
+
 ## 2.11.1 - 2026-11-08
 
 - Hide the due date and due-date comparison language from the gallery once an actual birth date has been entered.
