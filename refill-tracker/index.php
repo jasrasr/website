@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-/** Refill Tracker, revision 1.5.0. */
+/** Refill Tracker, revision 1.5.1. */
 use Jasr\Framework\JsonStore;
 use Jasr\Framework\SharedIdentity;
 
@@ -332,6 +332,15 @@ if (!in_array($method, ['GET', 'HEAD', 'POST'], true)) {
 
 try {
     $auth = SharedIdentity::connect();
+    if ($method !== 'POST') {
+        $identity = $auth->user();
+        if ($identity === null || $identity['mustChangePassword']) {
+            $loginUrl = $auth->loginUrl($_SERVER['SCRIPT_NAME'] ?? '');
+            $registrationUrl = rtrim($auth->portal(), '/') . '/register.php';
+            require __DIR__ . '/landing.php';
+            exit;
+        }
+    }
     $user = $auth->requireProject('refill-tracker', $method === 'POST' ? 'member' : 'viewer');
     if ($method === 'POST' && !$auth->validCsrf($_POST['csrf'] ?? null)) {
         http_response_code(403);
@@ -377,7 +386,7 @@ try {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Refill Tracker</title>
-    <link rel="stylesheet" href="assets/css/app.css?v=1.5.0">
+    <link rel="stylesheet" href="assets/css/app.css?v=1.5.1">
 </head>
 <body>
 <main>
@@ -611,9 +620,9 @@ try {
             </article>
         <?php endforeach; ?>
     </section>
-    <footer>Revision 1.5.0</footer>
+    <footer>Revision 1.5.1</footer>
 </main>
-<script src="assets/js/dates.js?v=1.5.0"></script>
-<script src="assets/js/receipt.js?v=1.5.0"></script>
+<script src="assets/js/dates.js?v=1.5.1"></script>
+<script src="assets/js/receipt.js?v=1.5.1"></script>
 </body>
 </html>
