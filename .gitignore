@@ -82,3 +82,9 @@ investment-tracker/config.local.php
 investment-tracker/storage/*
 !investment-tracker/storage/.htaccess
 !investment-tracker/storage/.placeholder
+
+# Fake chatbot: host-managed rules, question history, identity links and request quotas
+fake-chatbot/config.local.php
+fake-chatbot/storage/*
+!fake-chatbot/storage/.htaccess
+!fake-chatbot/storage/.placeholder

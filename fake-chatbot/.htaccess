@@ -1,0 +1,11 @@
+# File Name: .htaccess
+# Revision: 2.0.0
+# Author: Jason Lamb (with help from ChatGPT)
+# Created Date: 2026-11-20
+# Modified Date: 2026-11-20
+# Changelog: 2.0.0 - Prefer PHP entry point and keep internal source/config unreachable over HTTP.
+DirectoryIndex index.php
+Options -Indexes
+<FilesMatch "^(bootstrap|config\.local(?:\.example)?)\.php$">
+  Require all denied
+</FilesMatch>

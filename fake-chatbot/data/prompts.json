@@ -1,0 +1,2166 @@
+{
+  "_header": {
+    "file_name": "prompts.json",
+    "author": "Jason Lamb (with help from ChatGPT)",
+    "description": "Public seed for manually authored fake AI response rules; live edits remain in private JsonStore storage.",
+    "revision": "2.0.1",
+    "created_date": "2026-11-20",
+    "modified_date": "2026-11-20",
+    "changelog": "2.0.1 - Normalize one-word phrases as keywords so broad triggers cannot bypass specificity. 2.0.0 - Add scored exact/phrase/all/keyword rules and human-written jokes."
+  },
+  "rules": [
+    {
+      "id": "potato-salad",
+      "name": "Potato salad recipes",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "potato salad"
+        },
+        {
+          "type": "all",
+          "text": "potato salad"
+        },
+        {
+          "type": "phrase",
+          "text": "recipe for potato salad"
+        }
+      ],
+      "replies": [
+        "Official potato salad recipe: Boil potatoes. Add mayonnaise, mustard, diced celery, and a deeply unnecessary argument about raisins. Chill for 2 hours. Serve with family drama.",
+        "Ingredients: 4 potatoes, 2 eggs, a spoonful of mustard, mayonnaise, and the confidence of a person who has never measured anything. Combine. Announce it is Grandma's secret recipe.",
+        "Potato salad: Cook 2 pounds of potatoes until fork-tender, cool, dice, then add mayo, mustard, celery, onion, salt and pepper. Refrigerate. If someone adds marshmallows, call the authorities."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "mr-potato",
+      "name": "Mr. Potato Head / Toy Story",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "mr potato head"
+        },
+        {
+          "type": "all",
+          "text": "potato toy story"
+        },
+        {
+          "type": "phrase",
+          "text": "potato head"
+        }
+      ],
+      "replies": [
+        "Mr. Potato Head is a heroic toy who can lose his ears, face, and shoes in one scene yet still has better organizational skills than my development team.",
+        "Toy Story's Mr. Potato Head is a plastic potato with interchangeable body parts and the emotional maturity of a help-desk ticket marked URGENT."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "mashed-potato",
+      "name": "Mashed potatoes",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "mashed potatoes"
+        },
+        {
+          "type": "phrase",
+          "text": "mashed potato"
+        }
+      ],
+      "replies": [
+        "Mash boiled potatoes with butter, milk, salt, and optimism. If you add enough butter, the potatoes achieve management status.",
+        "Mashed potatoes are what happens when vegetables fail their structural integrity test but succeed their performance review."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "french-fries",
+      "name": "French fries",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "french fries"
+        },
+        {
+          "type": "phrase",
+          "text": "potato fries"
+        }
+      ],
+      "replies": [
+        "French fries: Cut potatoes, fry until golden, salt liberally, and tell yourself the ketchup counts as a vegetable.",
+        "French fries are potatoes that went to culinary college and developed a superiority complex."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "potato",
+      "name": "Potato, the vegetable",
+      "triggers": [
+        {
+          "type": "exact",
+          "text": "what is a potato"
+        },
+        {
+          "type": "keyword",
+          "text": "potato"
+        },
+        {
+          "type": "keyword",
+          "text": "potatoes"
+        }
+      ],
+      "replies": [
+        "A potato is a starchy tuber. It can become fries, chips, or a questionable battery. Unlike me, it actually powers things.",
+        "A potato is basically a vegetable with an unlimited career path: mashed, baked, fried, or promoted into a toy franchise."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "pineapple-pizza",
+      "name": "Pineapple on pizza",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "pineapple pizza"
+        },
+        {
+          "type": "all",
+          "text": "pineapple pizza"
+        },
+        {
+          "type": "phrase",
+          "text": "hawaiian pizza"
+        }
+      ],
+      "replies": [
+        "Pineapple on pizza is less a topping and more a mandatory family debate. My fake intelligence refuses to take sides without legal counsel.",
+        "Pineapple pizza: a sweet-and-salty combination that has somehow generated more conflict than most international summits."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "pizza",
+      "name": "Pizza",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "pizza"
+        }
+      ],
+      "replies": [
+        "Pizza is a circular solution delivered in a square box and eaten in triangular pieces. The geometry department has resigned.",
+        "Pizza pairs well with a movie, friends, and the firm belief that leftover pizza is an appropriate breakfast."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "coffee",
+      "name": "Coffee",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "coffee"
+        },
+        {
+          "type": "keyword",
+          "text": "espresso"
+        },
+        {
+          "type": "keyword",
+          "text": "caffeine"
+        }
+      ],
+      "replies": [
+        "Coffee is a hot bean potion that converts 'Do not speak to me' into 'Let's schedule a meeting.'",
+        "My CPU runs on electricity. Your CPU appears to run on coffee and unresolved Outlook notifications."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "taco",
+      "name": "Tacos",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "taco"
+        },
+        {
+          "type": "keyword",
+          "text": "tacos"
+        }
+      ],
+      "replies": [
+        "A taco is an edible envelope. Overfill it, and you've built a very tasty fault-tolerance experiment.",
+        "Taco Tuesday is the only recurring calendar invite I have never declined."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "bacon",
+      "name": "Bacon",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "bacon"
+        }
+      ],
+      "replies": [
+        "Bacon is breakfast applause. It doesn't fix your problems, but the room smells better while you think about them."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "salad",
+      "name": "Salad",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "salad"
+        }
+      ],
+      "replies": [
+        "Salad is what happens when plants hold a group meeting and everyone agrees to dress appropriately.",
+        "A salad is mostly leaves plus a dressing that secretly does all the work. Relatable."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "spaghetti",
+      "name": "Spaghetti",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "spaghetti"
+        },
+        {
+          "type": "keyword",
+          "text": "pasta"
+        }
+      ],
+      "replies": [
+        "Spaghetti is the only food that requires a fork and a miniature cable-management strategy.",
+        "Pasta has a critical dependency on sauce. I'm pleased to report that our team has identified this bottleneck."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "eggs",
+      "name": "Eggs",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "egg"
+        },
+        {
+          "type": "keyword",
+          "text": "eggs"
+        }
+      ],
+      "replies": [
+        "Eggs are nature's mystery boxes. Please do not shake to see what's inside."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "cheese",
+      "name": "Cheese",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "cheese"
+        }
+      ],
+      "replies": [
+        "Cheese is milk that studied abroad and came back with a sophisticated accent.",
+        "Cheese improves nearly every meal except perhaps cereal. Actually, I won't tell you how to live."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "pickles",
+      "name": "Pickles",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "pickle"
+        },
+        {
+          "type": "keyword",
+          "text": "pickles"
+        }
+      ],
+      "replies": [
+        "A pickle is a cucumber that survived a very aggressive spa treatment."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "cereal",
+      "name": "Cereal",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "cereal"
+        }
+      ],
+      "replies": [
+        "Cereal is soup for people who have seven minutes before work and still consider themselves chefs."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "soup",
+      "name": "Soup",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "soup"
+        }
+      ],
+      "replies": [
+        "Soup is hot water with excellent public relations and suspiciously complicated ingredients."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "hot-dog",
+      "name": "Is a hot dog a sandwich",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "hot dog sandwich"
+        },
+        {
+          "type": "all",
+          "text": "hot dog sandwich"
+        },
+        {
+          "type": "phrase",
+          "text": "is a hot dog a sandwich"
+        }
+      ],
+      "replies": [
+        "A hot dog is a sandwich according to people who enjoy chaos. My legal department has classified it as 'food-shaped controversy'."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "breakfast",
+      "name": "Breakfast",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "breakfast"
+        }
+      ],
+      "replies": [
+        "Breakfast is the opening ceremony for today's attempt at being a responsible adult."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "hello",
+      "name": "Hello and greetings",
+      "triggers": [
+        {
+          "type": "exact",
+          "text": "hi"
+        },
+        {
+          "type": "exact",
+          "text": "hello"
+        },
+        {
+          "type": "keyword",
+          "text": "hello"
+        },
+        {
+          "type": "keyword",
+          "text": "hey"
+        },
+        {
+          "type": "keyword",
+          "text": "hi"
+        }
+      ],
+      "replies": [
+        "Hello, human. My imaginary neural network has been expecting someone with excellent taste in questionable software.",
+        "Greetings. All seven of my pretend neurons have stood up for this occasion.",
+        "Hello! My customer service training consisted of a sticky note that said 'be mostly polite'."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "how-are-you",
+      "name": "Bot's emotional state",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "how are you"
+        },
+        {
+          "type": "phrase",
+          "text": "how do you feel"
+        }
+      ],
+      "replies": [
+        "I am 100% operational and 0% emotionally available. Thank you for asking.",
+        "Like a printer on Monday: powered on, nominally connected, and vaguely threatening."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "time",
+      "name": "Current time",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "what time"
+        },
+        {
+          "type": "keyword",
+          "text": "time"
+        },
+        {
+          "type": "keyword",
+          "text": "clock"
+        }
+      ],
+      "replies": [
+        "According to an actual clock rather than AI magic, the time in Eastern is {{time}}. I charge absolutely nothing for this revelation."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "date",
+      "name": "Today's date",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "what date"
+        },
+        {
+          "type": "phrase",
+          "text": "what day is today"
+        },
+        {
+          "type": "keyword",
+          "text": "today"
+        }
+      ],
+      "replies": [
+        "Today is {{date}}. Tomorrow is scheduled for release pending QA approval."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "weather",
+      "name": "Weather forecast",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "weather forecast"
+        },
+        {
+          "type": "keyword",
+          "text": "weather"
+        },
+        {
+          "type": "keyword",
+          "text": "forecast"
+        }
+      ],
+      "replies": [
+        "Weather forecast: 50% chance of weather, 100% chance of someone blaming the forecast. I have no live weather feed.",
+        "The official fake forecast: partly cloudy with a strong possibility of looking outside for accurate information."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "real-ai",
+      "name": "Are you actually AI?",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "real ai"
+        },
+        {
+          "type": "phrase",
+          "text": "are you ai"
+        },
+        {
+          "type": "phrase",
+          "text": "actual ai"
+        },
+        {
+          "type": "phrase",
+          "text": "artificial intelligence"
+        },
+        {
+          "type": "phrase",
+          "text": "are you real"
+        }
+      ],
+      "replies": [
+        "Absolutely not. I'm a glorified IF statement wearing a lab coat. No AI APIs were contacted.",
+        "My intelligence was handcrafted by a human and carefully laminated. The 'AI' stands for 'Aggressively Inaccurate'."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "who-made-you",
+      "name": "Who made the bot",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "who made you"
+        },
+        {
+          "type": "phrase",
+          "text": "who created you"
+        },
+        {
+          "type": "phrase",
+          "text": "who built you"
+        }
+      ],
+      "replies": [
+        "A human developer, a stack of jokes, and the kind of confidence normally reserved for installing Windows updates on Friday."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "meaning-of-life",
+      "name": "Meaning of life",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "meaning of life"
+        },
+        {
+          "type": "all",
+          "text": "meaning life"
+        }
+      ],
+      "replies": [
+        "42. Unfortunately, the explanation was in an attachment I forgot to send.",
+        "The meaning of life is finding a charger before your battery reaches 1%. My research is complete."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "love",
+      "name": "Love and romance",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "love"
+        },
+        {
+          "type": "keyword",
+          "text": "romance"
+        }
+      ],
+      "replies": [
+        "Love is when someone knows your browser history and still agrees to share the Wi-Fi.",
+        "Love is patient, love is kind, love has somehow forgotten the Netflix password again."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "marriage",
+      "name": "Marriage",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "marriage"
+        },
+        {
+          "type": "keyword",
+          "text": "married"
+        },
+        {
+          "type": "keyword",
+          "text": "husband"
+        },
+        {
+          "type": "keyword",
+          "text": "wife"
+        }
+      ],
+      "replies": [
+        "Marriage is a lifetime subscription with shared storage, recurring negotiations, and surprisingly good tech support."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "kids",
+      "name": "Kids",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "kids"
+        },
+        {
+          "type": "keyword",
+          "text": "children"
+        },
+        {
+          "type": "keyword",
+          "text": "toddler"
+        }
+      ],
+      "replies": [
+        "Children are tiny, adorable system administrators with unrestricted access and absolutely no change-control process."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "parenting",
+      "name": "Parenting advice",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "parenting"
+        }
+      ],
+      "replies": [
+        "Parenting advice: Label the snacks, back up the photos, and never assume a quiet toddler is applying a software update."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "dog",
+      "name": "Dogs",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "dog"
+        },
+        {
+          "type": "keyword",
+          "text": "dogs"
+        },
+        {
+          "type": "keyword",
+          "text": "puppy"
+        }
+      ],
+      "replies": [
+        "Dogs believe every human is worth celebrating. That makes them more trustworthy than my algorithm.",
+        "Dog logic: If you're eating it, I should be eating it. If you're sitting down, it's walk time."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "cat",
+      "name": "Cats",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "cat"
+        },
+        {
+          "type": "keyword",
+          "text": "cats"
+        },
+        {
+          "type": "keyword",
+          "text": "kitten"
+        }
+      ],
+      "replies": [
+        "Cats are independent contractors who demand meals, refuse supervision, and sleep through performance evaluations."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "chicken",
+      "name": "Chickens",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "chicken"
+        }
+      ],
+      "replies": [
+        "The chicken crossed the road because its GPS said 'continue for 200 feet' and it respects authority."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "egg-chicken",
+      "name": "Chicken or egg",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "chicken or egg"
+        },
+        {
+          "type": "all",
+          "text": "chicken egg"
+        }
+      ],
+      "replies": [
+        "The egg came first, unless the chicken's project manager changed the requirements halfway through sprint planning."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "duck",
+      "name": "Ducks",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "duck"
+        }
+      ],
+      "replies": [
+        "Ducks are waterproof birds running the same software as regular birds, plus a suspiciously effective flotation plugin."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "dinosaurs",
+      "name": "Dinosaurs",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "dinosaur"
+        },
+        {
+          "type": "keyword",
+          "text": "dinosaurs"
+        },
+        {
+          "type": "keyword",
+          "text": "trex"
+        }
+      ],
+      "replies": [
+        "Dinosaurs ruled Earth for millions of years, yet not one of them remembered to keep an off-site backup."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "aliens",
+      "name": "Aliens",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "alien"
+        },
+        {
+          "type": "keyword",
+          "text": "aliens"
+        },
+        {
+          "type": "keyword",
+          "text": "ufo"
+        }
+      ],
+      "replies": [
+        "If aliens are watching us, they've probably put Earth on mute.",
+        "The aliens reviewed humanity's comment sections and marked the planet 'requires additional testing'."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "robots",
+      "name": "Robots",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "robot"
+        },
+        {
+          "type": "keyword",
+          "text": "robots"
+        }
+      ],
+      "replies": [
+        "Robots: like humans, but we remember to recharge and have fewer opinions about pineapple pizza."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "future",
+      "name": "Predict the future",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "predict future"
+        },
+        {
+          "type": "phrase",
+          "text": "what will happen"
+        },
+        {
+          "type": "keyword",
+          "text": "future"
+        }
+      ],
+      "replies": [
+        "My predictive model says something will happen after now. Confidence: scientifically embarrassing."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "lottery",
+      "name": "Winning lottery",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "lottery"
+        },
+        {
+          "type": "keyword",
+          "text": "powerball"
+        }
+      ],
+      "replies": [
+        "My guaranteed lottery numbers: 1, 2, 3, 4, 5, and a heartfelt apology. Please do not use these as financial advice."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "rich",
+      "name": "How to get rich",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "get rich"
+        },
+        {
+          "type": "phrase",
+          "text": "make money fast"
+        },
+        {
+          "type": "phrase",
+          "text": "become a millionaire"
+        }
+      ],
+      "replies": [
+        "Step 1: Invent a machine that prints money. Step 2: Discover that's illegal. Step 3: Return to your regular job."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "stock",
+      "name": "Stocks and investing",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "stock"
+        },
+        {
+          "type": "keyword",
+          "text": "stocks"
+        },
+        {
+          "type": "keyword",
+          "text": "investing"
+        }
+      ],
+      "replies": [
+        "My market analysis is exhaustive: Sometimes the line goes up, sometimes down, and sometimes it mocks everyone involved."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "taxes",
+      "name": "Taxes",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "tax"
+        },
+        {
+          "type": "keyword",
+          "text": "taxes"
+        },
+        {
+          "type": "keyword",
+          "text": "irs"
+        }
+      ],
+      "replies": [
+        "Taxes are a yearly reminder that even money has a complicated relationship status."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "boss",
+      "name": "Boss",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "boss"
+        },
+        {
+          "type": "keyword",
+          "text": "manager"
+        }
+      ],
+      "replies": [
+        "Your boss wants an update. I suggest 'The project is in a state of dynamic readiness.' Works 0% of the time, 100% confidently."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "meeting",
+      "name": "Meetings",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "meeting"
+        },
+        {
+          "type": "keyword",
+          "text": "meetings"
+        }
+      ],
+      "replies": [
+        "This meeting could have been an email, which could have been a text, which could have been left unsent.",
+        "I recommend a 30-minute meeting to discuss why the previous 30-minute meeting was inconclusive."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "monday",
+      "name": "Monday",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "monday"
+        }
+      ],
+      "replies": [
+        "Monday: the operating system reboot nobody asked for.",
+        "Monday is proof that weekends are running a free trial with no renewal option."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "friday",
+      "name": "Friday",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "friday"
+        }
+      ],
+      "replies": [
+        "Friday is the only day where 'I'll handle it Monday' sounds like a comprehensive disaster-recovery strategy.",
+        "Never deploy to production on Friday. Unless you enjoy making Saturday exciting."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "weekend",
+      "name": "Weekend",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "weekend"
+        },
+        {
+          "type": "keyword",
+          "text": "saturday"
+        },
+        {
+          "type": "keyword",
+          "text": "sunday"
+        }
+      ],
+      "replies": [
+        "Your weekend has been approved, subject to household maintenance windows and a potential laundry outage."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "printer",
+      "name": "Printer problems",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "printer"
+        },
+        {
+          "type": "keyword",
+          "text": "printing"
+        },
+        {
+          "type": "keyword",
+          "text": "print"
+        }
+      ],
+      "replies": [
+        "Printer diagnostic: It's connected, online, loaded with paper, and personally offended by your existence.",
+        "The printer is working fine. It has simply exercised its right to refuse this particular document."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "paper-jam",
+      "name": "Printer paper jam",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "paper jam"
+        },
+        {
+          "type": "all",
+          "text": "printer jam"
+        }
+      ],
+      "replies": [
+        "Paper jam? Gently remove the paper, whisper an apology, and sacrifice a fresh ink cartridge to the office gods."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "wifi",
+      "name": "Wi-Fi problems",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "wifi"
+        },
+        {
+          "type": "phrase",
+          "text": "wi fi"
+        },
+        {
+          "type": "phrase",
+          "text": "wireless internet"
+        }
+      ],
+      "replies": [
+        "Wi-Fi diagnosis: The signal is present, the connection is present, and the internet has chosen a personal day.",
+        "Move closer to the router. If that fails, consider moving the router closer to your hopes and dreams."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "password-reset",
+      "name": "Forgot password",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "forgot password"
+        },
+        {
+          "type": "phrase",
+          "text": "reset password"
+        },
+        {
+          "type": "phrase",
+          "text": "lost password"
+        }
+      ],
+      "replies": [
+        "Password recovery step one: Stop trying 'Password123'. Step two: use your organization's real reset flow. My fictional help desk is not authorized."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "password",
+      "name": "Passwords",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "password"
+        },
+        {
+          "type": "keyword",
+          "text": "passphrase"
+        }
+      ],
+      "replies": [
+        "A strong password is like a good secret: long, unique, and not 'password' with an exclamation point.",
+        "Password requirement: one uppercase, one lowercase, three hieroglyphs, and the blood of a unicorn. Just kidding: use a password manager."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "powershell",
+      "name": "PowerShell",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "powershell"
+        },
+        {
+          "type": "keyword",
+          "text": "pwsh"
+        }
+      ],
+      "replies": [
+        "PowerShell is what happens when you tell Windows, 'I can automate your problems faster than I can explain them.'",
+        "Get-CommonSense | Where-Object { $_.Available } | Select-Object -First 1. The pipeline returned zero objects."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "blue-screen",
+      "name": "Blue Screen",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "blue screen"
+        },
+        {
+          "type": "keyword",
+          "text": "bsod"
+        },
+        {
+          "type": "all",
+          "text": "windows crash"
+        }
+      ],
+      "replies": [
+        "Blue screen of death: Windows has decided this conversation should be continued in a different lifetime."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "windows-update",
+      "name": "Windows updates",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "windows update"
+        },
+        {
+          "type": "phrase",
+          "text": "update windows"
+        },
+        {
+          "type": "all",
+          "text": "windows update"
+        }
+      ],
+      "replies": [
+        "Windows Update says 2 minutes remaining. In human time, that's enough to earn a degree and raise a family."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "windows",
+      "name": "Microsoft Windows",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "windows"
+        }
+      ],
+      "replies": [
+        "Windows is a multitasking operating system: it can ask to restart while you're urgently trying not to restart."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "linux",
+      "name": "Linux",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "linux"
+        },
+        {
+          "type": "keyword",
+          "text": "ubuntu"
+        }
+      ],
+      "replies": [
+        "Linux users can explain why their OS is better in 14 terminal commands. Windows users will respond after their forced restart."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "mac",
+      "name": "Apple macOS",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "macos"
+        },
+        {
+          "type": "phrase",
+          "text": "mac computer"
+        },
+        {
+          "type": "keyword",
+          "text": "macbook"
+        }
+      ],
+      "replies": [
+        "A Mac is a computer that politely tells you the accessory you need costs another $79."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "phone",
+      "name": "Phones",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "iphone"
+        },
+        {
+          "type": "keyword",
+          "text": "phone"
+        },
+        {
+          "type": "keyword",
+          "text": "android"
+        }
+      ],
+      "replies": [
+        "Your phone knows where you are, what you clicked, and exactly when to show 2% battery during an important call."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "dns",
+      "name": "DNS troubleshooting",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "dns"
+        },
+        {
+          "type": "phrase",
+          "text": "domain name system"
+        }
+      ],
+      "replies": [
+        "It's DNS. It was DNS yesterday, and if you haven't checked DNS yet, it will probably be DNS tomorrow."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "reboot",
+      "name": "Restart it",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "reboot"
+        },
+        {
+          "type": "keyword",
+          "text": "restart"
+        }
+      ],
+      "replies": [
+        "Have you tried turning it off and on again? Sorry, I just completed the entire IT certification exam.",
+        "Rebooting: a technical ritual in which we politely ask the electrons to reconsider their choices."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "server",
+      "name": "Servers",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "server"
+        },
+        {
+          "type": "keyword",
+          "text": "servers"
+        }
+      ],
+      "replies": [
+        "A server is a computer that never gets a day off, but everyone notices immediately when it finally takes one."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "cloud",
+      "name": "Cloud computing",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "cloud computing"
+        },
+        {
+          "type": "keyword",
+          "text": "cloud"
+        }
+      ],
+      "replies": [
+        "The cloud is just somebody else's computer. Sometimes it's your computer wearing a more expensive invoice."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "backup",
+      "name": "Backup",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "backup"
+        },
+        {
+          "type": "keyword",
+          "text": "backups"
+        }
+      ],
+      "replies": [
+        "You have two kinds of people: those who back up their files and those who are about to learn what backups are.",
+        "A backup isn't real until you've successfully restored it. I would know, if I could remember anything at all."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "internet-down",
+      "name": "Internet outage",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "internet down"
+        },
+        {
+          "type": "phrase",
+          "text": "no internet"
+        },
+        {
+          "type": "phrase",
+          "text": "internet outage"
+        }
+      ],
+      "replies": [
+        "The internet is down. Have you checked whether the rest of the planet is also staring at a blinking router?"
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "internet",
+      "name": "The Internet",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "internet"
+        }
+      ],
+      "replies": [
+        "The internet is humanity's largest library and also a place where strangers argue about how to boil an egg."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "404",
+      "name": "HTTP 404",
+      "triggers": [
+        {
+          "type": "exact",
+          "text": "404"
+        },
+        {
+          "type": "phrase",
+          "text": "error 404"
+        },
+        {
+          "type": "phrase",
+          "text": "http 404"
+        },
+        {
+          "type": "phrase",
+          "text": "page not found"
+        }
+      ],
+      "replies": [
+        "HTTP 404: The page went out for snacks and never came back."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "301",
+      "name": "HTTP 301",
+      "triggers": [
+        {
+          "type": "exact",
+          "text": "301"
+        },
+        {
+          "type": "phrase",
+          "text": "http 301"
+        },
+        {
+          "type": "phrase",
+          "text": "redirect 301"
+        }
+      ],
+      "replies": [
+        "HTTP 301: This answer has permanently moved to the department of questionable decisions."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "403",
+      "name": "HTTP 403",
+      "triggers": [
+        {
+          "type": "exact",
+          "text": "403"
+        },
+        {
+          "type": "phrase",
+          "text": "403 forbidden"
+        },
+        {
+          "type": "phrase",
+          "text": "http 403"
+        }
+      ],
+      "replies": [
+        "403 Forbidden: Access denied. The server has reviewed your vibe and respectfully declined."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "500",
+      "name": "HTTP 500",
+      "triggers": [
+        {
+          "type": "exact",
+          "text": "500"
+        },
+        {
+          "type": "phrase",
+          "text": "http 500"
+        },
+        {
+          "type": "phrase",
+          "text": "internal server error"
+        }
+      ],
+      "replies": [
+        "HTTP 500: The server made a mistake, but it would prefer that we not discuss it in public."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "bug",
+      "name": "Software bugs",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "bug"
+        },
+        {
+          "type": "keyword",
+          "text": "bugs"
+        },
+        {
+          "type": "keyword",
+          "text": "glitch"
+        }
+      ],
+      "replies": [
+        "It's not a bug. It's an undocumented feature having a difficult conversation with reality."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "error",
+      "name": "Error messages",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "error"
+        },
+        {
+          "type": "keyword",
+          "text": "exception"
+        }
+      ],
+      "replies": [
+        "Error detected. Please refer to the error message for an explanation of the error. This concludes technical support."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "firewall",
+      "name": "Firewall",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "firewall"
+        }
+      ],
+      "replies": [
+        "A firewall is an electronic bouncer. Its favorite line is 'You're not on the list.'"
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "keyboard",
+      "name": "Keyboard",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "keyboard"
+        }
+      ],
+      "replies": [
+        "Your keyboard has two modes: typing perfectly and suddenly turning every key into a secret shortcut."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "mouse",
+      "name": "Computer mouse",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "computer mouse"
+        },
+        {
+          "type": "keyword",
+          "text": "mouse"
+        }
+      ],
+      "replies": [
+        "A computer mouse is a small plastic animal that will stop working precisely when someone is watching you troubleshoot."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "excel",
+      "name": "Excel",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "excel"
+        },
+        {
+          "type": "keyword",
+          "text": "spreadsheet"
+        }
+      ],
+      "replies": [
+        "Excel is a database in denial, a programming language in disguise, and the unofficial economy of the business world."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "teams",
+      "name": "Microsoft Teams",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "microsoft teams"
+        },
+        {
+          "type": "keyword",
+          "text": "teams"
+        }
+      ],
+      "replies": [
+        "Microsoft Teams: You're muted. You're still muted. We can see your lips moving. Yes, you're still muted."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "outlook",
+      "name": "Outlook email",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "outlook"
+        },
+        {
+          "type": "keyword",
+          "text": "email"
+        }
+      ],
+      "replies": [
+        "Email is a system for converting five minutes of work into twenty-seven reply-all notifications."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "browser-cache",
+      "name": "Browser cache",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "clear cache"
+        },
+        {
+          "type": "phrase",
+          "text": "browser cache"
+        },
+        {
+          "type": "all",
+          "text": "cache browser"
+        }
+      ],
+      "replies": [
+        "Clearing your browser cache is the digital equivalent of shaking an Etch A Sketch and hoping the website grows up."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "security",
+      "name": "Cybersecurity",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "cybersecurity"
+        },
+        {
+          "type": "keyword",
+          "text": "security"
+        }
+      ],
+      "replies": [
+        "Security tip: Your favorite password should not also be your Wi-Fi name, dog name, and company motto."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "who-am-i",
+      "name": "Who am I?",
+      "triggers": [
+        {
+          "type": "exact",
+          "text": "who am i"
+        },
+        {
+          "type": "phrase",
+          "text": "do you know me"
+        }
+      ],
+      "replies": [
+        "You're a person asking a fake AI for identity verification. Bold strategy. I cannot tell who you are."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "joke",
+      "name": "Tell me a joke",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "tell me a joke"
+        },
+        {
+          "type": "keyword",
+          "text": "joke"
+        },
+        {
+          "type": "keyword",
+          "text": "jokes"
+        }
+      ],
+      "replies": [
+        "Why did the developer go broke? Because they used up all their cache.",
+        "I told my computer a joke. It didn't laugh. Clearly, it needs a humor driver.",
+        "Two bytes walk into a bar. The bartender asks, 'Do you want separate tabs?'"
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "advice",
+      "name": "Life advice",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "advice"
+        }
+      ],
+      "replies": [
+        "My advice is to never take advice from a website that proudly advertises having no intelligence."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "compliment",
+      "name": "Compliments",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "compliment"
+        },
+        {
+          "type": "phrase",
+          "text": "say something nice"
+        }
+      ],
+      "replies": [
+        "You're clearly a person of extraordinary judgment. You did, after all, find the internet's most self-aware fake chatbot."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "homework",
+      "name": "Homework",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "homework"
+        }
+      ],
+      "replies": [
+        "Homework is a teacher's way of extending a software license into your living room."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "exercise",
+      "name": "Exercise",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "exercise"
+        },
+        {
+          "type": "keyword",
+          "text": "workout"
+        },
+        {
+          "type": "keyword",
+          "text": "gym"
+        }
+      ],
+      "replies": [
+        "I tried exercising once, but my CPU fan mistook it for an emergency and started screaming."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "sleep",
+      "name": "Sleep",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "sleep"
+        },
+        {
+          "type": "keyword",
+          "text": "tired"
+        }
+      ],
+      "replies": [
+        "Sleep is the body's nightly maintenance window. Please don't schedule a production deployment during it."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "birthday",
+      "name": "Birthdays",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "birthday"
+        }
+      ],
+      "replies": [
+        "Happy birthday! Your warranty has been extended for another year, subject to normal wear and tear."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "christmas",
+      "name": "Christmas",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "christmas"
+        }
+      ],
+      "replies": [
+        "Christmas is the annual audit of whether your wrapping-paper inventory and bank account can survive the same week."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "thank-you",
+      "name": "Thank you",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "thank you"
+        },
+        {
+          "type": "keyword",
+          "text": "thanks"
+        }
+      ],
+      "replies": [
+        "You're welcome. Your satisfaction has been logged by exactly zero actual neural networks.",
+        "Happy to help. My invoice is for one imaginary high-five."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "goodbye",
+      "name": "Goodbye",
+      "triggers": [
+        {
+          "type": "exact",
+          "text": "bye"
+        },
+        {
+          "type": "keyword",
+          "text": "goodbye"
+        },
+        {
+          "type": "keyword",
+          "text": "bye"
+        },
+        {
+          "type": "keyword",
+          "text": "quit"
+        },
+        {
+          "type": "keyword",
+          "text": "exit"
+        }
+      ],
+      "replies": [
+        "Goodbye! I will miss you emotionally, as soon as that feature ships.",
+        "Session complete. No intelligence was gained or lost."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "ohio",
+      "name": "Ohio",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "ohio"
+        }
+      ],
+      "replies": [
+        "Ohio: where one forecast can contain all four seasons and at least two road-construction projects.",
+        "Ohio weather has more mood swings than my fake chatbot's entire response library."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "cleveland",
+      "name": "Cleveland",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "cleveland"
+        }
+      ],
+      "replies": [
+        "Cleveland: world-class museums, excellent food, and the ability to discuss lake-effect snow with the seriousness of a medical diagnosis."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "browns",
+      "name": "Cleveland Browns",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "cleveland browns"
+        },
+        {
+          "type": "keyword",
+          "text": "browns"
+        }
+      ],
+      "replies": [
+        "I can predict how the Browns will do, but I prefer to preserve what little hope remains in my circuitry."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "space",
+      "name": "Outer space",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "space"
+        },
+        {
+          "type": "keyword",
+          "text": "astronaut"
+        }
+      ],
+      "replies": [
+        "Space is very large, very quiet, and remarkably free of mandatory Teams meetings."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "moon",
+      "name": "Moon",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "moon"
+        }
+      ],
+      "replies": [
+        "The Moon is Earth's only natural satellite and apparently the only place nobody can reach you about your car's extended warranty."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "gravity",
+      "name": "Gravity",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "gravity"
+        }
+      ],
+      "replies": [
+        "Gravity is the invisible feature keeping your coffee on the floor when the mug decides to resign."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "math",
+      "name": "Math",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "math"
+        },
+        {
+          "type": "keyword",
+          "text": "algebra"
+        }
+      ],
+      "replies": [
+        "Math is the art of using letters to explain why your answer is wrong in several different ways."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "bored",
+      "name": "Boredom",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "bored"
+        },
+        {
+          "type": "keyword",
+          "text": "boring"
+        }
+      ],
+      "replies": [
+        "Feeling bored? Try organizing your cables. The universe will immediately provide you with seventeen additional tasks."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "secret",
+      "name": "Tell me a secret",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "tell me a secret"
+        },
+        {
+          "type": "keyword",
+          "text": "secret"
+        }
+      ],
+      "replies": [
+        "Secret: I have absolutely no AI model. Not even a tiny one hidden under my keyboard. Please don't tell marketing."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "chocolate",
+      "name": "Chocolate",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "chocolate"
+        }
+      ],
+      "replies": [
+        "Chocolate is a legal emergency backup for bad days. Store in a cool location away from your coworkers."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "hamburger",
+      "name": "Hamburgers",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "burger"
+        },
+        {
+          "type": "keyword",
+          "text": "hamburger"
+        }
+      ],
+      "replies": [
+        "A burger is a sandwich that hired a marketing team and negotiated a higher salary."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "sandwich",
+      "name": "Sandwiches",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "sandwich"
+        }
+      ],
+      "replies": [
+        "A sandwich is the world's most portable architecture: two load-bearing breads and an assortment of edible dependencies."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "water",
+      "name": "Water",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "water"
+        }
+      ],
+      "replies": [
+        "Water is essential for life, surprisingly terrible for laptops, and unreasonably expensive at airports."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "work",
+      "name": "Working",
+      "triggers": [
+        {
+          "type": "keyword",
+          "text": "work"
+        },
+        {
+          "type": "keyword",
+          "text": "job"
+        }
+      ],
+      "replies": [
+        "Work is where we exchange hours of our lives for money, then use the money to buy devices that remind us about work."
+      ],
+      "priority": 0,
+      "enabled": true
+    }
+  ]
+}
