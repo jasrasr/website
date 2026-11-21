@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-/** Refill Tracker, revision 1.5.2. */
+/** Refill Tracker, revision 1.5.3. */
 use Jasr\Framework\JsonStore;
 use Jasr\Framework\SharedIdentity;
 
@@ -348,7 +348,7 @@ try {
     }
     $canEdit = $auth->can('refill-tracker', 'member');
     $csrf = $canEdit ? refill_escape($auth->csrf()) : '';
-    $path = refill_inventory_path((string) $user['id'], $_SERVER['DOCUMENT_ROOT'] ?? '');
+    $path = refill_inventory_path((string) $user['id']);
     $error = null;
     if ($method === 'POST') {
         try {
@@ -386,7 +386,7 @@ try {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Refill Tracker</title>
-    <link rel="stylesheet" href="assets/css/app.css?v=1.5.2">
+    <link rel="stylesheet" href="assets/css/app.css?v=1.5.3">
 </head>
 <body>
 <main>
@@ -620,9 +620,9 @@ try {
             </article>
         <?php endforeach; ?>
     </section>
-    <footer>Revision 1.5.2 <span aria-hidden="true">·</span> Modified <time datetime="2026-11-21">Nov 21, 2026</time></footer>
+    <footer>Revision 1.5.3 <span aria-hidden="true">·</span> Modified <time datetime="2026-11-21">Nov 21, 2026</time></footer>
 </main>
-<script src="assets/js/dates.js?v=1.5.2"></script>
-<script src="assets/js/receipt.js?v=1.5.2"></script>
+<script src="assets/js/dates.js?v=1.5.3"></script>
+<script src="assets/js/receipt.js?v=1.5.3"></script>
 </body>
 </html>
