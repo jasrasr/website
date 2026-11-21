@@ -19,3 +19,5 @@ button { background: #235b49; color: white; cursor: pointer; }
 button:disabled { background: #e0e8e2; color: #4a5b52; cursor: default; }
 [role="alert"] { color: #842519; }
 footer { font-size: .85rem; }
+[data-receipt] input[type="checkbox"] { width: auto; min-height: 0; }
+[data-receipt-line] { min-inline-size: 0; margin: 0 0 .75rem; }

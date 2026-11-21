@@ -47,3 +47,9 @@ Use **Add item** for anything else. Use **Edit** to change the name, unit label,
 ## Purchase details
 
 On **Log refill**, expand **Purchase details** to enter the seller, units per pack, and total price in USD. For one Amazon two-pack of toothpaste, enter quantity 1 and pack size 2. For two Costco 48-packs of toilet paper, enter quantity 2 and pack size 48. Inventory goes up by 2 tubes or 96 rolls respectively, and refill history shows the pack breakdown, seller, total price when entered, and price per unit. Leave pack size blank to enter individual units. Use **Correct count** for adjustments in individual units.
+
+## Multi-item receipts
+
+Choose **Add items from a receipt**, enter the store and who restocked, then enter each line against an existing inventory item. Enter the full pre-tax line amount after discounts, not the per-unit price. Enter pack quantity, units per pack and the destination storage location. Leave unused lines blank. Add up to 50 lines with JavaScript enabled.
+
+Tax defaults to 8% for each new receipt and can be changed on the form. Clear **Taxable** for exempt lines. The app rounds tax to cents on the combined taxable subtotal and allocates it across taxable lines. All stock updates save together. Refill history shows line tax, after-tax line cost and the total for the recorded receipt lines. This is manual receipt entry and includes only the lines you enter.

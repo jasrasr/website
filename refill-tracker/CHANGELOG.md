@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.0 — 2026-11-21
+
+- Enter a receipt with multiple inventory items and save the updates together.
+- Calculate sales tax with an editable 8% default and per-line tax exemptions.
+
 ## 1.4.0 — 2026-11-21
 
 - Log optional seller, pack size, purchase quantity, and total cost with refills.

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-/** Refill Tracker, revision 1.4.0. */
+/** Refill Tracker, revision 1.5.0. */
 use Jasr\Framework\JsonStore;
 use Jasr\Framework\SharedIdentity;
 
@@ -124,9 +124,107 @@ function refill_add_starters(array $records): array
     return $records;
 }
 
+function refill_receipt_number(mixed $value, int $wholeDigits, string $message): int
+{
+    if (!is_string($value)
+        || preg_match('/^([0-9]{1,' . $wholeDigits . '})(?:\.([0-9]{1,2}))?$/D', trim($value), $parts) !== 1) {
+        throw new InvalidArgumentException($message);
+    }
+    return (int) $parts[1] * 100 + (int) str_pad($parts[2] ?? '', 2, '0');
+}
+
+function refill_receipt_units(mixed $value): int
+{
+    if (!is_string($value) || preg_match('/^[1-9][0-9]{0,3}$/D', $value) !== 1) {
+        throw new InvalidArgumentException('Enter 1 to 9,999 packs and units per pack.');
+    }
+    return (int) $value;
+}
+
+function refill_add_receipt(array $records): array
+{
+    $seller = refill_text('seller', 120);
+    $person = refill_text('person', 80);
+    $rate = refill_receipt_number($_POST['taxRate'] ?? null, 3, 'Enter a tax rate from 0 to 100 with up to two decimal places.');
+    $lines = $_POST['lines'] ?? null;
+    if ($rate > 10000 || !is_array($lines) || count($lines) > 50) {
+        throw new InvalidArgumentException('Use a tax rate from 0 to 100 and up to 50 receipt lines.');
+    }
+    $itemsById = array_column($records, null, 'id');
+    $receiptId = bin2hex(random_bytes(16));
+    $now = time();
+    $subtotal = $taxableSubtotal = $tax = 0;
+    $savedLines = [];
+    foreach ($lines as $line) {
+        if (is_array($line) && ($line['item'] ?? null) === '') {
+            if (($line['location'] ?? '') !== '' || ($line['price'] ?? '') !== '' || ($line['packs'] ?? '1') !== '1' || ($line['unitsPerPack'] ?? '1') !== '1') {
+                throw new InvalidArgumentException('Select an inventory item for each filled receipt line.');
+            }
+            continue;
+        }
+        $id = is_array($line) ? ($line['item'] ?? null) : null;
+        if (!is_string($id) || !isset($itemsById[$id])) {
+            throw new InvalidArgumentException('Select an inventory item for each receipt line.');
+        }
+        $location = is_string($line['location'] ?? null) ? trim($line['location']) : '';
+        if ($location === '' || strlen($location) > 80 || preg_match('/^[^\p{C}]+$/uD', $location) !== 1) {
+            throw new InvalidArgumentException('Enter a storage location for every receipt item.');
+        }
+        $packs = refill_receipt_units($line['packs'] ?? null);
+        $unitsPerPack = refill_receipt_units($line['unitsPerPack'] ?? null);
+        $units = $packs * $unitsPerPack;
+        $price = refill_receipt_number($line['price'] ?? null, 7, 'Enter a valid pre-tax line total, such as 12.99.');
+        $item = $itemsById[$id];
+        $stock = refill_stock($item);
+        if (array_sum($stock) + $units > 9999) {
+            throw new InvalidArgumentException('A receipt item would exceed the limit of 9,999 spares.');
+        }
+
+        $taxable = ($line['taxable'] ?? '') === '1';
+        $subtotal += $price;
+        $taxableSubtotal += $taxable ? $price : 0;
+        $nextTax = intdiv($taxableSubtotal * $rate + 5000, 10000);
+        $lineTax = $nextTax - $tax;
+        $tax = $nextTax;
+        $stock[$location] = ($stock[$location] ?? 0) + $units;
+        $item['stock'] = $stock;
+        $item['quantity'] = array_sum($stock);
+        $item['refills'][] = [
+            'at' => $now,
+            'storage' => $location,
+            'quantity' => $units,
+            'person' => $person,
+            'purchase' => [
+                'seller' => $seller,
+                'packs' => $packs,
+                'unitsPerPack' => $unitsPerPack,
+                'totalCostCents' => $price + $lineTax,
+                'receiptId' => $receiptId,
+                'subtotalCents' => $price,
+                'taxCents' => $lineTax,
+                'taxable' => $taxable,
+                'taxRate' => $rate,
+            ],
+        ];
+        $itemsById[$id] = $item;
+        $savedLines[] = [$id, array_key_last($item['refills'])];
+    }
+    if (!$savedLines) {
+        throw new InvalidArgumentException('Add at least one receipt item.');
+    }
+    foreach ($savedLines as [$id, $index]) {
+        $itemsById[$id]['refills'][$index]['purchase']['receiptTotalCents'] = $subtotal + $tax;
+        $itemsById[$id]['refills'][$index]['purchase']['receiptTaxCents'] = $tax;
+    }
+    return array_values($itemsById);
+}
+
 function refill_change(array $records): array
 {
     $action = $_POST['action'] ?? '';
+    if ($action === 'add-receipt') {
+        return refill_add_receipt($records);
+    }
     if ($action === 'add-starters') {
         return refill_add_starters($records);
     }
@@ -279,7 +377,7 @@ try {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Refill Tracker</title>
-    <link rel="stylesheet" href="assets/css/app.css?v=1.4.0">
+    <link rel="stylesheet" href="assets/css/app.css?v=1.5.0">
 </head>
 <body>
 <main>
@@ -317,6 +415,38 @@ try {
     <section aria-labelledby="inventory">
         <h2 id="inventory">Inventory</h2>
         <?php if ($canEdit): ?>
+            <?php if ($items): ?>
+                <details>
+                    <summary>Add items from a receipt</summary>
+                    <form method="post" class="fields" data-receipt>
+                        <input type="hidden" name="csrf" value="<?= $csrf ?>">
+                        <label>Purchased from <input name="seller" maxlength="120" required></label>
+                        <label>Who refilled it <input name="person" list="household-people" maxlength="80" required></label>
+                        <label>Sales tax rate (%) <input name="taxRate" type="number" min="0" max="100" step="0.01" value="8" required></label>
+                        <p>Enter totals before tax. Clear Taxable for exempt lines.</p>
+                        <div data-receipt-lines>
+                            <?php for ($lineNumber = 0; $lineNumber < 2; $lineNumber++): ?>
+                                <fieldset data-receipt-line>
+                                    <legend>Receipt item</legend>
+                                    <label>Inventory item <select name="lines[<?= $lineNumber ?>][item]">
+                                        <option value="">Choose an item</option>
+                                        <?php foreach ($items as $receiptItem): ?>
+                                            <option value="<?= refill_escape($receiptItem['id']) ?>"><?= refill_escape($receiptItem['name']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select></label>
+                                    <label>Storage location <input name="lines[<?= $lineNumber ?>][location]" list="storage-locations" maxlength="80"></label>
+                                    <label>Packs <input name="lines[<?= $lineNumber ?>][packs]" type="number" min="1" max="9999" value="1"></label>
+                                    <label>Units per pack <input name="lines[<?= $lineNumber ?>][unitsPerPack]" type="number" min="1" max="9999" value="1"></label>
+                                    <label>Pre-tax total for this line (USD) <input name="lines[<?= $lineNumber ?>][price]" inputmode="decimal" maxlength="10"></label>
+                                    <label><span><input type="checkbox" name="lines[<?= $lineNumber ?>][taxable]" value="1" checked> Taxable</span></label>
+                                </fieldset>
+                            <?php endfor; ?>
+                        </div>
+                        <button type="button" data-add-receipt-line hidden>Add another receipt line</button>
+                        <button name="action" value="add-receipt">Save receipt</button>
+                    </form>
+                </details>
+            <?php endif; ?>
             <form method="post">
                 <input type="hidden" name="csrf" value="<?= $csrf ?>">
                 <button name="action" value="add-starters">Add starter items</button>
@@ -397,6 +527,13 @@ try {
                                                 ($<?= number_format($purchase['totalCostCents'] / 100 / $entry['quantity'], 2) ?> per unit)
                                             <?php endif; ?>
                                         </div>
+                                        <?php if (isset($purchase['receiptId'])): ?>
+                                            <div>Line tax: $<?= number_format($purchase['taxCents'] / 100, 2) ?>
+                                                <?= $purchase['taxable'] ? '(' . number_format($purchase['taxRate'] / 100, 2) . '%)' : '(exempt)' ?>
+                                                · Receipt total: $<?= number_format($purchase['receiptTotalCents'] / 100, 2) ?>
+                                                ($<?= number_format($purchase['receiptTaxCents'] / 100, 2) ?> tax)
+                                            </div>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </li>
                             <?php endforeach; ?>
@@ -474,8 +611,9 @@ try {
             </article>
         <?php endforeach; ?>
     </section>
-    <footer>Revision 1.4.0</footer>
+    <footer>Revision 1.5.0</footer>
 </main>
-<script src="assets/js/dates.js?v=1.4.0"></script>
+<script src="assets/js/dates.js?v=1.5.0"></script>
+<script src="assets/js/receipt.js?v=1.5.0"></script>
 </body>
 </html>
