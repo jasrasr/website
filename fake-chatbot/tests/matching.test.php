@@ -42,7 +42,17 @@ fc_check(fc_match('this is a test', [$rules[array_search('hello', array_column($
 fc_check(fc_match('unmatchedzzzz', $rules) === null, 'unknown message is unmatched');
 fc_check(fc_trigger_score('potato salad', 'phrase', 'potato salad', 0) > fc_trigger_score('potato salad', 'keyword', 'potato', 20), 'phrase tier beats boosted keyword');
 fc_check(fc_trigger_score('potato salad', 'exact', 'potato salad', -20) > fc_trigger_score('potato salad', 'phrase', 'potato salad', 20), 'exact tier beats phrase tier');
+fc_check(fc_trigger_score('a b c', 'phrase', 'a b c', -20) > fc_trigger_score('a b c', 'phrase', 'a b', 20), 'longer phrase beats maximum priority difference');
+fc_check(fc_trigger_score('a b', 'phrase', 'a b', 20) > fc_trigger_score('a b', 'phrase', 'a b', -20), 'priority breaks specificity ties');
 fc_check(fc_trigger_score('potato', 'all', 'potato potato', 0) === null, 'repeated all-words do not masquerade as multiple distinct terms');
+$linkResult = fc_link_history_records([
+    ['session' => 'browser', 'timestamp' => 99, 'question' => 'expired'],
+    ['session' => 'browser', 'timestamp' => 100, 'question' => 'recent'],
+    ['session' => 'other', 'timestamp' => 99, 'question' => 'other expired'],
+    ['session' => 'other', 'timestamp' => 1, 'userId' => 'existing', 'question' => 'linked'],
+], 'browser', 'new-user', 100);
+fc_check($linkResult['count'] === 1 && count($linkResult['records']) === 2, 'linking prunes expired anonymous history and retains linked entries');
+fc_check(($linkResult['records'][0]['userId'] ?? null) === 'new-user' && ($linkResult['records'][1]['userId'] ?? null) === 'existing', 'only recent browser history is linked');
 fc_check(str_contains(fc_expand('Time {{time}}, literal $(Get-Date)'), '$(Get-Date)'), 'PowerShell code is not evaluated');
 $rule = fc_validate_rule(['name'=>'Test','triggers'=>"phrase: potato salad\nall: potato salad\nkeyword: potato",'replies'=>"Answer A\nAnswer B",'priority'=>'5','enabled'=>'1']);
 fc_check(count($rule['triggers']) === 3 && count($rule['replies']) === 2, 'admin rule parser accepts multi-trigger multi-answer forms');

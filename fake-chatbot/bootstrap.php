@@ -94,15 +94,14 @@ function fc_trigger_score(string $question, string $kind, string $raw, int $prio
     $boundaryHay = ' ' . $question . ' ';
     $whole = str_contains($boundaryHay, ' ' . $needle . ' ');
     $tier = match ($kind) {
-        'exact' => $question === $needle ? 4000 : null,
-        'phrase' => $whole ? 3000 : null,
-        'all' => count($words) > 1 && count(array_filter($words, static fn(string $word): bool => str_contains($boundaryHay, ' ' . $word . ' '))) === count($words) ? 2000 : null,
-        'keyword' => count($words) === 1 && $whole ? 1000 : null,
+        'exact' => $question === $needle ? 4 : null,
+        'phrase' => $whole ? 3 : null,
+        'all' => count($words) > 1 && count(array_filter($words, static fn(string $word): bool => str_contains($boundaryHay, ' ' . $word . ' '))) === count($words) ? 2 : null,
+        'keyword' => count($words) === 1 && $whole ? 1 : null,
         default => null
     };
     if ($tier === null) return null;
-    // A manual +/-20 tie-break never allows a single keyword to defeat a more precise tier.
-    return $tier + min(300, count($words) * 35) + min(99, strlen($needle)) + max(-20, min(20, $priority));
+    return $tier * 100000 + (min(300, count($words) * 35) + min(99, strlen($needle))) * 41 + max(-20, min(20, $priority));
 }
 function fc_match(string $question, array $rules): ?array
 {
@@ -257,18 +256,29 @@ function fc_linked_user(string $session): ?string
     }
     return null;
 }
+function fc_link_history_records(array $records, string $session, string $uid, int $cutoff): array
+{
+    $count = 0;
+    $records = array_values(array_filter($records, static fn($r): bool =>
+        is_array($r) && (!empty($r['userId']) || (int)($r['timestamp'] ?? 0) >= $cutoff)
+    ));
+    foreach ($records as &$r) {
+        if (($r['session'] ?? null) === $session && empty($r['userId'])) {
+            $r['userId'] = $uid;
+            $count++;
+        }
+    }
+    unset($r);
+    return ['records' => $records, 'count' => $count];
+}
 function fc_link_history(string $session, string $uid): int
 {
     $count = 0;
-    \Jasr\Framework\JsonStore::update(fc_store('history.json'), static function (array $records) use ($session, $uid, &$count): array {
-        foreach ($records as &$r) {
-            if (($r['session'] ?? null) === $session && empty($r['userId'])) {
-                $r['userId'] = $uid;
-                $count++;
-            }
-        }
-        unset($r);
-        return $records;
+    $cutoff = time() - 90 * 86400;
+    \Jasr\Framework\JsonStore::update(fc_store('history.json'), static function (array $records) use ($session, $uid, $cutoff, &$count): array {
+        $result = fc_link_history_records($records, $session, $uid, $cutoff);
+        $count = $result['count'];
+        return $result['records'];
     });
     \Jasr\Framework\JsonStore::update(fc_store('links.json'), static function (array $records) use ($session, $uid): array {
         $records[$session] = ['userId' => $uid, 'linkedAt' => gmdate(DATE_ATOM)];
