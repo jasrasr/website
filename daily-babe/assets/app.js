@@ -7,7 +7,7 @@ function formOptions(form){return{method:'POST',headers:{'X-CSRF-Token':window.B
 function toast(message){const el=$('#toast');el.textContent=message;el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),2800)}
 function daysBetween(a,b){return Math.floor((new Date(`${b}T12:00:00`)-new Date(`${a}T12:00:00`))/86400000)}
 function dayNumber(date){const start=state.settings.birthDate||state.settings.dueDate;if(!start||date<start)return null;return daysBetween(start,date)+1}
-function dateLabel(date){return new Intl.DateTimeFormat(undefined,{month:'short',day:'numeric',year:'numeric'}).format(new Date(`${date}T12:00:00`))}
+function dateLabel(date){return new Intl.DateTimeFormat(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'}).format(new Date(`${date}T12:00:00`))}
 function missingDates(){const start=state.settings.birthDate;if(!start)return[];const today=new Date(`${localToday()}T12:00:00`),found=new Set(state.records.map(r=>r.photoDate)),dates=[];for(let d=new Date(`${start}T12:00:00`);d<=today;d.setDate(d.getDate()+1)){const key=dateKey(d);if(!found.has(key))dates.push(key)}return dates.reverse()}
 function streak(){if(!state.records.length)return 0;const dates=[...new Set(state.records.map(r=>r.photoDate))].sort().reverse();let count=1;for(let i=1;i<dates.length;i++){if(daysBetween(dates[i],dates[i-1])===1)count++;else break}return count}
 function escapeHtml(value){const div=document.createElement('div');div.textContent=value;return div.innerHTML}
