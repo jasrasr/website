@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.1 — 2026-11-21
+
+- Show a public Refill Tracker landing page with links to shared sign-in and account registration.
+
 ## 1.5.0 — 2026-11-21
 
 - Enter a receipt with multiple inventory items and save the updates together.

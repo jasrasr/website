@@ -13,6 +13,8 @@ Each account gets one framework JSON file keyed by the hash of its stable User M
 
 ## Manual verification
 
+- In a signed-out browser, open Refill Tracker and verify its landing page stays visible. Check that **Sign in** returns to the tracker for a registered project and that **Request an account** opens shared registration. After signing in with project access, verify the inventory opens directly.
+
 - Add toothpaste with one spare and a threshold of one. Verify it appears under Restock. Add a spare and verify it clears. Remove two spares using count correction and confirm it returns at zero.
 - Edit the unit and threshold and verify that the spare count is preserved. Refresh after a successful change and verify it is applied only once.
 - Open the app with a different Member account and confirm its list starts empty. Verify a Viewer sees no editing controls and a signed-in Member submitting an invalid form token receives HTTP 403.
