@@ -188,13 +188,14 @@ function public_date_label(string $date): string
                 $day = public_day_number($photoDate, $birthDate);
                 $note = trim((string) ($record['note'] ?? ''));
                 $focus = photo_display_position($record);
+                $zoom = normalized_photo_zoom($record);
                 $rotation = normalized_photo_rotation($record);
                 $imageUrl = 'public-image.php?baby=' . rawurlencode($slug) . '&id=' . rawurlencode((string) ($record['id'] ?? ''));
                 $thumbnailUrl = $imageUrl . '&size=thumb';
             ?>
                 <article class="tile">
                     <a class="public-photo-link rotatable-frame" href="<?= htmlspecialchars($imageUrl) ?>" data-rotation="<?= $rotation ?>" aria-label="View larger photo of <?= htmlspecialchars($babyName . ' from ' . public_date_label($photoDate)) ?>">
-                        <img class="rotation-<?= $rotation ?>" loading="lazy" src="<?= htmlspecialchars($thumbnailUrl) ?>" alt="<?= htmlspecialchars($babyName . ' on ' . public_date_label($photoDate)) ?>" style="object-position:<?= $focus['x'] ?>% <?= $focus['y'] ?>%">
+                        <img class="rotation-<?= $rotation ?>" loading="lazy" src="<?= htmlspecialchars($thumbnailUrl) ?>" alt="<?= htmlspecialchars($babyName . ' on ' . public_date_label($photoDate)) ?>" style="object-position:<?= $focus['x'] ?>% <?= $focus['y'] ?>%;--photo-zoom:<?= $zoom / 100 ?>">
                         <span aria-hidden="true">View larger photo</span>
                     </a>
                     <div class="caption">
