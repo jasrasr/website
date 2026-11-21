@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.13.0 - 2026-11-21
+
+- Add a per-photo 100–200% zoom control beside horizontal and vertical focus.
+- Save zoom as presentation metadata without changing the original uploaded photo.
+- Apply saved zoom to signed-in and public gallery tiles, crop previews, collages, and GIFs.
+
 ## 2.12.0 - 2026-11-21
 
 - Add the abbreviated weekday to gallery dates, such as `Fri, Nov 20, 2026`.
