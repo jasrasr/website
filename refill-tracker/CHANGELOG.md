@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.4 — 2026-11-21
+
+- Choose a saved storage location or seller, or type a new one when recording stock or purchases.
+
 ## 1.5.3 — 2026-11-21
 
 - Store inventory inside the app’s HTTP-denied storage directory without host-specific configuration.

@@ -29,7 +29,7 @@ if (!isset($loginUrl, $registrationUrl)) {
         <div><dt>Usage and restock</dt><dd>Log openings and replacements to estimate when you’ll need more.</dd></div>
         <div><dt>Purchase history</dt><dd>Record multipacks, unit prices, and several items from one receipt.</dd></div>
     </dl>
-    <footer>Revision 1.5.3 <span aria-hidden="true">·</span> Modified <time datetime="2026-11-21">Nov 21, 2026</time></footer>
+    <footer>Revision 1.5.4 <span aria-hidden="true">·</span> Modified <time datetime="2026-11-21">Nov 21, 2026</time></footer>
 </main>
 </body>
 </html>
