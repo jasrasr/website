@@ -50,6 +50,8 @@ smart-404/smart-404-data/smart-404-malicious.json
 debt-payoff/data/*.json
 debt-payoff/data/**/*.json
 box/data/*.json
+box/data/boxes.json.lock
+box/data/boxes-*
 fs/config.local.php
 fs/storage/*
 !fs/storage/.htaccess

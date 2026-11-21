@@ -1,3 +1,17 @@
+<!--
+File Name: README.md
+Author: Jason Lamb (with help from ChatGPT)
+Description: QR Box Inventory setup, shared login, storage, and verification.
+Revision: 1.0.5
+Created Date: 2026-11-19
+Modified Date: 2026-11-20
+Changelog: 1.0.5 - Document how to rename a box.
+  1.0.4 - Document individual item removal and undo.
+  1.0.3 - Document batch box creation.
+  1.0.2 - Document Create Box layout verification.
+  1.0.1 - Document the dashboard link and verification.
+  1.0.0 - Document the public lookup page login link and verification.
+-->
 # QR Box Inventory
 
 The repository directory is `box/`. It serves public QR lookup pages and a protected inventory dashboard. The live URL may have a different path; register the actual deployed path in User Management.
@@ -6,7 +20,7 @@ The repository directory is `box/`. It serves public QR lookup pages and a prote
 
 The dashboard uses the `box` project in `user-management`. Register that project with the URL path where this app is deployed, then grant users `viewer` or `member` access. A viewer can open their dashboard and print labels. A member can also create, edit, delete, and regenerate QR codes for their own boxes. Project admins have the same per-owner box scope; central account roles do not grant access to other owners' boxes.
 
-`admin/login.php` redirects to the central sign-in page. Signing out of the dashboard signs out of the shared session in that browser. The old `data/users.json` password file is no longer read by the app. Public QR lookup pages and generated QR images remain public; use codes only for information intended to be visible to anyone holding a sticker or link.
+Select **Manage boxes** on the public Box Lookup page to open the protected inventory dashboard. If signed out, you will be prompted to sign in. You can also select **Log in** to start shared sign-in. `admin/login.php` redirects to the central sign-in page. Signing out of the dashboard signs out of the shared session in that browser. The old `data/users.json` password file is no longer read by the app. Public QR lookup pages and generated QR images remain public; use codes only for information intended to be visible to anyone holding a sticker or link.
 
 New boxes store the central immutable account ID in `owner` as `id:<central-id>`. The checked-in boxes and old login were demo data, so no legacy ownership migration is needed. A valid sample lives in `examples/boxes.example.json`; runtime `data/boxes.json` starts empty and is ignored by Git.
 
@@ -26,4 +40,19 @@ If a separate installation has real legacy boxes, do not deploy this version ove
 
 ## Verification
 
+Open the public lookup page while signed out and select **Log in**. Confirm that shared sign-in opens and returns you to the Box dashboard after signing in with an authorized account. Return to the lookup page, select **Manage boxes**, and confirm that the dashboard opens directly and offers **Create Box** for members.
+
 Run `node box/tests/shared-auth.test.cjs` and PHP syntax checks before deployment. The isolated HTTP test exercises sign-in, project permissions, ownership, CSRF, old entry points, logout, and revocation using disposable data. It stubs QR rendering because the local PHP runtime may lack GD. Check actual QR generation and PDF output on the host.
+
+With member access, open **Create Boxes** on the dashboard. Enter one box name per line, up to 50. Blank lines are skipped. All boxes are saved together with separate codes. If any QR is missing, use **Generate Missing QR Codes** from the dashboard. On desktop and mobile, check that the name field and submit button fit, that submitting returns you to the dashboard with the boxes listed, and that **Back to dashboard** exits without saving.
+
+On the dashboard, select **Edit Box** and change **Box name** to rename a box while keeping its code and QR label. Use the free-text field to edit the list or choose **Remove** beside an individual item. **Undo last removal** restores it until you edit the text again. **Save Changes** applies the draft, and **Cancel** discards it.
+
+## Changelog
+
+- Edit Box page 1.3.0 (2026-11-20) Added box renaming.
+- Edit Box page 1.2.0 (2026-11-20) Added individual draft removal and undo.
+- Create Box page 1.3.0 (2026-11-20) Added batch creation and dashboard confirmation.
+- Create Box page 1.2.1 (2026-11-20) Restyled the form to match the lookup and dashboard pages.
+- 1.3.2 (2026-11-20) Added a Manage boxes link to the inventory dashboard.
+- 1.3.1 (2026-11-20) Added a login link to the public Box Lookup page.

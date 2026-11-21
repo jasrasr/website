@@ -1,3 +1,11 @@
+// File Name: shared-auth.test.cjs
+// Author: Jason Lamb (with help from ChatGPT)
+// Description: Disposable HTTP integration checks for Box Inventory.
+// Revision: 1.0.1
+// Created Date: 2026-11-19
+// Modified Date: 2026-11-20
+// Changelog: 1.0.1 - Verify renaming preserves items and the existing QR code.
+// 1.0.0 - Verify batch creation, validation, and individual QR files.
 const {test, after} = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs'), os = require('node:os'), path = require('node:path');
@@ -80,6 +88,24 @@ test('shared identity guards box admin routes, isolates demo data, and enforces 
   assert.equal((await admin.request('/box/admin/create_box.php')).status, 200);
   assert.equal((await admin.request('/box/admin/create_box.php', {box_name: 'Denied', csrf: 'bad'})).status, 403);
   assert.equal((await admin.request('/box/admin/create_box.php', {box_name: 'New tools'})).status, 303);
+  const beforeBatch = Object.keys(boxes()).length;
+  const blank = await admin.request('/box/admin/create_box.php', {box_name: ' \n\t'});
+  assert.match(blank.body, /Enter at least one box name/);
+  const tooMany = await admin.request('/box/admin/create_box.php', {box_name: Array(51).fill('Extra').join('\n')});
+  assert.match(tooMany.body, /Enter up to 50 box names/);
+  assert.equal(Object.keys(boxes()).length, beforeBatch);
+  const batch = await admin.request('/box/admin/create_box.php', {box_name: ' Garage \r\n\r\n0\rKitchen \n'});
+  assert.equal(batch.status, 303);
+  assert.match(batch.location, /created=3/);
+  assert.match((await admin.request('/box/admin/' + batch.location)).body, /3 boxes created/);
+  const batchBoxes = Object.entries(boxes()).filter(([, box]) => ['Garage', '0', 'Kitchen'].includes(box.name));
+  assert.equal(batchBoxes.length, 3);
+  assert.equal(Object.keys(boxes()).length, beforeBatch + 3);
+  for (const [code, box] of batchBoxes) {
+    assert.match(code, /^BOX[A-F0-9]{6}$/);
+    assert.match(box.owner, /^id:/);
+    assert.ok(fs.existsSync(path.join(temp, 'box/qrcodes', code + '.png')));
+  }
   const created = Object.entries(boxes()).find(([, box]) => box.name === 'New tools');
   assert.ok(created, 'New box was not saved');
   const adminId = Object.values(directory().users).find(user => user.username === 'jasrasr').id;
@@ -92,6 +118,18 @@ test('shared identity guards box admin routes, isolates demo data, and enforces 
   assert.equal((await admin.request('/box/edit_box.php?c=' + created[0], {items: 'Bypass'})).status, 405);
   assert.deepEqual(boxes()[created[0]].items, ['Changed']);
 
+  const editRoute = '/box/admin/edit_box.php?c=' + created[0];
+  const invalidRename = await admin.request(editRoute, {box_name: '  ', items: 'Unsaved draft'});
+  assert.equal(invalidRename.status, 422);
+  assert.match(invalidRename.body, /Enter a box name/);
+  assert.match(invalidRename.body, /Unsaved draft/);
+  assert.equal(boxes()[created[0]].name, 'New tools');
+  const renamed = await admin.request(editRoute, {box_name: '  Garage tools  '});
+  assert.equal(renamed.status, 303);
+  assert.equal(boxes()[created[0]].name, 'Garage tools');
+  assert.deepEqual(boxes()[created[0]].items, ['Changed']);
+  assert.ok(fs.existsSync(path.join(temp, 'box/qrcodes', created[0] + '.png')));
+  assert.match((await admin.request('/box/?c=' + created[0])).body, /Garage tools/);
   assert.equal((await admin.request('/box/admin/edit_box.php?c=BOXABC123')).status, 404);
   assert.equal((await admin.request('/box/admin/generate_qr.php', {code: 'BOXABC123'})).status, 404);
   assert.equal((await admin.request('/box/admin/generate_qr.php', {code: created[0]})).status, 303);
@@ -108,7 +146,7 @@ test('shared identity guards box admin routes, isolates demo data, and enforces 
   await member.request('/user-management/');
   assert.equal((await member.request('/user-management/', {action: 'change-password', current_password: 'temporary-password-2026', password: 'permanent-password-2026', confirm_password: 'permanent-password-2026'})).status, 303);
   assert.equal((await member.login('member', 'permanent-password-2026')).status, 303);
-  assert.doesNotMatch((await member.request('/box/admin/index.php')).body, /Demo Box|New tools/);
+  assert.doesNotMatch((await member.request('/box/admin/index.php')).body, /Demo Box|Garage tools/);
   assert.equal((await member.request('/box/admin/edit_box.php?c=BOXABC123')).status, 404);
   assert.equal((await member.request('/box/admin/delete_box.php', {code: 'BOXABC123'})).status, 303);
   assert.ok(boxes().BOXABC123, 'Cross-owner delete succeeded');

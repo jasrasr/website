@@ -1,11 +1,11 @@
 <?php
 /*
 ===========================================================
- File: admin/index.php
- Author: Jason Lamb (with help from AI)
- Created: 2026-01-18
- Modified: 2026-01-18
- Revision: 1.3
+ File Name: admin/index.php
+ Author: Jason Lamb (with help from ChatGPT)
+ Created Date: 2026-01-18
+ Modified Date: 2026-11-20
+ Revision: 1.3.2
 
  Description:
    Admin dashboard for managing storage boxes.
@@ -13,7 +13,9 @@
    item count, last updated timestamp (local timezone),
    and available actions (edit, generate QR).
 
- Changes:
+ Changelog:
+   Rev 1.3.2 - Label the box editor for names and contents.
+   Rev 1.3.1 - Show batch creation results.
    Rev 1.0 - Initial admin dashboard listing boxes
    Rev 1.1 - Added local timezone timestamp formatting
    Rev 1.2 - add links for mulitple print sizes
@@ -56,7 +58,20 @@ $boxes = $data['boxes'] ?? [];
 
 <h2>Your Storage Boxes</h2>
 
-<?php if ($canEdit): ?><a href="create_box.php" class="btn btn-success mb-3">+ Create New Box</a><?php endif; ?>
+<?php
+$created = filter_input(INPUT_GET, 'created', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 50]]);
+$missing = filter_input(INPUT_GET, 'missing_qr', FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 50]]);
+?>
+<?php if ($created): ?>
+  <div class="alert alert-success" role="status"><?=$created === 1 ? '1 box created.' : $created . ' boxes created.'?></div>
+  <?php if ($missing > 0 && $missing <= $created): ?>
+    <div class="alert alert-warning" role="alert">
+      Some QR codes could not be generated. Use Generate Missing QR Codes to try again.
+    </div>
+  <?php endif; ?>
+<?php endif; ?>
+
+<?php if ($canEdit): ?><a href="create_box.php" class="btn btn-success mb-3">+ Create Boxes</a><?php endif; ?>
 
 <div class="mb-3">
   <a href="print_qr_pdf.php?size=small" class="btn btn-outline-primary me-2">
@@ -104,7 +119,7 @@ $boxes = $data['boxes'] ?? [];
     <td>
   <?php if ($canEdit): ?>
   <a href="edit_box.php?c=<?=urlencode($code)?>" class="btn btn-sm btn-primary mb-1">
-    Edit Items
+    Edit Box
   </a>
   <form method="post" action="generate_qr.php" class="d-inline">
     <input type="hidden" name="csrf" value="<?=$csrf?>">

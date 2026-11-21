@@ -1,11 +1,11 @@
 <?php
 /*
 ===========================================================
- File: box/index.php
- Author: Jason Lamb (with help from AI)
- Created: 2026-01-14
- Modified: 2026-07-16
- Revision: 1.3
+ File Name: box/index.php
+ Author: Jason Lamb (with help from ChatGPT)
+ Created Date: 2026-01-14
+ Modified Date: 2026-11-20
+ Revision: 1.3.2
 
  Description:
    Router + landing page for the QR box viewer.
@@ -15,7 +15,9 @@
    - Any other request shows a friendly landing page with a
      code-entry form.
 
- Changes:
+ Changelog:
+   1.3.2 - Link directly to the Box inventory dashboard.
+   1.3.1 - Link to shared sign-in from the lookup page.
    1.1 - pretty URL router
    1.2 - remove stray box.php require; prefix-agnostic code parse
    1.3 - branded landing page + code-entry form for bare /box/
@@ -75,11 +77,15 @@ http_response_code($attempted ? 404 : 200);
   <div class="card shadow-sm">
     <div class="card-body">
 
-      <div class="d-flex align-items-center gap-3 mb-3">
+      <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
         <span class="box-emoji">📦</span>
         <div>
           <h3 class="card-title mb-0">Box Lookup</h3>
           <div class="text-muted">Find what's inside a storage box</div>
+        </div>
+        <div class="d-flex flex-wrap gap-2 ms-auto">
+          <a class="btn btn-outline-primary btn-sm" href="admin/login.php">Log in</a>
+          <a class="btn btn-outline-primary btn-sm" href="admin/index.php">Manage boxes</a>
         </div>
       </div>
 
@@ -123,6 +129,7 @@ http_response_code($attempted ? 404 : 200);
 
   <p class="text-center text-muted small mt-3 mb-4">
     Tip: bookmark a box by its code URL, e.g. <code>?c=BOXAB12CD</code>.
+    <span class="d-block">Version 1.3.2 · Updated 2026-11-20</span>
   </p>
 </div>
 

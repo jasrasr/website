@@ -1,13 +1,15 @@
 <?php
 /*
 ===========================================================
- File: edit_box.php
- Author: Jason Lamb (with help from AI)
- Created: 2026-01-18
- Modified: 2026-01-18
- Revision: 1.1
+ File Name: edit_box.php
+ Author: Jason Lamb (with help from ChatGPT)
+ Created Date: 2026-01-18
+ Modified Date: 2026-11-20
+ Revision: 1.3.0
 
- Changes:
+ Changelog:
+   Rev 1.3.0 - Edit the box name while keeping the existing code and QR label.
+   Rev 1.2.0 - Remove individual items from the draft and undo the latest removal.
    Rev 1.0 - Initial version, edit box contents
    Rev 1.1 - Added Ctrl+Enter / Cmd+Enter keyboard shortcut to save
 ===========================================================
@@ -29,31 +31,58 @@ if (!$box || !box_owned_by($box, $user)) {
     exit;
 }
 
+$name = $box['name'];
+$rawItems = implode("\n", $box['items']);
+$error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     box_require_post();
-    $rawItems = $_POST['items'] ?? '';
+    $submittedName = $_POST['box_name'] ?? null;
+    $submittedItems = $_POST['items'] ?? null;
+    $name = $submittedName === null ? $name : (is_string($submittedName) ? trim($submittedName) : '');
+    $rawItems = is_string($submittedItems) ? $submittedItems : $rawItems;
 
-    // Convert textarea lines into clean array
-    $items = array_filter(
-        array_map('trim', explode("\n", $rawItems))
-    );
-
-    $box['items']   = $items;
-    $box['count']   = count($items);
-    $box['updated'] = date('c');
-
-    if (!saveBox($code, $box)) {
-        http_response_code(500);
-        exit('Could not save the box.');
+    if ($name === '') {
+        http_response_code(422);
+        $error = 'Enter a box name.';
+    } else {
+        $found = false;
+        $saved = updateBoxData(static function (array $data) use ($code, $user, $submittedName, $name, $submittedItems, $rawItems, &$found): array {
+            $current = $data['boxes'][$code] ?? null;
+            if (!$current || !box_owned_by($current, $user)) {
+                return $data;
+            }
+            $found = true;
+            if ($submittedName !== null) {
+                $current['name'] = $name;
+            }
+            if (is_string($submittedItems)) {
+                $current['items'] = array_values(array_filter(
+                    array_map('trim', explode("\n", $rawItems)),
+                    static fn(string $item): bool => $item !== ''
+                ));
+                $current['count'] = count($current['items']);
+            }
+            $current['updated'] = date('c');
+            $data['boxes'][$code] = $current;
+            return $data;
+        });
+        if (!$saved) {
+            http_response_code(500);
+            $error = 'Could not save the box. Your changes are still in the form.';
+        } elseif (!$found) {
+            http_response_code(404);
+            exit('Box not found.');
+        } else {
+            header('Location: index.php', true, 303);
+            exit;
+        }
     }
-
-    header('Location: index.php', true, 303);
-    exit;
 }
 ?>
 <!doctype html>
-<html>
+<html lang="en">
 <head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Edit Box</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -66,33 +95,109 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <form method="post" id="editForm">
   <input type="hidden" name="csrf" value="<?=htmlspecialchars(box_auth()->csrf(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')?>">
 
+  <?php if ($error): ?>
+    <div id="box-edit-error" class="alert alert-danger" role="alert"><?=htmlspecialchars($error)?></div>
+  <?php endif; ?>
   <div class="mb-3">
-    <label class="form-label">Items (one per line)</label>
+    <label for="box-name" class="form-label">Box name</label>
+    <input id="box-name" name="box_name" class="form-control" value="<?=htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')?>" required
+      <?php if ($name === ''): ?>aria-invalid="true" aria-describedby="box-edit-error"<?php endif; ?>>
+  </div>
+
+  <div class="mb-3">
+    <label for="itemsTextarea" class="form-label">Items (one per line)</label>
     <textarea
       name="items"
       id="itemsTextarea"
       rows="10"
       class="form-control"
-    ><?=htmlspecialchars(implode("\n", $box['items']))?></textarea>
+    ><?=htmlspecialchars($rawItems, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')?></textarea>
 
     <div class="form-text">
       Tip: Press <strong>Ctrl + Enter</strong> (or <strong>Cmd + Enter</strong> on Mac) to save
     </div>
   </div>
 
-  <button class="btn btn-primary">Save Items</button>
+  <section id="item-removal" class="mb-3" aria-labelledby="item-removal-heading" hidden>
+    <h3 id="item-removal-heading" class="h5">Remove individual items</h3>
+    <p class="text-body-secondary small mb-2">Removals are saved when you select Save Changes.</p>
+    <ul id="draft-items" class="list-group mb-2"></ul>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <span id="item-removal-status" class="small" role="status"></span>
+      <button id="undo-item-removal" type="button" class="btn btn-outline-secondary btn-sm" hidden>Undo last removal</button>
+    </div>
+  </section>
+
+  <button type="submit" class="btn btn-primary">Save Changes</button>
   <a href="index.php" class="btn btn-secondary">Cancel</a>
 
 </form>
 
 <script>
-document.getElementById('itemsTextarea').addEventListener('keydown', function (e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        e.preventDefault();
-        document.getElementById('editForm').submit();
+const form = document.getElementById('editForm');
+const textarea = document.getElementById('itemsTextarea');
+const removal = document.getElementById('item-removal');
+const list = document.getElementById('draft-items');
+const removalStatus = document.getElementById('item-removal-status');
+const undo = document.getElementById('undo-item-removal');
+let previousDraft = null;
+
+function renderDraftItems() {
+    list.replaceChildren();
+    textarea.value.split('\n').forEach((line, index) => {
+        const name = line.trim();
+        if (!name) return;
+
+        const item = document.createElement('li');
+        item.className = 'list-group-item d-flex align-items-center justify-content-between gap-3';
+        const label = document.createElement('span');
+        label.className = 'text-break';
+        label.textContent = name;
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn btn-outline-danger btn-sm flex-shrink-0';
+        button.textContent = 'Remove';
+        button.setAttribute('aria-label', 'Remove ' + name + ' (line ' + (index + 1) + ')');
+        button.addEventListener('click', () => {
+            const lines = textarea.value.split('\n');
+            previousDraft = textarea.value;
+            lines.splice(index, 1);
+            textarea.value = lines.join('\n');
+            renderDraftItems();
+            removalStatus.textContent = 'Removed ' + name + ' from the draft.';
+            undo.focus();
+        });
+
+        item.append(label, button);
+        list.append(item);
+    });
+    undo.hidden = previousDraft === null;
+    removal.hidden = list.childElementCount === 0 && undo.hidden;
+}
+
+textarea.addEventListener('input', () => {
+    previousDraft = null;
+    removalStatus.textContent = '';
+    renderDraftItems();
+});
+undo.addEventListener('click', () => {
+    textarea.value = previousDraft;
+    previousDraft = null;
+    renderDraftItems();
+    removalStatus.textContent = 'Item restored to the draft.';
+    textarea.focus();
+});
+textarea.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        event.preventDefault();
+        form.requestSubmit();
     }
 });
+renderDraftItems();
 </script>
+
+<p class="text-body-secondary small mt-3">Version 1.3.0 · Updated 2026-11-20</p>
 
 </body>
 </html>
