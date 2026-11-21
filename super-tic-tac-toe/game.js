@@ -1,4 +1,4 @@
-/* File Name: game.js | Revision: 1.3.0 | Modified: 2026-11-21 */
+/* File Name: game.js | Revision: 1.3.2 | Modified: 2026-11-20 */
 (() => {
   'use strict';
   const root = document.querySelector('.app-shell');
@@ -14,6 +14,7 @@
   let completedResult = null;
   let historyQueue = Promise.resolve();
   let configurationBlocked = false;
+  let latestHistoryEntry = null;
   const savedHistory = root.dataset.saveHistory === 'true';
 
   function blankGame() {
@@ -423,7 +424,7 @@
   }
   function recordResult(result) {
     if (!savedHistory) { $('saveStatus').textContent = 'Sign in with game access to save history'; return; }
-    postHistory({ csrf: root.dataset.csrf, action: 'record', gameId, result, mode: settings.mode, opponent: settings.players, size: settings.mode === 'classic' ? settings.size : 9, symbol: settings.human })
+    postHistory({ csrf: root.dataset.csrf, action: 'record', gameId, result, mode: settings.mode, opponent: settings.players, size: settings.mode === 'classic' ? settings.size : 9, symbol: settings.human, difficulty: settings.players === 'computer' ? settings.difficulty : null, secondPlayer: settings.players === 'human' ? settings.secondName : null })
       .then(r => r.json()).then(payload => {
         if (!payload.success) throw new Error('save failed');
         showHistory(payload.data.record);
@@ -479,11 +480,14 @@
   function showHistory(record) {
     $('saveStatus').textContent = `History · ${record.games} games · ${record.wins} wins · ${record.losses} losses · ${record.draws} draws`;
     $('historySummary').textContent = `${record.games} games · ${record.wins} wins · ${record.losses} losses · ${record.draws} draws`;
+    const recent = Array.isArray(record.recent) ? record.recent : [];
+    latestHistoryEntry = recent[0] || null;
+    $('historyReplay').hidden = !latestHistoryEntry;
     const list = $('historyList'); list.replaceChildren();
-    if (!Array.isArray(record.recent) || record.recent.length === 0) {
+    if (recent.length === 0) {
       const empty = document.createElement('li'); empty.className = 'history-empty'; empty.textContent = 'No completed games yet.'; list.append(empty); return;
     }
-    for (const entry of record.recent) {
+    for (const entry of recent) {
       const item = document.createElement('li'); item.className = `history-item result-${entry.result}`;
       const top = document.createElement('div'); top.className = 'history-item-top';
       const outcome = document.createElement('strong'); outcome.className = 'history-outcome';
@@ -494,9 +498,28 @@
       top.append(outcome, date);
       const detail = document.createElement('span'); detail.className = 'history-detail';
       const mode = entry.mode === 'super' ? 'Super Tic-Tac-Toe' : `Classic ${entry.size}×${entry.size}`;
-      detail.textContent = `${mode} · ${entry.opponent === 'computer' ? 'vs computer' : 'two players'} · played as ${entry.symbol}`;
+      const opponent = entry.opponent === 'computer'
+        ? `vs computer · ${['easy', 'medium', 'hard'].includes(entry.difficulty) ? entry.difficulty[0].toUpperCase() + entry.difficulty.slice(1) : 'difficulty not recorded'}`
+        : (entry.secondPlayer ? `vs ${entry.secondPlayer}` : 'two players');
+      detail.textContent = `${mode} · ${opponent} · played as ${entry.symbol}`;
       item.append(top, detail); list.append(item);
     }
+  }
+  function replayLastGame(entry) {
+    $('gameMode').value = entry.mode === 'classic' ? 'classic' : 'super';
+    if (entry.mode === 'classic' && [3, 4, 5].includes(Number(entry.size))) $('boardSize').value = String(entry.size);
+    $('difficulty').value = ['easy', 'medium', 'hard'].includes(entry.difficulty) ? entry.difficulty : 'medium';
+    const players = entry.opponent === 'human' ? 'human' : 'computer';
+    document.querySelectorAll('[data-setting="players"]').forEach(button => button.setAttribute('aria-pressed', button.dataset.value === players ? 'true' : 'false'));
+    if (players === 'computer') {
+      const order = entry.symbol === 'O' ? 'second' : 'first';
+      document.querySelectorAll('[data-setting="symbol"]').forEach(button => button.setAttribute('aria-pressed', button.dataset.value === order ? 'true' : 'false'));
+    } else {
+      const symbol = entry.symbol === 'O' ? 'O' : 'X';
+      document.querySelectorAll('[data-setting="humanSymbol"]').forEach(button => button.setAttribute('aria-pressed', button.dataset.value === symbol ? 'true' : 'false'));
+      $('secondPlayerName').value = entry.secondPlayer || '';
+    }
+    startGame();
   }
   function setHistoryVisible(visible) {
     $('historyPanel').hidden = !visible;
@@ -589,6 +612,7 @@
   if (savedHistory) $('historyToggle').hidden = false;
   $('historyToggle').addEventListener('click', () => setHistoryVisible($('historyPanel').hidden));
   $('historyClose').addEventListener('click', () => setHistoryVisible(false));
+  $('historyReplay').addEventListener('click', () => { if (latestHistoryEntry) replayLastGame(latestHistoryEntry); });
   $('newGame').addEventListener('click', startGame); $('newGameBottom').addEventListener('click', startGame);
   $('undoMove').addEventListener('click', undoMove); $('redoMove').addEventListener('click', redoMove);
   $('closeWinOverlay').addEventListener('click', () => { $('winOverlay').hidden = true; });

@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-/* File Name: api.php | Revision: 1.1.0 | Modified: 2026-11-18 */
+/* File Name: api.php | Revision: 1.2.0 | Modified: 2026-11-20 */
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
 use Jasr\Framework\JsonStore;
 use Jasr\Framework\SharedIdentity;
@@ -86,6 +86,14 @@ $mode = $body['mode'] ?? '';
 $opponent = $body['opponent'] ?? '';
 $symbol = $body['symbol'] ?? '';
 $size = filter_var($body['size'] ?? null, FILTER_VALIDATE_INT);
+$difficulty = $body['difficulty'] ?? null;
+$secondPlayer = $body['secondPlayer'] ?? null;
+if (($difficulty !== null && !in_array($difficulty, ['easy', 'medium', 'hard'], true))
+    || ($secondPlayer !== null && (!is_string($secondPlayer) || (function_exists('mb_strlen') ? mb_strlen($secondPlayer) : strlen($secondPlayer)) > 32))) {
+    game_reply(422, false, 'The game details are not valid.');
+}
+$secondPlayer = is_string($secondPlayer) ? trim($secondPlayer) : null;
+if ($secondPlayer === '') $secondPlayer = null;
 if (!in_array($result, ['win', 'loss', 'draw'], true)
     || !in_array($mode, ['super', 'classic'], true)
     || !in_array($opponent, ['computer', 'human'], true)
@@ -96,7 +104,7 @@ if (!in_array($result, ['win', 'loss', 'draw'], true)
     game_reply(422, false, 'The game result is not valid.');
 }
 try {
-    $records = JsonStore::update($path, static function (array $records) use ($userId, $gameId, $result, $mode, $opponent, $symbol, $size, $defaultRecord): array {
+    $records = JsonStore::update($path, static function (array $records) use ($userId, $gameId, $result, $mode, $opponent, $symbol, $size, $difficulty, $secondPlayer, $defaultRecord): array {
         $record = $records[$userId] ?? $defaultRecord;
         foreach (['games', 'wins', 'losses', 'draws'] as $key) if (!isset($record[$key]) || !is_int($record[$key])) $record[$key] = 0;
         if (!isset($record['recent']) || !is_array($record['recent'])) $record['recent'] = [];
@@ -110,6 +118,8 @@ try {
             'opponent' => $opponent,
             'symbol' => $symbol,
             'size' => $size,
+            'difficulty' => $opponent === 'computer' ? $difficulty : null,
+            'secondPlayer' => $opponent === 'human' ? $secondPlayer : null,
             'playedAt' => gmdate(DATE_ATOM),
         ]);
         $record['recent'] = array_slice($record['recent'], 0, 50);
