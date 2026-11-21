@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-const BABY_TRACKER_VERSION = '2.12.0';
+const BABY_TRACKER_VERSION = '2.13.0';
 const BABY_TRACKER_PROJECT = 'daily-babe';
 
 require_once __DIR__ . '/lib/unlisted-access.php';
@@ -310,6 +310,12 @@ function normalized_photo_rotation(array $record): int
         $rotation += 360;
     }
     return in_array($rotation, [0, 90, 180, 270], true) ? $rotation : 0;
+}
+
+function normalized_photo_zoom(array $record): int
+{
+    $zoom = is_numeric($record['zoom'] ?? null) ? (int) round((float) $record['zoom']) : 100;
+    return max(100, min(200, $zoom));
 }
 
 function photo_display_position(array $record): array
