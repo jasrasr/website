@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.2 — 2026-11-21
+
+- Redesign the public landing page for light and dark mode.
+- Show the modified date beside the revision on the landing page and inventory.
+
 ## 1.5.1 — 2026-11-21
 
 - Show a public Refill Tracker landing page with links to shared sign-in and account registration.
