@@ -13,11 +13,9 @@ article { border-top: 1px solid #cbd8d0; padding-top: 1rem; margin-top: 1rem; }
 summary { cursor: pointer; padding-block: .65rem; font-weight: 600; }
 .fields { display: grid; gap: .75rem; max-width: 24rem; }
 label { display: grid; gap: .25rem; }
-input, button { font: inherit; box-sizing: border-box; min-height: 44px; padding: .45rem .65rem; border: 1px solid #63786b; border-radius: .4rem; }
+input, select, button { font: inherit; box-sizing: border-box; min-height: 44px; padding: .45rem .65rem; border: 1px solid #63786b; border-radius: .4rem; }
 input { width: 100%; }
 button { background: #235b49; color: white; cursor: pointer; }
 button:disabled { background: #e0e8e2; color: #4a5b52; cursor: default; }
-.quantity { display: flex; gap: .5rem; }
-.quantity button { min-width: 3.5rem; }
 [role="alert"] { color: #842519; }
 footer { font-size: .85rem; }

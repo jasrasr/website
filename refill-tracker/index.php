@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-/** Refill Tracker, revision 1.0.0. */
+/** Refill Tracker, revision 1.1.0. */
 use Jasr\Framework\JsonStore;
 use Jasr\Framework\SharedIdentity;
 
@@ -33,16 +33,43 @@ function refill_count(string $field): int
     return $value;
 }
 
+function refill_stock(array $item): array
+{
+    return $item['stock'] ?? ['Unassigned' => $item['quantity']];
+}
+
+function refill_pace(array $openings): float
+{
+    $count = count($openings);
+    return $count < 2 ? 0.0 : ($openings[$count - 1]['at'] - $openings[0]['at']) / ($count - 1);
+}
+
+function refill_usage(array $openings): string
+{
+    $count = count($openings);
+    if ($count < 2) {
+        return 'Log at least two openings to estimate usage.';
+    }
+    $seconds = refill_pace($openings);
+    if ($seconds <= 0) {
+        return 'Log openings at different times to estimate usage.';
+    }
+    return 'About ' . number_format($seconds / 86400, 1) . ' days between openings';
+}
+
 function refill_change(array $records): array
 {
     $action = $_POST['action'] ?? '';
     if ($action === 'add') {
+        $quantity = refill_count('quantity');
         $records[] = [
             'id' => bin2hex(random_bytes(16)),
             'name' => refill_text('name', 120),
             'unit' => refill_text('unit', 40),
-            'quantity' => refill_count('quantity'),
+            'quantity' => $quantity,
             'restockAt' => refill_count('restockAt'),
+            'stock' => [refill_text('location', 80) => $quantity],
+            'openings' => [],
         ];
         return $records;
     }
@@ -51,12 +78,44 @@ function refill_change(array $records): array
         if ($item['id'] !== ($_POST['id'] ?? null)) {
             continue;
         }
+        $stock = refill_stock($item);
         switch ($action) {
-            case 'decrease':
-                $item['quantity'] = max(0, $item['quantity'] - 1);
-                break;
             case 'increase':
-                $item['quantity'] = min(9999, $item['quantity'] + 1);
+                $location = refill_text('location', 80);
+                $amount = refill_count('amount');
+                if ($amount < 1) {
+                    throw new InvalidArgumentException('Enter at least one spare.');
+                }
+                if (array_sum($stock) + $amount > 9999) {
+                    throw new InvalidArgumentException('Inventory cannot exceed 9,999 spares.');
+                }
+                $stock[$location] = ($stock[$location] ?? 0) + $amount;
+                break;
+            case 'decrease':
+            case 'open':
+            case 'move':
+                $location = refill_text('location', 80);
+                if (($stock[$location] ?? 0) < 1) {
+                    throw new InvalidArgumentException('That storage location has no spares.');
+                }
+                if ($action === 'move') {
+                    $destination = refill_text('destination', 80);
+                    $amount = refill_count('amount');
+                    if ($destination === $location || $amount < 1 || $amount > $stock[$location]) {
+                        throw new InvalidArgumentException('Choose a different destination and an amount in stock.');
+                    }
+                    $stock[$destination] = ($stock[$destination] ?? 0) + $amount;
+                    $stock[$location] -= $amount;
+                } else {
+                    $stock[$location]--;
+                }
+                if ($action === 'open') {
+                    $item['openings'][] = [
+                        'at' => time(),
+                        'storage' => $location,
+                        'room' => refill_text('room', 80),
+                    ];
+                }
                 break;
             case 'edit':
                 $item['name'] = refill_text('name', 120);
@@ -66,6 +125,8 @@ function refill_change(array $records): array
             default:
                 throw new InvalidArgumentException('Choose a valid inventory action.');
         }
+        $item['stock'] = $stock;
+        $item['quantity'] = array_sum($stock);
         $records[$index] = $item;
         return $records;
     }
@@ -103,6 +164,12 @@ try {
         }
     }
     $items = JsonStore::read($path)['records'];
+    $storageLocations = [];
+    $rooms = [];
+    foreach ($items as $item) {
+        $storageLocations = array_merge($storageLocations, array_map('strval', array_keys(refill_stock($item))));
+        $rooms = array_merge($rooms, array_column($item['openings'] ?? [], 'room'));
+    }
     $restock = array_filter($items, static fn (array $item): bool => $item['quantity'] <= $item['restockAt']);
 } catch (Throwable $exception) {
     error_log('Refill Tracker: ' . $exception->getMessage());
@@ -116,10 +183,20 @@ try {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Refill Tracker</title>
-    <link rel="stylesheet" href="assets/css/app.css?v=1.0.0">
+    <link rel="stylesheet" href="assets/css/app.css?v=1.1.0">
 </head>
 <body>
 <main>
+    <datalist id="storage-locations">
+        <?php foreach (array_unique($storageLocations) as $location): ?>
+            <option value="<?= refill_escape($location) ?>"></option>
+        <?php endforeach; ?>
+    </datalist>
+    <datalist id="usage-rooms">
+        <?php foreach (array_unique($rooms) as $room): ?>
+            <option value="<?= refill_escape($room) ?>"></option>
+        <?php endforeach; ?>
+    </datalist>
     <h1>Refill Tracker</h1>
     <?php if ($error !== null): ?>
         <p role="alert"><?= refill_escape($error) ?></p>
@@ -145,6 +222,7 @@ try {
                     <input type="hidden" name="csrf" value="<?= $csrf ?>">
                     <label>Item name <input name="name" required maxlength="120" placeholder="Toothpaste"></label>
                     <label>Unit <input name="unit" required maxlength="40" placeholder="tube"></label>
+                    <label>Storage location <input name="location" list="storage-locations" required maxlength="80" placeholder="Hall closet"></label>
                     <label>Unopened spares <input name="quantity" type="number" min="0" max="9999" value="0" required></label>
                     <label>Restock at <input name="restockAt" type="number" min="0" max="9999" value="1" required></label>
                     <button name="action" value="add">Add item</button>
@@ -153,16 +231,86 @@ try {
         <?php endif; ?>
         <?php foreach ($items as $item): ?>
             <?php $name = refill_escape($item['name']); $id = refill_escape($item['id']); ?>
+            <?php
+            $stock = refill_stock($item);
+            $openings = $item['openings'] ?? [];
+            $last = $openings ? $openings[array_key_last($openings)] : null;
+            $pace = refill_pace($openings);
+            ?>
             <article>
                 <h3><?= $name ?></h3>
                 <p><?= $item['quantity'] ?> in stock · unit: <?= refill_escape($item['unit']) ?> · restock at <?= $item['restockAt'] ?></p>
+                <ul>
+                    <?php foreach ($stock as $location => $quantity): ?>
+                        <li><?= refill_escape((string) $location) ?> · <?= $quantity ?> spares</li>
+                    <?php endforeach; ?>
+                </ul>
+                <?php if ($last): ?>
+                    <p>Last opened <time data-local datetime="<?= gmdate('c', $last['at']) ?>"><?= gmdate('M j, Y H:i', $last['at']) ?> UTC</time> in <?= refill_escape($last['room']) ?>.</p>
+                    <p><?= refill_escape(refill_usage($openings)) ?> across the household.</p>
+                    <?php if ($pace > 0): ?>
+                        <?php $orderBy = max(time(), (int) ($last['at'] + $pace * $item['quantity'] - 3 * 86400)); ?>
+                        <p>Suggested order date <time data-local data-date-only datetime="<?= gmdate('c', $orderBy) ?>"><?= gmdate('M j, Y', $orderBy) ?> UTC</time>. Estimate uses a three-day lead time before the spares are expected to reach zero.</p>
+                    <?php endif; ?>
+                    <details>
+                        <summary>Opening history</summary>
+                        <?php foreach (array_unique(array_column($openings, 'room')) as $room): ?>
+                            <?php $roomOpenings = array_values(array_filter($openings, static fn (array $entry): bool => $entry['room'] === $room)); ?>
+                            <h4><?= refill_escape($room) ?></h4>
+                            <p><?= refill_escape(refill_usage($roomOpenings)) ?></p>
+                            <ul>
+                                <?php foreach (array_reverse($roomOpenings) as $entry): ?>
+                                    <li><time data-local datetime="<?= gmdate('c', $entry['at']) ?>"><?= gmdate('M j, Y H:i', $entry['at']) ?> UTC</time> · from <?= refill_escape($entry['storage']) ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endforeach; ?>
+                    </details>
+                <?php endif; ?>
                 <?php if ($canEdit): ?>
-                    <form method="post" class="quantity">
-                        <input type="hidden" name="csrf" value="<?= $csrf ?>">
-                        <input type="hidden" name="id" value="<?= $id ?>">
-                        <button name="action" value="decrease" aria-label="Use one spare of <?= $name ?>" <?= $item['quantity'] === 0 ? 'disabled' : '' ?>>−1</button>
-                        <button name="action" value="increase" aria-label="Add one spare of <?= $name ?>" <?= $item['quantity'] === 9999 ? 'disabled' : '' ?>>+1</button>
-                    </form>
+                    <?php if ($item['quantity'] > 0): ?>
+                        <details>
+                            <summary>Opened one</summary>
+                            <form method="post" class="fields">
+                                <input type="hidden" name="csrf" value="<?= $csrf ?>">
+                                <input type="hidden" name="id" value="<?= $id ?>">
+                                <label>From storage <select name="location" required>
+                                    <?php foreach (array_keys(array_filter($stock)) as $location): ?>
+                                        <option><?= refill_escape((string) $location) ?></option>
+                                    <?php endforeach; ?>
+                                </select></label>
+                                <label>Used in <input name="room" list="usage-rooms" maxlength="80" required placeholder="Upstairs bathroom"></label>
+                                <button name="action" value="open">Log opening</button>
+                            </form>
+                        </details>
+                    <?php endif; ?>
+                    <details>
+                        <summary>Add spares</summary>
+                        <form method="post" class="fields">
+                            <input type="hidden" name="csrf" value="<?= $csrf ?>">
+                            <input type="hidden" name="id" value="<?= $id ?>">
+                            <label>Storage location <input name="location" list="storage-locations" maxlength="80" required></label>
+                            <label>Amount <input name="amount" type="number" min="1" max="9999" value="1" required></label>
+                            <button name="action" value="increase">Add spares</button>
+                        </form>
+                    </details>
+                    <?php if ($item['quantity'] > 0): ?>
+                        <details>
+                            <summary>Move spares or correct a count</summary>
+                            <form method="post" class="fields">
+                                <input type="hidden" name="csrf" value="<?= $csrf ?>">
+                                <input type="hidden" name="id" value="<?= $id ?>">
+                                <label>From storage <select name="location" required>
+                                    <?php foreach (array_keys(array_filter($stock)) as $location): ?>
+                                        <option><?= refill_escape((string) $location) ?></option>
+                                    <?php endforeach; ?>
+                                </select></label>
+                                <button name="action" value="decrease">Remove one from count</button>
+                                <label>Move to <input name="destination" list="storage-locations" maxlength="80"></label>
+                                <label>Amount to move <input name="amount" type="number" min="1" max="9999" value="1"></label>
+                                <button name="action" value="move">Move spares</button>
+                            </form>
+                        </details>
+                    <?php endif; ?>
                     <details>
                         <summary>Edit <?= $name ?></summary>
                         <form method="post" class="fields">
@@ -178,7 +326,8 @@ try {
             </article>
         <?php endforeach; ?>
     </section>
-    <footer>Revision 1.0.0</footer>
+    <footer>Revision 1.1.0</footer>
 </main>
+<script src="assets/js/dates.js?v=1.1.0"></script>
 </body>
 </html>

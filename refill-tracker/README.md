@@ -13,7 +13,21 @@ Each account gets one framework JSON file keyed by the hash of its stable User M
 
 ## Manual verification
 
-- Add toothpaste with one spare and a threshold of one. Verify it appears under Restock. Add a spare and verify it clears. Use two spares and confirm it returns at zero and the minus button becomes disabled.
+- Add toothpaste with one spare and a threshold of one. Verify it appears under Restock. Add a spare and verify it clears. Remove two spares using count correction and confirm it returns at zero.
 - Edit the unit and threshold and verify that the spare count is preserved. Refresh after a successful change and verify it is applied only once.
 - Open the app with a different Member account and confirm its list starts empty. Verify a Viewer sees no editing controls and a signed-in Member submitting an invalid form token receives HTTP 403.
 - Point the configuration to a directory inside the document root and verify the app reports it is unavailable. Restore the external private path before use.
+
+## Storage, usage, and order timing
+
+Add the same item to multiple storage locations from its inventory card. Move spares to transfer stock without changing the household total. Older records start with their existing balance under **Unassigned** and can be distributed using Move spares.
+
+Choose **Opened one** to subtract one from the source storage location and log the current time and the room where it will be used. Stock corrections and moves leave the opening history intact. Room and storage inputs suggest names already used in your inventory.
+
+Two openings at different times establish an initial average interval. The app shows the household average and room-specific averages in Opening history. The suggested order date estimates when the last spare will be opened, minus a fixed three-day lead time, and shows today when that date has passed. Use the estimate when choosing a delivery schedule. The app records opening times and calculates estimates without placing orders.
+
+### Location and usage checks
+
+- Add two spares to the hall closet and three to the bathroom cabinet. Move one between them and verify the total stays five.
+- Log an opening in a bathroom and verify only the selected source drops by one. Check that the history shows both locations. Correct a count and verify the opening history is unchanged.
+- Check that two openings at different times produce a suggested date and that room-specific intervals use only openings for that room.
