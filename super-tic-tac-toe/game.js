@@ -1,9 +1,9 @@
-/* File Name: game.js | Revision: 1.2.0 | Modified: 2026-11-18 */
+/* File Name: game.js | Revision: 1.3.0 | Modified: 2026-11-21 */
 (() => {
   'use strict';
   const root = document.querySelector('.app-shell');
   const $ = (id) => document.getElementById(id);
-  const settings = { mode: 'super', players: 'computer', human: 'X', difficulty: 'medium', size: 3 };
+  const settings = { mode: 'super', players: 'computer', human: 'X', humanChoice: 'first', secondName: '', difficulty: 'medium', size: 3 };
   const sessionScore = { X: 0, O: 0 };
   let state;
   let thinking = false;
@@ -13,6 +13,7 @@
   let gameId = '';
   let completedResult = null;
   let historyQueue = Promise.resolve();
+  let configurationBlocked = false;
   const savedHistory = root.dataset.saveHistory === 'true';
 
   function blankGame() {
@@ -96,14 +97,28 @@
     settings.mode = $('gameMode').value;
     settings.size = Number($('boardSize').value);
     settings.difficulty = $('difficulty').value;
-    settings.human = document.querySelector('[data-setting="symbol"][aria-pressed="true"]').dataset.value;
+    settings.humanChoice = document.querySelector('[data-setting="symbol"][aria-pressed="true"]').dataset.value;
     settings.players = document.querySelector('[data-setting="players"][aria-pressed="true"]').dataset.value;
+    settings.secondName = $('secondPlayerName').value.trim();
+    const humanSymbol = document.querySelector('[data-setting="humanSymbol"][aria-pressed="true"]').dataset.value;
+    settings.human = settings.players === 'human'
+      ? humanSymbol
+      : settings.humanChoice === 'second' ? 'O' : (settings.humanChoice === 'random' ? (Math.random() < 0.5 ? 'X' : 'O') : 'X');
+    const missingName = settings.players === 'human' && settings.secondName === '';
+    $('secondPlayerName').setAttribute('aria-invalid', missingName ? 'true' : 'false');
+    $('secondPlayerError').hidden = !missingName;
+    configurationBlocked = missingName;
     state = blankGame(); thinking = false; undoStack = []; redoStack = []; completedResult = null;
     $('winOverlay').hidden = true;
     gameId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    if (missingName) {
+      render();
+      $('secondPlayerName').focus();
+      return;
+    }
     render(); maybeComputer();
   }
-  function computerTurn() { return settings.players === 'computer' && state.turn !== settings.human && !state.over; }
+  function computerTurn() { return !configurationBlocked && settings.players === 'computer' && state.turn !== settings.human && !state.over; }
 
   function classicMinimax(cells, turn, depth, alpha, beta) {
     const win = wins(cells, 3, 3);
@@ -120,6 +135,179 @@
       if (beta <= alpha) break;
     }
     return best;
+  }
+  function classicEvaluation(cells, mark, n) {
+    const other = mark === 'X' ? 'O' : 'X';
+    const weights = n === 4 ? [0, 2, 20, 220, 30000] : [0, 2, 14, 100, 800, 30000];
+    const scoreMark = (side) => {
+      let total = 0;
+      for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) for (const [dr, dc] of [[0,1],[1,0],[1,1],[1,-1]]) {
+        const er = r + dr * (n - 1), ec = c + dc * (n - 1);
+        if (er < 0 || er >= n || ec < 0 || ec >= n) continue;
+        let count = 0, blocked = false;
+        for (let step = 0; step < n; step++) {
+          const cell = cells[(r + dr * step) * n + c + dc * step];
+          if (cell && cell !== side) blocked = true;
+          if (cell === side) count++;
+        }
+        if (!blocked) total += weights[count];
+      }
+      return total;
+    };
+    let score = scoreMark(mark) - scoreMark(other) * 1.08;
+    const center = (n - 1) / 2;
+    for (let i = 0; i < cells.length; i++) if (cells[i]) {
+      const distance = Math.abs(Math.floor(i / n) - center) + Math.abs(i % n - center);
+      score += (cells[i] === mark ? 1 : -1) * (n - distance) * 0.35;
+    }
+    return score;
+  }
+  function orderClassicMoves(cells, moves, side, ai, n, limit = moves.length) {
+    return moves.map(move => {
+      cells[move] = side;
+      const score = classicEvaluation(cells, ai, n);
+      cells[move] = '';
+      return { move, score };
+    }).sort((a, b) => side === ai ? b.score - a.score : a.score - b.score).slice(0, limit).map(item => item.move);
+  }
+  function hardClassicValue(cells, side, ai, n, depth, alpha, beta, context) {
+    const winner = wins(cells, n, n);
+    if (winner) return winner === ai ? 100000 + depth : -100000 - depth;
+    const empty = cells.reduce((count, cell) => count + (cell ? 0 : 1), 0);
+    if (!empty) return 0;
+    if (depth <= 0 || context.nodes >= context.limit) return classicEvaluation(cells, ai, n);
+    context.nodes++;
+    const moves = cells.map((cell, i) => cell ? -1 : i).filter(i => i >= 0);
+    const candidates = orderClassicMoves(cells, moves, side, ai, n, n === 4 ? 9 : 8);
+    const maximizing = side === ai;
+    let best = maximizing ? -Infinity : Infinity;
+    for (const move of candidates) {
+      cells[move] = side;
+      const value = hardClassicValue(cells, side === 'X' ? 'O' : 'X', ai, n, depth - 1, alpha, beta, context);
+      cells[move] = '';
+      if (maximizing) { best = Math.max(best, value); alpha = Math.max(alpha, best); }
+      else { best = Math.min(best, value); beta = Math.min(beta, best); }
+      if (beta <= alpha || context.nodes >= context.limit) break;
+    }
+    return best;
+  }
+  function hardClassicMove(moves) {
+    const n = settings.size, ai = state.turn, cells = state.cells.slice();
+    const context = { nodes: 0, limit: n === 4 ? 42000 : 26000 };
+    const rootMoves = orderClassicMoves(cells, moves, ai, ai, n);
+    const depth = n === 4 ? 4 : 3;
+    let bestMove = rootMoves[0], bestScore = -Infinity, alpha = -Infinity;
+    for (const move of rootMoves) {
+      cells[move] = ai;
+      const score = hardClassicValue(cells, ai === 'X' ? 'O' : 'X', ai, n, depth - 1, alpha, Infinity, context);
+      cells[move] = '';
+      if (score > bestScore) { bestScore = score; bestMove = move; }
+      alpha = Math.max(alpha, bestScore);
+      if (context.nodes >= context.limit) break;
+    }
+    return bestMove;
+  }
+  function cloneSuperPosition(position) {
+    return { ...position, winningCells: (position.winningCells || []).slice(), winningBoards: (position.winningBoards || []).slice(), mini: position.mini.map(board => ({ ...board, cells: board.cells.slice(), winningCells: (board.winningCells || []).slice() })) };
+  }
+  function superMovesFor(position) {
+    const open = position.mini.map((board, i) => board.winner || board.cells.every(Boolean) ? -1 : i).filter(i => i >= 0);
+    const boards = position.target !== null && open.includes(position.target) ? [position.target] : open;
+    return boards.flatMap(board => position.mini[board].cells.map((cell, i) => cell ? null : [board, i]).filter(Boolean));
+  }
+  function applySuperSearchMove(position, move) {
+    const next = cloneSuperPosition(position);
+    const [boardIndex, cellIndex] = move, mark = position.turn;
+    const board = next.mini[boardIndex];
+    board.cells[cellIndex] = mark;
+    board.winner = wins(board.cells, 3, 3);
+    if (board.winner) board.winningCells = winningCellsFor(board.cells, 3, 3, board.winner);
+    next.last = { board: boardIndex, cell: cellIndex };
+    next.target = cellIndex;
+    if (next.mini[next.target].winner || next.mini[next.target].cells.every(Boolean)) next.target = null;
+    const macro = next.mini.map(item => item.winner || '');
+    next.winner = wins(macro, 3, 3);
+    if (next.winner) next.winningBoards = winningCellsFor(macro, 3, 3, next.winner);
+    next.moves++;
+    next.over = Boolean(next.winner) || next.mini.every(item => item.winner || item.cells.every(Boolean));
+    if (!next.over) next.turn = mark === 'X' ? 'O' : 'X';
+    return next;
+  }
+  function evaluateSuper(position, ai) {
+    if (position.winner) return position.winner === ai ? 100000 : -100000;
+    if (position.over) return 0;
+    const other = ai === 'X' ? 'O' : 'X';
+    const macro = position.mini.map(board => board.winner || '');
+    const macroWeights = [0, 28, 900, 100000];
+    let score = linePotential(macro, 3, 3, ai, macroWeights) - linePotential(macro, 3, 3, other, macroWeights) * 1.04;
+    const boardWeights = [1.2, 1, 1.2, 1, 1.65, 1, 1.2, 1, 1.2];
+    const localWeights = [0, 2, 24, 600];
+    position.mini.forEach((board, index) => {
+      if (board.winner || board.cells.every(Boolean)) return;
+      score += boardWeights[index] * (linePotential(board.cells, 3, 3, ai, localWeights) - linePotential(board.cells, 3, 3, other, localWeights) * 1.02);
+    });
+    if (position.target !== null) {
+      const target = position.mini[position.target];
+      if (!target.winner && !target.cells.every(Boolean)) {
+        const side = position.turn;
+        for (let i = 0; i < 9; i++) if (!target.cells[i]) {
+          target.cells[i] = side;
+          const immediate = wins(target.cells, 3, 3) === side;
+          target.cells[i] = '';
+          if (immediate) { score += side === ai ? 320 : -320; break; }
+        }
+      }
+    }
+    return score;
+  }
+  function linePotential(cells, n, k, mark, weights) {
+    let score = 0;
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) for (const [dr, dc] of [[0,1],[1,0],[1,1],[1,-1]]) {
+      const er = r + dr * (k - 1), ec = c + dc * (k - 1);
+      if (er < 0 || er >= n || ec < 0 || ec >= n) continue;
+      let count = 0, blocked = false;
+      for (let step = 0; step < k; step++) {
+        const cell = cells[(r + dr * step) * n + c + dc * step];
+        if (cell && cell !== mark) blocked = true;
+        if (cell === mark) count++;
+      }
+      if (!blocked) score += weights[count] || 0;
+    }
+    return score;
+  }
+  function hardSuperValue(position, ai, depth, alpha, beta, context) {
+    if (position.winner) return position.winner === ai ? 100000 + depth : -100000 - depth;
+    if (position.over) return 0;
+    if (depth <= 0 || context.nodes >= context.limit) return evaluateSuper(position, ai);
+    context.nodes++;
+    const side = position.turn, maximizing = side === ai;
+    const moves = superMovesFor(position);
+    if (!moves.length) return evaluateSuper(position, ai);
+    const ordered = moves.map(move => ({ move, position: applySuperSearchMove(position, move) }))
+      .sort((a, b) => maximizing ? evaluateSuper(b.position, ai) - evaluateSuper(a.position, ai) : evaluateSuper(a.position, ai) - evaluateSuper(b.position, ai))
+      .slice(0, context.beam);
+    let best = maximizing ? -Infinity : Infinity;
+    for (const item of ordered) {
+      const value = hardSuperValue(item.position, ai, depth - 1, alpha, beta, context);
+      if (maximizing) { best = Math.max(best, value); alpha = Math.max(alpha, best); }
+      else { best = Math.min(best, value); beta = Math.min(beta, best); }
+      if (beta <= alpha || context.nodes >= context.limit) break;
+    }
+    return best;
+  }
+  function hardSuperMove(moves) {
+    const ai = state.turn, position = cloneSuperPosition(state);
+    const candidates = moves.map(move => ({ move, position: applySuperSearchMove(position, move) }))
+      .sort((a, b) => evaluateSuper(b.position, ai) - evaluateSuper(a.position, ai)).slice(0, 12);
+    const context = { nodes: 0, limit: 24000, beam: 8 };
+    let bestMove = candidates[0]?.move ?? moves[0], bestScore = -Infinity, alpha = -Infinity;
+    for (const item of candidates) {
+      const score = hardSuperValue(item.position, ai, 3, alpha, Infinity, context);
+      if (score > bestScore) { bestScore = score; bestMove = item.move; }
+      alpha = Math.max(alpha, bestScore);
+      if (context.nodes >= context.limit) break;
+    }
+    return bestMove;
   }
   function tacticalMove(moves) {
     for (const move of moves) {
@@ -183,14 +371,16 @@
     const moves = legalMoves(); if (!moves.length) return null;
     if (settings.difficulty === 'easy') return moves[Math.floor(Math.random() * moves.length)];
     const tactical = tacticalMove(moves); if (tactical) return tactical;
-    if (settings.difficulty === 'hard' && settings.mode === 'classic' && settings.size === 3) {
-      const originalTurn = state.turn;
-      const clone = state.cells.slice();
-      const aiMark = originalTurn;
-      if (aiMark === 'O') return classicMinimax(clone, 'O', 0, -Infinity, Infinity).move;
-      // The minimax evaluator treats O as maximizing; invert mark order for X's move.
-      const invert = clone.map(v => v === 'X' ? 'O' : v === 'O' ? 'X' : '');
-      return classicMinimax(invert, 'O', 0, -Infinity, Infinity).move;
+    if (settings.difficulty === 'hard') {
+      if (settings.mode === 'super') return hardSuperMove(moves);
+      if (settings.size === 3) {
+        const clone = state.cells.slice();
+        if (state.turn === 'O') return classicMinimax(clone, 'O', 0, -Infinity, Infinity).move;
+        // The minimax evaluator treats O as maximizing; invert mark order for X's move.
+        const invert = clone.map(v => v === 'X' ? 'O' : v === 'O' ? 'X' : '');
+        return classicMinimax(invert, 'O', 0, -Infinity, Infinity).move;
+      }
+      return hardClassicMove(moves);
     }
     return strategicMove(moves);
   }
@@ -288,6 +478,30 @@
   }
   function showHistory(record) {
     $('saveStatus').textContent = `History · ${record.games} games · ${record.wins} wins · ${record.losses} losses · ${record.draws} draws`;
+    $('historySummary').textContent = `${record.games} games · ${record.wins} wins · ${record.losses} losses · ${record.draws} draws`;
+    const list = $('historyList'); list.replaceChildren();
+    if (!Array.isArray(record.recent) || record.recent.length === 0) {
+      const empty = document.createElement('li'); empty.className = 'history-empty'; empty.textContent = 'No completed games yet.'; list.append(empty); return;
+    }
+    for (const entry of record.recent) {
+      const item = document.createElement('li'); item.className = `history-item result-${entry.result}`;
+      const top = document.createElement('div'); top.className = 'history-item-top';
+      const outcome = document.createElement('strong'); outcome.className = 'history-outcome';
+      outcome.textContent = entry.result === 'win' ? 'WIN' : entry.result === 'loss' ? 'LOSS' : 'DRAW';
+      const date = document.createElement('time'); date.className = 'history-date';
+      const played = Date.parse(entry.playedAt || '');
+      date.textContent = Number.isFinite(played) ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(played) : 'Date unavailable';
+      top.append(outcome, date);
+      const detail = document.createElement('span'); detail.className = 'history-detail';
+      const mode = entry.mode === 'super' ? 'Super Tic-Tac-Toe' : `Classic ${entry.size}×${entry.size}`;
+      detail.textContent = `${mode} · ${entry.opponent === 'computer' ? 'vs computer' : 'two players'} · played as ${entry.symbol}`;
+      item.append(top, detail); list.append(item);
+    }
+  }
+  function setHistoryVisible(visible) {
+    $('historyPanel').hidden = !visible;
+    $('historyToggle').setAttribute('aria-expanded', visible ? 'true' : 'false');
+    $('historyToggle').textContent = visible ? 'Hide score history' : 'View score history';
   }
   function loadHistory() {
     if (!savedHistory) return;
@@ -302,11 +516,13 @@
     $('boardWrap').classList.toggle('super-wrap', settings.mode === 'super');
     $('boardWrap').classList.toggle('classic-wrap', settings.mode === 'classic');
     $('sizeField').hidden = settings.mode !== 'classic';
-    $('symbolField').classList.toggle('muted-field', settings.players === 'human');
+    $('symbolField').hidden = settings.players !== 'computer';
+    $('humanSymbolField').hidden = settings.players !== 'human';
+    $('secondPlayerField').hidden = settings.players !== 'human';
     $('ruleTitle').textContent = settings.mode === 'super' ? 'Your move sets the next board' : 'Connect a line to win';
     $('ruleText').textContent = settings.mode === 'super' ? 'Play in a mini-board, then your opponent must play in the matching position.' : `Make ${settings.size} in a row across, down, or diagonally.`;
-    $('nameX').textContent = settings.players === 'human' ? 'Player 1' : (settings.human === 'X' ? 'You' : 'Computer');
-    $('nameO').textContent = settings.players === 'human' ? 'Player 2' : (settings.human === 'O' ? 'You' : 'Computer');
+    $('nameX').textContent = settings.players === 'human' ? (settings.human === 'X' ? 'You' : (settings.secondName || 'Second player')) : (settings.human === 'X' ? 'You' : 'Computer');
+    $('nameO').textContent = settings.players === 'human' ? (settings.human === 'O' ? 'You' : (settings.secondName || 'Second player')) : (settings.human === 'O' ? 'You' : 'Computer');
     $('winsX').textContent = sessionScore.X; $('winsO').textContent = sessionScore.O;
     $('turnHint').textContent = state.over ? 'Round complete' : `${state.turn} to move`;
   }
@@ -322,7 +538,7 @@
         cell.textContent = mark; if (mark) cell.classList.add(mark.toLowerCase());
         if (state.winningCells.includes(i)) cell.classList.add('winning-cell');
         if (state.last?.cell === i) cell.classList.add('previous-move');
-        cell.disabled = Boolean(mark) || state.over || thinking || computerTurn(); cell.addEventListener('click', () => handleMove(0, i)); board.append(cell);
+        cell.disabled = Boolean(mark) || state.over || thinking || configurationBlocked || computerTurn(); cell.addEventListener('click', () => handleMove(0, i)); board.append(cell);
       });
       $('targetText').textContent = state.over ? 'Round complete' : 'Tap any open square';
     } else {
@@ -341,16 +557,17 @@
           cell.textContent = mark; if (mark) cell.classList.add(mark.toLowerCase());
           if (mini.winningCells.includes(ci)) cell.classList.add('winning-cell');
           if (state.last?.board === bi && state.last?.cell === ci) cell.classList.add('previous-move');
-          cell.disabled = !legal.includes(bi) || Boolean(mark) || state.over || thinking || computerTurn();
+          cell.disabled = !legal.includes(bi) || Boolean(mark) || state.over || thinking || configurationBlocked || computerTurn();
           cell.addEventListener('click', () => handleMove(bi, ci)); miniEl.append(cell);
         });
+        if (mini.winner) { const stamp = document.createElement('span'); stamp.className = `mini-winner ${mini.winner.toLowerCase()}`; stamp.textContent = mini.winner; stamp.setAttribute('aria-hidden', 'true'); miniEl.append(stamp); }
         board.append(miniEl);
       });
       $('targetText').textContent = state.over ? 'Round complete' : state.target === null ? 'Choose any open mini-board' : `Play in mini-board ${state.target + 1}`;
     }
     const waiting = computerTurn() && thinking;
     $('turnChip').textContent = state.turn; $('turnChip').className = `turn-chip ${state.turn.toLowerCase()}-chip`;
-    $('statusText').textContent = state.over ? $('statusText').textContent : waiting ? 'Computer is thinking…' : (settings.players === 'computer' && state.turn === settings.human ? 'Your move' : settings.players === 'computer' ? 'Computer to move' : `${state.turn === 'X' ? 'Player 1' : 'Player 2'} to move`);
+    $('statusText').textContent = configurationBlocked ? 'Enter a name for Player 2 to start' : state.over ? $('statusText').textContent : waiting ? 'Computer is thinking…' : (settings.players === 'computer' && state.turn === settings.human ? 'Your move' : settings.players === 'computer' ? 'Computer to move' : `${state.turn === settings.human ? 'Your move' : settings.secondName + ' to move'}`);
     $('scoreX').classList.toggle('active', state.turn === 'X' && !state.over); $('scoreO').classList.toggle('active', state.turn === 'O' && !state.over);
     $('moveCount').textContent = `${state.moves} ${state.moves === 1 ? 'move' : 'moves'}`;
     if (!state.over) $('turnHint').textContent = `${state.turn} to move`;
@@ -364,10 +581,14 @@
   document.querySelectorAll('[data-setting]').forEach(button => button.addEventListener('click', () => {
     const group = button.dataset.setting;
     document.querySelectorAll(`[data-setting="${group}"]`).forEach(peer => peer.setAttribute('aria-pressed', peer === button ? 'true' : 'false'));
-    if (group === 'players') $('symbolField').classList.toggle('muted-field', button.dataset.value === 'human');
     startGame();
   }));
   $('gameMode').addEventListener('change', startGame); $('boardSize').addEventListener('change', startGame); $('difficulty').addEventListener('change', startGame);
+  $('secondPlayerName').addEventListener('change', startGame);
+  $('secondPlayerName').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); startGame(); } });
+  if (savedHistory) $('historyToggle').hidden = false;
+  $('historyToggle').addEventListener('click', () => setHistoryVisible($('historyPanel').hidden));
+  $('historyClose').addEventListener('click', () => setHistoryVisible(false));
   $('newGame').addEventListener('click', startGame); $('newGameBottom').addEventListener('click', startGame);
   $('undoMove').addEventListener('click', undoMove); $('redoMove').addEventListener('click', redoMove);
   $('closeWinOverlay').addEventListener('click', () => { $('winOverlay').hidden = true; });
