@@ -2,11 +2,11 @@
 declare(strict_types=1);
 /*
 File Name: index.php
-Revision: 1.3.0
+Revision: 1.3.1
 Description: Responsive Super Tic-Tac-Toe and configurable classic Tic-Tac-Toe.
 Author: Jason Lamb
 Created: 2026-11-18
-Modified: 2026-11-21
+Modified: 2026-11-20
 Changelog: 1.3.0 - Add stronger hard search, turn-order selection, and signed-in score history view. 1.2.0 - Highlight winning lines and add full-screen win overlay.
 */
 $identity = null;
@@ -30,8 +30,8 @@ $loginUrl = $identity ? $identity->loginUrl($_SERVER['REQUEST_URI'] ?? '/super-t
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f5f8ff">
   <title>Super Tic-Tac-Toe</title>
-  <link rel="stylesheet" href="style.css?v=1.3.0">
-  <script defer src="game.js?v=1.3.0"></script>
+  <link rel="stylesheet" href="style.css?v=1.3.1">
+  <script defer src="game.js?v=1.3.1"></script>
 </head>
 <body>
   <main class="app-shell" data-csrf="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>" data-save-history="<?= $canSaveHistory ? 'true' : 'false' ?>">

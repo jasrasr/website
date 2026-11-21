@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.1 — 2026-11-20
+- Constrain the playable board by available viewport height in short landscape layouts, including iPhone landscape.
+
 ## 1.3.0 — 2026-11-20
 - Add bounded lookahead Hard play for 4×4, 5×5, and Super Tic-Tac-Toe; 3×3 classic continues to use minimax.
 - Let computer matches choose first (X), second (O), or random turn order.
