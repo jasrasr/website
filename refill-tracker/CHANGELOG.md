@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.3 — 2026-11-21
+
+- Store inventory inside the app’s HTTP-denied storage directory without host-specific configuration.
+
 ## 1.5.2 — 2026-11-21
 
 - Redesign the public landing page for light and dark mode.
