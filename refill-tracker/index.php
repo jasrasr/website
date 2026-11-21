@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-/** Refill Tracker, revision 1.2.0. */
+/** Refill Tracker, revision 1.3.0. */
 use Jasr\Framework\JsonStore;
 use Jasr\Framework\SharedIdentity;
 
@@ -12,10 +12,16 @@ function refill_escape(string $value): string
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
-function refill_text(string $field, int $maxBytes): string
+function refill_text(string $field, int $maxBytes, bool $optional = false): string
 {
     $value = $_POST[$field] ?? null;
-    $value = is_string($value) ? trim($value) : '';
+    if (!is_string($value)) {
+        throw new InvalidArgumentException('Enter valid text in the form.');
+    }
+    $value = trim($value);
+    if ($optional && $value === '') {
+        return '';
+    }
     if ($value === '' || strlen($value) > $maxBytes || preg_match('/^[^\p{C}]+$/uD', $value) !== 1) {
         throw new InvalidArgumentException('Enter an item name and a unit within the allowed lengths.');
     }
@@ -57,15 +63,58 @@ function refill_usage(array $openings): string
     return 'About ' . number_format($seconds / 86400, 1) . ' days between openings';
 }
 
+function refill_details(): string
+{
+    return isset($_POST['details']) ? refill_text('details', 240, true) : '';
+}
+
+function refill_add_starters(array $records): array
+{
+    $starters = [
+        '2% milk' => 'carton',
+        '4% milk' => 'carton',
+        'Toilet paper' => 'roll',
+        'Toothpaste' => 'tube',
+        'Kleenex / facial tissues' => 'box',
+        'Paper towels' => 'roll',
+        'Contact solution' => 'bottle',
+        'Toothbrush' => 'brush',
+        'Deodorant' => 'stick',
+        'Dish soap' => 'bottle',
+    ];
+    $names = array_map('strtolower', array_column($records, 'name'));
+    $added = array_column($records, 'starter');
+    foreach ($starters as $name => $unit) {
+        if (in_array(strtolower($name), $names, true) || in_array($name, $added, true)) {
+            continue;
+        }
+        $records[] = [
+            'id' => bin2hex(random_bytes(16)),
+            'name' => $name,
+            'unit' => $unit,
+            'details' => '',
+            'quantity' => 0,
+            'restockAt' => 0,
+            'stock' => [],
+            'starter' => $name,
+        ];
+    }
+    return $records;
+}
+
 function refill_change(array $records): array
 {
     $action = $_POST['action'] ?? '';
+    if ($action === 'add-starters') {
+        return refill_add_starters($records);
+    }
     if ($action === 'add') {
         $quantity = refill_count('quantity');
         $records[] = [
             'id' => bin2hex(random_bytes(16)),
             'name' => refill_text('name', 120),
             'unit' => refill_text('unit', 40),
+            'details' => refill_details(),
             'quantity' => $quantity,
             'restockAt' => refill_count('restockAt'),
             'stock' => [refill_text('location', 80) => $quantity],
@@ -131,6 +180,7 @@ function refill_change(array $records): array
             case 'edit':
                 $item['name'] = refill_text('name', 120);
                 $item['unit'] = refill_text('unit', 40);
+                $item['details'] = refill_details();
                 $item['restockAt'] = refill_count('restockAt');
                 break;
             default:
@@ -187,7 +237,7 @@ try {
             array_column($item['refills'] ?? [], 'person')
         );
     }
-    $restock = array_filter($items, static fn (array $item): bool => $item['quantity'] <= $item['restockAt']);
+    $restock = array_filter($items, static fn (array $item): bool => refill_stock($item) !== [] && $item['quantity'] <= $item['restockAt']);
 } catch (Throwable $exception) {
     error_log('Refill Tracker: ' . $exception->getMessage());
     http_response_code(503);
@@ -200,7 +250,7 @@ try {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Refill Tracker</title>
-    <link rel="stylesheet" href="assets/css/app.css?v=1.2.0">
+    <link rel="stylesheet" href="assets/css/app.css?v=1.3.0">
 </head>
 <body>
 <main>
@@ -238,11 +288,16 @@ try {
     <section aria-labelledby="inventory">
         <h2 id="inventory">Inventory</h2>
         <?php if ($canEdit): ?>
+            <form method="post">
+                <input type="hidden" name="csrf" value="<?= $csrf ?>">
+                <button name="action" value="add-starters">Add starter items</button>
+            </form>
             <details>
                 <summary>Add item</summary>
                 <form method="post" class="fields">
                     <input type="hidden" name="csrf" value="<?= $csrf ?>">
                     <label>Item name <input name="name" required maxlength="120" placeholder="Toothpaste"></label>
+                    <label>Details <input name="details" maxlength="240" placeholder="Brand, size, or preferred variety"></label>
                     <label>Unit <input name="unit" required maxlength="40" placeholder="tube"></label>
                     <label>Storage location <input name="location" list="storage-locations" required maxlength="80" placeholder="Hall closet"></label>
                     <label>Unopened spares <input name="quantity" type="number" min="0" max="9999" value="0" required></label>
@@ -261,6 +316,12 @@ try {
             ?>
             <article>
                 <h3><?= $name ?></h3>
+                <?php if (!empty($item['details'])): ?>
+                    <p><?= refill_escape($item['details']) ?></p>
+                <?php endif; ?>
+                <?php if ($stock === []): ?>
+                    <p>Add your first stock count to start tracking restock status.</p>
+                <?php endif; ?>
                 <p><?= $item['quantity'] ?> in stock · unit: <?= refill_escape($item['unit']) ?> · restock at <?= $item['restockAt'] ?></p>
                 <ul>
                     <?php foreach ($stock as $location => $quantity): ?>
@@ -354,6 +415,7 @@ try {
                             <input type="hidden" name="csrf" value="<?= $csrf ?>">
                             <input type="hidden" name="id" value="<?= $id ?>">
                             <label>Item name <input name="name" required maxlength="120" value="<?= $name ?>"></label>
+                            <label>Details <input name="details" maxlength="240" value="<?= refill_escape($item['details'] ?? '') ?>"></label>
                             <label>Unit <input name="unit" required maxlength="40" value="<?= refill_escape($item['unit']) ?>"></label>
                             <label>Restock at <input name="restockAt" type="number" min="0" max="9999" required value="<?= $item['restockAt'] ?>"></label>
                             <button name="action" value="edit">Save changes</button>
@@ -363,8 +425,8 @@ try {
             </article>
         <?php endforeach; ?>
     </section>
-    <footer>Revision 1.2.0</footer>
+    <footer>Revision 1.3.0</footer>
 </main>
-<script src="assets/js/dates.js?v=1.2.0"></script>
+<script src="assets/js/dates.js?v=1.3.0"></script>
 </body>
 </html>

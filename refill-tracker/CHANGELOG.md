@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0 — 2026-11-21
+
+- Add an optional household starter list with distinct 2% and 4% milk entries.
+- Add editable item details and preserve stock and history when an item is renamed.
+
 ## 1.2.0 — 2026-11-21
 
 - Record who opened or replaced an item and who refilled its stock.

@@ -37,3 +37,9 @@ Two openings at different times establish an initial average interval. The app s
 Use **Opened or replaced one** when someone starts a new carton of milk, opens a box of tissues, or replaces a toothbrush. Enter who used it, where it was used, and where the spare came from. This action tracks one whole unit, such as a carton, roll, bottle, or toothbrush. Set the unit when adding each item. Use the same workflow for frequent and occasional replacements.
 
 Use **Log refill** when someone adds spares. Enter their name, the quantity, and the storage location. The refill history shows these details and the time. Select **Correct count** for a bookkeeping adjustment. Corrections and stock transfers leave both histories alone. Names are household labels, and previously used names appear as suggestions. Older opening entries show that the person was not recorded.
+
+## Starter and custom items
+
+Select **Add starter items** to populate the household starter list. It includes separate 2% and 4% milk entries, toilet paper, toothpaste, Kleenex / facial tissues, paper towels, contact solution, a toothbrush, deodorant, and dish soap. Starter entries begin with no assigned stock and join the restock list once you record stock and reach the threshold. Repeating the action skips existing starter entries, including ones you renamed, and matches existing item names case-insensitively.
+
+Use **Add item** for anything else. Use **Edit** to change the name, unit label, details (such as brand or package size), and restock threshold. Renaming an item keeps its existing storage balances and activity history.
