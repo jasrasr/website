@@ -19,7 +19,7 @@ The game does not create or manage accounts. It uses `Jasr\Framework\SharedIdent
 1. Deploy `1-Framework`, `user-management`, and this project beside each other on the same HTTPS host.
 2. In User Management, register project ID `super-tic-tac-toe` at its deployed local path and grant the intended users **Member** access. A central user without this grant can still play, but their games will not be recorded.
 3. Ensure `super-tic-tac-toe/data/` is writable by PHP and blocked from direct HTTP access. The included Apache/LiteSpeed rule denies JSON and lock files; configure an equivalent rule for nginx if needed.
-4. Signed-in members can open **View score history** below the board to see aggregate wins, losses, draws, and up to 50 recent results. Records are stored by stable central user ID in `data/scores.json`. Anonymous games stay in browser local storage and are not sent to the server. No gameplay moves or board contents are uploaded.
+4. Signed-in members can open **View score history** below the board to see aggregate wins, losses, draws, up to 50 recent results, the computer difficulty used, and the named local opponent when applicable. The latest saved game setup can be replayed from the history panel. Records are stored by stable central user ID in `data/scores.json`. Anonymous games stay in browser local storage and are not sent to the server. No gameplay moves or board contents are uploaded.
 
 If user management is unavailable or not configured, the public game still works. History is private to the account and is read or changed only through the PHP API. Keep server backups and never commit runtime JSON files.
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.2 — 2026-11-20
+- Record computer difficulty and local opponent name with each signed-in result.
+- Show difficulty in game history and add an action to replay the latest game setup.
+
+
 ## 1.3.1 — 2026-11-20
 - Constrain the playable board by available viewport height in short landscape layouts, including iPhone landscape.
 

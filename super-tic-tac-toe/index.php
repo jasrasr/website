@@ -2,12 +2,12 @@
 declare(strict_types=1);
 /*
 File Name: index.php
-Revision: 1.3.1
+Revision: 1.3.2
 Description: Responsive Super Tic-Tac-Toe and configurable classic Tic-Tac-Toe.
 Author: Jason Lamb
 Created: 2026-11-18
 Modified: 2026-11-20
-Changelog: 1.3.0 - Add stronger hard search, turn-order selection, and signed-in score history view. 1.2.0 - Highlight winning lines and add full-screen win overlay.
+Changelog: 1.3.2 - Log difficulty and replay recent setup. 1.3.1 - Fit board to landscape viewport. 1.3.0 - Add stronger hard search, turn-order selection, and signed-in score history view. 1.2.0 - Highlight winning lines and add full-screen win overlay.
 */
 $identity = null;
 $identityUser = null;
@@ -30,8 +30,8 @@ $loginUrl = $identity ? $identity->loginUrl($_SERVER['REQUEST_URI'] ?? '/super-t
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f5f8ff">
   <title>Super Tic-Tac-Toe</title>
-  <link rel="stylesheet" href="style.css?v=1.3.1">
-  <script defer src="game.js?v=1.3.1"></script>
+  <link rel="stylesheet" href="style.css?v=1.3.2">
+  <script defer src="game.js?v=1.3.2"></script>
 </head>
 <body>
   <main class="app-shell" data-csrf="<?= htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') ?>" data-save-history="<?= $canSaveHistory ? 'true' : 'false' ?>">
@@ -96,7 +96,7 @@ $loginUrl = $identity ? $identity->loginUrl($_SERVER['REQUEST_URI'] ?? '/super-t
         <div class="board-legend"><span><i class="legend-dot target-dot"></i>Playable board</span><span><i class="legend-dot previous-dot"></i>Previous move</span><span><i class="legend-dot won-dot"></i>Won board</span></div>
         <div class="bottom-row"><span id="moveCount">0 moves</span><div class="history-access"><span id="saveStatus">Scores on this device</span><button id="historyToggle" type="button" aria-expanded="false" aria-controls="historyPanel" hidden>View score history</button></div></div>
         <section id="historyPanel" class="history-panel" aria-labelledby="historyTitle" hidden>
-          <div class="history-heading"><div><span class="section-label">YOUR RECORD</span><h3 id="historyTitle">Previous games</h3></div><button id="historyClose" type="button" aria-label="Close score history">×</button></div>
+          <div class="history-heading"><div><span class="section-label">YOUR RECORD</span><h3 id="historyTitle">Previous games</h3></div><button id="historyReplay" class="history-replay" type="button" hidden>Play last setup again</button><button id="historyClose" type="button" aria-label="Close score history">×</button></div>
           <div class="history-summary" id="historySummary">Loading score history…</div>
           <ol id="historyList" class="history-list"></ol>
         </section>
