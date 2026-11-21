@@ -1,0 +1,7 @@
+# File Name: .placeholder
+# Revision: 2.0.0
+# Author: Jason Lamb (with help from ChatGPT)
+# Created Date: 2026-11-20
+# Modified Date: 2026-11-20
+# Changelog: 2.0.0 - Keep the private storage directory tracked without committing runtime data.
+# Storage records are created automatically by the application.
