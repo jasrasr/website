@@ -147,7 +147,7 @@ function public_date_label(string $date): string
     if (!valid_date($date)) {
         return '';
     }
-    return (new DateTimeImmutable($date))->format('M j, Y');
+    return (new DateTimeImmutable($date))->format('D, M j, Y');
 }
 ?>
 <!doctype html>
