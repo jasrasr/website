@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0 — 2026-11-21
+
+- Log optional seller, pack size, purchase quantity, and total cost with refills.
+- Convert packs to inventory units and show the cost per unit in refill history.
+
 ## 1.3.0 — 2026-11-21
 
 - Add an optional household starter list with distinct 2% and 4% milk entries.

@@ -43,3 +43,7 @@ Use **Log refill** when someone adds spares. Enter their name, the quantity, and
 Select **Add starter items** to populate the household starter list. It includes separate 2% and 4% milk entries, toilet paper, toothpaste, Kleenex / facial tissues, paper towels, contact solution, a toothbrush, deodorant, and dish soap. Starter entries begin with no assigned stock and join the restock list once you record stock and reach the threshold. Repeating the action skips existing starter entries, including ones you renamed, and matches existing item names case-insensitively.
 
 Use **Add item** for anything else. Use **Edit** to change the name, unit label, details (such as brand or package size), and restock threshold. Renaming an item keeps its existing storage balances and activity history.
+
+## Purchase details
+
+On **Log refill**, expand **Purchase details** to enter the seller, units per pack, and total price in USD. For one Amazon two-pack of toothpaste, enter quantity 1 and pack size 2. For two Costco 48-packs of toilet paper, enter quantity 2 and pack size 48. Inventory goes up by 2 tubes or 96 rolls respectively, and refill history shows the pack breakdown, seller, total price when entered, and price per unit. Leave pack size blank to enter individual units. Use **Correct count** for adjustments in individual units.

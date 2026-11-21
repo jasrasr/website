@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-/** Refill Tracker, revision 1.3.0. */
+/** Refill Tracker, revision 1.4.0. */
 use Jasr\Framework\JsonStore;
 use Jasr\Framework\SharedIdentity;
 
@@ -37,6 +37,28 @@ function refill_count(string $field): int
         throw new InvalidArgumentException('Enter a whole number from 0 to 9,999.');
     }
     return $value;
+}
+
+function refill_purchase(int $packs): array
+{
+    $unitsPerPack = ($_POST['unitsPerPack'] ?? '') === '' ? 1 : refill_count('unitsPerPack');
+    if ($unitsPerPack < 1) {
+        throw new InvalidArgumentException('Enter at least one unit per pack.');
+    }
+
+    $seller = isset($_POST['seller']) ? refill_text('seller', 120, true) : '';
+    $cost = $_POST['totalCost'] ?? '';
+    $cost = is_string($cost) ? trim($cost) : null;
+    if ($cost !== '' && (!is_string($cost) || preg_match('/^([0-9]{1,7})(?:\.([0-9]{1,2}))?$/D', $cost, $parts) !== 1)) {
+        throw new InvalidArgumentException('Enter a total price in dollars, such as 12.99.');
+    }
+
+    return [
+        'seller' => $seller,
+        'packs' => $packs,
+        'unitsPerPack' => $unitsPerPack,
+        'totalCostCents' => $cost === '' ? null : (int) $parts[1] * 100 + (int) str_pad($parts[2] ?? '', 2, '0'),
+    ];
 }
 
 function refill_stock(array $item): array
@@ -135,19 +157,26 @@ function refill_change(array $records): array
                 $location = refill_text('location', 80);
                 $amount = refill_count('amount');
                 if ($amount < 1) {
-                    throw new InvalidArgumentException('Enter at least one spare.');
+                    throw new InvalidArgumentException('Enter at least one spare or pack.');
                 }
-                if (array_sum($stock) + $amount > 9999) {
+                $purchase = $action === 'refill' ? refill_purchase($amount) : null;
+                $units = $amount * ($purchase['unitsPerPack'] ?? 1);
+                if (array_sum($stock) + $units > 9999) {
                     throw new InvalidArgumentException('Inventory cannot exceed 9,999 spares.');
                 }
-                $stock[$location] = ($stock[$location] ?? 0) + $amount;
+                $stock[$location] = ($stock[$location] ?? 0) + $units;
                 if ($action === 'refill') {
                     $item['refills'][] = [
                         'at' => time(),
                         'storage' => $location,
-                        'quantity' => $amount,
+                        'quantity' => $units,
                         'person' => refill_text('person', 80),
                     ];
+                    if ($purchase['seller'] !== '' || $purchase['totalCostCents'] !== null
+                        || $purchase['unitsPerPack'] !== 1) {
+                        $lastRefill = array_key_last($item['refills']);
+                        $item['refills'][$lastRefill]['purchase'] = $purchase;
+                    }
                 }
                 break;
             case 'decrease':
@@ -250,7 +279,7 @@ try {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Refill Tracker</title>
-    <link rel="stylesheet" href="assets/css/app.css?v=1.3.0">
+    <link rel="stylesheet" href="assets/css/app.css?v=1.4.0">
 </head>
 <body>
 <main>
@@ -355,7 +384,21 @@ try {
                         <ul>
                             <?php foreach (array_reverse($item['refills']) as $entry): ?>
                                 <li><time data-local datetime="<?= gmdate('c', $entry['at']) ?>"><?= gmdate('M j, Y H:i', $entry['at']) ?> UTC</time>
-                                    · <?= refill_escape($entry['person']) ?> added <?= $entry['quantity'] ?> to <?= refill_escape($entry['storage']) ?></li>
+                                    · <?= refill_escape($entry['person']) ?> added <?= $entry['quantity'] ?> to <?= refill_escape($entry['storage']) ?>
+                                    <?php if (isset($entry['purchase'])): ?>
+                                        <?php $purchase = $entry['purchase']; ?>
+                                        <div>
+                                            <?= $purchase['packs'] ?> × <?= $purchase['unitsPerPack'] ?> units
+                                            <?php if ($purchase['seller'] !== ''): ?>
+                                                · <?= refill_escape($purchase['seller']) ?>
+                                            <?php endif; ?>
+                                            <?php if ($purchase['totalCostCents'] !== null): ?>
+                                                · $<?= number_format($purchase['totalCostCents'] / 100, 2) ?> total
+                                                ($<?= number_format($purchase['totalCostCents'] / 100 / $entry['quantity'], 2) ?> per unit)
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </li>
                             <?php endforeach; ?>
                         </ul>
                     </details>
@@ -384,9 +427,15 @@ try {
                             <input type="hidden" name="csrf" value="<?= $csrf ?>">
                             <input type="hidden" name="id" value="<?= $id ?>">
                             <label>Storage location <input name="location" list="storage-locations" maxlength="80" required></label>
-                            <label>Amount <input name="amount" type="number" min="1" max="9999" value="1" required></label>
+                            <label>Quantity (packs if pack size is entered) <input name="amount" type="number" min="1" max="9999" value="1" required></label>
+                            <details>
+                                <summary>Purchase details (optional)</summary>
+                                <label>Purchased from <input name="seller" maxlength="120" placeholder="Amazon or Costco"></label>
+                                <label>Units per pack <input name="unitsPerPack" type="number" min="1" max="9999" placeholder="1"></label>
+                                <label>Total paid (USD) <input name="totalCost" type="text" inputmode="decimal" maxlength="10" placeholder="12.99"></label>
+                            </details>
                             <label>Who refilled it <input name="person" list="household-people" maxlength="80" aria-describedby="refill-person-<?= $id ?>"></label>
-                            <p id="refill-person-<?= $id ?>">Enter a name to log a refill. Use Correct count for inventory adjustments.</p>
+                            <p id="refill-person-<?= $id ?>">Enter a name to log a refill. Correct count uses quantity as individual units and skips purchase details.</p>
                             <button name="action" value="refill">Log refill</button>
                             <button name="action" value="increase">Correct count</button>
                         </form>
@@ -425,8 +474,8 @@ try {
             </article>
         <?php endforeach; ?>
     </section>
-    <footer>Revision 1.3.0</footer>
+    <footer>Revision 1.4.0</footer>
 </main>
-<script src="assets/js/dates.js?v=1.3.0"></script>
+<script src="assets/js/dates.js?v=1.4.0"></script>
 </body>
 </html>
