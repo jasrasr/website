@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.1 — 2026-11-20
+- Constrain the playable board by available viewport height in short landscape layouts, including iPhone landscape.
+
+## 1.3.0 — 2026-11-20
+- Add bounded lookahead Hard play for 4×4, 5×5, and Super Tic-Tac-Toe; 3×3 classic continues to use minimax.
+- Let computer matches choose first (X), second (O), or random turn order.
+- Require a name for the second local player and let the starting player choose X or O.
+- Add a signed-in score history panel with win, loss, draw totals and recent results.
+- Show a large X or O over each won Super mini-board.
+
+
 ## 1.2.0 — 2026-11-18
 - Highlight the winning cells and Super Tic-Tac-Toe winning mini-boards.
 - Show a full-screen X or O overlay when a player wins, with options to review the winning line or start another game.
