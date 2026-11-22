@@ -4,6 +4,10 @@ A memory game for young children. Choose **Colors**, **Letters**, **Numbers**, o
 
 The timer starts with the first block and stops when the last pair is found. The page shows attempts, completed games, pairs found, and the best time for each mode and board size in the current browser tab session. This score uses session storage when available and never requires an account.
 
+## Optional voice recordings
+
+Turn on **Read tiles aloud** to hear each revealed tile. Custom MP3 recordings in `matching-game/sounds/` are used first. When a file is missing, the game falls back to the browser voice. See [sounds/README.md](sounds/README.md) for the exact folders and filenames.
+
 ## Optional account history
 
 Public play needs no sign-in. To save finished games to a private account history, deploy this project beside `1-Framework` and `user-management` on a PHP 8.1+ host. Register project ID `matching-game` in User Management at its deployed path and grant intended users **Member** access. Signed-in members can view their 50 most recent completed games, including mode, board size, time, and tries. No card order or moves are uploaded.
