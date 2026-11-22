@@ -36,6 +36,7 @@
   const clues = document.querySelector('#order-clues');
   const feedback = document.querySelector('#order-feedback');
   const nextOrder = document.querySelector('#next-order');
+  const repeatOrder = document.querySelector('#repeat-order');
   const nextIcon = nextOrder.querySelector('.next-icon');
   const nextLabel = nextOrder.querySelector('.next-label');
   const game = document.querySelector('.game');
@@ -65,6 +66,15 @@
   let audio;
   let volume;
   let lastCue = 0;
+
+  function speakOrder() {
+    if (!soundEnabled || !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(orders[orderIndex].prompt);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.85;
+    window.speechSynthesis.speak(utterance);
+  }
 
   function renderHistory() {
     sessionCount.textContent = `${completedRounds.length} completed ${completedRounds.length === 1 ? 'round' : 'rounds'}`;
@@ -222,11 +232,14 @@
     nextOrder.hidden = true;
     const takingOrders = mode === 'orders';
     clues.hidden = !takingOrders;
+    repeatOrder.hidden = !takingOrders || !soundEnabled || !('speechSynthesis' in window);
     game.classList.toggle('taking-orders', takingOrders);
     if (takingOrders) {
       speech.textContent = orders[orderIndex].prompt;
       renderOrder();
+      speakOrder();
     } else {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       speech.textContent = selectedPet.welcome;
       progress.textContent = `Food: 0 of ${foods.length}`;
     }
@@ -258,6 +271,7 @@
     showRound();
     foodTray.querySelector('button').focus();
   });
+  repeatOrder.addEventListener('click', speakOrder);
   if (!AudioContext) {
     soundToggle.hidden = true;
   }
@@ -266,6 +280,8 @@
     lastCue += 1;
     soundToggle.setAttribute('aria-pressed', String(soundEnabled));
     soundToggle.querySelector('span').textContent = soundEnabled ? 'on' : 'off';
+    repeatOrder.hidden = !soundEnabled || mode !== 'orders' || !('speechSynthesis' in window);
+    if (!soundEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
     if (!soundEnabled && volume) {
       volume.disconnect();
       volume = undefined;
