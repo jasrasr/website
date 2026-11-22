@@ -1,0 +1,4 @@
+Options -Indexes
+<FilesMatch "^(\.gitignore|README\.md|.*\.json|.*\.lock|.*\.log)$">
+  Require all denied
+</FilesMatch>
