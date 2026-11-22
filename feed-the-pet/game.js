@@ -45,14 +45,19 @@
   const sessionList = document.querySelector('#session-list');
   const sessionKey = 'feed-the-pet-session-v1';
   let completedRounds = [];
+  let achievements = 0;
   try {
-    const stored = JSON.parse(sessionStorage.getItem(sessionKey) || '[]');
-    if (Array.isArray(stored)) {
-      completedRounds = stored.filter(entry =>
+    const stored = JSON.parse(sessionStorage.getItem(sessionKey) || 'null');
+    const rounds = Array.isArray(stored) ? stored : stored?.rounds;
+    if (Array.isArray(rounds)) {
+      completedRounds = rounds.filter(entry =>
         entry && ['free', 'orders'].includes(entry.mode) &&
         pets.some(pet => pet.name === entry.pet) &&
         typeof entry.time === 'string'
       ).slice(-20);
+      achievements = Number.isInteger(stored?.achievements)
+        ? Math.max(0, stored.achievements)
+        : completedRounds.filter(entry => entry.mode === 'orders').length;
     }
   } catch {
     // Continue with in-memory history when session storage is unavailable.
@@ -76,6 +81,37 @@
     window.speechSynthesis.speak(utterance);
   }
 
+  function achievementCount() {
+    return achievements;
+  }
+
+  function unlockedPetCount() {
+    return Math.min(pets.length, 1 + Math.floor(achievementCount() / 5));
+  }
+
+  function renderAchievements() {
+    const achievements = achievementCount();
+    const unlocked = unlockedPetCount();
+    const count = document.querySelector('#achievement-count');
+    const progress = document.querySelector('#unlock-progress');
+    count.textContent = `${achievements} ${achievements === 1 ? 'achievement' : 'achievements'}`;
+    if (unlocked === pets.length) {
+      progress.textContent = 'All pets unlocked!';
+    } else {
+      const remaining = unlocked * 5 - achievements;
+      progress.textContent = `${remaining} more ${remaining === 1 ? 'achievement' : 'achievements'} unlocks ${pets[unlocked].name}`;
+    }
+    document.querySelectorAll('.pet-choice').forEach((button, index) => {
+      const locked = index >= unlocked;
+      button.disabled = locked;
+      button.classList.toggle('locked', locked);
+      button.setAttribute('aria-label', locked
+        ? `${button.dataset.pet} locked. Earn ${index * 5} achievements to unlock.`
+        : `Choose ${button.dataset.pet}`);
+      button.querySelector('.pet-lock').hidden = !locked;
+    });
+  }
+
   function renderHistory() {
     sessionCount.textContent = `${completedRounds.length} completed ${completedRounds.length === 1 ? 'round' : 'rounds'}`;
     sessionList.replaceChildren(...completedRounds.slice().reverse().map(entry => {
@@ -86,6 +122,8 @@
   }
 
   function finishRound() {
+    const unlockedBefore = unlockedPetCount();
+    if (mode === 'orders') achievements += 1;
     completedRounds.push({
       pet: selectedPet.name,
       mode,
@@ -93,11 +131,13 @@
     });
     completedRounds = completedRounds.slice(-20);
     try {
-      sessionStorage.setItem(sessionKey, JSON.stringify(completedRounds));
+      sessionStorage.setItem(sessionKey, JSON.stringify({ rounds: completedRounds, achievements }));
     } catch {
       // The in-memory list still works for this page.
     }
     renderHistory();
+    renderAchievements();
+    return unlockedPetCount() > unlockedBefore ? pets[unlockedBefore] : null;
   }
 
   async function playSound(cue) {
@@ -190,9 +230,11 @@
     }
 
     const finished = orderIndex === orders.length - 1;
-    if (finished) finishRound();
+    const unlockedPet = finished ? finishRound() : null;
     playSound(finished ? 'finish' : 'order');
-    feedback.textContent = finished ? 'You filled all three orders! 🎉' : 'Order complete! ⭐';
+    feedback.textContent = unlockedPet
+      ? `You unlocked ${unlockedPet.name}! 🎉`
+      : finished ? 'You earned an achievement! ⭐' : 'Order complete! ⭐';
     nextIcon.textContent = finished ? '↻' : '▶';
     nextLabel.textContent = finished ? 'Play again' : 'Next order';
     nextOrder.hidden = false;
@@ -248,7 +290,7 @@
     const button = document.createElement('button');
     button.className = 'pet-choice'; button.type = 'button'; button.dataset.pet = item.name;
     button.setAttribute('aria-label', `Choose ${item.name}`); button.setAttribute('aria-pressed', String(item === selectedPet));
-    button.innerHTML = `<span>${item.emoji}</span><small>${item.name}</small>`;
+    button.innerHTML = `<span>${item.emoji}</span><small>${item.name}</small><b class="pet-lock" hidden aria-hidden="true">🔒</b>`;
     button.addEventListener('click', () => choosePet(item)); petPicker.append(button);
   });
   foods.forEach((item) => {
@@ -259,7 +301,10 @@
     button.innerHTML = `<span aria-hidden="true">${item.emoji}</span><small>${item.name}</small>`;
     button.addEventListener('click', () => feed(item, button)); foodTray.append(button);
   });
-  newGame.addEventListener('click', () => choosePet(pets[Math.floor(Math.random() * pets.length)]));
+  newGame.addEventListener('click', () => {
+    const unlocked = pets.slice(0, unlockedPetCount());
+    choosePet(unlocked[Math.floor(Math.random() * unlocked.length)]);
+  });
   modeButtons.forEach((button) => button.addEventListener('click', () => {
     if (mode === button.dataset.mode) return;
     mode = button.dataset.mode;
@@ -288,4 +333,5 @@
     }
   });
   renderHistory();
+  renderAchievements();
 })();

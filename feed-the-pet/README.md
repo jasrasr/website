@@ -10,4 +10,6 @@ Pet Orders also speaks each new order aloud. Tap **Hear again** to replay it.
 
 Completed rounds appear under **This session** and survive reloads in the same browser tab. The game offers an optional link to User Management sign in. Session history stays in the browser tab and does not sync to an account.
 
+Finishing all three Pet Orders earns one achievement. A session starts with Puppy; Kitten unlocks at 5 achievements, Bunny at 10, and Panda at 15.
+
 Open `index.html` locally or serve the website directory with the local host launcher.

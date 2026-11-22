@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#ffe5b5">
   <title>Feed the Pet</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="orders.css?v=5">
-  <script src="game.js?v=6" defer></script>
+  <link rel="stylesheet" href="orders.css?v=7">
+  <script src="game.js?v=7" defer></script>
 </head>
 <body>
   <main class="game" aria-labelledby="title">
@@ -23,6 +23,11 @@
       </button>
     </div>
     <section class="pet-picker" aria-label="Choose a pet"><p class="section-label">Who is hungry?</p><div id="pet-picker" class="pet-options"></div></section>
+    <div class="achievement-progress" aria-live="polite">
+      <span class="achievement-star" aria-hidden="true">⭐</span>
+      <strong id="achievement-count">0 achievements</strong>
+      <span id="unlock-progress">5 more unlocks Kitten</span>
+    </div>
     <section class="play-area" aria-label="Feeding area">
       <div id="pet" class="pet" role="img" aria-label="Happy pet">🐶</div>
       <div class="speech" id="speech" aria-live="polite">Tap some food for me!</div>
