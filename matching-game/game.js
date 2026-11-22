@@ -8,11 +8,20 @@
     ['mint', '#63c994'], ['violet', '#b774eb'], ['gold', '#d7a820'], ['sky blue', '#5dbde8'],
     ['magenta', '#c92784'], ['gray', '#8496a5'],
   ];
+  const modes = {
+    colors: { label: 'Colors', cards: colors.map(([name, color]) => ({ name, color, text: '' })) },
+    letters: { label: 'Letters', cards: Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ', text => ({ name: `Letter ${text}`, text })) },
+    numbers: { label: 'Numbers', cards: Array.from({ length: 18 }, (_, index) => {
+      const text = String(index + 1);
+      return { name: `Number ${text}`, text };
+    }) },
+  };
   const $ = id => document.getElementById(id);
   const root = document.querySelector('.game');
   const canSaveHistory = root.dataset.saveHistory === 'true';
   const storageKey = 'matching-game-session-v1';
   let rows = 4, columns = 4, pairs = 0, attempts = 0;
+  let mode = 'colors';
   let first = null, second = null, locked = false;
   let hideTimer = null, tickTimer = null, startedAt = null, elapsedMs = 0;
   let session = readSession();
@@ -32,8 +41,17 @@
 
   function updateSession() {
     $('session-totals').textContent = `${session.games} ${session.games === 1 ? 'game' : 'games'} · ${session.pairs} ${session.pairs === 1 ? 'pair' : 'pairs'}`;
-    const best = session.best[`${rows}x${columns}`];
-    $('session-best').textContent = `Best on ${rows}×${columns}: ${Number.isFinite(best) ? formatTime(best, true) : '—'}`;
+    const best = session.best[bestKey()];
+    $('session-best').textContent = `Best · ${modes[mode].label} ${rows}×${columns}: ${Number.isFinite(best) ? formatTime(best, true) : '—'}`;
+  }
+
+  function bestKey() {
+    const size = `${rows}x${columns}`;
+    return mode === 'colors' ? size : `${mode}:${size}`;
+  }
+
+  function promptForMatch() {
+    $('message').textContent = `Find two ${mode} that match!`;
   }
 
   function randomIndex(max) {
@@ -47,7 +65,7 @@
   }
 
   function shuffledCards() {
-    const selected = colors.slice(0, rows * columns / 2);
+    const selected = modes[mode].cards.slice(0, rows * columns / 2);
     const cards = [...selected, ...selected];
     for (let i = cards.length - 1; i > 0; i--) {
       const j = randomIndex(i + 1);
@@ -63,8 +81,8 @@
 
   function reveal(tile) {
     tile.classList.add('revealed');
-    tile.textContent = '';
-    tile.setAttribute('aria-label', `${tile.dataset.color} block`);
+    tile.textContent = tile.dataset.symbol;
+    tile.setAttribute('aria-label', tile.dataset.card);
     tile.setAttribute('aria-pressed', 'true');
   }
 
@@ -83,12 +101,12 @@
     $('timer').textContent = formatTime(elapsedMs, true);
     session.games++;
     session.pairs += pairs;
-    const size = `${rows}x${columns}`;
+    const size = bestKey();
     session.best[size] = Math.min(session.best[size] ?? Infinity, elapsedMs);
     try { sessionStorage.setItem(storageKey, JSON.stringify(session)); } catch (_) { /* Keep in memory. */ }
     updateSession();
     $('message').textContent = `You found them all in ${formatTime(elapsedMs, true)}! 🎉`;
-    if (canSaveHistory) recordHistory({ rows, columns, elapsedMs, attempts });
+    if (canSaveHistory) recordHistory({ mode, rows, columns, elapsedMs, attempts });
   }
 
   function choose(tile) {
@@ -102,7 +120,7 @@
     second = tile;
     attempts++;
     $('attempts').textContent = String(attempts);
-    if (first.dataset.color === second.dataset.color) {
+    if (first.dataset.card === second.dataset.card) {
       first.classList.add('matched');
       second.classList.add('matched');
       first.disabled = second.disabled = true;
@@ -121,7 +139,7 @@
       first = second = null;
       locked = false;
       hideTimer = null;
-      $('message').textContent = 'Find two colors that match!';
+      promptForMatch();
     }, 1400);
   }
 
@@ -137,6 +155,7 @@
     $('size-error').hidden = !!size;
     if (!size) return;
     [rows, columns] = size;
+    mode = $('match-mode').value;
     window.clearTimeout(hideTimer);
     window.clearInterval(tickTimer);
     hideTimer = tickTimer = startedAt = null;
@@ -146,19 +165,22 @@
     $('timer').textContent = '0:00';
     $('attempts').textContent = '0';
     $('progress').textContent = `Pairs 0 of ${rows * columns / 2}`;
-    $('message').textContent = 'Find two colors that match!';
+    promptForMatch();
     const board = $('board');
+    board.dataset.mode = mode;
+    board.setAttribute('aria-label', `${modes[mode].label} matching board`);
     board.style.setProperty('--rows', rows);
     board.style.setProperty('--columns', columns);
     board.replaceChildren();
-    shuffledCards().forEach(([name, color], index) => {
+    shuffledCards().forEach(({ name, color, text }, index) => {
       const tile = document.createElement('button');
       tile.type = 'button';
       tile.className = 'tile';
       tile.textContent = '?';
-      tile.dataset.color = name;
+      tile.dataset.card = name;
+      tile.dataset.symbol = text;
       tile.dataset.index = String(index);
-      tile.style.setProperty('--tile-color', color);
+      if (color) tile.style.setProperty('--tile-color', color);
       tile.setAttribute('aria-label', `Hidden block ${index + 1}`);
       tile.setAttribute('aria-pressed', 'false');
       tile.addEventListener('click', () => choose(tile));
@@ -173,7 +195,8 @@
     list.replaceChildren();
     for (const entry of record.recent || []) {
       const item = document.createElement('li');
-      item.textContent = `${entry.rows}×${entry.columns} · ${formatTime(entry.elapsedMs, true)} · ${entry.attempts} tries · ${new Date(entry.playedAt).toLocaleDateString()}`;
+      const label = modes[entry.mode ?? 'colors'].label;
+      item.textContent = `${label} · ${entry.rows}×${entry.columns} · ${formatTime(entry.elapsedMs, true)} · ${entry.attempts} tries · ${new Date(entry.playedAt).toLocaleDateString()}`;
       list.append(item);
     }
     if (!list.children.length) {

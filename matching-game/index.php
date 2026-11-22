@@ -20,19 +20,26 @@ $loginUrl = $identity ? $identity->loginUrl($_SERVER['REQUEST_URI'] ?? '/github/
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#d8f1ff">
   <title>Matching Game</title>
-  <link rel="stylesheet" href="style.css?v=1.1.0">
-  <script src="game.js?v=1.1.0" defer></script>
+  <link rel="stylesheet" href="style.css?v=1.2.0">
+  <script src="game.js?v=1.2.0" defer></script>
 </head>
 <body>
   <main class="game" aria-labelledby="title" data-save-history="<?= $canSaveHistory ? 'true' : 'false' ?>" data-csrf="<?= htmlspecialchars($identity ? $identity->csrf() : '', ENT_QUOTES, 'UTF-8') ?>">
     <h1 id="title">Matching Game</h1>
     <div class="play-layout">
-      <div id="board" class="board" aria-label="Color matching board"></div>
+      <div id="board" class="board" role="group" aria-label="Color matching board"></div>
       <div class="game-side">
         <p id="progress" class="progress" aria-live="polite">Pairs 0 of 8</p>
         <div class="game-stats" aria-label="Current game"><span>Time <strong id="timer">0:00</strong></span><span>Tries <strong id="attempts">0</strong></span></div>
         <p id="message" class="message" aria-live="polite">Find two colors that match!</p>
         <div class="setup">
+          <label class="mode-field">Match
+            <select id="match-mode">
+              <option value="colors">Colors</option>
+              <option value="letters">Letters</option>
+              <option value="numbers">Numbers</option>
+            </select>
+          </label>
           <p class="setup-title">Board size</p>
           <div class="size-fields">
             <label>Rows <input id="rows" type="number" min="2" max="6" step="1" value="4" inputmode="numeric"></label>

@@ -49,18 +49,19 @@ $rows = $body['rows'] ?? null;
 $columns = $body['columns'] ?? null;
 $elapsedMs = $body['elapsedMs'] ?? null;
 $attempts = $body['attempts'] ?? null;
-$pairs = is_int($rows) && is_int($columns) ? intdiv($rows * $columns, 2) : 0;
+$mode = $body['mode'] ?? 'colors';
 if (!is_string($gameId) || preg_match('/^[a-zA-Z0-9-]{8,80}$/D', $gameId) !== 1
+    || !in_array($mode, ['colors', 'letters', 'numbers'], true)
     || !is_int($rows) || $rows < 2 || $rows > 6
     || !is_int($columns) || $columns < 2 || $columns > 6 || ($rows * $columns) % 2 !== 0
     || !is_int($elapsedMs) || $elapsedMs < 0 || $elapsedMs > 86400000
-    || !is_int($attempts) || $attempts < $pairs || $attempts > 10000) {
+    || !is_int($attempts) || $attempts < intdiv($rows * $columns, 2) || $attempts > 10000) {
     matching_reply(422, 'The game result is not valid.');
 }
 
 $userId = (string) $user['id'];
 try {
-    $records = \Jasr\Framework\JsonStore::update($path, static function (array $records) use ($userId, $gameId, $rows, $columns, $elapsedMs, $attempts): array {
+    $records = \Jasr\Framework\JsonStore::update($path, static function (array $records) use ($userId, $gameId, $mode, $rows, $columns, $elapsedMs, $attempts): array {
         $record = $records[$userId] ?? ['games' => 0, 'recent' => []];
         if (!isset($record['recent']) || !is_array($record['recent'])) $record['recent'] = [];
         foreach ($record['recent'] ?? [] as $entry) {
@@ -69,6 +70,7 @@ try {
         $record['games'] = (int) ($record['games'] ?? 0) + 1;
         array_unshift($record['recent'], [
             'gameId' => $gameId,
+            'mode' => $mode,
             'rows' => $rows,
             'columns' => $columns,
             'elapsedMs' => $elapsedMs,
