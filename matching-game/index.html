@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#d8f1ff">
+  <title>Matching Game</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="game.js" defer></script>
+</head>
+<body>
+  <main class="game" aria-labelledby="title">
+    <h1 id="title">Matching Game</h1>
+    <div class="play-layout">
+      <div id="board" class="board" aria-label="Color matching board"></div>
+      <div class="game-side">
+        <p id="progress" class="progress" aria-live="polite">Pairs 0 of 8</p>
+        <p id="message" class="message" aria-live="polite">Find two colors that match!</p>
+        <button id="new-game" class="new-game" type="button">New game</button>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
