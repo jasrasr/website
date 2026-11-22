@@ -52,12 +52,15 @@ h1 { margin: 0 0 clamp(18px, 3vw, 32px); text-align: center; font-size: clamp(2.
 .board[data-mode="objects"] { --tile-color: #fff4d8; }
 .board:not([data-mode="colors"]) .tile.revealed {
   color: #0b2055;
-  font-size: clamp(1rem, calc(18vw / var(--columns)), 3.6rem);
+  font-size: clamp(1rem, calc(67 * min(100vw, 630px) / 100 / var(--columns)), 16rem);
+  line-height: 1;
+}
+.board[data-mode="numbers"] .tile.two-digit.revealed {
+  font-size: clamp(1rem, calc(60 * min(100vw, 630px) / 100 / var(--columns)), 16rem);
 }
 .board[data-mode="objects"] .tile.revealed {
   font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
-  font-size: clamp(1.5rem, 10vw, 4rem);
-  line-height: 1;
+  font-size: clamp(1rem, calc(60 * min(100vw, 630px) / 100 / var(--columns)), 16rem);
 }
 .game-side { display: flex; flex-direction: column; align-items: stretch; gap: 16px; text-align: center; }
 .progress { margin: 0; padding: 13px 12px; border-radius: 999px; background: #bde4ff; font-size: clamp(1.2rem, 2.6vw, 2.2rem); font-weight: 900; }
@@ -82,6 +85,9 @@ h1 { margin: 0 0 clamp(18px, 3vw, 32px); text-align: center; font-size: clamp(2.
   background: white;
   color: #0b2055;
 }
+.sound-field { display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 44px; margin-bottom: 10px; font-weight: 800; cursor: pointer; }
+.sound-field input { width: 22px; height: 22px; margin: 0; accent-color: #1168df; cursor: pointer; }
+.sound-field:has(input:disabled) { opacity: .6; cursor: default; }
 .setup-title { margin: 0 0 8px; font-size: 1rem; font-weight: 900; }
 .size-fields { display: flex; align-items: end; justify-content: center; gap: 10px; }
 .size-fields label { display: flex; flex-direction: column; gap: 3px; color: #415b82; font-size: .85rem; font-weight: 750; }
