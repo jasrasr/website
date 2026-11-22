@@ -88,6 +88,11 @@ h1 { margin: 0 0 clamp(18px, 3vw, 32px); text-align: center; font-size: clamp(2.
 .sound-field { display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 44px; margin-bottom: 10px; font-weight: 800; cursor: pointer; }
 .sound-field input { width: 22px; height: 22px; margin: 0; accent-color: #1168df; cursor: pointer; }
 .sound-field:has(input:disabled) { opacity: .6; cursor: default; }
+.sound-help { margin: -4px 0 12px; color: #415b82; font-size: .8rem; line-height: 1.35; text-align: left; }
+.sound-help summary { color: #0756d3; font-weight: 800; text-align: center; cursor: pointer; }
+.sound-help p { margin: 8px 0 5px; }
+.sound-help ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px 10px; margin: 0; padding-left: 22px; }
+.sound-help code { overflow-wrap: anywhere; color: #0b2055; font-size: .75rem; }
 .setup-title { margin: 0 0 8px; font-size: 1rem; font-weight: 900; }
 .size-fields { display: flex; align-items: end; justify-content: center; gap: 10px; }
 .size-fields label { display: flex; flex-direction: column; gap: 3px; color: #415b82; font-size: .85rem; font-weight: 750; }

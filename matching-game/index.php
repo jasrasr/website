@@ -20,8 +20,8 @@ $loginUrl = $identity ? $identity->loginUrl($_SERVER['REQUEST_URI'] ?? '/github/
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#d8f1ff">
   <title>Matching Game</title>
-  <link rel="stylesheet" href="style.css?v=1.4.0">
-  <script src="game.js?v=1.4.0" defer></script>
+  <link rel="stylesheet" href="style.css?v=1.5.0">
+  <script src="game.js?v=1.5.0" defer></script>
 </head>
 <body>
   <main class="game" aria-labelledby="title" data-save-history="<?= $canSaveHistory ? 'true' : 'false' ?>" data-csrf="<?= htmlspecialchars($identity ? $identity->csrf() : '', ENT_QUOTES, 'UTF-8') ?>">
@@ -42,6 +42,17 @@ $loginUrl = $identity ? $identity->loginUrl($_SERVER['REQUEST_URI'] ?? '/github/
             </select>
           </label>
           <label class="sound-field"><input id="read-aloud" type="checkbox"> Read tiles aloud</label>
+          <details class="sound-help">
+            <summary>Where do my recordings go?</summary>
+            <p>Save MP3 files in <code>matching-game/sounds/</code>:</p>
+            <ul>
+              <li><code>colors/red.mp3</code></li>
+              <li><code>letters/a.mp3</code></li>
+              <li><code>numbers/1.mp3</code></li>
+              <li><code>objects/apple.mp3</code></li>
+            </ul>
+            <p>The browser voice is used when a recording is missing. See <code>sounds/README.md</code> for every filename.</p>
+          </details>
           <p class="setup-title">Board size</p>
           <div class="size-fields">
             <label>Rows <input id="rows" type="number" min="2" max="6" step="1" value="4" inputmode="numeric"></label>
