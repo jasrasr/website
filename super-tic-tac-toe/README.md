@@ -1,4 +1,17 @@
+<!--
+File Name: README.md
+Author: Jason Lamb (with help from ChatGPT)
+Description: Super Tic-Tac-Toe setup, gameplay, validation, and deployment.
+Revision: 1.0.1
+Created Date: 2026-11-19
+Modified Date: 2026-11-22
+Changelog: 1.0.1 - Add fresh desktop and mobile screenshots. 1.0.0 - Document the game and deployment.
+-->
 # Super Tic-Tac-Toe
+
+![Super Tic-Tac-Toe desktop screenshot](screenshots/desktop.png)
+
+![Super Tic-Tac-Toe mobile screenshot](screenshots/mobile.png)
 
 **Play the game:** [Jasr.me](https://jasr.me/super-tic-tac-toe/)
 

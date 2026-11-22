@@ -2,11 +2,12 @@
 File Name     : README.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Repository overview, development conventions, project index, and deployment guidance.
-Revision      : 1.0.19
+Revision      : 1.0.20
 Created Date  : 2025-02-14
-Modified Date : 2026-11-20
+Modified Date : 2026-11-22
 Changelog     :
   Rev 1.0.19 - Upgrade Fake Chatbot to PHP-backed joke portal with optional shared-identity history linking and admin tools.
+  Rev 1.0.20 - Refresh Coin Flip and Super Tic-Tac-Toe documentation and screenshots.
   Rev 1.0.18 - Add preserved PowerShell fake chatbot and safe browser-based simulation as a new project.
   Rev 1.0.17 - Add Super Tic-Tac-Toe to the project index.
   Rev 1.0.16 - Link the Investment Tracker project title directly to its hosted Jasr.me site and clarify access requirements.
