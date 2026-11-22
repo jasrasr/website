@@ -7,7 +7,7 @@
   <title>Feed the Pet</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="orders.css">
-  <script src="game.js?v=2" defer></script>
+  <script src="game.js?v=3" defer></script>
 </head>
 <body>
   <main class="game" aria-labelledby="title">
@@ -15,9 +15,12 @@
       <div><p class="eyebrow">A little pet-care game</p><h1 id="title">Feed the Pet</h1></div>
       <button id="new-game" class="reset" type="button">New pet</button>
     </header>
-    <div class="mode-picker" role="group" aria-label="Play mode">
+    <div class="mode-picker" role="group" aria-label="Game controls">
       <button type="button" data-mode="free" aria-pressed="true">Free Feed</button>
       <button type="button" data-mode="orders" aria-pressed="false">Pet Orders</button>
+      <button id="sound-toggle" type="button" aria-pressed="true">
+        Sound <span aria-hidden="true">on</span>
+      </button>
     </div>
     <section class="pet-picker" aria-label="Choose a pet"><p class="section-label">Who is hungry?</p><div id="pet-picker" class="pet-options"></div></section>
     <section class="play-area" aria-label="Feeding area">

@@ -19,6 +19,12 @@
     { prompt: 'Two carrots, please!', items: [carrot, carrot] },
     { prompt: 'Apple, banana, apple. In that order!', items: [apple, banana, apple] },
   ];
+  const sounds = {
+    bite: [523, 659],
+    retry: [392, 330],
+    order: [523, 659, 784],
+    finish: [523, 659, 784, 1047],
+  };
   const petPicker = document.querySelector('#pet-picker');
   const foodTray = document.querySelector('#food');
   const pet = document.querySelector('#pet');
@@ -30,10 +36,53 @@
   const clues = document.querySelector('#order-clues');
   const feedback = document.querySelector('#order-feedback');
   const nextOrder = document.querySelector('#next-order');
+  const soundToggle = document.querySelector('#sound-toggle');
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
   let selectedPet = pets[0];
   let mode = 'free';
   let orderIndex = 0;
   let fed = 0;
+  let soundEnabled = true;
+  let audio;
+  let volume;
+  let lastCue = 0;
+
+  async function playSound(cue) {
+    if (!soundEnabled || !AudioContext) return;
+    const request = ++lastCue;
+
+    try {
+      // Create and unlock audio on a tap so mobile browsers allow playback.
+      audio ??= new AudioContext();
+      if (!volume) {
+        volume = audio.createGain();
+        volume.gain.value = 0.1;
+        volume.connect(audio.destination);
+      }
+      if (audio.state !== 'running') await audio.resume();
+      if (!soundEnabled || request !== lastCue) return;
+
+      sounds[cue].forEach((frequency, index) => {
+        const start = audio.currentTime + index * 0.11;
+        const end = start + 0.15;
+        const note = audio.createOscillator();
+        const envelope = audio.createGain();
+        note.frequency.value = frequency;
+        envelope.gain.setValueAtTime(0, start);
+        envelope.gain.linearRampToValueAtTime(0.55, start + 0.018);
+        envelope.gain.linearRampToValueAtTime(0, end);
+        note.connect(envelope).connect(volume);
+        note.onended = () => {
+          note.disconnect();
+          envelope.disconnect();
+        };
+        note.start(start);
+        note.stop(end);
+      });
+    } catch {
+      // Audio can be unavailable without interrupting play.
+    }
+  }
 
   function choosePet(nextPet) {
     selectedPet = nextPet;
@@ -55,6 +104,7 @@
     addBite(food);
     progress.textContent = `Food: ${fed} of ${foods.length}`;
     speech.textContent = fed === foods.length ? `${selectedPet.name} is full! Yum! 🎉` : 'Yum! More please!';
+    playSound(fed === foods.length ? 'finish' : 'bite');
   }
 
   function addBite(food) {
@@ -71,6 +121,7 @@
     const order = orders[orderIndex];
     if (food !== order.items[fed]) {
       feedback.textContent = 'Try the food in the highlighted picture!';
+      playSound('retry');
       return;
     }
 
@@ -79,10 +130,12 @@
     renderOrder();
     if (fed < order.items.length) {
       feedback.textContent = 'Yum! What comes next?';
+      playSound('bite');
       return;
     }
 
     const finished = orderIndex === orders.length - 1;
+    playSound(finished ? 'finish' : 'order');
     feedback.textContent = finished ? 'You filled all three orders! 🎉' : 'Order complete! ⭐';
     nextOrder.textContent = finished ? 'Play again' : 'Next order';
     nextOrder.hidden = false;
@@ -152,5 +205,18 @@
     orderIndex = (orderIndex + 1) % orders.length;
     showRound();
     foodTray.querySelector('button').focus();
+  });
+  if (!AudioContext) {
+    soundToggle.hidden = true;
+  }
+  soundToggle.addEventListener('click', () => {
+    soundEnabled = !soundEnabled;
+    lastCue += 1;
+    soundToggle.setAttribute('aria-pressed', String(soundEnabled));
+    soundToggle.querySelector('span').textContent = soundEnabled ? 'on' : 'off';
+    if (!soundEnabled && volume) {
+      volume.disconnect();
+      volume = undefined;
+    }
   });
 })();
