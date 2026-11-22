@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#ffe5b5">
   <title>Feed the Pet</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="orders.css?v=4">
-  <script src="game.js?v=4" defer></script>
+  <link rel="stylesheet" href="orders.css?v=5">
+  <script src="game.js?v=5" defer></script>
 </head>
 <body>
   <main class="game" aria-labelledby="title">
@@ -35,6 +35,12 @@
       </button>
     </section>
     <section class="food-area" aria-label="Choose food"><p class="section-label">Pick a food</p><div id="food" class="food-options"></div></section>
+    <section class="session-history" aria-labelledby="history-title">
+      <h2 id="history-title">This session</h2>
+      <p id="session-count" aria-live="polite">0 completed rounds</p>
+      <ol id="session-list" aria-label="Completed rounds"></ol>
+      <a href="/user-management/">Sign in to User Management</a>
+    </section>
   </main>
 </body>
 </html>

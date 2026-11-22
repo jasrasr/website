@@ -40,6 +40,22 @@
   const nextLabel = nextOrder.querySelector('.next-label');
   const game = document.querySelector('.game');
   const soundToggle = document.querySelector('#sound-toggle');
+  const sessionCount = document.querySelector('#session-count');
+  const sessionList = document.querySelector('#session-list');
+  const sessionKey = 'feed-the-pet-session-v1';
+  let completedRounds = [];
+  try {
+    const stored = JSON.parse(sessionStorage.getItem(sessionKey) || '[]');
+    if (Array.isArray(stored)) {
+      completedRounds = stored.filter(entry =>
+        entry && ['free', 'orders'].includes(entry.mode) &&
+        pets.some(pet => pet.name === entry.pet) &&
+        typeof entry.time === 'string'
+      ).slice(-20);
+    }
+  } catch {
+    // Continue with in-memory history when session storage is unavailable.
+  }
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   let selectedPet = pets[0];
   let mode = 'free';
@@ -49,6 +65,30 @@
   let audio;
   let volume;
   let lastCue = 0;
+
+  function renderHistory() {
+    sessionCount.textContent = `${completedRounds.length} completed ${completedRounds.length === 1 ? 'round' : 'rounds'}`;
+    sessionList.replaceChildren(...completedRounds.slice().reverse().map(entry => {
+      const item = document.createElement('li');
+      item.textContent = `${entry.pet} · ${entry.mode === 'orders' ? 'Pet Orders' : 'Free Feed'} · ${entry.time}`;
+      return item;
+    }));
+  }
+
+  function finishRound() {
+    completedRounds.push({
+      pet: selectedPet.name,
+      mode,
+      time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+    });
+    completedRounds = completedRounds.slice(-20);
+    try {
+      sessionStorage.setItem(sessionKey, JSON.stringify(completedRounds));
+    } catch {
+      // The in-memory list still works for this page.
+    }
+    renderHistory();
+  }
 
   async function playSound(cue) {
     if (!soundEnabled || !AudioContext) return;
@@ -107,6 +147,7 @@
     addBite(food);
     progress.textContent = `Food: ${fed} of ${foods.length}`;
     speech.textContent = fed === foods.length ? `${selectedPet.name} is full! Yum! 🎉` : 'Yum! More please!';
+    if (fed === foods.length) finishRound();
     playSound(fed === foods.length ? 'finish' : 'bite');
   }
 
@@ -139,6 +180,7 @@
     }
 
     const finished = orderIndex === orders.length - 1;
+    if (finished) finishRound();
     playSound(finished ? 'finish' : 'order');
     feedback.textContent = finished ? 'You filled all three orders! 🎉' : 'Order complete! ⭐';
     nextIcon.textContent = finished ? '↻' : '▶';
@@ -229,4 +271,5 @@
       volume = undefined;
     }
   });
+  renderHistory();
 })();

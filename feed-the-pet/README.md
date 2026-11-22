@@ -7,4 +7,6 @@ A simple touch-friendly feeding game for young children. Choose a pet, then tap 
 
 Both modes use short sound cues after a food tap. Use the **Sound** button to mute or unmute them.
 
+Completed rounds appear under **This session** and survive reloads in the same browser tab. The game offers an optional link to User Management sign in. Session history stays in the browser tab and does not sync to an account.
+
 Open `index.html` locally or serve the website directory with the local host launcher.

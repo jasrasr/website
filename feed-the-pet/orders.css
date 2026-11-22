@@ -153,6 +153,37 @@
   margin: 0;
 }
 
+.session-history {
+  margin-top: 24px;
+  padding: 16px 20px;
+  border-radius: 20px;
+  background: #fff0d7;
+  font-size: 1rem;
+}
+
+.session-history h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.session-history p {
+  margin: 5px 0 0;
+}
+
+.session-history ol {
+  margin: 8px 0;
+  padding-left: 1.5em;
+}
+
+.session-history li {
+  margin-top: 4px;
+}
+
+.session-history a {
+  color: #703452;
+  font-weight: 800;
+}
+
 @media (max-width: 560px) {
   .taking-orders .mode-picker button {
     padding-inline: 8px;
