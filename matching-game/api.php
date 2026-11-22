@@ -51,7 +51,7 @@ $elapsedMs = $body['elapsedMs'] ?? null;
 $attempts = $body['attempts'] ?? null;
 $mode = $body['mode'] ?? 'colors';
 if (!is_string($gameId) || preg_match('/^[a-zA-Z0-9-]{8,80}$/D', $gameId) !== 1
-    || !in_array($mode, ['colors', 'letters', 'numbers'], true)
+    || !in_array($mode, ['colors', 'letters', 'numbers', 'objects'], true)
     || !is_int($rows) || $rows < 2 || $rows > 6
     || !is_int($columns) || $columns < 2 || $columns > 6 || ($rows * $columns) % 2 !== 0
     || !is_int($elapsedMs) || $elapsedMs < 0 || $elapsedMs > 86400000

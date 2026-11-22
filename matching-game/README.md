@@ -1,6 +1,6 @@
 # Matching Game
 
-A memory game for young children. Choose **Colors**, **Letters**, or **Numbers** and press **New game**. Tap or click two blocks to reveal them. Matches stay visible and other blocks turn over after a short pause. The default board is 4×4. Choose any grid from 2×2 through 6×6 with an even number of blocks.
+A memory game for young children. Choose **Colors**, **Letters**, **Numbers**, or **Objects** and press **New game**. Tap or click two blocks to reveal them. Matches stay visible and other blocks turn over after a short pause. The default board is 4×4. Choose any grid from 2×2 through 6×6 with an even number of blocks.
 
 The timer starts with the first block and stops when the last pair is found. The page shows attempts, completed games, pairs found, and the best time for each mode and board size in the current browser tab session. This score uses session storage when available and never requires an account.
 

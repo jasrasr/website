@@ -15,6 +15,13 @@
       const text = String(index + 1);
       return { name: `Number ${text}`, text };
     }) },
+    objects: { label: 'Objects', cards: [
+      ['Apple', '🍎'], ['Banana', '🍌'], ['Ball', '⚽'], ['Car', '🚗'],
+      ['Train', '🚂'], ['Airplane', '✈️'], ['Teddy bear', '🧸'], ['Book', '📚'],
+      ['Pencil', '✏️'], ['Cup', '🥤'], ['Key', '🔑'], ['Clock', '⏰'],
+      ['Star', '⭐'], ['Flower', '🌻'], ['Tree', '🌳'], ['Dog', '🐶'],
+      ['Cat', '🐱'], ['House', '🏠'],
+    ].map(([name, text]) => ({ name, text })) },
   };
   const $ = id => document.getElementById(id);
   const root = document.querySelector('.game');

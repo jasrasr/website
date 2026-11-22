@@ -49,9 +49,15 @@ h1 { margin: 0 0 clamp(18px, 3vw, 32px); text-align: center; font-size: clamp(2.
 .tile:disabled { opacity: 1; }
 .board[data-mode="letters"] { --tile-color: #e5d5ff; }
 .board[data-mode="numbers"] { --tile-color: #c7f1df; }
+.board[data-mode="objects"] { --tile-color: #fff4d8; }
 .board:not([data-mode="colors"]) .tile.revealed {
   color: #0b2055;
   font-size: clamp(1rem, calc(18vw / var(--columns)), 3.6rem);
+}
+.board[data-mode="objects"] .tile.revealed {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-size: clamp(1.5rem, 10vw, 4rem);
+  line-height: 1;
 }
 .game-side { display: flex; flex-direction: column; align-items: stretch; gap: 16px; text-align: center; }
 .progress { margin: 0; padding: 13px 12px; border-radius: 999px; background: #bde4ff; font-size: clamp(1.2rem, 2.6vw, 2.2rem); font-weight: 900; }
