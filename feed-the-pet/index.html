@@ -6,7 +6,8 @@
   <meta name="theme-color" content="#ffe5b5">
   <title>Feed the Pet</title>
   <link rel="stylesheet" href="style.css">
-  <script src="game.js" defer></script>
+  <link rel="stylesheet" href="orders.css">
+  <script src="game.js?v=2" defer></script>
 </head>
 <body>
   <main class="game" aria-labelledby="title">
@@ -14,12 +15,19 @@
       <div><p class="eyebrow">A little pet-care game</p><h1 id="title">Feed the Pet</h1></div>
       <button id="new-game" class="reset" type="button">New pet</button>
     </header>
+    <div class="mode-picker" role="group" aria-label="Play mode">
+      <button type="button" data-mode="free" aria-pressed="true">Free Feed</button>
+      <button type="button" data-mode="orders" aria-pressed="false">Pet Orders</button>
+    </div>
     <section class="pet-picker" aria-label="Choose a pet"><p class="section-label">Who is hungry?</p><div id="pet-picker" class="pet-options"></div></section>
-    <section class="play-area" aria-live="polite">
+    <section class="play-area" aria-label="Feeding area">
       <div id="pet" class="pet" role="img" aria-label="Happy pet">🐶</div>
-      <div class="speech" id="speech">Tap some food for me!</div>
-      <div class="bowl" id="bowl" aria-label="Pet's bowl"><span>🥣</span></div>
-      <p class="progress" id="progress">Food: 0 of 5</p>
+      <div class="speech" id="speech" aria-live="polite">Tap some food for me!</div>
+      <div id="order-clues" class="order-clues" aria-hidden="true" hidden></div>
+      <div class="bowl" id="bowl" aria-hidden="true"><span class="bowl-icon">🥣</span></div>
+      <p class="progress" id="progress" aria-live="polite">Food: 0 of 5</p>
+      <p id="order-feedback" class="order-feedback" role="status"></p>
+      <button id="next-order" class="reset next-order" type="button" hidden>Next order</button>
     </section>
     <section class="food-area" aria-label="Choose food"><p class="section-label">Pick a food</p><div id="food" class="food-options"></div></section>
   </main>

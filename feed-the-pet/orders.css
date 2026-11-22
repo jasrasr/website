@@ -1,0 +1,90 @@
+.mode-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.mode-picker button {
+  min-height: 44px;
+  padding: 7px 15px;
+  border: 2px solid #703452;
+  border-radius: 999px;
+  background: #fffaf0;
+  color: #703452;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.mode-picker button[aria-pressed="true"] {
+  background: #703452;
+  color: #fff;
+}
+
+.mode-picker button:focus-visible {
+  outline: 3px solid #a34f21;
+  outline-offset: 3px;
+}
+
+.play-area {
+  padding: 12px 10px;
+  text-align: center;
+}
+
+.bowl > .bowl-food {
+  position: static;
+  font-size: clamp(1.2rem, 5vw, 2rem);
+}
+
+.bowl > .bowl-icon {
+  top: -.95em;
+}
+
+.order-clues {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 6px;
+  margin: 9px 0 5px;
+}
+
+.order-clues[hidden] {
+  display: none;
+}
+
+.order-clues span {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 2px solid transparent;
+  border-radius: 11px;
+  background: #fffaf0;
+  font-size: 1.4rem;
+}
+
+.order-clues .current {
+  border-color: #703452;
+  background: #fff0c9;
+}
+
+.order-clues .served {
+  opacity: .5;
+}
+
+.order-feedback,
+.next-order {
+  position: relative;
+  z-index: 1;
+  margin: 8px 0 0;
+}
+
+.order-feedback {
+  font-weight: 800;
+}
+
+.order-feedback:empty {
+  margin: 0;
+}
