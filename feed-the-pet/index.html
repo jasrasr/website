@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffe5b5">
+  <title>Feed the Pet</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="game.js" defer></script>
+</head>
+<body>
+  <main class="game" aria-labelledby="title">
+    <header class="header">
+      <div><p class="eyebrow">A little pet-care game</p><h1 id="title">Feed the Pet</h1></div>
+      <button id="new-game" class="reset" type="button">New pet</button>
+    </header>
+    <section class="pet-picker" aria-label="Choose a pet"><p class="section-label">Who is hungry?</p><div id="pet-picker" class="pet-options"></div></section>
+    <section class="play-area" aria-live="polite">
+      <div id="pet" class="pet" role="img" aria-label="Happy pet">🐶</div>
+      <div class="speech" id="speech">Tap some food for me!</div>
+      <div class="bowl" id="bowl" aria-label="Pet's bowl"><span>🥣</span></div>
+      <p class="progress" id="progress">Food: 0 of 5</p>
+    </section>
+    <section class="food-area" aria-label="Choose food"><p class="section-label">Pick a food</p><div id="food" class="food-options"></div></section>
+  </main>
+</body>
+</html>
