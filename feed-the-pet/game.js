@@ -36,10 +36,32 @@
   const clues = document.querySelector('#order-clues');
   const feedback = document.querySelector('#order-feedback');
   const nextOrder = document.querySelector('#next-order');
+  const repeatOrder = document.querySelector('#repeat-order');
   const nextIcon = nextOrder.querySelector('.next-icon');
   const nextLabel = nextOrder.querySelector('.next-label');
   const game = document.querySelector('.game');
   const soundToggle = document.querySelector('#sound-toggle');
+  const sessionCount = document.querySelector('#session-count');
+  const sessionList = document.querySelector('#session-list');
+  const sessionKey = 'feed-the-pet-session-v1';
+  let completedRounds = [];
+  let achievements = 0;
+  try {
+    const stored = JSON.parse(sessionStorage.getItem(sessionKey) || 'null');
+    const rounds = Array.isArray(stored) ? stored : stored?.rounds;
+    if (Array.isArray(rounds)) {
+      completedRounds = rounds.filter(entry =>
+        entry && ['free', 'orders'].includes(entry.mode) &&
+        pets.some(pet => pet.name === entry.pet) &&
+        typeof entry.time === 'string'
+      ).slice(-20);
+      achievements = Number.isInteger(stored?.achievements)
+        ? Math.max(0, stored.achievements)
+        : completedRounds.filter(entry => entry.mode === 'orders').length;
+    }
+  } catch {
+    // Continue with in-memory history when session storage is unavailable.
+  }
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   let selectedPet = pets[0];
   let mode = 'free';
@@ -49,6 +71,74 @@
   let audio;
   let volume;
   let lastCue = 0;
+
+  function speakOrder() {
+    if (!soundEnabled || !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(orders[orderIndex].prompt);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.85;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function achievementCount() {
+    return achievements;
+  }
+
+  function unlockedPetCount() {
+    return Math.min(pets.length, 1 + Math.floor(achievementCount() / 5));
+  }
+
+  function renderAchievements() {
+    const achievements = achievementCount();
+    const unlocked = unlockedPetCount();
+    const count = document.querySelector('#achievement-count');
+    const progress = document.querySelector('#unlock-progress');
+    count.textContent = `${achievements} ${achievements === 1 ? 'achievement' : 'achievements'}`;
+    if (unlocked === pets.length) {
+      progress.textContent = 'All pets unlocked!';
+    } else {
+      const remaining = unlocked * 5 - achievements;
+      progress.textContent = `${remaining} more ${remaining === 1 ? 'achievement' : 'achievements'} unlocks ${pets[unlocked].name}`;
+    }
+    document.querySelectorAll('.pet-choice').forEach((button, index) => {
+      const locked = index >= unlocked;
+      button.disabled = locked;
+      button.classList.toggle('locked', locked);
+      button.setAttribute('aria-label', locked
+        ? `${button.dataset.pet} locked. Earn ${index * 5} achievements to unlock.`
+        : `Choose ${button.dataset.pet}`);
+      button.querySelector('.pet-lock').hidden = !locked;
+    });
+  }
+
+  function renderHistory() {
+    sessionCount.textContent = `${completedRounds.length} completed ${completedRounds.length === 1 ? 'round' : 'rounds'}`;
+    sessionList.replaceChildren(...completedRounds.slice().reverse().map(entry => {
+      const item = document.createElement('li');
+      item.textContent = `${entry.pet} · ${entry.mode === 'orders' ? 'Pet Orders' : 'Free Feed'} · ${entry.time}`;
+      return item;
+    }));
+  }
+
+  function finishRound() {
+    const unlockedBefore = unlockedPetCount();
+    if (mode === 'orders') achievements += 1;
+    completedRounds.push({
+      pet: selectedPet.name,
+      mode,
+      time: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+    });
+    completedRounds = completedRounds.slice(-20);
+    try {
+      sessionStorage.setItem(sessionKey, JSON.stringify({ rounds: completedRounds, achievements }));
+    } catch {
+      // The in-memory list still works for this page.
+    }
+    renderHistory();
+    renderAchievements();
+    return unlockedPetCount() > unlockedBefore ? pets[unlockedBefore] : null;
+  }
 
   async function playSound(cue) {
     if (!soundEnabled || !AudioContext) return;
@@ -107,6 +197,7 @@
     addBite(food);
     progress.textContent = `Food: ${fed} of ${foods.length}`;
     speech.textContent = fed === foods.length ? `${selectedPet.name} is full! Yum! 🎉` : 'Yum! More please!';
+    if (fed === foods.length) finishRound();
     playSound(fed === foods.length ? 'finish' : 'bite');
   }
 
@@ -139,8 +230,11 @@
     }
 
     const finished = orderIndex === orders.length - 1;
+    const unlockedPet = finished ? finishRound() : null;
     playSound(finished ? 'finish' : 'order');
-    feedback.textContent = finished ? 'You filled all three orders! 🎉' : 'Order complete! ⭐';
+    feedback.textContent = unlockedPet
+      ? `You unlocked ${unlockedPet.name}! 🎉`
+      : finished ? 'You earned an achievement! ⭐' : 'Order complete! ⭐';
     nextIcon.textContent = finished ? '↻' : '▶';
     nextLabel.textContent = finished ? 'Play again' : 'Next order';
     nextOrder.hidden = false;
@@ -180,11 +274,14 @@
     nextOrder.hidden = true;
     const takingOrders = mode === 'orders';
     clues.hidden = !takingOrders;
+    repeatOrder.hidden = !takingOrders || !soundEnabled || !('speechSynthesis' in window);
     game.classList.toggle('taking-orders', takingOrders);
     if (takingOrders) {
       speech.textContent = orders[orderIndex].prompt;
       renderOrder();
+      speakOrder();
     } else {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       speech.textContent = selectedPet.welcome;
       progress.textContent = `Food: 0 of ${foods.length}`;
     }
@@ -193,7 +290,7 @@
     const button = document.createElement('button');
     button.className = 'pet-choice'; button.type = 'button'; button.dataset.pet = item.name;
     button.setAttribute('aria-label', `Choose ${item.name}`); button.setAttribute('aria-pressed', String(item === selectedPet));
-    button.innerHTML = `<span>${item.emoji}</span><small>${item.name}</small>`;
+    button.innerHTML = `<span>${item.emoji}</span><small>${item.name}</small><b class="pet-lock" hidden aria-hidden="true">🔒</b>`;
     button.addEventListener('click', () => choosePet(item)); petPicker.append(button);
   });
   foods.forEach((item) => {
@@ -204,7 +301,10 @@
     button.innerHTML = `<span aria-hidden="true">${item.emoji}</span><small>${item.name}</small>`;
     button.addEventListener('click', () => feed(item, button)); foodTray.append(button);
   });
-  newGame.addEventListener('click', () => choosePet(pets[Math.floor(Math.random() * pets.length)]));
+  newGame.addEventListener('click', () => {
+    const unlocked = pets.slice(0, unlockedPetCount());
+    choosePet(unlocked[Math.floor(Math.random() * unlocked.length)]);
+  });
   modeButtons.forEach((button) => button.addEventListener('click', () => {
     if (mode === button.dataset.mode) return;
     mode = button.dataset.mode;
@@ -216,6 +316,7 @@
     showRound();
     foodTray.querySelector('button').focus();
   });
+  repeatOrder.addEventListener('click', speakOrder);
   if (!AudioContext) {
     soundToggle.hidden = true;
   }
@@ -224,9 +325,13 @@
     lastCue += 1;
     soundToggle.setAttribute('aria-pressed', String(soundEnabled));
     soundToggle.querySelector('span').textContent = soundEnabled ? 'on' : 'off';
+    repeatOrder.hidden = !soundEnabled || mode !== 'orders' || !('speechSynthesis' in window);
+    if (!soundEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
     if (!soundEnabled && volume) {
       volume.disconnect();
       volume = undefined;
     }
   });
+  renderHistory();
+  renderAchievements();
 })();

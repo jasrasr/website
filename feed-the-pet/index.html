@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#ffe5b5">
   <title>Feed the Pet</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="orders.css?v=4">
-  <script src="game.js?v=4" defer></script>
+  <link rel="stylesheet" href="orders.css?v=7">
+  <script src="game.js?v=7" defer></script>
 </head>
 <body>
   <main class="game" aria-labelledby="title">
@@ -23,10 +23,18 @@
       </button>
     </div>
     <section class="pet-picker" aria-label="Choose a pet"><p class="section-label">Who is hungry?</p><div id="pet-picker" class="pet-options"></div></section>
+    <div class="achievement-progress" aria-live="polite">
+      <span class="achievement-star" aria-hidden="true">⭐</span>
+      <strong id="achievement-count">0 achievements</strong>
+      <span id="unlock-progress">5 more unlocks Kitten</span>
+    </div>
     <section class="play-area" aria-label="Feeding area">
       <div id="pet" class="pet" role="img" aria-label="Happy pet">🐶</div>
       <div class="speech" id="speech" aria-live="polite">Tap some food for me!</div>
       <div id="order-clues" class="order-clues" aria-hidden="true" hidden></div>
+      <button id="repeat-order" class="repeat-order" type="button" hidden aria-label="Hear the order again">
+        <span aria-hidden="true">🔊</span> Hear again
+      </button>
       <div class="bowl" id="bowl" aria-hidden="true"><span class="bowl-icon">🥣</span></div>
       <p class="progress" id="progress" aria-live="polite">Food: 0 of 5</p>
       <p id="order-feedback" class="order-feedback" role="status"></p>
@@ -35,6 +43,12 @@
       </button>
     </section>
     <section class="food-area" aria-label="Choose food"><p class="section-label">Pick a food</p><div id="food" class="food-options"></div></section>
+    <section class="session-history" aria-labelledby="history-title">
+      <h2 id="history-title">This session</h2>
+      <p id="session-count" aria-live="polite">0 completed rounds</p>
+      <ol id="session-list" aria-label="Completed rounds"></ol>
+      <a href="/user-management/">Sign in to User Management</a>
+    </section>
   </main>
 </body>
 </html>
