@@ -46,32 +46,96 @@
   position: relative;
   z-index: 1;
   display: flex;
-  gap: 6px;
-  margin: 9px 0 5px;
+  justify-content: center;
+  gap: clamp(8px, 3vw, 18px);
+  max-width: 100%;
+  padding: 12px 10px 21px;
+  margin: 4px 0 12px;
+  border-radius: 24px;
+  background: #fff4df;
 }
 
 .order-clues[hidden] {
   display: none;
 }
 
-.order-clues span {
+.order-card {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
-  border: 2px solid transparent;
-  border-radius: 11px;
-  background: #fffaf0;
-  font-size: 1.4rem;
+  width: clamp(54px, 18vw, 96px);
+  aspect-ratio: 1;
+  border: 3px solid #e3c6ac;
+  border-radius: 16px;
+  background: #fff;
+  font-size: clamp(2rem, 9vw, 4rem);
+  line-height: 1;
 }
 
-.order-clues .current {
+.order-card.red-clue {
+  background: #ffe1df;
+}
+
+.order-card.current {
   border-color: #703452;
-  background: #fff0c9;
+  box-shadow: 0 0 0 3px #ffca55;
 }
 
-.order-clues .served {
-  opacity: .5;
+.order-card.current::after {
+  position: absolute;
+  bottom: -15px;
+  border-inline: 8px solid transparent;
+  border-top: 9px solid #703452;
+  content: "";
+}
+
+.order-card.served {
+  border-color: #34824f;
+  background: #e3f6de;
+}
+
+.order-card.served::after,
+.retry .order-card.current::before {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #28653b;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 900;
+  content: "✓";
+}
+
+.retry .order-card.current::before {
+  background: #703452;
+  content: "↻";
+}
+
+.taking-orders .speech,
+.taking-orders .progress,
+.taking-orders .order-feedback {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.taking-orders .pet {
+  font-size: clamp(4.5rem, 16vw, 8rem);
+}
+
+.next-icon {
+  margin-inline-end: 4px;
+  font-size: 1.15em;
 }
 
 .order-feedback,
@@ -87,4 +151,44 @@
 
 .order-feedback:empty {
   margin: 0;
+}
+
+@media (max-width: 560px) {
+  .taking-orders .mode-picker button {
+    padding-inline: 8px;
+    font-size: .9rem;
+  }
+
+  .taking-orders .pet-picker,
+  .taking-orders .play-area,
+  .taking-orders .food-area {
+    margin-top: 12px;
+  }
+
+  .taking-orders .pet-choice {
+    min-width: 58px;
+  }
+
+  .taking-orders .pet-choice span {
+    font-size: 1.8rem;
+  }
+
+  .taking-orders .food-options {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .taking-orders .food-choice {
+    min-width: 0;
+    min-height: 54px;
+    padding-inline: 0;
+  }
+
+  .taking-orders .food-choice span {
+    font-size: clamp(1.5rem, 8vw, 2.3rem);
+  }
+
+  .taking-orders .food-choice small {
+    display: none;
+  }
 }
