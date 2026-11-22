@@ -20,8 +20,8 @@ $loginUrl = $identity ? $identity->loginUrl($_SERVER['REQUEST_URI'] ?? '/github/
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#d8f1ff">
   <title>Matching Game</title>
-  <link rel="stylesheet" href="style.css?v=1.3.0">
-  <script src="game.js?v=1.3.0" defer></script>
+  <link rel="stylesheet" href="style.css?v=1.4.0">
+  <script src="game.js?v=1.4.0" defer></script>
 </head>
 <body>
   <main class="game" aria-labelledby="title" data-save-history="<?= $canSaveHistory ? 'true' : 'false' ?>" data-csrf="<?= htmlspecialchars($identity ? $identity->csrf() : '', ENT_QUOTES, 'UTF-8') ?>">
@@ -41,6 +41,7 @@ $loginUrl = $identity ? $identity->loginUrl($_SERVER['REQUEST_URI'] ?? '/github/
               <option value="objects">Objects</option>
             </select>
           </label>
+          <label class="sound-field"><input id="read-aloud" type="checkbox"> Read tiles aloud</label>
           <p class="setup-title">Board size</p>
           <div class="size-fields">
             <label>Rows <input id="rows" type="number" min="2" max="6" step="1" value="4" inputmode="numeric"></label>

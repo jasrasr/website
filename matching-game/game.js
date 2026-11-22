@@ -32,6 +32,25 @@
   let first = null, second = null, locked = false;
   let hideTimer = null, tickTimer = null, startedAt = null, elapsedMs = 0;
   let session = readSession();
+  const speechAvailable = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+
+  if (!speechAvailable) {
+    $('read-aloud').disabled = true;
+    $('read-aloud').parentElement.title = 'Read aloud is unavailable in this browser.';
+  }
+
+  function stopSpeech() {
+    if (speechAvailable) window.speechSynthesis.cancel();
+  }
+
+  function speakTile(tile) {
+    if (!speechAvailable || !$('read-aloud').checked) return;
+    stopSpeech();
+    const utterance = new SpeechSynthesisUtterance(tile.dataset.card);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.85;
+    window.speechSynthesis.speak(utterance);
+  }
 
   function readSession() {
     try {
@@ -91,6 +110,7 @@
     tile.textContent = tile.dataset.symbol;
     tile.setAttribute('aria-label', tile.dataset.card);
     tile.setAttribute('aria-pressed', 'true');
+    speakTile(tile);
   }
 
   function hide(tile) {
@@ -161,6 +181,7 @@
     const size = requestedSize();
     $('size-error').hidden = !!size;
     if (!size) return;
+    stopSpeech();
     [rows, columns] = size;
     mode = $('match-mode').value;
     window.clearTimeout(hideTimer);
@@ -183,6 +204,7 @@
       const tile = document.createElement('button');
       tile.type = 'button';
       tile.className = 'tile';
+      if (mode === 'numbers' && text.length > 1) tile.classList.add('two-digit');
       tile.textContent = '?';
       tile.dataset.card = name;
       tile.dataset.symbol = text;
@@ -239,6 +261,9 @@
   }
 
   $('new-game').addEventListener('click', newGame);
+  $('read-aloud').addEventListener('change', () => {
+    if (!$('read-aloud').checked) stopSpeech();
+  });
   if (canSaveHistory) {
     const toggle = $('history-toggle'), panel = $('history-panel');
     toggle.addEventListener('click', () => {
