@@ -15,7 +15,7 @@
     { name: 'Blueberries', emoji: '🫐', color: 'blue' },
   ];
   const orders = [
-    { prompt: 'Something red, please!', items: [apple], clues: ['🔴'] },
+    { prompt: 'Something red, please!', items: [apple], colorClue: 'red' },
     { prompt: 'Two carrots, please!', items: [carrot, carrot] },
     { prompt: 'Apple, banana, apple. In that order!', items: [apple, banana, apple] },
   ];
@@ -36,6 +36,9 @@
   const clues = document.querySelector('#order-clues');
   const feedback = document.querySelector('#order-feedback');
   const nextOrder = document.querySelector('#next-order');
+  const nextIcon = nextOrder.querySelector('.next-icon');
+  const nextLabel = nextOrder.querySelector('.next-label');
+  const game = document.querySelector('.game');
   const soundToggle = document.querySelector('#sound-toggle');
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   let selectedPet = pets[0];
@@ -121,6 +124,7 @@
     const order = orders[orderIndex];
     if (food !== order.items[fed]) {
       feedback.textContent = 'Try the food in the highlighted picture!';
+      clues.classList.add('retry');
       playSound('retry');
       return;
     }
@@ -129,7 +133,7 @@
     addBite(food);
     renderOrder();
     if (fed < order.items.length) {
-      feedback.textContent = 'Yum! What comes next?';
+      feedback.textContent = `Good! Next: ${order.items[fed].name}.`;
       playSound('bite');
       return;
     }
@@ -137,7 +141,8 @@
     const finished = orderIndex === orders.length - 1;
     playSound(finished ? 'finish' : 'order');
     feedback.textContent = finished ? 'You filled all three orders! 🎉' : 'Order complete! ⭐';
-    nextOrder.textContent = finished ? 'Play again' : 'Next order';
+    nextIcon.textContent = finished ? '↻' : '▶';
+    nextLabel.textContent = finished ? 'Play again' : 'Next order';
     nextOrder.hidden = false;
     nextOrder.focus();
     foodTray.querySelectorAll('button').forEach((button) => { button.disabled = true; });
@@ -145,10 +150,13 @@
 
   function renderOrder() {
     const order = orders[orderIndex];
+    clues.classList.remove('retry');
     progress.textContent = `Order ${orderIndex + 1} of ${orders.length} · ${fed} of ${order.items.length} bites`;
     clues.replaceChildren(...order.items.map((food, index) => {
       const clue = document.createElement('span');
-      clue.textContent = order.clues?.[index] ?? food.emoji;
+      clue.className = 'order-card';
+      clue.textContent = food.emoji;
+      if (order.colorClue) clue.classList.add('red-clue');
       clue.classList.toggle('served', index < fed);
       clue.classList.toggle('current', index === fed);
       return clue;
@@ -170,8 +178,10 @@
     resetFood();
     feedback.textContent = '';
     nextOrder.hidden = true;
-    clues.hidden = mode === 'free';
-    if (mode === 'orders') {
+    const takingOrders = mode === 'orders';
+    clues.hidden = !takingOrders;
+    game.classList.toggle('taking-orders', takingOrders);
+    if (takingOrders) {
       speech.textContent = orders[orderIndex].prompt;
       renderOrder();
     } else {
