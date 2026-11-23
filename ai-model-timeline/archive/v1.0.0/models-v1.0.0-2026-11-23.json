@@ -2,7 +2,7 @@
   "project_version": "1.0.0",
   "updated": "2026-11-23",
   "status": "initial-canonical-dataset",
-  "source_policy": "first-party release catalog or news page; YYYY-MM means month precision, not assumed first of month",
+  "source_policy": "The source_url is a primary provider announcement for directly sourced records, otherwise a provider catalog. Month precision retained when exact day not confirmed. Catalog-linked entries merit further model-specific checking.",
   "models": [
     {
       "id": "m001",
@@ -12,8 +12,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m002",
@@ -23,8 +23,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m003",
@@ -34,8 +34,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m004",
@@ -45,8 +45,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m005",
@@ -56,8 +56,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m006",
@@ -67,8 +67,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m007",
@@ -78,8 +78,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m008",
@@ -89,8 +89,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m009",
@@ -100,8 +100,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m010",
@@ -111,8 +111,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m011",
@@ -121,9 +121,9 @@
       "release_date": "2026-03-05",
       "status": "released",
       "access": "public",
-      "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "source_url": "https://openai.com/index/introducing-gpt-5-4/",
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m012",
@@ -132,9 +132,9 @@
       "release_date": "2026-03-05",
       "status": "released",
       "access": "public",
-      "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "source_url": "https://openai.com/index/introducing-gpt-5-4/",
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m013",
@@ -144,8 +144,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m014",
@@ -155,8 +155,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m015",
@@ -166,8 +166,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m016",
@@ -177,8 +177,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m017",
@@ -188,8 +188,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m018",
@@ -199,8 +199,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m019",
@@ -210,8 +210,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m020",
@@ -221,8 +221,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m021",
@@ -232,8 +232,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m022",
@@ -243,8 +243,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m023",
@@ -254,8 +254,8 @@
       "status": "released",
       "access": "restricted",
       "source_url": "https://developers.openai.com/api/docs/changelog",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m024",
@@ -264,9 +264,9 @@
       "release_date": "2026-11-17",
       "status": "released",
       "access": "public",
-      "source_url": "https://help.openai.com/en/articles/9624314-model-release-notes",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "source_url": "https://openai.com/index/introducing-gpt-6-2-astra-sol/",
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m025",
@@ -275,9 +275,9 @@
       "release_date": "2026-11-17",
       "status": "released",
       "access": "public",
-      "source_url": "https://help.openai.com/en/articles/9624314-model-release-notes",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "source_url": "https://openai.com/index/introducing-gpt-6-2-astra-sol/",
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m026",
@@ -287,8 +287,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m027",
@@ -298,8 +298,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m028",
@@ -309,8 +309,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m029",
@@ -320,8 +320,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m030",
@@ -331,8 +331,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m031",
@@ -342,8 +342,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m032",
@@ -353,8 +353,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m033",
@@ -364,8 +364,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m034",
@@ -375,8 +375,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m035",
@@ -386,8 +386,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m036",
@@ -397,8 +397,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m037",
@@ -408,8 +408,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m038",
@@ -419,8 +419,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m039",
@@ -430,8 +430,8 @@
       "status": "released",
       "access": "mixed",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m040",
@@ -441,8 +441,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m041",
@@ -452,8 +452,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m042",
@@ -463,8 +463,8 @@
       "status": "released",
       "access": "mixed",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m043",
@@ -474,8 +474,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m044",
@@ -485,8 +485,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m045",
@@ -496,8 +496,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m046",
@@ -506,9 +506,10 @@
       "release_date": "2026-11-09",
       "status": "released",
       "access": "mixed",
-      "source_url": "https://www.anthropic.com/system-cards",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "source_url": "https://www.anthropic.com/claude-fable-and-mythos-5-2",
+      "date_precision": "day",
+      "source_scope": "model_announcement",
+      "notes": "One underlying model with different access and safeguards, as documented by Anthropic."
     },
     {
       "id": "m047",
@@ -518,8 +519,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://deepmind.google/models/model-cards/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m048",
@@ -529,8 +530,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://deepmind.google/models/model-cards/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m049",
@@ -540,8 +541,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://deepmind.google/models/model-cards/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m050",
@@ -551,8 +552,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://deepmind.google/models/model-cards/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m051",
@@ -562,8 +563,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://deepmind.google/models/model-cards/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m052",
@@ -573,8 +574,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://deepmind.google/models/model-cards/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m053",
@@ -584,8 +585,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://deepmind.google/models/model-cards/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m054",
@@ -595,8 +596,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://deepmind.google/models/model-cards/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m055",
@@ -606,8 +607,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://deepmind.google/models/model-cards/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m056",
@@ -617,8 +618,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://deepmind.google/models/model-cards/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m057",
@@ -628,8 +629,8 @@
       "status": "released",
       "access": "restricted",
       "source_url": "https://deepmind.google/models/model-cards/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m058",
@@ -639,8 +640,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://deepmind.google/models/model-cards/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m059",
@@ -649,9 +650,9 @@
       "release_date": "2026-11-05",
       "status": "released",
       "access": "public",
-      "source_url": "https://deepmind.google/models/model-cards/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "source_url": "https://deepmind.google/models/model-cards/gemini-omni-1-2-flash/",
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m060",
@@ -660,9 +661,9 @@
       "release_date": "2026-11-10",
       "status": "released",
       "access": "public",
-      "source_url": "https://deepmind.google/models/model-cards/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "source_url": "https://deepmind.google/models/model-cards/gemini-4-carbon/",
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m061",
@@ -671,9 +672,9 @@
       "release_date": "2026-11-12",
       "status": "released",
       "access": "public",
-      "source_url": "https://deepmind.google/models/model-cards/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "source_url": "https://deepmind.google/models/model-cards/gemini-4-hydrogen/",
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m062",
@@ -682,9 +683,9 @@
       "release_date": "2026-11-18",
       "status": "released",
       "access": "public",
-      "source_url": "https://deepmind.google/models/model-cards/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "source_url": "https://deepmind.google/models/model-cards/gemini-4-neon/",
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m063",
@@ -694,8 +695,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://x.ai/news/grok-4-7",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m064",
@@ -705,8 +706,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://x.ai/news/grok-4-7",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m065",
@@ -716,8 +717,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://x.ai/news/grok-4-7",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m066",
@@ -727,8 +728,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://x.ai/news/grok-4-7",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m067",
@@ -738,8 +739,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://x.ai/news/grok-4-7",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m068",
@@ -749,8 +750,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://x.ai/news/grok-4-7",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m069",
@@ -760,8 +761,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://x.ai/news/grok-4-7",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m070",
@@ -771,8 +772,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://research.meta.ai/blog/muse-spark-open",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m071",
@@ -782,8 +783,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://research.meta.ai/blog/muse-spark-open",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m072",
@@ -793,8 +794,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://research.meta.ai/blog/muse-spark-open",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m073",
@@ -804,8 +805,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://research.meta.ai/blog/muse-spark-open",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m074",
@@ -814,9 +815,9 @@
       "release_date": "2026-09-02",
       "status": "released",
       "access": "public",
-      "source_url": "https://research.meta.ai/blog/muse-spark-open",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "source_url": "https://research.meta.ai/blog/introducing-muse-spark-1-3",
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m075",
@@ -826,8 +827,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://research.meta.ai/blog/muse-spark-open",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m076",
@@ -837,8 +838,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://research.meta.ai/blog/muse-spark-open",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m077",
@@ -848,8 +849,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://research.meta.ai/blog/muse-spark-open",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m078",
@@ -859,8 +860,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://research.meta.ai/blog/muse-spark-open",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m079",
@@ -870,8 +871,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://mistral.ai/news/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m080",
@@ -881,8 +882,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://mistral.ai/news/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m081",
@@ -892,8 +893,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://mistral.ai/news/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m082",
@@ -903,8 +904,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://mistral.ai/news/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m083",
@@ -914,8 +915,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://mistral.ai/news/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m084",
@@ -925,8 +926,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://mistral.ai/news/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m085",
@@ -936,8 +937,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://mistral.ai/news/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m086",
@@ -947,8 +948,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://mistral.ai/news/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m087",
@@ -958,8 +959,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://mistral.ai/news/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m088",
@@ -969,8 +970,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://mistral.ai/news/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m089",
@@ -980,8 +981,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://mistral.ai/news/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m090",
@@ -991,8 +992,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://mistral.ai/news/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m091",
@@ -1001,9 +1002,10 @@
       "release_date": "2026-10-06",
       "status": "released",
       "access": "public",
-      "source_url": "https://mistral.ai/news/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "source_url": "https://mistral.ai/news/mistral-large-4/",
+      "date_precision": "day",
+      "source_scope": "model_announcement",
+      "notes": "Public preview October 6, 2026; general availability/open weights November 5, 2026. One model, not two separate launches."
     },
     {
       "id": "m092",
@@ -1013,8 +1015,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://deepseek.com/en/transparency/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m093",
@@ -1024,8 +1026,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://deepseek.com/en/transparency/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m094",
@@ -1035,8 +1037,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://deepseek.com/en/transparency/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m095",
@@ -1046,8 +1048,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://deepseek.com/en/transparency/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m096",
@@ -1057,8 +1059,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://deepseek.com/en/transparency/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m097",
@@ -1068,8 +1070,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://deepseek.com/en/transparency/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m098",
@@ -1079,8 +1081,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://deepseek.com/en/transparency/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m099",
@@ -1090,8 +1092,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://deepseek.com/en/transparency/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m100",
@@ -1101,8 +1103,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://microsoft.ai/news/microsoft-ignite-2026/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m101",
@@ -1112,8 +1114,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://microsoft.ai/news/microsoft-ignite-2026/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m102",
@@ -1123,8 +1125,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://microsoft.ai/news/microsoft-ignite-2026/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m103",
@@ -1134,8 +1136,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://microsoft.ai/news/microsoft-ignite-2026/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m104",
@@ -1145,8 +1147,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://microsoft.ai/news/microsoft-ignite-2026/",
-      "verified_on": "2026-11-23",
-      "date_precision": "month"
+      "date_precision": "month",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m105",
@@ -1156,8 +1158,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://microsoft.ai/news/microsoft-ignite-2026/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m106",
@@ -1166,9 +1168,9 @@
       "release_date": "2026-11-17",
       "status": "released",
       "access": "public",
-      "source_url": "https://microsoft.ai/news/microsoft-ignite-2026/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "source_url": "https://microsoft.ai/news/introducing-mai-cyber-2-flash/",
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m107",
@@ -1177,9 +1179,9 @@
       "release_date": "2026-11-17",
       "status": "released",
       "access": "public",
-      "source_url": "https://microsoft.ai/news/microsoft-ignite-2026/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "source_url": "https://microsoft.ai/news/introducing-mai-code-2-and-mai-code-2-flash/",
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m108",
@@ -1188,9 +1190,9 @@
       "release_date": "2026-11-17",
       "status": "released",
       "access": "public",
-      "source_url": "https://microsoft.ai/news/microsoft-ignite-2026/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "source_url": "https://microsoft.ai/news/introducing-mai-code-2-and-mai-code-2-flash/",
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m109",
@@ -1199,9 +1201,9 @@
       "release_date": "2026-11-17",
       "status": "released",
       "access": "public",
-      "source_url": "https://microsoft.ai/news/microsoft-ignite-2026/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "source_url": "https://microsoft.ai/news/introducing-mai-image-2-7/",
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m110",
@@ -1211,8 +1213,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://microsoft.ai/news/microsoft-ignite-2026/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m111",
@@ -1222,8 +1224,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://microsoft.ai/news/microsoft-ignite-2026/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m112",
@@ -1233,8 +1235,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://microsoft.ai/news/microsoft-ignite-2026/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     },
     {
       "id": "m113",
@@ -1244,8 +1246,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.moonshot.ai/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m114",
@@ -1255,8 +1257,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.moonshot.ai/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m115",
@@ -1266,8 +1268,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.moonshot.ai/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m116",
@@ -1277,8 +1279,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.moonshot.ai/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m117",
@@ -1288,8 +1290,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.moonshot.ai/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m118",
@@ -1299,8 +1301,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.moonshot.ai/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m119",
@@ -1310,8 +1312,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.moonshot.ai/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m120",
@@ -1321,8 +1323,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.moonshot.ai/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m121",
@@ -1332,8 +1334,8 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.moonshot.ai/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     },
     {
       "id": "m122",
@@ -1343,8 +1345,9 @@
       "status": "released",
       "access": "public",
       "source_url": "https://www.moonshot.ai/",
-      "verified_on": "2026-11-23",
-      "date_precision": "day"
+      "date_precision": "day",
+      "source_scope": "provider_catalog"
     }
-  ]
+  ],
+  "quality_note": "Initial canonical dataset: sourced model inventory, not independent primary-page verification of every exact historical date. Do not silently elevate month precision to day precision."
 }
