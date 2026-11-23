@@ -18,9 +18,39 @@
   touch-action: manipulation;
 }
 
-.mode-picker button[aria-pressed="true"] {
+.mode-picker button[data-mode][aria-pressed="true"] {
   background: #703452;
   color: #fff;
+  border-color: #703452;
+  box-shadow: 0 0 0 3px #ffca55, 0 5px 0 #4b2942;
+  transform: translateY(-2px);
+}
+
+.mode-picker button[data-mode][aria-pressed="false"] {
+  background: #fff;
+}
+
+.selection-mark,
+.mode-status {
+  display: none;
+}
+
+.mode-picker button[data-mode][aria-pressed="true"] .selection-mark {
+  display: inline;
+}
+
+.mode-picker button[data-mode][aria-pressed="true"] .mode-status {
+  display: block;
+  margin-top: 2px;
+  font-size: .7rem;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.mode-picker .sound-toggle {
+  background: #fff0d7;
+  border-color: #bd6a50;
 }
 
 .mode-picker button:focus-visible {

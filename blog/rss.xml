@@ -18,13 +18,6 @@
     <description>Database-free blog powered by JSON files.</description>
     <language>en-us</language>
     <item>
-      <title>Two Small Browser Games Built for Quick Play</title>
-      <link>https://jasr.me/blog/post.html?p=two-new-browser-games</link>
-      <guid>https://jasr.me/blog/post.html?p=two-new-browser-games</guid>
-      <pubDate>Mon, 23 Nov 2026 00:00:00 +0000</pubDate>
-      <description>A look at the latest Coin Flip and Super Tic-Tac-Toe builds, with fresh desktop and mobile screenshots.</description>
-    </item>
-    <item>
       <title>Kingdom Connections: A Directory With Verified Service Reviews</title>
       <link>https://jasr.me/blog/post.html?p=kingdom-connections-business-directory</link>
       <guid>https://jasr.me/blog/post.html?p=kingdom-connections-business-directory</guid>
@@ -81,6 +74,13 @@
       <description>A PHP and JSON analytics dashboard for page views, clicks, referrers, top pages, and daily reports across personal sites.</description>
     </item>
     <item>
+      <title>Oregon Trail: Saved Journeys and Editable Browser Game Rules</title>
+      <link>https://jasr.me/blog/post.html?p=oregon-trail-browser-game</link>
+      <guid>https://jasr.me/blog/post.html?p=oregon-trail-browser-game</guid>
+      <pubDate>Tue, 13 Oct 2026 00:00:00 +0000</pubDate>
+      <description>A browser trail game with automatic local saves, recoverable journeys, offline reload support, and editable JSON game content.</description>
+    </item>
+    <item>
       <title>Jurassic Terminal: A Retro Access-Denied Browser Gag</title>
       <link>https://jasr.me/blog/post.html?p=jurassic-terminal-browser-gag</link>
       <guid>https://jasr.me/blog/post.html?p=jurassic-terminal-browser-gag</guid>
@@ -100,13 +100,6 @@
       <guid>https://jasr.me/blog/post.html?p=shared-user-management-php-json</guid>
       <pubDate>Tue, 13 Oct 2026 00:00:00 +0000</pubDate>
       <description>A shared same-host account system with roles, project access, CSRF checks, session revocation, and protected JSON storage.</description>
-    </item>
-    <item>
-      <title>Oregon Trail: Saved Journeys and Editable Browser Game Rules</title>
-      <link>https://jasr.me/blog/post.html?p=oregon-trail-browser-game</link>
-      <guid>https://jasr.me/blog/post.html?p=oregon-trail-browser-game</guid>
-      <pubDate>Tue, 13 Oct 2026 00:00:00 +0000</pubDate>
-      <description>A browser trail game with automatic local saves, recoverable journeys, offline reload support, and editable JSON game content.</description>
     </item>
     <item>
       <title>Game Buzzer: Phones, QR Codes, and Majority Rules for Team Play</title>
@@ -172,6 +165,13 @@
       <description>The architectural baseline for sharing PHP and JSON conventions across small apps without forcing every project into a rewrite.</description>
     </item>
     <item>
+      <title>Robot or Human? A Playful Press-and-Hold Web Experiment</title>
+      <link>https://jasr.me/blog/post.html?p=robot-or-human-hold-button</link>
+      <guid>https://jasr.me/blog/post.html?p=robot-or-human-hold-button</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A press-and-hold interaction with a comic robot, keyboard support, and a clear distinction between a visual gate and server-side access checks.</description>
+    </item>
+    <item>
       <title>Shared Text: A Small Scratch Pad for Moving Text Between Devices</title>
       <link>https://jasr.me/blog/post.html?p=shared-text-between-devices</link>
       <guid>https://jasr.me/blog/post.html?p=shared-text-between-devices</guid>
@@ -193,6 +193,13 @@
       <description>The Smart 404 project logs missing URLs and supports deliberate mappings alongside conservative matching for hosted projects.</description>
     </item>
     <item>
+      <title>A File Listing with Favorites, Sorting, and Useful Context</title>
+      <link>https://jasr.me/blog/post.html?p=authenticated-directory-viewer</link>
+      <guid>https://jasr.me/blog/post.html?p=authenticated-directory-viewer</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A directory-viewer experiment that adds favorites, file details, and interaction counts to a live filesystem listing.</description>
+    </item>
+    <item>
       <title>From Clock-Out Slip to Work-Hours Log</title>
       <link>https://jasr.me/blog/post.html?p=timeclock-photo-hours-logger</link>
       <guid>https://jasr.me/blog/post.html?p=timeclock-photo-hours-logger</guid>
@@ -205,13 +212,6 @@
       <guid>https://jasr.me/blog/post.html?p=tv-binge-board-watch-tracker</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
       <description>A self-hosted watch tracker for TV and movies, with episode progress, next-up information, imports, and sharing.</description>
-    </item>
-    <item>
-      <title>A File Listing with Favorites, Sorting, and Useful Context</title>
-      <link>https://jasr.me/blog/post.html?p=authenticated-directory-viewer</link>
-      <guid>https://jasr.me/blog/post.html?p=authenticated-directory-viewer</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-      <description>A directory-viewer experiment that adds favorites, file details, and interaction counts to a live filesystem listing.</description>
     </item>
     <item>
       <title>A Two-Pane Writing Tool That Keeps the Draft in View</title>
@@ -235,13 +235,6 @@
       <description>A lightweight weather dashboard built around explicit locations, cached updates, and a readable multi-city view.</description>
     </item>
     <item>
-      <title>Robot or Human? A Playful Press-and-Hold Web Experiment</title>
-      <link>https://jasr.me/blog/post.html?p=robot-or-human-hold-button</link>
-      <guid>https://jasr.me/blog/post.html?p=robot-or-human-hold-button</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-      <description>A press-and-hold interaction with a comic robot, keyboard support, and a clear distinction between a visual gate and server-side access checks.</description>
-    </item>
-    <item>
       <title>Recreating Old Phone Keypad Tones in the Browser</title>
       <link>https://jasr.me/blog/post.html?p=old-phone-keypad-tones-browser</link>
       <guid>https://jasr.me/blog/post.html?p=old-phone-keypad-tones-browser</guid>
@@ -256,11 +249,25 @@
       <description>Fuel tracking gets more useful when partial fills, station details, photos, and corrections all work together.</description>
     </item>
     <item>
-      <title>Beyond the Ticket Count: Building a Freshservice Progress Dashboard</title>
-      <link>https://jasr.me/blog/post.html?p=freshservice-ticket-progress-dashboard</link>
-      <guid>https://jasr.me/blog/post.html?p=freshservice-ticket-progress-dashboard</guid>
+      <title>A Link Hub on the Drawing Board</title>
+      <link>https://jasr.me/blog/post.html?p=link-hub-project-notes</link>
+      <guid>https://jasr.me/blog/post.html?p=link-hub-project-notes</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-      <description>The Freshservice dashboard puts unresolved tickets, new work, completed work, and historical trends into one view.</description>
+      <description>An honest starting-point note for the Linktree-inspired folder: the idea is documented, but the planned app files are not there yet.</description>
+    </item>
+    <item>
+      <title>A Small Shortcut for a Repetitive IT Task: Dell Service Tag Lookup</title>
+      <link>https://jasr.me/blog/post.html?p=dell-service-tag-lookup-tool</link>
+      <guid>https://jasr.me/blog/post.html?p=dell-service-tag-lookup-tool</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A lightweight support-page shortcut with service-tag entry, photo scanning, and a shared recent-tag list.</description>
+    </item>
+    <item>
+      <title>Building an Odometer That Rolls Forward in the Browser</title>
+      <link>https://jasr.me/blog/post.html?p=browser-odometer-speedometer-emulator</link>
+      <guid>https://jasr.me/blog/post.html?p=browser-odometer-speedometer-emulator</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A simulated odometer and speedometer with a configurable starting reading, animated digits, and MPH/KPH modes.</description>
     </item>
     <item>
       <title>Building a Ticketing App: From Request to Resolution</title>
@@ -284,11 +291,11 @@
       <description>The church scoreboard project separates spectator displays from score entry and supports different ministry instances.</description>
     </item>
     <item>
-      <title>Building an Odometer That Rolls Forward in the Browser</title>
-      <link>https://jasr.me/blog/post.html?p=browser-odometer-speedometer-emulator</link>
-      <guid>https://jasr.me/blog/post.html?p=browser-odometer-speedometer-emulator</guid>
+      <title>Building a Browser Trip Tracker That Shows Its Assumptions</title>
+      <link>https://jasr.me/blog/post.html?p=browser-gps-trip-eta-tracker</link>
+      <guid>https://jasr.me/blog/post.html?p=browser-gps-trip-eta-tracker</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-      <description>A simulated odometer and speedometer with a configurable starting reading, animated digits, and MPH/KPH modes.</description>
+      <description>A mobile GPS experiment for speed, heading, trip progress, ETA, and saved sessions—with visible signal and freshness information.</description>
     </item>
     <item>
       <title>A Construction Sign Generator for Messages That Need More Orange</title>
@@ -326,25 +333,25 @@
       <description>A look at the loan-tracking app, with payoff comparisons, private records, controlled sharing, and recoverable changes.</description>
     </item>
     <item>
-      <title>A Small Shortcut for a Repetitive IT Task: Dell Service Tag Lookup</title>
-      <link>https://jasr.me/blog/post.html?p=dell-service-tag-lookup-tool</link>
-      <guid>https://jasr.me/blog/post.html?p=dell-service-tag-lookup-tool</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-      <description>A lightweight support-page shortcut with service-tag entry, photo scanning, and a shared recent-tag list.</description>
-    </item>
-    <item>
-      <title>Family GPS Tracker: Shared Location with Clear Boundaries</title>
-      <link>https://jasr.me/blog/post.html?p=family-gps-tracker-web-app</link>
-      <guid>https://jasr.me/blog/post.html?p=family-gps-tracker-web-app</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-      <description>A consent-based family and friend location-sharing experiment with groups, check-ins, account controls, and browser limitations.</description>
-    </item>
-    <item>
       <title>Inside a Browser Password Generator Experiment</title>
       <link>https://jasr.me/blog/post.html?p=browser-password-generator-experiment</link>
       <guid>https://jasr.me/blog/post.html?p=browser-password-generator-experiment</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
       <description>A look at the controls and implementation boundaries of the client-side password generator experiment.</description>
+    </item>
+    <item>
+      <title>A Screen-Size Page for Debugging Layout Differences</title>
+      <link>https://jasr.me/blog/post.html?p=browser-screen-size-debugging-tool</link>
+      <guid>https://jasr.me/blog/post.html?p=browser-screen-size-debugging-tool</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>A small viewport-inspection page that displays browser dimensions, pixel ratio, and orientation while the window changes.</description>
+    </item>
+    <item>
+      <title>Beyond the Ticket Count: Building a Freshservice Progress Dashboard</title>
+      <link>https://jasr.me/blog/post.html?p=freshservice-ticket-progress-dashboard</link>
+      <guid>https://jasr.me/blog/post.html?p=freshservice-ticket-progress-dashboard</guid>
+      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
+      <description>The Freshservice dashboard puts unresolved tickets, new work, completed work, and historical trends into one view.</description>
     </item>
     <item>
       <title>Building a Warranty Tracker Before the Warranty Is Needed</title>
@@ -359,13 +366,6 @@
       <guid>https://jasr.me/blog/post.html?p=impossible-click-browser-game</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
       <description>A deliberately uncooperative browser game that explores pointer movement, feedback, and the line between a joke and a usability bug.</description>
-    </item>
-    <item>
-      <title>Building a Browser Trip Tracker That Shows Its Assumptions</title>
-      <link>https://jasr.me/blog/post.html?p=browser-gps-trip-eta-tracker</link>
-      <guid>https://jasr.me/blog/post.html?p=browser-gps-trip-eta-tracker</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-      <description>A mobile GPS experiment for speed, heading, trip progress, ETA, and saved sessions—with visible signal and freshness information.</description>
     </item>
     <item>
       <title>A Blog Made of JSON Files—and a Little PowerShell</title>
@@ -403,18 +403,11 @@
       <description>A church attendance portal that connects check-in, student profiles, sibling links, leader access, and historical attendance.</description>
     </item>
     <item>
-      <title>A Link Hub on the Drawing Board</title>
-      <link>https://jasr.me/blog/post.html?p=link-hub-project-notes</link>
-      <guid>https://jasr.me/blog/post.html?p=link-hub-project-notes</guid>
+      <title>Family GPS Tracker: Shared Location with Clear Boundaries</title>
+      <link>https://jasr.me/blog/post.html?p=family-gps-tracker-web-app</link>
+      <guid>https://jasr.me/blog/post.html?p=family-gps-tracker-web-app</guid>
       <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-      <description>An honest starting-point note for the Linktree-inspired folder: the idea is documented, but the planned app files are not there yet.</description>
-    </item>
-    <item>
-      <title>A Screen-Size Page for Debugging Layout Differences</title>
-      <link>https://jasr.me/blog/post.html?p=browser-screen-size-debugging-tool</link>
-      <guid>https://jasr.me/blog/post.html?p=browser-screen-size-debugging-tool</guid>
-      <pubDate>Wed, 16 Sep 2026 00:00:00 +0000</pubDate>
-      <description>A small viewport-inspection page that displays browser dimensions, pixel ratio, and orientation while the window changes.</description>
+      <description>A consent-based family and friend location-sharing experiment with groups, check-ins, account controls, and browser limitations.</description>
     </item>
     <item>
       <title>Hello, flat-file world</title>

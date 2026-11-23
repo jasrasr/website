@@ -77,7 +77,7 @@
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   let selectedPet = pets[0];
   let activeOrders = orderSets[0];
-  let mode = 'free';
+  let mode = 'orders';
   let orderIndex = 0;
   let fed = 0;
   let soundEnabled = true;
@@ -372,4 +372,5 @@
   });
   renderHistory();
   renderAchievements();
+  startRound();
 })();
