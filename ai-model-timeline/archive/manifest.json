@@ -1,4 +1,17 @@
 {
   "project": "AI Model Timeline",
-  "releases": []
+  "latest": "1.0.0",
+  "releases": [
+    {
+      "version": "1.0.0",
+      "created": "2026-11-23",
+      "reason": "Initial canonical reproducible baseline replacing manually generated inconsistent timeline graphics.",
+      "models": 122,
+      "graphic": "archive/v1.0.0/ai-model-timeline-v1.0.0-2026-11-23.svg",
+      "dataset": "archive/v1.0.0/models-v1.0.0-2026-11-23.json",
+      "png_export_filename": "ai-model-timeline-v1.0.0-2026-11-23.png",
+      "png_committed": false,
+      "release_status": "baseline_primary_catalog_audit_pending"
+    }
+  ]
 }
