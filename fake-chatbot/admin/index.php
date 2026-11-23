@@ -138,11 +138,11 @@ usort($rules, static fn($a,$b): int => strcmp(strtolower((string)$a['name']), st
   <section class="panel">
     <h2>Active rule library</h2>
     <p>Rules are stored in a private JSON file using the shared framework. The tracked JSON seed is imported on first write and never overwrites your edits.</p>
-    <div class="table-wrap"><table><thead><tr><th>Rule</th><th>Triggers</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+    <div class="table-wrap"><table class="rules-table"><thead><tr><th>Rule</th><th>Triggers</th><th class="rule-status">Status</th><th>Actions</th></tr></thead><tbody>
       <?php foreach ($rules as $rule): ?>
         <tr><td><?=fc_escape($rule['name'])?></td>
         <td><small><?=fc_escape(implode(' · ', array_map(static fn($t) => $t['type'] . ': ' . $t['text'], $rule['triggers'])))?></small></td>
-        <td><?=!empty($rule['enabled']) ? 'Enabled' : 'Disabled'?></td>
+        <td class="rule-status"><?=!empty($rule['enabled']) ? 'Enabled' : 'Disabled'?></td>
         <td><a href="?edit=<?=rawurlencode((string)$rule['id'])?>#editor">Edit</a>
           <form method="post" class="inline-form">
             <input type="hidden" name="csrf" value="<?=fc_escape($auth->csrf())?>">

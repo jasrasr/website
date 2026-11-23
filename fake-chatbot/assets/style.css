@@ -79,6 +79,7 @@ textarea{resize:vertical}
 table{width:100%;border-collapse:collapse;font-size:.85rem}
 th,td{padding:11px;text-align:left;vertical-align:top;border-bottom:1px solid #35476a}
 td{overflow-wrap:anywhere}
+.rules-table .rule-status{white-space:nowrap}
 th{color:#bcd8fa}
 .inline-form{display:inline-block;margin:0 0 0 10px}
 .small{font-size:.72rem;padding:7px 9px}
