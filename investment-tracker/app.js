@@ -292,10 +292,14 @@ function renderQuoteStatus(result=null) {
 async function refreshMarketPrices(manual=false) {
  if(demoMode||priceRefreshing||!state.quoteStatus?.enabled)return;
  priceRefreshing=true;renderQuoteStatus();
+ const eventsAtRequest=state.events;
  const fd=formBody('refresh_market_prices');
  if(manual)fd.set('force','1');
  try {
   const d=await api(fd);
+  // A separate ledger save/reload may have happened during this request.
+  // Never overwrite new transactions with an earlier valuation response.
+  if(state.events!==eventsAtRequest)return;
   state.analysis=d.analysis;
   state.quoteStatus=d.quotes;
   render();
