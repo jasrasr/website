@@ -54,7 +54,10 @@ function it_mq_parse_quote(array $raw,string $ticker,int $now): ?array
        strtoupper((string)($raw['symbol']??''))!==$ticker ||
        strtoupper((string)($raw['currency']??''))!=='USD')return null;
     $value=$raw['close']??null;
-    $ts=$raw['timestamp']??null;
+    // Prefer the time of the most recent exchange quote when available.
+    // Twelve Data's generic "timestamp" can mark the OPEN of a quote bar.
+    $ts=(is_numeric($raw['last_quote_at']??null) && (int)$raw['last_quote_at']>0)
+        ?$raw['last_quote_at']:($raw['timestamp']??null);
     if(!is_numeric($value)||!is_numeric($ts))return null;
     $value=(float)$value;$ts=(int)$ts;
     if(!is_finite($value)||$value<=0 || $value>1000000000 ||
