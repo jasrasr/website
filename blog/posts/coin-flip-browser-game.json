@@ -3,16 +3,17 @@
     "filename": "coin-flip-browser-game.json",
     "author": "Jason Lamb (with help from ChatGPT)",
     "created_date": "2026-11-19",
-    "modified_date": "2026-11-19",
-    "revision": "1.0.0",
+    "modified_date": "2026-11-22",
+    "revision": "1.1.0",
     "changelog": [
+      "1.1.0: Added fresh desktop and mobile gameplay screenshots.",
       "1.0.0: Added a project article and generated cover image."
     ]
   },
   "slug": "coin-flip-browser-game",
   "title": "Coin Flip: A Small Browser Game With Shared Results",
   "date": "2026-11-19",
-  "updated": "2026-11-19",
+  "updated": "2026-11-22",
   "author": "Jason Lamb",
   "tags": [
     "Browser experiments",
@@ -27,8 +28,14 @@
     "src": "media/derivatives/2026/11/coin-flip-browser-game_640w.jpg",
     "alt": "Illustrated gold smiling coin spinning above a dark background with a cross on the reverse"
   },
-  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/11/coin-flip-browser-game_640w.jpg\" alt=\"Illustrated gold smiling coin spinning above a dark background with a cross on the reverse\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Coin Flip turns a quick decision into a small interactive browser experience. A flip starts when the page loads; visitors can flip again by tapping the coin, pressing the button, or using the keyboard. Heads appears as a smiling face and tails as a cross.</p>\n<p>The browser chooses each outcome with a cryptographic random bit. Every flip is independent, so a run of heads does not make tails more likely next time. The animation, confetti, and result display make the choice visible, while the page still gives an immediate result when reduced motion is preferred.</p>\n<p>A shared history panel shows lifetime totals, percentages, and the 50 most recent outcomes. The server records results separately from the public display. Its private log includes visitor network and browser metadata, which the public history endpoint does not return. If the history service is unavailable, the coin can still flip and reports that the result was not saved.</p>\n<p>The project is deliberately small, but its details matter: keyboard controls, focus handling, rapid-click protection, mobile layout, and a clear boundary between public statistics and private log data.</p>\n<p><a href=\"https://jasr.me/github/coin-flip/\">Open the hosted project</a> &middot; <a href=\"https://github.com/jasrasr/website/tree/main/coin-flip\">Explore the project on GitHub</a></p>\n\n<!-- blog-revision-history:start -->\n<section class=\"revision-history\" aria-label=\"Article update history\">\n<h2>Update history</h2>\n<p>These notes record article updates associated with repository changes. The original publication date is retained.</p>\n<ul>\n<li id=\"revision-2026-11-19-coin-flip-article\"><time datetime=\"2026-11-19\">2026-11-19</time> — Added a project overview covering independent flips, accessible controls, reduced motion, and shared history. <a href=\"https://github.com/jasrasr/website/commit/239e3f3569c21b239bec0735929223bc7a87e1cb\">GitHub source</a></li>\n</ul>\n</section>\n<!-- blog-revision-history:end -->\n",
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/11/coin-flip-browser-game_640w.jpg\" alt=\"Illustrated gold smiling coin spinning above a dark background with a cross on the reverse\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Coin Flip turns a quick decision into a small interactive browser experience. A flip starts when the page loads; visitors can flip again by tapping the coin, pressing the button, or using the keyboard. Heads appears as a smiling face and tails as a cross.</p>\n<p>The browser chooses each outcome with a cryptographic random bit. Every flip is independent, so a run of heads does not make tails more likely next time. The animation, confetti, and result display make the choice visible, while the page still gives an immediate result when reduced motion is preferred.</p>\n<p>A shared history panel shows lifetime totals, percentages, and the 50 most recent outcomes. The server records results separately from the public display. Its private log includes visitor network and browser metadata, which the public history endpoint does not return. If the history service is unavailable, the coin can still flip and reports that the result was not saved.</p>\n<p>The project is deliberately small, but its details matter: keyboard controls, focus handling, rapid-click protection, mobile layout, and a clear boundary between public statistics and private log data.</p>\n<h2>Fresh screenshots</h2><p>These current desktop and mobile captures show the live interface after the initial toss settles.</p><figure><img src=\"media/derivatives/2026/11/coin-flip-live-desktop_640w.jpg\" alt=\"Coin Flip desktop interface showing the smiling heads side of the coin\" loading=\"lazy\" decoding=\"async\"></figure><figure><img src=\"media/derivatives/2026/11/coin-flip-live-mobile_640w.jpg\" alt=\"Coin Flip mobile interface with the animated coin and flip control\" loading=\"lazy\" decoding=\"async\"></figure><p><a href=\"https://jasr.me/github/coin-flip/\">Open the hosted project</a> &middot; <a href=\"https://github.com/jasrasr/website/tree/main/coin-flip\">Explore the project on GitHub</a></p>\n\n<!-- blog-revision-history:start -->\n<section class=\"revision-history\" aria-label=\"Article update history\">\n<h2>Update history</h2>\n<p>These notes record article updates associated with repository changes. The original publication date is retained.</p>\n<ul>\n<li id=\"revision-2026-11-22-coin-flip-screenshots\"><time datetime=\"2026-11-22\">2026-11-22</time> — Added fresh desktop and mobile gameplay screenshots. <a href=\"https://github.com/jasrasr/website/commit/33c8c2f5bfc1f0fb4fa4309a116ee8bea14df789\">GitHub source</a></li>\n<li id=\"revision-2026-11-19-coin-flip-article\"><time datetime=\"2026-11-19\">2026-11-19</time> — Added a project overview covering independent flips, accessible controls, reduced motion, and shared history. <a href=\"https://github.com/jasrasr/website/commit/239e3f3569c21b239bec0735929223bc7a87e1cb\">GitHub source</a></li>\n</ul>\n</section>\n<!-- blog-revision-history:end -->\n",
   "revision_history": [
+    {
+      "id": "2026-11-22-coin-flip-screenshots",
+      "date": "2026-11-22",
+      "summary": "Added fresh desktop and mobile gameplay screenshots.",
+      "source_url": "https://github.com/jasrasr/website/commit/33c8c2f5bfc1f0fb4fa4309a116ee8bea14df789"
+    },
     {
       "id": "2026-11-19-coin-flip-article",
       "date": "2026-11-19",
