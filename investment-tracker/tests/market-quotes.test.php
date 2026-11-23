@@ -102,7 +102,7 @@ try{
  };
  for($step=0;$step<8;$step++)
      it_mq_refresh($larger,$many,$largeConfig,false,$manyFetcher,$now+$step*300);
- $all=JasrFrameworkJsonStore::read($larger)['records'][0]['quotes'];
+ $all=\Jasr\Framework\JsonStore::read($larger)['records'][0]['quotes'];
  must_quote(count($all)===64 && count($largeCalls)===8 &&
      isset($all['Q000'],$all['Q063']),
      'Fair queue refreshes every stock in a large portfolio before repeating cached tickers.');
