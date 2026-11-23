@@ -71,7 +71,7 @@ A phrase outranks a single keyword even with the maximum manual tie-break priori
 - "What is a potato?" or simply "potato" chooses the vegetable rule.
 - A totally unmatched question receives an obviously fictional fallback and still appears in admin question review.
 
-The initial seed contains **107 rule categories and 143 comedy answers**. Replies are randomly chosen only from human-written alternatives; no question or answer is sent to any AI service. Dynamic {{time}} and {{date}} are simple server-side replacements using America/New_York. Arbitrary code, HTML and the old PowerShell Invoke-Expression execution are **never** evaluated from rule text. All UI output is HTML-escaped.
+The seed contains **108 rule categories and 144 comedy answers**. Replies are randomly chosen only from human-written alternatives; no question or answer is sent to any AI service. Dynamic {{time}} and {{date}} are simple server-side replacements using America/New_York. Arbitrary code, HTML and the old PowerShell Invoke-Expression execution are **never** evaluated from rule text. All UI output is HTML-escaped.
 
 ## Admin features
 
