@@ -1,12 +1,12 @@
 <?php
 /*
 File Name: bootstrap.php
-Revision: 2.0.1
+Revision: 2.0.2
 Description: Framework-backed fake chatbot rule matching, private history and opt-in account linking.
 Author: Jason Lamb (with help from ChatGPT)
 Created Date: 2026-11-20
-Modified Date: 2026-11-20
-Changelog: 2.0.1 - Enforce distinct multiword all/phrase rule tiers and preserve empty edited rule libraries. 2.0.0 - Add ranked matching, JsonStore persistence, privacy controls, and shared-identity helpers.
+Modified Date: 2026-11-22
+Changelog: 2.0.2 - Find existing rules with equivalent triggers. 2.0.1 - Enforce distinct multiword all/phrase rule tiers and preserve empty edited rule libraries. 2.0.0 - Add ranked matching, JsonStore persistence, privacy controls, and shared-identity helpers.
 */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
@@ -68,6 +68,21 @@ function fc_normalize(string $s): string
     $s = function_exists('mb_strtolower') ? mb_strtolower($s, 'UTF-8') : strtolower($s);
     $clean = preg_replace('/[^\p{L}\p{N}]+/u', ' ', trim($s));
     return preg_replace('/\s+/u', ' ', trim($clean ?? '')) ?? '';
+}
+function fc_existing_trigger_rule_id(array $rules, string $type, string $text): ?string
+{
+    $normalized = fc_normalize($text);
+    if ($normalized === '') return null;
+    foreach ($rules as $rule) {
+        if (!is_array($rule) || !is_string($rule['id'] ?? null)) continue;
+        foreach ($rule['triggers'] ?? [] as $trigger) {
+            if (is_array($trigger) && ($trigger['type'] ?? null) === $type &&
+                is_string($trigger['text'] ?? null) && fc_normalize($trigger['text']) === $normalized) {
+                return $rule['id'];
+            }
+        }
+    }
+    return null;
 }
 function fc_rules(): array
 {
