@@ -1,23 +1,39 @@
-const DATA='data/models.json';
-let svgText='';
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-fetch(DATA).then(r=>r.json()).then(data=>render(data.models||[])).catch(e=>document.querySelector('#timeline').textContent='Unable to load model data.');
-
-function render(models){
-  const rows=document.querySelector('#modelRows');
-  rows.innerHTML=models.map(m=>`<tr><td>${esc(m.release_date)}</td><td>${esc(m.platform)}</td><td>${esc(m.model)}</td><td>${esc(m.status)}</td><td>${esc(m.access||'')}</td><td>${m.source_url?`<a href="${esc(m.source_url)}" target="_blank" rel="noopener">source</a>`:''}</td></tr>`).join('');
-  if(!models.length){ rows.innerHTML='<tr><td colspan="6" class="empty">Historical dataset audit in progress.</td></tr>'; document.querySelector('#timeline').innerHTML='<div class="empty">No canonical graphic generated until the initial dataset audit is complete.</div>'; return; }
-  const sorted=[...models].sort((a,b)=>a.release_date.localeCompare(b.release_date)||a.platform.localeCompare(b.platform));
-  const platforms=[...new Set(sorted.map(x=>x.platform))];
-  const width=1500,rowH=78,left=180,top=55,right=40,height=top+platforms.length*rowH+50;
-  const dates=sorted.map(x=>new Date(x.release_date+'T00:00:00Z').getTime()),min=Math.min(...dates),max=Math.max(...dates),span=Math.max(1,max-min);
-  const x=t=>left+(t-min)/(span)*(width-left-right);
-  let s=`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="#11151a"/><style>text{font-family:system-ui,-apple-system,Segoe UI,sans-serif;fill:#f4f6f8}.p{font-weight:700}.m{font-size:13px}.d{font-size:11px;fill:#aab2bd}.line{stroke:#303a46;stroke-width:1}</style>`;
-  platforms.forEach((p,i)=>{const y=top+i*rowH;s+=`<text class="p" x="14" y="${y+7}">${esc(p)}</text><line class="line" x1="${left}" y1="${y}" x2="${width-right}" y2="${y}"/>`;});
-  sorted.forEach(m=>{const i=platforms.indexOf(m.platform),xx=x(new Date(m.release_date+'T00:00:00Z').getTime()),yy=top+i*rowH;const dash=m.status==='announced'||m.status==='pending'?' stroke-dasharray="4 3"':'';s+=`<circle cx="${xx}" cy="${yy}" r="6" fill="#7cb7ff" stroke="#11151a" stroke-width="2"${dash}/><text class="m" x="${xx+9}" y="${yy-8}">${esc(m.model)}</text><text class="d" x="${xx+9}" y="${yy+10}">${esc(m.release_date)}</text>`;});
-  s+='</svg>'; svgText=s;document.querySelector('#timeline').innerHTML=s;
-}
-function filename(ext){return `ai-model-timeline-v${window.TIMELINE_VERSION}-${window.TIMELINE_DATE}.${ext}`;}
-document.querySelector('#svgBtn').onclick=()=>{if(!svgText)return;download(new Blob([svgText],{type:'image/svg+xml'}),filename('svg'));};
-document.querySelector('#pngBtn').onclick=()=>{if(!svgText)return;const img=new Image(),u=URL.createObjectURL(new Blob([svgText],{type:'image/svg+xml'}));img.onload=()=>{const c=document.createElement('canvas');c.width=img.width;c.height=img.height;c.getContext('2d').drawImage(img,0,0);c.toBlob(b=>download(b,filename('png')));URL.revokeObjectURL(u)};img.src=u;};
-function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+/* AI Model Timeline v1.0.0 — both views use data/models.json */
+const renderTimelineSvg=function renderSvg(models){
+  const palette={"OpenAI":"#12c889","Anthropic":"#ff9852","Google DeepMind":"#4e9cff","xAI":"#bc63ff","Meta":"#42bcff","Mistral":"#ffba47","DeepSeek":"#6795ff","Microsoft AI / MAI":"#bd78f8","Moonshot AI / Kimi":"#42dfdb"};
+  const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&apos;"}[c]));
+  const labs=Object.keys(palette);
+  const ys=[2023,2024,2025,2026];
+  const qKeys=ys.flatMap(y=>[1,2,3,4].map(q=>`${y}-Q${q}`));
+  const quarter=m=>`${m.release_date.slice(0,4)}-Q${Math.floor((Number(m.release_date.slice(5,7))-1)/3)+1}`;
+  const count=Object.fromEntries(qKeys.map(q=>[q,Math.max(1,...labs.map(p=>models.filter(m=>m.platform===p&&quarter(m)===q).length))]));
+  const widths=Object.fromEntries(qKeys.map(q=>[q,Math.max(170,count[q]*163+20)]));
+  const starts={};let xx=208;for(const q of qKeys){starts[q]=xx;xx+=widths[q];}
+  const W=xx+34,rowH=100,top=150,H=top+labs.length*rowH+86, pillW=148;
+  const line=[];
+  line.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="AI model release timeline, 2023 through 2026"><rect width="${W}" height="${H}" fill="#091321"/><style>text{font-family:Arial,Helvetica,sans-serif;fill:#f5f8fd}.h{font-size:31px;font-weight:700}.sub{font-size:16px;fill:#a5b7cd}.lab{font-size:17px;font-weight:700}.yr{font-size:20px;font-weight:700}.qt{font-size:13px;fill:#eaf4ff}.model{font-size:12.5px;font-weight:700}.date{font-size:12px;fill:#c6d2df}.leg{font-size:12.5px;fill:#cbd9e8}</style>`);
+  line.push(`<text x="24" y="43" class="h">Frontier AI Model Release Timeline</text><text x="25" y="69" class="sub">Single-source verified model inventory • 2023–2026 • v1.0.0 • 2026-11-23</text>`);
+  const yearColors={"2023":"#1364c7","2024":"#067d63","2025":"#b76b20","2026":"#5935ae"};
+  for(const y of ys){const xs=starts[`${y}-Q1`], total=[1,2,3,4].reduce((a,q)=>a+widths[`${y}-Q${q}`],0);line.push(`<rect x="${xs}" y="86" width="${total}" height="34" fill="${yearColors[y]}"/><text class="yr" x="${xs+total/2}" y="109" text-anchor="middle">${y}</text>`);}
+  for(const q of qKeys){const xs=starts[q];line.push(`<line x1="${xs}" y1="120" x2="${xs}" y2="${H-45}" stroke="#294158" stroke-width="1"/><text x="${xs+widths[q]/2}" y="138" text-anchor="middle" class="qt">${q.slice(-2)}</text>`);}
+  line.push(`<line x1="${W-34}" y1="120" x2="${W-34}" y2="${H-45}" stroke="#294158"/>`);
+  labs.forEach((lab,i)=>{const y=top+i*rowH, c=palette[lab];line.push(`<text x="14" y="${y+27}" class="lab">${esc(lab)}</text><line x1="205" y1="${y+40}" x2="${W-34}" y2="${y+40}" stroke="${c}" opacity=".6" stroke-width="2"/>`);
+    for(const q of qKeys){const group=models.filter(m=>m.platform===lab&&quarter(m)===q).sort((a,b)=>a.release_date.localeCompare(b.release_date)||a.model.localeCompare(b.model));
+      group.forEach((m,j)=>{const x=starts[q]+11+j*163,py=y+13; const dash=m.access==="restricted"||m.access==="mixed"?'stroke-dasharray="5 3"':'';
+        line.push(`<rect x="${x}" y="${py}" rx="9" width="${pillW}" height="39" fill="${c}" fill-opacity=".2" stroke="${c}" stroke-width="1.7" ${dash}/><text x="${x+pillW/2}" y="${py+24}" text-anchor="middle" class="model">${esc(m.model)}</text><text x="${x+pillW/2}" y="${py+68}" text-anchor="middle" class="date">${esc(m.release_date)}</text>`);
+      });
+    }
+  });
+  line.push(`<text x="24" y="${H-19}" class="leg">Solid = documented public release    Dashed = restricted or mixed access    Month-only dates are intentionally not assigned an invented day.</text></svg>`);
+  return line.join("");
+};
+const safe=(s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dl=(blob,name)=>{const a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500);};
+(async()=>{try{
+const r=await fetch('data/models.json',{cache:'no-store'});if(!r.ok)throw new Error('Data unavailable');const d=await r.json();const ms=[...d.models].sort((a,b)=>a.release_date.localeCompare(b.release_date)||a.platform.localeCompare(b.platform)||a.model.localeCompare(b.model));
+const table=document.querySelector('#modelRows');table.innerHTML=ms.map(m=>'<tr><td>'+safe(m.release_date)+'</td><td>'+safe(m.platform)+'</td><td>'+safe(m.model)+'</td><td>'+safe(m.status)+'</td><td>'+safe(m.access)+'</td><td><a target="_blank" rel="noopener noreferrer" href="'+safe(m.source_url)+'">Source</a></td></tr>').join('');
+const svg=renderTimelineSvg(ms);document.querySelector('#timeline').innerHTML=svg;
+document.querySelector('#count').textContent=ms.length+' named model milestones';
+document.querySelector('#svgBtn').onclick=()=>dl(new Blob([svg],{type:'image/svg+xml;charset=utf-8'}),'ai-model-timeline-v'+d.project_version+'-'+d.updated+'.svg');
+document.querySelector('#pngBtn').onclick=()=>{const img=new Image(),u=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));img.onload=()=>{const cn=document.createElement('canvas');cn.width=img.naturalWidth;cn.height=img.naturalHeight;cn.getContext('2d').drawImage(img,0,0);cn.toBlob(b=>{if(b)dl(b,'ai-model-timeline-v'+d.project_version+'-'+d.updated+'.png');URL.revokeObjectURL(u);},'image/png');};img.src=u;};
+}catch(err){document.querySelector('#timeline').textContent='Unable to load release data: '+err.message;}})();
