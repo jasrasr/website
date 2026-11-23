@@ -171,9 +171,9 @@ function it_mq_refresh(string $path,array $tickers,array $config,bool $force=fal
         $usage=array_values(array_filter(is_array($saved['usage']??null)?$saved['usage']:[],
             static fn($entry)=>is_array($entry) && is_int($entry['at']??null) &&
                 is_int($entry['credits']??null) && $entry['at']>$now-86400));
-        $minute=0;$daily=0;
+        $minute=0;$daily=0;$utcDay=gmdate('Y-m-d',$now);
         foreach($usage as $item) {
-            $daily+=$item['credits'];
+            if(gmdate('Y-m-d',$item['at'])===$utcDay)$daily+=$item['credits'];
             if($item['at']>$now-60)$minute+=$item['credits'];
         }
         $maxMinute=max(1,min(8,(int)$config['credits_per_minute']));
