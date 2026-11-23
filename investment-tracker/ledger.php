@@ -395,9 +395,10 @@ function it_calculate(array $events,array $marketQuotes=[]): array
         }
         $series[$ticker]??=[];
         $lastPoint=$series[$ticker] ? end($series[$ticker])['date']:null;
-        if($lastPoint===null || $date>$lastPoint)
-            $series[$ticker][]=['date'=>$date,'price'=>$price,
+        $point=['date'=>$date,'price'=>$price,
                 'value'=>$marketValue,'cost'=>$totalBasis,'lots'=>$snapshot];
+        if($lastPoint===null || $date>$lastPoint)$series[$ticker][]=$point;
+        elseif($date===$lastPoint)$series[$ticker][count($series[$ticker])-1]=$point;
     }
     $tickers=array_values(array_unique(array_merge(array_keys($purchases),array_keys($quotes))));
     sort($tickers);
