@@ -14,22 +14,27 @@
     { name: 'Peas', emoji: '🫛', color: 'green' },
     { name: 'Blueberries', emoji: '🫐', color: 'blue' },
   ];
-  const orderSets = [
-    [
-      { prompt: 'Something red, please!', audio: 'audio/order-red.mp3', items: [apple], colorClue: 'red' },
-      { prompt: 'Two carrots, please!', audio: 'audio/order-carrots.mp3', items: [carrot, carrot] },
-      { prompt: 'Apple, banana, apple. In that order!', audio: 'audio/order-pattern.mp3', items: [apple, banana, apple] },
-    ],
-    [
-      { prompt: 'Green peas, please!', audio: 'audio/order-green-peas.mp3', items: [foods[3]], colorClue: 'green' },
-      { prompt: 'Two bananas, please!', audio: 'audio/order-two-bananas.mp3', items: [banana, banana] },
-      { prompt: 'Blueberries, then apple!', audio: 'audio/order-blueberries-apple.mp3', items: [foods[4], apple] },
-    ],
-    [
-      { prompt: 'Something orange, please!', audio: 'audio/order-orange.mp3', items: [carrot], colorClue: 'orange' },
-      { prompt: 'Three apples, please!', audio: 'audio/order-three-apples.mp3', items: [apple, apple, apple] },
-      { prompt: 'Carrot, apple, carrot. In that order!', audio: 'audio/order-carrot-apple-carrot.mp3', items: [carrot, apple, carrot] },
-    ],
+  const peas = foods[3];
+  const blueberries = foods[4];
+  const orderPool = [
+    { id: 'red', prompt: 'Something red, please!', audio: 'audio/order-red.mp3', items: [apple], colorClue: 'red' },
+    { id: 'green', prompt: 'Green peas, please!', audio: 'audio/order-green-peas.mp3', items: [peas], colorClue: 'green' },
+    { id: 'orange', prompt: 'Something orange, please!', audio: 'audio/order-orange.mp3', items: [carrot], colorClue: 'orange' },
+    { id: 'yellow', prompt: 'Something yellow, please!', audio: 'audio/order-yellow.mp3', items: [banana], colorClue: 'yellow' },
+    { id: 'blue', prompt: 'Something blue, please!', audio: 'audio/order-blue.mp3', items: [blueberries], colorClue: 'blue' },
+    { id: 'two-carrots', prompt: 'Two carrots, please!', audio: 'audio/order-carrots.mp3', items: [carrot, carrot] },
+    { id: 'two-bananas', prompt: 'Two bananas, please!', audio: 'audio/order-two-bananas.mp3', items: [banana, banana] },
+    { id: 'two-apples', prompt: 'Two apples, please!', audio: 'audio/order-two-apples.mp3', items: [apple, apple] },
+    { id: 'two-blueberries', prompt: 'Two blueberries, please!', audio: 'audio/order-two-blueberries.mp3', items: [blueberries, blueberries] },
+    { id: 'three-apples', prompt: 'Three apples, please!', audio: 'audio/order-three-apples.mp3', items: [apple, apple, apple] },
+    { id: 'three-carrots', prompt: 'Three carrots, please!', audio: 'audio/order-three-carrots.mp3', items: [carrot, carrot, carrot] },
+    { id: 'apple-banana-apple', prompt: 'Apple, banana, apple. In that order!', audio: 'audio/order-pattern.mp3', items: [apple, banana, apple] },
+    { id: 'carrot-apple-carrot', prompt: 'Carrot, apple, carrot. In that order!', audio: 'audio/order-carrot-apple-carrot.mp3', items: [carrot, apple, carrot] },
+    { id: 'banana-apple-banana', prompt: 'Banana, apple, banana. In that order!', audio: 'audio/order-banana-apple-banana.mp3', items: [banana, apple, banana] },
+    { id: 'peas-carrot-peas', prompt: 'Peas, carrot, peas. In that order!', audio: 'audio/order-peas-carrot-peas.mp3', items: [peas, carrot, peas] },
+    { id: 'blueberries-apple', prompt: 'Blueberries, then apple!', audio: 'audio/order-blueberries-apple.mp3', items: [blueberries, apple] },
+    { id: 'banana-peas', prompt: 'Banana, then peas!', audio: 'audio/order-banana-peas.mp3', items: [banana, peas] },
+    { id: 'apple-carrot', prompt: 'Apple, then carrot!', audio: 'audio/order-apple-carrot.mp3', items: [apple, carrot] },
   ];
   const sounds = {
     bite: [523, 659],
@@ -56,6 +61,7 @@
   const sessionCount = document.querySelector('#session-count');
   const sessionList = document.querySelector('#session-list');
   const sessionKey = 'feed-the-pet-session-v1';
+  const lastOrdersKey = 'feed-the-pet-last-orders-v1';
   let completedRounds = [];
   let achievements = 0;
   try {
@@ -76,7 +82,14 @@
   }
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   let selectedPet = pets[0];
-  let activeOrders = orderSets[0];
+  let activeOrders = orderPool.slice(0, 3);
+  let lastOrderIds = [];
+  try {
+    const storedIds = JSON.parse(sessionStorage.getItem(lastOrdersKey) || '[]');
+    if (Array.isArray(storedIds)) lastOrderIds = storedIds.filter(id => typeof id === 'string');
+  } catch {
+    // A repeated set is harmless when session storage is unavailable.
+  }
   let mode = 'orders';
   let orderIndex = 0;
   let fed = 0;
@@ -85,6 +98,33 @@
   let volume;
   let lastCue = 0;
   let voiceAudio;
+
+  function randomIndex(max) {
+    if (window.crypto?.getRandomValues) {
+      const value = new Uint32Array(1);
+      const limit = Math.floor(0x100000000 / max) * max;
+      do { window.crypto.getRandomValues(value); } while (value[0] >= limit);
+      return value[0] % max;
+    }
+    return Math.floor(Math.random() * max);
+  }
+
+  function chooseOrders() {
+    let chosen;
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const shuffled = orderPool.slice();
+      for (let index = shuffled.length - 1; index > 0; index -= 1) {
+        const swapIndex = randomIndex(index + 1);
+        [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+      }
+      chosen = shuffled.slice(0, 3);
+      const ids = chosen.map(order => order.id).sort();
+      if (ids.join('|') !== lastOrderIds.slice().sort().join('|')) break;
+    }
+    lastOrderIds = chosen.map(order => order.id);
+    try { sessionStorage.setItem(lastOrdersKey, JSON.stringify(lastOrderIds)); } catch { /* Continue in memory. */ }
+    return chosen;
+  }
 
   function speakWithBrowser(prompt) {
     if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
@@ -293,7 +333,7 @@
   }
 
   function startRound() {
-    activeOrders = orderSets[achievementCount() % orderSets.length];
+    activeOrders = chooseOrders();
     orderIndex = 0;
     showRound();
   }
