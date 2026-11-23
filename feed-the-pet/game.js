@@ -14,10 +14,22 @@
     { name: 'Peas', emoji: '🫛', color: 'green' },
     { name: 'Blueberries', emoji: '🫐', color: 'blue' },
   ];
-  const orders = [
-    { prompt: 'Something red, please!', items: [apple], colorClue: 'red' },
-    { prompt: 'Two carrots, please!', items: [carrot, carrot] },
-    { prompt: 'Apple, banana, apple. In that order!', items: [apple, banana, apple] },
+  const orderSets = [
+    [
+      { prompt: 'Something red, please!', audio: 'audio/order-red.mp3', items: [apple], colorClue: 'red' },
+      { prompt: 'Two carrots, please!', audio: 'audio/order-carrots.mp3', items: [carrot, carrot] },
+      { prompt: 'Apple, banana, apple. In that order!', audio: 'audio/order-pattern.mp3', items: [apple, banana, apple] },
+    ],
+    [
+      { prompt: 'Green peas, please!', audio: 'audio/order-green-peas.mp3', items: [foods[3]], colorClue: 'green' },
+      { prompt: 'Two bananas, please!', audio: 'audio/order-two-bananas.mp3', items: [banana, banana] },
+      { prompt: 'Blueberries, then apple!', audio: 'audio/order-blueberries-apple.mp3', items: [foods[4], apple] },
+    ],
+    [
+      { prompt: 'Something orange, please!', audio: 'audio/order-orange.mp3', items: [carrot], colorClue: 'orange' },
+      { prompt: 'Three apples, please!', audio: 'audio/order-three-apples.mp3', items: [apple, apple, apple] },
+      { prompt: 'Carrot, apple, carrot. In that order!', audio: 'audio/order-carrot-apple-carrot.mp3', items: [carrot, apple, carrot] },
+    ],
   ];
   const sounds = {
     bite: [523, 659],
@@ -64,6 +76,7 @@
   }
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   let selectedPet = pets[0];
+  let activeOrders = orderSets[0];
   let mode = 'free';
   let orderIndex = 0;
   let fed = 0;
@@ -71,14 +84,30 @@
   let audio;
   let volume;
   let lastCue = 0;
+  let voiceAudio;
 
-  function speakOrder() {
-    if (!soundEnabled || !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
+  function speakWithBrowser(prompt) {
+    if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(orders[orderIndex].prompt);
+    const utterance = new SpeechSynthesisUtterance(prompt);
     utterance.lang = 'en-US';
     utterance.rate = 0.85;
     window.speechSynthesis.speak(utterance);
+  }
+
+  function speakOrder() {
+    if (!soundEnabled) return;
+    const order = activeOrders[orderIndex];
+    if (voiceAudio) voiceAudio.pause();
+    let usedFallback = false;
+    const fallback = () => {
+      if (usedFallback || !soundEnabled) return;
+      usedFallback = true;
+      speakWithBrowser(order.prompt);
+    };
+    voiceAudio = new Audio(order.audio);
+    voiceAudio.addEventListener('error', fallback, { once: true });
+    voiceAudio.play().catch(fallback);
   }
 
   function achievementCount() {
@@ -212,7 +241,7 @@
   }
 
   function serveOrder(food) {
-    const order = orders[orderIndex];
+    const order = activeOrders[orderIndex];
     if (food !== order.items[fed]) {
       feedback.textContent = 'Try the food in the highlighted picture!';
       clues.classList.add('retry');
@@ -229,7 +258,7 @@
       return;
     }
 
-    const finished = orderIndex === orders.length - 1;
+    const finished = orderIndex === activeOrders.length - 1;
     const unlockedPet = finished ? finishRound() : null;
     playSound(finished ? 'finish' : 'order');
     feedback.textContent = unlockedPet
@@ -243,9 +272,9 @@
   }
 
   function renderOrder() {
-    const order = orders[orderIndex];
+    const order = activeOrders[orderIndex];
     clues.classList.remove('retry');
-    progress.textContent = `Order ${orderIndex + 1} of ${orders.length} · ${fed} of ${order.items.length} bites`;
+    progress.textContent = `Order ${orderIndex + 1} of ${activeOrders.length} · ${fed} of ${order.items.length} bites`;
     clues.replaceChildren(...order.items.map((food, index) => {
       const clue = document.createElement('span');
       clue.className = 'order-card';
@@ -264,6 +293,7 @@
   }
 
   function startRound() {
+    activeOrders = orderSets[achievementCount() % orderSets.length];
     orderIndex = 0;
     showRound();
   }
@@ -277,7 +307,7 @@
     repeatOrder.hidden = !takingOrders || !soundEnabled || !('speechSynthesis' in window);
     game.classList.toggle('taking-orders', takingOrders);
     if (takingOrders) {
-      speech.textContent = orders[orderIndex].prompt;
+      speech.textContent = activeOrders[orderIndex].prompt;
       renderOrder();
       speakOrder();
     } else {
@@ -312,8 +342,12 @@
     startRound();
   }));
   nextOrder.addEventListener('click', () => {
-    orderIndex = (orderIndex + 1) % orders.length;
-    showRound();
+    if (orderIndex === activeOrders.length - 1) {
+      startRound();
+    } else {
+      orderIndex += 1;
+      showRound();
+    }
     foodTray.querySelector('button').focus();
   });
   repeatOrder.addEventListener('click', speakOrder);
@@ -327,6 +361,10 @@
     soundToggle.querySelector('span').textContent = soundEnabled ? 'on' : 'off';
     repeatOrder.hidden = !soundEnabled || mode !== 'orders' || !('speechSynthesis' in window);
     if (!soundEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+    if (!soundEnabled && voiceAudio) {
+      voiceAudio.pause();
+      voiceAudio = null;
+    }
     if (!soundEnabled && volume) {
       volume.disconnect();
       volume = undefined;
