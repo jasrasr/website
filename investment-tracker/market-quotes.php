@@ -193,13 +193,18 @@ function it_mq_refresh(string $path,array $tickers,array $config,bool $force=fal
             // The provider can report the same regular close all weekend.
             // Don't request again until the cache interval has elapsed.
             if($now-$lastFetch<$minimum || $now-$lastAttempt<300)continue;
-            $due[]=$ticker;
+            // Unfetched and oldest-fetched stocks MUST come first. Otherwise
+            // a portfolio larger than six 8-stock batches can starve later
+            // alphabetic tickers when the first batch becomes due again.
+            $due[]=['ticker'=>$ticker,'last_checked'=>max($lastFetch,$lastAttempt)];
         }
+        usort($due,static fn($a,$b)=>
+            ($a['last_checked']<=>$b['last_checked']) ?:strcmp($a['ticker'],$b['ticker']));
         if(!$due) {
             $result=['status'=>'cached','attempted'=>0,'updated'=>0,'message'=>'Quotes are up to date in the local cache.'];
             return [['quotes'=>$quotes,'attempts'=>$attempts,'usage'=>$usage]];
         }
-        $chosen=array_slice($due,0,$allow);
+        $chosen=array_column(array_slice($due,0,$allow),'ticker');
         $usage[]=['at'=>$now,'credits'=>count($chosen)];
         foreach($chosen as $ticker)$attempts[$ticker]=$now;
         $result=['status'=>'refreshed','attempted'=>count($chosen),'updated'=>0,'message'=>'Quote refresh completed.'];
