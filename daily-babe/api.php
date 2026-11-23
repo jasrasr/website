@@ -354,8 +354,8 @@ try {
         if (!is_numeric($focusX) || !is_numeric($focusY) || (float) $focusX < 0 || (float) $focusX > 100 || (float) $focusY < 0 || (float) $focusY > 100) {
             json_response(false, 'Choose a valid horizontal and vertical focus.', null, [['code' => 'INVALID_FOCUS']], 422);
         }
-        if ($zoom !== null && (!is_numeric($zoom) || (float) $zoom < 100 || (float) $zoom > 200)) {
-            json_response(false, 'Choose a valid zoom between 100% and 200%.', null, [['code' => 'INVALID_ZOOM']], 422);
+        if ($zoom !== null && (!is_numeric($zoom) || (float) $zoom < 100 || (float) $zoom > 300)) {
+            json_response(false, 'Choose a valid zoom between 100% and 300%.', null, [['code' => 'INVALID_ZOOM']], 422);
         }
         if (!in_array($rotation, [0, 90, 180, 270], true)) {
             json_response(false, 'Choose a valid photo rotation.', null, [['code' => 'INVALID_ROTATION']], 422);
