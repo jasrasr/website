@@ -3,10 +3,10 @@
  * File Name: index.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Private investment performance and broker-reported tax-basis dashboard with authenticated ledger API.
- * Revision: 1.9.1
+ * Revision: 2.0.0
  * Created Date: 2026-10-29
- * Modified Date: 2026-11-16
- * Changelog: 1.9.1 - Explain linked AMC/APE security actions and missing broker basis proof rather than falsely importing historical distributions. 1.9.0 - Preserve WKHS whole-share reverse split roundups, HCWC to HOST acquisition history and CHK to CHKAQ cash settlement with audited original rows. 1.8.0 - Reconcile uniquely paired simple reverse splits, cash closeouts and unknown-basis opening conversions without altering saved broker rows. 1.7.0 - Reconcile gross dividends against net-of-tax/ADR-fee reinvestments in old and new Robinhood drafts. 1.6.0 - Accept broker-reported sale basis, confirmed lot selections and per-lot tax-basis adjustments without changing investment-performance history. 1.5.4 - Correct full-liquidation FIFO ambiguity in closed positions without modifying imported events. 1.5.3 - Read-time compatibility for older Robinhood REC share-credit drafts without requiring reupload. 1.5.2 - Correct Tesla cancellation pairing and render closed-position returns without reuploading existing private staged reports. 1.5.0 - Enable preview-first, atomic batch import of all eligible stocks with explicit exception summary. 1.4.2 - Put estimated import first and move manual verification behind advanced details. 1.4.0 - Allow explicitly provisional one-click import using reported activity, inferred splits and FIFO; preserve unknown share basis. 1.3.2 - Offer explicitly unverified FIFO lot suggestions for review. 1.3.1 - Serialize stage and review edits with ticker commit to avoid concurrent draft mutation. 1.3.0 - Private draft creation, editable per-stock split and sale-lot reviews, validated atomic import. 1.2.1 - Clarify original Robinhood CSV versus normalized data, and guide misdirected uploads to safe preview. 1.2.0 - Preview Robinhood source reports without writing unverified lots; protect asset history from accidental import. 1.1.0 - Read-only NVIDIA demo, original and split-adjusted lot display, tax-term clarity. 1.0.0 - Shared login, manual events, atomic CSV import and lot dashboard.
+ * Modified Date: 2026-11-22
+ * Changelog: 2.0.0 - Add authenticated, cache-limited market quote refresh with read-only valuation updates, no historical transaction changes. 1.9.1 - Explain linked AMC/APE security actions and missing broker basis proof rather than falsely importing historical distributions. 1.9.0 - Preserve WKHS whole-share reverse split roundups, HCWC to HOST acquisition history and CHK to CHKAQ cash settlement with audited original rows. 1.8.0 - Reconcile uniquely paired simple reverse splits, cash closeouts and unknown-basis opening conversions without altering saved broker rows. 1.7.0 - Reconcile gross dividends against net-of-tax/ADR-fee reinvestments in old and new Robinhood drafts. 1.6.0 - Accept broker-reported sale basis, confirmed lot selections and per-lot tax-basis adjustments without changing investment-performance history. 1.5.4 - Correct full-liquidation FIFO ambiguity in closed positions without modifying imported events. 1.5.3 - Read-time compatibility for older Robinhood REC share-credit drafts without requiring reupload. 1.5.2 - Correct Tesla cancellation pairing and render closed-position returns without reuploading existing private staged reports. 1.5.0 - Enable preview-first, atomic batch import of all eligible stocks with explicit exception summary. 1.4.2 - Put estimated import first and move manual verification behind advanced details. 1.4.0 - Allow explicitly provisional one-click import using reported activity, inferred splits and FIFO; preserve unknown share basis. 1.3.2 - Offer explicitly unverified FIFO lot suggestions for review. 1.3.1 - Serialize stage and review edits with ticker commit to avoid concurrent draft mutation. 1.3.0 - Private draft creation, editable per-stock split and sale-lot reviews, validated atomic import. 1.2.1 - Clarify original Robinhood CSV versus normalized data, and guide misdirected uploads to safe preview. 1.2.0 - Preview Robinhood source reports without writing unverified lots; protect asset history from accidental import. 1.1.0 - Read-only NVIDIA demo, original and split-adjusted lot display, tax-term clarity. 1.0.0 - Shared login, manual events, atomic CSV import and lot dashboard.
  */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
@@ -14,6 +14,7 @@ require_once __DIR__ . '/ledger.php';
 require_once __DIR__ . '/demo.php';
 require_once __DIR__ . '/robinhood.php';
 require_once __DIR__ . '/reconciliation.php';
+require_once __DIR__ . '/market-quotes.php';
 header('Cache-Control: no-store, private');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: no-referrer');
@@ -26,6 +27,8 @@ $storage=__DIR__.'/storage';
 if (!is_dir($storage) && !mkdir($storage,0700,true) && !is_dir($storage)) { http_response_code(503); exit('Storage unavailable'); }
 $path=$storage.'/'.hash('sha256',(string)$user['id']).'.json';
 $reconcilePath=$storage.'/'.hash('sha256',(string)$user['id']).'.rh-stage.json';
+// The shared quote cache contains public ticker/price data only, not user portfolios.
+$marketQuotesPath=$storage.'/market-quotes.json';
 
 function it_reply(int $status, bool $success, string $message, mixed $data=null): never
 {
@@ -130,8 +133,22 @@ if ($isApi) {
         }
         if ($_SERVER['REQUEST_METHOD']==='GET') {
             $rows=$isDemo?it_demo_events():it_records($path);
+            $active=it_active($rows);
+            $base=it_calculate($active);
+            $config=it_mq_config(__DIR__);
+            $tickers=$isDemo?[]:it_mq_tickers($base);
+            $cached=(!$isDemo && $config['enabled'])
+                ?it_mq_snapshot($marketQuotesPath,$tickers,$config,time()):[];
+            $analysis=$cached?it_calculate($active,$cached):$base;
+            $status=[
+                'enabled'=>!$isDemo && $config['enabled'],
+                'provider'=>'Twelve Data','tracked'=>count($tickers),
+                'priced'=>count($cached),'stale'=>count(array_filter($cached,static fn($q)=>!empty($q['stale']))),
+                'cache_minutes'=>(int)ceil($config['cache_seconds']/60),
+            ];
             it_reply(200,true,$isDemo?'Read-only incomplete NVIDIA demonstration loaded.':'Investment ledger loaded.',[
-                'events'=>$rows,'analysis'=>it_calculate(it_active($rows)),'csrf'=>$auth->csrf(),
+                'events'=>$rows,'analysis'=>$analysis,'csrf'=>$auth->csrf(),
+                'quotes'=>$status,
                 'as_of'=>gmdate('Y-m-d'),'demo'=>$isDemo,'demo_exclusions'=>$isDemo?it_demo_exclusions():[]
             ]);
         }
@@ -139,6 +156,24 @@ if ($isApi) {
         if ($_SERVER['REQUEST_METHOD']!=='POST') it_reply(405,false,'Method not allowed.');
         if (!$auth->validCsrf($_POST['csrf']??null)) it_reply(403,false,'Invalid form token.');
         $action=(string)($_POST['action']??'');
+        if ($action==='refresh_market_prices') {
+            $rows=it_active(it_records($path));
+            $base=it_calculate($rows);
+            $config=it_mq_config(__DIR__);
+            $tickers=it_mq_tickers($base);
+            $stats=it_mq_refresh($marketQuotesPath,$tickers,$config,($_POST['force']??'')==='1');
+            $cached=$config['enabled']?it_mq_snapshot($marketQuotesPath,$tickers,$config,time()):[];
+            $analysis=$cached?it_calculate($rows,$cached):$base;
+            it_reply(200,true,$stats['message'],[
+                'result'=>$stats,'analysis'=>$analysis,
+                'quotes'=>[
+                    'enabled'=>$config['enabled'],'provider'=>'Twelve Data',
+                    'tracked'=>count($tickers),'priced'=>count($cached),
+                    'stale'=>count(array_filter($cached,static fn($q)=>!empty($q['stale']))),
+                    'cache_minutes'=>(int)ceil($config['cache_seconds']/60),
+                ],
+            ]);
+        }
         if ($action==='stage_robinhood') {
             if (!isset($_FILES['file']) || ($_FILES['file']['error']??1)!==UPLOAD_ERR_OK ||
                 !is_uploaded_file((string)$_FILES['file']['tmp_name'])) {
@@ -358,8 +393,8 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Investment Tracker · Tax Lots</title>
-<link rel="stylesheet" href="style.css?v=1.5.4">
-<script src="app.js?v=1.9.1" defer></script>
+<link rel="stylesheet" href="style.css?v=2.0.0">
+<script src="app.js?v=2.0.0" defer></script>
 </head>
 <body data-demo="<?=$isDemo?'1':'0'?>">
 <header class="topbar"><div><span class="eyebrow">PRIVATE PORTFOLIO ANALYTICS</span><h1>Investment Tracker</h1><p>See what each purchase is worth, not just the average.</p></div><a class="account" href="<?=it_h($auth->portal())?>">Account <span aria-hidden="true">↗</span></a></header>
@@ -367,10 +402,17 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
 <nav class="modes" aria-label="Portfolio data source"><a class="mode <?=$isDemo?'':'active'?>" href="?">My private portfolio</a><a class="mode <?=$isDemo?'active':''?>" href="?demo=1">NVIDIA screenshot demo</a></nav>
 <?php if($isDemo): ?><section class="demoBanner"><strong>NVIDIA DEMO · INCOMPLETE SCREENSHOT HISTORY · READ ONLY</strong><p>Separate from your private account. The export reconciles NVIDIA shares and fractional dividend reinvestments. Historical sale-lot assignments are a provisional illustration, and the last reference price is the October 9, 2026 execution price — not today’s market quote. <strong>Do not treat historical demonstration valuations as live trading prices or broker-confirmed tax lots.</strong></p></section><?php endif; ?>
 <div id="notice" class="notice" role="status" aria-live="polite">Loading private investment data…</div>
+<section class="panel marketQuoteBar" aria-label="Market price updates">
+  <div><span class="eyebrow">MARKET PRICES · READ-ONLY VALUATION</span><h2>Latest available stock quotes</h2>
+    <p class="subtle" id="marketQuoteStatus" role="status" aria-live="polite">Checking quote configuration…</p>
+    <p class="hint">Quotes may be delayed or unchanged outside market hours. Only open positions are refreshed. Trades, dividends, and cost basis stay unchanged.</p>
+  </div>
+  <button type="button" class="primary" id="refreshMarketPrices" <?=$isDemo?'disabled':''?>>Refresh Prices</button>
+</section>
 <section class="metrics" aria-label="Portfolio totals">
   <article class="metric"><span>Market value</span><strong id="marketValue">—</strong><small>Only complete when every holding has a price</small></article>
   <article class="metric"><span>Lifetime gain / loss</span><strong id="lifetimeProfit">—</strong><small>Sales + current holdings + cash dividends − cash purchases</small></article>
-  <article class="metric"><span>Unrealized gain / loss</span><strong id="unrealized">—</strong><small>Open lots at last recorded price</small></article>
+  <article class="metric"><span>Unrealized gain / loss</span><strong id="unrealized">—</strong><small>Open lots at latest valid quote or recorded price</small></article>
   <article class="metric"><span>Annualized money-weighted return</span><strong id="xirr">—</strong><small>XIRR with transaction dates and current market value</small></article>
 </section>
 <section class="charts">
@@ -437,5 +479,5 @@ function it_h(string $text): string { return htmlspecialchars($text,ENT_QUOTES|E
 </section>
 <section class="panel"><div class="panel-heading"><div><span class="eyebrow">IMMUTABLE HISTORY</span><h2>Activity ledger</h2></div><span id="recordCount" class="subtle"></span></div><div class="tablewrap"><table><thead><tr><th>Date</th><th>Stock</th><th>Type</th><th class="numeric">Shares</th><th class="numeric">Amount / price</th><th>Notes</th><th>Correction</th></tr></thead><tbody id="eventsBody"></tbody></table></div><div class="actions"><button type="button" class="secondary" id="newerEvents" disabled>Newer events</button><span id="eventPage" class="subtle" aria-live="polite"></span><button type="button" class="secondary" id="olderEvents" disabled>Older events</button></div><p class="hint">Voiding retains the original record for audit. Voiding a purchase that has allocated sales is blocked until its dependencies are corrected.</p></section>
 </main>
-<footer>Investment Tracker · Revision 1.9.1 · Updated November 16, 2026 · Data private to your central account · Calculations are estimates, not trading or tax advice</footer>
+<footer>Investment Tracker · Revision 2.0.0 · Updated November 22, 2026 · Data private to your central account · Calculations are estimates, not trading or tax advice</footer>
 </body></html>

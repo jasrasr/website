@@ -3,10 +3,10 @@
  * File Name: ledger.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Deterministic split-aware performance and broker-reported tax-basis calculations.
- * Revision: 1.9.0
+ * Revision: 2.0.0
  * Created Date: 2026-10-29
- * Modified Date: 2026-11-16
- * Changelog: 1.9.0 - Preserve source-rounded reverse split share credits and documented whole-share round-ups on a single intact acquisition lot. 1.8.0 - Treat source-paired liquidation and cash merger sale legs as one execution when evaluating FIFO ambiguity. 1.7.0 - Report gross/net DRIP and withheld tax separately, without charging withheld dollars twice in performance or XIRR. 1.6.0 - Track performance basis separately from broker-reported tax basis, accept per-lot basis adjustments and confirmed sale allocations, and retain warnings for aggregate-only 1099-B data. 1.5.4 - Recognize a single Robinhood sell liquidating every available purchase lot, avoiding false FIFO warnings while retaining partial-sale uncertainty. 1.5.1 - Recalculate closed-position status, return on purchases, holding duration, and real versus only nominal FIFO ambiguity from existing ledger records. 1.4.1 - Mark stock receipt holding period unknown instead of using credit date as tax acquisition. 1.4.0 - Preserve unpriced share receipts with unknown tax basis and suppress unreliable gain calculations. 1.3.0 - Track stock-lending income and fee charges separately from dividends and basis. 1.2.0 - Date valuations at their observed price and withhold results if more recent account activity lacks a quote. 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
+ * Modified Date: 2026-11-22
+ * Changelog: 2.0.0 - Apply temporary validated market quote overlays to open positions, charts and XIRR without ledger mutation. 1.9.0 - Preserve source-rounded reverse split share credits and documented whole-share round-ups on a single intact acquisition lot. 1.8.0 - Treat source-paired liquidation and cash merger sale legs as one execution when evaluating FIFO ambiguity. 1.7.0 - Report gross/net DRIP and withheld tax separately, without charging withheld dollars twice in performance or XIRR. 1.6.0 - Track performance basis separately from broker-reported tax basis, accept per-lot basis adjustments and confirmed sale allocations, and retain warnings for aggregate-only 1099-B data. 1.5.4 - Recognize a single Robinhood sell liquidating every available purchase lot, avoiding false FIFO warnings while retaining partial-sale uncertainty. 1.5.1 - Recalculate closed-position status, return on purchases, holding duration, and real versus only nominal FIFO ambiguity from existing ledger records. 1.4.1 - Mark stock receipt holding period unknown instead of using credit date as tax acquisition. 1.4.0 - Preserve unpriced share receipts with unknown tax basis and suppress unreliable gain calculations. 1.3.0 - Track stock-lending income and fee charges separately from dividends and basis. 1.2.0 - Date valuations at their observed price and withhold results if more recent account activity lacks a quote. 1.1.1 - Isolate calendar-aware tax holding period with explicit one-year tests. 1.1.0 - Preserve original shares and unit cost through splits; expose adjusted basis, full-quantity P&L and tax holding periods. 1.0.0 - Initial lot replay, realized/unrealized returns, snapshots and XIRR.
  */
 declare(strict_types=1);
 
@@ -152,7 +152,7 @@ function it_sale_execution_key(array $event): string
     return 'single|'.$id;
 }
 
-function it_calculate(array $events): array
+function it_calculate(array $events,array $marketQuotes=[]): array
 {
     // Immutable sale-basis records overlay an earlier sale during replay. This
     // lets a later broker statement correct basis/confirmation without editing
@@ -356,12 +356,62 @@ function it_calculate(array $events): array
             $series[$t][]=['date'=>$e['date'],'price'=>(float)$e['price'],'value'=>$value,'cost'=>$cost,'lots'=>$snapshot];
         }
     }
+    // Overlay external observations only for OPEN positions. They are not
+    // ledger transactions, never modify cost basis or tax lots, and never
+    // write an event to the owner's private permanent portfolio.
+    $openTickers=[];
+    foreach($lots as $lot)if($lot['shares']>0.000000001)$openTickers[$lot['ticker']]=true;
+    foreach($marketQuotes as $ticker=>$quote){
+        if(!isset($openTickers[$ticker]) || !isset($purchases[$ticker]) ||
+           !is_array($quote) || ($quote['source']??'')!=='Twelve Data' ||
+           ($quote['currency']??'')!=='USD' ||
+           !is_numeric($quote['price']??null) ||
+           !is_finite((float)$quote['price']) ||
+           (float)$quote['price']<=0 || (float)$quote['price']>1000000000 ||
+           !is_string($quote['as_of']??null))continue;
+        $timestamp=strtotime($quote['as_of']);
+        if(!$timestamp || $timestamp>time()+300 || time()-$timestamp>604800)continue;
+        $date=gmdate('Y-m-d',$timestamp);
+        if($date<($latestActivity[$ticker]??'0000-00-00') ||
+           (isset($quotes[$ticker]) && $date<$quotes[$ticker]['date']))continue;
+        $price=(float)$quote['price'];
+        $quotes[$ticker]=[
+            'price'=>$price,'date'=>$date,'source'=>'Twelve Data',
+            'as_of'=>gmdate(DATE_ATOM,$timestamp),'fetched_at'=>$quote['fetched_at']??null,
+            'stale'=>!empty($quote['stale']),
+        ];
+        // Add only a read-only point to the returned chart; never insert
+        // it into historical source events or persist it as a manual quote.
+        $snapshot=[];$totalBasis=0.0;$marketValue=0.0;
+        foreach($lots as $lot){
+            if($lot['ticker']!==$ticker || $lot['shares']<=0.000000001)continue;
+            $value=$lot['shares']*$price;
+            $snapshot[]=[
+                'id'=>$lot['id'],'value'=>$value,
+                'gain'=>!empty($lot['basis_unknown'])?null:$value-$lot['remaining_cost'],
+                'cost'=>!empty($lot['basis_unknown'])?null:$lot['remaining_cost'],
+            ];
+            $marketValue+=$value;$totalBasis+=$lot['remaining_cost'];
+        }
+        $series[$ticker]??=[];
+        $lastPoint=$series[$ticker] ? end($series[$ticker])['date']:null;
+        $point=['date'=>$date,'price'=>$price,
+                'value'=>$marketValue,'cost'=>$totalBasis,'lots'=>$snapshot];
+        if($lastPoint===null || $date>$lastPoint)$series[$ticker][]=$point;
+        elseif($date===$lastPoint)$series[$ticker][count($series[$ticker])-1]=$point;
+    }
     $tickers=array_values(array_unique(array_merge(array_keys($purchases),array_keys($quotes))));
     sort($tickers);
     $holdings=[];$missing=[];$totalValue=0.;$allFlows=[];$net=0.;$uncertain=[];
     foreach ($tickers as $t) {
         $price=$quotes[$t]['price']??null;
         $priceUsable=$price!==null && ($quotes[$t]['date']??'') >= ($latestActivity[$t]??'');
+        $quoteSource=$quotes[$t]['source']??'Recorded trade/manual observation';
+        $quoteAsOf=$quotes[$t]['as_of']??null;
+        $quoteStale=isset($quotes[$t]) &&
+            ($quoteSource==='Twelve Data'
+                ? !empty($quotes[$t]['stale'])
+                : (time()-(strtotime($quotes[$t]['date'].' 23:59:59 UTC')?:0)>259200));
         $qty=0.;$basis=0.;$taxBasis=0.;$currentLots=[];
         $unknownBasis=!empty($basisUncertain[$t]);
         foreach ($lots as $lot) {
@@ -432,7 +482,10 @@ function it_calculate(array $events): array
             'closed_holding_days'=>$closedHolding['days_held']??null,
             'closed_tax_term'=>$closedHolding['tax_term']??null,
             'closed_total_return_pct'=>$lifetimeReturnPct,
-            'price_date'=>$quotes[$t]['date']??null,'valuation_stale_or_incomplete'=>$missingPrice,'value'=>$v,'unrealized'=>($v===null||$unknownBasis)?null:$v-$basis,
+            'price_date'=>$quotes[$t]['date']??null,'price_source'=>$quoteSource,
+            'price_as_of'=>$quoteAsOf,'price_stale'=>$quoteStale,
+            'valuation_stale_or_incomplete'=>$missingPrice||$quoteStale,
+            'value'=>$v,'unrealized'=>($v===null||$unknownBasis)?null:$v-$basis,
             'realized'=>$unknownBasis?null:$realized[$t],'tax_realized'=>$unknownBasis?null:$taxRealized[$t],
             'tax_unrealized'=>($v===null||$unknownBasis||!empty($taxBasisUncertain[$t]))?null:$v-$taxBasis,
             'dividends_cash'=>$divs[$t],'dividends_reinvested'=>$reinvested[$t],
