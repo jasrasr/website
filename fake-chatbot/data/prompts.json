@@ -3,10 +3,10 @@
     "file_name": "prompts.json",
     "author": "Jason Lamb (with help from ChatGPT)",
     "description": "Public seed for manually authored fake AI response rules; live edits remain in private JsonStore storage.",
-    "revision": "2.0.1",
+    "revision": "2.0.2",
     "created_date": "2026-11-20",
-    "modified_date": "2026-11-20",
-    "changelog": "2.0.1 - Normalize one-word phrases as keywords so broad triggers cannot bypass specificity. 2.0.0 - Add scored exact/phrase/all/keyword rules and human-written jokes."
+    "modified_date": "2026-11-22",
+    "changelog": "2.0.2 - Add a reply explaining mostly polite. 2.0.1 - Normalize one-word phrases as keywords so broad triggers cannot bypass specificity. 2.0.0 - Add scored exact/phrase/all/keyword rules and human-written jokes."
   },
   "rules": [
     {
@@ -408,6 +408,21 @@
         "Hello, human. My imaginary neural network has been expecting someone with excellent taste in questionable software.",
         "Greetings. All seven of my pretend neurons have stood up for this occasion.",
         "Hello! My customer service training consisted of a sticky note that said 'be mostly polite'."
+      ],
+      "priority": 0,
+      "enabled": true
+    },
+    {
+      "id": "mostly-polite",
+      "name": "Mostly polite",
+      "triggers": [
+        {
+          "type": "phrase",
+          "text": "mostly polite"
+        }
+      ],
+      "replies": [
+        "Mostly polite means I say 'please' before stealing your last French fry and 'thank you' while fleeing the scene."
       ],
       "priority": 0,
       "enabled": true
