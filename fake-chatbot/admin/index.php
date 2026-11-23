@@ -1,12 +1,12 @@
 <?php
 /*
 File Name: admin/index.php
-Revision: 2.0.2
+Revision: 2.0.3
 Description: Shared-identity protected admin console for editing fake chatbot rules and reviewing questions.
 Author: Jason Lamb (with help from ChatGPT)
 Created Date: 2026-11-20
 Modified Date: 2026-11-22
-Changelog: 2.0.2 - Reuse existing exact rules and prevent duplicate saves. 2.0.1 - Remove punctuation from question-based rule suggestions. 2.0.0 - Add CRUD rules, ranked test preview and captured question review.
+Changelog: 2.0.3 - Show all admin times in Eastern time with EST/EDT. 2.0.2 - Reuse existing exact rules and prevent duplicate saves. 2.0.1 - Remove punctuation from question-based rule suggestions. 2.0.0 - Add CRUD rules, ranked test preview and captured question review.
 */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/bootstrap.php';
@@ -73,6 +73,9 @@ try {
 }
 $recent = array_slice(array_reverse($history), 0, 120);
 $unmatched = count(array_filter($recent, static fn($r): bool => empty($r['ruleId'])));
+$easternZone = new DateTimeZone('America/New_York');
+$formatEastern = static fn(int $timestamp): string =>
+    (new DateTimeImmutable('@' . $timestamp))->setTimezone($easternZone)->format('Y-m-d H:i T');
 $target = null;
 $edit = $_GET['edit'] ?? '';
 if (is_string($edit)) foreach ($rules as $rule) {
@@ -167,9 +170,9 @@ usort($rules, static fn($a,$b): int => strcmp(strtolower((string)$a['name']), st
     <h2>Recent visitor questions</h2>
     <p>Showing the latest 120 saved questions, anonymous and linked. Inspect unmatched ones to teach the bot a better response. Avoid sharing visitors' questions publicly.</p>
     <?php if ($recent === []): ?><p>No questions yet.</p><?php endif; ?>
-    <div class="table-wrap"><table><thead><tr><th>When (UTC)</th><th>Question</th><th>Match at submission</th><th>Action</th></tr></thead><tbody>
+    <div class="table-wrap"><table><thead><tr><th>When (Eastern)</th><th>Question</th><th>Match at submission</th><th>Action</th></tr></thead><tbody>
       <?php foreach ($recent as $item): ?>
-        <tr><td><small><?=fc_escape(gmdate('Y-m-d H:i', (int)($item['timestamp'] ?? 0)))?></small></td>
+        <tr><td><small><?=fc_escape($formatEastern((int)($item['timestamp'] ?? 0)))?></small></td>
         <td><?=fc_escape($item['question'] ?? '')?></td>
         <td><?=empty($item['ruleId']) ? 'Unmatched' : fc_escape((string)$item['ruleId']) . ' (' . fc_escape($item['score'] ?? 0) . ')'?></td>
         <?php $exactRuleId = fc_existing_trigger_rule_id($rules, 'exact', (string)($item['question'] ?? '')); ?>
@@ -177,5 +180,5 @@ usort($rules, static fn($a,$b): int => strcmp(strtolower((string)$a['name']), st
       <?php endforeach; ?>
     </tbody></table></div>
   </section>
-  <footer>Very Fake AI · Admin Rev 2.0.2 · <?=fc_escape(gmdate('Y-m-d H:i'))?> UTC</footer>
+  <footer>Very Fake AI · Admin Rev 2.0.3 · <?=fc_escape($formatEastern(time()))?></footer>
 </main><script src="../assets/confirm.js?v=2.0.0" defer></script></body></html>
