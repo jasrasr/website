@@ -1,12 +1,12 @@
 <?php
 /*
 File Name: admin/index.php
-Revision: 2.0.1
+Revision: 2.0.3
 Description: Shared-identity protected admin console for editing fake chatbot rules and reviewing questions.
 Author: Jason Lamb (with help from ChatGPT)
 Created Date: 2026-11-20
 Modified Date: 2026-11-22
-Changelog: 2.0.1 - Remove punctuation from question-based rule suggestions. 2.0.0 - Add CRUD rules, ranked test preview and captured question review.
+Changelog: 2.0.3 - Show all admin times in Eastern time with EST/EDT. 2.0.2 - Reuse existing exact rules and prevent duplicate saves. 2.0.1 - Remove punctuation from question-based rule suggestions. 2.0.0 - Add CRUD rules, ranked test preview and captured question review.
 */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/bootstrap.php';
@@ -17,7 +17,9 @@ header("Content-Security-Policy: default-src 'self'; style-src 'self'; script-sr
 $auth = \Jasr\Framework\SharedIdentity::connect();
 $user = $auth->requireProject(FC_PROJECT, 'admin');
 $error = '';
-$notice = '';
+$notice = $_SERVER['REQUEST_METHOD'] === 'GET' ?
+    ((($_GET['saved'] ?? null) === '1') ? 'Rule saved. Best-match behavior changes immediately.' :
+    ((($_GET['deleted'] ?? null) === '1') ? 'Rule deleted.' : '')) : '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         if (!fc_same_origin() || !$auth->validCsrf($_POST['csrf'] ?? null)) {
@@ -28,6 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'save') {
             $newRule = fc_validate_rule($_POST, $id === '' ? null : $id);
             fc_update_rules(static function (array $rules) use ($newRule, $id): array {
+                if ($id === '') foreach ($newRule['triggers'] as $trigger) {
+                    if (fc_existing_trigger_rule_id($rules, $trigger['type'], $trigger['text']) !== null) {
+                        throw new InvalidArgumentException('A rule already uses that trigger. Edit the existing rule instead.');
+                    }
+                }
                 $found = false;
                 foreach ($rules as $key => $rule) {
                     if (($rule['id'] ?? '') === $id && $id !== '') {
@@ -39,13 +46,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($id === '') $rules[] = $newRule;
                 return array_values($rules);
             });
-            $notice = 'Rule saved. Best-match behavior changes immediately.';
+            header('Location: index.php?edit=' . rawurlencode($newRule['id']) . '&saved=1#editor', true, 303);
+            exit;
         } elseif ($action === 'delete') {
             if ($id === '') throw new InvalidArgumentException('Select a rule.');
             fc_update_rules(static fn(array $rules): array =>
                 array_values(array_filter($rules, static fn($rule): bool => ($rule['id'] ?? '') !== $id))
             );
-            $notice = 'Rule deleted.';
+            header('Location: index.php?deleted=1#editor', true, 303);
+            exit;
         } else throw new InvalidArgumentException('Unsupported action.');
     } catch (InvalidArgumentException $e) {
         $error = $e->getMessage();
@@ -64,6 +73,9 @@ try {
 }
 $recent = array_slice(array_reverse($history), 0, 120);
 $unmatched = count(array_filter($recent, static fn($r): bool => empty($r['ruleId'])));
+$easternZone = new DateTimeZone('America/New_York');
+$formatEastern = static fn(int $timestamp): string =>
+    (new DateTimeImmutable('@' . $timestamp))->setTimezone($easternZone)->format('Y-m-d H:i T');
 $target = null;
 $edit = $_GET['edit'] ?? '';
 if (is_string($edit)) foreach ($rules as $rule) {
@@ -158,14 +170,15 @@ usort($rules, static fn($a,$b): int => strcmp(strtolower((string)$a['name']), st
     <h2>Recent visitor questions</h2>
     <p>Showing the latest 120 saved questions, anonymous and linked. Inspect unmatched ones to teach the bot a better response. Avoid sharing visitors' questions publicly.</p>
     <?php if ($recent === []): ?><p>No questions yet.</p><?php endif; ?>
-    <div class="table-wrap"><table><thead><tr><th>When (UTC)</th><th>Question</th><th>Match at submission</th><th>Action</th></tr></thead><tbody>
+    <div class="table-wrap"><table><thead><tr><th>When (Eastern)</th><th>Question</th><th>Match at submission</th><th>Action</th></tr></thead><tbody>
       <?php foreach ($recent as $item): ?>
-        <tr><td><small><?=fc_escape(gmdate('Y-m-d H:i', (int)($item['timestamp'] ?? 0)))?></small></td>
+        <tr><td><small><?=fc_escape($formatEastern((int)($item['timestamp'] ?? 0)))?></small></td>
         <td><?=fc_escape($item['question'] ?? '')?></td>
         <td><?=empty($item['ruleId']) ? 'Unmatched' : fc_escape((string)$item['ruleId']) . ' (' . fc_escape($item['score'] ?? 0) . ')'?></td>
-        <td><a href="?from=<?=rawurlencode((string)$item['id'])?>#editor">Create rule</a></td></tr>
+        <?php $exactRuleId = fc_existing_trigger_rule_id($rules, 'exact', (string)($item['question'] ?? '')); ?>
+        <td><a href="<?=$exactRuleId !== null ? '?edit=' . rawurlencode($exactRuleId) : '?from=' . rawurlencode((string)$item['id'])?>#editor"><?=$exactRuleId !== null ? 'Edit rule' : 'Create rule'?></a></td></tr>
       <?php endforeach; ?>
     </tbody></table></div>
   </section>
-  <footer>Very Fake AI · Admin Rev 2.0.1 · <?=fc_escape(gmdate('Y-m-d H:i'))?> UTC</footer>
+  <footer>Very Fake AI · Admin Rev 2.0.3 · <?=fc_escape($formatEastern(time()))?></footer>
 </main><script src="../assets/confirm.js?v=2.0.0" defer></script></body></html>

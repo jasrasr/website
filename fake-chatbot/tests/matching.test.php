@@ -1,12 +1,12 @@
 <?php
 /*
 File Name: matching.test.php
-Revision: 2.0.1
+Revision: 2.0.2
 Description: PHP regression coverage for deterministic ranked matches and framework persistence.
 Author: Jason Lamb (with help from ChatGPT)
 Created Date: 2026-11-20
-Modified Date: 2026-11-20
-Changelog: 2.0.1 - Cover duplicate all-words and one-word phrase invalid inputs. 2.0.0 - Validate potato specificity, safe expansions, editable rules, and JsonStore atomic writes.
+Modified Date: 2026-11-22
+Changelog: 2.0.2 - Cover duplicate trigger detection across punctuation variants. 2.0.1 - Cover duplicate all-words and one-word phrase invalid inputs. 2.0.0 - Validate potato specificity, safe expansions, editable rules, and JsonStore atomic writes.
 */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/bootstrap.php';
@@ -56,6 +56,9 @@ fc_check(($linkResult['records'][0]['userId'] ?? null) === 'new-user' && ($linkR
 fc_check(str_contains(fc_expand('Time {{time}}, literal $(Get-Date)'), '$(Get-Date)'), 'PowerShell code is not evaluated');
 $rule = fc_validate_rule(['name'=>'Test','triggers'=>"phrase: potato salad\nall: potato salad\nkeyword: potato",'replies'=>"Answer A\nAnswer B",'priority'=>'5','enabled'=>'1']);
 fc_check(count($rule['triggers']) === 3 && count($rule['replies']) === 2, 'admin rule parser accepts multi-trigger multi-answer forms');
+$existing = fc_validate_rule(['name'=>'Mostly polite','triggers'=>"exact: what is 'mostly polite'?",'replies'=>'An answer']);
+fc_check(fc_existing_trigger_rule_id([$existing], 'exact', 'WHAT IS mostly polite!!!') === $existing['id'], 'equivalent exact trigger detects duplicate despite punctuation');
+fc_check(fc_existing_trigger_rule_id([$existing], 'phrase', 'what is mostly polite') === null, 'different trigger types remain distinct');
 try {
     fc_validate_rule(['name'=>'Bad','triggers'=>'keyword: potato salad','replies'=>'Not valid']);
     fc_check(false, 'keyword cannot contain spaces');
