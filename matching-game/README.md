@@ -4,6 +4,8 @@ A memory game for young children. Choose **Colors**, **Letters**, **Numbers**, o
 
 The timer starts with the first block and stops when the last pair is found. The page shows attempts, completed games, pairs found, and the best time for each mode and board size in the current browser tab session. This score uses session storage when available and never requires an account.
 
+The selected game type and grid size are saved in the browser and restored when the page is refreshed or opened again.
+
 ## Optional voice recordings
 
 Turn on **Read tiles aloud** to hear each revealed tile. Custom MP3 recordings in `matching-game/sounds/` are used first. When a file is missing, the game falls back to the browser voice. See [sounds/README.md](sounds/README.md) for the exact folders and filenames.

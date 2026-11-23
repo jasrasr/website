@@ -21,7 +21,7 @@ $loginUrl = $identity ? $identity->loginUrl($_SERVER['REQUEST_URI'] ?? '/github/
   <meta name="theme-color" content="#d8f1ff">
   <title>Matching Game</title>
   <link rel="stylesheet" href="style.css?v=1.5.0">
-  <script src="game.js?v=1.5.0" defer></script>
+  <script src="game.js?v=1.5.1" defer></script>
 </head>
 <body>
   <main class="game" aria-labelledby="title" data-save-history="<?= $canSaveHistory ? 'true' : 'false' ?>" data-csrf="<?= htmlspecialchars($identity ? $identity->csrf() : '', ENT_QUOTES, 'UTF-8') ?>">

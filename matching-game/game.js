@@ -27,6 +27,7 @@
   const root = document.querySelector('.game');
   const canSaveHistory = root.dataset.saveHistory === 'true';
   const storageKey = 'matching-game-session-v1';
+  const settingsStorageKey = 'matching-game-settings-v1';
   let rows = 4, columns = 4, pairs = 0, attempts = 0;
   let mode = 'colors';
   let first = null, second = null, locked = false;
@@ -87,6 +88,25 @@
       if (value && Number.isInteger(value.games) && Number.isInteger(value.pairs) && value.best && typeof value.best === 'object') return value;
     } catch (_) { /* Storage can be unavailable in private browsing. */ }
     return { games: 0, pairs: 0, best: {} };
+  }
+
+  function restoreSettings() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(settingsStorageKey) || 'null');
+      const savedRows = Number(saved?.rows), savedColumns = Number(saved?.columns);
+      const validSize = Number.isInteger(savedRows) && Number.isInteger(savedColumns)
+        && savedRows >= 2 && savedRows <= 6 && savedColumns >= 2 && savedColumns <= 6
+        && savedRows * savedColumns % 2 === 0;
+      if (validSize) {
+        $('rows').value = String(savedRows);
+        $('columns').value = String(savedColumns);
+      }
+      if (typeof saved?.mode === 'string' && modes[saved.mode]) $('match-mode').value = saved.mode;
+    } catch (_) { /* Use the default settings when local storage is unavailable or invalid. */ }
+  }
+
+  function saveSettings() {
+    try { localStorage.setItem(settingsStorageKey, JSON.stringify({ mode, rows, columns })); } catch (_) { /* Keep playing without persistence. */ }
   }
 
   function formatTime(ms, completed = false) {
@@ -213,6 +233,7 @@
     stopAudio();
     [rows, columns] = size;
     mode = $('match-mode').value;
+    saveSettings();
     window.clearTimeout(hideTimer);
     window.clearInterval(tickTimer);
     hideTimer = tickTimer = startedAt = null;
@@ -303,5 +324,6 @@
       if (!panel.hidden) loadHistory();
     });
   }
+  restoreSettings();
   newGame();
 })();

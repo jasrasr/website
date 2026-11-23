@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Matching Game Voice Recording Sheet</title>
+  <style>
+    :root { font-family: Arial, Helvetica, sans-serif; color: #17233b; }
+    * { box-sizing: border-box; }
+    body { max-width: 8.5in; margin: 0 auto; padding: .35in; background: #eef5fb; }
+    main { padding: .38in; background: white; box-shadow: 0 4px 20px #17233b22; }
+    h1 { margin: 0 0 6px; font-size: 25px; }
+    h2 { margin: 20px 0 8px; padding-bottom: 4px; border-bottom: 2px solid #9fc6e5; font-size: 18px; }
+    p { margin: 5px 0; font-size: 12px; line-height: 1.4; }
+    .instructions { margin: 12px 0 18px; padding: 10px 12px; border: 1px solid #b8d8f2; background: #f2f8fd; }
+    .print-button { float: right; padding: 9px 14px; border: 0; border-radius: 7px; background: #0861ed; color: white; font-weight: 700; cursor: pointer; }
+    .list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 22px; }
+    .item { display: grid; grid-template-columns: 20px minmax(80px, .8fr) minmax(130px, 1.2fr); align-items: baseline; min-height: 25px; padding: 4px 0; border-bottom: 1px dotted #aeb9c7; break-inside: avoid; font-size: 12px; }
+    .box { width: 13px; height: 13px; border: 1.5px solid #17233b; }
+    .phrase { font-weight: 700; }
+    code { font-family: Consolas, monospace; font-size: 10px; color: #334d72; }
+    footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid #aeb9c7; font-size: 10px; color: #52657e; }
+    @media print {
+      @page { size: letter; margin: .35in; }
+      body { max-width: none; padding: 0; background: white; }
+      main { padding: 0; box-shadow: none; }
+      .print-button { display: none; }
+      h2 { break-after: avoid; }
+    }
+    @media (max-width: 600px) {
+      body, main { padding: 14px; }
+      .list { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <button class="print-button" type="button" onclick="window.print()">Print sheet</button>
+    <h1>Matching Game Voice Recording Sheet</h1>
+    <p>Read only the phrase in the middle column. The last column is the exact MP3 filename.</p>
+    <div class="instructions">
+      <p><strong>Recording:</strong> Use a quiet room, keep the microphone 6–10 inches away, and leave about two seconds between phrases.</p>
+      <p><strong>Editing:</strong> Export each phrase separately, trim silence from the beginning, and use MP3 format.</p>
+      <p><strong>Root folder:</strong> <code>matching-game/sounds/</code></p>
+    </div>
+
+    <h2>Colors — save in <code>sounds/colors/</code></h2>
+    <div class="list">
+      <div class="item"><span class="box"></span><span class="phrase">Red</span><code>red.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Orange</span><code>orange.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Yellow</span><code>yellow.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Green</span><code>green.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Teal</span><code>teal.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Blue</span><code>blue.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Purple</span><code>purple.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Pink</span><code>pink.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Brown</span><code>brown.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Lime</span><code>lime.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Navy</span><code>navy.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Coral</span><code>coral.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Mint</span><code>mint.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Violet</span><code>violet.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Gold</span><code>gold.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Sky blue</span><code>sky-blue.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Magenta</span><code>magenta.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Gray</span><code>gray.mp3</code></div>
+    </div>
+
+    <h2>Letters — save in <code>sounds/letters/</code></h2>
+    <div class="list">
+      <div class="item"><span class="box"></span><span class="phrase">A</span><code>a.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">B</span><code>b.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">C</span><code>c.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">D</span><code>d.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">E</span><code>e.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">F</span><code>f.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">G</span><code>g.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">H</span><code>h.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">I</span><code>i.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">J</span><code>j.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">K</span><code>k.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">L</span><code>l.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">M</span><code>m.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">N</span><code>n.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">O</span><code>o.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">P</span><code>p.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Q</span><code>q.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">R</span><code>r.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">S</span><code>s.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">T</span><code>t.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">U</span><code>u.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">V</span><code>v.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">W</span><code>w.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">X</span><code>x.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Y</span><code>y.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Z</span><code>z.mp3</code></div>
+    </div>
+
+    <h2>Numbers — save in <code>sounds/numbers/</code></h2>
+    <div class="list">
+      <div class="item"><span class="box"></span><span class="phrase">One</span><code>1.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Two</span><code>2.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Three</span><code>3.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Four</span><code>4.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Five</span><code>5.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Six</span><code>6.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Seven</span><code>7.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Eight</span><code>8.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Nine</span><code>9.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Ten</span><code>10.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Eleven</span><code>11.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Twelve</span><code>12.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Thirteen</span><code>13.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Fourteen</span><code>14.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Fifteen</span><code>15.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Sixteen</span><code>16.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Seventeen</span><code>17.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Eighteen</span><code>18.mp3</code></div>
+    </div>
+
+    <h2>Objects — save in <code>sounds/objects/</code></h2>
+    <div class="list">
+      <div class="item"><span class="box"></span><span class="phrase">Apple</span><code>apple.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Banana</span><code>banana.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Ball</span><code>ball.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Car</span><code>car.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Train</span><code>train.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Airplane</span><code>airplane.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Teddy bear</span><code>teddy-bear.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Book</span><code>book.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Pencil</span><code>pencil.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Cup</span><code>cup.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Key</span><code>key.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Clock</span><code>clock.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Star</span><code>star.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Flower</span><code>flower.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Tree</span><code>tree.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Dog</span><code>dog.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">Cat</span><code>cat.mp3</code></div>
+      <div class="item"><span class="box"></span><span class="phrase">House</span><code>house.mp3</code></div>
+    </div>
+
+    <footer>80 recordings total: 18 colors, 26 letters, 18 numbers, and 18 objects.</footer>
+  </main>
+</body>
+</html>
