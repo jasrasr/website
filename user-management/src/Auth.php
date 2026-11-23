@@ -141,14 +141,13 @@ final class Auth
         return ['selector' => $matches[1], 'validator' => $matches[2]];
     }
 
-    private function issueRememberedIdentity(array $user, int $expires, string $replaces = ''): void
+    private function issueRememberedIdentity(array $user, int $expires): void
     {
         $selector = bin2hex(random_bytes(16));
         $validator = bin2hex(random_bytes(32));
         $now = time();
-        JsonStore::update($this->rememberStore(), function (array $records) use ($selector, $validator, $user, $expires, $replaces, $now): array {
+        JsonStore::update($this->rememberStore(), function (array $records) use ($selector, $validator, $user, $expires, $now): array {
             $records = array_filter($records, static fn(array $record): bool => (int) ($record['expires'] ?? 0) > $now);
-            if ($replaces !== '') unset($records[$replaces]);
             $records[$selector] = [
                 'tokenHash' => hash('sha256', $validator),
                 'userId' => (string) $user['id'],
@@ -179,15 +178,13 @@ final class Auth
             && !empty($user['active'])
             && (int) $user['version'] === (int) ($record['identityVersion'] ?? -1);
         if (!$valid) {
-            $this->revokeRememberedIdentity();
+            // Keep stale responses from clearing a cookie set by a newer sign-in.
             return;
         }
         $expires = (int) $record['expires'];
         $this->session->restoreRemembered($expires);
         $_SESSION['identity_id'] = $user['id'];
         $_SESSION['identity_version'] = $user['version'];
-        // Rotate the one-time validator after recovery while retaining the original fixed expiry.
-        $this->issueRememberedIdentity($user, $expires, $token['selector']);
     }
 
     private function revokeRememberedIdentity(): void
@@ -196,7 +193,11 @@ final class Auth
         $token = $this->cookieToken();
         if ($token !== null) {
             JsonStore::update($this->rememberStore(), function (array $records) use ($token): array {
-                unset($records[$token['selector']]);
+                $record = $records[$token['selector']] ?? null;
+                if (is_string($record['tokenHash'] ?? null)
+                    && hash_equals($record['tokenHash'], hash('sha256', $token['validator']))) {
+                    unset($records[$token['selector']]);
+                }
                 return $records;
             });
         }

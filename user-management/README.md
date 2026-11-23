@@ -4,9 +4,9 @@ Shared PHP/JSON accounts for projects in this repository. PHP 8.1+, no database 
 
 ## Durable remembered sign-in (2026-11-07)
 
-The central login includes **Stay signed in for 7 days on this browser**, selected by default for personal devices. Uncheck it on shared devices. Unchecked sign-ins expire after **30 minutes idle**. A remembered sign-in uses a random browser validator whose hash, user ID, identity version and fixed expiry are stored privately in `data/remember_tokens.json`. If shared hosting removes the PHP session file, the provider validates and rotates that token before rebuilding the shared session. The raw validator is never stored server-side.
+The central login includes **Stay signed in for 7 days on this browser**, selected by default for personal devices. Uncheck it on shared devices. Unchecked sign-ins expire after **30 minutes idle**. A remembered sign-in uses a random browser validator whose hash, user ID, identity version and fixed expiry are stored privately in `data/remember_tokens.json`. If shared hosting removes the PHP session file, the provider validates that token before rebuilding the shared session. The same browser token can restore overlapping requests until its fixed expiry or revocation. The raw validator is never stored server-side.
 
-The duration is configurable with `remember_seconds` in `config.local.php` (default 604800; limited to 30 days), while `timeout` remains 1800 seconds by default. Both are server settings; do not write secrets to this repository. **Existing sessions do not automatically become remembered.** Sign out and sign back in once after this update. Token expiry is absolute, not sliding. Logout, password changes, disabled accounts and identity-version changes revoke access; the next successful recovery rotates the browser validator while retaining the original expiry.
+The duration is configurable with `remember_seconds` in `config.local.php` (default 604800; limited to 30 days), while `timeout` remains 1800 seconds by default. Both are server settings; do not write secrets to this repository. **Existing sessions do not automatically become remembered.** Sign out and sign back in once after this update. Token expiry is absolute, not sliding. Logout, password changes, disabled accounts and identity-version changes revoke access.
 
 Validation:
 

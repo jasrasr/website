@@ -123,10 +123,16 @@ test('default idle session, opt-in remembered login, and global logout',async()=
    'each visit retains the original fixed seven-day expiry rather than extending it');
  }
 
+ const overlapping=new Browser();
+ overlapping.cookies=new Map(browser.cookies);
+
  // Hostinger-style PHP session cleanup is repaired by the separate revocable token.
  assert.equal((await browser.request('/drop-session.php')).status,200);
  assert.match((await browser.request()).text,/Signed in as/,
   'remember token restores identity after PHP session data disappears');
+
+ assert.match((await overlapping.request()).text,/Signed in as/,
+  'an overlapping request with the original cookies also recovers');
 
  // Expired remembered sessions cannot bypass server expiration even with cookie.
  assert.equal((await browser.request('/expire.php')).status,200);
@@ -134,10 +140,15 @@ test('default idle session, opt-in remembered login, and global logout',async()=
   'expired remember token does not authenticate');
  assert.equal((await browser.post('login',{username:'member',password,remember:'yes'})).status,303);
  assert.match((await browser.request()).text,/Signed in as/);
+ const beforeLogout=new Browser();
+ beforeLogout.cookies=new Map(browser.cookies);
+ beforeLogout.cookies.delete('JASR_IDENTITY');
  const loggedOut=await browser.post('logout');
  assert.equal(loggedOut.status,303);
  assert.match((await browser.request()).text,/<h2>Sign in<\/h2>/,
   'logging out revokes the remembered session');
+ assert.match((await beforeLogout.request()).text,/<h2>Sign in<\/h2>/,
+  'the original remember token cannot restore a session after logout');
  console.log('Passed: short fallback, default-on durable seven-day login, host cleanup recovery, absolute expiry and shared sign-out.');
 });
 

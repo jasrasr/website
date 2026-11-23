@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.1 — 2026-11-23
+
+- Keep the remembered-login token valid across overlapping PHP session recoveries, up to its original expiry or revocation.
+- Keep stale recovery responses from clearing a newer sign-in cookie.
+
 ## 1.4.0 — 2026-11-08
 
 - Return successful shared sign-ins to the exact registered project page that requested authentication, including its query string.

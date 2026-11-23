@@ -124,5 +124,5 @@ function roleFields(array $account): void
 <details><summary>Reset password</summary><?php form('reset-password'); ?><input type="hidden" name="id" value="<?= e($managed['id']) ?>"><label>Temporary password <input type="password" name="password" minlength="12" maxlength="72" autocomplete="new-password" required></label><button>Reset password and revoke sessions</button></form></details></article>
 <?php endforeach ?></section>
 <?php endif; endif ?>
-<footer>User Management · v1.4.0</footer></main></body></html>
+<footer>User Management · v1.4.1</footer></main></body></html>
 
