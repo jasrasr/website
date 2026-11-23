@@ -41,3 +41,15 @@ Before publishing:
 
 ## Safety / hosting
 No database, login, writable server storage, API token, AI API or scheduled web crawler is required. The project is read-only and compatible with a basic PHP/static hosting plan. The user's existing weekly AI release check can provide candidate changes for manual review; do not automatically add unverified models to the canonical dataset.
+
+## Publishing future releases (one command)
+From the `ai-model-timeline` directory with Node.js installed:
+
+```sh
+node scripts/new-release.cjs --version 1.0.1 --reason "New publicly documented model releases" --changes "Added model X and corrected model Y date"
+node scripts/validate.cjs
+```
+
+The release builder rejects an existing version, missing reason, empty dataset, invalid dates, missing source links and duplicated model IDs/names. It creates a new immutable SVG and matching JSON, updates the latest model metadata, prepends a changelog entry, and appends the manifest. **Review the source evidence and commit the generated files as one PR.** Do not run it directly on a live server, and do not retroactively modify archived releases.
+
+Archive browsing is available on the project page. PNG is generated directly from the same SVG in the browser; it is named with the project version and graphic creation date.
