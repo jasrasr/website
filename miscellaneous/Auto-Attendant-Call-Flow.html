@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Auto Attendant Call Flow</title>
+<style>
+  /* Layout: single column. Header, settings, key editor (0 reserved, 1-9 with optional 1-9 submenus), live flow chart that redraws on every edit. */
+  :root {
+    --bg: #f5f6f7;
+    --surface: #ffffff;
+    --fg: #1d2125;
+    --muted: #5d6670;
+    --rule: #d9dde1;
+    --accent: #b3141b;
+    --accent-fg: #ffffff;
+    --field: #fbfbfc;
+    --note: #fff4d6;
+    --note-fg: #5b4300;
+    --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15181b; --surface: #1e2226; --fg: #e8eaec; --muted: #9aa3ab; --rule: #343a40;
+      --accent: #e5555b; --accent-fg: #15181b; --field: #171a1d; --note: #3a2f10; --note-fg: #f0d98c;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15181b; --surface: #1e2226; --fg: #e8eaec; --muted: #9aa3ab; --rule: #343a40;
+    --accent: #e5555b; --accent-fg: #15181b; --field: #171a1d; --note: #3a2f10; --note-fg: #f0d98c;
+    color-scheme: dark;
+  }
+  body {
+    background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.55;
+    padding-block: 32px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .wrap { max-width: 1340px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+  h1 { font-size: 1.5rem; font-weight: 600; margin: 0 0 4px; text-wrap: balance; }
+  h2 { font-size: 0.875rem; font-weight: 600; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+  p { margin: 0; }
+  .sub { color: var(--muted); font-size: 0.9375rem; }
+  .panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 20px; min-width: 0; }
+  .note { background: var(--note); color: var(--note-fg); border-radius: 6px; padding: 10px 16px; font-size: 0.9375rem; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px 20px; }
+  label.f { display: flex; flex-direction: column; gap: 4px; font-size: 0.8125rem; color: var(--muted); font-weight: 600; min-width: 0; }
+  input[type=text], select {
+    font: inherit; font-size: 0.9375rem; color: var(--fg); background: var(--field); border: 1px solid var(--rule);
+    border-radius: 4px; padding: 7px 10px; min-width: 0; width: 100%; box-sizing: border-box;
+  }
+  input[type=text]:disabled { opacity: 0.75; }
+  input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .keys { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 10px 24px; }
+  .keyblock { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .row { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+  .row.nochk { grid-template-columns: 28px minmax(0, 1fr); }
+  .badge { background: var(--accent); color: var(--accent-fg); font-weight: 600; font-size: 0.8125rem; border-radius: 4px; text-align: center; padding: 3px 0; font-variant-numeric: tabular-nums; }
+  .badge.res { background: var(--muted); }
+  .chk { display: inline-flex; gap: 6px; align-items: center; font-size: 0.875rem; color: var(--muted); white-space: nowrap; cursor: pointer; }
+  .subpanel { margin-left: 38px; padding: 10px 12px; border-left: 2px solid var(--accent); background: var(--field); border-radius: 0 4px 4px 0; display: flex; flex-direction: column; gap: 6px; }
+  .subpanel .t { font-size: 0.8125rem; font-weight: 600; color: var(--muted); }
+  .bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .bar .status { color: var(--muted); font-size: 0.875rem; flex: 1 1 200px; min-width: 0; }
+  button { font: inherit; font-size: 0.9375rem; font-weight: 600; border-radius: 4px; padding: 7px 14px; cursor: pointer; border: 1px solid var(--rule); background: var(--surface); color: var(--fg); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+  button:disabled { opacity: 0.5; cursor: default; }
+  .chart { overflow-x: auto; }
+  .modes { display: grid; grid-template-columns: auto 1fr; gap: 8px 20px; margin: 0; }
+  .modes dt { font-weight: 600; }
+  .modes dd { margin: 0; min-width: 0; }
+  svg .node { fill: var(--surface); stroke: var(--muted); stroke-width: 1.2; }
+  svg .node.mode { stroke: var(--accent); stroke-width: 1.6; }
+  svg .node.back { stroke-dasharray: 4 3; }
+  svg .edge { fill: none; stroke: var(--muted); stroke-width: 1.3; }
+  svg .arrow { fill: var(--muted); }
+  svg .badgebg { fill: var(--accent); }
+  svg text { font-family: var(--font-body); }
+  svg .t { fill: var(--fg); font-size: 13px; }
+  svg .t2 { fill: var(--muted); font-size: 11.5px; }
+  svg .tb { fill: var(--accent-fg); font-size: 12px; font-weight: 600; }
+  .detail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-left: 38px; }
+  .detail input { font-size: 0.875rem; padding: 5px 8px; }
+  [hidden] { display: none !important; }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  .seqrow { display: grid; grid-template-columns: 36px minmax(0, 1fr) minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+  .seqrow input { font-size: 0.875rem; padding: 5px 8px; }
+  .seqrow button { padding: 4px 10px; }
+  .subpanel > button { align-self: flex-start; }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap">
+</head><body>
+<div class="wrap" id="app"></div>
+
+<script id="state" type="application/json">{"rev":0,"op":{"seq":[{"name":"Contact One","phone":"216-555-0101"},{"name":"Contact Two","phone":"216-555-0102"}]},"line":"216-555-0100","built":"2026-11-23","hours":"8 to 5","plays":3,"examples":true,"keys":[{"label":"Sales","sub":false,"back":true,"items":["","","","","","","","",""]},{"label":"Support","sub":false,"back":true,"items":["","","","","","","","",""]},{"label":"Accounts Payable (AP)","sub":false,"back":true,"items":["","","","","","","","",""]},{"label":"Accounts Receivable (AR)","sub":false,"back":true,"items":["","","","","","","","",""]},{"label":"","sub":false,"back":true,"items":["","","","","","","","",""]},{"label":"","sub":false,"back":true,"items":["","","","","","","","",""]},{"label":"","sub":false,"back":true,"items":["","","","","","","","",""]},{"label":"","sub":false,"back":true,"items":["","","","","","","","",""]},{"label":"","sub":false,"back":true,"items":["","","","","","","","",""]}]}</script>
+<script id="default-state" type="application/json">null</script>
+
+<script>
+(function () {
+  var RESET = ':root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}';
+  var state = JSON.parse(document.getElementById('state').textContent);
+  var app = document.getElementById('app');
+  var artifact = null, dirty = false, saving = false;
+  var els = {};
+  var STORE = 'auto-attendant-call-flow-v1';
+  try { var stored = JSON.parse(localStorage.getItem(STORE) || 'null'); if (stored && stored.keys && stored.rev > (state.rev || 0)) state = stored; } catch (x) {}
+  normalize();
+  var past = [], future = [], groupT = null, lastSnap = '';
+  function snap() { return JSON.stringify(state); }
+  lastSnap = snap();
+  function starterState() {
+    function key(label) { var k = { label: label, name: '', phone: '', sub: false, back: true, items: [] }; for (var i = 0; i < 9; i++) k.items.push({ label: '', name: '', phone: '' }); return k; }
+    return { rev: 0, line: '216-555-0100', built: state.built, hours: '8 to 5', plays: 3, examples: true, op: { seq: [{ name: 'Contact One', phone: '216-555-0101' }, { name: 'Contact Two', phone: '216-555-0102' }] },
+      keys: ['Sales', 'Support', 'Accounts Payable (AP)', 'Accounts Receivable (AR)', '', '', '', '', ''].map(key) };
+  }
+  var DKEY = 'auto-attendant-call-flow-default-v1', defRec = null;
+  try {
+    var ed = JSON.parse(document.getElementById('default-state').textContent || 'null');
+    var sd = JSON.parse(localStorage.getItem(DKEY) || 'null');
+    [ed, sd].forEach(function (c) { if (c && typeof c.savedAt === 'number' && (!defRec || c.savedAt > defRec.savedAt)) defRec = c; });
+  } catch (x) {}
+  function hasCustom() { return !!(defRec && defRec.state && defRec.state.keys); }
+  function defaultState() { return hasCustom() ? JSON.parse(JSON.stringify(defRec.state)) : starterState(); }
+  function storeDefault() { try { localStorage.setItem(DKEY, JSON.stringify(defRec)); } catch (x) {} dirty = true; queueWrite(); drawStatus(); }
+  function setAsDefault() { defRec = { savedAt: Date.now(), state: JSON.parse(snap()) }; storeDefault(); flash('Current settings saved as the default.'); }
+  function restoreFactory() { defRec = { savedAt: Date.now(), state: null }; storeDefault(); flash('Default is back to the original starter menu.'); }
+  function drawHist() { if (els.undo) { els.undo.disabled = !past.length; els.redo.disabled = !future.length; } }
+  function setState(next) {
+    state = next; normalize(); state.rev = Date.now(); dirty = true; lastSnap = snap();
+    try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (x) {}
+    ['line', 'hours', 'built'].forEach(function (k) { var e = document.getElementById('f-' + k); if (e) e.value = state[k]; });
+    var pl = document.getElementById('f-plays'); if (pl) pl.value = String(state.plays);
+    if (els.noteBox) els.noteBox.hidden = !state.examples;
+    queueWrite(); drawEditor(); drawChart(); drawStatus(); drawHeader(); drawHist();
+  }
+  function commit(next) { clearTimeout(groupT); groupT = null; past.push(snap()); if (past.length > 100) past.shift(); future = []; setState(next); }
+  function undo() { if (!past.length) return; clearTimeout(groupT); groupT = null; future.push(snap()); setState(JSON.parse(past.pop())); flash('Undone.'); }
+  function redo() { if (!future.length) return; clearTimeout(groupT); groupT = null; past.push(snap()); setState(JSON.parse(future.pop())); flash('Redone.'); }
+  function resetDefault() { commit(defaultState()); flash((hasCustom() ? 'Reset to your saved default.' : 'Reset to the starter menu.') + ' Undo brings your last version back.'); }
+  function clearAllKeys() {
+    var n = JSON.parse(snap());
+    n.keys.forEach(function (k) { k.label = ''; k.name = ''; k.phone = ''; k.sub = false; k.back = true; k.items = k.items.map(function () { return { label: '', name: '', phone: '' }; }); });
+    n.op = { seq: [] }; n.examples = false;
+    commit(n); flash('All keys cleared. Undo brings them back.');
+  }
+
+  var ORD = ['1st', '2nd', '3rd', '4th', '5th'];
+  function normalize() {
+    state.op = state.op || {};
+    if (!Array.isArray(state.op.seq)) state.op.seq = [{ name: 'Contact One', phone: '216-555-0101' }, { name: 'Contact Two', phone: '216-555-0102' }];
+    state.op = { seq: state.op.seq.slice(0, 5).map(function (c) { return { name: c.name || '', phone: c.phone || '' }; }) };
+    state.keys.forEach(function (k) {
+      k.name = k.name || ''; k.phone = k.phone || '';
+      k.items = (k.items || []).slice(0, 9);
+      while (k.items.length < 9) k.items.push('');
+      k.items = k.items.map(function (t) { return typeof t === 'string' ? { label: t, name: '', phone: '' } : { label: t.label || '', name: t.name || '', phone: t.phone || '' }; });
+    });
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function fit(s, n) { s = String(s).trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+  function h(tag, attrs, kids) {
+    var e = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) {
+      if (k === 'text') e.textContent = attrs[k];
+      else if (k.slice(0, 2) === 'on') e.addEventListener(k.slice(2), attrs[k]);
+      else if (k === 'checked' || k === 'disabled' || k === 'value') e[k] = attrs[k];
+      else e.setAttribute(k, attrs[k]);
+    });
+    (kids || []).forEach(function (c) { if (c) e.appendChild(c); });
+    return e;
+  }
+  function touch() {
+    dirty = true; state.rev = Date.now();
+    if (!groupT) { past.push(lastSnap); if (past.length > 100) past.shift(); future = []; }
+    clearTimeout(groupT); groupT = setTimeout(function () { groupT = null; lastSnap = snap(); }, 800);
+    try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (x) {}
+    queueWrite(); drawChart(); drawStatus(); drawHeader(); drawHist();
+  }
+
+  /* ---------- flow chart ---------- */
+  function detail(o) { return [o.name, o.phone].map(function (x) { return (x || '').trim(); }).filter(Boolean).join(' · '); }
+  function chartSVG() {
+    var seqKids = state.op.seq.filter(function (c) { return (c.name + c.phone).trim(); }).map(function (c, i) { return { n: ORD[i], label: c.name.trim() || c.phone.trim(), det: c.name.trim() ? c.phone.trim() : '', seq: true }; });
+    var L1 = [{ n: '0', label: 'Operator (Receptionist)', det: '', kids: seqKids, seq: seqKids.length > 0 }];
+    state.keys.forEach(function (k, i) {
+      if (!k.label.trim()) return;
+      var kids = [];
+      if (k.sub) {
+        k.items.forEach(function (t, j) { if (t.label.trim()) kids.push({ n: String(j + 1), label: t.label, det: detail(t) }); });
+        if (k.back) kids.push({ n: '*', label: 'Return to main menu', back: true, det: '' });
+      }
+      L1.push({ n: String(i + 1), label: k.label, sub: k.sub, kids: kids, det: k.sub ? '' : detail(k) });
+    });
+    var y = 20, GAP = 12;
+    L1.forEach(function (d) {
+      d.h = (d.sub || d.det || d.seq) ? 46 : 34;
+      var gp = d.seq ? 22 : 8, kh = 0;
+      d.kids.forEach(function (k) { k.h = k.det ? 44 : 30; kh += k.h + gp; });
+      kh = kh ? kh - gp : 0;
+      var slot = Math.max(d.h, kh);
+      d.cy = y + slot / 2;
+      var ky = d.cy - kh / 2;
+      d.kids.forEach(function (k) { k.cy = ky + k.h / 2; ky += k.h + gp; });
+      y += slot + GAP;
+    });
+    var H = Math.max(y + 8, 300), mid = H / 2;
+    var anyKids = L1.some(function (d) { return d.kids.length; });
+    var W = anyKids ? 1310 : 1030;
+    var o = '';
+    o += '<defs><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path class="arrow" d="M0 0 L8 4 L0 8 z"/></marker></defs>';
+    function edge(x1, y1, x2, y2) {
+      var m = (x1 + x2) / 2 + 10;
+      return '<path class="edge" d="M' + x1 + ' ' + y1 + ' C' + m + ' ' + y1 + ' ' + m + ' ' + y2 + ' ' + x2 + ' ' + y2 + '" marker-end="url(#arr)"/>';
+    }
+    o += edge(140, mid, 164, mid);
+    o += edge(265, mid, 299, mid - 60);
+    o += edge(265, mid, 299, mid + 60);
+    o += edge(500, mid - 60, 549, mid);
+    o += edge(500, mid + 60, 549, mid);
+    L1.forEach(function (d) {
+      o += edge(720, mid, 799, d.cy);
+      d.kids.forEach(function (k, i) {
+        if (d.seq && i > 0) { var pv = d.kids[i - 1]; o += '<path class="edge" d="M1190 ' + (pv.cy + pv.h / 2) + ' L1190 ' + (k.cy - k.h / 2 - 1) + '" marker-end="url(#arr)"/>'; }
+        else o += edge(1010, d.cy, 1089, k.cy);
+      });
+    });
+    o += '<rect class="node" x="10" y="' + (mid - 25) + '" width="130" height="50" rx="6"/><text class="t" x="75" y="' + (mid - 3) + '" text-anchor="middle">Caller dials</text><text class="t t2" x="75" y="' + (mid + 13) + '" text-anchor="middle">the auto attendant</text>';
+    o += '<polygon class="node" points="165,' + mid + ' 215,' + (mid - 38) + ' 265,' + mid + ' 215,' + (mid + 38) + '"/><text class="t" x="215" y="' + (mid + 4.5) + '" text-anchor="middle">Schedule</text>';
+    o += '<rect class="node mode" x="300" y="' + (mid - 85) + '" width="200" height="50" rx="6"/><text class="t" x="400" y="' + (mid - 63) + '" text-anchor="middle">' + esc(fit('Business hours (' + state.hours + ')', 28)) + '</text><text class="t t2" x="400" y="' + (mid - 47) + '" text-anchor="middle">Destinations ring</text>';
+    o += '<rect class="node mode" x="300" y="' + (mid + 35) + '" width="200" height="50" rx="6"/><text class="t" x="400" y="' + (mid + 57) + '" text-anchor="middle">After hours or holiday</text><text class="t t2" x="400" y="' + (mid + 73) + '" text-anchor="middle">Destinations go to voicemail</text>';
+    o += '<rect class="node" x="550" y="' + (mid - 28) + '" width="170" height="56" rx="6"/><text class="t" x="635" y="' + (mid - 3) + '" text-anchor="middle">Main menu</text><text class="t t2" x="635" y="' + (mid + 13) + '" text-anchor="middle">No key pressed: operator</text>';
+    function node(x, w, cy, h, label, det, sub, cls, lim) {
+      var r = '<g><title>' + esc(label + (det ? ' - ' + det : '')) + '</title><rect class="node' + (cls ? ' ' + cls : '') + '" x="' + x + '" y="' + (cy - h / 2) + '" width="' + w + '" height="' + h + '" rx="6"/>';
+      var c = x + w / 2;
+      if (sub || det) r += '<text class="t" x="' + c + '" y="' + (cy - 3) + '" text-anchor="middle">' + esc(fit(label, lim)) + '</text><text class="t t2" x="' + c + '" y="' + (cy + 13) + '" text-anchor="middle">' + esc(fit(sub || det, lim + 4)) + '</text>';
+      else r += '<text class="t" x="' + c + '" y="' + (cy + 4.5) + '" text-anchor="middle">' + esc(fit(label, lim)) + '</text>';
+      return r + '</g>';
+    }
+    function badge(x, cy, n) { return '<rect class="badgebg" x="' + x + '" y="' + (cy - 9) + '" width="22" height="18" rx="4"/><text class="tb" x="' + (x + 11) + '" y="' + (cy + 4) + '" text-anchor="middle">' + n + '</text>'; }
+    function badgeW(x, cy, n) { return '<rect class="badgebg" x="' + x + '" y="' + (cy - 9) + '" width="32" height="18" rx="4"/><text class="tb" x="' + (x + 16) + '" y="' + (cy + 4) + '" text-anchor="middle">' + n + '</text>'; }
+    L1.forEach(function (d) {
+      o += node(800, 210, d.cy, d.h, d.sub ? d.label + ' submenu' : d.label, d.det, d.sub ? 'No key after ' + state.plays + ' plays: operator' : (d.seq ? 'Find-me: rings in order' : ''), '', 28);
+      o += badge(770, d.cy, d.n);
+      d.kids.forEach(function (k) {
+        o += node(1090, 200, k.cy, k.h, k.label, k.det, '', k.back ? 'back' : '', 26);
+        o += k.seq ? badgeW(1052, k.cy, k.n) : badge(1060, k.cy, k.n);
+      });
+    });
+    var minw = anyKids ? 980 : 760;
+    return '<svg role="img" aria-label="Call flow for the auto attendant: schedule check, then the main menu with key 0 for the receptionist and the keys assigned below." viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="min-width:' + minw + 'px;height:auto">' + o + '</svg>';
+  }
+
+  function outline() {
+    function ln(label, o) { var d = detail(o || {}); return label + (d ? ' - ' + d : ''); }
+    var t = [];
+    t.push('Auto attendant ' + state.line);
+    t.push('Business hours (' + state.hours + '): destinations ring. After hours and major US holidays: destinations go to voicemail; key 0 still goes to the receptionist.');
+    t.push('No key pressed at the main menu: operator. In a submenu, no key after ' + state.plays + ' plays: operator.');
+    var sq = state.op.seq.filter(function (c) { return (c.name + c.phone).trim(); });
+    t.push('0  Operator (Receptionist)' + (sq.length ? ' - find-me sequence, rings in order' : ''));
+    sq.forEach(function (c, i) { t.push('     ' + ORD[i] + '  ' + ln(c.name.trim() || c.phone.trim(), { name: '', phone: c.name.trim() ? c.phone : '' })); });
+    state.keys.forEach(function (k, i) {
+      if (!k.label.trim()) return;
+      t.push((i + 1) + '  ' + (k.sub ? k.label + ' (submenu)' : ln(k.label, k)));
+      if (k.sub) {
+        k.items.forEach(function (s, j) { if (s.label.trim()) t.push('     ' + (j + 1) + '  ' + ln(s.label, s)); });
+        if (k.back) t.push('     *  Return to main menu');
+      }
+    });
+    return t.join('\n');
+  }
+
+  /* ---------- page ---------- */
+  /* ---------- auto-save to a chosen file (Chrome and Edge) ---------- */
+  var canFS = typeof window.showSaveFilePicker === 'function';
+  var fileHandle = null, pending = null, writeT, fileMsg = '';
+  function idbOpen() { return new Promise(function (res, rej) { var r = indexedDB.open('auto-attendant-call-flow', 1); r.onupgradeneeded = function () { r.result.createObjectStore('h'); }; r.onsuccess = function () { res(r.result); }; r.onerror = function () { rej(r.error); }; }); }
+  function idbGet() { return idbOpen().then(function (db) { return new Promise(function (res, rej) { var q = db.transaction('h').objectStore('h').get('file'); q.onsuccess = function () { res(q.result); }; q.onerror = function () { rej(q.error); }; }); }); }
+  function idbSet(v) { return idbOpen().then(function (db) { return new Promise(function (res, rej) { var q = db.transaction('h', 'readwrite').objectStore('h').put(v, 'file'); q.onsuccess = function () { res(); }; q.onerror = function () { rej(q.error); }; }); }); }
+  function writeFile() {
+    if (!fileHandle) return Promise.resolve();
+    return fileHandle.createWritable().then(function (w) { return w.write(buildDoc()).then(function () { return w.close(); }); })
+      .then(function () { fileMsg = 'Saved to ' + fileHandle.name + ' at ' + new Date().toLocaleTimeString(); },
+            function () { fileMsg = ''; pending = fileHandle; fileHandle = null; })
+      .then(drawStatus);
+  }
+  function queueWrite() { if (!fileHandle) return; clearTimeout(writeT); writeT = setTimeout(writeFile, 400); }
+  function connect() {
+    if (!fileHandle && pending) {
+      var h0 = pending;
+      Promise.resolve(h0.requestPermission({ mode: 'readwrite' })).then(function (perm) {
+        if (perm === 'granted') { fileHandle = h0; pending = null; return writeFile(); }
+      }).catch(function () {}).then(drawStatus);
+      return;
+    }
+    window.showSaveFilePicker({ suggestedName: 'Auto-Attendant-Call-Flow.html', types: [{ description: 'HTML file', accept: { 'text/html': ['.html'] } }] })
+      .then(function (h1) { fileHandle = h1; pending = null; idbSet(h1).catch(function () {}); return writeFile(); })
+      .catch(function () {}).then(drawStatus);
+  }
+
+  function drawHeader() {
+    els.sub.textContent = 'Auto attendant line ' + state.line + '. Last edited ' + state.built + '. Destinations are shown by name, not by number.';
+    els.hoursDd.textContent = 'Each destination rings.';
+    els.hoursDt.textContent = 'Business hours (' + state.hours + ')';
+  }
+  function drawChart() { els.chart.innerHTML = chartSVG(); }
+  function drawStatus() {
+    els.save.disabled = saving;
+    if (els.factory) els.factory.hidden = !hasCustom();
+    if (els.auto) {
+      els.auto.hidden = !canFS;
+      els.auto.textContent = fileHandle ? 'Change save file' : (pending ? 'Resume auto-save (' + pending.name + ')' : 'Auto-save to file');
+    }
+    els.status.textContent = fileHandle ? (fileMsg || 'Auto-saving to ' + fileHandle.name + '.')
+      : canFS ? 'Choose Auto-save to file and every edit is written into that HTML file. Until then edits are kept in this browser only.'
+      : 'This browser cannot write to a file by itself (Chrome and Edge can). Edits are kept in this browser; use Download updated file for a copy.';
+  }
+
+  function detailRow(o, idp, hidden) {
+    var wrap = h('div', { 'class': 'detail' }, [
+      h('input', { type: 'text', value: o.name || '', placeholder: 'Contact name', 'aria-label': idp + ' contact name', id: idp + '_n', oninput: function (e) { o.name = e.target.value; state.examples = false; touch(); } }),
+      h('input', { type: 'text', value: o.phone || '', placeholder: 'Phone or extension', 'aria-label': idp + ' phone or extension', id: idp + '_p', oninput: function (e) { o.phone = e.target.value; state.examples = false; touch(); } })
+    ]);
+    wrap.hidden = hidden;
+    return wrap;
+  }
+  function seqEditor() {
+    var box = h('div', { 'class': 'subpanel' }, [h('div', { 'class': 't', text: 'Find-me sequence under key 0: rings in order' })]);
+    state.op.seq.forEach(function (c, i) {
+      var idp = 'op' + (i + 1);
+      box.appendChild(h('div', { 'class': 'seqrow' }, [
+        h('div', { 'class': 'badge', text: ORD[i] }),
+        h('input', { type: 'text', value: c.name, placeholder: 'Contact name', 'aria-label': 'Find-me ' + ORD[i] + ' contact name', id: idp + '_n', oninput: function (e) { c.name = e.target.value; touch(); } }),
+        h('input', { type: 'text', value: c.phone, placeholder: 'Phone or extension', 'aria-label': 'Find-me ' + ORD[i] + ' phone', id: idp + '_p', oninput: function (e) { c.phone = e.target.value; touch(); } }),
+        h('button', { type: 'button', text: '×', 'aria-label': 'Remove ' + ORD[i] + ' contact', onclick: function () { state.op.seq.splice(i, 1); touch(); drawEditor(); } })
+      ]));
+    });
+    if (state.op.seq.length < 5) box.appendChild(h('button', { type: 'button', text: 'Add next contact', onclick: function () { state.op.seq.push({ name: '', phone: '' }); touch(); drawEditor(); } }));
+    return box;
+  }
+  function drawEditor() {
+    els.keys.replaceChildren();
+    els.keys.appendChild(h('div', { 'class': 'keyblock' }, [
+      h('div', { 'class': 'row nochk' }, [
+        h('div', { 'class': 'badge res', text: '0' }),
+        h('input', { type: 'text', value: 'Operator (Receptionist), reserved', disabled: true, 'aria-label': 'Key 0 is reserved for the receptionist' })
+      ]),
+      seqEditor()
+    ]));
+    state.keys.forEach(function (k, i) {
+      var block = h('div', { 'class': 'keyblock' });
+      var det = detailRow(k, 'k' + (i + 1), !k.label.trim() || k.sub);
+      var inp = h('input', { type: 'text', value: k.label, placeholder: 'Key ' + (i + 1) + ' destination (blank = unused)', 'aria-label': 'Main menu key ' + (i + 1) + ' name', id: 'k' + (i + 1),
+        oninput: function (e) { k.label = e.target.value; state.examples = false; det.hidden = !k.label.trim() || k.sub; touch(); } });
+      var cb = h('input', { type: 'checkbox', checked: !!k.sub, id: 'ks' + (i + 1),
+        onchange: function (e) { k.sub = e.target.checked; touch(); drawEditor(); } });
+      block.appendChild(h('div', { 'class': 'row' }, [h('div', { 'class': 'badge', text: String(i + 1) }), inp, h('label', { 'class': 'chk' }, [cb, document.createTextNode('Submenu')])]));
+      block.appendChild(det);
+      if (k.sub) {
+        var sp = h('div', { 'class': 'subpanel' }, [h('div', { 'class': 't', text: 'Submenu under key ' + (i + 1) + (k.label.trim() ? ' (' + k.label.trim() + ')' : '') })]);
+        k.items.forEach(function (t, j) {
+          var idp = 'k' + (i + 1) + '_' + (j + 1);
+          var d2 = detailRow(t, idp, !t.label.trim());
+          sp.appendChild(h('div', { 'class': 'row nochk' }, [
+            h('div', { 'class': 'badge', text: String(j + 1) }),
+            h('input', { type: 'text', value: t.label, placeholder: 'Option ' + (j + 1) + ' (blank = unused)', 'aria-label': 'Submenu ' + (i + 1) + ' key ' + (j + 1), id: idp,
+              oninput: function (e) { t.label = e.target.value; state.examples = false; d2.hidden = !t.label.trim(); touch(); } })
+          ]));
+          sp.appendChild(d2);
+        });
+        sp.appendChild(h('label', { 'class': 'chk' }, [
+          h('input', { type: 'checkbox', checked: !!k.back, id: 'kb' + (i + 1), onchange: function (e) { k.back = e.target.checked; touch(); } }),
+          document.createTextNode('Show "Return to main menu" on *')
+        ]));
+        block.appendChild(sp);
+      }
+      els.keys.appendChild(block);
+    });
+  }
+
+  function build() {
+    var title = h('h1', { text: 'Auto Attendant Call Flow' });
+    els.sub = h('p', { 'class': 'sub' });
+    app.appendChild(h('header', {}, [title, els.sub]));
+
+    els.noteBox = h('div', { 'class': 'note', role: 'note' }, [
+      h('span', { text: 'The menu names and hours below are examples. Replace them with the real routing.' }),
+      h('button', { type: 'button', text: 'Clear examples', onclick: clearAllKeys })
+    ]);
+    els.noteBox.hidden = !state.examples;
+    app.appendChild(els.noteBox);
+
+    // settings
+    function field(label, id, key, kind) {
+      var inp;
+      if (kind === 'plays') {
+        inp = h('select', { id: id, onchange: function (e) { state.plays = Number(e.target.value); touch(); } });
+        [1, 2, 3, 4, 5].forEach(function (n) { var op = h('option', { value: String(n), text: String(n) }); if (n === state.plays) op.selected = true; inp.appendChild(op); });
+      } else {
+        inp = h('input', { type: 'text', id: id, value: state[key], oninput: function (e) { state[key] = e.target.value; touch(); } });
+      }
+      return h('label', { 'class': 'f', 'for': id }, [document.createTextNode(label), inp]);
+    }
+    var set = h('section', { 'class': 'panel' }, [h('h2', { text: 'Line and schedule' }),
+      h('div', { 'class': 'settings' }, [
+        field('Main line', 'f-line', 'line'),
+        field('Business hours', 'f-hours', 'hours'),
+        field('Plays before operator (submenus)', 'f-plays', 'plays', 'plays'),
+        field('Last edited', 'f-built', 'built')
+      ])]);
+    app.appendChild(set);
+
+    // schedule key
+    els.hoursDt = h('dt'); els.hoursDd = h('dd');
+    app.appendChild(h('section', { 'class': 'panel' }, [h('h2', { text: 'How the schedule changes routing' }),
+      h('dl', { 'class': 'modes' }, [
+        els.hoursDt, els.hoursDd,
+        h('dt', { text: 'After hours and major US holidays' }),
+        h('dd', { text: 'Same menus and keys. Each destination goes to the voicemail of that number. Key 0 still goes to the receptionist.' })
+      ])]));
+
+    // editor
+    els.keys = h('div', { 'class': 'keys' });
+    els.status = h('span', { 'class': 'status', role: 'status' });
+    els.save = h('button', { type: 'button', 'class': 'primary', text: 'Download updated file', onclick: save });
+    els.auto = h('button', { type: 'button', text: 'Auto-save to file', onclick: connect });
+    var copy = h('button', { type: 'button', text: 'Copy outline', onclick: function () {
+      var txt = outline();
+      function fallback() { var ta = h('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (x) {} ta.remove(); }
+      try { navigator.clipboard.writeText(txt).then(function () { flash('Outline copied.'); }, function () { fallback(); flash('Outline copied.'); }); } catch (x) { fallback(); flash('Outline copied.'); }
+    } });
+    app.appendChild(h('section', { 'class': 'panel' }, [h('h2', { text: 'Menu keys' }),
+      h('div', { 'class': 'bar', style: 'margin-bottom:14px' }, [
+        (els.undo = h('button', { type: 'button', text: 'Undo', onclick: undo })),
+        (els.redo = h('button', { type: 'button', text: 'Redo', onclick: redo })),
+        (els.tmsg = h('span', { 'class': 'status', role: 'status' })),
+        h('button', { type: 'button', text: 'Reset to default', onclick: resetDefault }),
+        h('button', { type: 'button', text: 'Set current as default', onclick: setAsDefault }),
+        (els.factory = h('button', { type: 'button', text: 'Restore original default', onclick: restoreFactory })),
+        h('button', { type: 'button', text: 'Clear all keys', onclick: clearAllKeys }),
+        h('button', { type: 'button', text: 'Export JSON', onclick: exportJSON }),
+        h('button', { type: 'button', text: 'Import JSON', onclick: function () { els.imp.click(); } }),
+        (els.imp = h('input', { type: 'file', id: 'import-file', accept: '.json,application/json', hidden: '', 'aria-label': 'Import menu from a JSON file', onchange: importJSON }))
+      ]),
+      els.keys,
+      h('div', { 'class': 'bar', style: 'margin-top:16px' }, [els.status, copy, els.auto, els.save])]));
+
+    // chart
+    els.chart = h('div');
+    var exp = h('div', { 'class': 'bar', style: 'margin-bottom:12px' }, [
+      h('h2', { text: 'Call flow', style: 'margin:0;flex:1 1 auto' }),
+      h('span', { 'class': 'status', text: 'Export the diagram:', style: 'flex:0 0 auto' }),
+      h('button', { type: 'button', text: 'PNG', onclick: function () { exportAs('png'); } }),
+      h('button', { type: 'button', text: 'JPG', onclick: function () { exportAs('jpg'); } }),
+      h('button', { type: 'button', text: 'PDF', onclick: function () { exportAs('pdf'); } })
+    ]);
+    app.appendChild(h('section', { 'class': 'panel chart' }, [exp, els.chart]));
+
+    drawEditor(); drawChart(); drawStatus(); drawHeader(); drawHist();
+  }
+
+  var flashT;
+  function flash(msg) { els.status.textContent = msg; if (els.tmsg) els.tmsg.textContent = msg; clearTimeout(flashT); flashT = setTimeout(function () { if (els.tmsg) els.tmsg.textContent = ''; drawStatus(); }, 5000); }
+
+  /* ---------- export and import the menu as an editable JSON file ---------- */
+  function jstr(v, max) { return (typeof v === 'string' || typeof v === 'number') ? String(v).slice(0, max) : ''; }
+  function blankKey() { var k = { label: '', name: '', phone: '', sub: false, back: true, items: [] }; for (var i = 0; i < 9; i++) k.items.push({ label: '', name: '', phone: '' }); return k; }
+  function toJSONDoc() {
+    var menu = {};
+    state.keys.forEach(function (k, i) {
+      if (!k.label.trim()) return;
+      var e = { label: k.label };
+      if (k.sub) {
+        var sm = {};
+        k.items.forEach(function (t, j) { if (t.label.trim()) sm[String(j + 1)] = { label: t.label, name: t.name, phone: t.phone }; });
+        e.submenu = sm; e.showReturn = !!k.back;
+      } else { e.name = k.name; e.phone = k.phone; }
+      menu[String(i + 1)] = e;
+    });
+    return {
+      format: 'auto-attendant-call-flow', version: 1,
+      _notes: 'Edit freely, then use Import JSON. Menu keys are 1 to 9. A key with a "submenu" opens a second menu with options 1 to 9 and has no name or phone of its own. Key 0 is reserved: the "operator" list is the find-me sequence (up to 5, rung in order). Remove a key or option to leave it unused.',
+      line: state.line, hours: state.hours, playsBeforeOperator: state.plays,
+      operator: state.op.seq.filter(function (c) { return (c.name + c.phone).trim(); }).map(function (c) { return { name: c.name, phone: c.phone }; }),
+      menu: menu
+    };
+  }
+  function fromJSONDoc(doc) {
+    if (!doc || typeof doc !== 'object' || Array.isArray(doc) || doc.format !== 'auto-attendant-call-flow') throw new Error('This is not an auto attendant call flow file.');
+    if (typeof doc.version === 'number' && doc.version > 1) throw new Error('This file comes from a newer version of the page.');
+    if (!doc.menu || typeof doc.menu !== 'object' || Array.isArray(doc.menu)) throw new Error('The file has no "menu" section.');
+    var next = JSON.parse(snap()), ignored = [], count = 0;
+    if (doc.line != null) next.line = jstr(doc.line, 40);
+    if (doc.hours != null) next.hours = jstr(doc.hours, 40);
+    var pl = Number(doc.playsBeforeOperator);
+    if (Number.isInteger(pl) && pl >= 1 && pl <= 5) next.plays = pl;
+    if (Array.isArray(doc.operator)) next.op = { seq: doc.operator.slice(0, 5).map(function (c) { c = c || {}; return { name: jstr(c.name, 80), phone: jstr(c.phone, 40) }; }) };
+    next.keys = []; for (var q = 0; q < 9; q++) next.keys.push(blankKey());
+    Object.keys(doc.menu).forEach(function (d) {
+      if (!/^[1-9]$/.test(d)) { ignored.push(d === '0' ? 'key 0 (reserved for the receptionist)' : 'key "' + d + '"'); return; }
+      var e = doc.menu[d]; if (typeof e === 'string') e = { label: e };
+      if (!e || typeof e !== 'object') return;
+      var k = next.keys[Number(d) - 1];
+      k.label = jstr(e.label, 80); k.name = jstr(e.name, 80); k.phone = jstr(e.phone, 40);
+      if (k.label.trim()) count++;
+      if (e.submenu && typeof e.submenu === 'object' && !Array.isArray(e.submenu)) {
+        k.sub = true; k.back = e.showReturn !== false;
+        Object.keys(e.submenu).forEach(function (sd) {
+          if (!/^[1-9]$/.test(sd)) { ignored.push('option "' + sd + '" under key ' + d); return; }
+          var t = e.submenu[sd]; if (typeof t === 'string') t = { label: t };
+          t = t || {};
+          k.items[Number(sd) - 1] = { label: jstr(t.label, 80), name: jstr(t.name, 80), phone: jstr(t.phone, 40) };
+        });
+      }
+    });
+    next.examples = false;
+    return { next: next, ignored: ignored, count: count };
+  }
+  function exportJSON() {
+    download(new Blob([JSON.stringify(toJSONDoc(), null, 2) + '\n'], { type: 'application/json' }), 'Auto-Attendant-Call-Flow.json');
+    flash('Exported Auto-Attendant-Call-Flow.json');
+  }
+  function importJSON(ev) {
+    var f = ev.target.files && ev.target.files[0];
+    if (!f) return;
+    var r = new FileReader();
+    r.onload = function () {
+      var out;
+      try { out = fromJSONDoc(JSON.parse(String(r.result))); }
+      catch (err) { flash(err instanceof SyntaxError ? 'That file is not valid JSON, so nothing was imported.' : err.message + ' Nothing was imported.'); return; }
+      commit(out.next);
+      flash('Imported ' + out.count + ' menu key' + (out.count === 1 ? '' : 's') + ' from ' + f.name + '. Undo brings back your previous menu.' + (out.ignored.length ? ' Ignored: ' + out.ignored.slice(0, 4).join(', ') + (out.ignored.length > 4 ? ' and more' : '') + '.' : ''));
+    };
+    r.onerror = function () { flash('Could not read that file.'); };
+    r.readAsText(f);
+    ev.target.value = '';
+  }
+
+  /* ---------- export diagram to PNG, JPG or PDF ---------- */
+  var EXPORT_CSS = '.node{fill:#fff;stroke:#5d6670;stroke-width:1.2}.node.mode{stroke:#b3141b;stroke-width:1.6}.node.back{stroke-dasharray:4 3}.edge{fill:none;stroke:#5d6670;stroke-width:1.3}.arrow{fill:#5d6670}.badgebg{fill:#b3141b}text{font-family:"Segoe UI",Arial,Helvetica,sans-serif}.t{fill:#1d2125;font-size:13px}.t2{fill:#5d6670;font-size:11.5px}.tb{fill:#fff;font-size:12px;font-weight:600}';
+  function download(blob, name) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  }
+  function renderCanvas() {
+    return new Promise(function (resolve, reject) {
+      var src = els.chart.querySelector('svg');
+      if (!src) { reject(new Error('no chart')); return; }
+      var vb = src.viewBox.baseVal, W = vb.width, H = vb.height;
+      var clone = src.cloneNode(true);
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      clone.setAttribute('width', W); clone.setAttribute('height', H); clone.removeAttribute('style');
+      var st = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+      st.textContent = EXPORT_CSS;
+      clone.insertBefore(st, clone.firstChild);
+      var xml = new XMLSerializer().serializeToString(clone);
+      var img = new Image();
+      img.onload = function () {
+        var pad = 24, head = 64, scale = 2;
+        while ((W + 2 * pad) * scale * (H + 2 * pad + head) * scale > 90e6 && scale > 1) scale -= 0.25;
+        var cv = document.createElement('canvas');
+        cv.width = Math.round((W + 2 * pad) * scale); cv.height = Math.round((H + 2 * pad + head) * scale);
+        var ctx = cv.getContext('2d');
+        ctx.scale(scale, scale);
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cv.width, cv.height);
+        ctx.fillStyle = '#1d2125'; ctx.font = '600 22px "Segoe UI", Arial, sans-serif'; ctx.textBaseline = 'alphabetic';
+        ctx.fillText('Auto Attendant Call Flow', pad, pad + 22);
+        ctx.fillStyle = '#5d6670'; ctx.font = '14px "Segoe UI", Arial, sans-serif';
+        ctx.fillText('Line ' + state.line + '  |  Business hours ' + state.hours + '  |  Exported ' + new Date().toISOString().slice(0, 10), pad, pad + 46);
+        ctx.drawImage(img, pad, pad + head, W, H);
+        resolve(cv);
+      };
+      img.onerror = function () { reject(new Error('render failed')); };
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+    });
+  }
+  function canvasBlob(cv, type, q) { return new Promise(function (res, rej) { cv.toBlob(function (b) { b ? res(b) : rej(new Error('encode failed')); }, type, q); }); }
+  function makePDF(jpeg, pxW, pxH) {
+    var enc = new TextEncoder(), parts = [], offs = [], pos = 0;
+    function add(u8) { parts.push(u8); pos += u8.length; }
+    function str(t) { add(enc.encode(t)); }
+    function n(x) { return x.toFixed(2); }
+    var land = pxW >= pxH, pw = land ? 792 : 612, ph = land ? 612 : 792, m = 36;
+    var sc = Math.min((pw - 2 * m) / pxW, (ph - 2 * m) / pxH), w = pxW * sc, hh = pxH * sc, x = (pw - w) / 2, y = (ph - hh) / 2;
+    var content = 'q ' + n(w) + ' 0 0 ' + n(hh) + ' ' + n(x) + ' ' + n(y) + ' cm /Im0 Do Q';
+    str('%PDF-1.4\n');
+    offs[1] = pos; str('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+    offs[2] = pos; str('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n');
+    offs[3] = pos; str('3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + pw + ' ' + ph + '] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n');
+    offs[4] = pos; str('4 0 obj\n<< /Type /XObject /Subtype /Image /Width ' + pxW + ' /Height ' + pxH + ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + jpeg.length + ' >>\nstream\n'); add(jpeg); str('\nendstream\nendobj\n');
+    offs[5] = pos; str('5 0 obj\n<< /Length ' + content.length + ' >>\nstream\n' + content + '\nendstream\nendobj\n');
+    var xref = pos;
+    str('xref\n0 6\n0000000000 65535 f \n');
+    for (var i = 1; i <= 5; i++) str(('0000000000' + offs[i]).slice(-10) + ' 00000 n \n');
+    str('trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF\n');
+    return new Blob(parts, { type: 'application/pdf' });
+  }
+  function exportAs(kind) {
+    flash('Preparing ' + kind.toUpperCase() + '…');
+    renderCanvas().then(function (cv) {
+      if (kind === 'png') return canvasBlob(cv, 'image/png').then(function (b) { download(b, 'Auto-Attendant-Call-Flow.png'); });
+      return canvasBlob(cv, 'image/jpeg', 0.92).then(function (b) {
+        if (kind === 'jpg') { download(b, 'Auto-Attendant-Call-Flow.jpg'); return; }
+        return b.arrayBuffer().then(function (buf) { download(makePDF(new Uint8Array(buf), cv.width, cv.height), 'Auto-Attendant-Call-Flow.pdf'); });
+      });
+    }).then(function () { flash('Exported Auto-Attendant-Call-Flow.' + kind); },
+            function () { flash('Export did not work in this browser. Try Chrome or Edge.'); });
+  }
+
+  function buildDoc() {
+    var clone = document.body.cloneNode(true);
+    clone.querySelector('#app').replaceChildren();
+    clone.querySelector('#state').textContent = JSON.stringify(state).replace(/</g, '\\u003c');
+    var ds = clone.querySelector('#default-state');
+    if (ds) ds.textContent = defRec ? JSON.stringify(defRec).replace(/</g, '\\u003c') : 'null';
+    return '<!doctype html>\n<html lang="en"><head>' + document.head.innerHTML + '</head><body>' + clone.innerHTML + '</body></html>';
+  }
+  function save() {
+    var blob = new Blob([buildDoc()], { type: 'text/html' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'Auto-Attendant-Call-Flow.html';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    dirty = false; flash('Downloaded Auto-Attendant-Call-Flow.html');
+  }
+
+  build();
+  if (canFS) { idbGet().then(function (h2) { if (h2) { pending = h2; drawStatus(); } }).catch(function () {}); }
+})();
+</script>
+
+</body></html>

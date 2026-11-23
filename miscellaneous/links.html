@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<!--
+File Name   : links.html
+Author      : Jason Lamb (with help from ChatGPT)
+Created     : 2026-02-01
+Modified    : auto
+Revision    : auto
+
+Change Log:
+- 1.0 (2026-02-01)
+  - Initial release
+  - Full-screen mobile-friendly layout
+  - Four large clickable navigation areas
+- 1.1 (2026-02-01)
+  - Added auto-updating footer
+  - Centralized revision control
+  - Switched to scalable grid layout
+- 1.2 (2026-02-02)
+  - Changed to 2-column grid layout for better mobile experience
+  - Allows adding more items in rows of 2
+- 1.2.1 remove \n typo
+- 1.3 (2026-02-02)
+  - Changed to 3-column grid layout (1 column on mobile)
+  - Increased minimum height for easier finger pressing
+  - Added responsive design for different screen sizes
+- 1.3.1
+  - uncomment additional test links for design testing
+- 1.4
+  - add actual links (relative)
+- 1.4.1
+  - add actual links (absolute)
+- 1.5
+  - Fit all current mobile link buttons and footer within the visible viewport
+  - Use dynamic viewport height for mobile Safari
+  - Keep a 44px minimum tap target and allow scrolling if more links are added later
+- 1.6
+  - Added TICKETS as the second link, pointing to https://jasr.me/fs/
+  - Changed mobile layout to a 2-column grid
+  - Eight links now fit as four rows within the visible mobile viewport
+- 1.7
+  - Give every active link its own distinct color
+  - Dynamically calculate rows and columns so active links fill the available screen
+  - Added commented placeholders for links 9 through 16 with reserved unique colors
+  - Recalculate layout automatically on resize/orientation changes
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Links</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            height: 100vh;
+            height: 100dvh;
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: grid;
+            grid-template-rows: minmax(0, 1fr) auto;
+            overflow: hidden;
+            background: #f4f4f4;
+        }
+
+        /* ===== Link Grid ===== */
+        .links {
+            --columns: 2;
+            --rows: 4;
+
+            display: grid;
+            grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+            grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
+            gap: 0;
+            width: 100%;
+            min-width: 0;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .link-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-width: 0;
+            min-height: 0;
+            padding: clamp(6px, 1.5vmin, 20px);
+            overflow: hidden;
+
+            text-decoration: none;
+            text-align: center;
+            overflow-wrap: anywhere;
+            color: var(--text, #fff);
+            background-color: var(--tile, #555);
+            font-size: clamp(0.9rem, 2.5vmin, 1.8rem);
+            font-weight: 650;
+            line-height: 1.1;
+
+            transition: transform 0.1s ease, filter 0.1s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .link-area:active {
+            transform: scale(0.98);
+            filter: brightness(0.9);
+        }
+
+        /* ===== Footer ===== */
+        footer {
+            width: 100%;
+            text-align: center;
+            padding: clamp(4px, 0.8vmin, 8px);
+            padding-bottom: max(clamp(4px, 0.8vmin, 8px), env(safe-area-inset-bottom));
+            font-size: clamp(0.7rem, 1.8vmin, 0.85rem);
+            color: #666;
+            background: #f4f4f4;
+            border-top: 1px solid #ddd;
+        }
+
+        /* Slightly smaller text on narrow phones */
+        @media (max-width: 600px) {
+            .link-area {
+                font-size: clamp(0.9rem, 4.3vw, 1.45rem);
+                padding: 6px 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ===== LINKS ===== -->
+    <div class="links" id="linksGrid">
+        <a href="https://jasr.me/github/mpg/" class="link-area" style="--tile:#2563EB;">MPG</a>
+        <a href="https://jasr.me/fs/" class="link-area" style="--tile:#16A34A;">TICKETS</a>
+        <a href="https://jasr.me/daily-babe" class="link-area" style="--tile:#FBBF24; --text:#1f2937;">DAILY-BABE</a>
+        <a href="https://jasr.me/family-tracker" class="link-area" style="--tile:#DC2626;">FAMILY-TRACKER</a>
+        <a href="https://jasr.me/weather/" class="link-area" style="--tile:#7C3AED;">WEATHER</a>
+        <a href="https://jasr.me/license-plate" class="link-area" style="--tile:#0D9488;">LICENSE-PLATE</a>
+        <a href="https://jasr.me/box/" class="link-area" style="--tile:#EA580C;">BOX</a>
+        <a href="https://jasr.me/updates/" class="link-area" style="--tile:#DB2777;">UPDATES</a>
+
+        <!-- ===== FUTURE LINK PLACEHOLDERS =====
+             Uncomment one line at a time and replace the URL + label.
+             Each placeholder already has its own reserved color.
+
+        <a href="https://jasr.me/example9/"  class="link-area" style="--tile:#0891B2;">LINK 9</a>
+        <a href="https://jasr.me/example10/" class="link-area" style="--tile:#4F46E5;">LINK 10</a>
+        <a href="https://jasr.me/example11/" class="link-area" style="--tile:#65A30D;">LINK 11</a>
+        <a href="https://jasr.me/example12/" class="link-area" style="--tile:#CA8A04; --text:#1f2937;">LINK 12</a>
+        <a href="https://jasr.me/example13/" class="link-area" style="--tile:#C026D3;">LINK 13</a>
+        <a href="https://jasr.me/example14/" class="link-area" style="--tile:#0284C7;">LINK 14</a>
+        <a href="https://jasr.me/example15/" class="link-area" style="--tile:#9333EA;">LINK 15</a>
+        <a href="https://jasr.me/example16/" class="link-area" style="--tile:#475569;">LINK 16</a>
+        ===== END FUTURE LINK PLACEHOLDERS ===== -->
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <footer id="footer"></footer>
+
+    <script>
+        const fileName = 'links.html';
+        const revision = '1.7';
+
+        document.getElementById('footer').textContent =
+            `${fileName} | Rev ${revision}`;
+
+        /*
+            Keep the active links fitted to the available viewport.
+            Columns respond to screen width; rows are calculated from
+            the number of active (uncommented) links.
+        */
+        function updateGridLayout() {
+            const grid = document.getElementById('linksGrid');
+            const linkCount = grid.querySelectorAll('.link-area').length;
+            const width = window.innerWidth;
+
+            let columns;
+
+            if (width <= 700) {
+                columns = 2;
+            } else if (width <= 1100) {
+                columns = 3;
+            } else {
+                columns = 4;
+            }
+
+            /* Never create more columns than active links. */
+            columns = Math.min(columns, Math.max(linkCount, 1));
+
+            const rows = Math.max(Math.ceil(linkCount / columns), 1);
+
+            grid.style.setProperty('--columns', columns);
+            grid.style.setProperty('--rows', rows);
+        }
+
+        updateGridLayout();
+        window.addEventListener('resize', updateGridLayout);
+        window.addEventListener('orientationchange', updateGridLayout);
+    </script>
+
+</body>
+</html>
