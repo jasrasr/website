@@ -3,10 +3,10 @@
  * File Name: market-quotes.test.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Synthetic quote parser, credits, caching and immutable-ledger valuation regressions.
- * Revision: 1.0.1
+ * Revision: 1.0.2
  * Created Date: 2026-11-22
  * Modified Date: 2026-11-22
- * Changelog: 1.0.1 - Verify same-day chart refresh and last_quote_at timestamp priority. 1.0.0 - Test current quotes without purchase/basis changes, API limits, stale quotes, missing data and disabled integration.
+ * Changelog: 1.0.2 - Prevent quote starvation with 64 open ticker batch simulation. 1.0.1 - Verify same-day chart refresh and last_quote_at timestamp priority. 1.0.0 - Test current quotes without purchase/basis changes, API limits, stale quotes, missing data and disabled integration.
  */
 declare(strict_types=1);
 require_once dirname(__DIR__,2).'/1-Framework/bootstrap.php';
@@ -89,6 +89,23 @@ try{
  $notConfigured=it_mq_refresh($cache,$symbolList,$off,false,$fetch,$now);
  must_quote($notConfigured['status']==='not_configured' && count($calls)===2,
     'Without a configured API key, the server never contacts a quote provider.');
+ // At 30m the first tickers are due again. Without a fair/oldest queue,
+ // an 8-credit batch every 5m would starve symbols past the first 48.
+ $larger=$root.'/large.json';$largeConfig=$config;$largeConfig['credits_per_day']=700;
+ $many=[];
+ for($i=0;$i<64;$i++)$many[]=sprintf('Q%03d',$i);
+ $largeCalls=[];
+ $manyFetcher=static function(array $symbols,string $key)use(&$largeCalls,$now,$fakeQuote):string{
+     $largeCalls[]=$symbols;
+     $items=[];foreach($symbols as $ticker)$items[$ticker]=$fakeQuote($ticker,12.50,$now);
+     return json_encode($items,JSON_THROW_ON_ERROR);
+ };
+ for($step=0;$step<8;$step++)
+     it_mq_refresh($larger,$many,$largeConfig,false,$manyFetcher,$now+$step*300);
+ $all=JasrFrameworkJsonStore::read($larger)['records'][0]['quotes'];
+ must_quote(count($all)===64 && count($largeCalls)===8 &&
+     isset($all['Q000'],$all['Q063']),
+     'Fair queue refreshes every stock in a large portfolio before repeating cached tickers.');
 }finally {
  foreach(glob($root.'/*')?:[] as $f)if(is_file($f))unlink($f);
  rmdir($root);
