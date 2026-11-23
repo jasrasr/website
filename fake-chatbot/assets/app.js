@@ -1,11 +1,11 @@
 /*
 File Name: app.js
-Revision: 2.0.0
+Revision: 2.0.1
 Description: Responsive fake AI frontend, public PHP response API and server-backed anonymous history.
 Author: Jason Lamb (with help from ChatGPT)
 Created Date: 2026-11-20
-Modified Date: 2026-11-20
-Changelog: 2.0.0 - Display matched rule reasons, persist questions via API and support history deletion.
+Modified Date: 2026-11-22
+Changelog: 2.0.1 - Clarify anonymous history is hidden from the visitor view while retained for admins. 2.0.0 - Display matched rule reasons, persist questions via API and support history deletion.
 */
 'use strict';
 (() => {
@@ -97,12 +97,12 @@ Changelog: 2.0.0 - Display matched rule reasons, persist questions via API and s
   });
   clearButton.addEventListener('click', () => {reset(); input.focus();});
   forgetButton.addEventListener('click', async () => {
-    if (!window.confirm('Permanently delete anonymous questions saved by this browser? Account-linked questions are not affected.')) return;
+    if (!window.confirm('Clear anonymous questions from this browser\'s history? Administrators can still review them until they expire after 90 days. Account-linked questions are not affected.')) return;
     forgetButton.disabled = true;
     try {
       await request('clear_guest_history');
       await loadHistory();
-      status.textContent = 'Anonymous question history deleted';
+      status.textContent = 'Anonymous history cleared from this browser';
     } catch (error) {
       status.textContent = error.message;
     } finally {

@@ -1,12 +1,12 @@
 <?php
 /*
 File Name: matching.test.php
-Revision: 2.0.2
+Revision: 2.0.3
 Description: PHP regression coverage for deterministic ranked matches and framework persistence.
 Author: Jason Lamb (with help from ChatGPT)
 Created Date: 2026-11-20
 Modified Date: 2026-11-22
-Changelog: 2.0.2 - Cover duplicate trigger detection across punctuation variants. 2.0.1 - Cover duplicate all-words and one-word phrase invalid inputs. 2.0.0 - Validate potato specificity, safe expansions, editable rules, and JsonStore atomic writes.
+Changelog: 2.0.3 - Cover visitor-only anonymous history clearing and link exclusion. 2.0.2 - Cover duplicate trigger detection across punctuation variants. 2.0.1 - Cover duplicate all-words and one-word phrase invalid inputs. 2.0.0 - Validate potato specificity, safe expansions, editable rules, and JsonStore atomic writes.
 */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/bootstrap.php';
@@ -53,6 +53,17 @@ $linkResult = fc_link_history_records([
 ], 'browser', 'new-user', 100);
 fc_check($linkResult['count'] === 1 && count($linkResult['records']) === 2, 'linking prunes expired anonymous history and retains linked entries');
 fc_check(($linkResult['records'][0]['userId'] ?? null) === 'new-user' && ($linkResult['records'][1]['userId'] ?? null) === 'existing', 'only recent browser history is linked');
+$now = time();
+$cleared = fc_hide_guest_history([
+    ['id' => 'own', 'session' => 'browser', 'timestamp' => $now],
+    ['id' => 'other', 'session' => 'other', 'timestamp' => $now],
+    ['id' => 'linked', 'session' => 'browser', 'userId' => 'member', 'timestamp' => $now],
+], 'browser');
+fc_check(count($cleared) === 3 && !empty($cleared[0]['hiddenFromBrowser']) && empty($cleared[1]['hiddenFromBrowser']) && empty($cleared[2]['hiddenFromBrowser']), 'clearing keeps all admin records and hides only this browser\'s anonymous entry');
+$visible = fc_recent($cleared, 'browser', 'member');
+fc_check(count($visible) === 1 && ($visible[0]['id'] ?? null) === 'linked', 'cleared anonymous entry disappears from visitor history while linked history remains');
+$linkedAfterClear = fc_link_history_records($cleared, 'browser', 'member', $now - 90 * 86400);
+fc_check($linkedAfterClear['count'] === 0 && empty($linkedAfterClear['records'][0]['userId']), 'cleared anonymous entry cannot become account-linked later');
 fc_check(str_contains(fc_expand('Time {{time}}, literal $(Get-Date)'), '$(Get-Date)'), 'PowerShell code is not evaluated');
 $rule = fc_validate_rule(['name'=>'Test','triggers'=>"phrase: potato salad\nall: potato salad\nkeyword: potato",'replies'=>"Answer A\nAnswer B",'priority'=>'5','enabled'=>'1']);
 fc_check(count($rule['triggers']) === 3 && count($rule['replies']) === 2, 'admin rule parser accepts multi-trigger multi-answer forms');

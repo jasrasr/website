@@ -1,12 +1,12 @@
 <?php
 /*
 File Name: api.php
-Revision: 2.0.0
+Revision: 2.0.1
 Description: Public fake-chat endpoint with server-side question history and browser-only history controls.
 Author: Jason Lamb (with help from ChatGPT)
 Created Date: 2026-11-20
-Modified Date: 2026-11-20
-Changelog: 2.0.0 - Use ranked PHP rules, private JsonStore persistence, and per-browser rate limits.
+Modified Date: 2026-11-22
+Changelog: 2.0.1 - Clear the visitor view without removing admin history. 2.0.0 - Use ranked PHP rules, private JsonStore persistence, and per-browser rate limits.
 */
 declare(strict_types=1);
 require_once __DIR__ . '/bootstrap.php';
@@ -30,9 +30,7 @@ try {
     if (!is_string($action)) fc_json(400, ['error' => 'Invalid action.']);
     if ($action === 'clear_guest_history') {
         \Jasr\Framework\JsonStore::update(fc_store('history.json'), static fn(array $r): array =>
-            array_values(array_filter($r, static fn($row): bool => !(
-                ($row['session'] ?? null) === $session && empty($row['userId'])
-            )))
+            fc_hide_guest_history($r, $session)
         );
         fc_json(200, ['ok' => true]);
     }

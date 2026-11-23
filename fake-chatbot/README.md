@@ -41,7 +41,7 @@ Use the existing 1-Framework/README.md, 1-Framework/AI-INSTRUCTIONS.md and user-
 - Anonymous questions expire after 90 days and are pruned on subsequent writes. Linked questions remain until their owner deletes them, subject to a global cap of 20,000 retained entries.
 - Visitors are warned not to enter confidential information. Authorized project administrators can inspect all submitted questions to teach the joke bot.
 - Signing in does NOT automatically link anonymous questions. The user explicitly selects **Link this browser's anonymous history** on the account page. Later questions are saved to that account only while the corresponding central account remains signed in.
-- **Clear screen** removes only visible messages. **Delete anonymous history** removes unlinked stored questions for that browser. The account page can unlink future saving or delete all questions owned by that account.
+- **Clear screen** removes only visible messages. **Clear anonymous history here** hides this browser's unlinked questions from the visitor view while retaining them for admin review until the normal 90-day expiry. Hidden questions are not linked to an account later. The account page can unlink future saving or delete all questions owned by that account.
 - Default per-cookie rate limits: 20 questions/minute and 300/day; global limits: 120/minute and 6,000/day.
 
 The tracked storage/.placeholder preserves an empty runtime directory. All runtime JSON and lock files are ignored by Git. PHP must have write permission to storage/. **Do not** wipe runtime files during Hostinger sync and include them in secure backups.

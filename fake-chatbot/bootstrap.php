@@ -1,12 +1,12 @@
 <?php
 /*
 File Name: bootstrap.php
-Revision: 2.0.2
+Revision: 2.0.3
 Description: Framework-backed fake chatbot rule matching, private history and opt-in account linking.
 Author: Jason Lamb (with help from ChatGPT)
 Created Date: 2026-11-20
 Modified Date: 2026-11-22
-Changelog: 2.0.2 - Find existing rules with equivalent triggers. 2.0.1 - Enforce distinct multiword all/phrase rule tiers and preserve empty edited rule libraries. 2.0.0 - Add ranked matching, JsonStore persistence, privacy controls, and shared-identity helpers.
+Changelog: 2.0.3 - Hide cleared anonymous history from visitors while retaining admin records. 2.0.2 - Find existing rules with equivalent triggers. 2.0.1 - Enforce distinct multiword all/phrase rule tiers and preserve empty edited rule libraries. 2.0.0 - Add ranked matching, JsonStore persistence, privacy controls, and shared-identity helpers.
 */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/1-Framework/bootstrap.php';
@@ -200,11 +200,21 @@ function fc_recent(array $records, string $session, ?string $userId = null): arr
 {
     $cutoff = time() - 90 * 86400;
     $result = array_values(array_filter($records, static function ($r) use ($session, $userId, $cutoff): bool {
-        if (!is_array($r)) return false;
+        if (!is_array($r) || !empty($r['hiddenFromBrowser'])) return false;
         return ($userId !== null && ($r['userId'] ?? null) === $userId) ||
             (($r['session'] ?? '') === $session && empty($r['userId']) && (int)($r['timestamp'] ?? 0) >= $cutoff);
     }));
     return array_slice(array_reverse($result), 0, 100);
+}
+function fc_hide_guest_history(array $records, string $session): array
+{
+    foreach ($records as &$record) {
+        if (is_array($record) && ($record['session'] ?? null) === $session && empty($record['userId'])) {
+            $record['hiddenFromBrowser'] = true;
+        }
+    }
+    unset($record);
+    return $records;
 }
 function fc_history_for_browser(string $session): array
 {
@@ -278,7 +288,7 @@ function fc_link_history_records(array $records, string $session, string $uid, i
         is_array($r) && (!empty($r['userId']) || (int)($r['timestamp'] ?? 0) >= $cutoff)
     ));
     foreach ($records as &$r) {
-        if (($r['session'] ?? null) === $session && empty($r['userId'])) {
+        if (($r['session'] ?? null) === $session && empty($r['userId']) && empty($r['hiddenFromBrowser'])) {
             $r['userId'] = $uid;
             $count++;
         }

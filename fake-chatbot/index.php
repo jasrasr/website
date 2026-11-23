@@ -1,12 +1,12 @@
 <?php
 /*
 File Name: index.php
-Revision: 2.0.0
+Revision: 2.0.1
 Description: Anonymous fake AI chat portal backed by framework JsonStore and optional identity linking.
 Author: Jason Lamb (with help from ChatGPT)
 Created Date: 2026-11-20
-Modified Date: 2026-11-20
-Changelog: 2.0.0 - Add persistent anonymous chat, explicit fake AI labels and account/history links.
+Modified Date: 2026-11-22
+Changelog: 2.0.1 - Clarify visitor history clearing while retaining admin records. 2.0.0 - Add persistent anonymous chat, explicit fake AI labels and account/history links.
 */
 declare(strict_types=1);
 require_once __DIR__ . '/bootstrap.php';
@@ -23,7 +23,7 @@ fc_browser_hash();
   <meta name="description" content="Laughably fake AI. Real question history, pretend answers, and zero AI.">
   <title>Very Fake AI | JASR</title>
   <link rel="stylesheet" href="assets/style.css?v=2.0.0">
-  <script src="assets/app.js?v=2.0.0" defer></script>
+  <script src="assets/app.js?v=2.0.1" defer></script>
 </head>
 <body>
   <div class="app">
@@ -65,12 +65,12 @@ fc_browser_hash();
     <section class="history-tools" aria-label="Conversation storage">
       <div>
         <h2>Yes, it remembers your questions.</h2>
-        <p>Questions and selected answers are saved privately on this server. Anonymous history stays attached to this browser's random cookie. Account linking is optional.</p>
+        <p>Questions and selected answers are saved privately on this server. Anonymous history stays attached to this browser's random cookie. Clearing it removes it from this browser's view; administrators can still review it until it expires after 90 days. Account linking is optional.</p>
       </div>
-      <button type="button" id="forget" class="secondary">Delete anonymous history</button>
+      <button type="button" id="forget" class="secondary">Clear anonymous history here</button>
     </section>
     <p class="disclaimer"><strong>This is not artificial intelligence.</strong> A collection of human-written jokes competes for keyword matches. Do not enter personal, confidential, or sensitive information. Site administrators can review submitted questions. Your anonymous questions expire after 90 days; linked questions are retained until you delete them, subject to the site's total history cap.</p>
-    <footer>Very Fake AI · Rev 2.0.0 · Updated 2026-11-20 · Original PowerShell chatbot preserved in <a href="https://github.com/jasrasr/website/tree/main/fake-chatbot/legacy">legacy/</a></footer>
+    <footer>Very Fake AI · Rev 2.0.1 · Updated 2026-11-22 · Original PowerShell chatbot preserved in <a href="https://github.com/jasrasr/website/tree/main/fake-chatbot/legacy">legacy/</a></footer>
   </div>
 </body>
 </html>
