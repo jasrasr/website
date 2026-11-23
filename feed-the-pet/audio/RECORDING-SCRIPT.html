@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Feed the Pet Recording Script</title>
+  <style>
+    :root { font-family: Arial, sans-serif; color: #241824; background: #f7efe3; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 28px; }
+    main { max-width: 850px; margin: auto; padding: 36px; background: white; }
+    h1 { margin: 0; font-size: 2rem; }
+    .notes { margin: 8px 0 28px; color: #554855; line-height: 1.5; }
+    section { margin-top: 26px; break-inside: avoid; }
+    h2 { margin: 0 0 10px; padding-bottom: 6px; border-bottom: 2px solid #703452; font-size: 1.25rem; }
+    .recording { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 8px 12px; padding: 13px 0; border-bottom: 1px solid #ddd; break-inside: avoid; }
+    .checkbox { width: 18px; height: 18px; margin-top: 4px; border: 2px solid #241824; }
+    .phrase { margin: 0; font-size: 1.25rem; font-weight: 700; }
+    .filename { grid-column: 2; margin: 0; color: #5b4758; font: .95rem Consolas, monospace; }
+    footer { margin-top: 30px; padding-top: 12px; border-top: 2px solid #241824; font-size: .9rem; }
+    @page { size: letter; margin: .55in; }
+    @media print {
+      :root, body { background: white; }
+      body, main { padding: 0; }
+      main { max-width: none; }
+      .notes { margin-bottom: 18px; }
+      section { margin-top: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Feed the Pet — Recording Script</h1>
+    <p class="notes">Record one MP3 for each line. Speak warmly and clearly, leave a short pause at the beginning and end, and save each recording with the exact filename shown.</p>
+
+    <section>
+      <h2>Order Set 1</h2>
+      <div class="recording"><span class="checkbox"></span><p class="phrase">“Something red, please!”</p><p class="filename">order-red.mp3</p></div>
+      <div class="recording"><span class="checkbox"></span><p class="phrase">“Two carrots, please!”</p><p class="filename">order-carrots.mp3</p></div>
+      <div class="recording"><span class="checkbox"></span><p class="phrase">“Apple, banana, apple. In that order!”</p><p class="filename">order-pattern.mp3</p></div>
+    </section>
+
+    <section>
+      <h2>Order Set 2</h2>
+      <div class="recording"><span class="checkbox"></span><p class="phrase">“Green peas, please!”</p><p class="filename">order-green-peas.mp3</p></div>
+      <div class="recording"><span class="checkbox"></span><p class="phrase">“Two bananas, please!”</p><p class="filename">order-two-bananas.mp3</p></div>
+      <div class="recording"><span class="checkbox"></span><p class="phrase">“Blueberries, then apple!”</p><p class="filename">order-blueberries-apple.mp3</p></div>
+    </section>
+
+    <section>
+      <h2>Order Set 3</h2>
+      <div class="recording"><span class="checkbox"></span><p class="phrase">“Something orange, please!”</p><p class="filename">order-orange.mp3</p></div>
+      <div class="recording"><span class="checkbox"></span><p class="phrase">“Three apples, please!”</p><p class="filename">order-three-apples.mp3</p></div>
+      <div class="recording"><span class="checkbox"></span><p class="phrase">“Carrot, apple, carrot. In that order!”</p><p class="filename">order-carrot-apple-carrot.mp3</p></div>
+    </section>
+
+    <footer>Save all nine files in <strong>feed-the-pet/audio/</strong>.</footer>
+  </main>
+</body>
+</html>

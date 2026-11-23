@@ -1,5 +1,7 @@
 # Pet Order Voice Files
 
+Open [`RECORDING-SCRIPT.html`](RECORDING-SCRIPT.html) in a browser and print it for a checklist containing all phrases and filenames.
+
 Store the custom voice recordings in this folder:
 
 | Filename | Spoken words |
