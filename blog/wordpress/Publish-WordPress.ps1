@@ -429,7 +429,7 @@ if (-not [string]::IsNullOrWhiteSpace($Username) -and -not [string]::IsNullOrWhi
         $encodedSlug = [uri]::EscapeDataString([string]$item.Data.slug)
         # WordPress returns a JSON array for this endpoint.  Enumerate it before
         # wrapping it so $found[0] is a post object, not an Object[] container.
-        $found = @(Invoke-WpJson -Method Get -Path "posts?slug=$encodedSlug&status=any&per_page=1&_fields=id,slug,status,link,date,tags,categories" | ForEach-Object { $_ })
+        $found = @(Invoke-WpJson -Method Get -Path "posts?slug=$encodedSlug&context=edit&status=publish,future,draft,pending,private&per_page=1&_fields=id,slug,status,link,date,tags,categories" | ForEach-Object { $_ })
 
         if ($found.Count -gt 0) {
             $status = [string]$found[0].status
