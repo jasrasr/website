@@ -24,7 +24,9 @@ try {
     $event = is_array($input) ? normalize_event($input, $origin) : null;
     if (!$event) fail(400, 'Invalid or excluded event.');
     // Never trust X-Forwarded-For supplied by public callers.
-    if (!allowance('collect:' . ($_SERVER['REMOTE_ADDR'] ?? ''), config()['events_per_ip_per_minute'], 60)) fail(429, 'Rate limited.');
+    $peer = $_SERVER['REMOTE_ADDR'] ?? '';
+    if (!allowance('collect:' . $peer, config()['events_per_ip_per_minute'], 60)) fail(429, 'Rate limited.');
+    if (filter_var($peer, FILTER_VALIDATE_IP) !== false) $event['ip'] = $peer;
     save_event($event);
     Response::json(200, 'Event accepted.', ['recorded' => true]);
 } catch (OverflowException $exception) {

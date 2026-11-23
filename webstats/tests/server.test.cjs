@@ -63,12 +63,22 @@ test('collector, dashboard authentication, filtering, escaping and storage prote
   assert.equal((await send('x'.repeat(8193))).status,413);
   assert.equal((await send({...event,kind:'other'})).status,400);
   assert.equal((await send({...event,page:[]})).status,400);
-  const accepted=await send(event);assert.equal(accepted.status,200);assert.equal((await accepted.json()).success,true);
+  const accepted=await fetch(base+'collect.php',{
+    method:'POST',
+    headers:{Origin:'https://source.test','Content-Type':'text/plain','X-Forwarded-For':'198.51.100.10'},
+    body:JSON.stringify({...event,ip:'198.51.100.20'})
+  });
+  assert.equal(accepted.status,200);assert.equal((await accepted.json()).success,true);
   await send(event); // retry must not inflate totals
   const files=fs.readdirSync(temp).filter(x=>/^events-.*json$/.test(x));assert.equal(files.length,1);
   const data=JSON.parse(fs.readFileSync(path.join(temp,files[0])));
   assert.equal(Object.keys(data.records).length,1);
   const saved=Object.values(data.records)[0];assert.equal(saved.page,'https://source.test/index.php');assert.equal(saved.referrer,'https://ref.test');assert.notEqual(saved.session,event.session);
+  assert.equal(saved.ip,'127.0.0.1');
+  const {ip, ...legacy}=saved;
+  const legacyId='2'.repeat(32);
+  data.records['source.test:'+legacyId]={...legacy,id:legacyId,page:'https://source.test/legacy'};
+  fs.writeFileSync(path.join(temp,files[0]),JSON.stringify(data));
   assert.equal((await fetch(base+'setup.php')).status,404);
   const anonymous = await fetch(base,{redirect:'manual'});
   assert.equal(anonymous.status,303);
@@ -78,6 +88,9 @@ test('collector, dashboard authentication, filtering, escaping and storage prote
   const cookie = await signIn('owner','correct-horse-staple');
   assert.equal((await post(base,cookie,{action:'logout',csrf:'invalid'})).status,403);
   const report=await fetch(base,{headers:{Cookie:cookie}});const html=await report.text();assert.equal(report.status,200);assert.match(html,/Top pages/);assert.match(html,/source.test\/index.php/);assert.doesNotMatch(html,/secret=remove/);
+  assert.match(html,/<th scope="col">IP address<\/th>/);
+  assert.match(html,/<td>https:\/\/source\.test\/index\.php<\/td><td>pageview<\/td><td>127\.0\.0\.1<\/td>/);
+  assert.match(html,/<td>https:\/\/source\.test\/legacy<\/td><td>pageview<\/td><td>—<\/td>/);
   assert.equal((await fetch(base+'?start=2026-02-30',{headers:{Cookie:cookie}})).status,400);
   assert.equal((await fetch(base+'?site=unknown',{headers:{Cookie:cookie}})).status,400);
   assert.equal((await post(base,cookie,{action:'logout',csrf:token(html)})).status,303);
