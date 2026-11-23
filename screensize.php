@@ -120,5 +120,6 @@
     }
   })();
 </script>
+<script defer src="https://jasr.me/github/webstats/assets/js/tracker.js"></script>
 </body>
 </html>

@@ -21,6 +21,7 @@
   } catch { /* Tracking still works without storage; session becomes per-page. */ }
   const track = (kind, target = '', label = '') => {
     if (excluded || document.documentElement.hasAttribute('data-analytics-ignore')) return;
+    if (/(?:^|\/)webstats(?:\/|$)/i.test(new URL(location.href).pathname)) return;
     const body = JSON.stringify({id: randomId(), kind, page: cleanUrl(location.href),
       target: target ? cleanUrl(target) : '', label: /^[a-zA-Z0-9_.:-]{0,80}$/.test(label) ? label : '',
       referrer: document.referrer ? new URL(document.referrer).origin : '', session});

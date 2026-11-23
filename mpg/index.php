@@ -102,5 +102,6 @@ error_reporting(E_ALL);
     <button type="submit">Save Entry</button>
 </form>
 -->
+<script defer src="https://jasr.me/github/webstats/assets/js/tracker.js"></script>
 </body>
 </html>

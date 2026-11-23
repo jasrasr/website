@@ -57,7 +57,9 @@ test('collector, dashboard authentication, filtering, escaping and storage prote
   assert.ok(ready,logs);
   assert.equal((await send(event,'https://evil.test')).status,403);
   assert.equal((await send({...event,page:'https://another.test/'})).status,400);
-  assert.equal((await send({...event,page:'https://source.test/github/webstats/'})).status,400);
+  for (const page of ['/webstats', '/webstats/', '/github/webstats/index.php']) {
+    assert.equal((await send({...event,page:'https://source.test'+page})).status,400);
+  }
   assert.equal((await send('x'.repeat(8193))).status,413);
   assert.equal((await send({...event,kind:'other'})).status,400);
   assert.equal((await send({...event,page:[]})).status,400);

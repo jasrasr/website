@@ -23,4 +23,4 @@ $created = (string) ($meta['updated'] ?? 'unknown');
 <section><h2>Historical graphics</h2><p class="meta">Each version is archived with its original data snapshot and change reason.</p><div id="history"></div></section>
 <section><h2>Release table</h2><p class="meta">Month-only dates intentionally show YYYY-MM; exact days are never inferred. Every model has a first-party source link. Some catalog-linked historical dates require more granular verification.</p><div class="table-wrap"><table><thead><tr><th>Release date</th><th>Platform</th><th>Model</th><th>Status</th><th>Access</th><th>Source</th></tr></thead><tbody id="modelRows"></tbody></table></div></section>
 <footer><small>v<?=htmlspecialchars($version)?> · Modified <?=htmlspecialchars($created)?> · <a href="README.md">Methodology</a></small></footer>
-</main><script src="assets/js/render-core.js"></script><script src="assets/js/timeline.js"></script></body></html>
+</main><script src="assets/js/render-core.js"></script><script src="assets/js/timeline.js"></script><script defer src="https://jasr.me/github/webstats/assets/js/tracker.js"></script></body></html>

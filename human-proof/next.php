@@ -45,5 +45,6 @@ unset($_SESSION['human_verified'], $_SESSION['human_verified_time']);
     <p>This page only rendered because your session was verified on the server.
        Replace this with whatever the next step of your site should be.</p>
   </div>
+<script defer src="https://jasr.me/github/webstats/assets/js/tracker.js"></script>
 </body>
 </html>

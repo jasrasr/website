@@ -11,4 +11,4 @@ $modifiedDate = 'Aug 16, 2026 12:25:10 PM EDT';
 <p class="muted" style="text-align:center;margin-top:1rem">Rev <?=htmlspecialchars($revision)?> • Modified <?=htmlspecialchars($modifiedDate)?></p></main>
 <script src="assets/app.js"></script><script>
 document.getElementById('join').addEventListener('submit',async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target));try{await api('join',d);location.href='play.php?code='+encodeURIComponent(d.code)}catch(err){const el=document.getElementById('error');el.textContent=err.message;el.classList.remove('hidden')}});
-</script></body></html>
+</script><script defer src="https://jasr.me/github/webstats/assets/js/tracker.js"></script></body></html>

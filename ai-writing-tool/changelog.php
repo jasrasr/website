@@ -109,5 +109,6 @@ $changelog = [
         <span>Revision <?= htmlspecialchars($currentRevision, ENT_QUOTES) ?></span>
         <span><a href="index.php">Back to tool</a></span>
     </footer>
+<script defer src="https://jasr.me/github/webstats/assets/js/tracker.js"></script>
 </body>
 </html>

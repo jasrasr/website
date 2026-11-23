@@ -6,4 +6,4 @@ function render(){const s=document.getElementById('screen');if(game.phase==='lob
 function tick(){if(!game||game.phase!=='question')return;const left=Math.max(0,game.ends_at-(Date.now()/1000+offset));const t=document.getElementById('timer'),b=document.getElementById('bar');if(t)t.textContent=Math.ceil(left);if(b)b.style.width=`${left/game.duration*100}%`;requestAnimationFrame(tick)}
 async function submitAnswer(choice){if(answered)return;answered=true;document.querySelectorAll('.answer').forEach(b=>b.disabled=true);try{const r=await api('answer',{code,choice});const e=document.getElementById('answerStatus');e.textContent=r.result.correct?`Correct — ${r.result.points} points`:'Answer locked in.';e.className='status '+(r.result.correct?'correct':'');game=r.game}catch(err){answered=false;alert(err.message)}}
 poll();setInterval(poll,1000);
-</script></body></html>
+</script><script defer src="https://jasr.me/github/webstats/assets/js/tracker.js"></script></body></html>

@@ -65,6 +65,8 @@ The tracked `.htaccess` must always be deployed, even when runtime files are exc
 
 ## Install on all your pages
 
+Public HTML and PHP pages in the `jasr.me` website repository include the tracker directly. Keep the script out of sign-in, account and administration screens. The tracker and collector both ignore pages under `/webstats` and `/github/webstats`. The separate `webstats-demo` pages still collect test events.
+
 For **HTML or PHP output**, include this once near `</body>` (or in a shared rendered header/footer):
 
 ```html

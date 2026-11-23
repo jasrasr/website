@@ -131,5 +131,6 @@
     </footer>
 
     <script src="assets/app.js?v=1.1.0" defer></script>
+<script defer src="https://jasr.me/github/webstats/assets/js/tracker.js"></script>
 </body>
 </html>

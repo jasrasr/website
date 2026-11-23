@@ -72,5 +72,6 @@ fc_browser_hash();
     <p class="disclaimer"><strong>This is not artificial intelligence.</strong> A collection of human-written jokes competes for keyword matches. Do not enter personal, confidential, or sensitive information. Site administrators can review submitted questions. Your anonymous questions expire after 90 days; linked questions are retained until you delete them, subject to the site's total history cap.</p>
     <footer>Very Fake AI · Rev 2.0.0 · Updated 2026-11-20 · Original PowerShell chatbot preserved in <a href="https://github.com/jasrasr/website/tree/main/fake-chatbot/legacy">legacy/</a></footer>
   </div>
+<script defer src="https://jasr.me/github/webstats/assets/js/tracker.js"></script>
 </body>
 </html>

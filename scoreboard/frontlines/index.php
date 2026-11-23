@@ -44,5 +44,6 @@
     </div>
     <script src="../public/app.js?v=<?= filemtime(__DIR__ . '/../public/app.js') ?>" defer></script>
     <script src="../public/theme-toggle.js?v=<?= filemtime(__DIR__ . '/../public/theme-toggle.js') ?>" defer></script>
+  <script defer src="https://jasr.me/github/webstats/assets/js/tracker.js"></script>
   </body>
 </html>

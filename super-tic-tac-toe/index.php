@@ -113,5 +113,6 @@ $loginUrl = $identity ? $identity->loginUrl($_SERVER['REQUEST_URI'] ?? '/super-t
     </div>
     <footer><span>Think ahead. Have fun.</span><span id="userHistoryLink"></span></footer>
   </main>
+<script defer src="https://jasr.me/github/webstats/assets/js/tracker.js"></script>
 </body>
 </html>

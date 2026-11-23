@@ -133,6 +133,7 @@ function normalize_event(array $event, string $origin): ?array {
     $page = clean_url($event['page']);
     if (!$page || url_origin($page) !== $origin) return null;
     $path = rawurldecode(parse_url($page, PHP_URL_PATH) ?: '/');
+    if (preg_match('~(?:^|/)webstats(?:/|$)~i', $path)) return null;
     foreach ($cfg['excluded_paths'] as $prefix) {
         if ($path === rtrim($prefix, '/') || str_starts_with($path, $prefix)) return null;
     }

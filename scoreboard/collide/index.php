@@ -33,5 +33,6 @@
     <script src="collide-extras.js?v=<?= filemtime(__DIR__ . '/collide-extras.js') ?>" defer></script>
     <script src="collide-viewer-polish.js?v=<?= filemtime(__DIR__ . '/collide-viewer-polish.js') ?>" defer></script>
     <script src="../public/theme-toggle.js?v=<?= filemtime(__DIR__ . '/../public/theme-toggle.js') ?>" defer></script>
+  <script defer src="https://jasr.me/github/webstats/assets/js/tracker.js"></script>
   </body>
 </html>

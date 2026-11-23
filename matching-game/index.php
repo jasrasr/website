@@ -77,5 +77,6 @@ $loginUrl = $identity ? $identity->loginUrl($_SERVER['REQUEST_URI'] ?? '/github/
       <section id="history-panel" class="history-panel" aria-labelledby="history-title" hidden><h2 id="history-title">Saved games</h2><p id="history-summary">Loading…</p><ol id="history-list"></ol></section>
     <?php endif; ?>
   </main>
+<script defer src="https://jasr.me/github/webstats/assets/js/tracker.js"></script>
 </body>
 </html>
