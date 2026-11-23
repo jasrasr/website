@@ -3,10 +3,10 @@
  * File Name: market-quotes.test.php
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Synthetic quote parser, credits, caching and immutable-ledger valuation regressions.
- * Revision: 1.0.0
+ * Revision: 1.0.1
  * Created Date: 2026-11-22
  * Modified Date: 2026-11-22
- * Changelog: 1.0.0 - Test current quotes without purchase/basis changes, API limits, stale quotes, missing data and disabled integration.
+ * Changelog: 1.0.1 - Verify same-day chart refresh and last_quote_at timestamp priority. 1.0.0 - Test current quotes without purchase/basis changes, API limits, stale quotes, missing data and disabled integration.
  */
 declare(strict_types=1);
 require_once dirname(__DIR__,2).'/1-Framework/bootstrap.php';
@@ -41,6 +41,11 @@ must_quote(count(it_mq_parse_response(json_encode($multi),['ABCD','EFGH'],$now))
     'Batch quotes are mapped to their own tickers.');
 $single=it_mq_parse_response(json_encode($fakeQuote('ABCD',16.5,$now)),['ABCD'],$now);
 must_quote(isset($single['ABCD']),'Single-ticker response shape is supported.');
+$precise=$fakeQuote('ABCD',12.34,$now-3600);
+$precise['last_quote_at']=$now-12;
+$exact=it_mq_parse_quote($precise,'ABCD',$now);
+must_quote($exact!==null && $exact['as_of']===gmdate(DATE_ATOM,$now-12),
+    'Latest exchange quote time takes precedence over quote-bar opening time.');
 
 $root=sys_get_temp_dir().'/investment-quotes-'.bin2hex(random_bytes(5));
 mkdir($root,0700,true);$cache=$root.'/market-quotes.json';
@@ -133,6 +138,16 @@ must_quote(json_encode($events,JSON_THROW_ON_ERROR)===$original,
     'Revaluation did not modify or append any original ledger transaction event.');
 must_quote(count($up['series']['ABCD'])===count($before['series']['ABCD'])+1,
     'Current quote extends the temporary chart only, not permanent history.');
+$recentSameDay=it_event(['date'=>gmdate('Y-m-d',$now),'ticker'=>'ABCD','type'=>'price','price'=>10]);
+$eventsSameDay=array_merge($events,[$recentSameDay]);
+$sameDayBase=it_calculate($eventsSameDay);
+$sameDayOverlay=it_calculate($eventsSameDay,['ABCD'=>[
+    'price'=>12.5,'as_of'=>$nowIso,'source'=>'Twelve Data',
+    'currency'=>'USD','stale'=>false,
+]]);
+must_quote(count($sameDayBase['series']['ABCD'])===count($sameDayOverlay['series']['ABCD']) &&
+    abs($sameDayOverlay['series']['ABCD'][count($sameDayOverlay['series']['ABCD'])-1]['price']-12.5)<1e-9,
+    'Same-day provider quote replaces the temporary chart endpoint without inserting extra event rows.');
 $oldOverlay=it_calculate($events,['ABCD'=>[
     'price'=>2,'as_of'=>gmdate(DATE_ATOM,$now-12*86400),
     'source'=>'Twelve Data','currency'=>'USD',
