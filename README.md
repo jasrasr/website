@@ -178,3 +178,8 @@ The [repository-wide TODO list](ALL-TODOS.md) collects the TODO files kept in ea
 
 Track shared-login adoption in the [User Management migration tracker](user-management/MIGRATION-TRACKER.md). Each application has its own migration checklist; completion requires verified data preservation and live access checks.
 
+
+
+### AI Model Release Timeline
+
+- [AI Model Timeline](https://jasr.me/ai-model-timeline/) — source-linked, versioned model release table and deterministic SVG/PNG timeline. [Project files](ai-model-timeline/) · [Historical graphics](ai-model-timeline/archive/manifest.json)
