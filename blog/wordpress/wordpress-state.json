@@ -195,6 +195,16 @@
       "last_sync": "2026-09-21T22:56:53.2525506-04:00",
       "note": "Updated by Publish-WordPress.ps1"
     },
+    "feed-the-pet": {
+      "source_file": "feed-the-pet.json",
+      "wordpress_post_id": 4653,
+      "wordpress_media_id": 4651,
+      "scheduled_date_eastern": "2026-12-01T12:00:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4653",
+      "last_sync": "2026-11-22T21:46:31.3118286-05:00",
+      "note": "Created by Publish-WordPress.ps1"
+    },
     "freshservice-ticket-progress-dashboard": {
       "source_file": "freshservice-ticket-progress-dashboard.json",
       "wordpress_post_id": 4310,
@@ -314,6 +324,16 @@
       "wordpress_url": "https://jasonlamb.me/?p=4304",
       "last_sync": "2026-09-21T22:57:46.8999982-04:00",
       "note": "Updated by Publish-WordPress.ps1"
+    },
+    "matching-game": {
+      "source_file": "matching-game.json",
+      "wordpress_post_id": 4650,
+      "wordpress_media_id": 4647,
+      "scheduled_date_eastern": "2026-11-30T12:00:00",
+      "status": "future",
+      "wordpress_url": "https://jasonlamb.me/?p=4650",
+      "last_sync": "2026-11-22T21:46:19.7871170-05:00",
+      "note": "Created by Publish-WordPress.ps1"
     },
     "mpg-tracker-partial-fill-ups": {
       "source_file": "mpg-tracker-partial-fill-ups.json",
