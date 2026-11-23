@@ -10,15 +10,47 @@ const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'webstats-test-'));
 const config = path.join(temp,'config.php');
 const quote = s => "'" + s.replaceAll('\\','\\\\').replaceAll("'","\\'") + "'";
 execFileSync('php', ['-r', `$c=require ${quote(root+'/webstats/config.example.php')}; $c['storage']=${quote(temp)}; $c['username']='tester'; $c['password_hash']=password_hash('correct-horse-staple',PASSWORD_DEFAULT); $c['secret']=str_repeat('a',64); $c['origins']=['https://source.test'=>'source.test']; file_put_contents(${quote(config)},'<?php return '.var_export($c,true).';');`]);
-const server = spawn('php',['-S','127.0.0.1:18765','-t',root],{env:{...process.env,JASR_WEBSTATS_CONFIG:config},stdio:['ignore','pipe','pipe']});
+const httpRoot = path.join(temp, 'http');
+fs.mkdirSync(httpRoot);
+for (const name of ['webstats', '1-Framework', 'user-management', 'webstats-demo']) {
+  fs.cpSync(path.join(root, name), path.join(httpRoot, name), {
+    recursive: true, filter: source => !['data', 'config.local.php'].includes(path.basename(source))
+  });
+}
+const identityData = path.join(temp, 'identity');
+fs.mkdirSync(identityData);
+fs.writeFileSync(path.join(httpRoot, 'user-management/config.local.php'),
+  '<?php return ["data_path"=>'+quote(identityData)+',"secure_cookie"=>false];');
+const identityBootstrap = quote(path.join(httpRoot, 'user-management/bootstrap.php'));
+const identity = '$directory=new \\Jasr\\Users\\Directory('+quote(identityData)+'); ';
+const phpIdentity = code => execFileSync('php', ['-r', 'require '+identityBootstrap+'; '+identity+code]);
+phpIdentity('$directory->setup("owner","Owner","correct-horse-staple"); '+
+  '$owner=current($directory->read()["users"]); '+
+  '$directory->administer($owner["id"],$owner["version"],"save-project",["project"=>"webstats","name"=>"Webstats","path"=>"/webstats/"]); '+
+  '$directory->administer($owner["id"],$owner["version"],"create-user",["username"=>"reader","name"=>"Reader","password"=>"reader-temporary-secret"]); '+
+  '$reader=array_values($directory->read()["users"])[1]; '+
+  '$directory->changePassword($reader["id"],$reader["version"],"reader-temporary-secret","reader-normal-secret");');
+const server = spawn('php',['-S','127.0.0.1:18765','-t',httpRoot],{env:{...process.env,JASR_WEBSTATS_CONFIG:config},stdio:['ignore','pipe','pipe']});
 let logs='';server.stderr.on('data',d=>logs+=d);
 after(()=>{server.kill();fs.rmSync(temp,{recursive:true,force:true});});
 const base='http://127.0.0.1:18765/webstats/';
 const event={id:'1'.repeat(32),kind:'pageview',page:'https://source.test/index.php?secret=remove#private',target:'',label:'',referrer:'https://ref.test/path?secret=remove',session:'a'.repeat(32)};
 const send=(value,origin='https://source.test')=>fetch(base+'collect.php',{method:'POST',headers:{Origin:origin,'Content-Type':'text/plain'},body:typeof value==='string'?value:JSON.stringify(value)});
-let cookie='',csrf='';
-async function getLogin(){const r=await fetch(base);cookie=r.headers.get('set-cookie').split(';')[0]; const html=await r.text();csrf=html.match(/name="csrf" value="([a-f0-9]+)"/)[1];return r;}
-async function login(password,token=csrf){return fetch(base,{method:'POST',redirect:'manual',headers:{Cookie:cookie,'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({username:'tester',password,csrf:token})});}
+const portal = new URL('../user-management/', base);
+const token = html => html.match(/name="csrf" value="([a-f0-9]+)"/)[1];
+const cookieOf = r => r.headers.get('set-cookie').split(';')[0];
+const post = (url, cookie, fields) => fetch(url, {
+  method:'POST', redirect:'manual', headers:{Cookie:cookie,'Content-Type':'application/x-www-form-urlencoded'},
+  body:new URLSearchParams(fields)
+});
+async function signIn(username, password) {
+  const loginPage = await fetch(portal);
+  const signedIn = await post(portal, cookieOf(loginPage), {
+    action:'login', csrf:token(await loginPage.text()), username, password, return:'/webstats/'
+  });
+  assert.equal(signedIn.status,303);
+  return cookieOf(signedIn);
+}
 test('collector, dashboard authentication, filtering, escaping and storage protections',async()=>{
   let ready=false;
   for(let i=0;i<60;i++){try{await fetch(base);ready=true;break;}catch{await new Promise(r=>setTimeout(r,100));}}
@@ -36,13 +68,18 @@ test('collector, dashboard authentication, filtering, escaping and storage prote
   assert.equal(Object.keys(data.records).length,1);
   const saved=Object.values(data.records)[0];assert.equal(saved.page,'https://source.test/index.php');assert.equal(saved.referrer,'https://ref.test');assert.notEqual(saved.session,event.session);
   assert.equal((await fetch(base+'setup.php')).status,404);
-  await getLogin();assert.equal((await login('correct-horse-staple','invalid')).status,403);
-  assert.equal((await login('wrong')).status,401);
-  const signedIn=await login('correct-horse-staple');assert.equal(signedIn.status,303);
-  const newCookie=signedIn.headers.get('set-cookie').split(';')[0];assert.notEqual(newCookie,cookie);cookie=newCookie;
+  const anonymous = await fetch(base,{redirect:'manual'});
+  assert.equal(anonymous.status,303);
+  assert.equal(anonymous.headers.get('location'),'/user-management/?return=%2Fwebstats%2F');
+  const reader = await signIn('reader','reader-normal-secret');
+  assert.equal((await fetch(base,{headers:{Cookie:reader}})).status,403);
+  const cookie = await signIn('owner','correct-horse-staple');
+  assert.equal((await post(base,cookie,{action:'logout',csrf:'invalid'})).status,403);
   const report=await fetch(base,{headers:{Cookie:cookie}});const html=await report.text();assert.equal(report.status,200);assert.match(html,/Top pages/);assert.match(html,/source.test\/index.php/);assert.doesNotMatch(html,/secret=remove/);
   assert.equal((await fetch(base+'?start=2026-02-30',{headers:{Cookie:cookie}})).status,400);
   assert.equal((await fetch(base+'?site=unknown',{headers:{Cookie:cookie}})).status,400);
+  assert.equal((await post(base,cookie,{action:'logout',csrf:token(html)})).status,303);
+  assert.equal((await fetch(base,{redirect:'manual',headers:{Cookie:cookie}})).status,303);
   // Daily storage is bounded and fail-closed; simulate capacity without flooding.
   execFileSync('php',['-r',`putenv('JASR_WEBSTATS_CONFIG=${config}'); require ${quote(root+'/webstats/bootstrap.php')}; if(allowance('test',1,60)!==true || allowance('test',1,60)!==false) exit(1);`]);
   const fixture=path.join(temp,'pages'); fs.mkdirSync(fixture);
@@ -70,7 +107,7 @@ test('collector, dashboard authentication, filtering, escaping and storage prote
   const reject = candidate => execFileSync('php',['-r',
     'require '+boot+'; try {validate_storage_path('+quote(candidate)+'); exit(2);} catch (RuntimeException $e) {echo "rejected";}'], {encoding:'utf8'});
   assert.equal(reject(root+'/webstats'),'rejected');
-  const symlink=path.join(temp,'unsafe-link');fs.symlinkSync(root+'/webstats',symlink);
+  const symlink=path.join(temp,'unsafe-link');fs.symlinkSync(root+'/webstats',symlink,process.platform==='win32'?'junction':'dir');
   assert.equal(reject(symlink),'rejected');
 
   // Replace a disposable source deployment; retain and reread external events.

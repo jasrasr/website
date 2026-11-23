@@ -21,23 +21,19 @@ Frontend assets are in `assets/css/` and `assets/js/`. Project-specific configur
 ## Hosting requirements
 
 - PHP **8.1+**, HTTPS, PHP sessions, a writable, HTTP-protected `webstats/data/` directory (or existing private external storage), and local filesystem support for `flock()` and atomic rename.
-- Deploy `webstats/` and updated `1-Framework/` together under the same parent directory.
+- Deploy `webstats/`, `1-Framework/`, and `user-management/` together under the same parent directory.
 - Apache/LiteSpeed supports the included `.htaccess`. On other servers, disable directory listings and deny HTTP access to config, internal helpers, CLI scripts and tests. The complete runtime data URL prefix must be denied by the web server.
 - If HTTPS terminates at a proxy, configure the host to set PHP's `HTTPS` server variable correctly; this application intentionally does not trust arbitrary forwarded headers.
 
-## First run — no terminal setup required
+## Set up dashboard access
 
-Deploy the updated `webstats/` folder, including `data/.htaccess`, alongside `1-Framework/`. Open the HTTPS dashboard and sign in as **admin** using the temporary password supplied privately with this installation. Its plaintext is not stored in the repository.
+Deploy Webstats alongside `1-Framework/` and `user-management/` on the same HTTPS host. In User Management, register the project ID `webstats` with the dashboard path `/github/webstats/` (or your actual deployment path). Give each authorized operator the Admin project role and an account role that permits it. Site-wide administrators with all-project access inherit access. The identity cookie path must cover both the portal and the dashboard.
 
-When no existing configuration is present, Webstats automatically saves its initial account and random application secret in `webstats/data/settings.json`. You must choose and confirm a new password before any reports are accessible. Use 12–72 bytes; the temporary password cannot be reused. After changing it, sign in again with your new password. Old temporary-password sessions are invalidated.
+Sign in through User Management. Complete any required password change in the portal. Signing out from Webstats ends the shared session. Accounts without Webstats Admin access receive HTTP 403.
 
-The new password is stored as a password hash in ignored `data/admin.json`. Normal updates do not replace it. Webstats does not overwrite existing settings or rerun first-time account creation on every visit. If settings disappear while events or a changed administrator exist, initialization stops instead of resetting the account. Restore the files from backup.
+The public collector initializes its local settings on first use. Preserve existing `config.local.php` or `JASR_WEBSTATS_CONFIG`, the analytics secret, and the entire runtime data directory when deploying. The legacy administrator records may remain in backups for rollback. The dashboard uses the shared account directory for sign-in.
 
-Existing `config.local.php` or `JASR_WEBSTATS_CONFIG` installations keep their configured credentials and storage. No existing records are moved or deleted automatically. To intentionally move existing external data into the new default, stop collection, back up and copy all runtime files into `webstats/data/` (preserve its `.htaccess`), then set your existing configuration's `storage` to `__DIR__ . '/data'`. Do not discard the old configuration or secret.
-
-The directory must be writable by PHP, and the web server must honor its access rules. Apache/LiteSpeed uses the shipped `.htaccess`. Nginx requires an equivalent deny rule for the entire data URL prefix before deployment. PHP's built-in development server does not honor `.htaccess`; do not publicly serve this application with it.
-
-Optional advanced configuration: create `config.local.php` from the example or use `JASR_WEBSTATS_CONFIG`. The CLI `setup.php` remains available for administrators who want custom credentials/storage. Default origins cover the previously configured example domains; customize the origin list if using another domain.
+Keep the runtime data directory writable by PHP and protected against direct HTTP access. Deploy the included `data/.htaccess` on Apache or LiteSpeed. On Nginx, deny the entire data URL prefix in server configuration.
 
 ## Test the dashboard with the sample pages
 
@@ -122,7 +118,7 @@ To exclude your own browser, execute `JasrWebstats.exclude()` on each tracked or
 - Origin allowlisting and validation reduce accidental misuse; public browser analytics endpoints can still be spoofed by non-browser clients. These counts are not billing-grade, bot-proof or fraud-proof. Ad blockers, disabled JavaScript, offline requests and interrupted navigation can undercount. Failed events are not retried.
 - JSON is intended for modest personal-site traffic: each accepted event rewrites one bounded daily file. Reports allow up to 90 days. For sustained high traffic, migrate the storage adapter rather than raising limits indefinitely.
 - Configure a daily hosting cron job: `php /ABSOLUTE/PATH/github/webstats/prune.php`. It removes daily files older than `retention_days` (180 by default); without the cron job nothing is automatically deleted. Back up private config and storage independently of Git, with the same retention policy.
-- Authentication uses password hashing, strict scoped HttpOnly/Secure cookies in production, CSRF tokens, ID rotation, and 30-minute inactivity expiry. The dashboard has no public reporting API. Password changes invalidate sessions using the previous credential version.
+- User Management handles passwords, shared sessions and account revocation. Dashboard sign-out requires a CSRF token. The dashboard has no public reporting API.
 
 ## Verification and rollout
 
@@ -139,7 +135,7 @@ Before broad deployment:
 2. Test another domain and WordPress while logged out. Check the collector network request succeeds with HTTP 200 and `success: true`.
 3. Open the dashboard on a phone; check site/date filters, top pages, recent activity and zero-data dates.
 4. Confirm query strings/fragments never appear in reports; try a named button and an excluded element.
-5. Confirm the dashboard requires login and the first password change, direct storage URLs return 403, and HTTPS/session cookies are correct.
+5. Confirm the dashboard requires login and any required shared password change, direct storage URLs return 403, and HTTPS/session cookies are correct.
 6. Inspect the installer diff, deploy remaining pages, and schedule retention. Roll back tracking by removing the script/plugin; stored data remains private.
 
 See `CHANGELOG.md` and `ROADMAP.md` for scope and next steps.

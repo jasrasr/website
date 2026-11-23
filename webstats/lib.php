@@ -65,8 +65,10 @@ function validate_storage_path(string $path): string {
     $roots = [realpath(dirname(__DIR__))];
     $documentRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
     if ($documentRoot !== '') $roots[] = realpath($documentRoot);
+    $comparison = DIRECTORY_SEPARATOR === '\\' ? strtolower(str_replace('\\', '/', $dir)) : $dir;
     foreach ($roots as $root) {
-        if ($root && ($dir === $root || str_starts_with($dir, rtrim($root, '/') . '/'))) {
+        if ($root && DIRECTORY_SEPARATOR === '\\') $root = strtolower(str_replace('\\', '/', $root));
+        if ($root && ($comparison === $root || str_starts_with($comparison, rtrim($root, '/') . '/'))) {
             throw new RuntimeException('Use webstats/data or private external storage.');
         }
     }
