@@ -42,6 +42,7 @@ Use the existing 1-Framework/README.md, 1-Framework/AI-INSTRUCTIONS.md and user-
 - Visitors are warned not to enter confidential information. Authorized project administrators can inspect all submitted questions to teach the joke bot.
 - Signing in does NOT automatically link anonymous questions. The user explicitly selects **Link this browser's anonymous history** on the account page. Later questions are saved to that account only while the corresponding central account remains signed in.
 - **Clear screen** removes only visible messages. **Clear anonymous history here** hides this browser's unlinked questions from the visitor view while retaining them for admin review until the normal 90-day expiry. Hidden questions are not linked to an account later. The account page can unlink future saving or delete all questions owned by that account.
+- In the question field, Up Arrow recalls saved submissions from newest to oldest; Down Arrow moves toward the newest and restores the unsent draft.
 - Default per-cookie rate limits: 20 questions/minute and 300/day; global limits: 120/minute and 6,000/day.
 
 The tracked storage/.placeholder preserves an empty runtime directory. All runtime JSON and lock files are ignored by Git. PHP must have write permission to storage/. **Do not** wipe runtime files during Hostinger sync and include them in secure backups.

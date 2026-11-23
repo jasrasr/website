@@ -1,12 +1,12 @@
 <?php
 /*
 File Name: index.php
-Revision: 2.0.1
+Revision: 2.0.2
 Description: Anonymous fake AI chat portal backed by framework JsonStore and optional identity linking.
 Author: Jason Lamb (with help from ChatGPT)
 Created Date: 2026-11-20
 Modified Date: 2026-11-22
-Changelog: 2.0.1 - Clarify visitor history clearing while retaining admin records. 2.0.0 - Add persistent anonymous chat, explicit fake AI labels and account/history links.
+Changelog: 2.0.2 - Expose updated question-history keyboard navigation script. 2.0.1 - Clarify visitor history clearing while retaining admin records. 2.0.0 - Add persistent anonymous chat, explicit fake AI labels and account/history links.
 */
 declare(strict_types=1);
 require_once __DIR__ . '/bootstrap.php';
@@ -23,7 +23,7 @@ fc_browser_hash();
   <meta name="description" content="Laughably fake AI. Real question history, pretend answers, and zero AI.">
   <title>Very Fake AI | JASR</title>
   <link rel="stylesheet" href="assets/style.css?v=2.0.0">
-  <script src="assets/app.js?v=2.0.1" defer></script>
+  <script src="assets/app.js?v=2.0.2" defer></script>
 </head>
 <body>
   <div class="app">
@@ -54,7 +54,7 @@ fc_browser_hash();
         <div class="message bot"><span class="speaker">FAKE BOT</span><p>Initializing imaginary intelligence...</p></div>
       </section>
       <form id="chat-form" autocomplete="off">
-        <label for="message">Ask anything. Accuracy sold separately.</label>
+        <label for="message">Ask anything. Accuracy sold separately. Use ↑ and ↓ to revisit prior questions.</label>
         <div class="composer">
           <input id="message" name="question" type="text" maxlength="500" placeholder="Try: potato salad, Mr. Potato Head, printer, meaning of life..." required>
           <button id="send" type="submit" disabled>Ask the fake brain</button>
@@ -70,7 +70,7 @@ fc_browser_hash();
       <button type="button" id="forget" class="secondary">Clear anonymous history here</button>
     </section>
     <p class="disclaimer"><strong>This is not artificial intelligence.</strong> A collection of human-written jokes competes for keyword matches. Do not enter personal, confidential, or sensitive information. Site administrators can review submitted questions. Your anonymous questions expire after 90 days; linked questions are retained until you delete them, subject to the site's total history cap.</p>
-    <footer>Very Fake AI · Rev 2.0.1 · Updated 2026-11-22 · Original PowerShell chatbot preserved in <a href="https://github.com/jasrasr/website/tree/main/fake-chatbot/legacy">legacy/</a></footer>
+    <footer>Very Fake AI · Rev 2.0.2 · Updated 2026-11-22 · Original PowerShell chatbot preserved in <a href="https://github.com/jasrasr/website/tree/main/fake-chatbot/legacy">legacy/</a></footer>
   </div>
 </body>
 </html>
