@@ -9,3 +9,8 @@ document.querySelector('#count').textContent=ms.length+' named model milestones'
 document.querySelector('#svgBtn').onclick=()=>dl(new Blob([svg],{type:'image/svg+xml;charset=utf-8'}),'ai-model-timeline-v'+d.project_version+'-'+d.updated+'.svg');
 document.querySelector('#pngBtn').onclick=()=>{const img=new Image(),u=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));img.onload=()=>{const cn=document.createElement('canvas');cn.width=img.naturalWidth;cn.height=img.naturalHeight;cn.getContext('2d').drawImage(img,0,0);cn.toBlob(b=>{if(b)dl(b,'ai-model-timeline-v'+d.project_version+'-'+d.updated+'.png');URL.revokeObjectURL(u);},'image/png');};img.src=u;};
 }catch(err){document.querySelector('#timeline').textContent='Unable to load release data: '+err.message;}})();
+fetch('archive/manifest.json',{cache:'no-store'}).then(r=>r.json()).then(data=>{
+const history=document.querySelector('#history');if(!history)return;
+const safeText=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+history.innerHTML=(data.releases||[]).map(r=>'<article class="history-item"><strong>v'+safeText(r.version)+'</strong> · '+safeText(r.created)+' · '+safeText(r.models)+' models<p>'+safeText(r.reason)+'</p><a href="'+encodeURI(r.graphic)+'">SVG graphic</a> · <a href="'+encodeURI(r.dataset)+'">JSON snapshot</a></article>').join('');
+}).catch(()=>{});
