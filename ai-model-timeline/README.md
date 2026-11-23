@@ -1,30 +1,43 @@
-# AI Model Timeline
+# Frontier AI Model Release Timeline
 
-Single-source timeline of notable AI model releases.
+Live path: `/ai-model-timeline/` when deployed from `jasrasr/website`.
 
-## Source of truth
-`data/models.json` is the only editable model dataset. The table and SVG timeline are both rendered from it.
+## Why this project exists
+Earlier AI-generated infographic images introduced model-name, date, duplication and box-size errors. This project fixes that by producing both a release table and a scalable SVG graphic from one file: `data/models.json`.
 
-## Versioned graphics
-Every published graphic is immutable and archived under `archive/<version>/`.
+## Project rules
+- One record per distinct named model; unique immutable `id`, provider, model, release_date, status, access, primary source URL and date precision.
+- Date precision is explicit: `YYYY-MM-DD` for day, `YYYY-MM` for month. Never invent the first day of a month.
+- UI modes, default recommendations, organization settings, effort levels and pricing presets are not model releases.
+- Different access tiers of the same underlying model can be annotated on one record (for example Fable/Mythos).
+- A later general-availability or open-weight launch is an *access-status event*, not a duplicate model row.
+- Provider catalog links are primary links but may not prove each exact model/date. They are labeled `provider_catalog`; direct release articles are labeled `model_announcement`.
 
-Naming:
+## Release inventory
+v1.0.0 (2026-11-23) is a 122-record initial inventory from nine providers. 23 records link directly to model announcements; 99 link to broader first-party catalogs that still warrant per-model source verification. Therefore v1.0.0 is a reproducible **baseline**, not a claim that 122 exact dates were independently corroborated.
+
+## Source of truth / renderer
+- `data/models.json`: current dataset.
+- `assets/js/timeline.js`: shared pure SVG function `renderTimelineSvg()`; page view, SVG export, PNG export use the same records.
+- `index.php`: read-only UI and version footer.
+- `archive/manifest.json`: historical release index.
+- `archive/vX.Y.Z/`: immutable release graphic and its exact matching data snapshot.
+
+## Archive / naming
 - `ai-model-timeline-vX.Y.Z-YYYY-MM-DD.svg`
-- `ai-model-timeline-vX.Y.Z-YYYY-MM-DD.png` (when exported)
+- `ai-model-timeline-vX.Y.Z-YYYY-MM-DD.png` (PNG is available through browser export)
 - `models-vX.Y.Z-YYYY-MM-DD.json`
 
-Never overwrite an archived graphic. A data correction or model addition requires a new project version and a new archived graphic.
+The archived SVG must be generated from its snapshot and the same renderer before release. Older releases must **never** be overwritten after merge. For subsequent corrections, increment project version, create a new archive folder and record changes under `CHANGELOG.md`.
 
-## Changelog
-Every graphic release must add a CHANGELOG entry containing:
-- version and creation date
-- graphic filename
-- reason a new graphic was created
-- models/statuses/dates added, corrected, or removed
-- source-verification notes
+## Release requirements
+Before publishing:
+1. Validate JSON and reject repeated IDs / repeated provider-model combinations.
+2. Check that the SVG has one model capsule per data row and that model labels and dates originate from the snapshot.
+3. Confirm the on-page table and SVG are both rendered from the same dataset.
+4. Verify sources and release dates, recording unresolved source gaps.
+5. Record the version, date, filenames, reason, model changes and correction list in `CHANGELOG.md`.
+6. Commit both the immutable SVG and JSON snapshot, then update `archive/manifest.json`.
 
-## Status rules
-Released, announced/pending, restricted-access, and retired are distinct statuses. UI modes, effort settings, org defaults, wrappers, and aliases are excluded unless they are distinct documented models.
-
-## Accuracy
-Prefer first-party release notes, model cards, API changelogs, and official announcements. Each record supports a source URL and verification date.
+## Safety / hosting
+No database, login, writable server storage, API token, AI API or scheduled web crawler is required. The project is read-only and compatible with a basic PHP/static hosting plan. The user's existing weekly AI release check can provide candidate changes for manual review; do not automatically add unverified models to the canonical dataset.
