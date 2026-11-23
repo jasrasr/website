@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.13.1 - 2026-11-23
+
+- Increase per-photo maximum zoom from 200% to 300%.
+- Keep the selected horizontal and vertical focal point anchored while zooming so edge-aligned subjects remain visible.
+- Apply the corrected zoom-and-focus behavior to crop previews, signed-in and public gallery tiles, collages, and GIFs.
+
 ## 2.13.0 - 2026-11-21
 
 - Add a per-photo 100–200% zoom control beside horizontal and vertical focus.
