@@ -2,14 +2,15 @@
  * File Name: app.js
  * Author: Jason Lamb (with help from ChatGPT)
  * Description: Accessible performance and broker-reported tax-basis views with private ledger controls.
- * Revision: 1.9.1
+ * Revision: 2.0.0
  * Created Date: 2026-10-29
- * Modified Date: 2026-11-16
- * Changelog: 1.9.1 - Explain multi-security corporate-action evidence requirements without misleading users into importing unknown basis. 1.7.0 - Explain gross reinvested dividends, net DRIP shares and tax/ADR fee withholding separately. 1.6.0 - Distinguish investment-performance basis from broker-reported tax basis and show confirmed versus unresolved sale-lot status. 1.5.2 - Explain matched Robinhood cancellations and closed-position returns, and remove canceled orders from review lots. 1.5.0 - Preview and import all eligible Robinhood symbols in one confirmed batch; show exceptions separately. 1.4.2 - Show unknown receipt basis and prevent false partial-sale tax calculations. 1.4.0 - Allow provisional Robinhood activity import without tax-lot attestation; display basis gaps prominently. 1.3.3 - Provide noncommitting FIFO allocation suggestions with explicit broker-verification warning. 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
+ * Modified Date: 2026-11-22
+ * Changelog: 2.0.0 - Auto-refresh quoted open holdings while page is visible; show quote age, stale flags and manual Refresh Prices action. 1.9.1 - Explain multi-security corporate-action evidence requirements without misleading users into importing unknown basis. 1.7.0 - Explain gross reinvested dividends, net DRIP shares and tax/ADR fee withholding separately. 1.6.0 - Distinguish investment-performance basis from broker-reported tax basis and show confirmed versus unresolved sale-lot status. 1.5.2 - Explain matched Robinhood cancellations and closed-position returns, and remove canceled orders from review lots. 1.5.0 - Preview and import all eligible Robinhood symbols in one confirmed batch; show exceptions separately. 1.4.2 - Show unknown receipt basis and prevent false partial-sale tax calculations. 1.4.0 - Allow provisional Robinhood activity import without tax-lot attestation; display basis gaps prominently. 1.3.3 - Provide noncommitting FIFO allocation suggestions with explicit broker-verification warning. 1.3.2 - Show export end date and clearly mark execution prices as not live. 1.3.1 - Distinguish fees and stock-lending income in holding summaries. 1.3.0 - Interactive per-ticker Robinhood draft review, share verification and atomic commit. 1.2.1 - Detect raw Robinhood CSV in either upload field and route it to preview without enabling import. 1.2.0 - Safe Robinhood CSV preview and exception dashboard. 1.1.0 - Original and adjusted quantities, tax term and isolated NVIDIA demo. 1.0.0 - Initial mobile dashboard, split-aware tax lot charts and CSV review.
  */
 'use strict';
 const $ = s => document.querySelector(s);
-let state={events:[],analysis:{holdings:{},series:{},totals:{},missing_prices:[]},csrf:''};
+let state={events:[],analysis:{holdings:{},series:{},totals:{},missing_prices:[]},csrf:'',quoteStatus:null};
+let priceRefreshing=false;
 let selectedTicker='', selectedLot='',csvPreviewKey='';
 let rhStage=null,rhSelected=null,rhBatchPreview=null;
 let eventPage=0;
@@ -184,6 +185,14 @@ function renderHoldings() {
    if(h.tax_basis_uncertain)card.append(el('p','subtle','Remaining tax basis UNKNOWN until the broker’s sale lots are confirmed.'));
    else if(h.tax_basis_differs)card.append(el('p','subtle','Broker-reported tax basis '+money(h.tax_basis)));
   }
+  if(!closed) {
+   const description=h.price_source==='Twelve Data'
+    ?'Twelve Data regular-session quote · '+new Date(h.price_as_of).toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'})
+    :'Recorded historical/manual observation'+(h.price_date?' · '+day(h.price_date):'');
+   card.append(el('p',h.price_stale?'rhWarning':'hint',
+     (h.price_stale?'STALE PRICE · ':'')+description+
+     (h.price_stale?' · Current market value and XIRR may be out of date.':'')));
+  }
   if(h.basis_unknown){
    card.append(el('p','rhWarning','UNKNOWN BASIS: received shares have no verified tax basis or holding period. Gain and return cannot be calculated reliably.'));
   } else if(h.allocation_estimated && h.sale_allocation_ambiguous){
@@ -265,6 +274,38 @@ function renderEvents() {
   body.append(tr);
  });
 }
+function renderQuoteStatus(result=null) {
+ const button=$('#refreshMarketPrices');
+ const status=$('#marketQuoteStatus');
+ if(!button||!status)return;
+ const q=state.quoteStatus;
+ button.disabled=demoMode||priceRefreshing||!q?.enabled;
+ if(demoMode){status.textContent='Read-only historical demonstration: no market API calls.';return;}
+ if(!q?.enabled){status.textContent='Automatic quotes are not configured. Historical/manual prices remain available. Add the private Twelve Data API key on Hostinger.';return;}
+ const total=q.tracked||0,covered=q.priced||0,stale=q.stale||0;
+ let summary=covered+' of '+total+' open positions have cached provider quotes';
+ if(stale)summary+=' · '+stale+' stale';
+ summary+=' · source: Twelve Data regular-session data';
+ if(result?.message)summary+=' · '+result.message;
+ status.textContent=summary+'. Price timestamps appear on each stock.';
+}
+async function refreshMarketPrices(manual=false) {
+ if(demoMode||priceRefreshing||!state.quoteStatus?.enabled)return;
+ priceRefreshing=true;renderQuoteStatus();
+ const fd=formBody('refresh_market_prices');
+ if(manual)fd.set('force','1');
+ try {
+  const d=await api(fd);
+  state.analysis=d.analysis;
+  state.quoteStatus=d.quotes;
+  render();
+  renderQuoteStatus(d.result);
+  if(manual)notice(d.result.message);
+ }catch(err) {
+  renderQuoteStatus({message:'Refresh failed; prior quotes retained.'});
+  if(manual)notice(err.message,true);
+ }finally{priceRefreshing=false;renderQuoteStatus();}
+}
 function render() {
  const t=state.analysis.totals;
  for(const [id,v] of [['marketValue',t.market_value],['lifetimeProfit',t.lifetime_profit],['unrealized',t.unrealized]]) {
@@ -283,11 +324,13 @@ function render() {
 }
 async function load() {
  selectedLot='';$('#selectedLot').hidden=true;
- const d=await api();state={...state,events:d.events,analysis:d.analysis,csrf:d.csrf};render();
+ const d=await api();state={...state,events:d.events,analysis:d.analysis,csrf:d.csrf,quoteStatus:d.quotes};render();renderQuoteStatus();
  const missing=d.analysis.missing_prices||[];
  if(demoMode)notice('Read-only NVDA demonstration: full activity history reconciles 1.736881 shares including DRIPs; historical sale tax-lot attribution is provisional, and the latest example price is stale (Oct 9).');
  else if(missing.length)notice('Missing current price observations for '+missing.join(', ')+'. Portfolio totals and XIRR are withheld until priced.');
- else notice('Ledger loaded. Prices are last recorded observations (manual or brokerage execution), NOT live market quotes; check their dates before decisions.');
+ else if(state.quoteStatus?.enabled)notice('Ledger loaded. Provider quotes overlay prices read-only where available. Check each source timestamp; trades and cost basis do not change.');
+ else notice('Ledger loaded. Prices are historical/manual observations until a provider API key is configured.');
+ if(!demoMode&&state.quoteStatus?.enabled)void refreshMarketPrices(false);
 }
 function setEventFields() {
  const type=$('#eventType').value;
@@ -706,6 +749,12 @@ document.addEventListener('DOMContentLoaded',()=>{
  $('#olderEvents').addEventListener('click',()=>{if((eventPage+1)*eventPageSize<state.events.length){eventPage++;renderEvents();}});
  $('#saleLot').addEventListener('change',()=>{$('#salePrice').value=state.analysis.holdings[openLots().find(l=>l.id===$('#saleLot').value)?.ticker]?.price||'';});
  $('#hideLot').addEventListener('click',()=>{selectedLot='';$('#selectedLot').hidden=true;render();});
+ $('#refreshMarketPrices').addEventListener('click',()=>{void refreshMarketPrices(true);});
+ // Automatic refresh only while the authenticated page is visible.
+ setInterval(()=>{
+  if(!demoMode&&!document.hidden&&state.quoteStatus?.enabled)
+   void refreshMarketPrices(false);
+ },5*60*1000);
  $('#addEvent').addEventListener('submit',async event=>{
   event.preventDefault();const form=event.currentTarget;const data=Object.fromEntries(new FormData(form).entries());
   for(const key of ['quantity','amount','price','numerator','denominator'])data[key]=data[key]===''?'0':data[key];
