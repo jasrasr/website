@@ -1,12 +1,12 @@
 <?php
 /*
 File Name: admin/index.php
-Revision: 2.0.0
+Revision: 2.0.1
 Description: Shared-identity protected admin console for editing fake chatbot rules and reviewing questions.
 Author: Jason Lamb (with help from ChatGPT)
 Created Date: 2026-11-20
-Modified Date: 2026-11-20
-Changelog: 2.0.0 - Add CRUD rules, ranked test preview and captured question review.
+Modified Date: 2026-11-22
+Changelog: 2.0.1 - Remove punctuation from question-based rule suggestions. 2.0.0 - Add CRUD rules, ranked test preview and captured question review.
 */
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/bootstrap.php';
@@ -77,8 +77,9 @@ if ($target === null && is_string($from) && $from !== '') foreach ($recent as $e
         break;
     }
 }
+$normalizedQuestion = fc_normalize($initialQuestion);
 $triggerValue = $target !== null ? implode("\n", array_map(static fn($t) => ($t['type'] ?? '') . ': ' . ($t['text'] ?? ''), $target['triggers'])) :
-    ($initialQuestion !== '' ? 'exact: ' . $initialQuestion : '');
+    ($normalizedQuestion !== '' ? 'exact: ' . $normalizedQuestion : '');
 $replyValue = $target !== null ? implode("\n", $target['replies']) : '';
 $preview = trim(is_string($_GET['test'] ?? null) ? $_GET['test'] : '');
 $previewMatch = $preview === '' ? null : fc_match($preview, $rules);
@@ -166,5 +167,5 @@ usort($rules, static fn($a,$b): int => strcmp(strtolower((string)$a['name']), st
       <?php endforeach; ?>
     </tbody></table></div>
   </section>
-  <footer>Very Fake AI · Admin Rev 2.0.0 · <?=fc_escape(gmdate('Y-m-d H:i'))?> UTC</footer>
+  <footer>Very Fake AI · Admin Rev 2.0.1 · <?=fc_escape(gmdate('Y-m-d H:i'))?> UTC</footer>
 </main><script src="../assets/confirm.js?v=2.0.0" defer></script></body></html>
