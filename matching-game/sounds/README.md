@@ -2,6 +2,8 @@
 
 Record each word separately as an MP3 file. Keep filenames lowercase and store them under this `matching-game/sounds/` folder. The game uses your recording when it exists and falls back to the browser voice when it does not.
 
+Open [recording-script.html](recording-script.html) in a browser for a print-friendly checklist containing every phrase and filename.
+
 ## Colors
 
 Store these in `matching-game/sounds/colors/`:
