@@ -69,8 +69,8 @@ The release command computes SHA-256 of the candidate SVG rendered from the curr
 
 Do not edit the `archive/` contents of an existing version. Before committing, run `node scripts/validate.cjs` and check for `PASS`. The GitHub Actions integrity workflow runs that check on pull requests.
 
-Exports are named for the **graphic's** version/date (not the current project version). The project can evolve independently while previously created graphics remain historically accurate.
+Archived exports use the **graphic's** version and creation date. The project can evolve independently while previously created graphics remain historically accurate.
 
-## Download archived graphics on demand
+## Download current and archived graphics
 
-The Download latest archived SVG / PNG buttons and the Historical graphics version cards download the existing SVG file under `archive/vX.Y.Z/`. PNG is converted locally in the browser from that exact archived SVG. Neither action creates a new image in the repository, modifies data, increments a graphic version, or changes the archived graphic creation date. Downloads are always named with the selected **graphic version and original creation date**, even if the website's project version has moved ahead.
+The top Download current SVG and Download current PNG buttons export the compact timeline with the selected years. The filename includes the project version and update date. Historical graphics cards download their original archived SVG or convert that SVG to PNG in the browser. Historical filenames retain the graphic version and original creation date.

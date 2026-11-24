@@ -32,17 +32,18 @@ const graphicVersion=d.graphic_version||d.project_version;
 const graphicDate=d.graphic_created||d.updated;
 const timeline=document.querySelector('#timeline');
 const yearControls=document.querySelector('#timelineYears');
+const currentDownloads=[['svg',document.querySelector('#svgBtn')],['png',document.querySelector('#pngBtn')]];
 const collapsedYears=new Set();
 const graphicMeta={version:graphicVersion,created:graphicDate};
 const labelMetrics=document.createElement('canvas').getContext('2d');
 if(labelMetrics)labelMetrics.font='bold 12.5px Arial, Helvetica, sans-serif';
 const measureLabel=labelMetrics ? label=>labelMetrics.measureText(label).width : undefined;
 const drawTimeline=()=>{
- if(collapsedYears.size===yearControls.childElementCount && collapsedYears.size>0){
-  timeline.innerHTML='<p class="empty">All years are collapsed. Select a year to expand it.</p>';
-  return;
- }
- timeline.innerHTML=renderTimelineSvg(ms,graphicMeta,collapsedYears,measureLabel);
+ const allCollapsed=collapsedYears.size>0 && collapsedYears.size===yearControls.childElementCount;
+ timeline.innerHTML=allCollapsed
+  ? '<p class="empty">All years are collapsed. Select a year to expand it.</p>'
+  : renderTimelineSvg(ms,graphicMeta,collapsedYears,measureLabel);
+ for(const [,button] of currentDownloads)button.disabled=allCollapsed||button.hasAttribute('aria-busy');
 };
 drawTimeline();
 for(const label of timeline.querySelectorAll('.yr')){
@@ -61,16 +62,19 @@ for(const label of timeline.querySelectorAll('.yr')){
  yearControls.append(button);
 }
 document.querySelector('#count').textContent=ms.length+' named model milestones';
-const latestRelease=await fetch('archive/manifest.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Archive manifest unavailable');return r.json()}).then(m=>m.releases.find(x=>x.version===graphicVersion));
-if(!latestRelease)throw new Error('Current archived graphic not found');
-document.querySelector('#svgBtn').onclick=()=>downloadArchived(latestRelease,'svg');
-document.querySelector('#pngBtn').onclick=()=>downloadArchived(latestRelease,'png');
+for(const [format,button] of currentDownloads)button.onclick=()=>{
+ const svg=timeline.querySelector('svg');
+ if(!svg)return;
+ const source=new XMLSerializer().serializeToString(svg);
+ const base='ai-model-timeline-current-v'+d.project_version+'-'+d.updated;
+ downloadGraphic(()=>source,base,format,button,()=>Boolean(timeline.querySelector('svg')));
+};
 }catch(err){document.querySelector('#timeline').textContent='Unable to load release data: '+err.message;}})();
 fetch('archive/manifest.json',{cache:'no-store'}).then(r=>r.json()).then(data=>{
 const history=document.querySelector('#history');if(!history)return;
 const safeText=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 history.innerHTML=(data.releases||[]).map(r=>'<article class="history-item"><strong>Graphic v'+safeText(r.version)+'</strong> · '+safeText(r.created)+' · '+safeText(r.models)+' models<p>'+safeText(r.reason)+'</p><div class="history-actions"><button type="button" class="archive-download" data-version="'+safeText(r.version)+'" data-format="svg">Download SVG</button><button type="button" class="archive-download" data-version="'+safeText(r.version)+'" data-format="png">Download PNG</button><a href="'+encodeURI(r.dataset)+'">JSON snapshot</a></div></article>').join('');
-history.addEventListener('click',event=>{const button=event.target.closest('.archive-download');if(!button)return;const release=(data.releases||[]).find(r=>r.version===button.dataset.version);if(release)downloadArchived(release,button.dataset.format,button);});
+history.addEventListener('click',event=>{const button=event.target.closest('.archive-download');if(!button)return;const release=(data.releases||[]).find(r=>r.version===button.dataset.version);if(release)downloadGraphic(()=>getArchiveSvg(release),'ai-model-timeline-v'+release.version+'-'+release.created,button.dataset.format,button);});
 }).catch(()=>{});
 
 /**
@@ -83,19 +87,19 @@ const getArchiveSvg=async release=>{
  if(!response.ok)throw Error('Archived graphic could not be loaded');
  return response.text();
 };
-async function downloadArchived(release,format,button){
- const target=button||document.querySelector(format==='svg'?'#svgBtn':'#pngBtn');
- const prior=target?.textContent;
- if(target){target.disabled=true;target.textContent='Preparing '+format.toUpperCase()+'…';}
+async function downloadGraphic(loadSource,base,format,button,isAvailable=()=>true){
+ const prior=button.textContent;
+ button.disabled=true;
+ button.setAttribute('aria-busy','true');
+ button.textContent='Preparing '+format.toUpperCase()+'…';
  try{
-  const source=await getArchiveSvg(release);
-  const base='ai-model-timeline-v'+release.version+'-'+release.created;
+  const source=await loadSource();
   if(format==='svg'){
    dl(new Blob([source],{type:'image/svg+xml;charset=utf-8'}),base+'.svg');
   }else if(format==='png'){
    const url=URL.createObjectURL(new Blob([source],{type:'image/svg+xml;charset=utf-8'}));
    try{
-    const image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(Error('Cannot render archived SVG'));img.src=url;});
+    const image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(Error('Cannot render SVG'));img.src=url;});
     const canvas=document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
     const ctx=canvas.getContext('2d');if(!ctx)throw Error('PNG rendering unavailable');
     ctx.drawImage(image,0,0);
@@ -105,5 +109,9 @@ async function downloadArchived(release,format,button){
    }finally{URL.revokeObjectURL(url);}
   }else throw Error('Unsupported download format');
  }catch(error){alert('Download failed: '+error.message);}
- finally{if(target){target.disabled=false;target.textContent=prior;}}
+ finally{
+  button.removeAttribute('aria-busy');
+  button.disabled=!isAvailable();
+  button.textContent=prior;
+ }
 }
