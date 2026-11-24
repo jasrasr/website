@@ -16,6 +16,8 @@ try {
     $auth->requireProject('webstats', 'admin');
     $viewerIp = filter_var($_SERVER['REMOTE_ADDR'] ?? '', FILTER_VALIDATE_IP);
     $viewerAddress = $viewerIp === false ? false : inet_pton($viewerIp);
+    $isViewerIp = static fn (?string $ip): bool => $viewerAddress !== false && $ip !== null && inet_pton($ip) === $viewerAddress;
+    $hideMe = $viewerAddress !== false && ($_GET['hide_me'] ?? null) === '1';
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (($_POST['action'] ?? '') !== 'logout' || !$auth->validCsrf($_POST['csrf'] ?? null)) {
             http_response_code(403);
@@ -61,6 +63,7 @@ try {
             $key = $event['page'] . ' → ' . ($event['target'] ?: $event['label']);
             $clicks[$key] = ($clicks[$key] ?? 0) + 1;
         }
+        if ($hideMe && $isViewerIp($event['ip'] ?? null)) continue;
         if ($recentLimit > 30 || $event['occurred'] >= $recentCutoff) {
             add_recent_activity($recent, $event, $recentLimit + 1);
         } else {
@@ -80,6 +83,7 @@ try {
         'sort' => $sort, 'direction' => $direction,
     ];
     if ($recentLimit > 30) $activityQuery['activity_limit'] = $recentLimit;
+    if ($hideMe) $activityQuery['hide_me'] = '1';
     $sortValue = static function (array $row) use ($sort): int|string {
         $event = $row['event'];
         return match ($sort) {
@@ -127,6 +131,7 @@ function activity_label(array $event): string {
 <?php else: ?>
 <form method="get" class="filters panel"><label>Website<select name="site"><option value="">All sites</option><?php foreach ($sites as $item): ?><option value="<?= e($item) ?>" <?= $site === $item ? 'selected' : '' ?>><?= e($item) ?></option><?php endforeach; ?></select></label>
 <input type="hidden" name="sort" value="<?= e($sort) ?>"><input type="hidden" name="direction" value="<?= e($direction) ?>">
+<?php if ($hideMe): ?><input type="hidden" name="hide_me" value="1"><?php endif; ?>
 <label>From<input type="date" name="start" value="<?= e($start->format('Y-m-d')) ?>" required></label>
 <label>Through<input type="date" name="end" value="<?= e($last->format('Y-m-d')) ?>" max="<?= e($today->format('Y-m-d')) ?>" required></label><button>Update view</button></form>
 <p class="muted">Dates use <?= e($cfg['timezone']) ?>. Today's totals are still growing. Refresh to load new activity.</p>
@@ -135,7 +140,17 @@ function activity_label(array $event): string {
 <section class="panel"><div class="section-heading"><h2>Daily traffic</h2><span class="muted">Page views / clicks</span></div><div class="daily">
 <?php foreach ($daily as $day => $values): ?><div class="day"><time><?= e($day) ?></time><meter min="0" max="<?= $peak ?>" value="<?= $values['pageview'] ?>" aria-label="<?= e($day) ?> page views"><?= $values['pageview'] ?></meter><span><?= number_format($values['pageview']) ?> / <?= number_format($values['click']) ?></span></div><?php endforeach; ?></div></section>
 <div class="grid"><?php ranking('Top pages', $pages, 'Views'); ranking('Clicked destinations & actions', $clicks, 'Clicks'); ranking('Referrers', $referrers, 'Views'); ranking('Traffic by site', $bySite, 'Events'); ?></div>
-<section class="panel" id="recent-activity"><h2>Recent activity</h2><div class="table-wrap"><table><thead><tr>
+<section class="panel" id="recent-activity"><h2>Recent activity</h2>
+<?php if ($viewerAddress !== false): ?>
+<form method="get" action="#recent-activity" class="activity-filter">
+<?php foreach (array_diff_key($activityQuery, ['hide_me' => true]) as $name => $value): ?>
+<input type="hidden" name="<?= e($name) ?>" value="<?= e($value) ?>">
+<?php endforeach; ?>
+<label><input type="checkbox" name="hide_me" value="1"<?= $hideMe ? ' checked' : '' ?>> Hide my activity</label>
+<button class="secondary">Apply</button>
+</form>
+<?php endif; ?>
+<div class="table-wrap"><table><thead><tr>
 <?php foreach ($columns as $key => $label):
     $active = $key === $sort;
     $query = http_build_query(array_replace($activityQuery, [
@@ -148,7 +163,6 @@ function activity_label(array $event): string {
 <?php foreach ($recent as $row):
     $event = $row['event'];
     $eventIp = $event['ip'] ?? null;
-    $isViewerIp = $viewerAddress !== false && $eventIp !== null && inet_pton($eventIp) === $viewerAddress;
 ?>
 <tr><td><?php if ($row['first'] !== $event['occurred']): ?><?= e(activity_time($row['first'], $tz)) ?> – <br><?php endif; ?><?= e(activity_time($event['occurred'], $tz)) ?></td><td><?= e($event['page']) ?></td><td>
 <?php if ($row['count'] > 1): ?>
@@ -156,7 +170,7 @@ function activity_label(array $event): string {
 <?php if ($row['count'] > count($row['clicks'])): ?><p class="muted">Showing the latest <?= count($row['clicks']) ?> clicks.</p><?php endif; ?>
 <ul><?php foreach (array_reverse($row['clicks']) as $click): ?><li><?= e(activity_time($click['occurred'], $tz)) ?> · <?= e(activity_label($click)) ?></li><?php endforeach; ?></ul></details>
 <?php else: ?><?= e(activity_label($event)) ?><?php endif; ?>
-</td><td><?= e($eventIp ?? '—') ?><?php if ($isViewerIp): ?> - <strong class="activity-me">ME</strong><?php endif; ?></td></tr>
+</td><td><?= e($eventIp ?? '—') ?><?php if ($isViewerIp($eventIp)): ?> - <strong class="activity-me">ME</strong><?php endif; ?></td></tr>
 <?php endforeach; ?>
 <?php if (!$recent): ?><tr><td colspan="4">No activity in the last 48 hours for these filters.</td></tr><?php endif; ?></tbody></table></div>
 <?php if ($hasMoreActivity): ?><p><a href="?<?= e(http_build_query(array_replace($activityQuery, ['activity_limit' => $recentLimit + 30]))) ?>#recent-activity">Show more</a></p><?php endif; ?></section>

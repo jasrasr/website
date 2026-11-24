@@ -129,6 +129,15 @@ test('collector, dashboard authentication, filtering, escaping and storage prote
   const expanded = await (await fetch(new URL(more[1].replaceAll('&amp;', '&'),base),{headers:{Cookie:cookie}})).text();
   assert.match(expanded,/click: older-than-48-hours/);
   assert.doesNotMatch(expanded,/>Show more<\/a>/);
+  const filtered = await (await fetch(base+'?hide_me=1&sort=ip&activity_limit=60',{headers:{Cookie:cookie}})).text();
+  const recentOnly = filtered.split('id="recent-activity"')[1];
+  assert.ok(recentOnly);
+  assert.match(recentOnly,/name="hide_me" value="1" checked/);
+  assert.match(recentOnly,/sort=ip&amp;direction=asc&amp;activity_limit=60&amp;hide_me=1#recent-activity/);
+  assert.match(recentOnly,/<td>192\.0\.2\.5<\/td>/);
+  assert.match(recentOnly,/https:\/\/source\.test\/legacy/);
+  assert.doesNotMatch(recentOnly,/activity-me|38 clicks|older-than-48-hours/);
+  assert.match(filtered,/<p class="eyebrow">CLICKS<\/p><strong>43<\/strong>/);
   assert.equal((await fetch(base+'?start=2026-02-30',{headers:{Cookie:cookie}})).status,400);
   assert.equal((await fetch(base+'?site=unknown',{headers:{Cookie:cookie}})).status,400);
   assert.equal((await post(base,cookie,{action:'logout',csrf:token(html)})).status,303);
