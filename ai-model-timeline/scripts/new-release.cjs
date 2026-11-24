@@ -10,7 +10,7 @@
  * graphic and matching data snapshot using the NEW project version.
  */
 'use strict';
-const {fs,path,root,readJSON,sha256,compareVersion,validVersion,baseline,validateModels,graphicSVG}=require('./release-utils.cjs');
+const {fs,path,root,readJSON,sha256,gitBlobSha,compareVersion,validVersion,baseline,validateModels,graphicSVG}=require('./release-utils.cjs');
 const args=process.argv.slice(2);
 const flag=name=>{const i=args.indexOf('--'+name);return i<0?null:args[i+1];};
 const version=flag('version'),reason=flag('reason'),changes=flag('changes');
@@ -26,7 +26,8 @@ validateModels(data.models);
 const {release,archive,snapshot}=baseline(manifest,data);
 const existing=fs.readFileSync(archive,'utf8');
 const oldData=readJSON(snapshot);
-if(sha256(graphicSVG(oldData.models,release.version,release.created))!==sha256(existing))throw Error('Previous graphic does not match its archived snapshot and renderer; cannot safely publish');
+if(release.graphic_git_blob_sha&&gitBlobSha(existing)!==release.graphic_git_blob_sha)throw Error('Archived graphic Git blob checksum mismatch');
+if(release.graphic_sha256&&sha256(existing)!==release.graphic_sha256)throw Error('Archived graphic SHA-256 mismatch');
 const candidate=graphicSVG(data.models,release.version,release.created);
 const visualChanged=sha256(candidate)!==sha256(existing);
 if(visualChanged&&manifest.releases.some(r=>r.version===version))throw Error('Graphic version already exists');
