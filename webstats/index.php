@@ -62,6 +62,26 @@ try {
     }
     foreach (['pages', 'clicks', 'referrers', 'bySite'] as $name) arsort($$name);
     $peak = max(1, ...array_column($daily, 'pageview'));
+    $columns = ['time' => 'Time', 'page' => 'Site / page', 'event' => 'Event', 'ip' => 'IP address'];
+    $sort = $_GET['sort'] ?? 'time';
+    if (!is_string($sort) || !isset($columns[$sort])) $sort = 'time';
+    $direction = ($_GET['direction'] ?? null) === 'asc' ? 'asc' : 'desc';
+    $sortValue = static function (array $row) use ($sort): int|string {
+        $event = $row['event'];
+        return match ($sort) {
+            'time' => $event['occurred'],
+            'page' => $event['page'],
+            'event' => $row['count'] > 1 ? 'click' : activity_label($event),
+            'ip' => isset($event['ip']) ? bin2hex(inet_pton($event['ip']) ?: '') : '',
+        };
+    };
+    $recent = array_reverse($recent);
+    usort($recent, static function (array $a, array $b) use ($sortValue, $sort, $direction): int {
+        $left = $sortValue($a);
+        $right = $sortValue($b);
+        $order = $sort === 'time' ? $left <=> $right : strcasecmp($left, $right);
+        return $direction === 'asc' ? $order : -$order;
+    });
 } catch (InvalidArgumentException $exception) {
     http_response_code(400); $error = $exception->getMessage(); $invalidFilters = true;
 } catch (Throwable $exception) {
@@ -84,7 +104,7 @@ function activity_label(array $event): string {
 ?>
 <!doctype html>
 <html lang="en" data-analytics-ignore><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Webstats · JASR</title><link rel="stylesheet" href="assets/css/app.css"></head>
+<title>Webstats · JASR</title><link rel="stylesheet" href="assets/css/app.css?v=2"></head>
 <body><main><header class="heading"><div><p class="eyebrow">JASR / YOUR SITES, YOUR STATS</p><h1>Webstats<span>.</span></h1><p class="muted">A clear view of where people go and what they click.</p></div>
 <?php if (isset($auth) && empty($unavailable)): ?><form method="post"><input type="hidden" name="csrf" value="<?= e($auth->csrf()) ?>"><button class="secondary" name="action" value="logout">Sign out</button></form><?php endif; ?></header>
 <?php if ($error): ?><p class="alert" role="alert"><?= e($error) ?></p><?php endif; ?>
@@ -92,6 +112,7 @@ function activity_label(array $event): string {
 <?php elseif (!empty($invalidFilters)): ?><a href="./">Reset filters</a>
 <?php else: ?>
 <form method="get" class="filters panel"><label>Website<select name="site"><option value="">All sites</option><?php foreach ($sites as $item): ?><option value="<?= e($item) ?>" <?= $site === $item ? 'selected' : '' ?>><?= e($item) ?></option><?php endforeach; ?></select></label>
+<input type="hidden" name="sort" value="<?= e($sort) ?>"><input type="hidden" name="direction" value="<?= e($direction) ?>">
 <label>From<input type="date" name="start" value="<?= e($start->format('Y-m-d')) ?>" required></label>
 <label>Through<input type="date" name="end" value="<?= e($last->format('Y-m-d')) ?>" max="<?= e($today->format('Y-m-d')) ?>" required></label><button>Update view</button></form>
 <p class="muted">Dates use <?= e($cfg['timezone']) ?>. Today's totals are still growing. Refresh to load new activity.</p>
@@ -100,8 +121,18 @@ function activity_label(array $event): string {
 <section class="panel"><div class="section-heading"><h2>Daily traffic</h2><span class="muted">Page views / clicks</span></div><div class="daily">
 <?php foreach ($daily as $day => $values): ?><div class="day"><time><?= e($day) ?></time><meter min="0" max="<?= $peak ?>" value="<?= $values['pageview'] ?>" aria-label="<?= e($day) ?> page views"><?= $values['pageview'] ?></meter><span><?= number_format($values['pageview']) ?> / <?= number_format($values['click']) ?></span></div><?php endforeach; ?></div></section>
 <div class="grid"><?php ranking('Top pages', $pages, 'Views'); ranking('Clicked destinations & actions', $clicks, 'Clicks'); ranking('Referrers', $referrers, 'Views'); ranking('Traffic by site', $bySite, 'Events'); ?></div>
-<section class="panel"><h2>Recent activity</h2><div class="table-wrap"><table><thead><tr><th scope="col">Time</th><th scope="col">Site / page</th><th scope="col">Event</th><th scope="col">IP address</th></tr></thead><tbody>
-<?php foreach (array_reverse($recent) as $row):
+<section class="panel" id="recent-activity"><h2>Recent activity</h2><div class="table-wrap"><table><thead><tr>
+<?php foreach ($columns as $key => $label):
+    $active = $key === $sort;
+    $query = http_build_query([
+        'site' => $site, 'start' => $start->format('Y-m-d'), 'end' => $last->format('Y-m-d'),
+        'sort' => $key, 'direction' => $active && $direction === 'asc' ? 'desc' : 'asc',
+    ]);
+?>
+<th scope="col"<?php if ($active): ?> aria-sort="<?= $direction === 'asc' ? 'ascending' : 'descending' ?>"<?php endif; ?>><a href="?<?= e($query) ?>#recent-activity"><?= e($label) ?><?php if ($active): ?> <span aria-hidden="true"><?= $direction === 'asc' ? '↑' : '↓' ?></span><?php endif; ?></a></th>
+<?php endforeach; ?>
+</tr></thead><tbody>
+<?php foreach ($recent as $row):
     $event = $row['event'];
     $eventIp = $event['ip'] ?? null;
     $isViewerIp = $viewerAddress !== false && $eventIp !== null && inet_pton($eventIp) === $viewerAddress;
@@ -112,7 +143,7 @@ function activity_label(array $event): string {
 <?php if ($row['count'] > count($row['clicks'])): ?><p class="muted">Showing the latest <?= count($row['clicks']) ?> clicks.</p><?php endif; ?>
 <ul><?php foreach (array_reverse($row['clicks']) as $click): ?><li><?= e(activity_time($click['occurred'], $tz)) ?> · <?= e(activity_label($click)) ?></li><?php endforeach; ?></ul></details>
 <?php else: ?><?= e(activity_label($event)) ?><?php endif; ?>
-</td><td><?= e($eventIp ?? '—') ?><?php if ($isViewerIp): ?> <strong>ME</strong><?php endif; ?></td></tr>
+</td><td><?= e($eventIp ?? '—') ?><?php if ($isViewerIp): ?> - <strong class="activity-me">ME</strong><?php endif; ?></td></tr>
 <?php endforeach; ?>
 <?php if (!$recent): ?><tr><td colspan="4">No activity yet.</td></tr><?php endif; ?></tbody></table></div></section>
 <?php endif; ?><footer>Webstats 1.1.0 · Self-hosted · No form values or URL query strings collected</footer></main></body></html>
