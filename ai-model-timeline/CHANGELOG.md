@@ -2,6 +2,12 @@
 
 Every new graphic must receive a unique project version, creation date, immutable archive path, and explanation.
 
+## [1.0.1] — 2026-11-23 (UI-only)
+- Added keyboard-accessible sorting on every release-table column header.
+- Repeated clicks toggle ascending/descending; release dates sort chronologically, even with month-only precision.
+- Added visible sort indicators and `aria-sort` state for screen readers.
+- The model dataset and SVG archive remain unchanged, so **no new graphic** was created. v1.0.0 remains the canonical release-graphic version.
+
 ## [1.0.0] — 2026-11-23
 
 **Graphic:** `archive/v1.0.0/ai-model-timeline-v1.0.0-2026-11-23.svg`
