@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-const {fs,path,root,readJSON,sha256,baseline,validateModels,graphicSVG}=require('./release-utils.cjs');
+const {fs,path,root,readJSON,sha256,gitBlobSha,baseline,validateModels,graphicSVG}=require('./release-utils.cjs');
 const data=readJSON(path.join(root,'data/models.json'));
 const manifest=readJSON(path.join(root,'archive/manifest.json'));
 validateModels(data.models);
@@ -11,7 +11,8 @@ if(release.created!==data.graphic_created)throw Error('Graphic creation date mis
 const original=fs.readFileSync(archive,'utf8');
 const archived=readJSON(snapshot);
 const fromSnapshot=graphicSVG(archived.models,release.version,release.created);
-if(sha256(original)!==sha256(fromSnapshot))throw Error('Archived SVG does not match its immutable data snapshot and current renderer');
+if(sha256(original)!==sha256(fromSnapshot))throw Error('Latest archived SVG does not match its data snapshot with the current renderer');
+if(release.graphic_git_blob_sha&&release.graphic_git_blob_sha!==gitBlobSha(original))throw Error('Archived SVG Git blob SHA mismatch');
 if(release.graphic_sha256&&release.graphic_sha256!==sha256(original))throw Error('Archived SVG SHA-256 mismatch');
 const live=graphicSVG(data.models,release.version,release.created);
 if(sha256(live)!==sha256(original))throw Error('Graphic-affecting changes detected. Run scripts/new-release.cjs to generate a new graphic version.');
