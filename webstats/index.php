@@ -56,8 +56,7 @@ try {
             $key = $event['page'] . ' → ' . ($event['target'] ?: $event['label']);
             $clicks[$key] = ($clicks[$key] ?? 0) + 1;
         }
-        $recent[] = $event;
-        if (count($recent) > 30) array_shift($recent);
+        add_recent_activity($recent, $event);
     }
     foreach (['pages', 'clicks', 'referrers', 'bySite'] as $name) arsort($$name);
     $peak = max(1, ...array_column($daily, 'pageview'));
@@ -73,6 +72,13 @@ function ranking(string $title, array $rows, string $unit): void { ?>
 <div class="table-wrap"><table><thead><tr><th scope="col">Source</th><th scope="col"><?= e($unit) ?></th></tr></thead><tbody>
 <?php foreach (array_slice($rows, 0, 15, true) as $label => $count): ?><tr><td><?= e($label) ?></td><td><?= number_format($count) ?></td></tr><?php endforeach; ?>
 </tbody></table></div><?php endif; ?></section><?php }
+function activity_time(int $timestamp, DateTimeZone $timezone): string {
+    return (new DateTimeImmutable('@' . $timestamp))->setTimezone($timezone)->format('M j, H:i:s T');
+}
+
+function activity_label(array $event): string {
+    return $event['kind'] === 'click' ? 'click: ' . ($event['target'] ?: $event['label']) : $event['kind'];
+}
 ?>
 <!doctype html>
 <html lang="en" data-analytics-ignore><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -93,6 +99,14 @@ function ranking(string $title, array $rows, string $unit): void { ?>
 <?php foreach ($daily as $day => $values): ?><div class="day"><time><?= e($day) ?></time><meter min="0" max="<?= $peak ?>" value="<?= $values['pageview'] ?>" aria-label="<?= e($day) ?> page views"><?= $values['pageview'] ?></meter><span><?= number_format($values['pageview']) ?> / <?= number_format($values['click']) ?></span></div><?php endforeach; ?></div></section>
 <div class="grid"><?php ranking('Top pages', $pages, 'Views'); ranking('Clicked destinations & actions', $clicks, 'Clicks'); ranking('Referrers', $referrers, 'Views'); ranking('Traffic by site', $bySite, 'Events'); ?></div>
 <section class="panel"><h2>Recent activity</h2><div class="table-wrap"><table><thead><tr><th scope="col">Time</th><th scope="col">Site / page</th><th scope="col">Event</th><th scope="col">IP address</th></tr></thead><tbody>
-<?php foreach (array_reverse($recent) as $event): ?><tr><td><?= e((new DateTimeImmutable('@' . $event['occurred']))->setTimezone($tz)->format('M j, H:i:s T')) ?></td><td><?= e($event['page']) ?></td><td><?= e($event['kind'] . ($event['kind'] === 'click' ? ': ' . ($event['target'] ?: $event['label']) : '')) ?></td><td><?= e($event['ip'] ?? '—') ?></td></tr><?php endforeach; ?>
+<?php foreach (array_reverse($recent) as $row): $event = $row['event']; ?>
+<tr><td><?php if ($row['first'] !== $event['occurred']): ?><?= e(activity_time($row['first'], $tz)) ?> – <br><?php endif; ?><?= e(activity_time($event['occurred'], $tz)) ?></td><td><?= e($event['page']) ?></td><td>
+<?php if ($row['count'] > 1): ?>
+<details><summary><?= number_format($row['count']) ?> clicks</summary>
+<?php if ($row['count'] > count($row['clicks'])): ?><p class="muted">Showing the latest <?= count($row['clicks']) ?> clicks.</p><?php endif; ?>
+<ul><?php foreach (array_reverse($row['clicks']) as $click): ?><li><?= e(activity_time($click['occurred'], $tz)) ?> · <?= e(activity_label($click)) ?></li><?php endforeach; ?></ul></details>
+<?php else: ?><?= e(activity_label($event)) ?><?php endif; ?>
+</td><td><?= e($event['ip'] ?? '—') ?></td></tr>
+<?php endforeach; ?>
 <?php if (!$recent): ?><tr><td colspan="4">No activity yet.</td></tr><?php endif; ?></tbody></table></div></section>
 <?php endif; ?><footer>Webstats 1.1.0 · Self-hosted · No form values or URL query strings collected</footer></main></body></html>

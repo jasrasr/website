@@ -162,6 +162,29 @@ function events_between(int $start, int $end, string $site): Generator {
         }
     }
 }
+function add_recent_activity(array &$recent, array $event): void {
+    $timestamp = $event['occurred'];
+    $group = $event['kind'] === 'click'
+        ? [$event['site'], $event['page'], $event['ip'] ?? null, $event['session']]
+        : null;
+    $row = ['group' => $group, 'event' => $event, 'first' => $timestamp, 'count' => 1, 'clicks' => []];
+    if ($group !== null) {
+        for ($i = count($recent) - 1; $i >= 0; --$i) {
+            if ($recent[$i]['group'] !== $group) continue;
+            if (abs($timestamp - $recent[$i]['event']['occurred']) <= 300) {
+                [$row] = array_splice($recent, $i, 1);
+                $row['event'] = $event;
+                $row['count']++;
+            }
+            break;
+        }
+        $row['clicks'][] = $event;
+        if (count($row['clicks']) > 100) array_shift($row['clicks']);
+    }
+    $recent[] = $row;
+    if (count($recent) > 30) array_shift($recent);
+}
+
 function fail(int $status, string $message): never {
     Response::json($status, $message, null, [['code' => 'REQUEST_FAILED', 'message' => $message]]);
 }

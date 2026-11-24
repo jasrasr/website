@@ -78,6 +78,20 @@ test('collector, dashboard authentication, filtering, escaping and storage prote
   const {ip, ...legacy}=saved;
   const legacyId='2'.repeat(32);
   data.records['source.test:'+legacyId]={...legacy,id:legacyId,page:'https://source.test/legacy'};
+  const game = {...saved,kind:'click',page:'https://source.test/tic-tac-toe/',label:'play-square'};
+  const addActivity = (id, fields) => {
+    data.records['source.test:'+id]={...game,...fields,id};
+  };
+  addActivity('earlier-game',{occurred:saved.occurred-600,label:'earlier-game'});
+  for (let move=0;move<38;move++) {
+    if (move===15) {
+      addActivity('other-tab',{occurred:saved.occurred-60,session:'other-tab',label:'other-tab'});
+      addActivity('other-ip',{occurred:saved.occurred-60,ip:'192.0.2.5',label:'other-ip'});
+      addActivity('other-page',{occurred:saved.occurred-60,page:'https://source.test/another-game/',label:'other-page'});
+      addActivity('game-view',{occurred:saved.occurred-60,kind:'pageview'});
+    }
+    addActivity('move-'+move,{occurred:saved.occurred-75+move,label:'play-square-'+move});
+  }
   fs.writeFileSync(path.join(temp,files[0]),JSON.stringify(data));
   assert.equal((await fetch(base+'setup.php')).status,404);
   const anonymous = await fetch(base,{redirect:'manual'});
@@ -89,8 +103,13 @@ test('collector, dashboard authentication, filtering, escaping and storage prote
   assert.equal((await post(base,cookie,{action:'logout',csrf:'invalid'})).status,403);
   const report=await fetch(base,{headers:{Cookie:cookie}});const html=await report.text();assert.equal(report.status,200);assert.match(html,/Top pages/);assert.match(html,/source.test\/index.php/);assert.doesNotMatch(html,/secret=remove/);
   assert.match(html,/<th scope="col">IP address<\/th>/);
-  assert.match(html,/<td>https:\/\/source\.test\/index\.php<\/td><td>pageview<\/td><td>127\.0\.0\.1<\/td>/);
-  assert.match(html,/<td>https:\/\/source\.test\/legacy<\/td><td>pageview<\/td><td>—<\/td>/);
+  assert.match(html,/<td>https:\/\/source\.test\/index\.php<\/td><td>\s*pageview\s*<\/td><td>127\.0\.0\.1<\/td>/);
+  assert.match(html,/<td>https:\/\/source\.test\/legacy<\/td><td>\s*pageview\s*<\/td><td>—<\/td>/);
+  const group = html.match(/<details><summary>38 clicks<\/summary>([\s\S]*?)<\/details>/);
+  assert.ok(group);
+  assert.equal((group[1].match(/<li>/g) ?? []).length,38);
+  assert.doesNotMatch(group[1],/earlier-game|other-tab|other-ip|other-page/);
+  assert.match(html,/<p class="eyebrow">CLICKS<\/p><strong>42<\/strong>/);
   assert.equal((await fetch(base+'?start=2026-02-30',{headers:{Cookie:cookie}})).status,400);
   assert.equal((await fetch(base+'?site=unknown',{headers:{Cookie:cookie}})).status,400);
   assert.equal((await post(base,cookie,{action:'logout',csrf:token(html)})).status,303);
