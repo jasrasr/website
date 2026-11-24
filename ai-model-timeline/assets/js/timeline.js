@@ -50,13 +50,14 @@ for(const label of timeline.querySelectorAll('.yr')){
  const year=Number(label.textContent);
  const button=document.createElement('button');
  button.type='button';
- button.textContent=String(year);
+ button.textContent='Hide '+year;
  button.setAttribute('aria-controls','timeline');
  button.setAttribute('aria-expanded','true');
  button.addEventListener('click',()=>{
   const expanded=collapsedYears.delete(year);
   if(!expanded)collapsedYears.add(year);
   button.setAttribute('aria-expanded',String(expanded));
+  button.textContent=(expanded?'Hide ':'Show ')+year;
   drawTimeline();
  });
  yearControls.append(button);

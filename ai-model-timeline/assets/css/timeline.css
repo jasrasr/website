@@ -15,5 +15,3 @@ th[aria-sort="ascending"] .sort-header,th[aria-sort="descending"] .sort-header{c
 
 .timeline-years{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
 .timeline-years button{padding:6px 10px}
-.timeline-years button[aria-expanded="true"]::after{content:" −";margin-left:4px}
-.timeline-years button[aria-expanded="false"]::after{content:" +";margin-left:4px}
