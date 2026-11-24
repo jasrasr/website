@@ -32,11 +32,49 @@ const graphicVersion=d.graphic_version||d.project_version;
 const graphicDate=d.graphic_created||d.updated;
 const svg=renderTimelineSvg(ms,{version:graphicVersion,created:graphicDate});document.querySelector('#timeline').innerHTML=svg;
 document.querySelector('#count').textContent=ms.length+' named model milestones';
-document.querySelector('#svgBtn').onclick=()=>dl(new Blob([svg],{type:'image/svg+xml;charset=utf-8'}),'ai-model-timeline-v'+graphicVersion+'-'+graphicDate+'.svg');
-document.querySelector('#pngBtn').onclick=()=>{const img=new Image(),u=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));img.onload=()=>{const cn=document.createElement('canvas');cn.width=img.naturalWidth;cn.height=img.naturalHeight;cn.getContext('2d').drawImage(img,0,0);cn.toBlob(b=>{if(b)dl(b,'ai-model-timeline-v'+graphicVersion+'-'+graphicDate+'.png');URL.revokeObjectURL(u);},'image/png');};img.src=u;};
+const latestRelease=await fetch('archive/manifest.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Archive manifest unavailable');return r.json()}).then(m=>m.releases.find(x=>x.version===graphicVersion));
+if(!latestRelease)throw new Error('Current archived graphic not found');
+document.querySelector('#svgBtn').onclick=()=>downloadArchived(latestRelease,'svg');
+document.querySelector('#pngBtn').onclick=()=>downloadArchived(latestRelease,'png');
 }catch(err){document.querySelector('#timeline').textContent='Unable to load release data: '+err.message;}})();
 fetch('archive/manifest.json',{cache:'no-store'}).then(r=>r.json()).then(data=>{
 const history=document.querySelector('#history');if(!history)return;
 const safeText=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-history.innerHTML=(data.releases||[]).map(r=>'<article class="history-item"><strong>v'+safeText(r.version)+'</strong> · '+safeText(r.created)+' · '+safeText(r.models)+' models<p>'+safeText(r.reason)+'</p><a href="'+encodeURI(r.graphic)+'">SVG graphic</a> · <a href="'+encodeURI(r.dataset)+'">JSON snapshot</a></article>').join('');
+history.innerHTML=(data.releases||[]).map(r=>'<article class="history-item"><strong>Graphic v'+safeText(r.version)+'</strong> · '+safeText(r.created)+' · '+safeText(r.models)+' models<p>'+safeText(r.reason)+'</p><div class="history-actions"><button type="button" class="archive-download" data-version="'+safeText(r.version)+'" data-format="svg">Download SVG</button><button type="button" class="archive-download" data-version="'+safeText(r.version)+'" data-format="png">Download PNG</button><a href="'+encodeURI(r.dataset)+'">JSON snapshot</a></div></article>').join('');
+history.addEventListener('click',event=>{const button=event.target.closest('.archive-download');if(!button)return;const release=(data.releases||[]).find(r=>r.version===button.dataset.version);if(release)downloadArchived(release,button.dataset.format,button);});
 }).catch(()=>{});
+
+/**
+ * Download the immutable SVG bytes from archive/; PNG is converted from
+ * those archived SVG bytes only. Neither operation writes to the repository.
+ */
+const getArchiveSvg=async release=>{
+ if(!/^archive\\/v\\d+\\.\\d+\\.\\d+\\/ai-model-timeline-v\\d+\\.\\d+\\.\\d+-\\d{4}-\\d{2}-\\d{2}\\.svg$/.test(release.graphic))throw Error('Invalid archive path');
+ const response=await fetch(release.graphic,{cache:'no-store'});
+ if(!response.ok)throw Error('Archived graphic could not be loaded');
+ return response.text();
+};
+async function downloadArchived(release,format,button){
+ const target=button||document.querySelector(format==='svg'?'#svgBtn':'#pngBtn');
+ const prior=target?.textContent;
+ if(target){target.disabled=true;target.textContent='Preparing '+format.toUpperCase()+'…';}
+ try{
+  const source=await getArchiveSvg(release);
+  const base='ai-model-timeline-v'+release.version+'-'+release.created;
+  if(format==='svg'){
+   dl(new Blob([source],{type:'image/svg+xml;charset=utf-8'}),base+'.svg');
+  }else if(format==='png'){
+   const url=URL.createObjectURL(new Blob([source],{type:'image/svg+xml;charset=utf-8'}));
+   try{
+    const image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(Error('Cannot render archived SVG'));img.src=url;});
+    const canvas=document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
+    const ctx=canvas.getContext('2d');if(!ctx)throw Error('PNG rendering unavailable');
+    ctx.drawImage(image,0,0);
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+    if(!blob)throw Error('PNG conversion failed');
+    dl(blob,base+'.png');
+   }finally{URL.revokeObjectURL(url);}
+  }else throw Error('Unsupported download format');
+ }catch(error){alert('Download failed: '+error.message);}
+ finally{if(target){target.disabled=false;target.textContent=prior;}}
+}

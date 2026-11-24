@@ -2,6 +2,13 @@
 
 Every new graphic must receive a unique project version, creation date, immutable archive path, and explanation.
 
+## [1.0.3] — 2026-11-23 (project-only; graphic unchanged)
+- Added on-demand download buttons for the last archived graphic in SVG and PNG formats.
+- Added per-version SVG/PNG download buttons to the historical graphics section.
+- Downloads use the archived SVG bytes; PNG conversion happens entirely in the browser without creating a new repository file or graphic release.
+- Kept graphic v1.0.0 and its 2026-11-23 creation date and filename unchanged.
+- Existing 122 model records and historical data snapshots remain untouched.
+
 ## [1.0.2] — 2026-11-23 (project-only; graphic unchanged)
 - Separated `project_version` from `graphic_version` and `graphic_created`.
 - Updated the page header, footer, archive link, and SVG/PNG export filenames to use the correct graphic metadata.

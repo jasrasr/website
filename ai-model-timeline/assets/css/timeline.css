@@ -8,3 +8,5 @@ thead th{white-space:nowrap}
 .sort-header:focus-visible{outline:2px solid #81c6ff;outline-offset:2px}
 .sort-arrow{color:#8bbcf1;font-size:.82em;min-width:1em;text-align:center}
 th[aria-sort="ascending"] .sort-header,th[aria-sort="descending"] .sort-header{color:#b9ddff}
+
+.history-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.history-actions button{padding:8px 12px}.actions{align-items:center;flex-wrap:wrap}.actions button:disabled,.history-actions button:disabled{cursor:progress;opacity:.65}
