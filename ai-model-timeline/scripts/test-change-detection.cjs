@@ -1,0 +1,27 @@
+#!/usr/bin/env node
+'use strict';
+const assert=require('node:assert/strict');
+const {fs,root,path,sha256,gitBlobSha,readJSON,graphicSVG,baseline}=require('./release-utils.cjs');
+const data=readJSON(path.join(root,'data/models.json'));
+const manifest=readJSON(path.join(root,'archive/manifest.json'));
+const {release,archive,snapshot}=baseline(manifest,data);
+const archived=fs.readFileSync(archive,'utf8'),old=readJSON(snapshot);
+const hash=sha256(archived);
+assert.equal(sha256(graphicSVG(data.models,release.version,release.created)),hash,'UI-only upgrade must keep graphic identical');
+assert.equal(sha256(graphicSVG(old.models,release.version,release.created)),hash,'Archive snapshot must reproduce canonical SVG');
+assert.equal(gitBlobSha(archived),release.graphic_git_blob_sha,'Archive checksum must remain intact');
+const sourceOnly=structuredClone(data.models);
+sourceOnly[0].source_url='https://example.com/updated-source';
+sourceOnly[0].source_scope='model_announcement';
+sourceOnly[0].notes='New source citation only';
+assert.equal(sha256(graphicSVG(sourceOnly,release.version,release.created)),hash,'Source-only edits must not generate a graphic');
+const renamed=structuredClone(data.models);
+renamed[0].model+=' corrected';
+assert.notEqual(sha256(graphicSVG(renamed,release.version,release.created)),hash,'Visible model change must generate graphic');
+const dated=structuredClone(data.models);
+dated[0].release_date='2023-04';
+assert.notEqual(sha256(graphicSVG(dated,release.version,release.created)),hash,'Release-date change must generate graphic');
+const future=structuredClone(data.models);
+future.push({...future[0],id:'test-2027',model:'Future test model',release_date:'2027-03-01'});
+assert.match(graphicSVG(future,'1.1.0','2027-03-02'),/2027-Q1|2027/,'Future years must be rendered');
+console.log('PASS: unchanged, metadata-only, model change, date change, future year and archive checksum');
