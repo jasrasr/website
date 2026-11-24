@@ -14,6 +14,8 @@ try {
     require_once dirname(__DIR__) . '/user-management/bootstrap.php';
     $auth = jasr_users_auth();
     $auth->requireProject('webstats', 'admin');
+    $viewerIp = filter_var($_SERVER['REMOTE_ADDR'] ?? '', FILTER_VALIDATE_IP);
+    $viewerAddress = $viewerIp === false ? false : inet_pton($viewerIp);
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (($_POST['action'] ?? '') !== 'logout' || !$auth->validCsrf($_POST['csrf'] ?? null)) {
             http_response_code(403);
@@ -99,14 +101,18 @@ function activity_label(array $event): string {
 <?php foreach ($daily as $day => $values): ?><div class="day"><time><?= e($day) ?></time><meter min="0" max="<?= $peak ?>" value="<?= $values['pageview'] ?>" aria-label="<?= e($day) ?> page views"><?= $values['pageview'] ?></meter><span><?= number_format($values['pageview']) ?> / <?= number_format($values['click']) ?></span></div><?php endforeach; ?></div></section>
 <div class="grid"><?php ranking('Top pages', $pages, 'Views'); ranking('Clicked destinations & actions', $clicks, 'Clicks'); ranking('Referrers', $referrers, 'Views'); ranking('Traffic by site', $bySite, 'Events'); ?></div>
 <section class="panel"><h2>Recent activity</h2><div class="table-wrap"><table><thead><tr><th scope="col">Time</th><th scope="col">Site / page</th><th scope="col">Event</th><th scope="col">IP address</th></tr></thead><tbody>
-<?php foreach (array_reverse($recent) as $row): $event = $row['event']; ?>
+<?php foreach (array_reverse($recent) as $row):
+    $event = $row['event'];
+    $eventIp = $event['ip'] ?? null;
+    $isViewerIp = $viewerAddress !== false && $eventIp !== null && inet_pton($eventIp) === $viewerAddress;
+?>
 <tr><td><?php if ($row['first'] !== $event['occurred']): ?><?= e(activity_time($row['first'], $tz)) ?> – <br><?php endif; ?><?= e(activity_time($event['occurred'], $tz)) ?></td><td><?= e($event['page']) ?></td><td>
 <?php if ($row['count'] > 1): ?>
 <details><summary><?= number_format($row['count']) ?> clicks</summary>
 <?php if ($row['count'] > count($row['clicks'])): ?><p class="muted">Showing the latest <?= count($row['clicks']) ?> clicks.</p><?php endif; ?>
 <ul><?php foreach (array_reverse($row['clicks']) as $click): ?><li><?= e(activity_time($click['occurred'], $tz)) ?> · <?= e(activity_label($click)) ?></li><?php endforeach; ?></ul></details>
 <?php else: ?><?= e(activity_label($event)) ?><?php endif; ?>
-</td><td><?= e($event['ip'] ?? '—') ?></td></tr>
+</td><td><?= e($eventIp ?? '—') ?><?php if ($isViewerIp): ?> <strong>ME</strong><?php endif; ?></td></tr>
 <?php endforeach; ?>
 <?php if (!$recent): ?><tr><td colspan="4">No activity yet.</td></tr><?php endif; ?></tbody></table></div></section>
 <?php endif; ?><footer>Webstats 1.1.0 · Self-hosted · No form values or URL query strings collected</footer></main></body></html>

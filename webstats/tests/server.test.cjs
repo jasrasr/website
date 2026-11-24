@@ -103,7 +103,8 @@ test('collector, dashboard authentication, filtering, escaping and storage prote
   assert.equal((await post(base,cookie,{action:'logout',csrf:'invalid'})).status,403);
   const report=await fetch(base,{headers:{Cookie:cookie}});const html=await report.text();assert.equal(report.status,200);assert.match(html,/Top pages/);assert.match(html,/source.test\/index.php/);assert.doesNotMatch(html,/secret=remove/);
   assert.match(html,/<th scope="col">IP address<\/th>/);
-  assert.match(html,/<td>https:\/\/source\.test\/index\.php<\/td><td>\s*pageview\s*<\/td><td>127\.0\.0\.1<\/td>/);
+  assert.match(html,/<td>https:\/\/source\.test\/index\.php<\/td><td>\s*pageview\s*<\/td><td>127\.0\.0\.1 <strong>ME<\/strong><\/td>/);
+  assert.match(html,/<td>\s*click: other-ip<\/td><td>192\.0\.2\.5<\/td>/);
   assert.match(html,/<td>https:\/\/source\.test\/legacy<\/td><td>\s*pageview\s*<\/td><td>—<\/td>/);
   const group = html.match(/<details><summary>38 clicks<\/summary>([\s\S]*?)<\/details>/);
   assert.ok(group);
