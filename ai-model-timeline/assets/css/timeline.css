@@ -12,3 +12,8 @@ th[aria-sort="ascending"] .sort-header,th[aria-sort="descending"] .sort-header{c
 .history-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.history-actions button{padding:8px 12px}.actions{align-items:center;flex-wrap:wrap}.actions button:disabled,.history-actions button:disabled{cursor:progress;opacity:.65}
 
 #timeline > svg{display:block;zoom:.8}
+
+.timeline-years{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.timeline-years button{padding:6px 10px}
+.timeline-years button[aria-expanded="true"]::after{content:" −";margin-left:4px}
+.timeline-years button[aria-expanded="false"]::after{content:" +";margin-left:4px}

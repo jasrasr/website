@@ -30,7 +30,33 @@ tableEl.querySelectorAll('.sort-header').forEach(btn=>btn.addEventListener('clic
 drawRows();
 const graphicVersion=d.graphic_version||d.project_version;
 const graphicDate=d.graphic_created||d.updated;
-const svg=renderTimelineSvg(ms,{version:graphicVersion,created:graphicDate});document.querySelector('#timeline').innerHTML=svg;
+const timeline=document.querySelector('#timeline');
+const yearControls=document.querySelector('#timelineYears');
+const collapsedYears=new Set();
+const graphicMeta={version:graphicVersion,created:graphicDate};
+const drawTimeline=()=>{
+ if(collapsedYears.size===yearControls.childElementCount && collapsedYears.size>0){
+  timeline.innerHTML='<p class="empty">All years are collapsed. Select a year to expand it.</p>';
+  return;
+ }
+ timeline.innerHTML=renderTimelineSvg(ms,graphicMeta,collapsedYears);
+};
+drawTimeline();
+for(const label of timeline.querySelectorAll('.yr')){
+ const year=Number(label.textContent);
+ const button=document.createElement('button');
+ button.type='button';
+ button.textContent=String(year);
+ button.setAttribute('aria-controls','timeline');
+ button.setAttribute('aria-expanded','true');
+ button.addEventListener('click',()=>{
+  const expanded=collapsedYears.delete(year);
+  if(!expanded)collapsedYears.add(year);
+  button.setAttribute('aria-expanded',String(expanded));
+  drawTimeline();
+ });
+ yearControls.append(button);
+}
 document.querySelector('#count').textContent=ms.length+' named model milestones';
 const latestRelease=await fetch('archive/manifest.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Archive manifest unavailable');return r.json()}).then(m=>m.releases.find(x=>x.version===graphicVersion));
 if(!latestRelease)throw new Error('Current archived graphic not found');

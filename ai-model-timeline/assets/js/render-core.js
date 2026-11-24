@@ -1,9 +1,9 @@
-const renderTimelineSvg=function renderSvg(models, meta={version:'1.0.0',created:'2026-11-23'}){
+const renderTimelineSvg=function renderSvg(models, meta={version:'1.0.0',created:'2026-11-23'}, collapsedYears=new Set()){
   const palette={"OpenAI":"#12c889","Anthropic":"#ff9852","Google DeepMind":"#4e9cff","xAI":"#bc63ff","Meta":"#42bcff","Mistral":"#ffba47","DeepSeek":"#6795ff","Microsoft AI / MAI":"#bd78f8","Moonshot AI / Kimi":"#42dfdb"};
   const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&apos;"}[c]));
   const labs=Object.keys(palette);
   const lastYear=Math.max(2026,...models.map(m=>Number(m.release_date.slice(0,4))));
-  const ys=Array.from({length:lastYear-2023+1},(_,i)=>2023+i);
+  const ys=Array.from({length:lastYear-2023+1},(_,i)=>2023+i).filter(year=>!collapsedYears.has(year));
   const qKeys=ys.flatMap(y=>[1,2,3,4].map(q=>`${y}-Q${q}`));
   const quarter=m=>`${m.release_date.slice(0,4)}-Q${Math.floor((Number(m.release_date.slice(5,7))-1)/3)+1}`;
   const count=Object.fromEntries(qKeys.map(q=>[q,Math.max(1,...labs.map(p=>models.filter(m=>m.platform===p&&quarter(m)===q).length))]));
