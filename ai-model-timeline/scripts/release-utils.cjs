@@ -6,6 +6,7 @@ const root=path.resolve(__dirname,'..');
 const renderer=require('../assets/js/render-core.js');
 const readJSON=file=>JSON.parse(fs.readFileSync(file,'utf8'));
 const sha256=content=>crypto.createHash('sha256').update(content,'utf8').digest('hex');
+const gitBlobSha=content=>{const b=Buffer.from(content,'utf8');return crypto.createHash('sha1').update(Buffer.from('blob '+b.length+'\\0')).update(b).digest('hex');};
 const compareVersion=(a,b)=>{const x=a.split('.').map(Number),y=b.split('.').map(Number);for(let i=0;i<3;i++){if(x[i]!==y[i])return x[i]-y[i];}return 0;};
 const validVersion=v=>/^\d+\.\d+\.\d+$/.test(v||'');
 const baseline=(manifest,data)=>{
@@ -29,4 +30,4 @@ function validateModels(models){
  }
 }
 const graphicSVG=(models,version,date)=>renderer(models,{version,created:date});
-module.exports={fs,path,root,readJSON,sha256,compareVersion,validVersion,baseline,validateModels,graphicSVG};
+module.exports={fs,path,root,readJSON,sha256,gitBlobSha,compareVersion,validVersion,baseline,validateModels,graphicSVG};
