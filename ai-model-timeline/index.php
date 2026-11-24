@@ -17,7 +17,7 @@ $graphicLink = is_array($graphicRelease) ? ($graphicRelease['graphic'] ?? '') : 
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Source-linked history of major AI model releases from nine AI labs, 2023 to 2026.">
 <title>Frontier AI Model Release Timeline</title>
-<link rel="stylesheet" href="assets/css/timeline.css">
+<link rel="stylesheet" href="assets/css/timeline.css?v=compact-timeline">
 </head>
 <body><main>
 <header><h1>Frontier AI Model Release Timeline</h1><p>One dataset → a matching table and timeline.</p>
