@@ -12,7 +12,7 @@ const original=fs.readFileSync(archive,'utf8');
 const archived=readJSON(snapshot);
 const fromSnapshot=graphicSVG(archived.models,release.version,release.created);
 if(sha256(original)!==sha256(fromSnapshot))throw Error('Latest archived SVG does not match its data snapshot with the current renderer');
-if(release.graphic_git_blob_sha&&release.graphic_git_blob_sha!==gitBlobSha(original))throw Error('Archived SVG Git blob SHA mismatch');
+if(release.graphic_git_blob_sha&&release.graphic_git_blob_sha!==gitBlobSha(original))throw Error('Archived SVG Git blob SHA mismatch; expected '+release.graphic_git_blob_sha+' got '+gitBlobSha(original));
 if(release.graphic_sha256&&release.graphic_sha256!==sha256(original))throw Error('Archived SVG SHA-256 mismatch');
 const live=graphicSVG(data.models,release.version,release.created);
 if(sha256(live)!==sha256(original))throw Error('Graphic-affecting changes detected. Run scripts/new-release.cjs to generate a new graphic version.');
