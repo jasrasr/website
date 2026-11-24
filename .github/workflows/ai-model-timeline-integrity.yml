@@ -17,3 +17,11 @@ jobs:
         with:
           node-version: '22'
       - run: node ai-model-timeline/scripts/validate.cjs
+      - run: node ai-model-timeline/scripts/test-change-detection.cjs
+      - name: Prevent edits or deletion of previously published graphic archives
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git fetch origin "${{ github.base_ref }}" --depth=1
+          git diff --name-status "origin/${{ github.base_ref }}" HEAD -- ai-model-timeline/archive/ |
+          awk '$2 == "ai-model-timeline/archive/manifest.json" {next} $1 !~ /^A/ { print "Archived file must not be changed: " $0; failed=1 } END {exit failed}'
