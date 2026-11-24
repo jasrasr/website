@@ -1,19 +1,21 @@
 #!/usr/bin/env node
 'use strict';
-const fs=require('fs'),path=require('path');
-const root=path.resolve(__dirname,'..');
-const d=JSON.parse(fs.readFileSync(path.join(root,'data/models.json'),'utf8'));
-const manifest=JSON.parse(fs.readFileSync(path.join(root,'archive/manifest.json'),'utf8'));
-const release=manifest.releases.find(x=>x.version===manifest.latest);
-if(!release)throw Error('Latest version missing from manifest');
-const snapshot=JSON.parse(fs.readFileSync(path.join(root,release.dataset),'utf8'));
-const graphic=fs.readFileSync(path.join(root,release.graphic),'utf8');
-const compare=JSON.stringify;
-if(compare(snapshot)!==compare(d))throw Error('Live dataset does not match archived snapshot. Create a new release.');
-const count=(graphic.match(/ rx="9" width="148"/g)||[]).length;
-if(count!==d.models.length)throw Error('SVG capsule count differs from table data');
-const ids=d.models.map(x=>x.id),pairs=d.models.map(x=>x.platform+'|'+x.model);
-if(new Set(ids).size!==ids.length||new Set(pairs).size!==pairs.length)throw Error('Duplicate model or ID');
-for(const m of d.models){if(!graphic.includes(m.model.replaceAll('&','&amp;')))throw Error('Missing SVG model: '+m.model);}
-if(d.project_version!==release.version)throw Error('Version mismatch');
-console.log('PASS: '+count+' models, identical live/archive JSON, unique IDs/models, matching release version.');
+const {fs,path,root,readJSON,sha256,baseline,validateModels,graphicSVG}=require('./release-utils.cjs');
+const data=readJSON(path.join(root,'data/models.json'));
+const manifest=readJSON(path.join(root,'archive/manifest.json'));
+validateModels(data.models);
+if(data.project_version!==manifest.project_version)throw Error('Project version and manifest disagree');
+if(data.graphic_version!==manifest.latest_graphic_version||manifest.latest!==data.graphic_version)throw Error('Graphic version and manifest disagree');
+const {release,archive,snapshot}=baseline(manifest,data);
+if(release.created!==data.graphic_created)throw Error('Graphic creation date mismatch');
+const original=fs.readFileSync(archive,'utf8');
+const archived=readJSON(snapshot);
+const fromSnapshot=graphicSVG(archived.models,release.version,release.created);
+if(sha256(original)!==sha256(fromSnapshot))throw Error('Archived SVG does not match its immutable data snapshot and current renderer');
+if(release.graphic_sha256&&release.graphic_sha256!==sha256(original))throw Error('Archived SVG SHA-256 mismatch');
+const live=graphicSVG(data.models,release.version,release.created);
+if(sha256(live)!==sha256(original))throw Error('Graphic-affecting changes detected. Run scripts/new-release.cjs to generate a new graphic version.');
+const count=(original.match(/ rx="9" width="148"/g)||[]).length;
+if(count!==archived.models.length||count!==data.models.length)throw Error('SVG capsule count differs from live and archived data');
+for(const m of data.models)if(!original.includes(m.model.replaceAll('&','&amp;').replaceAll('<','&lt;')))throw Error('Missing graphic model: '+m.model);
+console.log('PASS project v'+data.project_version+', graphic v'+release.version+' ('+release.created+'), '+count+' matching models; SVG sha256 '+sha256(original).slice(0,16)+'...');
