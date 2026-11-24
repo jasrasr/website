@@ -13,5 +13,7 @@
       "png_committed": false,
       "release_status": "baseline_primary_catalog_audit_pending"
     }
-  ]
+  ],
+  "project_version": "1.0.2",
+  "latest_graphic_version": "1.0.0"
 }
