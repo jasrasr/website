@@ -49,7 +49,7 @@ history.addEventListener('click',event=>{const button=event.target.closest('.arc
  * those archived SVG bytes only. Neither operation writes to the repository.
  */
 const getArchiveSvg=async release=>{
- if(!/^archive\\/v\\d+\\.\\d+\\.\\d+\\/ai-model-timeline-v\\d+\\.\\d+\\.\\d+-\\d{4}-\\d{2}-\\d{2}\\.svg$/.test(release.graphic))throw Error('Invalid archive path');
+ if(!/^archive\/v\d+\.\d+\.\d+\/ai-model-timeline-v\d+\.\d+\.\d+-\d{4}-\d{2}-\d{2}\.svg$/.test(release.graphic))throw Error('Invalid archive path');
  const response=await fetch(release.graphic,{cache:'no-store'});
  if(!response.ok)throw Error('Archived graphic could not be loaded');
  return response.text();
