@@ -34,12 +34,15 @@ const timeline=document.querySelector('#timeline');
 const yearControls=document.querySelector('#timelineYears');
 const collapsedYears=new Set();
 const graphicMeta={version:graphicVersion,created:graphicDate};
+const labelMetrics=document.createElement('canvas').getContext('2d');
+if(labelMetrics)labelMetrics.font='bold 12.5px Arial, Helvetica, sans-serif';
+const measureLabel=labelMetrics ? label=>labelMetrics.measureText(label).width : undefined;
 const drawTimeline=()=>{
  if(collapsedYears.size===yearControls.childElementCount && collapsedYears.size>0){
   timeline.innerHTML='<p class="empty">All years are collapsed. Select a year to expand it.</p>';
   return;
  }
- timeline.innerHTML=renderTimelineSvg(ms,graphicMeta,collapsedYears);
+ timeline.innerHTML=renderTimelineSvg(ms,graphicMeta,collapsedYears,measureLabel);
 };
 drawTimeline();
 for(const label of timeline.querySelectorAll('.yr')){
