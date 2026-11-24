@@ -93,6 +93,10 @@ test('collector, dashboard authentication, filtering, escaping and storage prote
     addActivity('move-'+move,{occurred:saved.occurred-75+move,label:'play-square-'+move});
   }
   fs.writeFileSync(path.join(temp,files[0]),JSON.stringify(data));
+  const olderTime = saved.occurred - 49 * 3600;
+  const olderDay = new Date(olderTime * 1000).toISOString().slice(0,10);
+  const older = {...game,id:'older',occurred:olderTime,label:'older-than-48-hours'};
+  fs.writeFileSync(path.join(temp,`events-${olderDay}.json`),JSON.stringify({...data,records:{older}}));
   assert.equal((await fetch(base+'setup.php')).status,404);
   const anonymous = await fetch(base,{redirect:'manual'});
   assert.equal(anonymous.status,303);
@@ -118,7 +122,13 @@ test('collector, dashboard authentication, filtering, escaping and storage prote
   assert.ok(group);
   assert.equal((group[1].match(/<li>/g) ?? []).length,38);
   assert.doesNotMatch(group[1],/earlier-game|other-tab|other-ip|other-page/);
-  assert.match(html,/<p class="eyebrow">CLICKS<\/p><strong>42<\/strong>/);
+  assert.match(html,/<p class="eyebrow">CLICKS<\/p><strong>43<\/strong>/);
+  assert.doesNotMatch(html,/click: older-than-48-hours/);
+  const more = html.match(/href="(\?[^\"]*activity_limit=60#recent-activity)">Show more<\/a>/);
+  assert.ok(more);
+  const expanded = await (await fetch(new URL(more[1].replaceAll('&amp;', '&'),base),{headers:{Cookie:cookie}})).text();
+  assert.match(expanded,/click: older-than-48-hours/);
+  assert.doesNotMatch(expanded,/>Show more<\/a>/);
   assert.equal((await fetch(base+'?start=2026-02-30',{headers:{Cookie:cookie}})).status,400);
   assert.equal((await fetch(base+'?site=unknown',{headers:{Cookie:cookie}})).status,400);
   assert.equal((await post(base,cookie,{action:'logout',csrf:token(html)})).status,303);

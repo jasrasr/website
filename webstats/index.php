@@ -43,6 +43,9 @@ try {
     if ($site !== '' && !in_array($site, $sites, true)) throw new InvalidArgumentException('Choose a configured site.');
     $counts = ['pageview' => 0, 'click' => 0];
     $sessions = $pages = $clicks = $referrers = $bySite = $daily = $recent = [];
+    $recentLimit = filter_var($_GET['activity_limit'] ?? 30, FILTER_VALIDATE_INT, ['options' => ['min_range' => 30, 'max_range' => PHP_INT_MAX - 30]]) ?: 30;
+    $recentCutoff = time() - 48 * 3600;
+    $hasOlderActivity = false;
     for ($day = $start; $day < $end; $day = $day->modify('+1 day')) $daily[$day->format('Y-m-d')] = ['pageview' => 0, 'click' => 0];
     foreach (events_between($start->getTimestamp(), $end->getTimestamp(), $site) as $event) {
         $counts[$event['kind']]++;
@@ -58,14 +61,25 @@ try {
             $key = $event['page'] . ' → ' . ($event['target'] ?: $event['label']);
             $clicks[$key] = ($clicks[$key] ?? 0) + 1;
         }
-        add_recent_activity($recent, $event);
+        if ($recentLimit > 30 || $event['occurred'] >= $recentCutoff) {
+            add_recent_activity($recent, $event, $recentLimit + 1);
+        } else {
+            $hasOlderActivity = true;
+        }
     }
+    $hasMoreActivity = $hasOlderActivity || count($recent) > $recentLimit;
+    if (count($recent) > $recentLimit) array_shift($recent);
     foreach (['pages', 'clicks', 'referrers', 'bySite'] as $name) arsort($$name);
     $peak = max(1, ...array_column($daily, 'pageview'));
     $columns = ['time' => 'Time', 'page' => 'Site / page', 'event' => 'Event', 'ip' => 'IP address'];
     $sort = $_GET['sort'] ?? 'time';
     if (!is_string($sort) || !isset($columns[$sort])) $sort = 'time';
     $direction = ($_GET['direction'] ?? null) === 'asc' ? 'asc' : 'desc';
+    $activityQuery = [
+        'site' => $site, 'start' => $start->format('Y-m-d'), 'end' => $last->format('Y-m-d'),
+        'sort' => $sort, 'direction' => $direction,
+    ];
+    if ($recentLimit > 30) $activityQuery['activity_limit'] = $recentLimit;
     $sortValue = static function (array $row) use ($sort): int|string {
         $event = $row['event'];
         return match ($sort) {
@@ -124,10 +138,9 @@ function activity_label(array $event): string {
 <section class="panel" id="recent-activity"><h2>Recent activity</h2><div class="table-wrap"><table><thead><tr>
 <?php foreach ($columns as $key => $label):
     $active = $key === $sort;
-    $query = http_build_query([
-        'site' => $site, 'start' => $start->format('Y-m-d'), 'end' => $last->format('Y-m-d'),
+    $query = http_build_query(array_replace($activityQuery, [
         'sort' => $key, 'direction' => $active && $direction === 'asc' ? 'desc' : 'asc',
-    ]);
+    ]));
 ?>
 <th scope="col"<?php if ($active): ?> aria-sort="<?= $direction === 'asc' ? 'ascending' : 'descending' ?>"<?php endif; ?>><a href="?<?= e($query) ?>#recent-activity"><?= e($label) ?><?php if ($active): ?> <span aria-hidden="true"><?= $direction === 'asc' ? '↑' : '↓' ?></span><?php endif; ?></a></th>
 <?php endforeach; ?>
@@ -145,5 +158,6 @@ function activity_label(array $event): string {
 <?php else: ?><?= e(activity_label($event)) ?><?php endif; ?>
 </td><td><?= e($eventIp ?? '—') ?><?php if ($isViewerIp): ?> - <strong class="activity-me">ME</strong><?php endif; ?></td></tr>
 <?php endforeach; ?>
-<?php if (!$recent): ?><tr><td colspan="4">No activity yet.</td></tr><?php endif; ?></tbody></table></div></section>
+<?php if (!$recent): ?><tr><td colspan="4">No activity in the last 48 hours for these filters.</td></tr><?php endif; ?></tbody></table></div>
+<?php if ($hasMoreActivity): ?><p><a href="?<?= e(http_build_query(array_replace($activityQuery, ['activity_limit' => $recentLimit + 30]))) ?>#recent-activity">Show more</a></p><?php endif; ?></section>
 <?php endif; ?><footer>Webstats 1.1.0 · Self-hosted · No form values or URL query strings collected</footer></main></body></html>

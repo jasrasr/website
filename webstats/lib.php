@@ -162,7 +162,7 @@ function events_between(int $start, int $end, string $site): Generator {
         }
     }
 }
-function add_recent_activity(array &$recent, array $event): void {
+function add_recent_activity(array &$recent, array $event, int $limit): void {
     $timestamp = $event['occurred'];
     $group = $event['kind'] === 'click'
         ? [$event['site'], $event['page'], $event['ip'] ?? null, $event['session']]
@@ -182,7 +182,7 @@ function add_recent_activity(array &$recent, array $event): void {
         if (count($row['clicks']) > 100) array_shift($row['clicks']);
     }
     $recent[] = $row;
-    if (count($recent) > 30) array_shift($recent);
+    if (count($recent) > $limit) array_shift($recent);
 }
 
 function fail(int $status, string $message): never {
