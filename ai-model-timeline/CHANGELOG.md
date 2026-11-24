@@ -2,14 +2,14 @@
 
 Every new graphic must receive a unique project version, creation date, immutable archive path, and explanation.
 
-## [1.0.3] — 2026-11-23 (project-only; graphic unchanged)
+## [1.0.3] - 2026-11-23 (project-only; graphic unchanged)
 - Added on-demand download buttons for the last archived graphic in SVG and PNG formats.
 - Added per-version SVG/PNG download buttons to the historical graphics section.
 - Downloads use the archived SVG bytes; PNG conversion happens entirely in the browser without creating a new repository file or graphic release.
 - Kept graphic v1.0.0 and its 2026-11-23 creation date and filename unchanged.
 - Existing 122 model records and historical data snapshots remain untouched.
 
-## [1.0.2] — 2026-11-23 (project-only; graphic unchanged)
+## [1.0.2] - 2026-11-23 (project-only; graphic unchanged)
 - Separated `project_version` from `graphic_version` and `graphic_created`.
 - Updated the page header, footer, archive link, and SVG/PNG export filenames to use the correct graphic metadata.
 - Added SHA-256 comparison of the rendered SVG to the immutable archived graphic. UI-only and source-only changes do not generate a new image.
@@ -17,13 +17,13 @@ Every new graphic must receive a unique project version, creation date, immutabl
 - Added dynamic year support for future model launches, without changing the existing 2023–2026 graphic.
 - **Graphic remains v1.0.0, created 2026-11-23.** No model records or historical graphics were changed.
 
-## [1.0.1] — 2026-11-23 (UI-only)
+## [1.0.1] - 2026-11-23 (UI-only)
 - Added keyboard-accessible sorting on every release-table column header.
 - Repeated clicks toggle ascending/descending; release dates sort chronologically, even with month-only precision.
 - Added visible sort indicators and `aria-sort` state for screen readers.
 - The model dataset and SVG archive remain unchanged, so **no new graphic** was created. v1.0.0 remains the canonical release-graphic version.
 
-## [1.0.0] — 2026-11-23
+## [1.0.0] - 2026-11-23
 
 **Graphic:** `archive/v1.0.0/ai-model-timeline-v1.0.0-2026-11-23.svg`
 
@@ -39,5 +39,5 @@ Every new graphic must receive a unique project version, creation date, immutabl
 
 **Exports:** SVG archived in GitHub. PNG export available in-browser, with the same version and date filename; no separate PNG artifact committed in v1.0.0.
 
-## [0.1.0] — 2026-11-23
+## [0.1.0] - 2026-11-23
 Project scaffolding, source-of-truth JSON structure, renderer prototype, versioned archival conventions. No canonical graphic was published for v0.1.0.
