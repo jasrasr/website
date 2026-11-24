@@ -18,9 +18,9 @@ v1.0.0 (2026-11-23) is a 122-record initial inventory from nine providers. 23 re
 
 ## Source of truth / renderer
 - `data/models.json`: current dataset.
-- `assets/js/timeline.js`: shared pure SVG function `renderTimelineSvg()`; page view, SVG export, PNG export use the same records.
+- `assets/js/render-core.js`: shared pure SVG renderer. `assets/js/timeline.js`: table and browser exports; all use the same models.
 - `index.php`: read-only UI and version footer.
-- `archive/manifest.json`: historical release index.
+- `archive/manifest.json`: historical graphic release index, with separate `project_version` and `latest_graphic_version`.
 - `archive/vX.Y.Z/`: immutable release graphic and its exact matching data snapshot.
 
 ## Archive / naming
@@ -28,7 +28,7 @@ v1.0.0 (2026-11-23) is a 122-record initial inventory from nine providers. 23 re
 - `ai-model-timeline-vX.Y.Z-YYYY-MM-DD.png` (PNG is available through browser export)
 - `models-vX.Y.Z-YYYY-MM-DD.json`
 
-The archived SVG must be generated from its snapshot and the same renderer before release. Older releases must **never** be overwritten after merge. For subsequent corrections, increment project version, create a new archive folder and record changes under `CHANGELOG.md`.
+The archived SVG must be generated from its snapshot and the same renderer before release. Older releases must **never** be overwritten after merge. UI-only versions advance `project_version` without changing the latest `graphic_version`. Only when the SHA-256 of rendered SVG changes does the release command create a new archived graphic. Model source metadata updates that do not change the timeline are also project-only. Every project release updates `CHANGELOG.md`.
 
 ## Release requirements
 Before publishing:
@@ -42,14 +42,31 @@ Before publishing:
 ## Safety / hosting
 No database, login, writable server storage, API token, AI API or scheduled web crawler is required. The project is read-only and compatible with a basic PHP/static hosting plan. The user's existing weekly AI release check can provide candidate changes for manual review; do not automatically add unverified models to the canonical dataset.
 
+## Two independent versions
+
+- `project_version`: increments for site UI, functionality, metadata, or model updates.
+- `graphic_version` and `graphic_created`: identify the immutable historical graphic currently displayed and exported.
+- `models_updated`: date on which model metadata was last changed; it does not rename the graphic.
+- A v1.0.2 website can legitimately display and download v1.0.0 of the graphic.
+- The newest archived graphic comes from `archive/manifest.json`, not a derived project-version path.
+- The renderer now automatically extends the timeline when future years are added.
+
 ## Publishing future releases (one command)
-From the `ai-model-timeline` directory with Node.js installed:
+
+Run from `ai-model-timeline/` with Node.js:
 
 ```sh
-node scripts/new-release.cjs --version 1.0.1 --reason "New publicly documented model releases" --changes "Added model X and corrected model Y date"
+node scripts/new-release.cjs --version 1.0.3 --reason "Improve mobile table layout" --changes "Better header spacing"
 node scripts/validate.cjs
 ```
 
-The release builder rejects an existing version, missing reason, empty dataset, invalid dates, missing source links and duplicated model IDs/names. It creates a new immutable SVG and matching JSON, updates the latest model metadata, prepends a changelog entry, and appends the manifest. **Review the source evidence and commit the generated files as one PR.** Do not run it directly on a live server, and do not retroactively modify archived releases.
+The release command computes SHA-256 of the candidate SVG rendered from the current model data using the prior graphic's embedded version/date:
 
-Archive browsing is available on the project page. PNG is generated directly from the same SVG in the browser; it is named with the project version and graphic creation date.
+1. **Same SVG hash:** update the project version and changelog only; retain the existing graphic, date, filename, and archive.
+2. **Different SVG hash:** make an immutable new SVG and matching JSON snapshot named with the new project version and creation date; update `graphic_version`, `graphic_created`, the manifest, and the changelog.
+3. **Manual edits to JSON source URLs / verification metadata:** allowed as project changes; they only trigger a graphic if the displayed timeline actually changes.
+4. **Unreleased visible model or SVG style changes:** CI rejects the mismatch until the release command archives a new graphic.
+
+Do not edit the `archive/` contents of an existing version. Before committing, run `node scripts/validate.cjs` and check for `PASS`. The GitHub Actions integrity workflow runs that check on pull requests.
+
+Exports are named for the **graphic's** version/date (not the current project version). The project can evolve independently while previously created graphics remain historically accurate.
