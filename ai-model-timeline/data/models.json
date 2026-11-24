@@ -1,5 +1,5 @@
 {
-  "project_version": "1.0.2",
+  "project_version": "1.0.3",
   "updated": "2026-11-23",
   "status": "initial-canonical-dataset",
   "source_policy": "The source_url is a primary provider announcement for directly sourced records, otherwise a provider catalog. Month precision retained when exact day not confirmed. Catalog-linked entries merit further model-specific checking.",
