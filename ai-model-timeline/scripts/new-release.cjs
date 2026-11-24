@@ -1,53 +1,74 @@
 #!/usr/bin/env node
 /**
- * New-AIModelTimelineRelease equivalent for Node.js.
- * Usage:
- *   node scripts/new-release.cjs --version 1.0.1 --reason "Verified new model releases" --changes "Added model X"
- * Optional: --date YYYY-MM-DD (defaults to current local date, used ONLY for graphic creation date).
- * Archives are append-only. Never overwrite an existing release.
+ * Publish a project version without needlessly creating a new graphic.
+ * node scripts/new-release.cjs --version 1.0.3 --reason "Improve table filters" --changes "..."
+ * node scripts/new-release.cjs --version 1.1.0 --reason "New AI models" --changes "..."
+ * --date YYYY-MM-DD overrides creation date (America/New_York by default).
+ *
+ * If rendered SVG bytes match the last archived SVG, release only project changes.
+ * If any visible SVG content or renderer output differs, create a new immutable
+ * graphic and matching data snapshot using the NEW project version.
  */
 'use strict';
-const fs=require('fs'),path=require('path'),render=require('../assets/js/render-core.js');
-const root=path.resolve(__dirname,'..');
-const args=process.argv.slice(2);const flag=n=>{const i=args.indexOf('--'+n);return i>=0?args[i+1]:null;};
-const version=flag('version'),reason=flag('reason'),changes=flag('changes')||'See source data diff.';
-const date=flag('date')||new Date().toLocaleDateString('en-CA',{timeZone:'America/New_York'});
-if(!/^\d+\.\d+\.\d+$/.test(version||''))throw Error('Specify --version X.Y.Z');
-if(!/^\d{4}-\d{2}-\d{2}$/.test(date))throw Error('Invalid --date');
-if(!reason||reason.trim().length<8)throw Error('A meaningful --reason is required');
-const dir=path.join(root,'archive','v'+version);
-if(fs.existsSync(dir))throw Error('Refusing to overwrite existing release '+version);
-const dataPath=path.join(root,'data','models.json');
-const manifestPath=path.join(root,'archive','manifest.json');
-const changelogPath=path.join(root,'CHANGELOG.md');
-const d=JSON.parse(fs.readFileSync(dataPath,'utf8'));const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
-if(manifest.releases.some(x=>x.version===version))throw Error('Version already in manifest');
-const models=d.models||[],keys=new Set(),ids=new Set();
-for(const m of models){
- if(!/^\d{4}-\d{2}(-\d{2})?$/.test(m.release_date)||Number(m.release_date.slice(5,7))>12||Number(m.release_date.slice(5,7))<1)throw Error('Invalid model date: '+m.model);
- if(m.release_date.length===10&&!Number.isFinite(Date.parse(m.release_date)))throw Error('Invalid calendar day: '+m.model);
- if(!m.model||!m.platform||!m.source_url?.startsWith('https://'))throw Error('Incomplete model: '+JSON.stringify(m));
- const key=m.platform+'|'+m.model;if(keys.has(key)||ids.has(m.id))throw Error('Duplicate model/id: '+key);keys.add(key);ids.add(m.id);
+const {fs,path,root,readJSON,sha256,gitBlobSha,compareVersion,validVersion,baseline,validateModels,graphicSVG}=require('./release-utils.cjs');
+const args=process.argv.slice(2);
+const flag=name=>{const i=args.indexOf('--'+name);return i<0?null:args[i+1];};
+const version=flag('version'),reason=flag('reason'),changes=flag('changes');
+const date=flag('date')||new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+if(!validVersion(version))throw Error('Specify --version X.Y.Z');
+if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||new Date(date+'T00:00:00Z').toISOString().slice(0,10)!==date)throw Error('Invalid --date YYYY-MM-DD');
+if(!reason||reason.trim().length<8)throw Error('Provide a meaningful --reason');
+if(!changes||!changes.trim())throw Error('Specify --changes for the changelog');
+const dataPath=path.join(root,'data/models.json'),manifestPath=path.join(root,'archive/manifest.json'),logPath=path.join(root,'CHANGELOG.md');
+const data=readJSON(dataPath),manifest=readJSON(manifestPath);
+if(!validVersion(data.project_version)||compareVersion(version,data.project_version)<=0)throw Error('Project version must increase from '+data.project_version);
+validateModels(data.models);
+const {release,archive,snapshot}=baseline(manifest,data);
+const existing=fs.readFileSync(archive,'utf8');
+const oldData=readJSON(snapshot);
+if(release.graphic_git_blob_sha&&gitBlobSha(existing)!==release.graphic_git_blob_sha)throw Error('Archived graphic Git blob checksum mismatch');
+if(release.graphic_sha256&&sha256(existing)!==release.graphic_sha256)throw Error('Archived graphic SHA-256 mismatch');
+const candidate=graphicSVG(data.models,release.version,release.created);
+const visualChanged=sha256(candidate)!==sha256(existing);
+if(visualChanged&&manifest.releases.some(r=>r.version===version))throw Error('Graphic version already exists');
+const target=path.join(root,'archive','v'+version);
+if(visualChanged&&fs.existsSync(target))throw Error('Refusing to overwrite existing graphic directory '+target);
+const priorModels=JSON.stringify(data.models)!==JSON.stringify(oldData.models);
+data.project_version=version;
+data.updated=date;
+if(priorModels)data.models_updated=date;
+let newGraphic=null;
+if(visualChanged){
+ data.graphic_version=version;data.graphic_created=date;
+ const svgName='ai-model-timeline-v'+version+'-'+date+'.svg',jsonName='models-v'+version+'-'+date+'.json';
+ const svg=graphicSVG(data.models,version,date);
+ newGraphic={version,created:date,reason,changes,models:data.models.length,
+  graphic:'archive/v'+version+'/'+svgName,
+  dataset:'archive/v'+version+'/'+jsonName,
+  graphic_sha256:sha256(svg),
+  png_export_filename:'ai-model-timeline-v'+version+'-'+date+'.png',png_committed:false};
+ manifest.latest=version;
+ manifest.latest_graphic_version=version;
+ manifest.releases.unshift(newGraphic);
+} else {
+ data.graphic_version=release.version;
+ data.graphic_created=release.created;
+ manifest.latest_graphic_version=release.version;
 }
-if(!models.length)throw Error('Refusing to release empty dataset');
-d.project_version=version;d.updated=date;
-const svg=render(models);
-const capsuleCount=(svg.match(/ rx="9" width="148"/g)||[]).length;
-if(capsuleCount!==models.length)throw Error('SVG capsule mismatch: '+capsuleCount+' vs '+models.length);
-const svgName='ai-model-timeline-v'+version+'-'+date+'.svg';
-const jsonName='models-v'+version+'-'+date+'.json';
-manifest.latest=version;
-manifest.releases.unshift({version,created:date,reason,changes,models:models.length,
- graphic:'archive/v'+version+'/'+svgName,
- dataset:'archive/v'+version+'/'+jsonName,
- png_export_filename:'ai-model-timeline-v'+version+'-'+date+'.png',png_committed:false});
-const oldLog=fs.readFileSync(changelogPath,'utf8');
-const entry='## ['+version+'] — '+date+'\n\n**Graphic:** `archive/v'+version+'/'+svgName+'`\n\n**Data snapshot:** `archive/v'+version+'/'+jsonName+'`\n\n**Why created:** '+reason+'\n\n**Changes:** '+changes+'\n\n**Models:** '+models.length+'\n\n';
-const updatedLog=oldLog.replace(/^(# [^\n]+\n\n)/,'$1'+entry);
-fs.mkdirSync(dir,{recursive:false});
-fs.writeFileSync(path.join(dir,svgName),svg,'utf8');
-fs.writeFileSync(path.join(dir,jsonName),JSON.stringify(d,null,2)+'\n','utf8');
-fs.writeFileSync(dataPath,JSON.stringify(d,null,2)+'\n','utf8');
-fs.writeFileSync(manifestPath,JSON.stringify(manifest,null,2)+'\n','utf8');
-fs.writeFileSync(changelogPath,updatedLog,'utf8');
-console.log('Created '+svgName+' and '+jsonName+' ('+models.length+' records).');
+manifest.project_version=version;
+const header='## ['+version+'] — '+date+(visualChanged?' (graphic release)':' (project-only; graphic unchanged)')+'\n';
+const detail='\n**Why:** '+reason+'\n\n**Changes:** '+changes+'\n\n**Graphic:** '+(visualChanged?'New archive `'+newGraphic.graphic+'`':'Reused `'+release.graphic+'`; no new graphic generated')+'\n\n';
+const log=fs.readFileSync(logPath,'utf8').replace(/^(# [^\n]+\n\n)/,'$1'+header+detail);
+// Render and validate everything before writing files.
+const dataText=JSON.stringify(data,null,2)+'\n',manifestText=JSON.stringify(manifest,null,2)+'\n';
+if(visualChanged){
+ const svg=graphicSVG(data.models,version,date);
+ fs.mkdirSync(target,{recursive:false});
+ fs.writeFileSync(path.join(root,newGraphic.graphic),svg,'utf8');
+ fs.writeFileSync(path.join(root,newGraphic.dataset),dataText,'utf8');
+}
+fs.writeFileSync(dataPath,dataText,'utf8');
+fs.writeFileSync(manifestPath,manifestText,'utf8');
+fs.writeFileSync(logPath,log,'utf8');
+console.log(visualChanged?'NEW GRAPHIC '+newGraphic.graphic:'NO GRAPHIC CHANGE; kept '+release.graphic);
+console.log('Project v'+version+'; graphic v'+data.graphic_version+'; model records '+data.models.length);

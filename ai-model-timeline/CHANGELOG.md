@@ -2,6 +2,14 @@
 
 Every new graphic must receive a unique project version, creation date, immutable archive path, and explanation.
 
+## [1.0.2] — 2026-11-23 (project-only; graphic unchanged)
+- Separated `project_version` from `graphic_version` and `graphic_created`.
+- Updated the page header, footer, archive link, and SVG/PNG export filenames to use the correct graphic metadata.
+- Added SHA-256 comparison of the rendered SVG to the immutable archived graphic. UI-only and source-only changes do not generate a new image.
+- Updated the release builder to create new archived graphics only if the rendered SVG changed; validation supports the separate versions and checks the archived snapshot.
+- Added dynamic year support for future model launches, without changing the existing 2023–2026 graphic.
+- **Graphic remains v1.0.0, created 2026-11-23.** No model records or historical graphics were changed.
+
 ## [1.0.1] — 2026-11-23 (UI-only)
 - Added keyboard-accessible sorting on every release-table column header.
 - Repeated clicks toggle ascending/descending; release dates sort chronologically, even with month-only precision.

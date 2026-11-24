@@ -11,7 +11,10 @@
       "dataset": "archive/v1.0.0/models-v1.0.0-2026-11-23.json",
       "png_export_filename": "ai-model-timeline-v1.0.0-2026-11-23.png",
       "png_committed": false,
-      "release_status": "baseline_primary_catalog_audit_pending"
+      "release_status": "baseline_primary_catalog_audit_pending",
+      "graphic_git_blob_sha": "c7d69fd9f7833544ba0dec57f4037c2d57e5e4f3"
     }
-  ]
+  ],
+  "project_version": "1.0.2",
+  "latest_graphic_version": "1.0.0"
 }

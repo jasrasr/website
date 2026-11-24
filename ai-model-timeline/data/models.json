@@ -1,5 +1,5 @@
 {
-  "project_version": "1.0.0",
+  "project_version": "1.0.2",
   "updated": "2026-11-23",
   "status": "initial-canonical-dataset",
   "source_policy": "The source_url is a primary provider announcement for directly sourced records, otherwise a provider catalog. Month precision retained when exact day not confirmed. Catalog-linked entries merit further model-specific checking.",
@@ -1349,5 +1349,8 @@
       "source_scope": "provider_catalog"
     }
   ],
-  "quality_note": "Initial canonical dataset: sourced model inventory, not independent primary-page verification of every exact historical date. Do not silently elevate month precision to day precision."
+  "quality_note": "Initial canonical dataset: sourced model inventory, not independent primary-page verification of every exact historical date. Do not silently elevate month precision to day precision.",
+  "graphic_version": "1.0.0",
+  "graphic_created": "2026-11-23",
+  "models_updated": "2026-11-23"
 }
