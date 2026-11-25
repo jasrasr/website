@@ -129,10 +129,11 @@ test('collector, dashboard authentication, filtering, escaping and storage prote
   const expanded = await (await fetch(new URL(more[1].replaceAll('&amp;', '&'),base),{headers:{Cookie:cookie}})).text();
   assert.match(expanded,/click: older-than-48-hours/);
   assert.doesNotMatch(expanded,/>Show more<\/a>/);
+  assert.match(html,/name="activity" value="all" aria-pressed="true">All activity/);
   const filtered = await (await fetch(base+'?hide_me=1&sort=ip&activity_limit=60',{headers:{Cookie:cookie}})).text();
   const recentOnly = filtered.split('id="recent-activity"')[1];
   assert.ok(recentOnly);
-  assert.match(recentOnly,/value="hide" selected/);
+  assert.match(recentOnly,/name="activity" value="hide" aria-pressed="true">Hide my activity/);
   assert.match(recentOnly,/sort=ip&amp;direction=asc&amp;activity_limit=60&amp;activity=hide#recent-activity/);
   assert.match(recentOnly,/<td>192\.0\.2\.5<\/td>/);
   assert.match(recentOnly,/https:\/\/source\.test\/legacy/);
@@ -140,7 +141,7 @@ test('collector, dashboard authentication, filtering, escaping and storage prote
   assert.match(filtered,/<p class="eyebrow">CLICKS<\/p><strong>43<\/strong>/);
   const mine = await (await fetch(base+'?activity=show&sort=ip',{headers:{Cookie:cookie}})).text();
   const mineRecent = mine.split('id="recent-activity"')[1];
-  assert.match(mineRecent,/value="show" selected/);
+  assert.match(mineRecent,/name="activity" value="show" aria-pressed="true">Show my activity/);
   assert.match(mineRecent,/activity-me/);
   assert.doesNotMatch(mineRecent,/192\.0\.2\.5|source\.test\/legacy/);
   assert.match(mineRecent,/sort=ip&amp;direction=asc&amp;activity=show#recent-activity/);

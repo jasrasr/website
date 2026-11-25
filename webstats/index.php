@@ -123,7 +123,7 @@ function activity_label(array $event): string {
 ?>
 <!doctype html>
 <html lang="en" data-analytics-ignore><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Webstats · JASR</title><link rel="stylesheet" href="assets/css/app.css?v=2"></head>
+<title>Webstats · JASR</title><link rel="stylesheet" href="assets/css/app.css?v=3"></head>
 <body><main><header class="heading"><div><p class="eyebrow">JASR / YOUR SITES, YOUR STATS</p><h1>Webstats<span>.</span></h1><p class="muted">A clear view of where people go and what they click.</p></div>
 <?php if (isset($auth) && empty($unavailable)): ?><form method="post"><input type="hidden" name="csrf" value="<?= e($auth->csrf()) ?>"><button class="secondary" name="action" value="logout">Sign out</button></form><?php endif; ?></header>
 <?php if ($error): ?><p class="alert" role="alert"><?= e($error) ?></p><?php endif; ?>
@@ -143,19 +143,15 @@ function activity_label(array $event): string {
 <div class="grid"><?php ranking('Top pages', $pages, 'Views'); ranking('Clicked destinations & actions', $clicks, 'Clicks'); ranking('Referrers', $referrers, 'Views'); ranking('Traffic by site', $bySite, 'Events'); ?></div>
 <section class="panel" id="recent-activity"><h2>Recent activity</h2>
 <?php if ($viewerAddress !== false): ?>
-<form method="get" action="#recent-activity" class="activity-filter">
+<form method="get" action="#recent-activity" class="activity-filter" aria-label="Filter by current IP">
 <?php foreach (array_diff_key($activityQuery, ['activity' => true]) as $name => $value): ?>
 <input type="hidden" name="<?= e($name) ?>" value="<?= e($value) ?>">
 <?php endforeach; ?>
-<label>Filter by current IP
-<select name="activity">
-<option value="all"<?= $activityMode === 'all' ? ' selected' : '' ?>>All activity</option>
-<option value="show"<?= $activityMode === 'show' ? ' selected' : '' ?>>Show my activity</option>
-<option value="hide"<?= $activityMode === 'hide' ? ' selected' : '' ?>>Hide my activity</option>
-</select></label>
-<button class="secondary">Apply</button>
+<?php foreach (['all' => 'All activity', 'show' => 'Show my activity', 'hide' => 'Hide my activity'] as $mode => $label): ?>
+<button type="submit" name="activity" value="<?= e($mode) ?>" aria-pressed="<?= $activityMode === $mode ? 'true' : 'false' ?>"<?= $activityMode === $mode ? '' : ' class="secondary"' ?>><?= e($label) ?></button>
+<?php endforeach; ?>
 </form>
-<script src="assets/js/activity-filter.js?v=2" defer></script>
+
 <?php endif; ?>
 <div class="table-wrap"><table><thead><tr>
 <?php foreach ($columns as $key => $label):
