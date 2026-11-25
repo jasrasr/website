@@ -17,7 +17,8 @@ try {
     $viewerIp = filter_var($_SERVER['REMOTE_ADDR'] ?? '', FILTER_VALIDATE_IP);
     $viewerAddress = $viewerIp === false ? false : inet_pton($viewerIp);
     $isViewerIp = static fn (?string $ip): bool => $viewerAddress !== false && $ip !== null && inet_pton($ip) === $viewerAddress;
-    $hideMe = $viewerAddress !== false && ($_GET['hide_me'] ?? null) === '1';
+    $activityMode = $_GET['activity'] ?? (($_GET['hide_me'] ?? null) === '1' ? 'hide' : 'all');
+    if ($viewerAddress === false || !in_array($activityMode, ['show', 'hide'], true)) $activityMode = 'all';
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (($_POST['action'] ?? '') !== 'logout' || !$auth->validCsrf($_POST['csrf'] ?? null)) {
             http_response_code(403);
@@ -63,7 +64,7 @@ try {
             $key = $event['page'] . ' → ' . ($event['target'] ?: $event['label']);
             $clicks[$key] = ($clicks[$key] ?? 0) + 1;
         }
-        if ($hideMe && $isViewerIp($event['ip'] ?? null)) continue;
+        if ($activityMode !== 'all' && $isViewerIp($event['ip'] ?? null) !== ($activityMode === 'show')) continue;
         if ($recentLimit > 30 || $event['occurred'] >= $recentCutoff) {
             add_recent_activity($recent, $event, $recentLimit + 1);
         } else {
@@ -83,7 +84,7 @@ try {
         'sort' => $sort, 'direction' => $direction,
     ];
     if ($recentLimit > 30) $activityQuery['activity_limit'] = $recentLimit;
-    if ($hideMe) $activityQuery['hide_me'] = '1';
+    if ($activityMode !== 'all') $activityQuery['activity'] = $activityMode;
     $sortValue = static function (array $row) use ($sort): int|string {
         $event = $row['event'];
         return match ($sort) {
@@ -131,7 +132,7 @@ function activity_label(array $event): string {
 <?php else: ?>
 <form method="get" class="filters panel"><label>Website<select name="site"><option value="">All sites</option><?php foreach ($sites as $item): ?><option value="<?= e($item) ?>" <?= $site === $item ? 'selected' : '' ?>><?= e($item) ?></option><?php endforeach; ?></select></label>
 <input type="hidden" name="sort" value="<?= e($sort) ?>"><input type="hidden" name="direction" value="<?= e($direction) ?>">
-<?php if ($hideMe): ?><input type="hidden" name="hide_me" value="1"><?php endif; ?>
+<?php if ($activityMode !== 'all'): ?><input type="hidden" name="activity" value="<?= e($activityMode) ?>"><?php endif; ?>
 <label>From<input type="date" name="start" value="<?= e($start->format('Y-m-d')) ?>" required></label>
 <label>Through<input type="date" name="end" value="<?= e($last->format('Y-m-d')) ?>" max="<?= e($today->format('Y-m-d')) ?>" required></label><button>Update view</button></form>
 <p class="muted">Dates use <?= e($cfg['timezone']) ?>. Today's totals are still growing. Refresh to load new activity.</p>
@@ -143,13 +144,18 @@ function activity_label(array $event): string {
 <section class="panel" id="recent-activity"><h2>Recent activity</h2>
 <?php if ($viewerAddress !== false): ?>
 <form method="get" action="#recent-activity" class="activity-filter">
-<?php foreach (array_diff_key($activityQuery, ['hide_me' => true]) as $name => $value): ?>
+<?php foreach (array_diff_key($activityQuery, ['activity' => true]) as $name => $value): ?>
 <input type="hidden" name="<?= e($name) ?>" value="<?= e($value) ?>">
 <?php endforeach; ?>
-<label><input type="checkbox" name="hide_me" value="1"<?= $hideMe ? ' checked' : '' ?>> Hide my activity</label>
+<label>Filter by current IP
+<select name="activity">
+<option value="all"<?= $activityMode === 'all' ? ' selected' : '' ?>>All activity</option>
+<option value="show"<?= $activityMode === 'show' ? ' selected' : '' ?>>Show my activity</option>
+<option value="hide"<?= $activityMode === 'hide' ? ' selected' : '' ?>>Hide my activity</option>
+</select></label>
 <button class="secondary">Apply</button>
 </form>
-<script src="assets/js/activity-filter.js" defer></script>
+<script src="assets/js/activity-filter.js?v=2" defer></script>
 <?php endif; ?>
 <div class="table-wrap"><table><thead><tr>
 <?php foreach ($columns as $key => $label):
