@@ -1,4 +1,21 @@
 {
+  "project_index": {
+    "_header": {
+      "File Name": "ticketing/project.json",
+      "Author": "Jason Lamb (with help from ChatGPT)",
+      "Description": "Project index metadata.",
+      "Revision": "1.0.0",
+      "Created Date": "2026-11-25",
+      "Modified Date": "2026-11-25",
+      "Changelog": [
+        "Rev 1.0.0 - Register the project in the repository index."
+      ]
+    },
+    "name": "Ticketing",
+    "category": "tools",
+    "description": "PHP/JSON requester and agent help-desk portals, categories, and CSV tools; preserve instance-local runtime data.",
+    "order": 170
+  },
   "name": "Ticketing",
   "revision": "1.7.3",
   "modified": "2026-09-15",

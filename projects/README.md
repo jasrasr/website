@@ -2,10 +2,11 @@
 File Name     : projects/README.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Deployment, maintenance, and validation for the project directory.
-Revision      : 1.1.0
+Revision      : 1.1.1
 Created Date  : 2026-11-25
 Modified Date : 2026-11-25
 Changelog     :
+  Rev 1.1.1 - Document index metadata in existing release manifests.
   Rev 1.1.0 - Document project metadata and automated index updates.
   Rev 1.0.0 - Add the Jasr.me project directory.
 -->
@@ -29,6 +30,8 @@ Copy [Refill Tracker’s `project.json`](../refill-tracker/project.json) into th
 | `order` | Optional README sort position. Entries without a position sort alphabetically after the seeded order. |
 | `site_note`, `link_title` | Optional custom site label and clickable README title. |
 
+If the app already uses `project.json` for release history, put the index fields in a `project_index` object inside it. Availability and Ticketing use this form.
+
 List visitor-facing entry points on the Projects page. The access label describes the app’s existing requirements. Keep credentials and other private values out of metadata.
 
 Before committing a new or updated project, run from the repository root:
@@ -50,6 +53,10 @@ Store metadata outside the generated blocks. Edit existing app code and app-leve
 - After Hostinger sync, confirm the displayed revision matches this changelog and that `/` still opens the existing Jasr.me homepage.
 
 ## Changelog
+
+### 1.1.1 · 2026-11-25
+
+- Support index metadata in existing project release manifests.
 
 ### 1.1.0 · 2026-11-25
 

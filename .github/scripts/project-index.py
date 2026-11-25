@@ -1,10 +1,11 @@
 # File Name     : .github/scripts/project-index.py
 # Author        : Jason Lamb (with help from ChatGPT)
 # Description   : Generate README listings and navigation tiles from project metadata.
-# Revision      : 1.0.0
+# Revision      : 1.0.1
 # Created Date  : 2026-11-25
 # Modified Date : 2026-11-25
 # Changelog     :
+#   Rev 1.0.1 - Read index metadata nested in existing release manifests.
 #   Rev 1.0.0 - Generate both project indexes from project.json.
 import argparse
 import json
@@ -39,6 +40,8 @@ def validate_url(value, navigation=False):
 
 def read_project(path):
     item = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(item, dict) and "project_index" in item:
+        item = item["project_index"]
     if not isinstance(item, dict) or item.keys() - FIELDS:
         raise ValueError("expected a project object with documented fields")
     if not isinstance(item.get("_header"), dict):
