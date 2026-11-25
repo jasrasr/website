@@ -1,0 +1,61 @@
+# File Name     : .github/workflows/repo-activity.yml
+# Author        : Jason Lamb (with help from ChatGPT)
+# Description   : Build and publish CSV logs and the README repository activity plot.
+# Revision      : 1.0.0
+# Created Date  : 2026-11-25
+# Modified Date : 2026-11-25
+# Changelog     :
+#   Rev 1.0.0 - Publish main history metrics to the repo-activity branch.
+name: Repo Activity
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: publish-repo-activity
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Generate activity logs and plot
+        run: python3 .github/scripts/repo-activity.py "$RUNNER_TEMP/repo-activity"
+      - name: Publish the snapshot
+        shell: bash
+        env:
+          ACTIVITY_DIR: ${{ runner.temp }}/repo-activity
+          ACTIVITY_REF: refs/heads/repo-activity
+        run: |
+          tree=$(
+            for name in commit-activity.csv main-activity.csv repo-activity.svg; do
+              blob=$(git hash-object -w "$ACTIVITY_DIR/$name") || exit 1
+              printf '100644 blob %s\t%s\n' "$blob" "$name"
+            done | git mktree
+          )
+          current=$(git ls-remote origin "$ACTIVITY_REF")
+          parents=()
+          if [[ -n "$current" ]]; then
+            git fetch --no-tags origin "$ACTIVITY_REF"
+            parent=$(git rev-parse FETCH_HEAD)
+            if [[ "$tree" == "$(git rev-parse "$parent^{tree}")" ]]; then
+              echo "Activity snapshot is current."
+              exit 0
+            fi
+            parents=(-p "$parent")
+          fi
+          source=$(git rev-parse --short HEAD)
+          commit=$(git -c user.name='github-actions[bot]' \
+            -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit-tree "$tree" "${parents[@]}" -m "Refresh repo activity for $source")
+          git push origin "$commit:$ACTIVITY_REF"
