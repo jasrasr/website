@@ -1603,3 +1603,4 @@ f0f065afbae7067a1de39a14931d11da1d8122e2,2026-11-25T11:01:10-05:00,commit,Link p
 c49a9eaf925b0a522841428306fa0d9665327d02,2026-11-25T11:52:10-05:00,commit,Apply the Webstats activity checkbox immediately,2,10,1,0,webstats
 c37e89ed1e86de09a52735b275ccf0a9308f1ca4,2026-11-25T12:15:01-05:00,commit,Show current IP activity in Webstats,3,27,13,0,webstats
 5740de0935dd2786f3f7d59b82181ab4bc855deb,2026-11-25T12:23:16-05:00,commit,Allow Webstats events from jeremylamb.tech,1,1,0,0,webstats
+efcf3dd769fa96a1d7a8759af0b1029f274b0a03,2026-11-25T13:26:51-05:00,commit,Use quick buttons for Webstats activity views,4,10,23,0,webstats
