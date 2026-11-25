@@ -1,16 +1,17 @@
 <?php
 /*
 Filename: smart-404-admin.php
-Revision: 1.3.0
+Revision: 1.4.0
 Description: Password-gated web viewer and editor for smart-404 logs, manual redirects, and malicious patterns.
 Author: Jason Lamb (with help from Codex CLI)
 Created Date: 2026-05-18
-Modified Date: 2026-05-27
+Modified Date: 2026-11-25
 Changelog:
 1.0.0 initial release with login, filtering, summary stats, and newest-first log table
 1.1.0 add manual map create, update, and delete controls
 1.2.0 add map-from-log controls with optional matching log cleanup notices
 1.3.0 add malicious pattern controls with optional matching log cleanup
+1.4.0 compact request log with expandable details and actions
 */
 
 declare(strict_types=1);
@@ -515,14 +516,44 @@ $uniquePaths = count(array_unique(array_map(fn ($entry) => $entry['path'] ?? '',
         td { font-size: 13px; }
         code { background: #edf3f8; padding: 2px 4px; }
         .muted { color: #657384; }
-        .wide { min-width: 260px; }
+        .request-log { background: #fff; border: 1px solid #ccd5df; margin-bottom: 16px; }
+        .request-log > details + details { border-top: 1px solid #ccd5df; }
+        .request-summary {
+            display: grid;
+            grid-template-columns: 18ch minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.5fr) auto;
+            align-items: baseline;
+            gap: 4px 12px;
+            padding: 6px 10px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .request-summary::-webkit-details-marker { display: none; }
+        .request-summary, .request-details { overflow-wrap: anywhere; }
+        .request-toggle { grid-column: -2; text-decoration: underline; }
+        .request-toggle::before { content: "▸ "; }
+        details[open] > .request-summary .request-toggle::before { content: "▾ "; }
+        .request-details { padding: 4px 10px 10px; }
+        .request-details dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; margin: 0 0 10px; font-size: 13px; }
+        .request-details dt { font-weight: bold; }
+        .request-details dd { margin: 0; }
+        .request-details .map-form { margin-bottom: 6px; font-size: 13px; }
+        .request-details input, .request-details select, .request-details button { padding: 4px 6px; max-width: 100%; box-sizing: border-box; }
+        .request-empty { margin: 0; padding: 8px 10px; }
+        @media (max-width: 720px) {
+            main { padding-inline: 12px; }
+            .panel { padding: 10px; overflow-x: auto; }
+            .panel input, .toolbar input { min-width: 0; max-width: 100%; box-sizing: border-box; }
+            .request-summary { grid-template-columns: minmax(0, 1fr) auto; }
+            .request-summary > span:not(.request-toggle) { grid-column: 1; }
+            .request-toggle { grid-row: 1; }
+        }
         .source-input { min-width: 180px; }
         .target-input { min-width: 320px; }
         @media (prefers-color-scheme: dark) {
             body { background: #10151b; color: #e8edf2; }
-            .login, .panel, .stat, table { background: #161d25; border-color: #2d3a47; }
+            .login, .panel, .stat, table, .request-log { background: #161d25; border-color: #2d3a47; }
             th { background: #202a34; }
-            th, td { border-color: #2d3a47; }
+            th, td, .request-log > details + details { border-color: #2d3a47; }
             code { background: #202a34; }
             .muted { color: #aab4bf; }
             .notice { color: #7bd99a; }
@@ -645,60 +676,49 @@ $uniquePaths = count(array_unique(array_map(fn ($entry) => $entry['path'] ?? '',
         </table>
     </section>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Time UTC</th>
-                <th>Path</th>
-                <th>Map</th>
-                <th>Malicious</th>
-                <th>Query</th>
-                <th>Mapped To</th>
-                <th>Matched By</th>
-                <th>IP</th>
-                <th class="wide">Referrer</th>
-                <th class="wide">User Agent</th>
-            </tr>
-        </thead>
-        <tbody>
+    <section aria-labelledby="request-log-heading">
+        <h2 id="request-log-heading">Request Log</h2>
+        <div class="request-log">
         <?php foreach ($shown as $entry): ?>
-            <tr>
-                <td><?= h($entry['time_utc']) ?></td>
-                <td><code><?= h($entry['path']) ?></code></td>
-                <td>
+            <details>
+                <summary class="request-summary">
+                    <span class="muted"><?= h(str_replace(['T', '+00:00'], [' ', 'Z'], $entry['time_utc'])) ?></span>
+                    <span><code><?= h($entry['path']) ?></code></span>
+                    <span class="muted"><?= h($entry['ip']) ?></span>
+                    <span><?= h($entry['mapped_to']) ?><?php if ($entry['matched_by'] !== ''): ?> <span class="muted">(<?= h($entry['matched_by']) ?>)</span><?php endif; ?></span>
+                    <span class="request-toggle">Details</span>
+                </summary>
+                <div class="request-details">
+                    <dl>
+                        <dt>Query</dt><dd><?= h($entry['query']) ?></dd>
+                        <dt>Referrer</dt><dd><?= h($entry['referer']) ?></dd>
+                        <dt>User Agent</dt><dd><?= h($entry['user_agent']) ?></dd>
+                    </dl>
                     <form method="post" class="map-form">
                         <input type="hidden" name="source" value="<?= h($entry['path']) ?>">
-                        <input class="target-input" name="target" placeholder="/github/example/" required>
+                        <input class="target-input" name="target" aria-label="Redirect target" placeholder="/github/example/" required>
                         <label><input type="checkbox" name="remove_matching_logs" value="1"> Remove matches</label>
                         <button type="submit" name="map_action" value="save">Map this</button>
                     </form>
-                </td>
-                <td>
                     <form method="post" class="map-form">
-                        <select name="malicious_type">
+                        <select name="malicious_type" aria-label="Pattern type">
                             <option value="exact">Exact</option>
                             <option value="prefix">Prefix</option>
                             <option value="contains">Contains</option>
                         </select>
-                        <input class="source-input" name="malicious_value" value="<?= h($entry['path']) ?>" required>
-                        <input name="malicious_note" placeholder="optional note">
+                        <input class="source-input" name="malicious_value" aria-label="Pattern value" value="<?= h($entry['path']) ?>" required>
+                        <input name="malicious_note" aria-label="Pattern note" placeholder="optional note">
                         <label><input type="checkbox" name="remove_matching_logs" value="1"> Remove matches</label>
                         <button type="submit" name="malicious_action" value="save">Mark malicious</button>
                     </form>
-                </td>
-                <td><?= h($entry['query']) ?></td>
-                <td><?= h($entry['mapped_to']) ?></td>
-                <td><?= h($entry['matched_by']) ?></td>
-                <td><?= h($entry['ip']) ?></td>
-                <td><?= h($entry['referer']) ?></td>
-                <td><?= h($entry['user_agent']) ?></td>
-            </tr>
+                </div>
+            </details>
         <?php endforeach; ?>
         <?php if (!$shown): ?>
-            <tr><td colspan="10" class="muted">No log entries found.</td></tr>
+            <p class="request-empty muted">No log entries found.</p>
         <?php endif; ?>
-        </tbody>
-    </table>
+        </div>
+    </section>
 <?php endif; ?>
 </main>
 </body>
