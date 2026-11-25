@@ -2,9 +2,10 @@
 File: style.css
 Author: Jason Lamb (with help from ChatGPT)
 Created: 2026-02-03
-Modified: 2026-02-03
-Revision: 1.0
+Modified: 2026-11-25
+Revision: 1.1
 Change Log:
+- 1.1: Apply themed link colors and support the search submit button.
 - 1.0: Initial styling for flat-file blog
 */
 
@@ -21,6 +22,8 @@ Change Log:
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
 }
+
+a { color: var(--link); }
 
 * { box-sizing: border-box; }
 html, body { height: 100%; }
@@ -67,9 +70,10 @@ body {
 .hero h1 { margin: 0 0 8px; font-size: 1.6rem; }
 .hero p { margin: 0; color: var(--muted); line-height: 1.5; }
 
-.search-row { display: flex; gap: 10px; margin-top: 14px; }
+.search-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 .search {
-  flex: 1;
+  flex: 1 1 12rem;
+  min-width: 0;
   background: rgba(0,0,0,.2);
   border: 1px solid var(--border);
   border-radius: 12px;
