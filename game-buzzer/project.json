@@ -1,0 +1,20 @@
+{
+  "_header": {
+    "File Name": "game-buzzer/project.json",
+    "Author": "Jason Lamb (with help from ChatGPT)",
+    "Description": "Project index metadata.",
+    "Revision": "1.0.0",
+    "Created Date": "2026-11-25",
+    "Modified Date": "2026-11-25",
+    "Changelog": [
+      "Rev 1.0.0 - Register the project in the repository index."
+    ]
+  },
+  "name": "Game Buzzer",
+  "category": "games",
+  "description": "Six-team phone buzzer and arrival-survey Majority Rules game, with host controls and projector scoreboard. Requires private host setup.",
+  "order": 60,
+  "navigation": {
+    "order": 80
+  }
+}

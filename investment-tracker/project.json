@@ -1,0 +1,22 @@
+{
+  "_header": {
+    "File Name": "investment-tracker/project.json",
+    "Author": "Jason Lamb (with help from ChatGPT)",
+    "Description": "Project index metadata.",
+    "Revision": "1.0.0",
+    "Created Date": "2026-11-25",
+    "Modified Date": "2026-11-25",
+    "Changelog": [
+      "Rev 1.0.0 - Register the project in the repository index."
+    ]
+  },
+  "name": "Investment Tracker",
+  "category": "trackers",
+  "description": "Authenticated investment tracker with tax lots, split history, Robinhood imports, charts, and sell simulations. Project access required.",
+  "order": 10,
+  "link_title": true,
+  "navigation": {
+    "order": 30,
+    "access": "Project access required"
+  }
+}

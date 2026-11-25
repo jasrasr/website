@@ -1,0 +1,21 @@
+{
+  "_header": {
+    "File Name": "ai-model-timeline/project.json",
+    "Author": "Jason Lamb (with help from ChatGPT)",
+    "Description": "Project index metadata.",
+    "Revision": "1.0.0",
+    "Created Date": "2026-11-25",
+    "Modified Date": "2026-11-25",
+    "Changelog": [
+      "Rev 1.0.0 - Register the project in the repository index."
+    ]
+  },
+  "name": "AI Model Release Timeline",
+  "category": "tools",
+  "description": "Source-linked, versioned model release table and deterministic SVG/PNG timeline.",
+  "url": "https://jasr.me/ai-model-timeline/",
+  "navigation": {
+    "order": 70,
+    "href": "../ai-model-timeline/"
+  }
+}

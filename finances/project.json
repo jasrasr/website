@@ -1,0 +1,17 @@
+{
+  "_header": {
+    "File Name": "finances/project.json",
+    "Author": "Jason Lamb (with help from ChatGPT)",
+    "Description": "Project index metadata.",
+    "Revision": "1.0.0",
+    "Created Date": "2026-11-25",
+    "Modified Date": "2026-11-25",
+    "Changelog": [
+      "Rev 1.0.0 - Register the project in the repository index."
+    ]
+  },
+  "name": "Budget Tracker",
+  "category": "trackers",
+  "description": "Private PHP budget tracker using per-user JSON files.",
+  "order": 80
+}

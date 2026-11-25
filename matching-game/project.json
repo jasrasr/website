@@ -1,0 +1,20 @@
+{
+  "_header": {
+    "File Name": "matching-game/project.json",
+    "Author": "Jason Lamb (with help from ChatGPT)",
+    "Description": "Project index metadata.",
+    "Revision": "1.0.0",
+    "Created Date": "2026-11-25",
+    "Modified Date": "2026-11-25",
+    "Changelog": [
+      "Rev 1.0.0 - Register the project in the repository index."
+    ]
+  },
+  "name": "Matching Game",
+  "category": "games",
+  "description": "Touch-friendly color memory game with custom grids, a timer, session scores, and optional private history.",
+  "order": 30,
+  "navigation": {
+    "order": 30
+  }
+}

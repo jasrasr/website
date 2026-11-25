@@ -1,0 +1,17 @@
+{
+  "_header": {
+    "File Name": "fs/project.json",
+    "Author": "Jason Lamb (with help from ChatGPT)",
+    "Description": "Project index metadata.",
+    "Revision": "1.0.0",
+    "Created Date": "2026-11-25",
+    "Modified Date": "2026-11-25",
+    "Changelog": [
+      "Rev 1.0.0 - Register the project in the repository index."
+    ]
+  },
+  "name": "Freshservice Ticket Tracker",
+  "category": "tools",
+  "description": "Aggregate backlog and ticket activity charts with server-side API collection and ticket review tools. Requires private configuration.",
+  "order": 160
+}

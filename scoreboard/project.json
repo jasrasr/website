@@ -1,0 +1,20 @@
+{
+  "_header": {
+    "File Name": "scoreboard/project.json",
+    "Author": "Jason Lamb (with help from ChatGPT)",
+    "Description": "Project index metadata.",
+    "Revision": "1.0.0",
+    "Created Date": "2026-11-25",
+    "Modified Date": "2026-11-25",
+    "Changelog": [
+      "Rev 1.0.0 - Register the project in the repository index."
+    ]
+  },
+  "name": "Live Game Scoreboard",
+  "category": "games",
+  "description": "PHP scoreboard app with default, Collide, Youth, and Frontlines instances.",
+  "order": 70,
+  "navigation": {
+    "order": 90
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "_header": {
+    "File Name": "gps-eta/project.json",
+    "Author": "Jason Lamb (with help from ChatGPT)",
+    "Description": "Project index metadata.",
+    "Revision": "1.0.0",
+    "Created Date": "2026-11-25",
+    "Modified Date": "2026-11-25",
+    "Changelog": [
+      "Rev 1.0.0 - Register the project in the repository index."
+    ]
+  },
+  "name": "Trip ETA Tracker",
+  "category": "trackers",
+  "description": "Mobile GPS speed, ETA, compass heading, trip sessions, and server-side history.",
+  "order": 50,
+  "navigation": {
+    "order": 120
+  }
+}

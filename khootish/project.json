@@ -1,0 +1,20 @@
+{
+  "_header": {
+    "File Name": "khootish/project.json",
+    "Author": "Jason Lamb (with help from ChatGPT)",
+    "Description": "Project index metadata.",
+    "Revision": "1.0.0",
+    "Created Date": "2026-11-25",
+    "Modified Date": "2026-11-25",
+    "Changelog": [
+      "Rev 1.0.0 - Register the project in the repository index."
+    ]
+  },
+  "name": "Khootish Multiplayer Quiz",
+  "category": "games",
+  "description": "Formerly `quiz-web-interactive` (renamed August 2026). Team quizzes with a projector display, question bank, and game history.",
+  "order": 80,
+  "navigation": {
+    "order": 70
+  }
+}

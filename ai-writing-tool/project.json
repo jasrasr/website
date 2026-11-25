@@ -1,0 +1,20 @@
+{
+  "_header": {
+    "File Name": "ai-writing-tool/project.json",
+    "Author": "Jason Lamb (with help from ChatGPT)",
+    "Description": "Project index metadata.",
+    "Revision": "1.0.0",
+    "Created Date": "2026-11-25",
+    "Modified Date": "2026-11-25",
+    "Changelog": [
+      "Rev 1.0.0 - Register the project in the repository index."
+    ]
+  },
+  "name": "AI Writing Tool",
+  "category": "tools",
+  "description": "Two-pane browser editor with local autosave and AI suggestions through a PHP proxy.",
+  "order": 90,
+  "navigation": {
+    "order": 100
+  }
+}

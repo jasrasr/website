@@ -1,0 +1,20 @@
+{
+  "_header": {
+    "File Name": "magic-word/project.json",
+    "Author": "Jason Lamb (with help from ChatGPT)",
+    "Description": "Project index metadata.",
+    "Revision": "1.0.0",
+    "Created Date": "2026-11-25",
+    "Modified Date": "2026-11-25",
+    "Changelog": [
+      "Rev 1.0.0 - Register the project in the repository index."
+    ]
+  },
+  "name": "Magic Word Terminal",
+  "category": "games",
+  "description": "Jurassic Park-inspired interactive access-denied terminal with command entry and sound.",
+  "order": 140,
+  "navigation": {
+    "order": 100
+  }
+}
