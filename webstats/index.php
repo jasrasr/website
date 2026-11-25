@@ -163,8 +163,11 @@ function activity_label(array $event): string {
 <?php foreach ($recent as $row):
     $event = $row['event'];
     $eventIp = $event['ip'] ?? null;
+    $pageUrl = clean_url($event['page']);
 ?>
-<tr><td><?php if ($row['first'] !== $event['occurred']): ?><?= e(activity_time($row['first'], $tz)) ?> – <br><?php endif; ?><?= e(activity_time($event['occurred'], $tz)) ?></td><td><?= e($event['page']) ?></td><td>
+<tr><td><?php if ($row['first'] !== $event['occurred']): ?><?= e(activity_time($row['first'], $tz)) ?> – <br><?php endif; ?><?= e(activity_time($event['occurred'], $tz)) ?></td><td>
+<?php if ($pageUrl !== ''): ?><a href="<?= e($pageUrl) ?>" target="_blank" rel="noopener noreferrer"><?= e($event['page']) ?></a><?php else: ?><?= e($event['page']) ?><?php endif; ?>
+</td><td>
 <?php if ($row['count'] > 1): ?>
 <details><summary><?= number_format($row['count']) ?> clicks</summary>
 <?php if ($row['count'] > count($row['clicks'])): ?><p class="muted">Showing the latest <?= count($row['clicks']) ?> clicks.</p><?php endif; ?>

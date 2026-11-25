@@ -107,9 +107,9 @@ test('collector, dashboard authentication, filtering, escaping and storage prote
   assert.equal((await post(base,cookie,{action:'logout',csrf:'invalid'})).status,403);
   const report=await fetch(base,{headers:{Cookie:cookie}});const html=await report.text();assert.equal(report.status,200);assert.match(html,/Top pages/);assert.match(html,/source.test\/index.php/);assert.doesNotMatch(html,/secret=remove/);
   assert.match(html,/<th scope="col" aria-sort="descending"><a [^>]+>Time /);
-  assert.match(html,/<td>https:\/\/source\.test\/index\.php<\/td><td>\s*pageview\s*<\/td><td>127\.0\.0\.1 - <strong class="activity-me">ME<\/strong><\/td>/);
+  assert.match(html,/<td>\s*<a href="https:\/\/source\.test\/index\.php" target="_blank" rel="noopener noreferrer">https:\/\/source\.test\/index\.php<\/a>\s*<\/td><td>\s*pageview\s*<\/td><td>127\.0\.0\.1 - <strong class="activity-me">ME<\/strong><\/td>/);
   assert.match(html,/<td>\s*click: other-ip<\/td><td>192\.0\.2\.5<\/td>/);
-  assert.match(html,/<td>https:\/\/source\.test\/legacy<\/td><td>\s*pageview\s*<\/td><td>—<\/td>/);
+  assert.match(html,/<td>\s*<a href="https:\/\/source\.test\/legacy" [^>]+>https:\/\/source\.test\/legacy<\/a>\s*<\/td><td>\s*pageview\s*<\/td><td>—<\/td>/);
   for (const direction of ['asc', 'desc']) {
     const sorted = await (await fetch(`${base}?sort=ip&direction=${direction}&site=source.test`, {headers:{Cookie:cookie}})).text();
     const mine = sorted.indexOf('127.0.0.1 - <strong');
