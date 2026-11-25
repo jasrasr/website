@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign in to your account</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #fff;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 360px;
+      margin: 80px auto;
+      padding: 20px;
+    }
+    .logo {
+      margin-bottom: 20px;
+    }
+    .logo img {
+      width: 108px;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 400;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 14px;
+      margin: 10px 0;
+      box-sizing: border-box;
+    }
+    .link {
+      font-size: 13px;
+      margin: 8px 0;
+    }
+    .link a {
+      text-decoration: none;
+      color: #0067b8;
+    }
+    .btn {
+      width: 100%;
+      background: #0067b8;
+      color: #fff;
+      padding: 10px;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    .options {
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+    }
+    .options::before {
+      content: "🔑";
+      margin-right: 10px;
+    }
+    footer {
+      text-align: center;
+      font-size: 12px;
+      margin-top: 60px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <img src="https://logincdn.msauth.net/16.000.30925.11/images/microsoft_logo.svg" alt="Microsoft logo"/>
+    </div>
+    <h1>Sign in</h1>
+    <form onsubmit="handleSubmit(event)">
+      <input type="text" placeholder="Email, phone, or Skype" required />
+      <div class="link"><a href="#">No account? Create one!</a></div>
+      <div class="link"><a href="#">Can't access your account?</a></div>
+      <button type="submit" class="btn">Next</button>
+    </form>
+    <div class="options">Sign-in options</div>
+    <footer>
+      <a href="#">Terms of use</a> • <a href="#">Privacy & cookies</a>
+    </footer>
+  </div>
+
+  <script>
+    function handleSubmit(e) {
+      e.preventDefault();
+      const email = e.target.querySelector("input").value;
+      console.log(`Captured email: ${email}`);
+      alert("This is a simulation. In real life, you'd be hacked.");
+    }
+  </script>
+</body>
+</html>
