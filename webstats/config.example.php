@@ -14,6 +14,7 @@ return [
         'https://www.jasr.me' => 'jasr.me',
         'https://jasonlamb.me' => 'jasonlamb.me',
         'https://www.jasonlamb.me' => 'jasonlamb.me',
+        'https://jeremylamb.tech' => 'jeremylamb.tech',
         'https://justjason.fyi' => 'justjason.fyi',
         'https://www.justjason.fyi' => 'justjason.fyi',
         'https://jasrasr.github.io' => 'jasrasr.github.io',
