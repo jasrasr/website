@@ -3,16 +3,17 @@
     "filename": "feed-the-pet.json",
     "author": "Jason Lamb (with help from ChatGPT)",
     "created_date": "2026-11-22",
-    "modified_date": "2026-11-22",
-    "revision": "1.0.0",
+    "modified_date": "2026-11-25",
+    "revision": "1.0.1",
     "changelog": [
+      "1.0.1: Added the initial public revision record linked to the original article commit.",
       "1.0.0: Added a project article with fresh desktop and mobile screenshots."
     ]
   },
   "slug": "feed-the-pet",
   "title": "Feed the Pet: A Gentle Game of Taps and Pet Orders",
   "date": "2026-11-23",
-  "updated": "2026-11-22",
+  "updated": "2026-11-23",
   "author": "Jason Lamb",
   "tags": [
     "Browser experiments",
@@ -27,5 +28,13 @@
     "src": "media/derivatives/2026/11/feed-the-pet_640w.jpg",
     "alt": "Feed the Pet game showing a friendly pet and colorful food choices"
   },
-  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/11/feed-the-pet_640w.jpg\" alt=\"Feed the Pet game showing a friendly pet and colorful food choices\" loading=\"eager\" decoding=\"async\"></figure>\n<figure><img src=\"media/derivatives/2026/11/feed-the-pet_640w.jpg\" alt=\"Feed the Pet game showing a friendly pet and colorful food choices\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Feed the Pet is a small, touch-friendly game for young children. Pick a puppy, kitten, bunny, or panda, then tap foods to fill the bowl. Free Feed lets children choose any five foods from the tray.</p>\n<p>Pet Orders adds picture challenges that practice colors, counting, and patterns. The game gives a simple order, such as finding something red or serving two carrots. A wrong choice leaves progress intact, so children can try again. New orders are spoken aloud, and the Hear again control repeats them.</p>\n<p>Sound cues play after food taps, with a Sound button to mute or unmute. Completed rounds stay in the current browser tab across reloads. Finishing all three orders in a set earns an achievement, and achievements unlock additional pets. The game works without an account or server storage.</p>\n<h2>Desktop and mobile play</h2>\n<p>The large food choices and direct taps make the game easy to use on phones and tablets as well as desktop browsers.</p>\n<figure><img src=\"media/derivatives/2026/11/feed-the-pet_640w.jpg\" alt=\"Feed the Pet desktop view with pet selection and food tray\" loading=\"lazy\" decoding=\"async\"></figure>\n<figure><img src=\"media/derivatives/2026/11/feed-the-pet-mobile_640w.jpg\" alt=\"Feed the Pet mobile view with large food cards for touch play\" loading=\"lazy\" decoding=\"async\"></figure>\n<p><a href=\"https://jasr.me/github/feed-the-pet/\">Play Feed the Pet</a> · <a href=\"https://github.com/jasrasr/website/tree/main/feed-the-pet\">Explore the project on GitHub</a></p>\n"
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/11/feed-the-pet_640w.jpg\" alt=\"Feed the Pet game showing a friendly pet and colorful food choices\" loading=\"eager\" decoding=\"async\"></figure>\n<figure><img src=\"media/derivatives/2026/11/feed-the-pet_640w.jpg\" alt=\"Feed the Pet game showing a friendly pet and colorful food choices\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Feed the Pet is a small, touch-friendly game for young children. Pick a puppy, kitten, bunny, or panda, then tap foods to fill the bowl. Free Feed lets children choose any five foods from the tray.</p>\n<p>Pet Orders adds picture challenges that practice colors, counting, and patterns. The game gives a simple order, such as finding something red or serving two carrots. A wrong choice leaves progress intact, so children can try again. New orders are spoken aloud, and the Hear again control repeats them.</p>\n<p>Sound cues play after food taps, with a Sound button to mute or unmute. Completed rounds stay in the current browser tab across reloads. Finishing all three orders in a set earns an achievement, and achievements unlock additional pets. The game works without an account or server storage.</p>\n<h2>Desktop and mobile play</h2>\n<p>The large food choices and direct taps make the game easy to use on phones and tablets as well as desktop browsers.</p>\n<figure><img src=\"media/derivatives/2026/11/feed-the-pet_640w.jpg\" alt=\"Feed the Pet desktop view with pet selection and food tray\" loading=\"lazy\" decoding=\"async\"></figure>\n<figure><img src=\"media/derivatives/2026/11/feed-the-pet-mobile_640w.jpg\" alt=\"Feed the Pet mobile view with large food cards for touch play\" loading=\"lazy\" decoding=\"async\"></figure>\n<p><a href=\"https://jasr.me/github/feed-the-pet/\">Play Feed the Pet</a> · <a href=\"https://github.com/jasrasr/website/tree/main/feed-the-pet\">Explore the project on GitHub</a></p>\n\n<!-- blog-revision-history:start -->\n<section class=\"revision-history\" aria-label=\"Article update history\">\n<h2>Update history</h2>\n<p>These notes record article updates associated with repository changes. The original publication date is retained.</p>\n<ul>\n<li id=\"revision-2026-11-23-feed-the-pet-article\"><time datetime=\"2026-11-23\">2026-11-23</time> — Published the initial article introducing Feed the Pet, with desktop and mobile screenshots. <a href=\"https://github.com/jasrasr/website/commit/9b2f02bd7e1b329cb17e6455a92023d85ec160fc\">GitHub source</a></li>\n</ul>\n</section>\n<!-- blog-revision-history:end -->\n",
+  "revision_history": [
+    {
+      "id": "2026-11-23-feed-the-pet-article",
+      "date": "2026-11-23",
+      "summary": "Published the initial article introducing Feed the Pet, with desktop and mobile screenshots.",
+      "source_url": "https://github.com/jasrasr/website/commit/9b2f02bd7e1b329cb17e6455a92023d85ec160fc"
+    }
+  ]
 }

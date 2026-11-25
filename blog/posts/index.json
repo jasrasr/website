@@ -3,7 +3,7 @@
     "filename": "posts/index.json",
     "author": "Jason Lamb (with help from ChatGPT)",
     "created_date": "2026-02-03",
-    "modified_date": "2026-11-22",
+    "modified_date": "2026-11-25",
     "revision": "1.3.1",
     "changelog": [
       "1.3.1: Preserves cover metadata and fallback excerpts during generated index rebuilds",
@@ -12,7 +12,7 @@
     ]
   },
   "blog_title": "Jason’s Flat-File Blog",
-  "generated": "2026-11-23T02:41:41.8855842Z",
+  "generated": "2026-11-25T13:01:34.7356255Z",
   "posts": [
     {
       "slug": "feed-the-pet",
@@ -27,7 +27,7 @@
         "src": "media/derivatives/2026/11/feed-the-pet_640w.jpg",
         "alt": "Feed the Pet game showing a friendly pet and colorful food choices"
       },
-      "_searchText": "feed the pet: a gentle game of taps and pet orders browser experiments games a touch-friendly feeding game for children, with free play, picture challenges, spoken orders, and unlockable pets. feed the pet is a small, touch-friendly game for young children. pick a puppy, kitten, bunny, or panda, then tap foods to fill the bowl. free feed lets children choose any five foods from the tray. pet orders adds picture challenges that practice colors, counting, and patterns. the game gives a simple order, such as finding something red or serving two carrots. a wrong choice leaves progress intact, so children can try again. new orders are spoken aloud, and the hear again control repeats them. sound cues play after food taps, with a sound button to mute or unmute. completed rounds stay in the current browser tab across reloads. finishing all three orders in a set earns an achievement, and achievements unlock additional pets. the game works without an account or server storage. desktop and mobile play the large food choices and direct taps make the game easy to use on phones and tablets as well as desktop browsers. play feed the pet · explore the project on github"
+      "_searchText": "feed the pet: a gentle game of taps and pet orders browser experiments games a touch-friendly feeding game for children, with free play, picture challenges, spoken orders, and unlockable pets. feed the pet is a small, touch-friendly game for young children. pick a puppy, kitten, bunny, or panda, then tap foods to fill the bowl. free feed lets children choose any five foods from the tray. pet orders adds picture challenges that practice colors, counting, and patterns. the game gives a simple order, such as finding something red or serving two carrots. a wrong choice leaves progress intact, so children can try again. new orders are spoken aloud, and the hear again control repeats them. sound cues play after food taps, with a sound button to mute or unmute. completed rounds stay in the current browser tab across reloads. finishing all three orders in a set earns an achievement, and achievements unlock additional pets. the game works without an account or server storage. desktop and mobile play the large food choices and direct taps make the game easy to use on phones and tablets as well as desktop browsers. play feed the pet · explore the project on github update history these notes record article updates associated with repository changes. the original publication date is retained. 2026-11-23 — published the initial article introducing feed the pet, with desktop and mobile screenshots. github source"
     },
     {
       "slug": "matching-game",
@@ -42,7 +42,7 @@
         "src": "media/derivatives/2026/11/matching-game_640w.jpg",
         "alt": "Matching Game desktop interface showing a colorful grid of face-down tiles"
       },
-      "_searchText": "matching game: a colorful memory challenge browser experiments games a child-friendly browser memory game with colors, letters, numbers, objects, adjustable grids, and optional spoken tiles. matching game gives young players a simple memory challenge. choose colors, letters, numbers, or objects, then turn over two tiles at a time. a pair stays visible, while a mismatch turns back after a short pause. the board can be changed from a compact 2-by-2 grid up to 6-by-6, with an even number of tiles in every layout. the timer starts on the first reveal and stops when all pairs are found. attempts, completed rounds, pairs, and best times are kept for the current browser tab session, so children can play without creating an account. tiles can also be read aloud. the game uses supplied recordings when available and falls back to the browser voice for missing files. optional signed-in history saves completed game summaries, while card order and moves stay on the device. desktop and mobile play the layout keeps the tile grid touch friendly on smaller screens and gives the game controls room on desktop. play matching game · explore the project on github"
+      "_searchText": "matching game: a colorful memory challenge browser experiments games a child-friendly browser memory game with colors, letters, numbers, objects, adjustable grids, and optional spoken tiles. matching game gives young players a simple memory challenge. choose colors, letters, numbers, or objects, then turn over two tiles at a time. a pair stays visible, while a mismatch turns back after a short pause. the board can be changed from a compact 2-by-2 grid up to 6-by-6, with an even number of tiles in every layout. the timer starts on the first reveal and stops when all pairs are found. attempts, completed rounds, pairs, and best times are kept for the current browser tab session, so children can play without creating an account. tiles can also be read aloud. the game uses supplied recordings when available and falls back to the browser voice for missing files. optional signed-in history saves completed game summaries, while card order and moves stay on the device. desktop and mobile play the layout keeps the tile grid touch friendly on smaller screens and gives the game controls room on desktop. play matching game · explore the project on github update history these notes record article updates associated with repository changes. the original publication date is retained. 2026-11-22 — published the initial article introducing matching game, with desktop and mobile screenshots. github source"
     },
     {
       "slug": "kingdom-connections-business-directory",
