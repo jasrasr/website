@@ -2,10 +2,11 @@
 File Name     : README.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Repository overview, development conventions, project index, and deployment guidance.
-Revision      : 1.0.20
+Revision      : 1.0.21
 Created Date  : 2025-02-14
-Modified Date : 2026-11-22
+Modified Date : 2026-11-25
 Changelog     :
+  Rev 1.0.21 - Link the searchable Jasr.me Project Navigation page.
   Rev 1.0.19 - Upgrade Fake Chatbot to PHP-backed joke portal with optional shared-identity history linking and admin tools.
   Rev 1.0.20 - Refresh Coin Flip and Super Tic-Tac-Toe documentation and screenshots.
   Rev 1.0.18 - Add preserved PowerShell fake chatbot and safe browser-based simulation as a new project.
@@ -66,6 +67,8 @@ Apply framework components according to the project's runtime. Browser-only/offl
 Folders in this repo sync under `https://jasr.me/github/<folder>/`, which is the canonical URL for each project. Short vanity paths like `jasr.me/mpg` or `jasr.me/time-clock` are **redirects** to the matching `jasr.me/github/<folder>/` location, so the tables below list the canonical `/github/` URLs. Canonical `/github/` links open in a new tab.
 
 ## Project index
+
+Open [Project Navigation](https://jasr.me/github/projects/) for a searchable tile view of featured projects. See [projects/](projects/) for its source and [README](projects/README.md) for maintenance and deployment.
 
 Browse the projects by purpose. The source links open folders in this repository; site links may be live, private, or deployment targets. This index does not verify every hosted endpoint.
 
