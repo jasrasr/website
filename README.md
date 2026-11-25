@@ -2,10 +2,11 @@
 File Name     : README.md
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Repository overview, development conventions, project index, and deployment guidance.
-Revision      : 1.0.21
+Revision      : 1.0.22
 Created Date  : 2025-02-14
 Modified Date : 2026-11-25
 Changelog     :
+  Rev 1.0.22 - Embed the repository activity plot and link the generated commit logs.
   Rev 1.0.21 - Link the searchable Jasr.me Project Navigation page.
   Rev 1.0.19 - Upgrade Fake Chatbot to PHP-backed joke portal with optional shared-identity history linking and admin tools.
   Rev 1.0.20 - Refresh Coin Flip and Super Tic-Tac-Toe documentation and screenshots.
@@ -36,6 +37,19 @@ This repo is where I keep HTML, CSS, JavaScript, PHP scripts, and small hosted w
 I currently use Hostinger for hosting. I have used GoDaddy, billable through LuckyRegister, and Powweb before that. I currently maintain several domains, but I mainly publish on [jasonlamb.me](https://jasonlamb.me). I use [jasr.me](https://jasr.me) for tools, tests, redirects, and hosted side projects.
 
 Important hosting note: this repo is used as source storage and syncs to my web host. PHP projects in this repo are intended to run from the hosted website, not from GitHub Pages.
+
+## Repo activity
+
+![Repo activity scatter plot for the latest 90 days](https://raw.githubusercontent.com/jasrasr/website/repo-activity/repo-activity.svg)
+
+Each dot represents a commit or PR merge that landed on `main`. Time runs left to right. Height shows files changed on a logarithmic scale, size shows lines added plus deleted, and color identifies active folders. The window ends at the most recent commit in the charted history.
+
+- [Download per-commit CSV](https://raw.githubusercontent.com/jasrasr/website/repo-activity/commit-activity.csv) for individual commits and their first-parent diffs.
+- [Download main activity CSV](https://raw.githubusercontent.com/jasrasr/website/repo-activity/main-activity.csv) to count work once when it lands on `main`. Use this CSV for totals. It counts binary and renamed files as changed files and measures additions and deletions on text diffs.
+
+The [Repo Activity workflow](https://github.com/jasrasr/website/actions/workflows/repo-activity.yml) (revision 1.0.0, 2026-11-25) publishes these files to the `repo-activity` branch after pushes to `main`. It also supports manual runs. A rerun with identical outputs leaves the snapshot as it is.
+
+To preview locally, run `python3 .github/scripts/repo-activity.py /tmp/repo-activity` from a full checkout of the branch you want to measure. Compare the CSV row count (excluding the header) to `git rev-list --count HEAD`, compare the main CSV to `git rev-list --first-parent --count HEAD`, and open the SVG.
 
 ## Development conventions — read before changing files
 
