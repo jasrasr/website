@@ -1,6 +1,6 @@
 {
-  "project_version": "1.0.3",
-  "updated": "2026-11-23",
+  "project_version": "1.1.0",
+  "updated": "2026-11-25",
   "status": "initial-canonical-dataset",
   "source_policy": "The source_url is a primary provider announcement for directly sourced records, otherwise a provider catalog. Month precision retained when exact day not confirmed. Catalog-linked entries merit further model-specific checking.",
   "models": [
@@ -1347,10 +1347,43 @@
       "source_url": "https://www.moonshot.ai/",
       "date_precision": "day",
       "source_scope": "provider_catalog"
+    },
+    {
+      "id": "m123",
+      "platform": "OpenAI",
+      "model": "GPT-5.5 Cyber",
+      "release_date": "2026-06-22",
+      "status": "released",
+      "access": "restricted",
+      "source_url": "https://openai.com/index/introducing-gpt-5-5-cyber/",
+      "date_precision": "day",
+      "source_scope": "model_announcement"
+    },
+    {
+      "id": "m124",
+      "platform": "OpenAI",
+      "model": "GPT-5.6 Cyber",
+      "release_date": "2026-08-10",
+      "status": "released",
+      "access": "restricted",
+      "source_url": "https://openai.com/index/introducing-gpt-5-6-cyber/",
+      "date_precision": "day",
+      "source_scope": "model_announcement"
+    },
+    {
+      "id": "m125",
+      "platform": "OpenAI",
+      "model": "GPT-6 Cyber",
+      "release_date": "2026-11-05",
+      "status": "released",
+      "access": "restricted",
+      "source_url": "https://openai.com/index/introducing-gpt-6-cyber/",
+      "date_precision": "day",
+      "source_scope": "model_announcement"
     }
   ],
   "quality_note": "Initial canonical dataset: sourced model inventory, not independent primary-page verification of every exact historical date. Do not silently elevate month precision to day precision.",
-  "graphic_version": "1.0.0",
-  "graphic_created": "2026-11-23",
-  "models_updated": "2026-11-23"
+  "graphic_version": "1.1.0",
+  "graphic_created": "2026-11-25",
+  "models_updated": "2026-11-25"
 }
