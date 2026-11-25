@@ -1,0 +1,23 @@
+{
+  "_header": {
+    "File Name": "random-password-generator/project.json",
+    "Author": "Jason Lamb (with help from ChatGPT)",
+    "Description": "Project index metadata.",
+    "Revision": "1.0.0",
+    "Created Date": "2026-11-25",
+    "Modified Date": "2026-11-25",
+    "Changelog": [
+      "Rev 1.0.0 - Register the project in the repository index."
+    ]
+  },
+  "name": "Random Password Generator",
+  "category": "tools",
+  "description": "Client-side password generator experiments and working copies. Deployed at `/pw`; the `/github/` path is access-restricted.",
+  "order": 30,
+  "url": "https://jasr.me/pw",
+  "navigation": {
+    "order": 10,
+    "name": "Password Generator",
+    "href": "/pw"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "_header": {
+    "File Name": "tv-binge-board/project.json",
+    "Author": "Jason Lamb (with help from ChatGPT)",
+    "Description": "Project index metadata.",
+    "Revision": "1.0.0",
+    "Created Date": "2026-11-25",
+    "Modified Date": "2026-11-25",
+    "Changelog": [
+      "Rev 1.0.0 - Register the project in the repository index."
+    ]
+  },
+  "name": "TV Binge Board",
+  "category": "trackers",
+  "description": "Mobile-first PHP/JSON tracker for what to watch, watching, and completed TV/movies, with import, sharing, and friend activity. Does not stream.",
+  "order": 70,
+  "navigation": {
+    "order": 80
+  }
+}

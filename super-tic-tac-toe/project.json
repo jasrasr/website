@@ -1,0 +1,22 @@
+{
+  "_header": {
+    "File Name": "super-tic-tac-toe/project.json",
+    "Author": "Jason Lamb (with help from ChatGPT)",
+    "Description": "Project index metadata.",
+    "Revision": "1.0.0",
+    "Created Date": "2026-11-25",
+    "Modified Date": "2026-11-25",
+    "Changelog": [
+      "Rev 1.0.0 - Register the project in the repository index."
+    ]
+  },
+  "name": "Super Tic-Tac-Toe",
+  "category": "games",
+  "description": "Nine linked boards, classic modes, local two-player or computer play, undo and redo, and optional private score history.",
+  "order": 20,
+  "url": "https://jasr.me/super-tic-tac-toe/",
+  "navigation": {
+    "order": 10,
+    "href": "../super-tic-tac-toe/"
+  }
+}

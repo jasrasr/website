@@ -1,0 +1,22 @@
+{
+  "_header": {
+    "File Name": "box/project.json",
+    "Author": "Jason Lamb (with help from ChatGPT)",
+    "Description": "Project index metadata.",
+    "Revision": "1.0.0",
+    "Created Date": "2026-11-25",
+    "Modified Date": "2026-11-25",
+    "Changelog": [
+      "Rev 1.0.0 - Register the project in the repository index."
+    ]
+  },
+  "name": "QR Box Inventory System",
+  "category": "tools",
+  "description": "Database-free QR inventory system for physical storage boxes.",
+  "order": 70,
+  "navigation": {
+    "order": 100,
+    "name": "QR Box Inventory",
+    "category": "trackers"
+  }
+}

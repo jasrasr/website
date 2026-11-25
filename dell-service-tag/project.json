@@ -1,0 +1,20 @@
+{
+  "_header": {
+    "File Name": "dell-service-tag/project.json",
+    "Author": "Jason Lamb (with help from ChatGPT)",
+    "Description": "Project index metadata.",
+    "Revision": "1.0.0",
+    "Created Date": "2026-11-25",
+    "Modified Date": "2026-11-25",
+    "Changelog": [
+      "Rev 1.0.0 - Register the project in the repository index."
+    ]
+  },
+  "name": "Dell Service Tag Lookup",
+  "category": "tools",
+  "description": "Service-tag entry page that opens the matching Dell Support page.",
+  "order": 150,
+  "navigation": {
+    "order": 50
+  }
+}

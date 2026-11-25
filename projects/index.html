@@ -3,10 +3,11 @@
 File Name     : projects/index.html
 Author        : Jason Lamb (with help from ChatGPT)
 Description   : Searchable directory of Jasr.me projects.
-Revision      : 1.0.0
+Revision      : 1.1.0
 Created Date  : 2026-11-25
 Modified Date : 2026-11-25
 Changelog     :
+  Rev 1.1.0 - Generate project tiles from per-project metadata.
   Rev 1.0.0 - Add the Jasr.me project directory.
 -->
 <html lang="en">
@@ -104,6 +105,7 @@ Changelog     :
         <section id="games" aria-labelledby="games-heading">
             <h2 id="games-heading">Games</h2>
             <ul class="tiles">
+<!-- BEGIN GENERATED NAV games -->
                 <li><a class="tile" href="../super-tic-tac-toe/"><strong>Super Tic-Tac-Toe</strong></a></li>
                 <li><a class="tile" href="../oregon-trail/"><strong>Oregon Trail</strong></a></li>
                 <li><a class="tile" href="../matching-game/"><strong>Matching Game</strong></a></li>
@@ -115,12 +117,14 @@ Changelog     :
                 <li><a class="tile" href="../scoreboard/"><strong>Live Game Scoreboard</strong></a></li>
                 <li><a class="tile" href="../magic-word/"><strong>Magic Word Terminal</strong></a></li>
                 <li><a class="tile" href="../human-proof/"><strong>Robot or Human?</strong></a></li>
+<!-- END GENERATED NAV games -->
             </ul>
         </section>
 
         <section id="trackers" aria-labelledby="trackers-heading">
             <h2 id="trackers-heading">Trackers</h2>
             <ul class="tiles">
+<!-- BEGIN GENERATED NAV trackers -->
                 <li><a class="tile" href="../daily-babe/"><strong>Daily Babe</strong><small>Account or shared link</small></a></li>
                 <li><a class="tile" href="../refill-tracker/"><strong>Refill Tracker</strong><small>Sign-in required</small></a></li>
                 <li><a class="tile" href="../investment-tracker/"><strong>Investment Tracker</strong><small>Project access required</small></a></li>
@@ -133,24 +137,27 @@ Changelog     :
                 <li><a class="tile" href="../box/"><strong>QR Box Inventory</strong></a></li>
                 <li><a class="tile" href="../life-group-attendance/"><strong>Life Group Attendance</strong><small>Sign-in required</small></a></li>
                 <li><a class="tile" href="../gps-eta/"><strong>Trip ETA Tracker</strong></a></li>
+<!-- END GENERATED NAV trackers -->
             </ul>
         </section>
 
         <section id="tools" aria-labelledby="tools-heading">
             <h2 id="tools-heading">Tools</h2>
             <ul class="tiles">
+<!-- BEGIN GENERATED NAV tools -->
                 <li><a class="tile" href="/pw"><strong>Password Generator</strong></a></li>
-                <li><a class="tile" href="/secure"><strong>Secure Notes</strong></a></li>
                 <li><a class="tile" href="../weather/"><strong>Weather Dashboard</strong></a></li>
                 <li><a class="tile" href="../construction-sign/"><strong>Construction Sign Generator</strong></a></li>
                 <li><a class="tile" href="../dell-service-tag/"><strong>Dell Service Tag Lookup</strong></a></li>
                 <li><a class="tile" href="../time-clock/"><strong>Time Clock Kiosk</strong></a></li>
                 <li><a class="tile" href="../ai-model-timeline/"><strong>AI Model Release Timeline</strong></a></li>
-                <li><a class="tile" href="../screensize.php"><strong>Screen Size</strong></a></li>
                 <li><a class="tile" href="../fake-chatbot/"><strong>Very Fake AI Portal</strong></a></li>
                 <li><a class="tile" href="../ai-writing-tool/"><strong>AI Writing Tool</strong></a></li>
                 <li><a class="tile" href="../kingdom-connections/"><strong>Kingdom Connections</strong></a></li>
                 <li><a class="tile" href="../blog/"><strong>JSON Flat-File Blog</strong></a></li>
+<!-- END GENERATED NAV tools -->
+                <li><a class="tile" href="/secure"><strong>Secure Notes</strong></a></li>
+                <li><a class="tile" href="../screensize.php"><strong>Screen Size</strong></a></li>
             </ul>
         </section>
 
@@ -165,7 +172,7 @@ Changelog     :
         </section>
     </main>
     <footer>
-        <div class="wrap">Revision 1.0.0 · Updated <time datetime="2026-11-25">November 25, 2026</time></div>
+        <div class="wrap">Revision 1.1.0 · Updated <time datetime="2026-11-25">November 25, 2026</time></div>
     </footer>
     <script>
         const search = document.querySelector('#project-search');

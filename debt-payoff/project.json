@@ -1,0 +1,20 @@
+{
+  "_header": {
+    "File Name": "debt-payoff/project.json",
+    "Author": "Jason Lamb (with help from ChatGPT)",
+    "Description": "Project index metadata.",
+    "Revision": "1.0.0",
+    "Created Date": "2026-11-25",
+    "Modified Date": "2026-11-25",
+    "Changelog": [
+      "Rev 1.0.0 - Register the project in the repository index."
+    ]
+  },
+  "name": "Debt Payoff Planner",
+  "category": "trackers",
+  "description": "Per-user loan tracking, amortization, snowball/avalanche comparisons, sharing, and backups.",
+  "order": 120,
+  "navigation": {
+    "order": 90
+  }
+}
