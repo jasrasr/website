@@ -2,9 +2,10 @@
 # filename: README.md
 # author: Jason Lamb (with help from ChatGPT)
 # created date: 2026-02-03
-# modified date: 2026-02-04
-# revision: 1.3
+# modified date: 2026-11-25
+# revision: 1.4
 # changelog:
+# - 1.4: Document submitted searches and link validation.
 # - 1.1: Added admin-protected media workflow (manifest + uploader) and a full directory map
 # - 1.2: Corrected asset/log filenames in directory map
 # - 1.3: Fixed README assets/css/style.css filename
@@ -36,6 +37,12 @@ Base URL assumed by the builder: **https://jasr.me/blog**
    - Copy the entire folder to your hosting (keep paths intact)
 
 ---
+
+## Search
+
+Results filter while you type. Press **Search** or **Enter** to add the trimmed query to Recent searches and send its result count to the server. Selecting a recent query filters the list again. The submitted-search history starts fresh because older entries include partial queries.
+
+To verify, type `Webstats` a letter at a time and check that results filter without updating Recent searches or posting to `log-search.php`. Submit once and check for one history entry and one POST. Change a tag, select the recent query, and use Clear and Clear history to verify that none of these actions logs a search. Open a post and check the links in its article and update history in dark and light themes.
 
 ## Media workflow (admin-protected)
 
