@@ -3,9 +3,10 @@
     "filename": "matching-game.json",
     "author": "Jason Lamb (with help from ChatGPT)",
     "created_date": "2026-11-22",
-    "modified_date": "2026-11-22",
-    "revision": "1.0.0",
+    "modified_date": "2026-11-25",
+    "revision": "1.0.1",
     "changelog": [
+      "1.0.1: Added the initial public revision record linked to the original article commit.",
       "1.0.0: Added a project article with fresh desktop and mobile screenshots."
     ]
   },
@@ -27,5 +28,13 @@
     "src": "media/derivatives/2026/11/matching-game_640w.jpg",
     "alt": "Matching Game desktop interface showing a colorful grid of face-down tiles"
   },
-  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/11/matching-game_640w.jpg\" alt=\"Matching Game desktop interface showing a colorful grid of face-down tiles\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Matching Game gives young players a simple memory challenge. Choose Colors, Letters, Numbers, or Objects, then turn over two tiles at a time. A pair stays visible, while a mismatch turns back after a short pause.</p>\n<p>The board can be changed from a compact 2-by-2 grid up to 6-by-6, with an even number of tiles in every layout. The timer starts on the first reveal and stops when all pairs are found. Attempts, completed rounds, pairs, and best times are kept for the current browser tab session, so children can play without creating an account.</p>\n<p>Tiles can also be read aloud. The game uses supplied recordings when available and falls back to the browser voice for missing files. Optional signed-in history saves completed game summaries, while card order and moves stay on the device.</p>\n<h2>Desktop and mobile play</h2>\n<p>The layout keeps the tile grid touch friendly on smaller screens and gives the game controls room on desktop.</p>\n<figure><img src=\"media/derivatives/2026/11/matching-game_640w.jpg\" alt=\"Matching Game desktop view with the mode controls and card grid\" loading=\"lazy\" decoding=\"async\"></figure>\n<figure><img src=\"media/derivatives/2026/11/matching-game-mobile_640w.jpg\" alt=\"Matching Game mobile view sized for tapping tiles\" loading=\"lazy\" decoding=\"async\"></figure>\n<p><a href=\"https://jasr.me/github/matching-game/\">Play Matching Game</a> · <a href=\"https://github.com/jasrasr/website/tree/main/matching-game\">Explore the project on GitHub</a></p>\n"
+  "content_html": "<figure class=\"post-cover\"><img src=\"media/derivatives/2026/11/matching-game_640w.jpg\" alt=\"Matching Game desktop interface showing a colorful grid of face-down tiles\" loading=\"eager\" decoding=\"async\"></figure>\n<p>Matching Game gives young players a simple memory challenge. Choose Colors, Letters, Numbers, or Objects, then turn over two tiles at a time. A pair stays visible, while a mismatch turns back after a short pause.</p>\n<p>The board can be changed from a compact 2-by-2 grid up to 6-by-6, with an even number of tiles in every layout. The timer starts on the first reveal and stops when all pairs are found. Attempts, completed rounds, pairs, and best times are kept for the current browser tab session, so children can play without creating an account.</p>\n<p>Tiles can also be read aloud. The game uses supplied recordings when available and falls back to the browser voice for missing files. Optional signed-in history saves completed game summaries, while card order and moves stay on the device.</p>\n<h2>Desktop and mobile play</h2>\n<p>The layout keeps the tile grid touch friendly on smaller screens and gives the game controls room on desktop.</p>\n<figure><img src=\"media/derivatives/2026/11/matching-game_640w.jpg\" alt=\"Matching Game desktop view with the mode controls and card grid\" loading=\"lazy\" decoding=\"async\"></figure>\n<figure><img src=\"media/derivatives/2026/11/matching-game-mobile_640w.jpg\" alt=\"Matching Game mobile view sized for tapping tiles\" loading=\"lazy\" decoding=\"async\"></figure>\n<p><a href=\"https://jasr.me/github/matching-game/\">Play Matching Game</a> · <a href=\"https://github.com/jasrasr/website/tree/main/matching-game\">Explore the project on GitHub</a></p>\n\n<!-- blog-revision-history:start -->\n<section class=\"revision-history\" aria-label=\"Article update history\">\n<h2>Update history</h2>\n<p>These notes record article updates associated with repository changes. The original publication date is retained.</p>\n<ul>\n<li id=\"revision-2026-11-22-matching-game-article\"><time datetime=\"2026-11-22\">2026-11-22</time> — Published the initial article introducing Matching Game, with desktop and mobile screenshots. <a href=\"https://github.com/jasrasr/website/commit/9b2f02bd7e1b329cb17e6455a92023d85ec160fc\">GitHub source</a></li>\n</ul>\n</section>\n<!-- blog-revision-history:end -->\n",
+  "revision_history": [
+    {
+      "id": "2026-11-22-matching-game-article",
+      "date": "2026-11-22",
+      "summary": "Published the initial article introducing Matching Game, with desktop and mobile screenshots.",
+      "source_url": "https://github.com/jasrasr/website/commit/9b2f02bd7e1b329cb17e6455a92023d85ec160fc"
+    }
+  ]
 }
