@@ -4,7 +4,7 @@ require __DIR__ . '/bootstrap.php';
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: no-referrer');
-header("Content-Security-Policy: default-src 'self'; style-src 'self'; script-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
+header("Content-Security-Policy: default-src 'self'; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
 $error = '';
 try {
     $cfg = config();
@@ -149,6 +149,7 @@ function activity_label(array $event): string {
 <label><input type="checkbox" name="hide_me" value="1"<?= $hideMe ? ' checked' : '' ?>> Hide my activity</label>
 <button class="secondary">Apply</button>
 </form>
+<script src="assets/js/activity-filter.js" defer></script>
 <?php endif; ?>
 <div class="table-wrap"><table><thead><tr>
 <?php foreach ($columns as $key => $label):
