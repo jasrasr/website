@@ -2,9 +2,10 @@
 # filename: index.html
 # author: Jason Lamb (with help from ChatGPT)
 # created date: 2026-02-03
-# modified date: 2026-09-16
-# revision: 1.2.0
+# modified date: 2026-11-25
+# revision: 1.2.1
 # changelog:
+# - 1.2.1: Add explicit search submission and update the blog revision.
 # - 1.2.0: Displays the blog project revision and modification date.
 # - 1.2: Added recent search history UI; ensured jasr.me/blog URLs for RSS/Sitemap references
 # - 1.1: Added search + tag filters
@@ -16,7 +17,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Jason’s Flat-File Blog</title>
-  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/style.css?v=1.6.2" />
   <script src="assets/js/theme.js"></script>
   <meta name="description" content="A JSON flat-file blog: WordPress vibes, zero database." />
   <link rel="alternate" type="application/rss+xml" title="Jason’s Flat-File Blog RSS" href="https://jasr.me/blog/rss.xml" />
@@ -40,10 +41,11 @@
         Posts live as JSON files. Styling lives in one CSS file.
         Index page reads <code>/posts/index.json</code>.
       </p>
-      <div class="search-row">
-        <input id="searchBox" class="search" type="search" placeholder="Search posts (title/tags/body)..." />
+      <form class="search-row" id="searchForm" role="search">
+        <input id="searchBox" class="search" type="search" aria-label="Search posts" enterkeyhint="search" placeholder="Search posts (title/tags/body)..." />
+        <button class="btn" type="submit">Search</button>
         <button id="clearSearch" class="btn" type="button">Clear</button>
-      </div>
+      </form>
     </section>
 
     <section>
@@ -63,7 +65,7 @@
         </div>
         <ul id="recentSearches" class="muted" style="margin:12px 0 0; padding-left: 18px"></ul>
         <div class="muted small" style="margin-top:10px">
-          Note: this list is stored in your browser only. Server logs are separate.
+          Use Search or Enter to save a query to this browser’s history. Submitted searches are also logged on the server.
         </div>
       </div>
     </section>
@@ -71,17 +73,18 @@
 
   <footer class="site-footer">
     <div class="wrap">
-      <span class="muted">© 2026 Jason Lamb • Blog v1.4.0 • Updated 2026-09-16</span>
+      <span class="muted">© 2026 Jason Lamb • Blog v1.6.2 • Updated 2026-11-25</span>
     </div>
   </footer>
 
-  <script src="assets/js/blog.js"></script>
+  <script src="assets/js/blog.js?v=1.6.2"></script>
   <script>
     window.Blog.renderIndex({
       indexUrl: "posts/index.json",
       postListEl: document.getElementById("postList"),
       tagPillsEl: document.getElementById("tagPills"),
       postCountEl: document.getElementById("postCount"),
+      searchFormEl: document.getElementById("searchForm"),
       searchEl: document.getElementById("searchBox"),
       clearBtnEl: document.getElementById("clearSearch"),
       recentListEl: document.getElementById("recentSearches"),
