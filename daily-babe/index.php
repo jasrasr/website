@@ -200,7 +200,12 @@ if ($authenticated) {
             <span id="rotationLabel" aria-live="polite">No rotation</span>
             <button type="button" class="secondary" id="rotateClockwiseButton" aria-label="Rotate 90 degrees clockwise">Clockwise ↷</button>
         </div>
-        <div class="focus-actions"><button type="button" class="secondary" id="centerFocusButton">Center focus</button><button type="button" id="saveFocusButton">Save crop, zoom &amp; rotation</button></div>
+        <div class="focus-actions">
+            <button type="button" class="secondary" id="centerFocusButton">Center focus</button>
+            <button type="button" class="secondary" id="closePhotoDialogButton">Close</button>
+            <button type="button" id="saveFocusButton">Saved</button>
+            <button type="button" id="saveFocusAndCloseButton">Save &amp; Close</button>
+        </div>
     </section>
     <?php endif; ?>
     <button type="button" class="danger" id="deletePhotoButton" <?= $canWrite ? '' : 'disabled title="Member access is required to remove photos."' ?>>Remove photo</button></div></dialog>

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.14.0 - 2026-11-25
+
+- Keep the crop editor save status on `Saved` after a successful update, and return it to the save action when crop, zoom, or rotation changes again.
+- Add bottom `Close` and `Save & Close` actions so mobile users can leave the editor without scrolling back to the top.
+- Warn before the top or bottom close action discards unsaved presentation changes.
+
 ## 2.13.1 - 2026-11-23
 
 - Increase per-photo maximum zoom from 200% to 300%.
