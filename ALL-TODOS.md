@@ -912,6 +912,8 @@ Changelog: 1.0.0 - Collected documented migration work and code review suggestio
 
 - [ ] Plan and implement shared-identity access for `smart-404-admin.php` while keeping public missing-page handling available; preserve live mapping, malicious-pattern, and request-log files during rollout. Source: `user-management/MIGRATION-TRACKER.md`.
 
+- [ ] Add a **ME** filter to the Smart 404 request log, following Webstats: **All activity**, **Show my activity** (only rows matching the current server-reported IP), and **Hide my activity** (exclude matching rows). Keep rows without a recorded IP visible in All and Hide modes.
+
 ## Code review suggestions
 
 - [ ] Add automated checks for exact/manual mappings, malicious pattern precedence, and fuzzy redirect decisions in `smart-404.php` before changing redirect rules.
