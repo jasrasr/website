@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<!--
+File Name     : projects/index.html
+Author        : Jason Lamb (with help from ChatGPT)
+Description   : Searchable directory of Jasr.me projects.
+Revision      : 1.0.0
+Created Date  : 2026-11-25
+Modified Date : 2026-11-25
+Changelog     :
+  Rev 1.0.0 - Add the Jasr.me project directory.
+-->
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Browse Jason Lamb’s games, trackers, and tools on Jasr.me.">
+    <title>Project Navigation | Jasr.me</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            color: #172033;
+            background: #f6f7fb;
+            font: 1rem/1.5 system-ui, sans-serif;
+        }
+        .wrap {
+            width: min(70rem, 100%);
+            margin-inline: auto;
+            padding-inline: clamp(1rem, 4vw, 2rem);
+        }
+        header { padding-block: 2rem; background: #111827; color: #fff; }
+        header a { color: #d1e1ff; font-weight: 650; }
+        h1 { margin: .3rem 0 0; font-size: clamp(2rem, 6vw, 3.5rem); line-height: 1.1; }
+        main { padding-block: 1.5rem 2.5rem; }
+        label { display: block; font-weight: 650; }
+        input {
+            width: min(100%, 28rem);
+            margin-top: .35rem;
+            padding: .65rem .8rem;
+            border: 1px solid #64748b;
+            border-radius: .45rem;
+            font: inherit;
+        }
+        nav { display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; margin-block: 1rem; }
+        nav a { color: #174b99; padding-block: .3rem; font-weight: 650; }
+        section + section { margin-top: 1.75rem; }
+        h2 { margin: 0 0 .65rem; font-size: 1.18rem; }
+        .tiles {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+            gap: .75rem;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+        .tile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: .2rem;
+            min-height: 5.5rem;
+            height: 100%;
+            padding: .85rem;
+            border-radius: .6rem;
+            background: #214f9e;
+            color: #fff;
+            text-align: center;
+            text-decoration: none;
+            font-weight: 700;
+            box-shadow: 0 4px 10px #17203320;
+        }
+        li:nth-child(4n+2) .tile { background: #176851; }
+        li:nth-child(4n+3) .tile { background: #67439b; }
+        li:nth-child(4n+4) .tile { background: #973d2b; }
+        .tile:hover strong { text-decoration: underline; }
+        .tile small { font-size: .8rem; font-weight: 500; }
+        :focus-visible { outline: 3px solid #1763bf; outline-offset: 3px; }
+        header :focus-visible { outline-color: #fff; }
+        footer { padding-block: 1rem; border-top: 1px solid #d6dde8; color: #475569; font-size: .9rem; }
+        [hidden] { display: none !important; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="wrap">
+            <a href="/">Jasr.me</a>
+            <h1>Project Navigation</h1>
+        </div>
+    </header>
+    <main class="wrap">
+        <div id="search-controls" hidden>
+            <label for="project-search">Find a project</label>
+            <input type="search" id="project-search" placeholder="Search by name or category">
+            <p id="search-status" role="status" hidden></p>
+        </div>
+        <nav aria-label="Project categories">
+            <a href="#games">Games</a>
+            <a href="#trackers">Trackers</a>
+            <a href="#tools">Tools</a>
+            <a href="#elsewhere">Elsewhere</a>
+        </nav>
+
+        <section id="games" aria-labelledby="games-heading">
+            <h2 id="games-heading">Games</h2>
+            <ul class="tiles">
+                <li><a class="tile" href="../super-tic-tac-toe/"><strong>Super Tic-Tac-Toe</strong></a></li>
+                <li><a class="tile" href="../oregon-trail/"><strong>Oregon Trail</strong></a></li>
+                <li><a class="tile" href="../matching-game/"><strong>Matching Game</strong></a></li>
+                <li><a class="tile" href="../feed-the-pet/"><strong>Feed the Pet</strong></a></li>
+                <li><a class="tile" href="../coin-flip/"><strong>Coin Flip</strong></a></li>
+                <li><a class="tile" href="../wheel/"><strong>Random Wheel</strong></a></li>
+                <li><a class="tile" href="../khootish/"><strong>Khootish Multiplayer Quiz</strong></a></li>
+                <li><a class="tile" href="../game-buzzer/"><strong>Game Buzzer</strong></a></li>
+                <li><a class="tile" href="../scoreboard/"><strong>Live Game Scoreboard</strong></a></li>
+                <li><a class="tile" href="../magic-word/"><strong>Magic Word Terminal</strong></a></li>
+                <li><a class="tile" href="../human-proof/"><strong>Robot or Human?</strong></a></li>
+            </ul>
+        </section>
+
+        <section id="trackers" aria-labelledby="trackers-heading">
+            <h2 id="trackers-heading">Trackers</h2>
+            <ul class="tiles">
+                <li><a class="tile" href="../daily-babe/"><strong>Daily Babe</strong><small>Account or shared link</small></a></li>
+                <li><a class="tile" href="../refill-tracker/"><strong>Refill Tracker</strong><small>Sign-in required</small></a></li>
+                <li><a class="tile" href="../investment-tracker/"><strong>Investment Tracker</strong><small>Project access required</small></a></li>
+                <li><a class="tile" href="../workout-tracker/"><strong>Workout Tracker</strong><small>Project access required</small></a></li>
+                <li><a class="tile" href="../warranty-tracker/"><strong>Warranty Tracker</strong><small>Sign-in required</small></a></li>
+                <li><a class="tile" href="../mpg/"><strong>MPG Fuel Log</strong></a></li>
+                <li><a class="tile" href="../availability/"><strong>Availability Poll</strong></a></li>
+                <li><a class="tile" href="../tv-binge-board/"><strong>TV Binge Board</strong></a></li>
+                <li><a class="tile" href="../debt-payoff/"><strong>Debt Payoff Planner</strong></a></li>
+                <li><a class="tile" href="../box/"><strong>QR Box Inventory</strong></a></li>
+                <li><a class="tile" href="../life-group-attendance/"><strong>Life Group Attendance</strong><small>Sign-in required</small></a></li>
+                <li><a class="tile" href="../gps-eta/"><strong>Trip ETA Tracker</strong></a></li>
+            </ul>
+        </section>
+
+        <section id="tools" aria-labelledby="tools-heading">
+            <h2 id="tools-heading">Tools</h2>
+            <ul class="tiles">
+                <li><a class="tile" href="/pw"><strong>Password Generator</strong></a></li>
+                <li><a class="tile" href="/secure"><strong>Secure Notes</strong></a></li>
+                <li><a class="tile" href="../weather/"><strong>Weather Dashboard</strong></a></li>
+                <li><a class="tile" href="../construction-sign/"><strong>Construction Sign Generator</strong></a></li>
+                <li><a class="tile" href="../dell-service-tag/"><strong>Dell Service Tag Lookup</strong></a></li>
+                <li><a class="tile" href="../time-clock/"><strong>Time Clock Kiosk</strong></a></li>
+                <li><a class="tile" href="../ai-model-timeline/"><strong>AI Model Release Timeline</strong></a></li>
+                <li><a class="tile" href="../screensize.php"><strong>Screen Size</strong></a></li>
+                <li><a class="tile" href="../fake-chatbot/"><strong>Very Fake AI Portal</strong></a></li>
+                <li><a class="tile" href="../ai-writing-tool/"><strong>AI Writing Tool</strong></a></li>
+                <li><a class="tile" href="../kingdom-connections/"><strong>Kingdom Connections</strong></a></li>
+                <li><a class="tile" href="../blog/"><strong>JSON Flat-File Blog</strong></a></li>
+            </ul>
+        </section>
+
+        <section id="elsewhere" aria-labelledby="elsewhere-heading">
+            <h2 id="elsewhere-heading">Elsewhere</h2>
+            <ul class="tiles">
+                <li><a class="tile" href="/"><strong>Jasr.me Short Links</strong></a></li>
+                <li><a class="tile" href="https://jasonlamb.me/"><strong>Jason’s Blog</strong></a></li>
+                <li><a class="tile" href="https://jasrasr.github.io/"><strong>GitHub Pages Navigation</strong></a></li>
+                <li><a class="tile" href="https://github.com/jasrasr/website"><strong>Website Source</strong></a></li>
+            </ul>
+        </section>
+    </main>
+    <footer>
+        <div class="wrap">Revision 1.0.0 · Updated <time datetime="2026-11-25">November 25, 2026</time></div>
+    </footer>
+    <script>
+        const search = document.querySelector('#project-search');
+        const status = document.querySelector('#search-status');
+        const groups = [...document.querySelectorAll('main section')].map(section => ({
+            section,
+            jumpLink: document.querySelector(`nav a[href="#${section.id}"]`),
+            label: section.querySelector('h2').textContent.toLowerCase(),
+            tiles: [...section.querySelectorAll('li')],
+        }));
+
+        function filterProjects() {
+            const words = search.value.toLowerCase().replaceAll('-', ' ').split(/\s+/).filter(Boolean);
+            let total = 0;
+
+            for (const { section, jumpLink, label, tiles } of groups) {
+                let visible = 0;
+
+                for (const tile of tiles) {
+                    const text = `${label} ${tile.textContent.toLowerCase().replaceAll('-', ' ')}`;
+                    const matches = words.every(word => text.includes(word));
+                    tile.hidden = !matches;
+                    visible += Number(matches);
+                }
+
+                section.hidden = visible === 0;
+                jumpLink.hidden = section.hidden;
+                total += visible;
+            }
+
+            status.textContent = total === 0
+                ? 'No matching projects.'
+                : `${total} ${total === 1 ? 'result' : 'results'}`;
+            status.hidden = words.length === 0;
+        }
+
+        search.addEventListener('input', filterProjects);
+        filterProjects();
+        document.querySelector('#search-controls').hidden = false;
+    </script>
+</body>
+</html>
