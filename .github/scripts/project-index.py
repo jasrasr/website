@@ -1,10 +1,11 @@
 # File Name     : .github/scripts/project-index.py
 # Author        : Jason Lamb (with help from ChatGPT)
 # Description   : Generate README listings and navigation tiles from project metadata.
-# Revision      : 1.0.1
+# Revision      : 1.0.2
 # Created Date  : 2026-11-25
 # Modified Date : 2026-11-25
 # Changelog     :
+#   Rev 1.0.2 - Preserve new-tab links for hosted project URLs.
 #   Rev 1.0.1 - Read index metadata nested in existing release manifests.
 #   Rev 1.0.0 - Generate both project indexes from project.json.
 import argparse
@@ -99,6 +100,16 @@ def markdown(text):
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("|", "&#124;")
 
 
+def readme_link(label, url, *, bold=False):
+    if url.startswith("https://jasr.me/github/"):
+        if bold:
+            label = f"<strong>{label}</strong>"
+        return f'<a href="{escape(url)}" target="_blank" rel="noopener noreferrer">{label}</a>'
+    if bold:
+        label = f"**{label}**"
+    return f"[{label}]({url})"
+
+
 def readme_rows(projects, category):
     yield "| Project and source | Site | Highlights |"
     yield "| --- | --- | --- |"
@@ -106,15 +117,14 @@ def readme_rows(projects, category):
     entries.sort(key=lambda item: (item.get("order", 1000), item["name"].casefold(), item["folder"]))
     for item in entries:
         folder = item["folder"]
-        title = f'**{markdown(item["name"])}**'
+        name = markdown(item["name"])
         url = item["url"]
-        if item.get("link_title") and url:
-            title = f"[{title}]({url})"
+        title = readme_link(name, url, bold=True) if item.get("link_title") and url else f"**{name}**"
         source = f"<br>[`{folder}/`]({folder}/)"
         if item["docs"]:
             source += f' / [README]({folder}/{item["docs"]})'
         label = markdown(item.get("site_note") or (url.removeprefix("https://").rstrip("/") if url else "—"))
-        site = f"[{label}]({url})" if url else label
+        site = readme_link(label, url) if url else label
         yield f'| {title}{source} | {site} | {markdown(item["description"])} |'
 
 

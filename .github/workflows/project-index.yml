@@ -1,10 +1,11 @@
 # File Name     : .github/workflows/project-index.yml
 # Author        : Jason Lamb (with help from ChatGPT)
 # Description   : Validate generated project listings and open a sync PR when needed.
-# Revision      : 1.0.0
+# Revision      : 1.0.1
 # Created Date  : 2026-11-25
 # Modified Date : 2026-11-25
 # Changelog     :
+#   Rev 1.0.1 - Republish repairs when the previous sync branch is already merged.
 #   Rev 1.0.0 - Check project index changes and reconcile stale generated listings.
 name: Project Index
 
@@ -74,15 +75,19 @@ jobs:
           git add -- README.md projects/index.html
           tree=$(git write-tree)
           parents=(-p HEAD)
+          publish=true
           current=$(git ls-remote origin "refs/heads/$SYNC_BRANCH")
           if [[ -n "$current" ]]; then
             git fetch --no-tags origin "refs/heads/$SYNC_BRANCH"
             if ! git merge-base --is-ancestor FETCH_HEAD HEAD; then
               parents+=(-p FETCH_HEAD)
+              if [[ "$tree" == "$(git rev-parse 'FETCH_HEAD^{tree}')" ]]; then
+                publish=false
+              fi
             fi
           fi
 
-          if [[ -z "$current" || "$tree" != "$(git rev-parse 'FETCH_HEAD^{tree}')" ]]; then
+          if [[ "$publish" == true ]]; then
             commit=$(git -c user.name='github-actions[bot]' \
               -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
               commit-tree "$tree" "${parents[@]}" -m "Sync generated project indexes")
