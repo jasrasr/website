@@ -7,6 +7,7 @@ A simple touch-friendly feeding game for young children. Choose a pet, then tap 
 
 Both modes use short sound cues after a food tap. Use the **Sound** button to mute or unmute them.
 Pet Orders also speaks each new order aloud. Tap **Hear again** to replay it.
+After a successful order, the next order starts automatically in three seconds. **Next order** can be tapped sooner; **Play again** appears immediately after the final order and waits for a tap.
 
 ## Custom voice recordings
 

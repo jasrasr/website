@@ -104,6 +104,7 @@
   let volume;
   let lastCue = 0;
   let voiceAudio;
+  let advanceTimer = null;
 
   function randomIndex(max) {
     if (window.crypto?.getRandomValues) {
@@ -331,6 +332,12 @@
     nextOrder.hidden = false;
     nextOrder.focus();
     foodTray.querySelectorAll('button').forEach((button) => { button.disabled = true; });
+    if (!finished) {
+      advanceTimer = window.setTimeout(() => {
+        advanceTimer = null;
+        nextOrder.click();
+      }, 3000);
+    }
   }
 
   function renderOrder() {
@@ -361,6 +368,10 @@
   }
 
   function showRound() {
+    if (advanceTimer !== null) {
+      window.clearTimeout(advanceTimer);
+      advanceTimer = null;
+    }
     resetFood();
     feedback.textContent = '';
     nextOrder.hidden = true;
