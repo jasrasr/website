@@ -2,9 +2,10 @@
 # filename: CHANGELOG.md
 # author: Jason Lamb (with help from ChatGPT)
 # created date: 2026-02-03
-# modified date: 2026-09-29
-# revision: 1.6.0
+# modified date: 2026-11-25
+# revision: 1.6.2
 # changelog:
+# - 1.6.2: Save submitted searches and improve article link contrast.
 # - 1.6.0: Neutral automated article voice and safe existing-post content sync.
 # - 1.5.0: Adds a dry-run-first WordPress category and tag maintenance tool.
 # - 1.4.0: Documents project-series integration and review fixes.
@@ -14,6 +15,11 @@
 # - 1.0: Initial changelog
 -->
 # Changelog
+
+## v1.6.2 — 2026-11-25
+
+- Keep live filtering and record searches only when submitted with Search or Enter. Start a fresh browser history for submitted queries.
+- Apply the theme’s link color to article and update-history links, including visited links.
 
 ## v1.6.1 - 2026-10-12
 

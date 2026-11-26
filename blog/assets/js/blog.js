@@ -2,9 +2,10 @@
 # filename: blog.js
 # author: Jason Lamb (with help from ChatGPT)
 # created date: 2026-02-03
-# modified date: 2026-02-03
-# revision: 1.3
+# modified date: 2026-11-25
+# revision: 1.4
 # changelog:
+# - 1.4: Record submitted searches and keep live filtering.
 # - 1.3: Uses build-time _searchText for deterministic full-text search; adds server logging + recent search history (clearable)
 # - 1.2: Added server + local logging helpers
 # - 1.1: Attempted lazy-loaded body search (fragile)
@@ -111,14 +112,14 @@
   // -----------------------------
   // Logging + Recent Searches
   // -----------------------------
-  const RECENT_KEY = "blogRecentSearches";
+  const LEGACY_RECENT_KEY = "blogRecentSearches";
+  const RECENT_KEY = "blogSubmittedSearches";
 
   function addRecentSearch(query) {
     const q = String(query || "").trim();
     if (!q) return;
 
-    let items = [];
-    try { items = JSON.parse(localStorage.getItem(RECENT_KEY) || "[]"); } catch {}
+    let items = getRecentSearches();
 
     // de-dupe (case-insensitive)
     const lower = q.toLowerCase();
@@ -127,15 +128,21 @@
     items.unshift({ query: q, timestamp: new Date().toISOString() });
     items = items.slice(0, 10);
 
-    localStorage.setItem(RECENT_KEY, JSON.stringify(items));
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(items)); } catch {}
   }
 
   function getRecentSearches() {
-    try { return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]"); } catch { return []; }
+    try {
+      const items = JSON.parse(localStorage.getItem(RECENT_KEY) || "[]");
+      return Array.isArray(items) ? items.filter((item) => typeof item?.query === "string") : [];
+    } catch { return []; }
   }
 
   function clearRecentSearches() {
-    localStorage.removeItem(RECENT_KEY);
+    try {
+      localStorage.removeItem(RECENT_KEY);
+      localStorage.removeItem(LEGACY_RECENT_KEY);
+    } catch {}
   }
 
   function renderRecentSearches(listEl, onClickQuery) {
@@ -182,6 +189,7 @@
       tagPillsEl,
       postCountEl,
       searchEl,
+      searchFormEl,
       clearBtnEl,
       recentListEl,
       clearHistoryEl,
@@ -213,24 +221,21 @@
       const filtered = posts.filter(matches);
       postCountEl.textContent = filtered.length + " post(s)";
 
-      // Log only for non-empty searches
-      const q = String(query || "").trim();
-      if (q) {
-        addRecentSearch(q);
-        renderRecentSearches(recentListEl, (qq) => {
-          searchEl.value = qq;
-          query = qq;
-          draw();
-        });
-        logSearchServer(logEndpoint, q, filtered.length);
-      }
-
       if (filtered.length === 0) {
         postListEl.innerHTML = `<div class="card"><p class="muted">No matches. The internet remains undefeated.</p></div>`;
-        return;
+        return 0;
       }
 
       postListEl.innerHTML = filtered.map(postCardHtml).join("");
+      return filtered.length;
+    }
+
+    function refreshRecentSearches() {
+      renderRecentSearches(recentListEl, (recentQuery) => {
+        searchEl.value = recentQuery;
+        query = recentQuery;
+        draw();
+      });
     }
 
     try {
@@ -247,22 +252,25 @@
         highlightActivePill();
       }, activeTag);
 
-      renderRecentSearches(recentListEl, (qq) => {
-        searchEl.value = qq;
-        query = qq;
-        draw();
-      });
+      refreshRecentSearches();
 
       if (clearHistoryEl) {
         clearHistoryEl.addEventListener("click", () => {
           clearRecentSearches();
-          renderRecentSearches(recentListEl, (qq) => {
-            searchEl.value = qq;
-            query = qq;
-            draw();
-          });
+          refreshRecentSearches();
         });
       }
+
+      searchFormEl.addEventListener("submit", (event) => {
+        event.preventDefault();
+        query = searchEl.value.trim();
+        const resultCount = draw();
+        if (!query) return;
+
+        addRecentSearch(query);
+        refreshRecentSearches();
+        logSearchServer(logEndpoint, query, resultCount);
+      });
 
       searchEl.addEventListener("input", (e) => {
         query = e.target.value || "";
