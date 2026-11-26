@@ -1,5 +1,15 @@
 # AI Model Timeline — Graphic and project changelog
 
+## [1.1.0] — 2026-11-25 (graphic release)
+
+**Why:** Add missing OpenAI cybersecurity-specialized model releases
+
+**Changes:** Add GPT-5.5 Cyber, GPT-5.6 Cyber and GPT-6 Cyber as restricted access; Daybreak Blue and Red are access programs, not separate models. Retain all 122 existing records.
+
+**Graphic:** New archive `archive/v1.1.0/ai-model-timeline-v1.1.0-2026-11-25.svg`
+
+**Data snapshot:** `archive/v1.1.0/models-v1.1.0-2026-11-25.json`
+
 Every new graphic must receive a unique project version, creation date, immutable archive path, and explanation.
 
 ## [1.0.3] - 2026-11-23 (project-only; graphic unchanged)

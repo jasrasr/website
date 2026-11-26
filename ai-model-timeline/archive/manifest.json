@@ -1,7 +1,19 @@
 {
   "project": "AI Model Timeline",
-  "latest": "1.0.0",
+  "latest": "1.1.0",
   "releases": [
+    {
+      "version": "1.1.0",
+      "created": "2026-11-25",
+      "reason": "Add missing OpenAI cybersecurity-specialized model releases",
+      "changes": "Add GPT-5.5 Cyber, GPT-5.6 Cyber and GPT-6 Cyber as restricted access; Daybreak Blue and Red are access programs, not separate models. Retain all 122 existing records.",
+      "models": 125,
+      "graphic": "archive/v1.1.0/ai-model-timeline-v1.1.0-2026-11-25.svg",
+      "dataset": "archive/v1.1.0/models-v1.1.0-2026-11-25.json",
+      "graphic_git_blob_sha": "b7252ea109c394e234c69682de5f1f057ff4c164",
+      "png_export_filename": "ai-model-timeline-v1.1.0-2026-11-25.png",
+      "png_committed": false
+    },
     {
       "version": "1.0.0",
       "created": "2026-11-23",
@@ -15,6 +27,6 @@
       "graphic_git_blob_sha": "c7d69fd9f7833544ba0dec57f4037c2d57e5e4f3"
     }
   ],
-  "project_version": "1.0.3",
-  "latest_graphic_version": "1.0.0"
+  "project_version": "1.1.0",
+  "latest_graphic_version": "1.1.0"
 }
