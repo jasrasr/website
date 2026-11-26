@@ -12,10 +12,16 @@
   const foods = [
     apple, banana, carrot,
     { name: 'Peas', emoji: '🫛', color: 'green' },
-    { name: 'Blueberries', emoji: '🫐', color: 'blue' },
+    { name: 'Blueberries', icon: 'blueberries.svg', color: 'blue' },
   ];
   const peas = foods[3];
   const blueberries = foods[4];
+  const orderLengthsByPet = [
+    [1, 1, 2], // Puppy: two simple choices and one two-food order.
+    [1, 2, 2], // Kitten: one simple choice and two two-food orders.
+    [1, 2, 3], // Bunny: introduce a three-food order.
+    [2, 3, 3], // Panda: all orders have multiple foods.
+  ];
   const orderPool = [
     { id: 'red', prompt: 'Something red, please!', audio: 'audio/order-red.mp3', items: [apple], colorClue: 'red' },
     { id: 'green', prompt: 'Green peas, please!', audio: 'audio/order-green-peas.mp3', items: [peas], colorClue: 'green' },
@@ -111,13 +117,17 @@
 
   function chooseOrders() {
     let chosen;
+    const lengths = orderLengthsByPet[pets.indexOf(selectedPet)];
     for (let attempt = 0; attempt < 5; attempt += 1) {
       const shuffled = orderPool.slice();
       for (let index = shuffled.length - 1; index > 0; index -= 1) {
         const swapIndex = randomIndex(index + 1);
         [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
       }
-      chosen = shuffled.slice(0, 3);
+      chosen = lengths.map(length => {
+        const index = shuffled.findIndex(order => order.items.length === length);
+        return shuffled.splice(index, 1)[0];
+      });
       const ids = chosen.map(order => order.id).sort();
       if (ids.join('|') !== lastOrderIds.slice().sort().join('|')) break;
     }
@@ -254,6 +264,18 @@
     startRound();
   }
 
+  function showFoodIcon(food, container) {
+    if (food.icon) {
+      const image = document.createElement('img');
+      image.className = 'food-icon';
+      image.src = food.icon;
+      image.alt = '';
+      container.append(image);
+    } else {
+      container.textContent = food.emoji;
+    }
+  }
+
   function feed(food, button) {
     if (button.disabled) return;
     if (mode === 'orders') {
@@ -273,7 +295,7 @@
   function addBite(food) {
     const bite = document.createElement('span');
     bite.className = 'bowl-food';
-    bite.textContent = food.emoji;
+    showFoodIcon(food, bite);
     bowl.append(bite);
     pet.classList.remove('happy');
     void pet.offsetWidth;
@@ -318,7 +340,7 @@
     clues.replaceChildren(...order.items.map((food, index) => {
       const clue = document.createElement('span');
       clue.className = 'order-card';
-      clue.textContent = food.emoji;
+      showFoodIcon(food, clue);
       if (order.colorClue) clue.classList.add('red-clue');
       clue.classList.toggle('served', index < fed);
       clue.classList.toggle('current', index === fed);
@@ -368,7 +390,12 @@
     button.className = `food-choice ${item.color}`;
     button.type = 'button';
     button.setAttribute('aria-label', `${item.color} ${item.name}`);
-    button.innerHTML = `<span aria-hidden="true">${item.emoji}</span><small>${item.name}</small>`;
+    const icon = document.createElement('span');
+    icon.setAttribute('aria-hidden', 'true');
+    showFoodIcon(item, icon);
+    const label = document.createElement('small');
+    label.textContent = item.name;
+    button.append(icon, label);
     button.addEventListener('click', () => feed(item, button)); foodTray.append(button);
   });
   newGame.addEventListener('click', () => {

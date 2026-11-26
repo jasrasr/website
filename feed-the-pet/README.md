@@ -3,7 +3,7 @@
 A simple touch-friendly feeding game for young children. Choose a pet, then tap each food to fill the bowl. It is a standalone static page with no account, saved data, or build step.
 
 - **Free Feed** lets children give the pet any five foods from the tray.
-- **Pet Orders** randomly chooses three unique challenges from a pool of 18. The pool practices colors, counting, and patterns, and the same trio is not repeated back-to-back. A wrong tap leaves progress intact.
+- **Pet Orders** chooses three unique challenges from a pool of 18. Puppy gets orders of 1, 1, and 2 foods; Kitten gets 1, 2, and 2; Bunny gets 1, 2, and 3; Panda gets 2, 3, and 3. The pool practices colors, counting, and patterns, and the same trio is not repeated back-to-back. A wrong tap leaves progress intact.
 
 Both modes use short sound cues after a food tap. Use the **Sound** button to mute or unmute them.
 Pet Orders also speaks each new order aloud. Tap **Hear again** to replay it.

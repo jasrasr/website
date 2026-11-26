@@ -68,6 +68,13 @@
   font-size: clamp(1.2rem, 5vw, 2rem);
 }
 
+.food-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+}
+
 .bowl > .bowl-icon {
   top: -.95em;
 }
