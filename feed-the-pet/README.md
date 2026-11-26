@@ -39,5 +39,6 @@ The 18-order pool produces 816 unique three-order combinations and 4,896 sequenc
 Completed rounds appear under **This session** and survive reloads in the same browser tab. The game offers an optional link to User Management sign in. Session history stays in the browser tab and does not sync to an account.
 
 Finishing all three Pet Orders earns one achievement. A session starts with Puppy; Kitten unlocks at 5 achievements, Bunny at 10, and Panda at 15.
+At the end of a Pet Orders round, a congratulations card announces the achievement and also names any newly unlocked pet.
 
 Open `index.html` locally or serve the website directory with the local host launcher.

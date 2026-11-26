@@ -220,6 +220,20 @@
     return unlockedPetCount() > unlockedBefore ? pets[unlockedBefore] : null;
   }
 
+  function showCongratulations(unlockedPet) {
+    const heading = document.createElement('strong');
+    heading.textContent = 'Congratulations! 🎉';
+    const achievement = document.createElement('span');
+    achievement.textContent = 'You earned an achievement! ⭐';
+    feedback.replaceChildren(heading, achievement);
+    if (unlockedPet) {
+      const petNotice = document.createElement('span');
+      petNotice.textContent = `You unlocked ${unlockedPet.name}! ${unlockedPet.emoji}`;
+      feedback.append(petNotice);
+    }
+    feedback.classList.add('celebration');
+  }
+
   async function playSound(cue) {
     if (!soundEnabled || !AudioContext) return;
     const request = ++lastCue;
@@ -324,9 +338,8 @@
     const finished = orderIndex === activeOrders.length - 1;
     const unlockedPet = finished ? finishRound() : null;
     playSound(finished ? 'finish' : 'order');
-    feedback.textContent = unlockedPet
-      ? `You unlocked ${unlockedPet.name}! 🎉`
-      : finished ? 'You earned an achievement! ⭐' : 'Order complete! ⭐';
+    if (finished) showCongratulations(unlockedPet);
+    else feedback.textContent = 'Order complete! ⭐';
     nextIcon.textContent = finished ? '↻' : '▶';
     nextLabel.textContent = finished ? 'Play again' : 'Next order';
     nextOrder.hidden = false;
@@ -373,6 +386,7 @@
       advanceTimer = null;
     }
     resetFood();
+    feedback.classList.remove('celebration');
     feedback.textContent = '';
     nextOrder.hidden = true;
     const takingOrders = mode === 'orders';

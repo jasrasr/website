@@ -206,6 +206,32 @@
   font-weight: 800;
 }
 
+.taking-orders .order-feedback.celebration {
+  position: relative;
+  width: min(100%, 420px);
+  height: auto;
+  margin: 12px 0 0;
+  padding: 12px 18px;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+  border: 3px solid #f2a93b;
+  border-radius: 20px;
+  background: #fff7d9;
+  color: #703452;
+  line-height: 1.35;
+  box-shadow: 0 5px 0 #d58c7244;
+}
+
+.order-feedback.celebration strong,
+.order-feedback.celebration span {
+  display: block;
+}
+
+.order-feedback.celebration span + span {
+  margin-top: 5px;
+}
+
 .order-feedback:empty {
   margin: 0;
 }
