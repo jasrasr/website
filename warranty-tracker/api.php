@@ -7,7 +7,13 @@ require_once __DIR__ . '/lib/WarrantyStore.php';
 
 header('Content-Type: application/json; charset=utf-8');
 $requestId = bin2hex(random_bytes(6));
-$store = new WarrantyStore(__DIR__ . '/storage/warranties.json');
+$runtimeDirectory = __DIR__ . '/storage/runtime';
+$runtimePath = $runtimeDirectory . '/warranties.json';
+if (!is_file($runtimePath) && is_file(__DIR__ . '/storage/warranties.json')) {
+    if (!is_dir($runtimeDirectory) && !mkdir($runtimeDirectory, 0775, true) && !is_dir($runtimeDirectory)) throw new RuntimeException('Warranty runtime storage could not be created.');
+    if (!copy(__DIR__ . '/storage/warranties.json', $runtimePath)) throw new RuntimeException('Warranty runtime data could not be initialized.');
+}
+$store = new WarrantyStore($runtimePath);
 $auth = \Jasr\Framework\SharedIdentity::connect();
 
 function respond(bool $success, string $message, mixed $data = null, array $errors = [], int $status = 200): never
@@ -38,17 +44,26 @@ try {
     if ($method !== 'POST') respond(false, 'Method not allowed.', null, [], 405);
 
     $errors = [];
-    foreach (['product', 'purchaseDate', 'warrantyEndDate'] as $field) {
+    foreach (['product', 'purchaseDate'] as $field) {
         if (trim((string) ($input[$field] ?? '')) === '') $errors[] = ['code' => 'VALIDATION_FAILED', 'field' => $field, 'message' => "$field is required."];
     }
-    foreach (['purchaseDate', 'warrantyEndDate'] as $field) {
+    foreach (['purchaseDate'] as $field) {
         if (isset($input[$field]) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $input[$field])) $errors[] = ['code' => 'VALIDATION_FAILED', 'field' => $field, 'message' => 'Use YYYY-MM-DD.'];
     }
-    if (($input['warrantyEndDate'] ?? '') < ($input['purchaseDate'] ?? '')) $errors[] = ['code' => 'VALIDATION_FAILED', 'field' => 'warrantyEndDate', 'message' => 'Warranty end date cannot precede purchase date.'];
-    foreach (['itemCost', 'warrantyCost'] as $field) {
+    $months = (int) ($input['warrantyDurationMonths'] ?? 0);
+    if ($months < 1) $months = (int) ($input['customWarrantyMonths'] ?? 0);
+    if ($months < 1 || $months > 1200) $errors[] = ['code' => 'VALIDATION_FAILED', 'field' => 'warrantyDurationMonths', 'message' => 'Enter a warranty term of 1 to 1200 months.'];
+    if (!$errors) {
+        $input['warrantyDurationMonths'] = $months;
+        $input['warrantyEndDate'] = (new DateTimeImmutable($input['purchaseDate']))->modify("+{$months} months")->format('Y-m-d');
+    }
+    foreach (['retailPrice', 'paidPrice', 'warrantyCost'] as $field) {
         if (isset($input[$field]) && $input[$field] !== '' && (!is_numeric($input[$field]) || (float) $input[$field] < 0)) {
             $errors[] = ['code' => 'VALIDATION_FAILED', 'field' => $field, 'message' => "$field must be zero or greater."];
         }
+    }
+    foreach (['productPhoto', 'receiptPhoto'] as $field) {
+        if (($input[$field] ?? '') !== '' && (!is_string($input[$field]) || strlen($input[$field]) > 4194304 || !preg_match('#^data:image/(jpeg|png|gif|webp);base64,[A-Za-z0-9+/=]+$#', $input[$field]))) $errors[] = ['code' => 'VALIDATION_FAILED', 'field' => $field, 'message' => 'Upload a valid image smaller than 3 MB.'];
     }
     if ($errors) respond(false, 'Please correct the highlighted fields.', null, $errors, 422);
     respond(true, 'Warranty saved.', $store->save($input, (string) $user['id']));
