@@ -1610,3 +1610,4 @@ efcf3dd769fa96a1d7a8759af0b1029f274b0a03,2026-11-25T13:26:51-05:00,commit,Use qu
 2f640ca10ad292db474cf70f0c71c9fff345c106,2026-11-26T15:08:06-05:00,commit,Make blueberries blue and scale pet order difficulty,5,49,8,0,feed-the-pet
 7d58cbaf15c17a1bac0d6adeb1817b026aa0970c,2026-11-26T15:13:20-05:00,commit,Auto-advance completed pet orders after three seconds,3,13,1,0,feed-the-pet
 06500b3afd6f7f2bd1e4ad98ccfb71a084e237e2,2026-11-26T15:16:58-05:00,commit,Show achievement and pet unlock congratulations,4,46,5,0,feed-the-pet
+8b790bc481d3445d643a175753ba1547f1fb56ba,2026-11-27T14:04:20-05:00,commit,Fix Baby Daily upload and Missing controls (#205),3,7,2,0,daily-babe
