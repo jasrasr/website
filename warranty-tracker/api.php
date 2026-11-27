@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../1-Framework/bootstrap.php';
 require_once __DIR__ . '/lib/WarrantyStore.php';
-require_once __DIR__ . '/lib/Auth.php';
 
 header('Content-Type: application/json; charset=utf-8');
 $requestId = bin2hex(random_bytes(6));
 $store = new WarrantyStore(__DIR__ . '/storage/warranties.json');
-$auth = new Auth(__DIR__ . '/storage/users.json', __DIR__ . '/storage/invites.json');
+$auth = \Jasr\Framework\SharedIdentity::connect();
 
 function respond(bool $success, string $message, mixed $data = null, array $errors = [], int $status = 200): never
 {
@@ -20,13 +19,12 @@ function respond(bool $success, string $message, mixed $data = null, array $erro
 }
 
 try {
-    $user = $auth->user();
-    if ($user === null) respond(false, 'Sign in is required.', null, [['code' => 'AUTH_REQUIRED', 'message' => 'Sign in is required.']], 401);
+    $user = $auth->requireProject('warranty-tracker', 'viewer', true);
     $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
     if ($method === 'GET') {
         respond(true, 'Warranties loaded.', $store->visibleFor((string) $user['id']));
     }
-    $auth->verifyCsrf($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null);
+    if (!$auth->validCsrf($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null)) respond(false, 'Security token is invalid.', null, [['code' => 'CSRF_INVALID', 'message' => 'Security token is invalid.']], 403);
     $input = json_decode((string) file_get_contents('php://input'), true, 512, JSON_THROW_ON_ERROR);
     if (!is_array($input)) {
         respond(false, 'Invalid request.', null, [['code' => 'INVALID_BODY', 'message' => 'A JSON object is required.']], 400);
