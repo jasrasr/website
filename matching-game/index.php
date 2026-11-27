@@ -21,6 +21,7 @@ $loginUrl = $identity ? $identity->loginUrl($_SERVER['REQUEST_URI'] ?? '/github/
   <meta name="theme-color" content="#d8f1ff">
   <title>Matching Game</title>
   <link rel="stylesheet" href="style.css?v=1.5.0">
+  <style>.build-footer{position:fixed;right:12px;bottom:8px;color:#7890a0;font-size:.7rem;letter-spacing:.03em}</style>
   <script src="game.js?v=1.5.1" defer></script>
 </head>
 <body>
@@ -77,6 +78,7 @@ $loginUrl = $identity ? $identity->loginUrl($_SERVER['REQUEST_URI'] ?? '/github/
       <section id="history-panel" class="history-panel" aria-labelledby="history-title" hidden><h2 id="history-title">Saved games</h2><p id="history-summary">Loading…</p><ol id="history-list"></ol></section>
     <?php endif; ?>
   </main>
+  <footer class="build-footer">Modified 2026-11-27 · Rev 1.1.0</footer>
 <script defer src="https://jasr.me/github/webstats/assets/js/tracker.js"></script>
 </body>
 </html>
