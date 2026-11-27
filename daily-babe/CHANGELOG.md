@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.14.1 - 2026-11-27
+
+- Fix a JavaScript initialization error that prevented the Missing filter, selected-photo preview, and daily photo save handler from being attached.
+- Restore all dialog close-button handling by iterating over the complete close-button collection.
+
 ## 2.14.0 - 2026-11-25
 
 - Keep the crop editor save status on `Saved` after a successful update, and return it to the save action when crop, zoom, or rotation changes again.
