@@ -46,12 +46,16 @@
     if (speechAvailable) window.speechSynthesis.cancel();
   }
 
-  function useBrowserVoice(tile) {
+  function speakText(text) {
     if (!speechAvailable || !$('read-aloud').checked) return;
-    const utterance = new SpeechSynthesisUtterance(tile.dataset.card);
+    const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US';
     utterance.rate = 0.85;
     window.speechSynthesis.speak(utterance);
+  }
+
+  function useBrowserVoice(tile) {
+    speakText(tile.dataset.card);
   }
 
   function speakTile(tile) {
@@ -205,6 +209,7 @@
       first = second = null;
       if (pairs === rows * columns / 2) finishGame();
       else $('message').textContent = 'Great match! ⭐';
+      speakText('Match found!');
       return;
     }
     locked = true;
