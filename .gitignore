@@ -28,7 +28,8 @@ time-clock/weather-demo.json
 .worktrees/
 
 # App data and uploads
-warranty-tracker/storage/runtime/
+warranty-tracker/storage/runtime/*
+!warranty-tracker/storage/runtime/.placeholder
 how-much-time-worked/data/
 how-much-time-worked/uploads/
 computers/logs/*.json

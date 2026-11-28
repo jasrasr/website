@@ -7,12 +7,7 @@ require_once __DIR__ . '/lib/WarrantyStore.php';
 
 header('Content-Type: application/json; charset=utf-8');
 $requestId = bin2hex(random_bytes(6));
-$runtimeDirectory = __DIR__ . '/storage/runtime';
-$runtimePath = $runtimeDirectory . '/warranties.json';
-if (!is_file($runtimePath) && is_file(__DIR__ . '/storage/warranties.json')) {
-    if (!is_dir($runtimeDirectory) && !mkdir($runtimeDirectory, 0775, true) && !is_dir($runtimeDirectory)) throw new RuntimeException('Warranty runtime storage could not be created.');
-    if (!copy(__DIR__ . '/storage/warranties.json', $runtimePath)) throw new RuntimeException('Warranty runtime data could not be initialized.');
-}
+$runtimePath = __DIR__ . '/storage/runtime/warranties.json';
 $store = new WarrantyStore($runtimePath);
 $auth = \Jasr\Framework\SharedIdentity::connect();
 

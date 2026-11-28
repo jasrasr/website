@@ -4,8 +4,8 @@ Author: Jason Lamb (with help from ChatGPT)
 Description: Shared PHP/JSON framework overview and deployment conventions.
 Revision: 1.2.0
 Created Date: 2026-09-20
-Modified Date: 2026-10-21
-Changelog: 1.2.0 - Document config.local.example.php and runtime .placeholder convention.
+Modified Date: 2026-11-27
+Changelog: 1.2.1 - Require tracked .placeholder files for ignored runtime directories across the repository.
 -->
 # 1-Framework
 
@@ -85,6 +85,6 @@ See [the integration guide](../user-management/README.md#connect-a-php-project) 
 
 New hosted projects use **`config.local.example.php` → `config.local.php`**: the tracked example retains the entire target filename, and only the `.example` suffix is removed when copying it into place on Hostinger. Do not use `config.example.php` for a runtime file named `config.local.php`. Never commit the real config. For different destination names apply the same pattern (e.g., `settings.local.example.json` → `settings.local.json`).
 
-Each runtime directory that must exist in the deployed source includes a safe, tracked **`.placeholder`**, and the app's `.gitignore` makes an exception for these marker files. The app should auto-create ignored storage/JSON files when safe; secrets and private credentials are instead created or supplied manually on Hostinger. Markers hold no personal data or tokens. Sync/deploy processes must preserve runtime files and must not confuse marker presence with an actual configured secret.
+Each runtime directory that must exist in the deployed source includes a safe, tracked **`.placeholder`**, and the repository's `.gitignore` makes an explicit exception for that marker while ignoring the directory's runtime contents. The app should auto-create ignored storage/JSON files when safe; secrets and private credentials are instead created or supplied manually on Hostinger. Markers hold no personal data or tokens. Sync/deploy processes must preserve runtime files and must not confuse marker presence with an actual configured secret.
 
 See [AI-INSTRUCTIONS.md](AI-INSTRUCTIONS.md#configuration-templates-and-runtime-placeholders) for the mandatory coding and safety rules.

@@ -1,5 +1,9 @@
 # Warranty Tracker
 
+## Runtime data
+
+Warranty records are stored in the ignored `storage/runtime/warranties.json` file, following the repository's other runtime JSON stores such as `box/data/boxes.json`. The tracked `storage/runtime/.placeholder` keeps that directory present after clone or deployment. The tracked `storage/warranties.json` file is an immutable seed and is never copied into runtime storage.
+
 A PHP and JSON home-warranty portal based on the conventions in `1-Framework`.
 
 ## Features
